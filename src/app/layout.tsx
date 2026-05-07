@@ -1,8 +1,6 @@
 import React from "react";
 import type { Metadata } from 'next';
 import "./globals.css";
-import {NextIntlClientProvider} from 'next-intl';
-import {getLocale} from 'next-intl/server';
 import Header from "@/components/Header";
 
 
@@ -28,14 +26,10 @@ export const metadata: Metadata = {
     description: "Bienvenue sur le site du Jardin Sonore..."
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-    const locale = await getLocale();
-
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
-        <html lang={locale}>
+        <html lang="fr">
         <body className="bg-bgLight text-primary antialiased">
-        <NextIntlClientProvider>
             <header className="fixed top-0 w-full z-20 h-16">
                 <Header/>
             </header>
@@ -45,7 +39,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <footer className="p-4 text-center text-sm text-[#6C7A89]">
                 © {new Date().getFullYear()} Jardin Sonore
             </footer>
-        </NextIntlClientProvider>
         </body>
         </html>
     )
