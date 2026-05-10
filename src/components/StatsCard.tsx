@@ -1,23 +1,20 @@
 import {JSX} from "react";
-import {StatProps} from "@/types/stats";
+import {StatItem} from "@/types/content";
 
-export default function StatsCard({ icon, value, label }: StatProps): JSX.Element {
+const toneClasses: Record<StatItem["tone"], {icon: string; bubble: string}> = {
+    primary: {icon: "text-primary", bubble: "bg-primary-fixed/55"},
+    secondary: {icon: "text-secondary", bubble: "bg-secondary-container/55"},
+    tertiary: {icon: "text-tertiary", bubble: "bg-on-tertiary-container/25"},
+};
+
+export default function StatsCard({icon: Icon, value, label, tone}: StatItem): JSX.Element {
     return (
-        <div
-            className="
-        mx-4
-        flex flex-col items-center
-        p-4 bg-white/50 backdrop-blur-sm rounded-2xl
-        shadow-sm hover:shadow-lg
-        transition transform hover:-translate-y-1
-        duration-200
-      "
-        >
-            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-accent/40 mb-3">
-                <div className="w-8 h-8 text-accent-700">{icon}</div>
+        <div className="flex flex-col items-center text-center">
+            <div className={`mb-4 flex h-14 w-14 items-center justify-center rounded-full ${toneClasses[tone].bubble}`}>
+                <Icon className={`h-7 w-7 ${toneClasses[tone].icon}`} aria-hidden="true" />
             </div>
-            <span className="text-xl font-semibold text-primary mb-1">{value}</span>
-            <span className="text-sm text-secondary text-center">{label}</span>
+            <strong className="font-serif text-2xl font-semibold text-primary">{value}</strong>
+            <span className="mt-2 max-w-[190px] font-sans text-xs font-bold uppercase tracking-[0.18em] text-on-surface-variant">{label}</span>
         </div>
-    )
+    );
 }

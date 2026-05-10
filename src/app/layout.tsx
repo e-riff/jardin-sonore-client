@@ -1,45 +1,42 @@
-import React from "react";
-import type { Metadata } from 'next';
-import "./globals.css";
+import type {Metadata} from "next";
+import {JSX, ReactNode} from "react";
+import Footer from "@/components/Footer";
 import Header from "@/components/Header";
-
-
+import "./globals.css";
 
 export const metadata: Metadata = {
     title: {
-        default:"Jardin Sonore",
-        template: " | Jardin sonore"
+        default: "Jardin Sonore",
+        template: "%s | Jardin Sonore",
     },
+    description: "Éveil musical bienveillant pour la petite enfance.",
     icons: {
         icon: [
-            { url: '/favicon/favicon.ico', sizes: 'any', type: 'image/x-icon' },
-            { url: '/favicon/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
-            { url: '/favicon/favicon.svg', sizes: 'any', type: 'image/svg+xml' }
+            {url: "/favicon/favicon.ico", sizes: "any", type: "image/x-icon"},
+            {url: "/favicon/favicon-96x96.png", sizes: "96x96", type: "image/png"},
+            {url: "/favicon/favicon.svg", sizes: "any", type: "image/svg+xml"},
         ],
-        shortcut: '/favicon/favicon-96x96.png',
-        apple: '/favicon/apple-touch-icon.png',
+        shortcut: "/favicon/favicon-96x96.png",
+        apple: "/favicon/apple-touch-icon.png",
         other: [
-            { rel: 'manifest', url: '/favicon/site.webmanifest' },
-            { rel: 'mask-icon', url: '/favicon/favicon.svg', color: '#5bbad5' }
-        ]
+            {rel: "manifest", url: "/favicon/site.webmanifest"},
+            {rel: "mask-icon", url: "/favicon/favicon.svg", color: "#87362d"},
+        ],
     },
-    description: "Bienvenue sur le site du Jardin Sonore..."
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+interface RootLayoutProps {
+    children: ReactNode;
+}
+
+export default function RootLayout({children}: RootLayoutProps): JSX.Element {
     return (
         <html lang="fr">
-        <body className="bg-bgLight text-primary antialiased">
-            <header className="fixed top-0 w-full z-20 h-16">
-                <Header/>
-            </header>
-            <main className="pt-16 min-h-screen">
-                {children}
-            </main>
-            <footer className="p-4 text-center text-sm text-[#6C7A89]">
-                © {new Date().getFullYear()} Jardin Sonore
-            </footer>
-        </body>
+            <body className="min-h-screen bg-background text-on-background antialiased">
+                <Header />
+                <main>{children}</main>
+                <Footer />
+            </body>
         </html>
-    )
+    );
 }

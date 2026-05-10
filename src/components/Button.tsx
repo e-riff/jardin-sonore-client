@@ -1,26 +1,26 @@
-import React, {JSX} from "react";
+import {JSX, ReactNode} from "react";
 
-interface ButtonProps extends React.HTMLAttributes<HTMLDivElement> {
-    children: React.ReactNode
-    href?: string
-    className?: string
+type ButtonVariant = "primary" | "secondary" | "light";
+
+interface ButtonProps {
+    children: ReactNode;
+    href?: string;
+    variant?: ButtonVariant;
+    className?: string;
 }
 
-export default function Button({children, href, className = ''}: ButtonProps): JSX.Element {
-    const baseStyles =
-        'inline-block mt-6 px-6 py-3 bg-white rounded-2xl shadow hover:shadow-lg transition text-[#243237]'
-    const combined = `${baseStyles} ${className}`
+const variantClasses: Record<ButtonVariant, string> = {
+    primary: "bg-primary text-on-primary border-primary hover:-translate-y-0.5 hover:bg-primary-container",
+    secondary: "bg-surface/70 text-primary border-primary/35 hover:-translate-y-0.5 hover:border-primary hover:bg-primary-fixed/35",
+    light: "bg-surface text-primary border-surface hover:-translate-y-0.5 hover:bg-primary-fixed",
+};
+
+export default function Button({children, href, variant = "primary", className = ""}: ButtonProps): JSX.Element {
+    const classes = `inline-flex items-center justify-center rounded-full border px-7 py-3 font-sans text-sm font-bold tracking-[0.05em] transition duration-200 soft-shadow ${variantClasses[variant]} ${className}`;
 
     if (href) {
-        return (
-            <a href={href} className={combined}>
-                {children}
-            </a>
-        )
+        return <a className={classes} href={href}>{children}</a>;
     }
-    return (
-        <button className={combined}>
-            {children}
-        </button>
-    )
+
+    return <button className={classes} type="button">{children}</button>;
 }
