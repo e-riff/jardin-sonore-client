@@ -1,19 +1,93 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-    --color-primary: #243237;
-    --color-secondary: #6C7A89;
-    --color-bgLight: #FFF8F0;
-    --color-accent: #E0F7FA;
-    --radius-2xl: 1rem;
-    --font-sans: 'Poppins', sans-serif;
-    --font-playful: 'Comic Neue', cursive;
+  --color-background: #fdf8f5;
+  --color-on-background: #1c1b1a;
+  --color-surface: #fdf8f5;
+  --color-surface-dim: #ded9d6;
+  --color-surface-bright: #fdf8f5;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f8f3f0;
+  --color-surface-container: #f2edea;
+  --color-surface-container-high: #ece7e4;
+  --color-surface-container-highest: #e6e2df;
+  --color-on-surface: #1c1b1a;
+  --color-on-surface-variant: #554240;
+  --color-outline: #88726f;
+  --color-outline-variant: #dbc1bd;
+  --color-primary: #87362d;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #a64d43;
+  --color-on-primary-container: #ffe1dd;
+  --color-primary-fixed: #ffdad5;
+  --color-primary-fixed-dim: #ffb4aa;
+  --color-on-primary-fixed-variant: #7b2d25;
+  --color-secondary: #47664b;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #c6e9c7;
+  --color-on-secondary-container: #4b6a4f;
+  --color-tertiary: #6d4820;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #886035;
+  --color-on-tertiary-container: #ffe3cb;
+
+  --font-serif: 'Noto Serif', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', Arial, sans-serif;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.75rem;
+  --spacing-md: 1.5rem;
+  --spacing-lg: 3rem;
+  --spacing-xl: 5rem;
+  --spacing-gutter: 1.5rem;
+  --spacing-margin: 2rem;
 }
 
-
 @layer base {
-    body {
-        font-family: var(--font-sans), serif; }
-    h1, h2 {
-        font-family: var(--font-playful), serif; }
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--color-background);
+    color: var(--color-on-background);
+    font-family: var(--font-serif);
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--color-primary-fixed);
+    color: var(--color-primary);
+  }
+}
+
+@layer utilities {
+  .ambient-shadow {
+    box-shadow: 0 18px 45px -24px rgb(135 54 45 / 0.28);
+  }
+
+  .soft-shadow {
+    box-shadow: 0 10px 30px -12px rgb(135 54 45 / 0.18);
+  }
+
+  .hero-gradient {
+    background: linear-gradient(180deg, rgb(253 248 245 / 0.2), rgb(253 248 245 / 0.76));
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }

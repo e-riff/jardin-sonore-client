@@ -1,35 +1,52 @@
-'use client'
+'use client';
 
-import React, {useState, useEffect, JSX} from 'react'
+import {Bars3Icon} from "@heroicons/react/24/outline";
+import {JSX, useEffect, useState} from "react";
+import BrandLogo from "@/components/BrandLogo";
+import Button from "@/components/Button";
 
+interface NavigationItem {
+    label: string;
+    href: string;
+}
+
+const navigationItems: NavigationItem[] = [
+    {label: "À propos", href: "#about"},
+    {label: "Services", href: "#services"},
+    {label: "Témoignages", href: "#testimonials"},
+    {label: "Contact", href: "#contact"},
+];
 
 export default function Header(): JSX.Element {
-    const [scrolled, setScrolled] = useState(false)
+    const [scrolled, setScrolled] = useState<boolean>(false);
 
     useEffect(() => {
-        const onScroll = () => setScrolled(window.scrollY > 50)
-        window.addEventListener('scroll', onScroll)
-        return () => window.removeEventListener('scroll', onScroll)
-    }, [])
+        const onScroll = (): void => setScrolled(window.scrollY > 24);
+        onScroll();
+        window.addEventListener("scroll", onScroll);
+        return () => window.removeEventListener("scroll", onScroll);
+    }, []);
 
     return (
-        <header
-            className={`
-        fixed top-0 left-0 w-full z-20 transition-all
-        ${scrolled ? 'backdrop-blur-md bg-white/40 py-2 shadow-md' : 'bg-transparent py-4'}
-      `}
-        >
-            <div className="container mx-auto flex items-center justify-between px-4">
-                <div className="text-2xl font-bold text-primary">Jardin Sonore</div>
-                <nav className="space-x-4 hidden md:flex text-secondary">
-                    <a href="#about" className="hover:text-primary transition">À propos</a>
-                    <a href="#statsSection" className="hover:text-primary transition">Stats</a>
-                    <a href="#contact" className="hover:text-primary transition">Contact</a>
-                </nav>
-                <button className="md:hidden p-2">
-                    ☰
+        <header className={`fixed left-0 top-0 z-50 w-full border-b transition duration-300 ${scrolled ? "border-outline-variant/40 bg-background/88 py-2 backdrop-blur-xl" : "border-transparent bg-background/72 py-3 backdrop-blur-md"}`}>
+            <nav className="mx-auto flex max-w-[1280px] items-center justify-between px-6 sm:px-margin" aria-label="Navigation principale">
+                <a href="#top" aria-label="Accueil Jardin Sonore">
+                    <BrandLogo className="text-xl font-semibold sm:text-2xl" />
+                </a>
+
+                <div className="hidden items-center gap-8 md:flex">
+                    {navigationItems.map((item: NavigationItem) => (
+                        <a className="font-sans text-sm font-semibold tracking-[0.05em] text-on-surface-variant transition hover:text-primary" href={item.href} key={item.href}>
+                            {item.label}
+                        </a>
+                    ))}
+                    <Button className="px-6 py-2" href="#contact">Réserver</Button>
+                </div>
+
+                <button className="rounded-full p-2 text-primary md:hidden" type="button" aria-label="Ouvrir le menu">
+                    <Bars3Icon className="h-6 w-6" />
                 </button>
-            </div>
+            </nav>
         </header>
-    )
+    );
 }
