@@ -9,25 +9,29 @@ interface HeroProps {
 
 export default function Hero({backgroundImage}: HeroProps): JSX.Element {
     return (
-        <section className="relative flex min-h-[86vh] items-center justify-center overflow-hidden px-6 py-28" id="top">
-            <Image
-                alt="Enfant explorant des instruments d'éveil musical"
-                className="object-cover"
-                fill
-                priority
-                sizes="100vw"
-                src={`/${backgroundImage}`}
-            />
-            <div className="absolute inset-0 hero-gradient" />
+        <section className="relative overflow-hidden" id="top">
+            <div className="relative flex min-h-screen items-center">
+                <Image
+                    alt="Enfant explorant des instruments d'éveil musical"
+                    className="object-cover object-center"
+                    fill
+                    priority
+                    sizes="100vw"
+                    src={`/${backgroundImage}`}
+                />
+                <div className="absolute inset-0 hero-gradient" />
 
-            <div className="relative z-10 mx-auto max-w-[690px] rounded-xl border border-white/60 bg-surface/82 px-8 py-12 text-center backdrop-blur-xl ambient-shadow sm:px-14 sm:py-16">
-                <BrandLogo className="text-4xl font-semibold leading-tight sm:text-5xl" />
-                <p className="mx-auto mt-5 max-w-xl text-lg leading-8 text-on-surface-variant sm:text-2xl">
-                    Éveil musical bienveillant pour la petite enfance
-                </p>
-                <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-                    <Button href="#about">En savoir plus</Button>
-                    <Button href="#contact" variant="secondary">Nous contacter</Button>
+                <div className="relative z-10 mx-auto flex w-full max-w-[1320px] items-center justify-center px-5 pb-24 pt-28 sm:px-8 sm:pt-32 lg:px-12 lg:pb-28 lg:pt-36">
+                    <div className="w-full max-w-[780px] rounded-xl border border-white/60 bg-surface/82 px-7 py-10 text-center backdrop-blur-xl ambient-shadow sm:px-10 sm:py-12 md:px-14 md:py-16">
+                        <BrandLogo className="text-[2.5rem] font-semibold leading-none sm:text-6xl" />
+                        <p className="mx-auto mt-5 max-w-[24ch] text-balance text-xl leading-[1.35] text-on-surface-variant sm:mt-6 sm:text-[2rem]">
+                            Éveil musical bienveillant pour la petite enfance
+                        </p>
+                        <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:mt-10 sm:flex-row">
+                            <Button className="min-w-[190px]" href="#about">En savoir plus</Button>
+                            <Button className="min-w-[190px]" href="#contact" variant="secondary">Nous contacter</Button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
