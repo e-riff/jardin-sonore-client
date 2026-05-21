@@ -1,0 +1,8 @@
+.git
+.agents
+.codex
+.idea
+docker-compose.yml
+jardin-sonore-client/.next
+jardin-sonore-client/.next-*
+jardin-sonore-client/node_modules
