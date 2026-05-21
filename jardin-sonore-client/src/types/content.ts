@@ -28,3 +28,10 @@ export interface ChecklistItem {
     text: string;
     icon?: ReactNode;
 }
+
+export type Tone = "primary" | "secondary" | "tertiary";
+
+export interface LinkItem {
+    label: string;
+    href: string;
+}

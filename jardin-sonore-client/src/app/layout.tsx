@@ -2,14 +2,18 @@ import type {Metadata} from "next";
 import {JSX, ReactNode} from "react";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import fr from "@/i18n/dictionaries/fr";
+import {defaultLocale} from "@/i18n/locales";
+import {getTranslations} from "@/i18n/server";
+import {TranslationsProvider} from "@/i18n/translations-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
     title: {
-        default: "Jardin Sonore",
-        template: "%s | Jardin Sonore",
+        default: fr.brand.name,
+        template: fr.metadata.titleTemplate,
     },
-    description: "Éveil musical bienveillant pour la petite enfance.",
+    description: fr.metadata.description,
     icons: {
         icon: [
             {url: "/favicon/favicon.ico", sizes: "any", type: "image/x-icon"},
@@ -29,13 +33,17 @@ interface RootLayoutProps {
     children: ReactNode;
 }
 
-export default function RootLayout({children}: RootLayoutProps): JSX.Element {
+export default async function RootLayout({children}: RootLayoutProps): Promise<JSX.Element> {
+    const dictionary = await getTranslations();
+
     return (
-        <html lang="fr">
+        <html lang={defaultLocale}>
             <body className="min-h-screen bg-background text-on-background antialiased">
-                <Header />
-                <main>{children}</main>
-                <Footer />
+                <TranslationsProvider dictionary={dictionary}>
+                    <Header />
+                    <main>{children}</main>
+                    <Footer />
+                </TranslationsProvider>
             </body>
         </html>
     );
