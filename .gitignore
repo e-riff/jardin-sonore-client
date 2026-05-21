@@ -15,6 +15,7 @@ coverage/
 
 # next.js
 .next/
+.next-*/
 out/
 
 # production
@@ -47,3 +48,7 @@ logs/
 
 # ide
 .idea/
+
+# local agent state
+.agents/
+.codex/

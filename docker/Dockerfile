@@ -1,13 +1,14 @@
 FROM node:24-alpine
 
 WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1
 
-COPY package.json ./
+COPY jardin-sonore-client/package*.json ./
 
 RUN npm install
 
-COPY . .
+COPY jardin-sonore-client .
 
 EXPOSE 3000
 
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]

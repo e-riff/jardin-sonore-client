@@ -1,0 +1,23 @@
+services:
+  client:
+    image: jardin-sonore-client:dev
+    container_name: jardin-sonore-client
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    environment:
+      NODE_ENV: development
+      NEXT_TELEMETRY_DISABLED: "1"
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - ./jardin-sonore-client:/app
+      - node_modules:/app/node_modules
+      - next:/app/.next
+    command: npm run dev -- --hostname 0.0.0.0
+
+volumes:
+  node_modules:
+    name: jardin-sonore-client_node_modules
+  next:
+    name: jardin-sonore-client_next
