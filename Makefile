@@ -11,13 +11,13 @@ SCRIPT ?= lint
 
 help:
 	@printf "Commandes disponibles:\n"
-	@printf "  make build    Build l'image Docker Compose\n"
-	@printf "  make up       Lance le client sur http://localhost:%s\n" "$(PORT)"
-	@printf "  make down     Stoppe les services Compose\n"
-	@printf "  make restart  Redemarre les services Compose\n"
+	@printf "  make docker-build    Build l'image Docker Compose\n"
+	@printf "  make docker-up       Lance le client sur http://localhost:%s\n" "$(PORT)"
+	@printf "  make docker-down     Stoppe les services Compose\n"
+	@printf "  make docker-restart  Redemarre les services Compose\n"
 	@printf "  make logs     Affiche les logs du client\n"
 	@printf "  make shell    Ouvre un shell dans le conteneur client\n"
-	@printf "  make ps       Affiche l'etat des services Compose\n"
+	@printf "  make docker-ps       Affiche l'etat des services Compose\n"
 	@printf "  make clean    Supprime services, volumes et image locale\n"
 	@printf "  make lint     Lance npm run lint dans un conteneur jetable\n"
 	@printf "  make app-build Lance npm run build dans un conteneur jetable\n"
@@ -27,16 +27,16 @@ help:
 	@printf "  make exec-run SCRIPT=\"lint\" Lance un script npm dans le conteneur actif\n"
 	@printf "  Astuce: PORT=3001 make up pour changer le port publie\n"
 
-build:
+docker-build:
 	$(COMPOSE) build $(SERVICE)
 
-up:
+docker-up:
 	$(COMPOSE) up --build $(SERVICE)
 
-down:
+docker-down:
 	$(COMPOSE) down --remove-orphans
 
-restart: down up
+docker-restart: down up
 
 logs:
 	$(COMPOSE) logs -f $(SERVICE)
@@ -44,7 +44,7 @@ logs:
 shell:
 	$(COMPOSE) exec $(SERVICE) sh
 
-ps:
+docker-ps:
 	$(COMPOSE) ps
 
 clean: down
