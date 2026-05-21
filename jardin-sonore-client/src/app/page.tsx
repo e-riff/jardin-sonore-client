@@ -4,7 +4,6 @@ import CtaSection from "@/components/CtaSection";
 import Hero from "@/components/Hero";
 import ServicesSection from "@/components/ServicesSection";
 import StatsSection from "@/components/StatsSection";
-import TestimonialsSection from "@/components/TestimonialsSection";
 
 export default function Home(): JSX.Element {
     return (
@@ -13,7 +12,6 @@ export default function Home(): JSX.Element {
             <StatsSection />
             <AboutSection />
             <ServicesSection />
-            <TestimonialsSection />
             <CtaSection />
         </>
     );

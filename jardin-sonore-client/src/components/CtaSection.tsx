@@ -12,7 +12,7 @@ export default function CtaSection(): JSX.Element {
                     <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-on-primary/90">Contactez-nous pour une présentation personnalisée de nos programmes et un devis adapté à vos besoins.</p>
                     <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
                         <Button href="mailto:contact@jardin-sonore.fr" variant="light">Demander un devis</Button>
-                        <Button href="tel:+33000000000" variant="secondary" className="border-white/35 text-on-primary hover:bg-white/10">Nous appeler</Button>
+                        <Button href="tel:+33000000000" variant="secondary" className="!border-white/55 !bg-white/10 !text-on-primary hover:!border-white/80 hover:!bg-white/20 hover:!text-on-primary">Nous appeler</Button>
                     </div>
                 </div>
             </div>

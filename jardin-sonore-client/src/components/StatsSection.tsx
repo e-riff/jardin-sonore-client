@@ -11,7 +11,7 @@ const stats: StatItem[] = [
 
 export default function StatsSection(): JSX.Element {
     return (
-        <section className="relative z-20 -mt-16 px-6 sm:px-margin" aria-label="Chiffres clés">
+        <section className="relative z-20 -mt-20 px-6 sm:-mt-24 sm:px-margin" aria-label="Chiffres clés">
             <div className="mx-auto grid max-w-[1100px] grid-cols-1 gap-8 rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-8 ambient-shadow sm:p-10 md:grid-cols-[1fr_auto_1fr_auto_1fr] md:items-center">
                 {stats.map((stat: StatItem, index: number) => (
                     <div className="contents" key={stat.label}>
