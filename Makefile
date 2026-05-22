@@ -7,7 +7,7 @@ PORT ?= 3000
 NPM_ARGS ?= --version
 SCRIPT ?= lint
 
-.PHONY: help build up down restart logs shell ps clean lint app-build npm npm-run exec-npm exec-run
+.PHONY: help docker-build docker-up docker-down docker-restart logs shell docker-ps clean lint app-build npm npm-run exec-npm exec-run
 
 help:
 	@printf "Commandes disponibles:\n"
@@ -25,7 +25,7 @@ help:
 	@printf "  make npm-run SCRIPT=\"build\" Lance un script npm dans un conteneur jetable\n"
 	@printf "  make exec-npm NPM_ARGS=\"install\" Lance npm dans le conteneur actif\n"
 	@printf "  make exec-run SCRIPT=\"lint\" Lance un script npm dans le conteneur actif\n"
-	@printf "  Astuce: PORT=3001 make up pour changer le port publie\n"
+	@printf "  Astuce: PORT=3001 make docker-up pour changer le port publie\n"
 
 docker-build:
 	$(COMPOSE) build $(SERVICE)
@@ -36,7 +36,7 @@ docker-up:
 docker-down:
 	$(COMPOSE) down --remove-orphans
 
-docker-restart: down up
+docker-restart: docker-down docker-up
 
 logs:
 	$(COMPOSE) logs -f $(SERVICE)
@@ -47,21 +47,21 @@ shell:
 docker-ps:
 	$(COMPOSE) ps
 
-clean: down
+clean: docker-down
 	docker image rm -f $(IMAGE_NAME) >/dev/null 2>&1 || true
 	docker volume rm -f $(APP_NAME)_node_modules $(APP_NAME)_next >/dev/null 2>&1 || true
 
 lint:
-	$(COMPOSE) run --rm $(SERVICE) npm run lint
+	$(COMPOSE) run --rm $(SERVICE) sh -c "npm install && npm run lint"
 
 app-build:
-	$(COMPOSE) run --rm $(SERVICE) npm run build
+	$(COMPOSE) run --rm $(SERVICE) sh -c "npm install && npm run build"
 
 npm:
 	$(COMPOSE) run --rm $(SERVICE) npm $(NPM_ARGS)
 
 npm-run:
-	$(COMPOSE) run --rm $(SERVICE) npm run $(SCRIPT)
+	$(COMPOSE) run --rm $(SERVICE) sh -c "npm install && npm run $(SCRIPT)"
 
 exec-npm:
 	$(COMPOSE) exec $(SERVICE) npm $(NPM_ARGS)

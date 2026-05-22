@@ -25,7 +25,7 @@ export default function Header(): JSX.Element {
             <nav className="mx-auto max-w-[1280px] px-6 sm:px-margin" aria-label={content.ariaLabel}>
                 <div className="flex items-center justify-between">
                     <a href="#top" aria-label={content.homeAriaLabel} onClick={() => setMenuOpen(false)}>
-                        <BrandLogo label={dictionary.brand.name} className="text-2xl font-semibold sm:text-2xl" />
+                        <BrandLogo label={dictionary.brand.name} className="text-2xl font-semibold md:text-[1.7rem]" />
                     </a>
 
                     <div className="hidden items-center gap-8 md:flex">
