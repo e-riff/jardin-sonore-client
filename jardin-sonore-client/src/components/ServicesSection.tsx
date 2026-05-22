@@ -1,4 +1,4 @@
-import {AcademicCapIcon, BuildingStorefrontIcon, UserGroupIcon} from "@heroicons/react/24/outline";
+import {SunIcon, BuildingStorefrontIcon, UsersIcon} from "@heroicons/react/24/outline";
 import {JSX} from "react";
 import SectionHeading from "@/components/SectionHeading";
 import ServiceCard from "@/components/ServiceCard";
@@ -7,8 +7,8 @@ import {ServiceItem} from "@/types/content";
 
 const serviceIcons: ServiceItem["icon"][] = [
     BuildingStorefrontIcon,
-    AcademicCapIcon,
-    UserGroupIcon,
+    SunIcon,
+    UsersIcon,
 ];
 
 export default async function ServicesSection(): Promise<JSX.Element> {
@@ -18,7 +18,7 @@ export default async function ServicesSection(): Promise<JSX.Element> {
     const services: ServiceItem[] = content.items.map((item, index) => ({...item, icon: serviceIcons[index]}));
 
     return (
-        <section className="bg-surface-container-low px-6 py-xl sm:px-margin" id="services">
+        <section className="bg-surface-container-low px-6 py-xl sm:px-margin" id="prestations">
             <div className="mx-auto max-w-[1280px]">
                 <SectionHeading centered title={content.title} description={content.description} />
                 <div className="mx-auto mt-4 h-1.5 w-16 rounded-full bg-primary-container" />

@@ -13,7 +13,7 @@ const fr = {
         reserveCta: "Réserver",
         navigation: [
             {label: "À propos", href: "#about"},
-            {label: "Services", href: "#services"},
+            {label: "Prestations", href: "#prestations"},
             {label: "Contact", href: "#contact"},
         ],
     },
@@ -55,18 +55,18 @@ const fr = {
         discoverCta: "Découvrir",
         items: [
             {
-                title: "Crèches & EAMU",
-                description: "Ateliers hebdomadaires adaptés aux tout-petits, centrés sur la manipulation et l'éveil sensoriel.",
+                title: "Crèches & EAJE",
+                description: "Ateliers réguliers adaptés pour les plus jeunes (dès 3 mois) et centrés sur la manipulation libre et l'éveil sensoriel.",
                 tone: "primary",
             },
             {
-                title: "Écoles",
-                description: "Projets pédagogiques sur-mesure pour les classes maternelles, exploration des instruments du monde.",
+                title: "Fêtes et festivals",
+                description: "Projets d'intervention à la journée, autour d'un thème précis ou pour une manifestation particulière : fin d'année, festival petite enfance...",
                 tone: "tertiary",
             },
             {
                 title: "Parents-Enfants",
-                description: "Des moments privilégiés de partage en famille pour renforcer le lien à travers la vibration sonore.",
+                description: "Des moments privilégiés de partage en famille pour renforcer le lien à travers la musique",
                 tone: "secondary",
             },
         ],
@@ -94,7 +94,7 @@ const fr = {
     },
     cta: {
         title: "Prêt à faire entrer la musique dans votre structure ?",
-        description: "Contactez-nous pour une présentation personnalisée de nos programmes et un devis adapté à vos besoins.",
+        description: "Contactez-nous pour une présentation de nos prestations et un devis adapté à vos besoins.",
         quoteCta: "Demander un devis",
         callCta: "Nous appeler",
     },
@@ -102,10 +102,8 @@ const fr = {
         ariaLabel: "Navigation de pied de page",
         shareAriaLabel: "Partager",
         emailAriaLabel: "Envoyer un email",
-        copyright: "© 2026 Jardin Sonore. Éveil musical bienveillant pour la petite enfance.",
+        copyright: "© 2026 Jardin Sonore",
         links: [
-            {label: "Mentions Légales", href: "#"},
-            {label: "Confidentialité", href: "#"},
             {label: "Contact", href: "#contact"},
         ],
     },
