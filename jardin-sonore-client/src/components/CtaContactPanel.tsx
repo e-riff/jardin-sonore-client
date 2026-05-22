@@ -136,41 +136,81 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
                     >
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                             <label className="grid gap-2 font-sans text-sm font-semibold text-on-surface-variant">
-                                {content.form.fullNameLabel}
-                                <input className="w-full rounded-lg border border-outline-variant/50 bg-surface px-4 py-3 font-sans text-base text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" name="name" placeholder={content.form.fullNamePlaceholder} required type="text" />
+                                <span>{content.form.fullNameLabel}</span>
+                                <input
+                                    className="w-full rounded-lg border border-outline-variant/50 bg-surface px-4 py-3 font-sans text-base text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                    name="name"
+                                    placeholder={content.form.fullNamePlaceholder}
+                                    required
+                                    type="text"
+                                />
                             </label>
+
                             <label className="grid gap-2 font-sans text-sm font-semibold text-on-surface-variant">
-                                {content.form.emailLabel}
-                                <input className="w-full rounded-lg border border-outline-variant/50 bg-surface px-4 py-3 font-sans text-base text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" name="email" placeholder={content.form.emailPlaceholder} required type="email" />
+                                <span>{content.form.emailLabel}</span>
+                                <input
+                                    className="w-full rounded-lg border border-outline-variant/50 bg-surface px-4 py-3 font-sans text-base text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                    name="email"
+                                    placeholder={content.form.emailPlaceholder}
+                                    required
+                                    type="email"
+                                />
                             </label>
                         </div>
 
                         <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
                             <label className="grid gap-2 font-sans text-sm font-semibold text-on-surface-variant">
-                                {content.form.phoneLabel}
-                                <input className="w-full rounded-lg border border-outline-variant/50 bg-surface px-4 py-3 font-sans text-base text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" name="phone" placeholder={content.form.phonePlaceholder} type="tel" />
+                                <span>{content.form.phoneLabel}</span>
+                                <input
+                                    className="w-full rounded-lg border border-outline-variant/50 bg-surface px-4 py-3 font-sans text-base text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                    name="phone"
+                                    placeholder={content.form.phonePlaceholder}
+                                    type="tel"
+                                />
                             </label>
+
                             <label className="grid gap-2 font-sans text-sm font-semibold text-on-surface-variant">
-                                {content.form.organizationLabel}
-                                <input className="w-full rounded-lg border border-outline-variant/50 bg-surface px-4 py-3 font-sans text-base text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" name="organization" placeholder={content.form.organizationPlaceholder} type="text" />
+                                <span>{content.form.organizationLabel}</span>
+                                <input
+                                    className="w-full rounded-lg border border-outline-variant/50 bg-surface px-4 py-3 font-sans text-base text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                    name="organization"
+                                    placeholder={content.form.organizationPlaceholder}
+                                    type="text"
+                                />
                             </label>
                         </div>
 
                         <label className="mt-6 grid gap-2 font-sans text-sm font-semibold text-on-surface-variant">
-                            {content.form.cityLabel}
-                            <input className="w-full rounded-lg border border-outline-variant/50 bg-surface px-4 py-3 font-sans text-base text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" name="city" placeholder={content.form.cityPlaceholder} type="text" />
+                            <span>{content.form.cityLabel}</span>
+                            <input
+                                className="w-full rounded-lg border border-outline-variant/50 bg-surface px-4 py-3 font-sans text-base text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                name="city"
+                                placeholder={content.form.cityPlaceholder}
+                                type="text"
+                            />
                         </label>
 
                         <label className="mt-6 grid gap-2 font-sans text-sm font-semibold text-on-surface-variant">
-                            {content.form.messageLabel}
-                            <textarea className="min-h-32 w-full resize-y rounded-lg border border-outline-variant/50 bg-surface px-4 py-3 font-sans text-base text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" name="message" placeholder={content.form.messagePlaceholder} rows={4} />
+                            <span>{content.form.messageLabel}</span>
+                            <textarea
+                                className="min-h-32 w-full resize-y rounded-lg border border-outline-variant/50 bg-surface px-4 py-3 font-sans text-base text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                name="message"
+                                placeholder={content.form.messagePlaceholder}
+                                required
+                                rows={4}
+                            />
                         </label>
 
                         <AltchaWidget />
 
-                        <button className="mt-6 w-full rounded-full bg-primary py-4 font-sans text-base font-bold tracking-[0.05em] text-on-primary soft-shadow transition hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-70" type="submit" disabled={submitState === "sending"}>
+                        <button
+                            className="mt-6 w-full rounded-full bg-primary py-4 font-sans text-base font-bold tracking-wider text-on-primary soft-shadow transition hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-70"
+                            type="submit"
+                            disabled={submitState === "sending"}
+                        >
                             {submitState === "sending" ? content.form.submitSending : content.form.submitLabel}
                         </button>
+
                         {submitNotice ? (
                             <p className="mt-4 text-center font-sans text-sm leading-6 text-on-surface-variant" role="status">
                                 {submitNotice}

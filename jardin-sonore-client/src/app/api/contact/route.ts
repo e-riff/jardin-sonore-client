@@ -29,7 +29,7 @@ const buildText = (data: Required<Omit<ContactRequest, "altcha">>): string => [
     `Ville: ${data.city || "Non renseignee"}`,
     "",
     "Message:",
-    data.message || "Non renseigne",
+    data.message,
 ].join("\n");
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -53,25 +53,27 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const smtpPort = Number.parseInt(process.env.SMTP_PORT ?? "587", 10);
     const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST ?? "smtp.fake.local",
+        host: process.env.SMTP_HOST,
         port: Number.isNaN(smtpPort) ? 587 : smtpPort,
         secure: process.env.SMTP_SECURE === "true",
         auth: {
-            user: process.env.SMTP_USER ?? "fake-user",
-            pass: process.env.SMTP_PASSWORD ?? "fake-password",
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASSWORD,
         },
     });
 
-    const to = process.env.CONTACT_EMAIL ?? "contact@example.com";
-    const from = process.env.SMTP_FROM ?? "Jardin Sonore <no-reply@jardin-sonore.local>";
-    const replyTo = `${name} <${email}>`;
+    const to = process.env.CONTACT_EMAIL
+    const from = process.env.SMTP_FROM;
     const contact = {city, email, message, name, organization, phone};
 
     try {
         await transporter.sendMail({
             from,
-            replyTo,
-            subject: `Demande de devis - ${name}`,
+            replyTo: {
+                name,
+                address: email,
+            },
+            subject: `CONTACT JARDIN SONORE - Demande de devis - ${name}`,
             text: buildText(contact),
             to,
         });

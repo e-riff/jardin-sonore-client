@@ -9,7 +9,7 @@ export default async function Footer(): Promise<JSX.Element> {
 
     return (
         <footer className="bg-surface-container-high px-6 py-16 text-center sm:px-margin">
-            <div className="mx-auto flex max-w-[1280px] flex-col items-center">
+            <div className="mx-auto flex max-w-7xl flex-col items-center">
                 <BrandLogo label={dictionary.brand.name} className="text-2xl font-semibold" colorized={false} />
 {/*                <nav className="mt-9 flex flex-wrap justify-center gap-x-10 gap-y-4" aria-label={content.ariaLabel}>
                     {content.links.map((link: LinkItem) => (
