@@ -13,7 +13,7 @@ const fr = {
         reserveCta: "Réserver",
         navigation: [
             {label: "À propos", href: "#about"},
-            {label: "Prestations", href: "#prestations"},
+            {label: "Nos interventions", href: "#prestations"},
             {label: "Contact", href: "#contact"},
         ],
     },
@@ -101,9 +101,9 @@ const fr = {
             loadingLabel: "Ouverture...",
         },
         form: {
-            fullNameLabel: "Nom complet *",
+            fullNameLabel: "Nom complet",
             fullNamePlaceholder: "Votre nom",
-            emailLabel: "Email *",
+            emailLabel: "Email",
             emailPlaceholder: "votre@email.com",
             phoneLabel: "Téléphone",
             phonePlaceholder: "06 00 00 00 00",

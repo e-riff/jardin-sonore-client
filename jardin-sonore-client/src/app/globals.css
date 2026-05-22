@@ -93,3 +93,13 @@
     display: none;
   }
 }
+
+@layer components {
+  form label:has(input:required) > span:first-child::after,
+  form label:has(textarea:required) > span:first-child::after,
+  form label:has(select:required) > span:first-child::after {
+    content: " *";
+    color: var(--color-primary);
+    font-weight: 700;
+  }
+}
