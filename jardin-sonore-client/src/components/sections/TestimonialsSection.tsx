@@ -23,7 +23,7 @@ export default async function TestimonialsSection(): Promise<JSX.Element> {
                 <div className="lg:col-span-8">
                     <div className="flex snap-x gap-gutter overflow-x-auto pb-8 scrollbar-hide">
                         {content.items.map((testimonial: TestimonialItem) => (
-                            <Card className="relative min-w-[320px] snap-start bg-surface-container sm:min-w-[450px]" key={testimonial.author}>
+                            <Card className="relative min-w-80 snap-start bg-surface-container sm:min-w-112.5" key={testimonial.author}>
                                 <span className="absolute right-8 top-5 font-serif text-7xl text-primary/10" aria-hidden="true">{content.quoteMark}</span>
                                 <blockquote className="relative text-lg italic leading-8 text-on-surface">{content.quoteMark}{testimonial.quote}{content.quoteMark}</blockquote>
                                 <div className="mt-10 flex items-center gap-5">

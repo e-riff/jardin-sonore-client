@@ -19,7 +19,7 @@ export default async function ServicesSection(): Promise<JSX.Element> {
 
     return (
         <section className="bg-surface-container-low px-6 py-xl sm:px-margin" id="prestations">
-            <div className="mx-auto max-w-[1280px]">
+            <div className="mx-auto max-w-320">
                 <SectionHeading centered title={content.title} description={content.description} />
                 <div className="mx-auto mt-4 h-1.5 w-16 rounded-full bg-primary-container" />
                 <div className="mt-14 grid grid-cols-1 gap-gutter md:grid-cols-3">
