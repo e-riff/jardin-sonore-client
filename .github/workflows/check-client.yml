@@ -1,0 +1,48 @@
+name: Check client
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "jardin-sonore-client/**"
+      - ".github/workflows/check-client.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "jardin-sonore-client/**"
+      - ".github/workflows/check-client.yml"
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  check:
+    name: Lint and build Next.js client
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: jardin-sonore-client
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: jardin-sonore-client/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build

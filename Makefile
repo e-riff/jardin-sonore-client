@@ -7,7 +7,7 @@ PORT ?= 3000
 NPM_ARGS ?= --version
 SCRIPT ?= lint
 
-.PHONY: help docker-build docker-up docker-down docker-restart logs shell docker-ps clean lint app-build npm npm-run exec-npm exec-run
+.PHONY: help docker-build docker-up docker-down docker-restart logs shell docker-ps clean lint app-build deploy-client npm npm-run exec-npm exec-run
 
 help:
 	@printf "Commandes disponibles:\n"
@@ -21,6 +21,7 @@ help:
 	@printf "  make clean    Supprime services, volumes et image locale\n"
 	@printf "  make lint     Lance npm run lint dans un conteneur jetable\n"
 	@printf "  make app-build Lance npm run build dans un conteneur jetable\n"
+	@printf "  make deploy-client Deploie le client avec la config .env.deploy.local\n"
 	@printf "  make npm NPM_ARGS=\"install\" Lance npm dans un conteneur jetable\n"
 	@printf "  make npm-run SCRIPT=\"build\" Lance un script npm dans un conteneur jetable\n"
 	@printf "  make exec-npm NPM_ARGS=\"install\" Lance npm dans le conteneur actif\n"
@@ -56,6 +57,9 @@ lint:
 
 app-build:
 	$(COMPOSE) run --rm $(SERVICE) sh -c "npm install && npm run build"
+
+deploy-client:
+	./scripts/deploy-client.sh
 
 npm:
 	$(COMPOSE) run --rm $(SERVICE) npm $(NPM_ARGS)

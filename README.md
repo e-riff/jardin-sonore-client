@@ -12,6 +12,7 @@ make up
 make down
 make lint
 make app-build
+make deploy-client
 ```
 
 Le front tourne via Docker Compose sur `http://localhost:3000` par defaut. Pour changer le port: `PORT=3001 make up`.
