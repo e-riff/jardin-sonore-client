@@ -14,7 +14,7 @@ export default function StatsCard({icon: Icon, value, label, tone}: StatItem): J
                 <Icon className={`h-7 w-7 ${toneClasses[tone].icon}`} aria-hidden="true" />
             </div>
             <strong className="font-serif text-2xl font-semibold text-primary">{value}</strong>
-            <span className="mt-2 max-w-[190px] font-sans text-xs font-bold uppercase tracking-[0.18em] text-on-surface-variant">{label}</span>
+            <span className="mt-2 max-w-47.5 font-sans text-xs font-bold uppercase tracking-[0.18em] text-on-surface-variant">{label}</span>
         </div>
     );
 }

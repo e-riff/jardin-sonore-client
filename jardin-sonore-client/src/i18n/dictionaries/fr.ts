@@ -20,6 +20,7 @@ const fr = {
     hero: {
         imageAlt: "Enfant explorant des instruments d'éveil musical",
         tagline: "Éveil musical bienveillant pour la petite enfance",
+        serviceArea: "Forez — Giers — Pilat — Lyonnais",
         primaryCta: "En savoir plus",
         secondaryCta: "Nous contacter",
     },

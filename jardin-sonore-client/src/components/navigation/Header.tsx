@@ -22,7 +22,7 @@ export default function Header(): JSX.Element {
 
     return (
         <header className={`fixed left-0 top-0 z-50 w-full border-b transition duration-300 ${scrolled ? "border-outline-variant/40 bg-background/88 py-2 backdrop-blur-xl" : "border-transparent bg-background/72 py-3 backdrop-blur-md"}`}>
-            <nav className="mx-auto max-w-[1280px] px-6 sm:px-margin" aria-label={content.ariaLabel}>
+            <nav className="mx-auto max-w-320 px-6 sm:px-margin" aria-label={content.ariaLabel}>
                 <div className="flex items-center justify-between">
                     <a href="#top" aria-label={content.homeAriaLabel} onClick={() => setMenuOpen(false)}>
                         <BrandLogo label={dictionary.brand.name} className="text-2xl font-semibold md:text-[1.7rem]" />
