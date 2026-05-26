@@ -8,7 +8,7 @@ interface PhotoTileProps extends ExplorationPhoto {
     sizes: string;
 }
 
-export default function PhotoTile({title, imageSrc, imageAlt, featured = false, className = "", sizes}: PhotoTileProps): JSX.Element {
+export default function PhotoTile({title, description, imageSrc, imageAlt, featured = false, className = "", sizes}: PhotoTileProps): JSX.Element {
     return (
         <figure className={`group relative overflow-hidden rounded-xl border border-outline-variant/30 bg-surface-container-lowest soft-shadow ${className}`}>
             <Image
@@ -22,7 +22,8 @@ export default function PhotoTile({title, imageSrc, imageAlt, featured = false, 
                 <>
                     <div className="absolute inset-0 bg-gradient-to-t from-on-surface/70 via-on-surface/10 to-transparent opacity-80 transition-opacity duration-300 group-hover:opacity-95" />
                     <figcaption className="absolute inset-x-0 bottom-0 p-6 text-on-primary sm:p-8">
-                        <h3 className="font-serif text-2xl font-semibold">{title}</h3>
+                        {title ? <h3 className="font-serif text-2xl font-semibold">{title}</h3> : null}
+                        {description ? <p className="mt-2 max-w-120 text-sm leading-6 text-on-primary/90 sm:text-base">{description}</p> : null}
                     </figcaption>
                 </>
             ) : null}
