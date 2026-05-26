@@ -10,10 +10,19 @@ export interface StatItem {
 }
 
 export interface ServiceItem {
-    icon: IconComponent;
     title: string;
     description: string;
     tone: "primary" | "secondary" | "tertiary";
+    imageSrc: string;
+    imageAlt: string;
+    badge: string;
+}
+
+export interface ExplorationPhoto {
+    title: string;
+    description?: string;
+    imageSrc: string;
+    imageAlt: string;
 }
 
 export interface TestimonialItem {

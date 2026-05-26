@@ -14,6 +14,7 @@ const fr = {
         navigation: [
             {label: "À propos", href: "#about"},
             {label: "Nos interventions", href: "#prestations"},
+            {label: "Photos", href: "#exploration"},
             {label: "Contact", href: "#contact"},
         ],
     },
@@ -50,6 +51,44 @@ const fr = {
         ],
         imageAlt: "Atelier musical avec instruments colorés pour enfants",
     },
+    exploration: {
+        eyebrow: "Découverte sensorielle",
+        title: "Moments d'exploration",
+        description: "En atelier, chaque son est une nouvelle aventure.",
+        photos: [
+            {
+                title: "Immersion sonore",
+                description: "Une approche intuitive pour permettre aux enfants de s'approprier le rythme naturellement.",
+                imageSrc: "/Hero2.jpg",
+                imageAlt: "Atelier d'éveil musical avec instruments disposés pour les enfants",
+            },
+            {
+                title: "Instruments à manipuler",
+                imageSrc: "/Hero.jpg",
+                imageAlt: "Instruments d'éveil sonore prêts à être explorés",
+            },
+            {
+                title: "Gestes et écoute",
+                imageSrc: "/Hero2.jpg",
+                imageAlt: "Moment d'exploration sonore pendant un atelier petite enfance",
+            },
+            {
+                title: "Rythmes partagés",
+                imageSrc: "/Hero.jpg",
+                imageAlt: "Placeholder pour une future photo de rythme partagé en atelier",
+            },
+            {
+                title: "Textures sonores",
+                imageSrc: "/Hero2.jpg",
+                imageAlt: "Placeholder pour une future photo de découverte des textures sonores",
+            },
+            {
+                title: "Écoute collective",
+                imageSrc: "/Hero.jpg",
+                imageAlt: "Placeholder pour une future photo de moment d'écoute collective",
+            },
+        ],
+    },
     services: {
         title: "Nos Interventions",
         description: "Des formats adaptés à tous les environnements d'accueil de la petite enfance.",
@@ -59,16 +98,25 @@ const fr = {
                 title: "Crèches & EAJE",
                 description: "Ateliers réguliers adaptés pour les plus jeunes (dès 3 mois) et centrés sur la manipulation libre et l'éveil sensoriel.",
                 tone: "primary",
+                imageSrc: "/Hero.jpg",
+                imageAlt: "Intervention d'éveil musical en crèche",
+                badge: "Crèches",
             },
             {
                 title: "Fêtes et festivals",
                 description: "Projets d'intervention à la journée, autour d'un thème précis ou pour une manifestation particulière : fin d'année, festival petite enfance...",
                 tone: "tertiary",
+                imageSrc: "/Hero2.jpg",
+                imageAlt: "Animation sonore pour un événement petite enfance",
+                badge: "Événements",
             },
             {
                 title: "Parents-Enfants",
                 description: "Des moments privilégiés de partage en famille pour renforcer le lien à travers la musique",
                 tone: "secondary",
+                imageSrc: "/Hero.jpg",
+                imageAlt: "Atelier musical partagé entre parent et enfant",
+                badge: "Binôme",
             },
         ],
     },
