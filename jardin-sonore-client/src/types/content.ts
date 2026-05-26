@@ -19,10 +19,16 @@ export interface ServiceItem {
 }
 
 export interface ExplorationPhoto {
-    title: string;
+    title?: string;
     description?: string;
     imageSrc: string;
     imageAlt: string;
+}
+
+export interface ExplorationPhotoGroup {
+    title: string;
+    subtitle: string;
+    images: readonly ExplorationPhoto[];
 }
 
 export interface TestimonialItem {

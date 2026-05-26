@@ -4,14 +4,14 @@ import {ArrowLeftIcon, ArrowRightIcon} from "@heroicons/react/24/outline";
 import {JSX, useEffect, useMemo, useState} from "react";
 import PhotoTile from "@/components/PhotoTile";
 import SectionHeading from "@/components/SectionHeading";
-import {ExplorationPhoto} from "@/types/content";
+import {ExplorationPhotoGroup} from "@/types/content";
 
 interface ExplorationGalleryProps {
     content: {
         eyebrow: string;
         title: string;
         description: string;
-        photos: readonly ExplorationPhoto[];
+        photoGroups: readonly ExplorationPhotoGroup[];
     };
 }
 
@@ -23,18 +23,10 @@ interface SlideTransition {
     targetIndex: number;
 }
 
-function getVisiblePhotos(photos: readonly ExplorationPhoto[], activePhotoIndex: number): readonly ExplorationPhoto[] {
-    if (photos.length <= 3) {
-        return photos;
-    }
+function PhotoGrid({group}: {group: ExplorationPhotoGroup | undefined}): JSX.Element | null {
+    const [featuredPhoto, ...secondaryPhotos] = group?.images ?? [];
 
-    return Array.from({length: 3}, (_, index) => photos[(activePhotoIndex + index) % photos.length]);
-}
-
-function PhotoGrid({photos}: {photos: readonly ExplorationPhoto[]}): JSX.Element | null {
-    const [featuredPhoto, ...secondaryPhotos] = photos;
-
-    if (!featuredPhoto) {
+    if (!group || !featuredPhoto) {
         return null;
     }
 
@@ -42,6 +34,8 @@ function PhotoGrid({photos}: {photos: readonly ExplorationPhoto[]}): JSX.Element
         <div className="grid grid-cols-2 gap-3 sm:gap-gutter md:grid-cols-12">
             <PhotoTile
                 {...featuredPhoto}
+                title={group.title}
+                description={group.subtitle}
                 className="col-span-2 aspect-[4/3] md:col-span-7 md:row-span-2 md:aspect-auto md:min-h-150"
                 featured
                 sizes="(min-width: 768px) 58vw, 100vw"
@@ -50,7 +44,7 @@ function PhotoGrid({photos}: {photos: readonly ExplorationPhoto[]}): JSX.Element
                 <PhotoTile
                     {...photo}
                     className="aspect-square md:col-span-5 md:aspect-auto md:min-h-72"
-                    key={photo.title}
+                    key={photo.imageSrc}
                     sizes="(min-width: 768px) 42vw, 50vw"
                 />
             ))}
@@ -59,19 +53,19 @@ function PhotoGrid({photos}: {photos: readonly ExplorationPhoto[]}): JSX.Element
 }
 
 export default function ExplorationGallery({content}: ExplorationGalleryProps): JSX.Element {
-    const [activePhotoIndex, setActivePhotoIndex] = useState<number>(0);
+    const [activeGroupIndex, setActiveGroupIndex] = useState<number>(0);
     const [slideTransition, setSlideTransition] = useState<SlideTransition | null>(null);
-    const photos = content.photos;
-    const canNavigate = photos.length > 3;
+    const photoGroups = content.photoGroups;
+    const canNavigate = photoGroups.length > 1;
 
-    const visiblePhotos = useMemo(() => getVisiblePhotos(photos, activePhotoIndex), [activePhotoIndex, photos]);
-    const targetPhotos = useMemo(() => {
+    const activeGroup = photoGroups[activeGroupIndex];
+    const targetGroup = useMemo(() => {
         if (!slideTransition) {
-            return [];
+            return undefined;
         }
 
-        return getVisiblePhotos(photos, slideTransition.targetIndex);
-    }, [photos, slideTransition]);
+        return photoGroups[slideTransition.targetIndex];
+    }, [photoGroups, slideTransition]);
 
     useEffect(() => {
         if (!slideTransition || slideTransition.phase !== "ready") {
@@ -91,7 +85,7 @@ export default function ExplorationGallery({content}: ExplorationGalleryProps): 
         }
 
         const offset = direction === "previous" ? -1 : 1;
-        const targetIndex = (activePhotoIndex + offset + photos.length) % photos.length;
+        const targetIndex = (activeGroupIndex + offset + photoGroups.length) % photoGroups.length;
         setSlideTransition({direction, phase: "ready", targetIndex});
     };
 
@@ -124,7 +118,7 @@ export default function ExplorationGallery({content}: ExplorationGalleryProps): 
                 ) : null}
             </div>
 
-            {visiblePhotos.length > 0 ? (
+            {activeGroup ? (
                 <div className="mt-12 overflow-hidden">
                     <div className="grid">
                         <div
@@ -137,7 +131,7 @@ export default function ExplorationGallery({content}: ExplorationGalleryProps): 
                             }`}
                             aria-hidden={Boolean(slideTransition)}
                         >
-                            <PhotoGrid photos={visiblePhotos} />
+                            <PhotoGrid group={activeGroup} />
                         </div>
                         {slideTransition ? (
                             <div
@@ -151,11 +145,11 @@ export default function ExplorationGallery({content}: ExplorationGalleryProps): 
                                         return;
                                     }
 
-                                    setActivePhotoIndex(slideTransition.targetIndex);
+                                    setActiveGroupIndex(slideTransition.targetIndex);
                                     setSlideTransition(null);
                                 }}
                             >
-                                <PhotoGrid photos={targetPhotos} />
+                                <PhotoGrid group={targetGroup} />
                             </div>
                         ) : null}
                     </div>

@@ -14,7 +14,6 @@ const fr = {
         navigation: [
             {label: "À propos", href: "#about"},
             {label: "Nos interventions", href: "#prestations"},
-            {label: "Photos", href: "#exploration"},
             {label: "Contact", href: "#contact"},
         ],
     },
@@ -55,37 +54,60 @@ const fr = {
         eyebrow: "Découverte sensorielle",
         title: "Moments d'exploration",
         description: "En atelier, chaque son est une nouvelle aventure.",
-        photos: [
+        photoGroups: [
             {
-                title: "Immersion sonore",
-                description: "Une approche intuitive pour permettre aux enfants de s'approprier le rythme naturellement.",
-                imageSrc: "/Hero2.jpg",
-                imageAlt: "Atelier d'éveil musical avec instruments disposés pour les enfants",
+                title: "En séance",
+                subtitle: "Des ateliers pensés comme des temps d'exploration, d'écoute et de rencontre.",
+                images: [
+                    {
+                        imageSrc: "/galerie/1-1 - Animateur tambour.png",
+                        imageAlt: "Atelier d'éveil musical autour d'un grand tambour avec un jeune enfant",
+                    },
+                    {
+                        imageSrc: "/galerie/1-2 - Animateur gong.png",
+                        imageAlt: "Découverte d'un gong pendant un atelier musical avec de jeunes enfants",
+                    },
+                    {
+                        imageSrc: "/galerie/1-3 - animateur tubes hurlant.png",
+                        imageAlt: "Exploration sonore avec des tubes auprès d'enfants en crèche",
+                    },
+                ],
             },
             {
-                title: "Instruments à manipuler",
-                imageSrc: "/Hero.jpg",
-                imageAlt: "Instruments d'éveil sonore prêts à être explorés",
+                title: "Matières sonores",
+                subtitle: "Bois, métal, peaux, tissus : des objets à écouter, toucher et explorer.",
+                images: [
+                    {
+                        imageSrc: "/galerie/2-1 - Balles en crochet.jpg",
+                        imageAlt: "Balles textiles colorées utilisées pendant les ateliers sonores",
+                    },
+                    {
+                        imageSrc: "/galerie/2-2 - boules méditation.jpg",
+                        imageAlt: "Billes métalliques dans un bol en bois pour l'exploration sonore",
+                    },
+                    {
+                        imageSrc: "/galerie/2-3 - Sac et matériel.jpg",
+                        imageAlt: "Instruments et objets sonores disposés au sol avant un atelier",
+                    },
+                ],
             },
             {
-                title: "Gestes et écoute",
-                imageSrc: "/Hero2.jpg",
-                imageAlt: "Moment d'exploration sonore pendant un atelier petite enfance",
-            },
-            {
-                title: "Rythmes partagés",
-                imageSrc: "/Hero.jpg",
-                imageAlt: "Placeholder pour une future photo de rythme partagé en atelier",
-            },
-            {
-                title: "Textures sonores",
-                imageSrc: "/Hero2.jpg",
-                imageAlt: "Placeholder pour une future photo de découverte des textures sonores",
-            },
-            {
-                title: "Écoute collective",
-                imageSrc: "/Hero.jpg",
-                imageAlt: "Placeholder pour une future photo de moment d'écoute collective",
+                title: "Espaces d'exploration",
+                subtitle: "Des dispositifs simples et sensibles, adaptés aux lieux et aux tout-petits.",
+                images: [
+                    {
+                        imageSrc: "/galerie/3-1 - instruments plan large.png",
+                        imageAlt: "Installation sonore avec instruments répartis au sol",
+                    },
+                    {
+                        imageSrc: "/galerie/3-2 - table.png",
+                        imageAlt: "Table d'exploration sonore avec objets en métal et matériaux variés",
+                    },
+                    {
+                        imageSrc: "/galerie/3-3 - rideaux.jpg",
+                        imageAlt: "Installation extérieure colorée composée de bouchons suspendus",
+                    },
+                ],
             },
         ],
     },
