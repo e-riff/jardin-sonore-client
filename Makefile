@@ -26,7 +26,7 @@ help:
 	@printf "  make npm-run SCRIPT=\"build\" Lance un script npm dans un conteneur jetable\n"
 	@printf "  make exec-npm NPM_ARGS=\"install\" Lance npm dans le conteneur actif\n"
 	@printf "  make exec-run SCRIPT=\"lint\" Lance un script npm dans le conteneur actif\n"
-	@printf "  Astuce: PORT=3001 make docker-up pour changer le port publie\n"
+	@printf "  Port par defaut: localhost:3000. Astuce: PORT=3001 make docker-up pour changer le port publie\n"
 
 docker-build:
 	$(COMPOSE) build $(SERVICE)
