@@ -1,0 +1,166 @@
+'use client';
+
+import {ArrowLeftIcon, ArrowRightIcon} from "@heroicons/react/24/outline";
+import {JSX, useEffect, useMemo, useState} from "react";
+import PhotoTile from "@/components/PhotoTile";
+import SectionHeading from "@/components/SectionHeading";
+import {ExplorationPhoto} from "@/types/content";
+
+interface ExplorationGalleryProps {
+    content: {
+        eyebrow: string;
+        title: string;
+        description: string;
+        photos: readonly ExplorationPhoto[];
+    };
+}
+
+type SlideDirection = "previous" | "next";
+
+interface SlideTransition {
+    direction: SlideDirection;
+    phase: "ready" | "sliding";
+    targetIndex: number;
+}
+
+function getVisiblePhotos(photos: readonly ExplorationPhoto[], activePhotoIndex: number): readonly ExplorationPhoto[] {
+    if (photos.length <= 3) {
+        return photos;
+    }
+
+    return Array.from({length: 3}, (_, index) => photos[(activePhotoIndex + index) % photos.length]);
+}
+
+function PhotoGrid({photos}: {photos: readonly ExplorationPhoto[]}): JSX.Element | null {
+    const [featuredPhoto, ...secondaryPhotos] = photos;
+
+    if (!featuredPhoto) {
+        return null;
+    }
+
+    return (
+        <div className="grid grid-cols-2 gap-3 sm:gap-gutter md:grid-cols-12">
+            <PhotoTile
+                {...featuredPhoto}
+                className="col-span-2 aspect-[4/3] md:col-span-7 md:row-span-2 md:aspect-auto md:min-h-150"
+                featured
+                sizes="(min-width: 768px) 58vw, 100vw"
+            />
+            {secondaryPhotos.map((photo) => (
+                <PhotoTile
+                    {...photo}
+                    className="aspect-square md:col-span-5 md:aspect-auto md:min-h-72"
+                    key={photo.title}
+                    sizes="(min-width: 768px) 42vw, 50vw"
+                />
+            ))}
+        </div>
+    );
+}
+
+export default function ExplorationGallery({content}: ExplorationGalleryProps): JSX.Element {
+    const [activePhotoIndex, setActivePhotoIndex] = useState<number>(0);
+    const [slideTransition, setSlideTransition] = useState<SlideTransition | null>(null);
+    const photos = content.photos;
+    const canNavigate = photos.length > 3;
+
+    const visiblePhotos = useMemo(() => getVisiblePhotos(photos, activePhotoIndex), [activePhotoIndex, photos]);
+    const targetPhotos = useMemo(() => {
+        if (!slideTransition) {
+            return [];
+        }
+
+        return getVisiblePhotos(photos, slideTransition.targetIndex);
+    }, [photos, slideTransition]);
+
+    useEffect(() => {
+        if (!slideTransition || slideTransition.phase !== "ready") {
+            return;
+        }
+
+        const animationFrame = window.requestAnimationFrame(() => {
+            setSlideTransition((currentTransition) => currentTransition ? {...currentTransition, phase: "sliding"} : null);
+        });
+
+        return () => window.cancelAnimationFrame(animationFrame);
+    }, [slideTransition]);
+
+    const showPhoto = (direction: SlideDirection): void => {
+        if (slideTransition || !canNavigate) {
+            return;
+        }
+
+        const offset = direction === "previous" ? -1 : 1;
+        const targetIndex = (activePhotoIndex + offset + photos.length) % photos.length;
+        setSlideTransition({direction, phase: "ready", targetIndex});
+    };
+
+    return (
+        <div className="mx-auto max-w-320">
+            <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+                <SectionHeading eyebrow={content.eyebrow} title={content.title} description={content.description} />
+
+                {canNavigate ? (
+                    <div className="flex gap-3" aria-label="Navigation des photos">
+                        <button
+                            className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-outline-variant/70 text-primary transition hover:border-primary hover:bg-primary hover:text-on-primary"
+                            type="button"
+                            aria-label="Photo précédente"
+                            disabled={Boolean(slideTransition)}
+                            onClick={() => showPhoto("previous")}
+                        >
+                            <ArrowLeftIcon className="h-5 w-5" />
+                        </button>
+                        <button
+                            className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-outline-variant/70 text-primary transition hover:border-primary hover:bg-primary hover:text-on-primary"
+                            type="button"
+                            aria-label="Photo suivante"
+                            disabled={Boolean(slideTransition)}
+                            onClick={() => showPhoto("next")}
+                        >
+                            <ArrowRightIcon className="h-5 w-5" />
+                        </button>
+                    </div>
+                ) : null}
+            </div>
+
+            {visiblePhotos.length > 0 ? (
+                <div className="mt-12 overflow-hidden">
+                    <div className="grid">
+                        <div
+                            className={`col-start-1 row-start-1 ${
+                                slideTransition ? "transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none" : ""
+                            } ${
+                                slideTransition?.phase === "sliding"
+                                    ? slideTransition.direction === "next" ? "-translate-x-full" : "translate-x-full"
+                                    : "translate-x-0"
+                            }`}
+                            aria-hidden={Boolean(slideTransition)}
+                        >
+                            <PhotoGrid photos={visiblePhotos} />
+                        </div>
+                        {slideTransition ? (
+                            <div
+                                className={`col-start-1 row-start-1 transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+                                    slideTransition.phase === "sliding"
+                                        ? "translate-x-0"
+                                        : slideTransition.direction === "next" ? "translate-x-full" : "-translate-x-full"
+                                }`}
+                                onTransitionEnd={(event) => {
+                                    if (event.target !== event.currentTarget) {
+                                        return;
+                                    }
+
+                                    setActivePhotoIndex(slideTransition.targetIndex);
+                                    setSlideTransition(null);
+                                }}
+                            >
+                                <PhotoGrid photos={targetPhotos} />
+                            </div>
+                        ) : null}
+                    </div>
+                </div>
+            ) : null}
+        </div>
+    );
+}
