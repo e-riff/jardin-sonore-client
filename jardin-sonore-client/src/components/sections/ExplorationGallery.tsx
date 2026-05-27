@@ -90,7 +90,7 @@ export default function ExplorationGallery({content}: ExplorationGalleryProps): 
     };
 
     return (
-        <div className="mx-auto max-w-320">
+        <div className="mx-auto max-w-7xl">
             <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
                 <SectionHeading eyebrow={content.eyebrow} title={content.title} description={content.description} />
 

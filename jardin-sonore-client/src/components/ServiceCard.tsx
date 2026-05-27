@@ -15,8 +15,8 @@ interface ServiceCardProps extends ServiceItem {
 
 export default function ServiceCard({title, description, tone, ctaLabel, imageSrc, imageAlt, badge}: ServiceCardProps): JSX.Element {
     return (
-        <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-outline-variant/30 bg-surface-container-lowest soft-shadow transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_50px_-28px_rgb(135_54_45_/_0.42)]">
-            <div className="relative aspect-[4/3] overflow-hidden">
+        <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-outline-variant/30 bg-surface-container-lowest soft-shadow transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_50px_-28px_rgb(135_54_45/0.42)]">
+            <div className="relative aspect-4/3 overflow-hidden">
                 <Image
                     alt={imageAlt}
                     className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
@@ -31,7 +31,7 @@ export default function ServiceCard({title, description, tone, ctaLabel, imageSr
             <div className="flex flex-1 flex-col p-6 sm:p-8">
                 <h3 className={`font-serif text-2xl font-semibold text-on-surface transition-colors ${toneClasses[tone].title}`}>{title}</h3>
                 <p className="mt-4 flex-1 text-base leading-7 text-on-surface-variant">{description}</p>
-                <a className={`mt-8 inline-flex items-center gap-2 font-sans text-sm font-bold tracking-[0.05em] transition-all group-hover:gap-4 ${toneClasses[tone].link}`} href="#contact">
+                <a className={`mt-8 inline-flex items-center gap-2 font-sans text-sm font-bold tracking-wider transition-all group-hover:gap-4 ${toneClasses[tone].link}`} href="#contact">
                     {ctaLabel} <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
                 </a>
             </div>

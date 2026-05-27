@@ -12,7 +12,7 @@ const fr = {
         menuAriaLabel: "Ouvrir le menu",
         reserveCta: "Réserver",
         navigation: [
-            {label: "Notre approche", href: "#about"},
+            {label: "Notre approche", href: "#a-propos"},
             {label: "Nos interventions", href: "#prestations"},
             {label: "Contact", href: "#contact"},
         ],
@@ -27,9 +27,9 @@ const fr = {
     stats: {
         ariaLabel: "Chiffres clés",
         items: [
-            {value: "10 ans", label: "expérience en petite enfance", tone: "primary"},
-            {value: "Bac +5", label: "musique & pédagogie", tone: "tertiary"},
-            {value: "30+", label: "structures partenaires", tone: "secondary"},
+            {value: "10 ans", label: "d'expérience en petite enfance", tone: "primary"},
+            {value: "Bac +5", label: "en musique & pédagogie", tone: "tertiary"},
+            {value: "+ de 30", label: "structures qui nous font confiance", tone: "secondary"},
         ],
     },
     about: {
@@ -62,7 +62,7 @@ const fr = {
                 images: [
                     {
                         imageSrc: "/galerie/1-1 - animateur tabla enfants.png",
-                        imageAlt: "Atelier d'éveil musical autour d'un grand tambour avec un jeune enfant",
+                        imageAlt: "Atelier d'éveil musical autour d'un tabla",
                     },
                     {
                         imageSrc: "/galerie/1-2 - Animateur gong.png",
@@ -119,14 +119,14 @@ const fr = {
         items: [
             {
                 title: "Crèches & EAJE",
-                description: "Ateliers réguliers (ou non) adaptés pour les plus jeunes (dès 3 mois) et centrés sur la manipulation libre et l'éveil sensoriel.",
+                description: "Ateliers réguliers (ou non) adaptés pour les plus jeunes (dès 3 mois) et centrés sur la manipulation libre et l'éveil sensoriel. Un déroulé répertoriant tous les éléments de la séance et des idées pour la poursuivre en notre absence est fournis",
                 tone: "primary",
                 imageSrc: "/intervention-creche.png",
                 imageAlt: "Intervention d'éveil musical en crèche",
                 badge: "Structures",
             },
             {
-                title: "Fêtes de structure et festivals",
+                title: "Fêtes de structures et festivals",
                 description: "Projets d'intervention à la journée, autour d'un thème précis ou pour une manifestation particulière : fin d'année, festival petite enfance...",
                 tone: "tertiary",
                 imageSrc: "/galerie/3-3 - rideaux.jpg",
