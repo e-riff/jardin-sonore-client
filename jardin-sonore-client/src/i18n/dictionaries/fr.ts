@@ -36,7 +36,7 @@ const fr = {
         eyebrow: "Notre approche",
         title: "Un éveil en douceur pour chaque enfant",
         paragraphs: [
-            "Notre approche Jardin Sonore repose sur une pédagogie où la manipulation libre et la découverte sonore sont au cœur de l'apprentissage. Nous créons un environnement sécurisant permettant aux tout-petits d'explorer leur sensibilité musicale.",
+            "Notre approche de l'intervention musicale en petite enfance repose sur une pédagogie où la manipulation libre et la découverte sonore sont au cœur de l'apprentissage. Nous créons un environnement sécurisant permettant aux tout-petits d'explorer leur sensibilité musicale.",
             "Loin de la performance, nous privilégions la dévouverte, l'écoute, le rythme corporel et l'interaction sociale à travers des instruments et d'objets sonores adaptés et des rituels sonores apaisants.",
         ],
         benefits: [
@@ -46,8 +46,8 @@ const fr = {
         ],
         badges: [
             {label: "Exploration", tone: "secondary"},
+            {label: "Plaisir", tone: "primary"},
             {label: "Créativité", tone: "tertiary"},
-            {label: "Plaisir", tone: "primary"}
         ],
         imageAlt: "Tambour collectif, baguettes et semoule",
     },
