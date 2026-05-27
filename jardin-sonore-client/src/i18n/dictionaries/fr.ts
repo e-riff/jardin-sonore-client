@@ -12,7 +12,7 @@ const fr = {
         menuAriaLabel: "Ouvrir le menu",
         reserveCta: "Réserver",
         navigation: [
-            {label: "À propos", href: "#about"},
+            {label: "Notre approche", href: "#about"},
             {label: "Nos interventions", href: "#prestations"},
             {label: "Contact", href: "#contact"},
         ],
@@ -27,28 +27,29 @@ const fr = {
     stats: {
         ariaLabel: "Chiffres clés",
         items: [
-            {value: "10 ans", label: "d'expertise reconnue", tone: "primary"},
+            {value: "10 ans", label: "expérience en petite enfance", tone: "primary"},
             {value: "Bac +5", label: "musique & pédagogie", tone: "tertiary"},
             {value: "30+", label: "structures partenaires", tone: "secondary"},
         ],
     },
     about: {
-        eyebrow: "Approche",
+        eyebrow: "Notre approche",
         title: "Un éveil en douceur pour chaque enfant",
         paragraphs: [
-            "Notre approche Jardin Sonore repose sur une pédagogie où le jeu libre et la découverte sonore sont au cœur de l'apprentissage. Nous créons un environnement sécurisant permettant aux tout-petits d'explorer leur sensibilité musicale.",
+            "Notre approche Jardin Sonore repose sur une pédagogie où la manipulation libre et la découverte sonore sont au cœur de l'apprentissage. Nous créons un environnement sécurisant permettant aux tout-petits d'explorer leur sensibilité musicale.",
             "Loin de la performance, nous privilégions la dévouverte, l'écoute, le rythme corporel et l'interaction sociale à travers des instruments et d'objets sonores adaptés et des rituels sonores apaisants.",
         ],
         benefits: [
+            "Socialisation et partage",
             "Développement de la motricité",
             "Découverte et exploration sonore",
-            "Socialisation et partage",
         ],
         badges: [
             {label: "Exploration", tone: "secondary"},
             {label: "Créativité", tone: "tertiary"},
+            {label: "Plaisir", tone: "primary"}
         ],
-        imageAlt: "Atelier musical avec instruments colorés pour enfants",
+        imageAlt: "Tambour collectif, baguettes et semoule",
     },
     exploration: {
         eyebrow: "Découverte sensorielle",
@@ -118,14 +119,14 @@ const fr = {
         items: [
             {
                 title: "Crèches & EAJE",
-                description: "Ateliers réguliers adaptés pour les plus jeunes (dès 3 mois) et centrés sur la manipulation libre et l'éveil sensoriel.",
+                description: "Ateliers réguliers (ou non) adaptés pour les plus jeunes (dès 3 mois) et centrés sur la manipulation libre et l'éveil sensoriel.",
                 tone: "primary",
                 imageSrc: "/Hero.jpg",
                 imageAlt: "Intervention d'éveil musical en crèche",
                 badge: "Crèches",
             },
             {
-                title: "Fêtes et festivals",
+                title: "Fêtes de structure et festivals",
                 description: "Projets d'intervention à la journée, autour d'un thème précis ou pour une manifestation particulière : fin d'année, festival petite enfance...",
                 tone: "tertiary",
                 imageSrc: "/Hero2.jpg",
