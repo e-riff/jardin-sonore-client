@@ -41,7 +41,7 @@ export default async function AboutSection(): Promise<JSX.Element> {
                         className="aspect-4/3 w-full object-cover"
                         height={900}
                         sizes="(min-width: 1024px) 50vw, 100vw"
-                        src="/Hero.jpg"
+                        src="/Tambour collectif.jpg"
                         width={1200}
                     />
                 </div>
