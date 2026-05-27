@@ -10,7 +10,7 @@ import StatsSection from "@/components/sections/StatsSection";
 export default function Home(): JSX.Element {
     return (
         <>
-            <Hero backgroundImage="galerie/1-1 - Animateur tambour.png"/>
+            <Hero backgroundImage="Hero-perso.png"/>
             <StatsSection />
             <AboutSection />
             <ExplorationSection />
