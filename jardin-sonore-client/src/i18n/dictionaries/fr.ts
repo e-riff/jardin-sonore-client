@@ -61,7 +61,7 @@ const fr = {
                 subtitle: "Des ateliers pensés comme des temps d'exploration, d'écoute et de rencontre.",
                 images: [
                     {
-                        imageSrc: "/galerie/1-1 - Animateur tambour.png",
+                        imageSrc: "/galerie/1-1 - animateur tabla enfants.png",
                         imageAlt: "Atelier d'éveil musical autour d'un grand tambour avec un jeune enfant",
                     },
                     {
