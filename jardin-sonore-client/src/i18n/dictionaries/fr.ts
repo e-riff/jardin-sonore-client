@@ -123,7 +123,7 @@ const fr = {
                 tone: "primary",
                 imageSrc: "/intervention-creche.png",
                 imageAlt: "Intervention d'éveil musical en crèche",
-                badge: "Crèches",
+                badge: "Structures",
             },
             {
                 title: "Fêtes de structure et festivals",
@@ -139,7 +139,7 @@ const fr = {
                 tone: "secondary",
                 imageSrc: "/parents-enfants.png",
                 imageAlt: "Atelier musical partagé entre parent et enfant",
-                badge: "Binôme",
+                badge: "ateliers",
             },
         ],
     },
