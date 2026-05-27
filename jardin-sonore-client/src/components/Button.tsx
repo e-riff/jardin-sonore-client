@@ -16,7 +16,7 @@ const variantClasses: Record<ButtonVariant, string> = {
 };
 
 export default function Button({children, href, variant = "primary", className = ""}: ButtonProps): JSX.Element {
-    const classes = `inline-flex items-center justify-center rounded-full border px-7 py-3 font-sans text-sm font-bold tracking-[0.05em] transition duration-200 soft-shadow ${variantClasses[variant]} ${className}`;
+    const classes = `inline-flex items-center justify-center rounded-full border px-7 py-3 font-sans text-sm font-bold tracking-wider transition duration-200 soft-shadow ${variantClasses[variant]} ${className}`;
 
     if (href) {
         return <a className={classes} href={href}>{children}</a>;

@@ -11,7 +11,7 @@ export default async function AboutSection(): Promise<JSX.Element> {
     const content = dictionary.about;
 
     return (
-        <Section id="about">
+        <Section id="a-propos">
             <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16">
                 <div>
                     <SectionHeading title={content.title} eyebrow={content.eyebrow} />
@@ -38,7 +38,7 @@ export default async function AboutSection(): Promise<JSX.Element> {
                 <div className="relative overflow-hidden rounded-2xl ambient-shadow">
                     <Image
                         alt={content.imageAlt}
-                        className="aspect-[4/3] w-full object-cover"
+                        className="aspect-4/3 w-full object-cover"
                         height={900}
                         sizes="(min-width: 1024px) 50vw, 100vw"
                         src="/Hero.jpg"

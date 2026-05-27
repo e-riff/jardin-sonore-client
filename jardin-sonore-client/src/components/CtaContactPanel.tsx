@@ -105,7 +105,7 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
         <>
             <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
                 <button
-                    className="cursor-pointer inline-flex items-center justify-center rounded-full border border-primary bg-primary px-10 py-3 font-sans text-sm font-bold tracking-[0.05em] text-on-primary soft-shadow transition duration-200 hover:-translate-y-0.5 hover:bg-primary-container sm:px-14 sm:py-4 sm:text-base"
+                    className="cursor-pointer inline-flex items-center justify-center rounded-full border border-primary bg-primary px-10 py-3 font-sans text-sm font-bold tracking-wider text-on-primary soft-shadow transition duration-200 hover:-translate-y-0.5 hover:bg-primary-container sm:px-14 sm:py-4 sm:text-base"
                     type="button"
                     aria-expanded={formOpen}
                     aria-controls="devis-form-container"
@@ -114,7 +114,7 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
                     {content.quoteCta}
                 </button>
                 <button
-                    className="cursor-pointer inline-flex items-center justify-center gap-2 rounded-full border-2 border-primary/20 px-10 py-3 font-sans text-sm font-bold tracking-[0.05em] text-primary transition duration-200 hover:bg-primary/5 sm:px-14 sm:py-4 sm:text-base"
+                    className="cursor-pointer inline-flex items-center justify-center gap-2 rounded-full border-2 border-primary/20 px-10 py-3 font-sans text-sm font-bold tracking-wider text-primary transition duration-200 hover:bg-primary/5 sm:px-14 sm:py-4 sm:text-base"
                     type="button"
                     onClick={onPhoneClick}
                     disabled={phoneLoading}

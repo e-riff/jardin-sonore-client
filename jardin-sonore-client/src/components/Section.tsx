@@ -9,7 +9,7 @@ interface SectionProps {
 export default function Section({children, id, className = ""}: SectionProps): JSX.Element {
     return (
         <section className={`px-6 py-xl sm:px-margin ${className}`} id={id}>
-            <div className="mx-auto max-w-320">
+            <div className="mx-auto max-w-7xl">
                 {children}
             </div>
         </section>
