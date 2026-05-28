@@ -32,7 +32,9 @@ export const metadata: Metadata = {
         description: fr.metadata.socialDescription,
         images: [
             {
-                url: "/Hero-perso.png",
+                url: "/images/social/jardin-sonore-og.jpg",
+                width: 1200,
+                height: 630,
                 alt: "Atelier d'éveil musical Jardin Sonore pour la petite enfance",
             },
         ],
@@ -41,7 +43,7 @@ export const metadata: Metadata = {
         card: "summary_large_image",
         title: fr.metadata.socialTitle,
         description: fr.metadata.socialDescription,
-        images: ["/Hero-perso.png"],
+        images: ["/images/social/jardin-sonore-og.jpg"],
     },
     robots: isProduction
         ? {

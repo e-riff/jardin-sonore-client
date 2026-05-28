@@ -12,7 +12,7 @@ export default function Home(): JSX.Element {
     return (
         <>
             <StructuredData />
-            <Hero backgroundImage="Hero-perso.png"/>
+            <Hero backgroundImage="images/hero-perso.webp"/>
             <StatsSection />
             <AboutSection />
             <ExplorationSection />

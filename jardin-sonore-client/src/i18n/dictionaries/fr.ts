@@ -64,15 +64,15 @@ const fr = {
                 subtitle: "Des ateliers pensés comme des temps d'exploration, d'écoute et de rencontre.",
                 images: [
                     {
-                        imageSrc: "/galerie/1-1 - animateur tabla enfants.png",
+                        imageSrc: "/images/galerie/animateur-tabla-enfants.webp",
                         imageAlt: "Atelier d'éveil musical autour d'un tabla",
                     },
                     {
-                        imageSrc: "/galerie/1-2 - Animateur gong.png",
+                        imageSrc: "/images/galerie/animateur-gong.webp",
                         imageAlt: "Découverte d'un gong pendant un atelier musical avec de jeunes enfants",
                     },
                     {
-                        imageSrc: "/galerie/1-3 - animateur tubes hurlant.png",
+                        imageSrc: "/images/galerie/animateur-tubes-hurlants.webp",
                         imageAlt: "Exploration sonore avec des tubes auprès d'enfants en crèche",
                     },
                 ],
@@ -82,15 +82,15 @@ const fr = {
                 subtitle: "Bois, métal, peaux, tissus : des objets à écouter, toucher et explorer.",
                 images: [
                     {
-                        imageSrc: "/galerie/2-1 - Balles en crochet.jpg",
+                        imageSrc: "/images/galerie/balles-crochet.webp",
                         imageAlt: "Balles textiles colorées utilisées pendant les ateliers sonores",
                     },
                     {
-                        imageSrc: "/galerie/2-2 - boules méditation.jpg",
+                        imageSrc: "/images/galerie/boules-meditation.webp",
                         imageAlt: "Billes métalliques dans un bol en bois pour l'exploration sonore",
                     },
                     {
-                        imageSrc: "/galerie/2-3 - Sac et matériel.jpg",
+                        imageSrc: "/images/galerie/sac-materiel.webp",
                         imageAlt: "Instruments et objets sonores disposés au sol avant un atelier",
                     },
                 ],
@@ -100,15 +100,15 @@ const fr = {
                 subtitle: "Des dispositifs simples et sensibles, adaptés aux lieux et aux tout-petits.",
                 images: [
                     {
-                        imageSrc: "/galerie/3-1 - instruments plan large.png",
+                        imageSrc: "/images/galerie/instruments-plan-large.webp",
                         imageAlt: "Installation sonore avec instruments répartis au sol",
                     },
                     {
-                        imageSrc: "/galerie/3-2 - table.png",
+                        imageSrc: "/images/galerie/table-exploration-sonore.webp",
                         imageAlt: "Table d'exploration sonore avec objets en métal et matériaux variés",
                     },
                     {
-                        imageSrc: "/galerie/3-3 - rideaux.jpg",
+                        imageSrc: "/images/galerie/rideaux-sonores.webp",
                         imageAlt: "Installation extérieure colorée composée de bouchons suspendus",
                     },
                 ],
@@ -124,7 +124,7 @@ const fr = {
                 title: "Crèches & EAJE",
                 description: "Ateliers réguliers ou ponctuels, adaptés aux plus jeunes dès 3 mois, autour de la manipulation libre, de l’écoute et de l’éveil sensoriel. Après chaque séance, un déroulé récapitulatif est fourni, accompagné d’idées simples pour poursuivre l’exploration en notre absence.",
                 tone: "primary",
-                imageSrc: "/intervention-creche.png",
+                imageSrc: "/images/intervention-creche.webp",
                 imageAlt: "Intervention d'éveil musical en crèche",
                 badge: "Structures",
             },
@@ -132,7 +132,7 @@ const fr = {
                 title: "Fêtes de structures et festivals",
                 description: "Interventions à la journée autour d'un thème précis ou pour une manifestation particulière : fête de fin d'année, festival petite enfance, temps fort associatif ou événement local.",
                 tone: "tertiary",
-                imageSrc: "/galerie/3-3 - rideaux.jpg",
+                imageSrc: "/images/galerie/rideaux-sonores.webp",
                 imageAlt: "Installation de rideaux sonores extérieurs",
                 badge: "Événements",
             },
@@ -140,7 +140,7 @@ const fr = {
                 title: "Parents-enfants",
                 description: "Des moments privilégiés de partage en famille pour renforcer le lien à travers la musique, les comptines, les instruments et l'exploration sonore libre.",
                 tone: "secondary",
-                imageSrc: "/parents-enfants.png",
+                imageSrc: "/images/parents-enfants.webp",
                 imageAlt: "Atelier musical partagé entre parent et enfant",
                 badge: "ateliers",
             },

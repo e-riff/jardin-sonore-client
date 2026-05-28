@@ -40,7 +40,7 @@ const structuredData = {
             name: fr.brand.name,
             description: fr.metadata.description,
             url: siteUrl,
-            image: `${siteUrl}/Hero-perso.png`,
+            image: `${siteUrl}/images/hero-perso.webp`,
             logo: `${siteUrl}/favicon/favicon-96x96.png`,
             areaServed,
             sameAs: [
