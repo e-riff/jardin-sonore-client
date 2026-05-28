@@ -3,6 +3,24 @@ import {NextRequest} from "next/server";
 const siteUrl = (process.env.PUBLIC_SITE_URL ?? "https://jardin-sonore.fr").replace(/\/+$/, "");
 const isProduction = process.env.NODE_ENV === "production";
 
+function getAllowedOrigins(request: NextRequest): Set<string> {
+    const origins = new Set([
+        new URL(siteUrl).origin,
+        request.nextUrl.origin,
+    ]);
+
+    for (const origin of [...origins]) {
+        const url = new URL(origin);
+        const alternateHost = url.hostname.startsWith("www.")
+            ? url.hostname.replace(/^www\./, "")
+            : `www.${url.hostname}`;
+
+        origins.add(`${url.protocol}//${alternateHost}`);
+    }
+
+    return origins;
+}
+
 function getOrigin(value: string | null): string | null {
     if (!value) {
         return null;
@@ -16,10 +34,7 @@ function getOrigin(value: string | null): string | null {
 }
 
 export function isAllowedRequestOrigin(request: NextRequest): boolean {
-    const allowedOrigins = new Set([
-        new URL(siteUrl).origin,
-        request.nextUrl.origin,
-    ]);
+    const allowedOrigins = getAllowedOrigins(request);
     const origin = getOrigin(request.headers.get("origin"));
     const referer = getOrigin(request.headers.get("referer"));
 
