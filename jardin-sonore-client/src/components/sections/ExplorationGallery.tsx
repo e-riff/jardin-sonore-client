@@ -36,7 +36,7 @@ function PhotoGrid({group}: {group: ExplorationPhotoGroup | undefined}): JSX.Ele
                 {...featuredPhoto}
                 title={group.title}
                 description={group.subtitle}
-                className="col-span-2 aspect-[4/3] md:col-span-7 md:row-span-2 md:aspect-auto md:min-h-150"
+                className="col-span-2 aspect-4/3 md:col-span-7 md:row-span-2 md:aspect-auto md:min-h-150"
                 featured
                 sizes="(min-width: 768px) 58vw, 100vw"
             />

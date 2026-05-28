@@ -119,22 +119,103 @@ const fr = {
         title: "Nos interventions",
         description: "Des formats adaptés à tous les environnements d'accueil de la petite enfance.",
         discoverCta: "Découvrir",
+        closeModalLabel: "Fermer le détail de la prestation",
         items: [
             {
                 title: "Crèches & EAJE",
-                description: "Ateliers réguliers ou ponctuels, adaptés aux plus jeunes dès 3 mois, autour de la manipulation libre, de l’écoute et de l’éveil sensoriel. Après chaque séance, un déroulé récapitulatif est fourni, accompagné d’idées simples pour poursuivre l’exploration en notre absence.",
+                description: "Ateliers réguliers ou ponctuels, adaptés aux plus jeunes dès 3 mois, autour de la manipulation libre, de l'écoute et de l'éveil sensoriel. Après chaque séance, un déroulé récapitulatif est fourni, accompagné d'idées simples pour poursuivre l'exploration en notre absence.",
                 tone: "primary",
                 imageSrc: "/images/intervention-creche.webp",
                 imageAlt: "Intervention d'éveil musical en crèche",
                 badge: "Structures",
+                modal: {
+                    eyebrow: "Détails de la prestation",
+                    subtitle: "Des séances qui évoluent avec les enfants et la vie de votre structure.",
+                    body: [
+                        "Les interventions en crèche et en EAJE sont pensées comme un rendez-vous régulier plutôt qu'une animation isolée. Les séances peuvent progresser au fil des semaines, avec des rituels, des thèmes et des formats variés pour accompagner l'écoute, le geste, la voix et la manipulation libre.",
+                        "Chaque proposition s'adapte à l'âge des enfants, au rythme du groupe et au projet pédagogique de la structure.",
+                    ],
+                    practicalTitle: "En pratique",
+                    points: [
+                        {
+                            icon: "group",
+                            label: "15 enfants max.",
+                            text: "Un petit groupe pour garder une qualité d'écoute et de présence.",
+                        },
+                        {
+                            icon: "clock",
+                            label: "1 à 2 séances par matinée",
+                            text: "Un format pratique pour accueillir plusieurs groupes dans de bonnes conditions.",
+                        },
+                        {
+                            icon: "path",
+                            label: "Parcours évolutif",
+                            text: "Des séances régulières avec des thèmes et approches qui se renouvellent.",
+                        },
+                        {
+                            icon: "music",
+                            label: "Matériel fourni",
+                            text: "Instruments, objets sonores, supports adaptés aux tout-petits et récapitulatif final fourni.",
+                        },
+                    ],
+                    resourcesTitle: "Ressource",
+                    resources: [
+                        {
+                            label: "Exemple de déroulé : séance Brésil",
+                            description: "Un aperçu concret d'une séance thématique avec comptines, jeux de sons et manipulations.",
+                            href: "/documents/seance-bresil.pdf",
+                        },
+                    ],
+                    ctaLabel: "Demander plus d'informations",
+                },
             },
             {
                 title: "Fêtes de structures et festivals",
-                description: "Interventions à la journée autour d'un thème précis ou pour une manifestation particulière : fête de fin d'année, festival petite enfance, temps fort associatif ou événement local.",
+                description: "Interventions longues (demi-journée, journée...) autour d'un thème précis ou pour une manifestation particulière : fête de fin d'année, festival petite enfance, temps fort associatif ou événement local.",
                 tone: "tertiary",
                 imageSrc: "/images/galerie/rideaux-sonores.webp",
                 imageAlt: "Installation de rideaux sonores extérieurs",
                 badge: "Événements",
+                modal: {
+                    eyebrow: "Détails de la prestation",
+                    subtitle: "Un jardin sonore modulable pour transformer un lieu en espace d'exploration.",
+                    body: [
+                        "Le jardin sonore peut s'installer sur une demi-journée ou une journée, en intérieur ou en extérieur selon les lieux. Il propose plusieurs espaces à traverser : bulle sonore douce, petits parcours, objets détournés, instruments à manipuler et coins d'écoute.",
+                        "Le format s'adapte à l'événement, au nombre de participants et à l'équipe présente. Il peut être animé par un ou plusieurs intervenants, et s'accompagner de temps d'échange ou de sensibilisation pour les professionnels.",
+                    ],
+                    practicalTitle: "En pratique",
+                    points: [
+                        {
+                            icon: "calendar",
+                            label: "Demi-journée ou journée",
+                            text: "Une présence ajustée au programme de votre fête ou de votre temps fort.",
+                        },
+                        {
+                            icon: "sparkles",
+                            label: "Plusieurs espaces",
+                            text: "Bulle sonore, parcours, manipulations libres et matières à écouter.",
+                        },
+                        {
+                            icon: "group",
+                            label: "Un ou plusieurs intervenants diplômés et expérimentés",
+                            text: "Le dispositif peut grandir selon la taille du lieu et le public attendu.",
+                        },
+                        {
+                            icon: "training",
+                            label: "Temps formatifs possibles",
+                            text: "Des échanges autour de l'animation avec les équipes peuvent prolonger l'expérience.",
+                        },
+                    ],
+                    resourcesTitle: "Ressource",
+                    resources: [
+                        {
+                            label: "Descriptif du jardin sonore",
+                            description: "Une présentation du dispositif, de ses espaces et de ses possibilités d'adaptation.",
+                            href: "/documents/jardin-sonore-descriptif.pdf",
+                        },
+                    ],
+                    ctaLabel: "Échanger sur votre projet",
+                },
             },
             {
                 title: "Parents-enfants",
@@ -142,7 +223,34 @@ const fr = {
                 tone: "secondary",
                 imageSrc: "/images/parents-enfants.webp",
                 imageAlt: "Atelier musical partagé entre parent et enfant",
-                badge: "ateliers",
+                badge: "Ateliers",
+                modal: {
+                    eyebrow: "Détails de la prestation",
+                    subtitle: "Un temps musical pour créer du lien entre les familles et la structure.",
+                    body: [
+                        "Les ateliers parents-enfants offrent un cadre simple et chaleureux pour partager comptines, manipulations sonores et jeux d'écoute en famille. Ils sont souvent organisés par une crèche, une médiathèque ou une collectivité.",
+                        "Ces temps favorisent la rencontre entre parents et enfants, donnent des idées faciles à reprendre à la maison et permettent aux familles d'entrer dans l'univers sonore de la structure sans enjeu de résultat.",
+                    ],
+                    practicalTitle: "En pratique",
+                    points: [
+                        {
+                            icon: "group",
+                            label: "Familles accueillies",
+                            text: "Un format pensé pour les enfants accompagnés d'un parent ou d'un proche.",
+                        },
+                        {
+                            icon: "music",
+                            label: "Comptines et instruments",
+                            text: "Des propositions accessibles, sensorielles et faciles à partager.",
+                        },
+                        {
+                            icon: "sparkles",
+                            label: "Lien avec la structure",
+                            text: "Un moment convivial pour ouvrir un temps fort ou nourrir un projet parentalité.",
+                        },
+                    ],
+                    ctaLabel: "Demander plus d'informations",
+                },
             },
         ],
     },

@@ -16,6 +16,30 @@ export interface ServiceItem {
     imageSrc: string;
     imageAlt: string;
     badge: string;
+    modal: ServiceModalContent;
+}
+
+export interface ServiceModalPoint {
+    icon: "calendar" | "clock" | "document" | "group" | "music" | "path" | "sparkles" | "training";
+    label: string;
+    text: string;
+}
+
+export interface ServiceModalResource {
+    label: string;
+    description: string;
+    href: string;
+}
+
+export interface ServiceModalContent {
+    eyebrow: string;
+    subtitle: string;
+    body: readonly string[];
+    practicalTitle: string;
+    points: readonly ServiceModalPoint[];
+    resourcesTitle?: string;
+    resources?: readonly ServiceModalResource[];
+    ctaLabel: string;
 }
 
 export interface ExplorationPhoto {
