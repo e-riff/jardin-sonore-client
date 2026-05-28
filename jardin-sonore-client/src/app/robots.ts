@@ -1,6 +1,7 @@
 import type {MetadataRoute} from "next";
+import {getSiteUrl} from "@/lib/site-url";
 
-const siteUrl = (process.env.PUBLIC_SITE_URL ?? "https://jardin-sonore.fr").replace(/\/+$/, "");
+const siteUrl = getSiteUrl();
 const isProduction = process.env.NODE_ENV === "production";
 
 export default function robots(): MetadataRoute.Robots {

@@ -6,9 +6,10 @@ import fr from "@/i18n/dictionaries/fr";
 import {defaultLocale} from "@/i18n/locales";
 import {getTranslations} from "@/i18n/server";
 import {TranslationsProvider} from "@/i18n/translations-provider";
+import {getSiteUrl} from "@/lib/site-url";
 import "./globals.css";
 
-const siteUrl = (process.env.PUBLIC_SITE_URL ?? "https://jardin-sonore.fr").replace(/\/+$/, "");
+const siteUrl = getSiteUrl();
 const siteOrigin = new URL(siteUrl);
 const isProduction = process.env.NODE_ENV === "production";
 

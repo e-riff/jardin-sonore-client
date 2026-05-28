@@ -18,6 +18,7 @@ fi
 : "${CPANEL_SSH_PORT:=22}"
 : "${CPANEL_APP_PATH:?Missing CPANEL_APP_PATH. Set it in .env.deploy.local or in the shell environment.}"
 : "${CPANEL_BUILD_ENV:=docker}"
+: "${CPANEL_PUBLIC_SITE_URL:=https://jardin-sonore.fr}"
 
 SSH_KEY_OPTION=()
 if [[ -n "${CPANEL_SSH_KEY:-}" ]]; then
@@ -36,6 +37,7 @@ case "$CPANEL_BUILD_ENV" in
     docker run --rm \
       --user "$(id -u):$(id -g)" \
       -e NEXT_TELEMETRY_DISABLED=1 \
+      -e PUBLIC_SITE_URL="$CPANEL_PUBLIC_SITE_URL" \
       -e npm_config_cache=/tmp/npm-cache \
       -v "$CLIENT_DIR:/app" \
       -w /app \
@@ -43,6 +45,7 @@ case "$CPANEL_BUILD_ENV" in
       sh -c "npm ci && npm run lint && npm run build"
     ;;
   local)
+    export PUBLIC_SITE_URL="$CPANEL_PUBLIC_SITE_URL"
     npm ci
     npm run lint
     npm run build
