@@ -1,6 +1,7 @@
 import {NextRequest, NextResponse} from "next/server";
 import nodemailer from "nodemailer";
 import {verifyAltchaPayload} from "@/lib/altcha";
+import {isAllowedRequestOrigin} from "@/lib/request-origin";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -33,6 +34,10 @@ const buildText = (data: Required<Omit<ContactRequest, "altcha">>): string => [
 ].join("\n");
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+    if (!isAllowedRequestOrigin(request)) {
+        return NextResponse.json({error: "Forbidden"}, {status: 403});
+    }
+
     const body = await request.json().catch((): ContactRequest => ({})) as ContactRequest;
     const name = trimValue(body.name);
     const email = trimValue(body.email);

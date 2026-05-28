@@ -3,8 +3,11 @@ const fr = {
         name: "Jardin Sonore",
     },
     metadata: {
+        titleDefault: "Éveil musical petite enfance à Saint-Étienne, Lyon et dans le Pilat",
         titleTemplate: "%s | Jardin Sonore",
-        description: "Éveil musical bienveillant pour la petite enfance.",
+        description: "Jardin Sonore propose des ateliers d'éveil musical bienveillants pour crèches, EAJE, festivals petite enfance et ateliers parents-enfants à Saint-Étienne, Lyon, dans le Pilat, le Forez, le Giers, le Grand Lyon, Roanne, la Haute-Loire, Annonay, Condrieu et Vienne.",
+        socialTitle: "Jardin Sonore - Éveil musical petite enfance",
+        socialDescription: "Ateliers d'éveil musical autour des comptines, instruments, objets sonores et manipulations libres pour les tout-petits, en crèche, EAJE, festival ou atelier parents-enfants.",
     },
     header: {
         ariaLabel: "Navigation principale",
@@ -119,7 +122,7 @@ const fr = {
         items: [
             {
                 title: "Crèches & EAJE",
-                description: "Ateliers réguliers (ou non) adaptés pour les plus jeunes (dès 3 mois) et centrés sur la manipulation libre et l'éveil sensoriel. Un déroulé répertoriant tous les éléments de la séance et des idées pour la poursuivre en notre absence est fournis",
+                description: "Ateliers réguliers ou ponctuels, adaptés aux plus jeunes dès 3 mois, autour de la manipulation libre, de l’écoute et de l’éveil sensoriel. Après chaque séance, un déroulé récapitulatif est fourni, accompagné d’idées simples pour poursuivre l’exploration en notre absence.",
                 tone: "primary",
                 imageSrc: "/intervention-creche.png",
                 imageAlt: "Intervention d'éveil musical en crèche",
