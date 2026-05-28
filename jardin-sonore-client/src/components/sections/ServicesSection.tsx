@@ -1,6 +1,6 @@
 import {JSX} from "react";
 import SectionHeading from "@/components/SectionHeading";
-import ServiceCard from "@/components/ServiceCard";
+import ServicesBrowser from "@/components/ServicesBrowser";
 import {getTranslations} from "@/i18n/server";
 
 export default async function ServicesSection(): Promise<JSX.Element> {
@@ -14,9 +14,7 @@ export default async function ServicesSection(): Promise<JSX.Element> {
             <div className="mx-auto max-w-7xl">
                 <SectionHeading centered title={content.title} description={content.description} />
                 <div className="mx-auto mt-4 h-1.5 w-16 rounded-full bg-primary-container" />
-                <div className="mt-14 grid grid-cols-1 gap-gutter md:grid-cols-3">
-                    {services.map((service) => <ServiceCard {...service} ctaLabel={content.discoverCta} key={service.title} />)}
-                </div>
+                <ServicesBrowser closeLabel={content.closeModalLabel} discoverCta={content.discoverCta} services={services} />
             </div>
         </section>
     );

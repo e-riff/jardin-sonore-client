@@ -1,6 +1,6 @@
 import {ArrowRightIcon} from "@heroicons/react/24/outline";
 import Image from "next/image";
-import {JSX} from "react";
+import {JSX, KeyboardEvent as ReactKeyboardEvent} from "react";
 import {ServiceItem} from "@/types/content";
 
 const toneClasses: Record<ServiceItem["tone"], {badge: string; link: string; title: string}> = {
@@ -11,11 +11,29 @@ const toneClasses: Record<ServiceItem["tone"], {badge: string; link: string; tit
 
 interface ServiceCardProps extends ServiceItem {
     ctaLabel: string;
+    onDiscover?: () => void;
 }
 
-export default function ServiceCard({title, description, tone, ctaLabel, imageSrc, imageAlt, badge}: ServiceCardProps): JSX.Element {
+export default function ServiceCard({title, description, tone, ctaLabel, imageSrc, imageAlt, badge, onDiscover}: ServiceCardProps): JSX.Element {
+    const handleKeyDown = (event: ReactKeyboardEvent<HTMLElement>): void => {
+        if (!onDiscover || (event.key !== "Enter" && event.key !== " ")) {
+            return;
+        }
+
+        event.preventDefault();
+        onDiscover();
+    };
+
     return (
-        <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-outline-variant/30 bg-surface-container-lowest soft-shadow transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_50px_-28px_rgb(135_54_45/0.42)]">
+        <article
+            aria-label={`${ctaLabel} ${title}`}
+            aria-haspopup="dialog"
+            className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-outline-variant/30 bg-surface-container-lowest soft-shadow transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_50px_-28px_rgb(135_54_45/0.42)] focus:outline-none focus-visible:ring-3 focus-visible:ring-primary/45"
+            role="button"
+            tabIndex={0}
+            onClick={onDiscover}
+            onKeyDown={handleKeyDown}
+        >
             <div className="relative aspect-4/3 overflow-hidden">
                 <Image
                     alt={imageAlt}
@@ -31,9 +49,9 @@ export default function ServiceCard({title, description, tone, ctaLabel, imageSr
             <div className="flex flex-1 flex-col p-6 sm:p-8">
                 <h3 className={`font-serif text-2xl font-semibold text-on-surface transition-colors ${toneClasses[tone].title}`}>{title}</h3>
                 <p className="mt-4 flex-1 text-base leading-7 text-on-surface-variant">{description}</p>
-                <a className={`mt-8 inline-flex items-center gap-2 font-sans text-sm font-bold tracking-wider transition-all group-hover:gap-4 ${toneClasses[tone].link}`} href="#contact">
+                <span className={`mt-8 inline-flex items-center gap-2 self-start font-sans text-sm font-bold tracking-wider transition-all group-hover:gap-4 ${toneClasses[tone].link}`}>
                     {ctaLabel} <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
-                </a>
+                </span>
             </div>
         </article>
     );
