@@ -40,7 +40,7 @@ const fr = {
         title: "Un éveil en douceur pour chaque enfant",
         paragraphs: [
             "Notre approche de l'intervention musicale en petite enfance repose sur une pédagogie où la manipulation libre et la découverte sonore sont au cœur de l'apprentissage. Nous créons un environnement sécurisant permettant aux tout-petits d'explorer leur sensibilité musicale.",
-            "Loin de la performance, nous privilégions la dévouverte, l'écoute, le rythme corporel et l'interaction sociale à travers des instruments et d'objets sonores adaptés et des rituels sonores apaisants.",
+            "Loin de la performance, nous privilégions la découverte, l'écoute, le rythme corporel et l'interaction sociale à travers des instruments, des comptines, des objets sonores adaptés et des rituels sonores apaisants.",
         ],
         benefits: [
             "Socialisation et partage",
@@ -116,7 +116,7 @@ const fr = {
         ],
     },
     services: {
-        title: "Nos Interventions",
+        title: "Nos interventions",
         description: "Des formats adaptés à tous les environnements d'accueil de la petite enfance.",
         discoverCta: "Découvrir",
         items: [
@@ -130,15 +130,15 @@ const fr = {
             },
             {
                 title: "Fêtes de structures et festivals",
-                description: "Projets d'intervention à la journée, autour d'un thème précis ou pour une manifestation particulière : fin d'année, festival petite enfance...",
+                description: "Interventions à la journée autour d'un thème précis ou pour une manifestation particulière : fête de fin d'année, festival petite enfance, temps fort associatif ou événement local.",
                 tone: "tertiary",
                 imageSrc: "/galerie/3-3 - rideaux.jpg",
                 imageAlt: "Installation de rideaux sonores extérieurs",
                 badge: "Événements",
             },
             {
-                title: "Parents-Enfants",
-                description: "Des moments privilégiés de partage en famille pour renforcer le lien à travers la musique",
+                title: "Parents-enfants",
+                description: "Des moments privilégiés de partage en famille pour renforcer le lien à travers la musique, les comptines, les instruments et l'exploration sonore libre.",
                 tone: "secondary",
                 imageSrc: "/parents-enfants.png",
                 imageAlt: "Atelier musical partagé entre parent et enfant",
