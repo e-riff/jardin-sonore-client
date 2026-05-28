@@ -20,6 +20,21 @@ export default function Header(): JSX.Element {
         return () => window.removeEventListener("scroll", onScroll);
     }, []);
 
+    useEffect(() => {
+        if (!menuOpen) {
+            return;
+        }
+
+        const onKeyDown = (event: KeyboardEvent): void => {
+            if (event.key === "Escape") {
+                setMenuOpen(false);
+            }
+        };
+
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, [menuOpen]);
+
     return (
         <header className={`fixed left-0 top-0 z-50 w-full border-b transition duration-300 ${scrolled ? "border-outline-variant/40 bg-background/88 py-2 backdrop-blur-xl" : "border-transparent bg-background/72 py-3 backdrop-blur-md"}`}>
             <nav className="mx-auto max-w-7xl px-6 sm:px-margin" aria-label={content.ariaLabel}>
@@ -42,14 +57,14 @@ export default function Header(): JSX.Element {
                         type="button"
                         aria-controls="mobile-menu"
                         aria-expanded={menuOpen}
-                        aria-label={content.menuAriaLabel}
+                        aria-label={menuOpen ? "Fermer le menu" : content.menuAriaLabel}
                         onClick={() => setMenuOpen((isOpen) => !isOpen)}
                     >
                         {menuOpen ? <XMarkIcon className="h-6 w-6" /> : <Bars3Icon className="h-6 w-6" />}
                     </button>
                 </div>
 
-                <div className={`${menuOpen ? "grid" : "hidden"} gap-2 pb-3 pt-5 md:hidden`} id="mobile-menu">
+                <div className={`${menuOpen ? "grid" : "hidden"} gap-2 pb-3 pt-5 md:hidden`} id="mobile-menu" aria-hidden={!menuOpen}>
                     {content.navigation.map((item: LinkItem) => (
                         <a
                             className="rounded-xl px-4 py-3 font-sans text-sm font-semibold tracking-wider text-on-surface-variant transition hover:bg-primary/10 hover:text-primary"

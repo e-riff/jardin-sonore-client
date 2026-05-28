@@ -22,6 +22,7 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
     const [submitState, setSubmitState] = useState<SubmitState>("idle");
     const [successVisible, setSuccessVisible] = useState<boolean>(false);
     const formRef = useRef<HTMLDivElement>(null);
+    const firstFieldRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (!formOpen) {
@@ -30,6 +31,7 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
 
         window.setTimeout(() => {
             formRef.current?.scrollIntoView({behavior: "smooth", block: "center"});
+            firstFieldRef.current?.focus({preventScroll: true});
         }, 80);
     }, [formOpen]);
 
@@ -155,6 +157,7 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
                     type="button"
                     onClick={onPhoneClick}
                     disabled={phoneLoading}
+                    aria-busy={phoneLoading}
                 >
                     <PhoneIcon className="h-4 w-4" aria-hidden="true" />
                     {phoneLoading ? content.phone.loadingLabel : content.callCta}
@@ -165,6 +168,7 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
                 <p
                     className={`mx-auto mt-6 w-full max-w-2xl rounded-lg border border-on-primary/25 bg-on-primary/12 px-5 py-4 text-center font-sans text-base font-semibold leading-7 text-on-primary shadow-sm backdrop-blur-sm transition-all duration-500 ease-out sm:w-fit sm:min-w-[32rem] ${successVisible ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0"}`}
                     role="status"
+                    aria-live="polite"
                 >
                     {submitSuccessNotice}
                 </p>
@@ -174,11 +178,14 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
                 className={`grid transition-[grid-template-rows,opacity,margin] duration-500 ease-out ${formOpen ? "mt-12 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0"}`}
                 id="devis-form-container"
                 ref={formRef}
+                aria-hidden={!formOpen}
+                inert={formOpen ? undefined : true}
             >
                 <div className="overflow-hidden">
                     <form
                         className="mx-auto max-w-2xl rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6 text-left soft-shadow md:p-10"
                         onSubmit={onSubmit}
+                        aria-busy={isSending}
                     >
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                             <label className="grid gap-2 font-sans text-sm font-semibold text-on-surface-variant">
@@ -187,6 +194,7 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
                                     className="w-full rounded-lg border border-outline-variant/50 bg-surface px-4 py-3 font-sans text-base text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                                     name="name"
                                     placeholder={content.form.fullNamePlaceholder}
+                                    ref={firstFieldRef}
                                     required
                                     type="text"
                                 />
@@ -254,6 +262,8 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
                                 className="inline-flex w-full items-center justify-center gap-3 rounded-full bg-primary px-8 py-4 font-sans text-base font-bold tracking-wider text-on-primary soft-shadow transition hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto sm:min-w-72"
                                 type="submit"
                                 disabled={isSending}
+                                aria-busy={isSending}
+                                aria-describedby={submitErrorNotice ? "contact-form-error" : undefined}
                             >
                                 {isSending ? (
                                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-on-primary/35 border-t-on-primary" aria-hidden="true" />
@@ -263,6 +273,7 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
 
                             {submitErrorNotice ? (
                                 <p
+                                    id="contact-form-error"
                                     className="w-full rounded-lg border border-primary/20 bg-primary-fixed/45 px-5 py-4 text-center font-sans text-base font-semibold leading-7 text-primary shadow-sm"
                                     role="alert"
                                 >

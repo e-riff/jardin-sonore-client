@@ -67,6 +67,11 @@
     background: var(--color-primary-fixed);
     color: var(--color-primary);
   }
+
+  :focus-visible {
+    outline: 3px solid color-mix(in oklab, var(--color-primary) 82%, white);
+    outline-offset: 4px;
+  }
 }
 
 @layer utilities {
