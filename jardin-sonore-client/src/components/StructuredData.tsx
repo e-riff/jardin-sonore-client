@@ -1,7 +1,8 @@
 import {JSX} from "react";
 import fr from "@/i18n/dictionaries/fr";
+import {getSiteUrl} from "@/lib/site-url";
 
-const siteUrl = (process.env.PUBLIC_SITE_URL ?? "https://jardin-sonore.fr").replace(/\/+$/, "");
+const siteUrl = getSiteUrl();
 
 const areaServed = [
     "Saint-Étienne",

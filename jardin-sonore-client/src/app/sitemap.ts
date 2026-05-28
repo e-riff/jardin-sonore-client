@@ -1,6 +1,7 @@
 import type {MetadataRoute} from "next";
+import {getSiteUrl} from "@/lib/site-url";
 
-const siteUrl = (process.env.PUBLIC_SITE_URL ?? "https://jardin-sonore.fr").replace(/\/+$/, "");
+const siteUrl = getSiteUrl();
 
 export default function sitemap(): MetadataRoute.Sitemap {
     return [
