@@ -170,7 +170,7 @@ const fr = {
     cta: {
         title: "Prêt à faire entrer la musique dans votre structure ?",
         description: "Contactez-nous pour une présentation de nos prestations et un devis adapté à vos besoins.",
-        quoteCta: "Demander un devis",
+        quoteCta: "Demander des renseignements",
         callCta: "Nous appeler",
         phone: {
             loadingLabel: "Ouverture...",

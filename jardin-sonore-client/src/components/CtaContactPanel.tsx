@@ -20,6 +20,7 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
     const [formOpen, setFormOpen] = useState<boolean>(false);
     const [phoneLoading, setPhoneLoading] = useState<boolean>(false);
     const [submitState, setSubmitState] = useState<SubmitState>("idle");
+    const [successVisible, setSuccessVisible] = useState<boolean>(false);
     const formRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -32,7 +33,41 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
         }, 80);
     }, [formOpen]);
 
+    useEffect(() => {
+        if (!["captcha", "error"].includes(submitState)) {
+            return;
+        }
+
+        const timeoutId = window.setTimeout(() => {
+            setSubmitState("idle");
+        }, 6000);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [submitState]);
+
+    useEffect(() => {
+        if (submitState !== "success") {
+            return;
+        }
+
+        const hideTimeoutId = window.setTimeout(() => {
+            setSuccessVisible(false);
+        }, 5000);
+        const resetTimeoutId = window.setTimeout(() => {
+            setSubmitState("idle");
+        }, 5600);
+
+        return () => {
+            window.clearTimeout(hideTimeoutId);
+            window.clearTimeout(resetTimeoutId);
+        };
+    }, [submitState]);
+
     const onQuoteClick = (): void => {
+        if (submitState !== "sending") {
+            setSubmitState("idle");
+        }
+
         setFormOpen((isOpen) => !isOpen);
     };
 
@@ -83,7 +118,9 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
 
             if (response.ok) {
                 form.reset();
+                setSuccessVisible(true);
                 setSubmitState("success");
+                setFormOpen(false);
                 return;
             }
 
@@ -93,19 +130,19 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
         }
     };
 
-    const submitNotice = {
-        captcha: content.form.captchaError,
-        error: content.form.submitError,
-        idle: "",
-        sending: content.form.submitSending,
-        success: content.form.submitSuccess,
-    }[submitState];
+    const isSending = submitState === "sending";
+    const submitErrorNotice = submitState === "captcha"
+        ? content.form.captchaError
+        : submitState === "error"
+            ? content.form.submitError
+            : "";
+    const submitSuccessNotice = submitState === "success" ? content.form.submitSuccess : "";
 
     return (
         <>
             <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
                 <button
-                    className="cursor-pointer inline-flex items-center justify-center rounded-full border border-primary bg-primary px-10 py-3 font-sans text-sm font-bold tracking-wider text-on-primary soft-shadow transition duration-200 hover:-translate-y-0.5 hover:bg-primary-container sm:px-14 sm:py-4 sm:text-base"
+                    className="inline-flex cursor-pointer items-center justify-center rounded-full border border-surface bg-surface px-10 py-3 font-sans text-sm font-bold tracking-wider text-primary soft-shadow transition duration-200 hover:-translate-y-0.5 hover:bg-primary-fixed sm:px-14 sm:py-4 sm:text-base"
                     type="button"
                     aria-expanded={formOpen}
                     aria-controls="devis-form-container"
@@ -114,7 +151,7 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
                     {content.quoteCta}
                 </button>
                 <button
-                    className="cursor-pointer inline-flex items-center justify-center gap-2 rounded-full border-2 border-primary/20 px-10 py-3 font-sans text-sm font-bold tracking-wider text-primary transition duration-200 hover:bg-primary/5 sm:px-14 sm:py-4 sm:text-base"
+                    className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border-2 border-on-primary/35 px-10 py-3 font-sans text-sm font-bold tracking-wider text-on-primary transition duration-200 hover:bg-on-primary/10 disabled:cursor-not-allowed disabled:opacity-70 sm:px-14 sm:py-4 sm:text-base"
                     type="button"
                     onClick={onPhoneClick}
                     disabled={phoneLoading}
@@ -123,6 +160,15 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
                     {phoneLoading ? content.phone.loadingLabel : content.callCta}
                 </button>
             </div>
+
+            {submitSuccessNotice ? (
+                <p
+                    className={`mx-auto mt-6 w-full max-w-2xl rounded-lg border border-on-primary/25 bg-on-primary/12 px-5 py-4 text-center font-sans text-base font-semibold leading-7 text-on-primary shadow-sm backdrop-blur-sm transition-all duration-500 ease-out sm:w-fit sm:min-w-[32rem] ${successVisible ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0"}`}
+                    role="status"
+                >
+                    {submitSuccessNotice}
+                </p>
+            ) : null}
 
             <div
                 className={`grid transition-[grid-template-rows,opacity,margin] duration-500 ease-out ${formOpen ? "mt-12 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0"}`}
@@ -203,19 +249,27 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
 
                         <AltchaWidget />
 
-                        <button
-                            className="mt-6 w-full rounded-full bg-primary py-4 font-sans text-base font-bold tracking-wider text-on-primary soft-shadow transition hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-70"
-                            type="submit"
-                            disabled={submitState === "sending"}
-                        >
-                            {submitState === "sending" ? content.form.submitSending : content.form.submitLabel}
-                        </button>
+                        <div className="mt-6 flex flex-col items-center gap-3">
+                            <button
+                                className="inline-flex w-full items-center justify-center gap-3 rounded-full bg-primary px-8 py-4 font-sans text-base font-bold tracking-wider text-on-primary soft-shadow transition hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto sm:min-w-72"
+                                type="submit"
+                                disabled={isSending}
+                            >
+                                {isSending ? (
+                                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-on-primary/35 border-t-on-primary" aria-hidden="true" />
+                                ) : null}
+                                {isSending ? content.form.submitSending : content.form.submitLabel}
+                            </button>
 
-                        {submitNotice ? (
-                            <p className="mt-4 text-center font-sans text-sm leading-6 text-on-surface-variant" role="status">
-                                {submitNotice}
-                            </p>
-                        ) : null}
+                            {submitErrorNotice ? (
+                                <p
+                                    className="w-full rounded-lg border border-primary/20 bg-primary-fixed/45 px-5 py-4 text-center font-sans text-base font-semibold leading-7 text-primary shadow-sm"
+                                    role="alert"
+                                >
+                                    {submitErrorNotice}
+                                </p>
+                            ) : null}
+                        </div>
                     </form>
                 </div>
             </div>
