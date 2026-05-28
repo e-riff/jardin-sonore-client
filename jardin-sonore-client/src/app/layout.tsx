@@ -8,12 +8,51 @@ import {getTranslations} from "@/i18n/server";
 import {TranslationsProvider} from "@/i18n/translations-provider";
 import "./globals.css";
 
+const siteUrl = (process.env.PUBLIC_SITE_URL ?? "https://jardin-sonore.fr").replace(/\/+$/, "");
+const siteOrigin = new URL(siteUrl);
+const isProduction = process.env.NODE_ENV === "production";
+
 export const metadata: Metadata = {
+    metadataBase: siteOrigin,
+    applicationName: fr.brand.name,
     title: {
-        default: fr.brand.name,
+        default: fr.metadata.titleDefault,
         template: fr.metadata.titleTemplate,
     },
     description: fr.metadata.description,
+    alternates: {
+        canonical: "/",
+    },
+    openGraph: {
+        type: "website",
+        locale: "fr_FR",
+        url: siteUrl,
+        siteName: fr.brand.name,
+        title: fr.metadata.socialTitle,
+        description: fr.metadata.socialDescription,
+        images: [
+            {
+                url: "/Hero-perso.png",
+                alt: "Atelier d'éveil musical Jardin Sonore pour la petite enfance",
+            },
+        ],
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: fr.metadata.socialTitle,
+        description: fr.metadata.socialDescription,
+        images: ["/Hero-perso.png"],
+    },
+    robots: isProduction
+        ? {
+              index: true,
+              follow: true,
+          }
+        : {
+              index: false,
+              follow: false,
+              nocache: true,
+          },
     icons: {
         icon: [
             {url: "/favicon/favicon.ico", sizes: "any", type: "image/x-icon"},

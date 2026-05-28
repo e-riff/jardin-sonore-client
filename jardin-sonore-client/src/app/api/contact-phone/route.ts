@@ -1,4 +1,5 @@
 import {NextRequest, NextResponse} from "next/server";
+import {isAllowedRequestOrigin} from "@/lib/request-origin";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,10 @@ const formatPhoneLabel = (phone: string): string => {
 };
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+    if (!isAllowedRequestOrigin(request)) {
+        return NextResponse.json({error: "Forbidden"}, {status: 403});
+    }
+
     const body = await request.json().catch((): RevealPhoneRequest => ({})) as RevealPhoneRequest;
 
     if (body.intent !== "reveal-phone") {
