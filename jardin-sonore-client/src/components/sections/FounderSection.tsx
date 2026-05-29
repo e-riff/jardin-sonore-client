@@ -9,7 +9,7 @@ export default async function FounderSection(): Promise<JSX.Element> {
     const content = dictionary.founder;
 
     return (
-        <Section id="intervenant" className="bg-background">
+        <Section id="intervenant-musical" className="bg-background">
             <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16">
                 <div>
                     <SectionHeading eyebrow={content.eyebrow} title={content.title} />

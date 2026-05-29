@@ -11,7 +11,7 @@ export default async function AboutSection(): Promise<JSX.Element> {
     const content = dictionary.about;
 
     return (
-        <Section id="a-propos">
+        <Section id="approche">
             <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16">
                 <div>
                     <SectionHeading title={content.title} eyebrow={content.eyebrow} />

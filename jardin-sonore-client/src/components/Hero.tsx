@@ -35,7 +35,7 @@ export default async function Hero({backgroundImage}: HeroProps): Promise<JSX.El
                             {content.serviceArea}
                         </p>
                         <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:mt-10 sm:flex-row">
-                            <Button className="min-w-47.5" href="#a-propos">{content.primaryCta}</Button>
+                            <Button className="min-w-47.5" href="#intervenant-musical">{content.primaryCta}</Button>
                             <Button className="min-w-47.5" href="#contact" variant="secondary">{content.secondaryCta}</Button>
                         </div>
                     </div>
