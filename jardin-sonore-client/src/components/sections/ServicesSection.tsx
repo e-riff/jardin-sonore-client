@@ -12,7 +12,7 @@ export default async function ServicesSection(): Promise<JSX.Element> {
     return (
         <section className="bg-surface-container-low px-6 py-xl sm:px-margin lg:py-28" id="prestations">
             <div className="mx-auto max-w-7xl">
-                <SectionHeading centered title={content.title} description={content.description} />
+                <SectionHeading centered eyebrow={content.eyebrow} title={content.title} description={content.description} />
                 <div className="mx-auto mt-4 h-1.5 w-16 rounded-full bg-primary-container" />
                 <ServicesBrowser closeLabel={content.closeModalLabel} discoverCta={content.discoverCta} services={services} />
             </div>
