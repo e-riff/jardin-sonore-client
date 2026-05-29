@@ -3,9 +3,9 @@ const fr = {
         name: "Jardin Sonore",
     },
     metadata: {
-        titleDefault: "Éveil musical petite enfance à Saint-Étienne, Lyon et dans le Pilat",
+        titleDefault: "Éveil musical crèches & EAJE | Saint-Étienne · Lyon",
         titleTemplate: "%s | Jardin Sonore",
-        description: "Jardin Sonore propose des ateliers d'éveil musical bienveillants pour crèches, EAJE, festivals petite enfance et ateliers parents-enfants à Saint-Étienne, Lyon, dans le Pilat, le Forez, le Giers, le Grand Lyon, Roanne, la Haute-Loire, Annonay, Condrieu et Vienne.",
+        description: "Ateliers d'éveil musical pour crèches et EAJE à Saint-Étienne, Lyon et dans le Pilat. 10 ans d'expérience, diplôme petite enfance, devis sur demande.",
         socialTitle: "Jardin Sonore - Éveil musical petite enfance",
         socialDescription: "Ateliers d'éveil musical autour des comptines, instruments, objets sonores et manipulations libres pour les tout-petits, en crèche, EAJE, festival ou atelier parents-enfants.",
     },
@@ -15,10 +15,10 @@ const fr = {
         menuAriaLabel: "Ouvrir le menu",
         reserveCta: "Demander des renseignements",
         navigation: [
-            {label: "Intervenant", href: "#intervenant"},
-            {label: "Formats", href: "#prestations"},
-            {label: "Approche", href: "#a-propos"},
-            {label: "Exploration", href: "#exploration"},
+            {label: "Intervenant", href: "#intervenant-musical"},
+            {label: "Formats", href: "#formats"},
+            {label: "Approche", href: "#approche"},
+            {label: "Exploration", href: "#exploration-sonore"},
             {label: "Contact", href: "#contact"},
         ],
     },
@@ -41,11 +41,11 @@ const fr = {
         eyebrow: "L'intervenant",
         title: "Une présence musicale auprès des tout-petits",
         paragraphs: [
-            "Je m’appelle Emeric. Musicien et professeur de musique, j’ai découvert l’intervention musicale en petite enfance au fil de mes expériences, et je n’en suis jamais vraiment parti.",
+            "Je m’appelle Emeric RIFF. Musicien et professeur de musique, j’ai découvert l’intervention musicale en petite enfance au fil de mes expériences, et je n’en suis jamais vraiment parti.",
             "J’y ai trouvé un terrain d’exploration précieux : des moments simples, sensibles, où la musique devient un support de lien, d’écoute et de découverte pour les tout-petits.",
             "Diplômé dans le champ de la formation et de la petite enfance, je construis mes séances à partir de mon parcours d’enseignant, de musicien et d’intervenant auprès des jeunes enfants. Avec le Jardin Sonore, je propose aux structures petite enfance des temps musicaux vivants, doux et adaptés à chaque groupe.",
         ],
-        imageAlt: "Animateur Jardin Sonore présentant des jeux sonores avec des couvercles",
+        imageAlt: "Emeric présentant des jeux sonores avec des couvercles",
     },
     about: {
         eyebrow: "Mon approche",
@@ -152,7 +152,7 @@ const fr = {
                     points: [
                         {
                             icon: "group",
-                            label: "15 participants max.",
+                            label: "15 participants maximum",
                             text: "Un petit groupe pour garder une qualité d'écoute et de présence.",
                         },
                         {
@@ -329,10 +329,10 @@ const fr = {
         copyrightHolder: "Jardin Sonore",
         copyrightDescription: "Éveil musical bienveillant pour la petite enfance.",
         links: [
-            {label: "Intervenant", href: "#intervenant"},
-            {label: "Formats", href: "#prestations"},
-            {label: "Approche", href: "#a-propos"},
-            {label: "Exploration", href: "#exploration"},
+            {label: "Intervenant", href: "#intervenant-musical"},
+            {label: "Formats", href: "#formats"},
+            {label: "Approche", href: "#approche"},
+            {label: "Exploration", href: "#exploration-sonore"},
             {label: "Contact", href: "#contact"},
         ],
     },

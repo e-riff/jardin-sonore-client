@@ -7,7 +7,7 @@ export default async function ExplorationSection(): Promise<JSX.Element> {
     const content = dictionary.exploration;
 
     return (
-        <section className="bg-surface-container-low px-6 py-xl sm:px-margin lg:py-28" id="exploration">
+        <section className="bg-surface-container-low px-6 py-xl sm:px-margin lg:py-28" id="exploration-sonore">
             <ExplorationGallery content={content} />
         </section>
     );

@@ -44,6 +44,9 @@ const structuredData = {
             image: `${siteUrl}/images/hero-perso.webp`,
             logo: `${siteUrl}/favicon/favicon-96x96.png`,
             areaServed,
+            founder: {
+                "@id": `${siteUrl}/#person`,
+            },
             sameAs: [
                 "https://www.instagram.com/jardin.sonore/",
             ],
@@ -69,7 +72,23 @@ const structuredData = {
             },
             inLanguage: "fr-FR",
         },
-        ...services,
+        {
+            "@id": `${siteUrl}/#person`,
+            "@type": "Person",
+            name: "Emeric RIFF",
+            givenName: "Emeric",
+            familyName: "RIFF",
+            jobTitle: "Intervenant musical petite enfance",
+            description: "Musicien, professeur de musique et intervenant auprès des jeunes enfants.",
+            image: `${siteUrl}/images/fondateur-couvercles.webp`,
+            hasCredential: {
+                "@type": "EducationalOccupationalCredential",
+                name: "Diplôme dans le champ de la formation et de la petite enfance",
+            },
+            worksFor: {
+                "@id": `${siteUrl}/#organization`,
+            },
+        },
     ],
 };
 
