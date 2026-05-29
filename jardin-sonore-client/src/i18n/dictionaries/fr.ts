@@ -15,9 +15,10 @@ const fr = {
         menuAriaLabel: "Ouvrir le menu",
         reserveCta: "Demander des renseignements",
         navigation: [
+            {label: "Intervenant", href: "#intervenant"},
+            {label: "Formats", href: "#prestations"},
             {label: "Approche", href: "#a-propos"},
             {label: "Exploration", href: "#exploration"},
-            {label: "Interventions", href: "#prestations"},
             {label: "Contact", href: "#contact"},
         ],
     },
@@ -26,22 +27,32 @@ const fr = {
         tagline: "Éveil musical bienveillant pour la petite enfance",
         serviceArea: "Forez — Giers — Pilat — Lyonnais",
         primaryCta: "En savoir plus",
-        secondaryCta: "Nous contacter",
+        secondaryCta: "Me contacter",
     },
     stats: {
         ariaLabel: "Chiffres clés",
         items: [
             {value: "", label: "d'expérience en petite enfance", tone: "primary"},
             {value: "Bac +5", label: "en musique & pédagogie", tone: "tertiary"},
-            {value: "+ de 30", label: "structures qui nous font confiance", tone: "secondary"},
+            {value: "+ de 30", label: "structures qui me font confiance", tone: "secondary"},
         ],
     },
+    founder: {
+        eyebrow: "L'intervenant",
+        title: "Une présence musicale auprès des tout-petits",
+        paragraphs: [
+            "Je m’appelle Emeric. Musicien et professeur de musique, j’ai découvert l’intervention musicale en petite enfance au fil de mes expériences, et je n’en suis jamais vraiment parti.",
+            "J’y ai trouvé un terrain d’exploration précieux : des moments simples, sensibles, où la musique devient un support de lien, d’écoute et de découverte pour les tout-petits.",
+            "Diplômé dans le champ de la formation et de la petite enfance, je construis mes séances à partir de mon parcours d’enseignant, de musicien et d’intervenant auprès des jeunes enfants. Avec le Jardin Sonore, je propose aux structures petite enfance des temps musicaux vivants, doux et adaptés à chaque groupe.",
+        ],
+        imageAlt: "Animateur Jardin Sonore présentant des jeux sonores avec des couvercles",
+    },
     about: {
-        eyebrow: "Notre approche",
+        eyebrow: "Mon approche",
         title: "Un éveil en douceur pour chaque enfant",
         paragraphs: [
-            "Notre approche de l'intervention musicale en petite enfance repose sur une pédagogie où la manipulation libre et la découverte sonore sont au cœur de l'apprentissage. Nous créons un environnement sécurisant permettant aux tout-petits d'explorer leur sensibilité musicale.",
-            "Loin de la performance, nous privilégions la découverte, l'écoute, le rythme corporel et l'interaction sociale à travers des instruments, des comptines, des objets sonores adaptés et des rituels sonores apaisants.",
+            "Mon approche de l'intervention musicale en petite enfance repose sur une pédagogie où la manipulation libre et la découverte sonore sont au cœur de l'apprentissage. Je crée un environnement sécurisant permettant aux tout-petits d'explorer leur sensibilité musicale.",
+            "Loin de la performance, je privilégie la découverte, l'écoute, le rythme corporel et l'interaction sociale à travers des instruments, des comptines, des objets sonores adaptés et des rituels sonores apaisants.",
         ],
         benefits: [
             "Socialisation et partage",
@@ -117,15 +128,15 @@ const fr = {
         ],
     },
     services: {
-        eyebrow: "Interventions",
-        title: "Des formats pour chaque contexte",
-        description: "Crèches, fêtes de structures, festivals ou ateliers parents-enfants : chaque proposition s'adapte à votre lieu, à vos publics et à votre projet.",
+        eyebrow: "Formats",
+        title: "Des interventions pour chaque contexte",
+        description: "Avec le Jardin Sonore, chaque proposition s'adapte à votre lieu, à vos publics et à votre projet : crèches, fêtes de structures, festivals ou ateliers parents-enfants.",
         discoverCta: "Découvrir",
         closeModalLabel: "Fermer le détail de la prestation",
         items: [
             {
                 title: "Crèches & EAJE",
-                description: "Ateliers réguliers ou ponctuels, adaptés aux plus jeunes dès 3 mois, autour de la manipulation libre, de l'écoute et de l'éveil sensoriel. Après chaque séance, un déroulé récapitulatif est fourni, accompagné d'idées simples pour poursuivre l'exploration en notre absence.",
+                description: "Ateliers réguliers ou ponctuels, adaptés aux plus jeunes dès 3 mois, autour de la manipulation libre, de l'écoute et de l'éveil sensoriel. Après chaque séance, un déroulé récapitulatif est fourni, accompagné d'idées simples pour poursuivre l'exploration en mon absence.",
                 tone: "primary",
                 imageSrc: "/images/intervention-creche.webp",
                 imageAlt: "Intervention d'éveil musical en crèche",
@@ -173,7 +184,7 @@ const fr = {
             },
             {
                 title: "Fêtes de structures et festivals",
-                description: "Interventions longues (demi-journée, journée...) autour d'un thème précis ou pour une manifestation particulière : fête de fin d'année, festival petite enfance, temps fort associatif ou événement local.",
+                description: "Présences longues (demi-journée, journée...) autour d'un thème précis ou pour une manifestation particulière : fête de fin d'année, festival petite enfance, temps fort associatif ou événement local.",
                 tone: "tertiary",
                 imageSrc: "/images/galerie/rideaux-sonores.webp",
                 imageAlt: "Installation de rideaux sonores extérieurs",
@@ -199,8 +210,8 @@ const fr = {
                         },
                         {
                             icon: "group",
-                            label: "Un ou plusieurs intervenants diplômés et expérimentés",
-                            text: "Le dispositif peut grandir selon la taille du lieu et le public attendu.",
+                            label: "Un intervenant diplômé et expérimenté",
+                            text: "Le dispositif peut évoluer selon la taille du lieu et le public attendu.",
                         },
                         {
                             icon: "training",
@@ -257,8 +268,8 @@ const fr = {
         ],
     },
     testimonials: {
-        title: "Ils nous font confiance",
-        description: "Ce que disent les directrices et directeurs d'établissements partenaires de nos interventions sonores.",
+        title: "Ils me font confiance",
+        description: "Ce que disent les directrices et directeurs d'établissements partenaires des interventions Jardin Sonore.",
         quoteMark: "“",
         items: [
             {
@@ -280,9 +291,9 @@ const fr = {
     cta: {
         eyebrow: "Contact",
         title: "Prêt à faire entrer la musique dans votre structure ?",
-        description: "Contactez-nous pour une présentation de nos prestations et un devis adapté à vos besoins.",
+        description: "Contactez-moi pour une présentation des prestations et un devis adapté à vos besoins.",
         quoteCta: "Demander des renseignements",
-        callCta: "Nous appeler",
+        callCta: "M'appeler",
         phone: {
             loadingLabel: "Ouverture...",
         },
@@ -310,7 +321,7 @@ const fr = {
         ariaLabel: "Navigation de pied de page",
         navigationTitle: "Menu",
         socialAriaLabel: "Réseaux et partage",
-        socialTitle: "Nos réseaux",
+        socialTitle: "Mes réseaux",
         shareAriaLabel: "Partager",
         shareTitle: "Partager",
         shareCopiedLabel: "Lien copié",
@@ -318,9 +329,10 @@ const fr = {
         copyrightHolder: "Jardin Sonore",
         copyrightDescription: "Éveil musical bienveillant pour la petite enfance.",
         links: [
+            {label: "Intervenant", href: "#intervenant"},
+            {label: "Formats", href: "#prestations"},
             {label: "Approche", href: "#a-propos"},
             {label: "Exploration", href: "#exploration"},
-            {label: "Interventions", href: "#prestations"},
             {label: "Contact", href: "#contact"},
         ],
     },
