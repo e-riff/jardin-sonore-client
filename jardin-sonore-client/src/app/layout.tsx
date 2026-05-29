@@ -13,6 +13,8 @@ const siteUrl = getSiteUrl();
 const siteOrigin = new URL(siteUrl);
 const isProduction = process.env.NODE_ENV === "production";
 
+export const revalidate = 86400;
+
 export const metadata: Metadata = {
     metadataBase: siteOrigin,
     applicationName: fr.brand.name,

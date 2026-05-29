@@ -2,6 +2,7 @@ import {AcademicCapIcon, BuildingOffice2Icon, ClockIcon} from "@heroicons/react/
 import {JSX} from "react";
 import StatsCard from "@/components/StatsCard";
 import {getTranslations} from "@/i18n/server";
+import {EXPERIENCE_START_YEAR, formatYearsSince} from "@/lib/dates";
 import {StatItem} from "@/types/content";
 
 const statIcons: StatItem["icon"][] = [
@@ -14,7 +15,11 @@ export default async function StatsSection(): Promise<JSX.Element> {
     const dictionary = await getTranslations();
     const content = dictionary.stats;
 
-    const stats: StatItem[] = content.items.map((item, index) => ({...item, icon: statIcons[index]}));
+    const stats: StatItem[] = content.items.map((item, index) => ({
+        ...item,
+        icon: statIcons[index],
+        value: index === 0 ? formatYearsSince(EXPERIENCE_START_YEAR) : item.value,
+    }));
 
     return (
         <section className="relative z-20 -mt-20 px-6 sm:-mt-24 sm:px-margin" aria-label={content.ariaLabel}>

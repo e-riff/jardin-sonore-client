@@ -15,8 +15,9 @@ const fr = {
         menuAriaLabel: "Ouvrir le menu",
         reserveCta: "Demander des renseignements",
         navigation: [
-            {label: "Notre approche", href: "#a-propos"},
-            {label: "Nos interventions", href: "#prestations"},
+            {label: "Approche", href: "#a-propos"},
+            {label: "Exploration", href: "#exploration"},
+            {label: "Interventions", href: "#prestations"},
             {label: "Contact", href: "#contact"},
         ],
     },
@@ -30,7 +31,7 @@ const fr = {
     stats: {
         ariaLabel: "Chiffres clés",
         items: [
-            {value: "10 ans", label: "d'expérience en petite enfance", tone: "primary"},
+            {value: "", label: "d'expérience en petite enfance", tone: "primary"},
             {value: "Bac +5", label: "en musique & pédagogie", tone: "tertiary"},
             {value: "+ de 30", label: "structures qui nous font confiance", tone: "secondary"},
         ],
@@ -55,7 +56,7 @@ const fr = {
         imageAlt: "Tambour collectif, baguettes et semoule",
     },
     exploration: {
-        eyebrow: "Découverte sensorielle",
+        eyebrow: "Exploration sonore",
         title: "Moments d'exploration",
         description: "En atelier, chaque son est une nouvelle aventure.",
         photoGroups: [
@@ -116,8 +117,9 @@ const fr = {
         ],
     },
     services: {
-        title: "Nos interventions",
-        description: "Des formats adaptés à tous les environnements d'accueil de la petite enfance.",
+        eyebrow: "Interventions",
+        title: "Des formats pour chaque contexte",
+        description: "Crèches, fêtes de structures, festivals ou ateliers parents-enfants : chaque proposition s'adapte à votre lieu, à vos publics et à votre projet.",
         discoverCta: "Découvrir",
         closeModalLabel: "Fermer le détail de la prestation",
         items: [
@@ -276,6 +278,7 @@ const fr = {
         ],
     },
     cta: {
+        eyebrow: "Contact",
         title: "Prêt à faire entrer la musique dans votre structure ?",
         description: "Contactez-nous pour une présentation de nos prestations et un devis adapté à vos besoins.",
         quoteCta: "Demander des renseignements",
@@ -305,10 +308,19 @@ const fr = {
     },
     footer: {
         ariaLabel: "Navigation de pied de page",
+        navigationTitle: "Menu",
+        socialAriaLabel: "Réseaux et partage",
+        socialTitle: "Nos réseaux",
         shareAriaLabel: "Partager",
+        shareTitle: "Partager",
+        shareCopiedLabel: "Lien copié",
         emailAriaLabel: "Envoyer un email",
-        copyright: "© 2026 Jardin Sonore",
+        copyrightHolder: "Jardin Sonore",
+        copyrightDescription: "Éveil musical bienveillant pour la petite enfance.",
         links: [
+            {label: "Approche", href: "#a-propos"},
+            {label: "Exploration", href: "#exploration"},
+            {label: "Interventions", href: "#prestations"},
             {label: "Contact", href: "#contact"},
         ],
     },
