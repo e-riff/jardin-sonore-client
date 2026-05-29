@@ -13,7 +13,7 @@ const fr = {
         ariaLabel: "Navigation principale",
         homeAriaLabel: "Accueil Jardin Sonore",
         menuAriaLabel: "Ouvrir le menu",
-        reserveCta: "Réserver",
+        reserveCta: "Demander des renseignements",
         navigation: [
             {label: "Notre approche", href: "#a-propos"},
             {label: "Nos interventions", href: "#prestations"},
@@ -139,13 +139,13 @@ const fr = {
                     points: [
                         {
                             icon: "group",
-                            label: "15 enfants max.",
+                            label: "15 participants max.",
                             text: "Un petit groupe pour garder une qualité d'écoute et de présence.",
                         },
                         {
                             icon: "clock",
                             label: "1 à 2 séances par matinée",
-                            text: "Un format pratique pour accueillir plusieurs groupes dans de bonnes conditions.",
+                            text: "Un format pratique (30 minutes à 1h) pour accueillir plusieurs groupes dans de bonnes conditions.",
                         },
                         {
                             icon: "path",
@@ -153,7 +153,7 @@ const fr = {
                             text: "Des séances régulières avec des thèmes et approches qui se renouvellent.",
                         },
                         {
-                            icon: "music",
+                            icon: "clock",
                             label: "Matériel fourni",
                             text: "Instruments, objets sonores, supports adaptés aux tout-petits et récapitulatif final fourni.",
                         },
