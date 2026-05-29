@@ -43,17 +43,17 @@ export default function Header(): JSX.Element {
                         <BrandLogo label={dictionary.brand.name} className="text-2xl font-semibold md:text-[1.7rem]" />
                     </a>
 
-                    <div className="hidden items-center gap-8 md:flex">
+                    <div className="hidden items-center gap-6 lg:flex xl:gap-8">
                         {content.navigation.map((item: LinkItem) => (
                             <a className="font-sans text-sm font-semibold tracking-wider text-on-surface-variant transition hover:text-primary" href={item.href} key={item.href}>
                                 {item.label}
                             </a>
                         ))}
-                        <Button className="px-6 py-2" href="#contact">{content.reserveCta}</Button>
+                        <Button className="px-5 py-2 xl:px-6" href="#contact">{content.reserveCta}</Button>
                     </div>
 
                     <button
-                        className="rounded-full p-2 text-primary transition hover:bg-primary/10 md:hidden"
+                        className="rounded-full p-2 text-primary transition hover:bg-primary/10 lg:hidden"
                         type="button"
                         aria-controls="mobile-menu"
                         aria-expanded={menuOpen}
@@ -64,7 +64,7 @@ export default function Header(): JSX.Element {
                     </button>
                 </div>
 
-                <div className={`${menuOpen ? "grid" : "hidden"} gap-2 pb-3 pt-5 md:hidden`} id="mobile-menu" aria-hidden={!menuOpen}>
+                <div className={`${menuOpen ? "grid" : "hidden"} gap-2 pb-3 pt-5 lg:hidden`} id="mobile-menu" aria-hidden={!menuOpen}>
                     {content.navigation.map((item: LinkItem) => (
                         <a
                             className="rounded-xl px-4 py-3 font-sans text-sm font-semibold tracking-wider text-on-surface-variant transition hover:bg-primary/10 hover:text-primary"
