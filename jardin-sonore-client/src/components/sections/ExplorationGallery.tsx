@@ -1,16 +1,12 @@
 'use client';
 
 import {ArrowLeftIcon, ArrowRightIcon} from "@heroicons/react/24/outline";
-import {JSX, useEffect, useMemo, useState} from "react";
+import {JSX, TouchEvent, useEffect, useMemo, useRef, useState} from "react";
 import PhotoTile from "@/components/PhotoTile";
-import SectionHeading from "@/components/SectionHeading";
 import {ExplorationPhotoGroup} from "@/types/content";
 
 interface ExplorationGalleryProps {
     content: {
-        eyebrow: string;
-        title: string;
-        description: string;
         photoGroups: readonly ExplorationPhotoGroup[];
     };
 }
@@ -55,6 +51,7 @@ function PhotoGrid({group}: {group: ExplorationPhotoGroup | undefined}): JSX.Ele
 export default function ExplorationGallery({content}: ExplorationGalleryProps): JSX.Element {
     const [activeGroupIndex, setActiveGroupIndex] = useState<number>(0);
     const [slideTransition, setSlideTransition] = useState<SlideTransition | null>(null);
+    const touchStartRef = useRef<{x: number; y: number} | null>(null);
     const photoGroups = content.photoGroups;
     const canNavigate = photoGroups.length > 1;
 
@@ -89,37 +86,57 @@ export default function ExplorationGallery({content}: ExplorationGalleryProps): 
         setSlideTransition({direction, phase: "ready", targetIndex});
     };
 
+    const handleTouchStart = (event: TouchEvent<HTMLDivElement>): void => {
+        const touch = event.touches[0];
+        touchStartRef.current = {x: touch.clientX, y: touch.clientY};
+    };
+
+    const handleTouchEnd = (event: TouchEvent<HTMLDivElement>): void => {
+        const touchStart = touchStartRef.current;
+        const touch = event.changedTouches[0];
+        touchStartRef.current = null;
+
+        if (!touchStart || !touch) {
+            return;
+        }
+
+        const deltaX = touch.clientX - touchStart.x;
+        const deltaY = touch.clientY - touchStart.y;
+        const isHorizontalSwipe = Math.abs(deltaX) > 48 && Math.abs(deltaX) > Math.abs(deltaY);
+
+        if (!isHorizontalSwipe) {
+            return;
+        }
+
+        showPhoto(deltaX < 0 ? "next" : "previous");
+    };
+
     return (
-        <div className="mx-auto max-w-7xl">
-            <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
-                <SectionHeading eyebrow={content.eyebrow} title={content.title} description={content.description} />
-
-                {canNavigate ? (
-                    <div className="flex gap-3" aria-label="Navigation des photos">
-                        <button
-                            className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-outline-variant/70 text-primary transition hover:border-primary hover:bg-primary hover:text-on-primary"
-                            type="button"
-                            aria-label="Photo précédente"
-                            disabled={Boolean(slideTransition)}
-                            onClick={() => showPhoto("previous")}
-                        >
-                            <ArrowLeftIcon className="h-5 w-5" />
-                        </button>
-                        <button
-                            className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-outline-variant/70 text-primary transition hover:border-primary hover:bg-primary hover:text-on-primary"
-                            type="button"
-                            aria-label="Photo suivante"
-                            disabled={Boolean(slideTransition)}
-                            onClick={() => showPhoto("next")}
-                        >
-                            <ArrowRightIcon className="h-5 w-5" />
-                        </button>
-                    </div>
-                ) : null}
-            </div>
-
+        <div>
             {activeGroup ? (
-                <div className="mt-12 overflow-hidden">
+                <div className="relative touch-pan-y overflow-hidden" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+                    {canNavigate ? (
+                        <div className="absolute right-3 top-3 z-20 flex gap-2 rounded-full bg-surface/88 p-1.5 shadow-lg backdrop-blur-md sm:right-5 sm:top-5" aria-label="Navigation des photos">
+                            <button
+                                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-outline-variant/70 text-primary transition hover:border-primary hover:bg-primary hover:text-on-primary disabled:opacity-60 sm:h-11 sm:w-11"
+                                type="button"
+                                aria-label="Photo précédente"
+                                disabled={Boolean(slideTransition)}
+                                onClick={() => showPhoto("previous")}
+                            >
+                                <ArrowLeftIcon className="h-5 w-5" />
+                            </button>
+                            <button
+                                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-outline-variant/70 text-primary transition hover:border-primary hover:bg-primary hover:text-on-primary disabled:opacity-60 sm:h-11 sm:w-11"
+                                type="button"
+                                aria-label="Photo suivante"
+                                disabled={Boolean(slideTransition)}
+                                onClick={() => showPhoto("next")}
+                            >
+                                <ArrowRightIcon className="h-5 w-5" />
+                            </button>
+                        </div>
+                    ) : null}
                     <div className="grid">
                         <div
                             className={`col-start-1 row-start-1 ${

@@ -57,9 +57,13 @@ export interface ExplorationPhotoGroup {
 
 export interface TestimonialItem {
     quote: string;
-    author: string;
+    date: string;
+    firstName: string;
+    lastNameInitial: string;
     role: string;
-    initials: string;
+    structure?: string;
+    structureHref?: string;
+    personHref?: string;
     tone: "primary" | "secondary";
 }
 
