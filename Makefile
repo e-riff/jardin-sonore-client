@@ -1,74 +1,156 @@
-APP_NAME ?= jardin-sonore-client
-IMAGE_NAME ?= $(APP_NAME):dev
-SERVICE ?= client
 COMPOSE_FILE ?= docker-compose.yml
 COMPOSE ?= docker compose -f $(COMPOSE_FILE)
+
+CLIENT_SERVICE ?= client
+BACKEND_SERVICE ?= backend
+PHP_SERVICE ?= php
+
 PORT ?= 3000
+BACKEND_PORT ?= 8080
+MAILPIT_UI_PORT ?= 8025
+
 NPM_ARGS ?= --version
 SCRIPT ?= lint
+COMPOSER_ARGS ?=
+CONSOLE_ARGS ?= --version
+SYMFONY_ARGS ?= --version
 
-.PHONY: help docker-build docker-up docker-down docker-restart logs shell docker-ps clean lint app-build deploy-client npm npm-run exec-npm exec-run
+.PHONY: help docker docker-build docker-up docker-down docker-restart docker-logs docker-ps docker-health clean \
+	docker-client-up docker-client-down docker-client-restart docker-client-logs client-shell \
+	docker-back-up docker-back-down docker-back-restart docker-back-logs backend-shell backend-health \
+	lint app-build deploy-client npm npm-run exec-npm exec-run \
+	composer composer-install composer-update backend-console backend-migrate symfony symfony-assets
 
 help:
 	@printf "Commandes disponibles:\n"
-	@printf "  make docker-build    Build l'image Docker Compose\n"
-	@printf "  make docker-up       Lance le client sur http://localhost:%s\n" "$(PORT)"
-	@printf "  make docker-down     Stoppe les services Compose\n"
-	@printf "  make docker-restart  Redemarre les services Compose\n"
-	@printf "  make logs     Affiche les logs du client\n"
-	@printf "  make shell    Ouvre un shell dans le conteneur client\n"
-	@printf "  make docker-ps       Affiche l'etat des services Compose\n"
-	@printf "  make clean    Supprime services, volumes et image locale\n"
-	@printf "  make lint     Lance npm run lint dans un conteneur jetable\n"
-	@printf "  make app-build Lance npm run build dans un conteneur jetable\n"
-	@printf "  make deploy-client Deploie le client avec la config .env.deploy.local\n"
-	@printf "  make npm NPM_ARGS=\"install\" Lance npm dans un conteneur jetable\n"
-	@printf "  make npm-run SCRIPT=\"build\" Lance un script npm dans un conteneur jetable\n"
-	@printf "  make exec-npm NPM_ARGS=\"install\" Lance npm dans le conteneur actif\n"
-	@printf "  make exec-run SCRIPT=\"lint\" Lance un script npm dans le conteneur actif\n"
-	@printf "  Port par defaut: localhost:3000. Astuce: PORT=3001 make docker-up pour changer le port publie\n"
+	@printf "  make docker                Alias de make docker-up\n"
+	@printf "  make docker-build          Build toutes les images Compose\n"
+	@printf "  make docker-up             Lance toute la stack: client, backend, MySQL, Mailpit\n"
+	@printf "  make docker-down           Stoppe toute la stack Compose\n"
+	@printf "  make docker-restart        Redemarre toute la stack Compose\n"
+	@printf "  make docker-logs           Affiche les logs de toute la stack\n"
+	@printf "  make docker-ps             Affiche l'etat des services Compose\n"
+	@printf "  make docker-health         Affiche l'etat de sante des services\n"
+	@printf "  make clean                 Supprime services, volumes et images locales\n"
+	@printf "  make docker-client-up      Lance seulement le client sur http://localhost:%s\n" "$(PORT)"
+	@printf "  make docker-client-down    Stoppe seulement le client\n"
+	@printf "  make docker-client-restart Redemarre seulement le client\n"
+	@printf "  make docker-client-logs    Affiche les logs du client\n"
+	@printf "  make client-shell          Ouvre un shell dans le conteneur client\n"
+	@printf "  make docker-back-up        Lance backend, PHP, MySQL et Mailpit sur http://localhost:%s\n" "$(BACKEND_PORT)"
+	@printf "  make docker-back-down      Stoppe backend, PHP, MySQL et Mailpit\n"
+	@printf "  make docker-back-restart   Redemarre backend, PHP, MySQL et Mailpit\n"
+	@printf "  make docker-back-logs      Affiche les logs backend, PHP, MySQL et Mailpit\n"
+	@printf "  make backend-shell         Ouvre un shell dans le conteneur PHP\n"
+	@printf "  make backend-health        Affiche l'etat de sante backend\n"
+	@printf "  make composer              Lance composer COMPOSER_ARGS=\"...\" dans PHP\n"
+	@printf "  make composer-install      Lance composer install dans PHP\n"
+	@printf "  make composer-update       Lance composer update COMPOSER_ARGS=\"...\" dans PHP\n"
+	@printf "  make backend-console       Lance php bin/console CONSOLE_ARGS=\"...\"\n"
+	@printf "  make backend-migrate       Lance doctrine:migrations:migrate\n"
+	@printf "  make symfony               Lance symfony SYMFONY_ARGS=\"...\" si le CLI Symfony est installe dans PHP\n"
+	@printf "  make symfony-assets        Lance asset-map:compile\n"
+	@printf "  make lint                  Lance npm run lint dans un conteneur client jetable\n"
+	@printf "  make app-build             Lance npm run build dans un conteneur client jetable\n"
+	@printf "  make npm NPM_ARGS=\"...\"   Lance npm dans un conteneur client jetable\n"
+	@printf "  make npm-run SCRIPT=\"...\" Lance npm run SCRIPT dans un conteneur client jetable\n"
+	@printf "  Front: localhost:%s | Backend: localhost:%s | Mailpit: localhost:%s\n" "$(PORT)" "$(BACKEND_PORT)" "$(MAILPIT_UI_PORT)"
+
+docker: docker-up
 
 docker-build:
-	$(COMPOSE) build $(SERVICE)
+	$(COMPOSE) build
 
 docker-up:
-	$(COMPOSE) up --build $(SERVICE)
+	$(COMPOSE) up --build
 
 docker-down:
 	$(COMPOSE) down --remove-orphans
 
 docker-restart: docker-down docker-up
 
-logs:
-	$(COMPOSE) logs -f $(SERVICE)
-
-shell:
-	$(COMPOSE) exec $(SERVICE) sh
+docker-logs:
+	$(COMPOSE) logs -f
 
 docker-ps:
 	$(COMPOSE) ps
 
+docker-health:
+	$(COMPOSE) ps --format "table {{.Name}}\t{{.Service}}\t{{.Status}}"
+
+docker-client-up:
+	$(COMPOSE) up --build $(CLIENT_SERVICE)
+
+docker-client-down:
+	$(COMPOSE) stop $(CLIENT_SERVICE)
+
+docker-client-restart: docker-client-down docker-client-up
+
+docker-client-logs:
+	$(COMPOSE) logs -f $(CLIENT_SERVICE)
+
+client-shell:
+	$(COMPOSE) exec $(CLIENT_SERVICE) sh
+
+docker-back-up:
+	$(COMPOSE) up --build $(BACKEND_SERVICE)
+
+docker-back-down:
+	$(COMPOSE) stop $(BACKEND_SERVICE) $(PHP_SERVICE) mysql mailpit
+
+docker-back-restart: docker-back-down docker-back-up
+
+docker-back-logs:
+	$(COMPOSE) logs -f $(BACKEND_SERVICE) $(PHP_SERVICE) mysql mailpit
+
+backend-shell:
+	$(COMPOSE) exec $(PHP_SERVICE) sh
+
+backend-health:
+	$(COMPOSE) ps $(BACKEND_SERVICE) $(PHP_SERVICE) mysql mailpit
+
 clean: docker-down
-	docker image rm -f $(IMAGE_NAME) >/dev/null 2>&1 || true
-	docker volume rm -f $(APP_NAME)_node_modules $(APP_NAME)_next >/dev/null 2>&1 || true
+	docker image rm -f jardin-sonore-client:dev jardin-sonore-backend-php:dev >/dev/null 2>&1 || true
+	docker volume rm -f jardin-sonore-client_node_modules jardin-sonore-client_next jardin-sonore-backend_vendor jardin-sonore-mysql_data >/dev/null 2>&1 || true
 
 lint:
-	$(COMPOSE) run --rm $(SERVICE) sh -c "npm install && npm run lint"
+	$(COMPOSE) run --rm $(CLIENT_SERVICE) sh -c "npm install && npm run lint"
 
 app-build:
-	$(COMPOSE) run --rm $(SERVICE) sh -c "npm install && npm run build"
+	$(COMPOSE) run --rm $(CLIENT_SERVICE) sh -c "npm install && npm run build"
 
 deploy-client:
 	./scripts/deploy-client.sh
 
 npm:
-	$(COMPOSE) run --rm $(SERVICE) npm $(NPM_ARGS)
+	$(COMPOSE) run --rm $(CLIENT_SERVICE) npm $(NPM_ARGS)
 
 npm-run:
-	$(COMPOSE) run --rm $(SERVICE) sh -c "npm install && npm run $(SCRIPT)"
+	$(COMPOSE) run --rm $(CLIENT_SERVICE) sh -c "npm install && npm run $(SCRIPT)"
 
 exec-npm:
-	$(COMPOSE) exec $(SERVICE) npm $(NPM_ARGS)
+	$(COMPOSE) exec $(CLIENT_SERVICE) npm $(NPM_ARGS)
 
 exec-run:
-	$(COMPOSE) exec $(SERVICE) npm run $(SCRIPT)
+	$(COMPOSE) exec $(CLIENT_SERVICE) npm run $(SCRIPT)
+
+composer:
+	$(COMPOSE) run --rm $(PHP_SERVICE) composer $(if $(COMPOSER_ARGS),$(COMPOSER_ARGS),--version)
+
+composer-install:
+	$(COMPOSE) run --rm $(PHP_SERVICE) composer install $(COMPOSER_ARGS)
+
+composer-update:
+	$(COMPOSE) run --rm $(PHP_SERVICE) composer update $(COMPOSER_ARGS)
+
+backend-console:
+	$(COMPOSE) exec $(PHP_SERVICE) php bin/console $(CONSOLE_ARGS)
+
+backend-migrate:
+	$(COMPOSE) exec $(PHP_SERVICE) php bin/console doctrine:migrations:migrate
+
+symfony:
+	$(COMPOSE) exec $(PHP_SERVICE) symfony $(SYMFONY_ARGS)
+
+symfony-assets:
+	$(COMPOSE) exec $(PHP_SERVICE) php bin/console asset-map:compile
