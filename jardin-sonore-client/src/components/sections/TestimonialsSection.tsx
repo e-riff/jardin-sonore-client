@@ -1,7 +1,5 @@
 import {JSX} from "react";
 import Card from "@/components/Card";
-import Section from "@/components/Section";
-import SectionHeading from "@/components/SectionHeading";
 import {getTranslations} from "@/i18n/server";
 import {TestimonialItem} from "@/types/content";
 
@@ -10,36 +8,67 @@ const avatarClasses: Record<TestimonialItem["tone"], string> = {
     secondary: "bg-secondary-container text-secondary",
 };
 
+function getAuthorName(testimonial: TestimonialItem): string {
+    return `${testimonial.firstName} ${testimonial.lastNameInitial}.`;
+}
+
+function getAuthorInitials(testimonial: TestimonialItem): string {
+    return `${testimonial.firstName.charAt(0)}${testimonial.lastNameInitial}`.toUpperCase();
+}
+
+function SignatureLine({testimonial}: {testimonial: TestimonialItem}): JSX.Element {
+    const roleAndStructure = [testimonial.role, testimonial.structure].filter(Boolean).join(" · ");
+
+    return (
+        <div>
+            {testimonial.personHref ? (
+                <a className="font-sans text-sm font-bold text-on-surface transition hover:text-primary" href={testimonial.personHref}>
+                    {getAuthorName(testimonial)}
+                </a>
+            ) : (
+                <p className="font-sans text-sm font-bold text-on-surface">{getAuthorName(testimonial)}</p>
+            )}
+            {roleAndStructure ? (
+                <p className="mt-1 font-sans text-[11px] font-bold uppercase tracking-[0.18em] text-on-surface-variant">
+                    {testimonial.structureHref && testimonial.structure ? (
+                        <>
+                            {testimonial.role} ·{" "}
+                            <a className="transition hover:text-primary" href={testimonial.structureHref}>
+                                {testimonial.structure}
+                            </a>
+                        </>
+                    ) : (
+                        roleAndStructure
+                    )}
+                </p>
+            ) : null}
+            <p className="mt-2 font-sans text-xs font-semibold text-on-surface-variant">{testimonial.date}</p>
+        </div>
+    );
+}
+
 export default async function TestimonialsSection(): Promise<JSX.Element> {
     const dictionary = await getTranslations();
     const content = dictionary.testimonials;
 
     return (
-        <Section id="testimonials" className="overflow-hidden">
-            <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-16">
-                <div className="lg:col-span-4">
-                    <SectionHeading title={content.title} description={content.description} />
-                </div>
-                <div className="lg:col-span-8">
-                    <div className="flex snap-x gap-gutter overflow-x-auto pb-8 scrollbar-hide">
-                        {content.items.map((testimonial: TestimonialItem) => (
-                            <Card className="relative min-w-80 snap-start bg-surface-container sm:min-w-112.5" key={testimonial.author}>
-                                <span className="absolute right-8 top-5 font-serif text-7xl text-primary/10" aria-hidden="true">{content.quoteMark}</span>
-                                <blockquote className="relative text-lg italic leading-8 text-on-surface">{content.quoteMark}{testimonial.quote}{content.quoteMark}</blockquote>
-                                <div className="mt-10 flex items-center gap-5">
-                                    <div className={`flex h-14 w-14 items-center justify-center rounded-full font-sans text-sm font-bold ${avatarClasses[testimonial.tone]}`}>
-                                        {testimonial.initials}
-                                    </div>
-                                    <div>
-                                        <p className="font-sans text-sm font-bold text-on-surface">{testimonial.author}</p>
-                                        <p className="mt-1 font-sans text-[11px] font-bold uppercase tracking-[0.18em] text-on-surface-variant">{testimonial.role}</p>
-                                    </div>
-                                </div>
-                            </Card>
-                        ))}
-                    </div>
-                </div>
+        <div className="overflow-hidden">
+            <div className="flex snap-x gap-gutter overflow-x-auto pb-8 scrollbar-hide">
+                {content.items.map((testimonial: TestimonialItem) => (
+                    <Card className="relative min-w-80 snap-start bg-surface-container sm:min-w-150" key={`${testimonial.firstName}-${testimonial.lastNameInitial}-${testimonial.date}`}>
+                        <span className="absolute right-8 top-5 font-serif text-7xl text-primary/10" aria-hidden="true">{content.quoteMark}</span>
+                        <blockquote className="relative max-w-3xl text-base italic leading-8 text-on-surface sm:text-lg">
+                            {content.quoteMark}{testimonial.quote}{content.quoteMark}
+                        </blockquote>
+                        <div className="mt-10 flex items-center gap-5">
+                            <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full font-sans text-sm font-bold ${avatarClasses[testimonial.tone]}`}>
+                                {getAuthorInitials(testimonial)}
+                            </div>
+                            <SignatureLine testimonial={testimonial} />
+                        </div>
+                    </Card>
+                ))}
             </div>
-        </Section>
+        </div>
     );
 }

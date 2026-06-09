@@ -52,5 +52,6 @@ logs/
 .idea/
 
 # local agent state
+AGENTS.md
 .agents/
 .codex/
