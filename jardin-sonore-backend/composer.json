@@ -69,6 +69,9 @@
             "assets:install %PUBLIC_DIR%": "symfony-cmd",
             "importmap:install": "symfony-cmd"
         },
+        "cs-check": "php-cs-fixer fix --dry-run --diff --verbose",
+        "cs-fix": "php-cs-fixer fix --verbose",
+        "stan": "phpstan analyse --memory-limit=1G",
         "post-install-cmd": [
             "@auto-scripts"
         ],
@@ -87,6 +90,10 @@
     },
     "require-dev": {
         "doctrine/doctrine-fixtures-bundle": "^4.3",
+        "friendsofphp/php-cs-fixer": "^3.95",
+        "phpstan/phpstan": "^2.2",
+        "phpstan/phpstan-doctrine": "^2.0",
+        "phpstan/phpstan-symfony": "^2.0",
         "symfony/maker-bundle": "^1.67"
     }
 }

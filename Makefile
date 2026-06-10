@@ -17,12 +17,14 @@ SCRIPT ?= lint
 COMPOSER_ARGS ?=
 CONSOLE_ARGS ?= --version
 SYMFONY_ARGS ?= --version
+BACKEND_SCRIPT ?= stan
 
 .PHONY: help docker docker-build docker-up docker-down docker-restart docker-logs docker-ps docker-health clean \
 	docker-client-up docker-client-down docker-client-restart docker-client-logs client-shell \
 	docker-back-up docker-back-down docker-back-restart docker-back-logs backend-shell backend-health \
 	lint app-build deploy-client npm npm-run exec-npm exec-run \
-	composer composer-install composer-update backend-console backend-migrate symfony symfony-assets
+	composer composer-install composer-update composer-run backend-console backend-migrate \
+	backend-cs-check backend-cs-fix backend-stan symfony symfony-assets
 
 help:
 	@printf "Commandes disponibles:\n"
@@ -49,8 +51,12 @@ help:
 	@printf "  make composer              Lance composer COMPOSER_ARGS=\"...\" dans PHP\n"
 	@printf "  make composer-install      Lance composer install dans PHP\n"
 	@printf "  make composer-update       Lance composer update COMPOSER_ARGS=\"...\" dans PHP\n"
+	@printf "  make composer-run          Lance composer run BACKEND_SCRIPT=\"...\" dans PHP\n"
 	@printf "  make backend-console       Lance php bin/console CONSOLE_ARGS=\"...\"\n"
 	@printf "  make backend-migrate       Lance doctrine:migrations:migrate\n"
+	@printf "  make backend-cs-check      Verifie le style PHP backend avec PHP-CS-Fixer\n"
+	@printf "  make backend-cs-fix        Corrige le style PHP backend avec PHP-CS-Fixer\n"
+	@printf "  make backend-stan          Lance PHPStan sur le backend\n"
 	@printf "  make symfony               Lance symfony SYMFONY_ARGS=\"...\" si le CLI Symfony est installe dans PHP\n"
 	@printf "  make symfony-assets        Lance asset-map:compile\n"
 	@printf "  make lint                  Lance npm run lint dans un conteneur client jetable\n"
@@ -146,11 +152,23 @@ composer-install:
 composer-update:
 	$(COMPOSER_RUN) composer update $(COMPOSER_ARGS)
 
+composer-run:
+	$(COMPOSER_RUN) composer run $(BACKEND_SCRIPT)
+
 backend-console:
 	$(COMPOSE) exec $(PHP_SERVICE) php bin/console $(CONSOLE_ARGS)
 
 backend-migrate:
 	$(COMPOSE) exec $(PHP_SERVICE) php bin/console doctrine:migrations:migrate
+
+backend-cs-check:
+	$(COMPOSER_RUN) composer run cs-check
+
+backend-cs-fix:
+	$(COMPOSER_RUN) composer run cs-fix
+
+backend-stan:
+	$(COMPOSER_RUN) composer run stan
 
 symfony:
 	$(COMPOSE) exec $(PHP_SERVICE) symfony $(SYMFONY_ARGS)
