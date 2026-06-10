@@ -1,7 +1,9 @@
 <?php
 
-declare(strict_types=1);
+use App\Kernel;
 
-header('Content-Type: text/plain; charset=utf-8');
+require_once dirname(__DIR__).'/vendor/autoload_runtime.php';
 
-echo "Jardin Sonore backend placeholder\n";
+return static function (array $context) {
+    return new Kernel($context['APP_ENV'], (bool) $context['APP_DEBUG']);
+};
