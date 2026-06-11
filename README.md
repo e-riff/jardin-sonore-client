@@ -132,10 +132,19 @@ Le script de deploiement utilise la configuration `.env.deploy.local`, avec un e
 make deploy-client
 ```
 
+Le backend Symfony se deploie avec la meme configuration SSH :
+
+```bash
+make deploy-backend
+```
+
+Le sous-domaine backend doit pointer vers le dossier `public/` de `CPANEL_BACKEND_PATH`.
+
 Avant de deployer, verifier:
 
 - les variables SMTP;
 - `ALTCHA_HMAC_SECRET`;
 - `CONTACT_EMAIL`;
 - `CONTACT_PHONE`;
+- les variables Symfony backend en prod: `APP_ENV`, `APP_SECRET`, `DATABASE_URL`, `MAILER_DSN`;
 - le build avec `make app-build`.

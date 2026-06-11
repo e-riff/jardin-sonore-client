@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'security.login.title'|trans }}{% endblock %}
+
+{% block body %}
+    <main style="min-height: 100vh; display: grid; place-items: center; background: #f5f2ed; font-family: system-ui, sans-serif;">
+        <form method="post" style="width: min(100% - 32px, 380px); display: grid; gap: 16px; padding: 24px; background: #fff; border: 1px solid #ded8ce; border-radius: 8px;">
+            <h1 style="margin: 0; font-size: 1.4rem;">{{ 'security.login.heading'|trans }}</h1>
+
+            {% if error %}
+                <p style="margin: 0; color: #9f1239;">{{ error.messageKey|trans(error.messageData, 'security') }}</p>
+            {% endif %}
+
+            <label style="display: grid; gap: 6px;">
+                <span>{{ 'security.login.email'|trans }}</span>
+                <input type="email" name="_username" value="{{ last_username }}" autocomplete="email" required autofocus style="padding: 10px 12px; border: 1px solid #b8afa2; border-radius: 6px;">
+            </label>
+
+            <label style="display: grid; gap: 6px;">
+                <span>{{ 'security.login.password'|trans }}</span>
+                <input type="password" name="_password" autocomplete="current-password" required style="padding: 10px 12px; border: 1px solid #b8afa2; border-radius: 6px;">
+            </label>
+
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+            <button type="submit" style="padding: 11px 14px; border: 0; border-radius: 6px; background: #23423d; color: #fff; font-weight: 700;">
+                {{ 'security.login.submit'|trans }}
+            </button>
+        </form>
+    </main>
+{% endblock %}
