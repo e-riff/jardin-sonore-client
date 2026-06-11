@@ -1,0 +1,53 @@
+admin:
+  dashboard:
+    title: "Jardin Sonore"
+  menu:
+    dashboard: "Tableau de bord"
+    geography: "Territoires"
+    regions: "Régions"
+    departments: "Départements"
+    municipalities: "Communes"
+  field:
+    id: "ID"
+    uuid: "UUID"
+    code: "Code"
+    name: "Nom"
+    region: "Région"
+    department: "Département"
+    insee_code: "Code INSEE"
+    postal_code: "Code postal"
+    phone_number: "Téléphone"
+    email_address: "Adresse e-mail"
+    address: "Adresse"
+    siren: "SIREN"
+    siret: "SIRET"
+    geo_shape: "Contour géographique"
+  region:
+    page:
+      index: "Régions"
+      new: "Créer une région"
+      edit: "Modifier une région"
+      detail: "Détail de la région"
+  department:
+    page:
+      index: "Départements"
+      new: "Créer un département"
+      edit: "Modifier un département"
+      detail: "Détail du département"
+  municipality:
+    page:
+      index: "Communes"
+      new: "Créer une commune"
+      edit: "Modifier une commune"
+      detail: "Détail de la commune"
+
+geography:
+  region:
+    singular: "Région"
+    plural: "Régions"
+  department:
+    singular: "Département"
+    plural: "Départements"
+  municipality:
+    singular: "Commune"
+    plural: "Communes"

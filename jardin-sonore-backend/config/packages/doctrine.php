@@ -43,9 +43,9 @@ return static function (ContainerConfigurator $containerConfigurator): void {
             'auto_mapping' => false,
             'mappings' => [
                 'AppInfrastructureDoctrineEntity' => [
-                    'type' => 'attribute',
+                    'type' => 'php',
                     'is_bundle' => false,
-                    'dir' => '%kernel.project_dir%/src/Infrastructure/Doctrine/Entity',
+                    'dir' => '%kernel.project_dir%/src/Infrastructure/Doctrine/Mapping',
                     'prefix' => 'App\\Infrastructure\\Doctrine\\Entity',
                     'alias' => 'AppInfrastructureDoctrineEntity',
                 ],
