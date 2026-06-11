@@ -33,7 +33,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
                     'login_path' => 'app_login',
                     'check_path' => 'app_login',
                     'enable_csrf' => true,
-                    'default_target_path' => '/admin',
+                    'default_target_path' => '/',
                 ],
                 'logout' => [
                     'path' => 'app_logout',
@@ -48,7 +48,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
                 'roles' => 'PUBLIC_ACCESS',
             ],
             [
-                'path' => '^/admin',
+                'path' => '^/',
                 'roles' => 'ROLE_ADMIN',
             ],
         ],
