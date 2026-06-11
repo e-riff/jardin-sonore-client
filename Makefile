@@ -10,6 +10,7 @@ COMPOSER_RUN ?= $(COMPOSE) run --rm --user $(HOST_UID):$(HOST_GID) -e COMPOSER_H
 
 PORT ?= 3000
 BACKEND_PORT ?= 8080
+BACKEND_HTTPS_PORT ?= 8443
 MAILPIT_UI_PORT ?= 8025
 
 NPM_ARGS ?= --version
@@ -22,7 +23,7 @@ BACKEND_SCRIPT ?= stan
 .PHONY: help docker docker-build docker-up docker-down docker-restart docker-logs docker-ps docker-health clean \
 	docker-client-up docker-client-down docker-client-restart docker-client-logs client-shell \
 	docker-back-up docker-back-down docker-back-restart docker-back-logs backend-shell backend-health \
-	lint app-build deploy-client deploy-backend npm npm-run exec-npm exec-run \
+	lint app-build deploy-client deploy-backend setup-backend-local-host npm npm-run exec-npm exec-run \
 	composer composer-install composer-update composer-run backend-console backend-migrate \
 	backend-cs-check backend-cs-fix backend-stan symfony symfony-assets
 
@@ -42,7 +43,7 @@ help:
 	@printf "  make docker-client-restart Redemarre seulement le client\n"
 	@printf "  make docker-client-logs    Affiche les logs du client\n"
 	@printf "  make client-shell          Ouvre un shell dans le conteneur client\n"
-	@printf "  make docker-back-up        Lance nginx, PHP, MySQL et Mailpit sur http://localhost:%s\n" "$(BACKEND_PORT)"
+	@printf "  make docker-back-up        Lance le backend sur http://localhost:%s et https://admin.jardin-sonore.local:%s\n" "$(BACKEND_PORT)" "$(BACKEND_HTTPS_PORT)"
 	@printf "  make docker-back-down      Stoppe nginx, PHP, MySQL et Mailpit\n"
 	@printf "  make docker-back-restart   Redemarre nginx, PHP, MySQL et Mailpit\n"
 	@printf "  make docker-back-logs      Affiche les logs nginx, PHP, MySQL et Mailpit\n"
@@ -62,6 +63,7 @@ help:
 	@printf "  make lint                  Lance npm run lint dans un conteneur client jetable\n"
 	@printf "  make app-build             Lance npm run build dans un conteneur client jetable\n"
 	@printf "  make deploy-backend        Deploie le backend Symfony sur cPanel via SSH/rsync\n"
+	@printf "  make setup-backend-local-host Ajoute admin.jardin-sonore.local et genere un certificat mkcert si disponible\n"
 	@printf "  make npm NPM_ARGS=\"...\"   Lance npm dans un conteneur client jetable\n"
 	@printf "  make npm-run SCRIPT=\"...\" Lance npm run SCRIPT dans un conteneur client jetable\n"
 	@printf "  Front: localhost:%s | Backend: localhost:%s | Mailpit: localhost:%s\n" "$(PORT)" "$(BACKEND_PORT)" "$(MAILPIT_UI_PORT)"
@@ -134,6 +136,9 @@ deploy-client:
 
 deploy-backend:
 	./scripts/deploy-backend.sh
+
+setup-backend-local-host:
+	./scripts/setup-backend-local-host.sh
 
 npm:
 	$(COMPOSE) run --rm $(CLIENT_SERVICE) npm $(NPM_ARGS)
