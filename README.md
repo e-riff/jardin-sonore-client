@@ -140,6 +140,26 @@ make deploy-backend
 
 Le sous-domaine backend doit pointer vers le dossier `public/` de `CPANEL_BACKEND_PATH`.
 
+Pour ajouter l'alias local backend :
+
+```bash
+make setup-backend-local-host
+```
+
+Cela ajoute `admin.jardin-sonore.local` dans `/etc/hosts` et genere un certificat local avec `mkcert` si l'outil est installe.
+
+Ensuite le backend expose HTTP et HTTPS localement avec la commande habituelle :
+
+```bash
+make docker-back-up
+```
+
+URL locale HTTPS par defaut :
+
+```text
+https://admin.jardin-sonore.local:8443
+```
+
 Avant de deployer, verifier:
 
 - les variables SMTP;

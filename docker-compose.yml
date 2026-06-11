@@ -48,9 +48,12 @@ services:
     container_name: nginx
     ports:
       - "${BACKEND_PORT:-8080}:80"
+      - "${BACKEND_HTTPS_PORT:-8443}:443"
     volumes:
       - ./jardin-sonore-backend:/app:ro
       - ./docker/backend/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker/backend/nginx/https.conf:/etc/nginx/conf.d/https.conf:ro
+      - ./docker/backend/nginx/certs:/etc/nginx/certs:ro
     depends_on:
       php:
         condition: service_healthy
