@@ -1,0 +1,5 @@
+security:
+  login:
+    disabled_account: "Ce compte administrateur est désactivé."
+
+Invalid credentials.: "Identifiants invalides."

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Application\Security\AdminUserChecker;
+use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
@@ -11,8 +13,11 @@ return static function (ContainerConfigurator $containerConfigurator): void {
             PasswordAuthenticatedUserInterface::class => 'auto',
         ],
         'providers' => [
-            'users_in_memory' => [
-                'memory' => null,
+            'admin_user_provider' => [
+                'entity' => [
+                    'class' => AdminUserEntity::class,
+                    'property' => 'email',
+                ],
             ],
         ],
         'firewalls' => [
@@ -22,10 +27,31 @@ return static function (ContainerConfigurator $containerConfigurator): void {
             ],
             'main' => [
                 'lazy' => true,
-                'provider' => 'users_in_memory',
+                'provider' => 'admin_user_provider',
+                'user_checker' => AdminUserChecker::class,
+                'form_login' => [
+                    'login_path' => 'app_login',
+                    'check_path' => 'app_login',
+                    'enable_csrf' => true,
+                    'default_target_path' => '/admin',
+                ],
+                'logout' => [
+                    'path' => 'app_logout',
+                    'target' => 'app_login',
+                    'enable_csrf' => true,
+                ],
             ],
         ],
-        'access_control' => [],
+        'access_control' => [
+            [
+                'path' => '^/login$',
+                'roles' => 'PUBLIC_ACCESS',
+            ],
+            [
+                'path' => '^/admin',
+                'roles' => 'ROLE_ADMIN',
+            ],
+        ],
     ];
 
     if ('test' === $containerConfigurator->env()) {

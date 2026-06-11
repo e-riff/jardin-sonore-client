@@ -22,7 +22,7 @@ BACKEND_SCRIPT ?= stan
 .PHONY: help docker docker-build docker-up docker-down docker-restart docker-logs docker-ps docker-health clean \
 	docker-client-up docker-client-down docker-client-restart docker-client-logs client-shell \
 	docker-back-up docker-back-down docker-back-restart docker-back-logs backend-shell backend-health \
-	lint app-build deploy-client npm npm-run exec-npm exec-run \
+	lint app-build deploy-client deploy-backend npm npm-run exec-npm exec-run \
 	composer composer-install composer-update composer-run backend-console backend-migrate \
 	backend-cs-check backend-cs-fix backend-stan symfony symfony-assets
 
@@ -61,6 +61,7 @@ help:
 	@printf "  make symfony-assets        Lance asset-map:compile\n"
 	@printf "  make lint                  Lance npm run lint dans un conteneur client jetable\n"
 	@printf "  make app-build             Lance npm run build dans un conteneur client jetable\n"
+	@printf "  make deploy-backend        Deploie le backend Symfony sur cPanel via SSH/rsync\n"
 	@printf "  make npm NPM_ARGS=\"...\"   Lance npm dans un conteneur client jetable\n"
 	@printf "  make npm-run SCRIPT=\"...\" Lance npm run SCRIPT dans un conteneur client jetable\n"
 	@printf "  Front: localhost:%s | Backend: localhost:%s | Mailpit: localhost:%s\n" "$(PORT)" "$(BACKEND_PORT)" "$(MAILPIT_UI_PORT)"
@@ -130,6 +131,9 @@ app-build:
 
 deploy-client:
 	./scripts/deploy-client.sh
+
+deploy-backend:
+	./scripts/deploy-backend.sh
 
 npm:
 	$(COMPOSE) run --rm $(CLIENT_SERVICE) npm $(NPM_ARGS)
