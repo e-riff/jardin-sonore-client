@@ -1,0 +1,53 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Infrastructure\Admin;
+
+use App\Infrastructure\Doctrine\Entity\MunicipalityEntity;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
+use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+
+/**
+ * @extends AbstractCrudController<MunicipalityEntity>
+ */
+final class MunicipalityCrudController extends AbstractCrudController
+{
+    public static function getEntityFqcn(): string
+    {
+        return MunicipalityEntity::class;
+    }
+
+    public function configureCrud(Crud $crud): Crud
+    {
+        return $crud
+            ->setEntityLabelInSingular('geography.municipality.singular')
+            ->setEntityLabelInPlural('geography.municipality.plural')
+            ->setPageTitle(Crud::PAGE_INDEX, 'admin.municipality.page.index')
+            ->setPageTitle(Crud::PAGE_NEW, 'admin.municipality.page.new')
+            ->setPageTitle(Crud::PAGE_EDIT, 'admin.municipality.page.edit')
+            ->setPageTitle(Crud::PAGE_DETAIL, 'admin.municipality.page.detail');
+    }
+
+    public function configureFields(string $pageName): iterable
+    {
+        yield IdField::new('id', 'admin.field.id')->hideOnForm();
+        yield TextField::new('uuid', 'admin.field.uuid')->hideOnForm();
+        yield TextField::new('name', 'admin.field.name');
+        yield TextField::new('inseeCode', 'admin.field.insee_code');
+        yield TextField::new('postalCode', 'admin.field.postal_code');
+        yield AssociationField::new('department', 'admin.field.department');
+        yield TextField::new('phoneNumber', 'admin.field.phone_number')->hideOnIndex();
+        yield EmailField::new('emailAddress', 'admin.field.email_address')->hideOnIndex();
+        yield TextareaField::new('address', 'admin.field.address')->hideOnIndex();
+        yield TextField::new('siren', 'admin.field.siren')->hideOnIndex();
+        yield TextField::new('siret', 'admin.field.siret')->hideOnIndex();
+        yield ArrayField::new('geoShape', 'admin.field.geo_shape')->hideOnIndex();
+    }
+}
