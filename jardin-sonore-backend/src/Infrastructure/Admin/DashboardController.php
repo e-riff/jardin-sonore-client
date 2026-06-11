@@ -25,7 +25,7 @@ final class DashboardController extends AbstractDashboardController
     public function index(): Response
     {
         return $this->redirect($this->adminUrlGenerator
-            ->setController(RegionCrudController::class)
+            ->setController(OrganizationCrudController::class)
             ->setAction(Action::INDEX)
             ->generateUrl());
     }
@@ -41,6 +41,12 @@ final class DashboardController extends AbstractDashboardController
     public function configureMenuItems(): iterable
     {
         yield MenuItem::linkToDashboard('admin.menu.dashboard', 'fa fa-home');
+        yield MenuItem::section('admin.menu.address_book');
+        yield MenuItem::linkTo(OrganizationCrudController::class, 'admin.menu.organizations', 'fa fa-building');
+        yield MenuItem::linkTo(PersonCrudController::class, 'admin.menu.people', 'fa fa-user');
+        yield MenuItem::linkTo(EmailContactCrudController::class, 'admin.menu.email_contacts', 'fa fa-envelope');
+        yield MenuItem::linkTo(PhoneContactCrudController::class, 'admin.menu.phone_contacts', 'fa fa-phone');
+        yield MenuItem::linkTo(TagCrudController::class, 'admin.menu.tags', 'fa fa-tags');
         yield MenuItem::section('admin.menu.geography');
         yield MenuItem::linkTo(RegionCrudController::class, 'admin.menu.regions', 'fa fa-map');
         yield MenuItem::linkTo(DepartmentCrudController::class, 'admin.menu.departments', 'fa fa-map-location-dot');

@@ -3,6 +3,12 @@ admin:
     title: "Jardin Sonore"
   menu:
     dashboard: "Tableau de bord"
+    address_book: "Annuaire"
+    organizations: "Organisations"
+    people: "Personnes"
+    email_contacts: "E-mails"
+    phone_contacts: "Téléphones"
+    tags: "Tags"
     geography: "Territoires"
     regions: "Régions"
     departments: "Départements"
@@ -12,6 +18,25 @@ admin:
     uuid: "UUID"
     code: "Code"
     name: "Nom"
+    first_name: "Prénom"
+    last_name: "Nom"
+    role: "Poste"
+    label: "Libellé"
+    organization: "Organisation"
+    organizations: "Organisations"
+    person: "Personne"
+    people: "Personnes"
+    organization_type: "Type d’établissement"
+    organization_sector: "Secteur"
+    customer_status: "Statut client"
+    city: "Ville"
+    municipality: "Commune"
+    email_contacts: "E-mails"
+    phone_contacts: "Téléphones"
+    tags: "Tags"
+    source: "Source"
+    opt_in_newsletter: "Newsletter"
+    active: "Actif"
     region: "Région"
     department: "Département"
     insee_code: "Code INSEE"
@@ -40,6 +65,36 @@ admin:
       new: "Créer une commune"
       edit: "Modifier une commune"
       detail: "Détail de la commune"
+  organization:
+    page:
+      index: "Organisations"
+      new: "Créer une organisation"
+      edit: "Modifier une organisation"
+      detail: "Détail de l’organisation"
+  person:
+    page:
+      index: "Personnes"
+      new: "Créer une personne"
+      edit: "Modifier une personne"
+      detail: "Détail de la personne"
+  email_contact:
+    page:
+      index: "E-mails"
+      new: "Créer un e-mail"
+      edit: "Modifier un e-mail"
+      detail: "Détail de l’e-mail"
+  phone_contact:
+    page:
+      index: "Téléphones"
+      new: "Créer un téléphone"
+      edit: "Modifier un téléphone"
+      detail: "Détail du téléphone"
+  tag:
+    page:
+      index: "Tags"
+      new: "Créer un tag"
+      edit: "Modifier un tag"
+      detail: "Détail du tag"
 
 geography:
   region:
@@ -51,3 +106,43 @@ geography:
   municipality:
     singular: "Commune"
     plural: "Communes"
+
+address_book:
+  organization:
+    singular: "Organisation"
+    plural: "Organisations"
+  person:
+    singular: "Personne"
+    plural: "Personnes"
+  email_contact:
+    singular: "E-mail"
+    plural: "E-mails"
+  phone_contact:
+    singular: "Téléphone"
+    plural: "Téléphones"
+  tag:
+    singular: "Tag"
+    plural: "Tags"
+  organization_type:
+    creche: "Crèche - multi-accueil"
+    mairie: "Mairie - collectivité"
+    ram: "Relais assistantes maternelles"
+    mam: "Maison d’assistantes maternelles"
+    centre: "Centre social"
+    garderie: "Garderie"
+    unknown: "Inconnu"
+  organization_sector:
+    association: "Association"
+    public: "Secteur public"
+    private: "Privé non associatif"
+    unknown: "Inconnu"
+  customer_status:
+    customer: "Client"
+    prospect: "Prospect"
+    former_customer: "Ancien client"
+    unknown: "Inconnu"
+  contact_source:
+    manual: "Saisie manuelle"
+    google_sheets: "Google Sheets"
+    legacy_import: "Ancien import"
+    unknown: "Inconnue"
