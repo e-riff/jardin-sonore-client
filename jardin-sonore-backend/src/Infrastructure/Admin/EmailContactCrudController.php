@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Admin;
 
 use App\Domain\Model\AddressBook\ContactDataSource;
+use App\Domain\Model\AddressBook\EmailContactType;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
@@ -42,8 +43,8 @@ final class EmailContactCrudController extends AbstractCrudController
         yield TextField::new('uuid', 'admin.field.uuid')->hideOnForm();
         yield EmailField::new('emailAddress', 'admin.field.email_address');
         yield TextField::new('label', 'admin.field.label');
-        yield AssociationField::new('organization', 'admin.field.organization');
-        yield AssociationField::new('person', 'admin.field.person');
+        yield AssociationField::new('contactDetails', 'admin.field.contact_details');
+        yield ChoiceField::new('type', 'admin.field.type')->setChoices($this->typeChoices());
         yield ChoiceField::new('source', 'admin.field.source')->setChoices($this->sourceChoices());
         yield BooleanField::new('optInNewsletter', 'admin.field.opt_in_newsletter');
         yield BooleanField::new('active', 'admin.field.active');
@@ -59,6 +60,20 @@ final class EmailContactCrudController extends AbstractCrudController
             'address_book.contact_source.google_sheets' => ContactDataSource::GOOGLE_SHEETS,
             'address_book.contact_source.legacy_import' => ContactDataSource::LEGACY_IMPORT,
             'address_book.contact_source.unknown' => ContactDataSource::UNKNOWN,
+        ];
+    }
+
+    /**
+     * @return array<string, EmailContactType>
+     */
+    private function typeChoices(): array
+    {
+        return [
+            'address_book.email_contact_type.main' => EmailContactType::MAIN,
+            'address_book.email_contact_type.work' => EmailContactType::WORK,
+            'address_book.email_contact_type.personal' => EmailContactType::PERSONAL,
+            'address_book.email_contact_type.billing' => EmailContactType::BILLING,
+            'address_book.email_contact_type.other' => EmailContactType::OTHER,
         ];
     }
 }

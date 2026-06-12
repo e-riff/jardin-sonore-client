@@ -6,8 +6,10 @@ admin:
     address_book: "Annuaire"
     organizations: "Organisations"
     people: "Personnes"
+    contact_details: "Coordonnées"
     email_contacts: "E-mails"
     phone_contacts: "Téléphones"
+    address_contacts: "Adresses"
     tags: "Tags"
     geography: "Territoires"
     regions: "Régions"
@@ -26,14 +28,20 @@ admin:
     organizations: "Organisations"
     person: "Personne"
     people: "Personnes"
+    directory_entry: "Entrée d’annuaire"
+    directory_entries: "Entrées d’annuaire"
+    entry_type: "Type d’entrée"
     organization_type: "Type d’établissement"
     organization_sector: "Secteur"
     customer_status: "Statut client"
     city: "Ville"
     municipality: "Commune"
+    contact_details: "Coordonnées"
     email_contacts: "E-mails"
     phone_contacts: "Téléphones"
+    address_contacts: "Adresses"
     tags: "Tags"
+    type: "Type"
     source: "Source"
     opt_in_newsletter: "Newsletter"
     active: "Actif"
@@ -77,6 +85,12 @@ admin:
       new: "Créer une personne"
       edit: "Modifier une personne"
       detail: "Détail de la personne"
+  contact_details:
+    page:
+      index: "Coordonnées"
+      new: "Créer des coordonnées"
+      edit: "Modifier les coordonnées"
+      detail: "Détail des coordonnées"
   email_contact:
     page:
       index: "E-mails"
@@ -89,6 +103,12 @@ admin:
       new: "Créer un téléphone"
       edit: "Modifier un téléphone"
       detail: "Détail du téléphone"
+  address_contact:
+    page:
+      index: "Adresses"
+      new: "Créer une adresse"
+      edit: "Modifier une adresse"
+      detail: "Détail de l’adresse"
   tag:
     page:
       index: "Tags"
@@ -114,15 +134,43 @@ address_book:
   person:
     singular: "Personne"
     plural: "Personnes"
+  contact_details:
+    singular: "Coordonnées"
+    plural: "Coordonnées"
   email_contact:
     singular: "E-mail"
     plural: "E-mails"
   phone_contact:
     singular: "Téléphone"
     plural: "Téléphones"
+  address_contact:
+    singular: "Adresse"
+    plural: "Adresses"
   tag:
     singular: "Tag"
     plural: "Tags"
+  directory_entry_type:
+    organization: "Organisation"
+    person: "Personne"
+  email_contact_type:
+    main: "Principal"
+    work: "Professionnel"
+    personal: "Personnel"
+    billing: "Facturation"
+    other: "Autre"
+  phone_contact_type:
+    main: "Principal"
+    mobile: "Mobile"
+    office: "Bureau"
+    home: "Personnel"
+    other: "Autre"
+  address_contact_type:
+    main: "Principale"
+    office: "Bureau"
+    billing: "Facturation"
+    delivery: "Livraison"
+    home: "Domicile"
+    other: "Autre"
   organization_type:
     creche: "Crèche - multi-accueil"
     mairie: "Mairie - collectivité"

@@ -10,10 +10,11 @@ use App\Domain\Model\Behavior\IdentifiableTrait;
 use App\Domain\Model\Behavior\NullableLabelTrait;
 use App\Domain\Model\Behavior\UuidIdentifiableInterface;
 use App\Domain\Model\Behavior\UuidIdentifiableTrait;
-use App\Domain\Model\ValueObject\PhoneNumber;
+use App\Domain\Model\Geo\Municipality;
+use App\Domain\Model\ValueObject\PostalCode;
 use Symfony\Component\Uid\Uuid;
 
-final class PhoneContact implements IdentifiableInterface, UuidIdentifiableInterface
+final class AddressContact implements IdentifiableInterface, UuidIdentifiableInterface
 {
     use ActivableTrait;
     use IdentifiableTrait;
@@ -21,9 +22,12 @@ final class PhoneContact implements IdentifiableInterface, UuidIdentifiableInter
     use UuidIdentifiableTrait;
 
     public function __construct(
-        private PhoneNumber $phoneNumber,
+        private AddressContactType $type = AddressContactType::MAIN,
+        private ?string $address = null,
+        private ?PostalCode $postalCode = null,
+        private ?string $city = null,
+        private ?Municipality $municipality = null,
         ?string $label = null,
-        private PhoneContactType $type = PhoneContactType::MAIN,
         bool $active = true,
         ?Uuid $uuid = null,
         ?int $id = null,
@@ -34,13 +38,28 @@ final class PhoneContact implements IdentifiableInterface, UuidIdentifiableInter
         $this->initializeActive($active);
     }
 
-    public function getPhoneNumber(): PhoneNumber
-    {
-        return $this->phoneNumber;
-    }
-
-    public function getType(): PhoneContactType
+    public function getType(): AddressContactType
     {
         return $this->type;
+    }
+
+    public function getAddress(): ?string
+    {
+        return $this->address;
+    }
+
+    public function getPostalCode(): ?PostalCode
+    {
+        return $this->postalCode;
+    }
+
+    public function getCity(): ?string
+    {
+        return $this->city;
+    }
+
+    public function getMunicipality(): ?Municipality
+    {
+        return $this->municipality;
     }
 }

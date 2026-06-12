@@ -37,6 +37,6 @@ final class TagCrudController extends AbstractCrudController
         yield IdField::new('id', 'admin.field.id')->hideOnForm();
         yield TextField::new('uuid', 'admin.field.uuid')->hideOnForm();
         yield TextField::new('label', 'admin.field.label');
-        yield AssociationField::new('organizations', 'admin.field.organizations')->onlyOnDetail();
+        yield AssociationField::new('directoryEntries', 'admin.field.directory_entries')->onlyOnDetail();
     }
 }

@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-use App\Domain\Model\AddressBook\ContactDataSource;
-use App\Domain\Model\AddressBook\EmailContactType;
+use App\Domain\Model\AddressBook\AddressContactType;
 use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
+use App\Infrastructure\Doctrine\Entity\MunicipalityEntity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 
 return static function (ClassMetadata $metadata): void {
     $metadata->setPrimaryTable([
-        'name' => 'email_contact',
+        'name' => 'address_contact',
         'indexes' => [
-            'idx_email_contact_details' => ['columns' => ['contact_details_id']],
-            'idx_email_contact_newsletter' => ['columns' => ['active', 'opt_in_newsletter']],
+            'idx_address_contact_details' => ['columns' => ['contact_details_id']],
+            'idx_address_contact_municipality' => ['columns' => ['municipality_id']],
+            'idx_address_contact_postal_code' => ['columns' => ['postal_code']],
         ],
         'uniqueConstraints' => [
-            'uniq_email_contact_uuid' => ['columns' => ['uuid']],
-            'uniq_email_contact_email_address' => ['columns' => ['email_address']],
+            'uniq_address_contact_uuid' => ['columns' => ['uuid']],
         ],
     ]);
 
@@ -36,11 +36,10 @@ return static function (ClassMetadata $metadata): void {
     ]);
 
     $metadata->mapField([
-        'fieldName' => 'emailAddress',
-        'columnName' => 'email_address',
+        'fieldName' => 'type',
         'type' => Types::STRING,
-        'length' => 255,
-        'unique' => true,
+        'length' => 32,
+        'enumType' => AddressContactType::class,
     ]);
 
     $metadata->mapField([
@@ -51,17 +50,24 @@ return static function (ClassMetadata $metadata): void {
     ]);
 
     $metadata->mapField([
-        'fieldName' => 'type',
-        'type' => Types::STRING,
-        'length' => 32,
-        'enumType' => EmailContactType::class,
+        'fieldName' => 'address',
+        'type' => Types::TEXT,
+        'nullable' => true,
     ]);
 
     $metadata->mapField([
-        'fieldName' => 'optInNewsletter',
-        'columnName' => 'opt_in_newsletter',
-        'type' => Types::BOOLEAN,
-        'options' => ['default' => true],
+        'fieldName' => 'postalCode',
+        'columnName' => 'postal_code',
+        'type' => Types::STRING,
+        'length' => 5,
+        'nullable' => true,
+    ]);
+
+    $metadata->mapField([
+        'fieldName' => 'city',
+        'type' => Types::STRING,
+        'length' => 255,
+        'nullable' => true,
     ]);
 
     $metadata->mapField([
@@ -70,23 +76,29 @@ return static function (ClassMetadata $metadata): void {
         'options' => ['default' => true],
     ]);
 
-    $metadata->mapField([
-        'fieldName' => 'source',
-        'type' => Types::STRING,
-        'length' => 32,
-        'enumType' => ContactDataSource::class,
-    ]);
-
     $metadata->mapManyToOne([
         'fieldName' => 'contactDetails',
         'targetEntity' => ContactDetailsEntity::class,
-        'inversedBy' => 'emailContacts',
+        'inversedBy' => 'addressContacts',
         'joinColumns' => [
             [
                 'name' => 'contact_details_id',
                 'referencedColumnName' => 'id',
                 'nullable' => false,
                 'onDelete' => 'CASCADE',
+            ],
+        ],
+    ]);
+
+    $metadata->mapManyToOne([
+        'fieldName' => 'municipality',
+        'targetEntity' => MunicipalityEntity::class,
+        'joinColumns' => [
+            [
+                'name' => 'municipality_id',
+                'referencedColumnName' => 'id',
+                'nullable' => true,
+                'onDelete' => 'SET NULL',
             ],
         ],
     ]);

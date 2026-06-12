@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
-use App\Infrastructure\Doctrine\Entity\PersonEntity;
+use App\Domain\Model\AddressBook\PhoneContactType;
+use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Symfony\Bridge\Doctrine\Types\UuidType;
@@ -12,8 +12,7 @@ return static function (ClassMetadata $metadata): void {
     $metadata->setPrimaryTable([
         'name' => 'phone_contact',
         'indexes' => [
-            'idx_phone_contact_organization' => ['columns' => ['organization_id']],
-            'idx_phone_contact_person' => ['columns' => ['person_id']],
+            'idx_phone_contact_details' => ['columns' => ['contact_details_id']],
             'idx_phone_contact_phone_number' => ['columns' => ['phone_number']],
         ],
         'uniqueConstraints' => [
@@ -49,35 +48,28 @@ return static function (ClassMetadata $metadata): void {
     ]);
 
     $metadata->mapField([
+        'fieldName' => 'type',
+        'type' => Types::STRING,
+        'length' => 32,
+        'enumType' => PhoneContactType::class,
+    ]);
+
+    $metadata->mapField([
         'fieldName' => 'active',
         'type' => Types::BOOLEAN,
         'options' => ['default' => true],
     ]);
 
     $metadata->mapManyToOne([
-        'fieldName' => 'organization',
-        'targetEntity' => OrganizationEntity::class,
+        'fieldName' => 'contactDetails',
+        'targetEntity' => ContactDetailsEntity::class,
         'inversedBy' => 'phoneContacts',
         'joinColumns' => [
             [
-                'name' => 'organization_id',
+                'name' => 'contact_details_id',
                 'referencedColumnName' => 'id',
-                'nullable' => true,
-                'onDelete' => 'SET NULL',
-            ],
-        ],
-    ]);
-
-    $metadata->mapManyToOne([
-        'fieldName' => 'person',
-        'targetEntity' => PersonEntity::class,
-        'inversedBy' => 'phoneContacts',
-        'joinColumns' => [
-            [
-                'name' => 'person_id',
-                'referencedColumnName' => 'id',
-                'nullable' => true,
-                'onDelete' => 'SET NULL',
+                'nullable' => false,
+                'onDelete' => 'CASCADE',
             ],
         ],
     ]);

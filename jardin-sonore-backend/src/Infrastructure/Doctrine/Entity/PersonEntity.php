@@ -4,18 +4,10 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Doctrine\Entity;
 
-use App\Infrastructure\Doctrine\Entity\Behavior\ActivableTrait;
-use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
-use App\Infrastructure\Doctrine\Entity\Behavior\UuidIdentifiableTrait;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
+use App\Domain\Model\AddressBook\DirectoryEntryType;
 
-class PersonEntity
+class PersonEntity extends DirectoryEntryEntity
 {
-    use ActivableTrait;
-    use IdentifiableTrait;
-    use UuidIdentifiableTrait;
-
     private string $firstName = '';
 
     private string $lastName = '';
@@ -24,21 +16,9 @@ class PersonEntity
 
     private ?OrganizationEntity $organization = null;
 
-    /**
-     * @var Collection<int, EmailContactEntity>
-     */
-    private Collection $emailContacts;
-
-    /**
-     * @var Collection<int, PhoneContactEntity>
-     */
-    private Collection $phoneContacts;
-
     public function __construct()
     {
-        $this->initializeUuid();
-        $this->emailContacts = new ArrayCollection();
-        $this->phoneContacts = new ArrayCollection();
+        parent::__construct(DirectoryEntryType::PERSON);
     }
 
     public function __toString(): string
@@ -90,70 +70,6 @@ class PersonEntity
     public function setOrganization(?OrganizationEntity $organization): static
     {
         $this->organization = $organization;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, EmailContactEntity>
-     */
-    public function getEmailContacts(): Collection
-    {
-        return $this->emailContacts;
-    }
-
-    public function hasEmailContacts(): bool
-    {
-        return !$this->emailContacts->isEmpty();
-    }
-
-    public function addEmailContact(EmailContactEntity $emailContactEntity): static
-    {
-        if (!$this->emailContacts->contains($emailContactEntity)) {
-            $this->emailContacts->add($emailContactEntity);
-            $emailContactEntity->setPerson($this);
-        }
-
-        return $this;
-    }
-
-    public function removeEmailContact(EmailContactEntity $emailContactEntity): static
-    {
-        if ($this->emailContacts->removeElement($emailContactEntity) && $emailContactEntity->getPerson() === $this) {
-            $emailContactEntity->setPerson(null);
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, PhoneContactEntity>
-     */
-    public function getPhoneContacts(): Collection
-    {
-        return $this->phoneContacts;
-    }
-
-    public function hasPhoneContacts(): bool
-    {
-        return !$this->phoneContacts->isEmpty();
-    }
-
-    public function addPhoneContact(PhoneContactEntity $phoneContactEntity): static
-    {
-        if (!$this->phoneContacts->contains($phoneContactEntity)) {
-            $this->phoneContacts->add($phoneContactEntity);
-            $phoneContactEntity->setPerson($this);
-        }
-
-        return $this;
-    }
-
-    public function removePhoneContact(PhoneContactEntity $phoneContactEntity): static
-    {
-        if ($this->phoneContacts->removeElement($phoneContactEntity) && $phoneContactEntity->getPerson() === $this) {
-            $phoneContactEntity->setPerson(null);
-        }
 
         return $this;
     }
