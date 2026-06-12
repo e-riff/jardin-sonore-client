@@ -10,22 +10,12 @@ use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 
 final readonly class EmailContactMapper
 {
-    public function __construct(
-        private OrganizationMapper $organizationMapper,
-        private PersonMapper $personMapper,
-    ) {
-    }
-
     public function toDomain(EmailContactEntity $emailContactEntity): EmailContact
     {
-        $organizationEntity = $emailContactEntity->getOrganization();
-        $personEntity = $emailContactEntity->getPerson();
-
         return new EmailContact(
             emailAddress: new EmailAddress($emailContactEntity->getEmailAddress()),
-            organization: null !== $organizationEntity ? $this->organizationMapper->toDomain($organizationEntity) : null,
-            person: null !== $personEntity ? $this->personMapper->toDomain($personEntity) : null,
             label: $emailContactEntity->getLabel(),
+            type: $emailContactEntity->getType(),
             optInNewsletter: $emailContactEntity->hasOptInNewsletter(),
             active: $emailContactEntity->isActive(),
             source: $emailContactEntity->getSource(),
@@ -38,18 +28,14 @@ final readonly class EmailContactMapper
     {
         $emailContactEntity ??= new EmailContactEntity();
 
-        $organization = $emailContact->getOrganization();
-        $person = $emailContact->getPerson();
-
         $emailContactEntity
             ->setUuid($emailContact->getUuid())
             ->setEmailAddress($emailContact->getEmailAddress()->value())
             ->setLabel($emailContact->getLabel())
+            ->setType($emailContact->getType())
             ->setOptInNewsletter($emailContact->hasNewsletterOptIn())
             ->setActive($emailContact->isActive())
-            ->setSource($emailContact->getSource())
-            ->setOrganization(null !== $organization ? $this->organizationMapper->toEntity($organization, $emailContactEntity->getOrganization()) : null)
-            ->setPerson(null !== $person ? $this->personMapper->toEntity($person, $emailContactEntity->getPerson()) : null);
+            ->setSource($emailContact->getSource());
 
         return $emailContactEntity;
     }

@@ -17,14 +17,14 @@ class TagEntity
     private string $label = '';
 
     /**
-     * @var Collection<int, OrganizationEntity>
+     * @var Collection<int, DirectoryEntryEntity>
      */
-    private Collection $organizations;
+    private Collection $directoryEntries;
 
     public function __construct()
     {
         $this->initializeUuid();
-        $this->organizations = new ArrayCollection();
+        $this->directoryEntries = new ArrayCollection();
     }
 
     public function __toString(): string
@@ -45,25 +45,25 @@ class TagEntity
     }
 
     /**
-     * @return Collection<int, OrganizationEntity>
+     * @return Collection<int, DirectoryEntryEntity>
      */
-    public function getOrganizations(): Collection
+    public function getDirectoryEntries(): Collection
     {
-        return $this->organizations;
+        return $this->directoryEntries;
     }
 
-    public function addOrganization(OrganizationEntity $organizationEntity): static
+    public function addDirectoryEntry(DirectoryEntryEntity $directoryEntryEntity): static
     {
-        if (!$this->organizations->contains($organizationEntity)) {
-            $this->organizations->add($organizationEntity);
+        if (!$this->directoryEntries->contains($directoryEntryEntity)) {
+            $this->directoryEntries->add($directoryEntryEntity);
         }
 
         return $this;
     }
 
-    public function removeOrganization(OrganizationEntity $organizationEntity): static
+    public function removeDirectoryEntry(DirectoryEntryEntity $directoryEntryEntity): static
     {
-        $this->organizations->removeElement($organizationEntity);
+        $this->directoryEntries->removeElement($directoryEntryEntity);
 
         return $this;
     }

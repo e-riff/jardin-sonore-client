@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Admin;
 
 use App\Domain\Model\AddressBook\CustomerStatus;
+use App\Domain\Model\AddressBook\DirectoryEntryType;
 use App\Domain\Model\AddressBook\OrganizationSector;
 use App\Domain\Model\AddressBook\OrganizationType;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
@@ -14,7 +15,6 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 
 /**
@@ -42,18 +42,14 @@ final class OrganizationCrudController extends AbstractCrudController
     {
         yield IdField::new('id', 'admin.field.id')->hideOnForm();
         yield TextField::new('uuid', 'admin.field.uuid')->hideOnForm();
+        yield ChoiceField::new('entryType', 'admin.field.entry_type')->setChoices($this->entryTypeChoices())->hideOnForm();
         yield TextField::new('name', 'admin.field.name');
         yield ChoiceField::new('type', 'admin.field.organization_type')->setChoices($this->organizationTypeChoices());
         yield ChoiceField::new('sector', 'admin.field.organization_sector')->setChoices($this->organizationSectorChoices());
         yield ChoiceField::new('customerStatus', 'admin.field.customer_status')->setChoices($this->customerStatusChoices());
-        yield TextareaField::new('address', 'admin.field.address')->hideOnIndex();
-        yield TextField::new('postalCode', 'admin.field.postal_code')->hideOnIndex();
-        yield TextField::new('city', 'admin.field.city');
-        yield AssociationField::new('municipality', 'admin.field.municipality')->hideOnIndex();
         yield AssociationField::new('tags', 'admin.field.tags')->hideOnIndex();
         yield AssociationField::new('people', 'admin.field.people')->onlyOnDetail();
-        yield AssociationField::new('emailContacts', 'admin.field.email_contacts')->onlyOnDetail();
-        yield AssociationField::new('phoneContacts', 'admin.field.phone_contacts')->onlyOnDetail();
+        yield AssociationField::new('contactDetails', 'admin.field.contact_details')->onlyOnDetail();
         yield BooleanField::new('active', 'admin.field.active');
     }
 
@@ -96,6 +92,16 @@ final class OrganizationCrudController extends AbstractCrudController
             'address_book.customer_status.prospect' => CustomerStatus::PROSPECT,
             'address_book.customer_status.former_customer' => CustomerStatus::FORMER_CUSTOMER,
             'address_book.customer_status.unknown' => CustomerStatus::UNKNOWN,
+        ];
+    }
+
+    /**
+     * @return array<string, DirectoryEntryType>
+     */
+    private function entryTypeChoices(): array
+    {
+        return [
+            'address_book.directory_entry_type.organization' => DirectoryEntryType::ORGANIZATION,
         ];
     }
 }

@@ -22,9 +22,8 @@ final class EmailContact implements IdentifiableInterface, UuidIdentifiableInter
 
     public function __construct(
         private EmailAddress $emailAddress,
-        private ?Organization $organization = null,
-        private ?Person $person = null,
         ?string $label = null,
+        private EmailContactType $type = EmailContactType::MAIN,
         private bool $optInNewsletter = true,
         bool $active = true,
         private ContactDataSource $source = ContactDataSource::MANUAL,
@@ -42,19 +41,14 @@ final class EmailContact implements IdentifiableInterface, UuidIdentifiableInter
         return $this->emailAddress;
     }
 
-    public function getOrganization(): ?Organization
-    {
-        return $this->organization;
-    }
-
-    public function getPerson(): ?Person
-    {
-        return $this->person;
-    }
-
     public function hasNewsletterOptIn(): bool
     {
         return $this->optInNewsletter;
+    }
+
+    public function getType(): EmailContactType
+    {
+        return $this->type;
     }
 
     public function getSource(): ContactDataSource

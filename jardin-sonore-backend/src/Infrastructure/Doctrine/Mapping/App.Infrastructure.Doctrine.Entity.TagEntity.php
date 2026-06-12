@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
+use App\Infrastructure\Doctrine\Entity\DirectoryEntryEntity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Symfony\Bridge\Doctrine\Types\UuidType;
@@ -40,8 +40,8 @@ return static function (ClassMetadata $metadata): void {
     ]);
 
     $metadata->mapManyToMany([
-        'fieldName' => 'organizations',
-        'targetEntity' => OrganizationEntity::class,
+        'fieldName' => 'directoryEntries',
+        'targetEntity' => DirectoryEntryEntity::class,
         'mappedBy' => 'tags',
     ]);
 };

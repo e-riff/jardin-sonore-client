@@ -4,31 +4,21 @@ declare(strict_types=1);
 
 namespace App\Domain\Model\AddressBook;
 
-use App\Domain\Model\Behavior\ActivableTrait;
-use App\Domain\Model\Behavior\IdentifiableInterface;
-use App\Domain\Model\Behavior\IdentifiableTrait;
-use App\Domain\Model\Behavior\UuidIdentifiableInterface;
-use App\Domain\Model\Behavior\UuidIdentifiableTrait;
 use Symfony\Component\Uid\Uuid;
 
-final class Person implements IdentifiableInterface, UuidIdentifiableInterface
+final class Person extends DirectoryEntry
 {
-    use ActivableTrait;
-    use IdentifiableTrait;
-    use UuidIdentifiableTrait;
-
     public function __construct(
         private string $firstName,
         private string $lastName,
         private Organization $organization,
         private ?string $role = null,
+        CustomerStatus $customerStatus = CustomerStatus::UNKNOWN,
         bool $active = true,
         ?Uuid $uuid = null,
         ?int $id = null,
     ) {
-        $this->initializeId($id);
-        $this->initializeUuid($uuid);
-        $this->initializeActive($active);
+        parent::__construct(DirectoryEntryType::PERSON, $customerStatus, $active, $uuid, $id);
         $this->assertNamePartIsNotBlank($firstName, 'Person first name cannot be blank.');
         $this->assertNamePartIsNotBlank($lastName, 'Person last name cannot be blank.');
     }

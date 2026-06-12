@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use App\Domain\Model\AddressBook\ContactDataSource;
-use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
-use App\Infrastructure\Doctrine\Entity\PersonEntity;
+use App\Domain\Model\AddressBook\EmailContactType;
+use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Symfony\Bridge\Doctrine\Types\UuidType;
@@ -13,8 +13,7 @@ return static function (ClassMetadata $metadata): void {
     $metadata->setPrimaryTable([
         'name' => 'email_contact',
         'indexes' => [
-            'idx_email_contact_organization' => ['columns' => ['organization_id']],
-            'idx_email_contact_person' => ['columns' => ['person_id']],
+            'idx_email_contact_details' => ['columns' => ['contact_details_id']],
             'idx_email_contact_newsletter' => ['columns' => ['active', 'opt_in_newsletter']],
         ],
         'uniqueConstraints' => [
@@ -52,6 +51,13 @@ return static function (ClassMetadata $metadata): void {
     ]);
 
     $metadata->mapField([
+        'fieldName' => 'type',
+        'type' => Types::STRING,
+        'length' => 32,
+        'enumType' => EmailContactType::class,
+    ]);
+
+    $metadata->mapField([
         'fieldName' => 'optInNewsletter',
         'columnName' => 'opt_in_newsletter',
         'type' => Types::BOOLEAN,
@@ -72,29 +78,15 @@ return static function (ClassMetadata $metadata): void {
     ]);
 
     $metadata->mapManyToOne([
-        'fieldName' => 'organization',
-        'targetEntity' => OrganizationEntity::class,
+        'fieldName' => 'contactDetails',
+        'targetEntity' => ContactDetailsEntity::class,
         'inversedBy' => 'emailContacts',
         'joinColumns' => [
             [
-                'name' => 'organization_id',
+                'name' => 'contact_details_id',
                 'referencedColumnName' => 'id',
-                'nullable' => true,
-                'onDelete' => 'SET NULL',
-            ],
-        ],
-    ]);
-
-    $metadata->mapManyToOne([
-        'fieldName' => 'person',
-        'targetEntity' => PersonEntity::class,
-        'inversedBy' => 'emailContacts',
-        'joinColumns' => [
-            [
-                'name' => 'person_id',
-                'referencedColumnName' => 'id',
-                'nullable' => true,
-                'onDelete' => 'SET NULL',
+                'nullable' => false,
+                'onDelete' => 'CASCADE',
             ],
         ],
     ]);

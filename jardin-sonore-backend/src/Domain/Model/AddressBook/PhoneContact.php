@@ -22,9 +22,8 @@ final class PhoneContact implements IdentifiableInterface, UuidIdentifiableInter
 
     public function __construct(
         private PhoneNumber $phoneNumber,
-        private ?Organization $organization = null,
-        private ?Person $person = null,
         ?string $label = null,
+        private PhoneContactType $type = PhoneContactType::MAIN,
         bool $active = true,
         ?Uuid $uuid = null,
         ?int $id = null,
@@ -40,13 +39,8 @@ final class PhoneContact implements IdentifiableInterface, UuidIdentifiableInter
         return $this->phoneNumber;
     }
 
-    public function getOrganization(): ?Organization
+    public function getType(): PhoneContactType
     {
-        return $this->organization;
-    }
-
-    public function getPerson(): ?Person
-    {
-        return $this->person;
+        return $this->type;
     }
 }

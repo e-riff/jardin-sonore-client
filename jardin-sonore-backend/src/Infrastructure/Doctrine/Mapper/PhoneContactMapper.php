@@ -10,22 +10,12 @@ use App\Infrastructure\Doctrine\Entity\PhoneContactEntity;
 
 final readonly class PhoneContactMapper
 {
-    public function __construct(
-        private OrganizationMapper $organizationMapper,
-        private PersonMapper $personMapper,
-    ) {
-    }
-
     public function toDomain(PhoneContactEntity $phoneContactEntity): PhoneContact
     {
-        $organizationEntity = $phoneContactEntity->getOrganization();
-        $personEntity = $phoneContactEntity->getPerson();
-
         return new PhoneContact(
             phoneNumber: new PhoneNumber($phoneContactEntity->getPhoneNumber()),
-            organization: null !== $organizationEntity ? $this->organizationMapper->toDomain($organizationEntity) : null,
-            person: null !== $personEntity ? $this->personMapper->toDomain($personEntity) : null,
             label: $phoneContactEntity->getLabel(),
+            type: $phoneContactEntity->getType(),
             active: $phoneContactEntity->isActive(),
             uuid: $phoneContactEntity->getUuid(),
             id: $phoneContactEntity->getId(),
@@ -36,16 +26,12 @@ final readonly class PhoneContactMapper
     {
         $phoneContactEntity ??= new PhoneContactEntity();
 
-        $organization = $phoneContact->getOrganization();
-        $person = $phoneContact->getPerson();
-
         $phoneContactEntity
             ->setUuid($phoneContact->getUuid())
             ->setPhoneNumber($phoneContact->getPhoneNumber()->value())
             ->setLabel($phoneContact->getLabel())
-            ->setActive($phoneContact->isActive())
-            ->setOrganization(null !== $organization ? $this->organizationMapper->toEntity($organization, $phoneContactEntity->getOrganization()) : null)
-            ->setPerson(null !== $person ? $this->personMapper->toEntity($person, $phoneContactEntity->getPerson()) : null);
+            ->setType($phoneContact->getType())
+            ->setActive($phoneContact->isActive());
 
         return $phoneContactEntity;
     }

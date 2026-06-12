@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Infrastructure\Doctrine\Entity;
 
 use App\Domain\Model\AddressBook\ContactDataSource;
+use App\Domain\Model\AddressBook\EmailContactType;
 use App\Infrastructure\Doctrine\Entity\Behavior\ActivableTrait;
-use App\Infrastructure\Doctrine\Entity\Behavior\ContactTargetTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\NullableLabelTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\UuidIdentifiableTrait;
@@ -14,12 +14,15 @@ use App\Infrastructure\Doctrine\Entity\Behavior\UuidIdentifiableTrait;
 class EmailContactEntity
 {
     use ActivableTrait;
-    use ContactTargetTrait;
     use IdentifiableTrait;
     use NullableLabelTrait;
     use UuidIdentifiableTrait;
 
+    private ContactDetailsEntity $contactDetails;
+
     private string $emailAddress = '';
+
+    private EmailContactType $type = EmailContactType::MAIN;
 
     private bool $optInNewsletter = true;
 
@@ -43,6 +46,30 @@ class EmailContactEntity
     public function setEmailAddress(string $emailAddress): static
     {
         $this->emailAddress = mb_strtolower(trim($emailAddress));
+
+        return $this;
+    }
+
+    public function getContactDetails(): ?ContactDetailsEntity
+    {
+        return $this->contactDetails ?? null;
+    }
+
+    public function setContactDetails(ContactDetailsEntity $contactDetails): static
+    {
+        $this->contactDetails = $contactDetails;
+
+        return $this;
+    }
+
+    public function getType(): EmailContactType
+    {
+        return $this->type;
+    }
+
+    public function setType(EmailContactType $type): static
+    {
+        $this->type = $type;
 
         return $this;
     }

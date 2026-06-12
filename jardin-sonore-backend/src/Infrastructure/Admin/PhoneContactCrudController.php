@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Admin;
 
+use App\Domain\Model\AddressBook\PhoneContactType;
 use App\Infrastructure\Doctrine\Entity\PhoneContactEntity;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TelephoneField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
@@ -40,8 +42,22 @@ final class PhoneContactCrudController extends AbstractCrudController
         yield TextField::new('uuid', 'admin.field.uuid')->hideOnForm();
         yield TelephoneField::new('phoneNumber', 'admin.field.phone_number');
         yield TextField::new('label', 'admin.field.label');
-        yield AssociationField::new('organization', 'admin.field.organization');
-        yield AssociationField::new('person', 'admin.field.person');
+        yield AssociationField::new('contactDetails', 'admin.field.contact_details');
+        yield ChoiceField::new('type', 'admin.field.type')->setChoices($this->typeChoices());
         yield BooleanField::new('active', 'admin.field.active');
+    }
+
+    /**
+     * @return array<string, PhoneContactType>
+     */
+    private function typeChoices(): array
+    {
+        return [
+            'address_book.phone_contact_type.main' => PhoneContactType::MAIN,
+            'address_book.phone_contact_type.mobile' => PhoneContactType::MOBILE,
+            'address_book.phone_contact_type.office' => PhoneContactType::OFFICE,
+            'address_book.phone_contact_type.home' => PhoneContactType::HOME,
+            'address_book.phone_contact_type.other' => PhoneContactType::OTHER,
+        ];
     }
 }
