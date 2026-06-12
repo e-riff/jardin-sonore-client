@@ -14,6 +14,11 @@ final class Version20260612120000 extends AbstractMigration
         return 'Move people and organizations to joined directory entries with shared contact details.';
     }
 
+    public function isTransactional(): bool
+    {
+        return false;
+    }
+
     public function up(Schema $schema): void
     {
         $this->addSql('SET @person_id_offset = (SELECT COALESCE(MAX(id), 0) FROM organization)');
