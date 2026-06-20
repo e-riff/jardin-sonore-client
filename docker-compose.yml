@@ -31,7 +31,6 @@ services:
       - ./jardin-sonore-backend/.env.local
     volumes:
       - ./jardin-sonore-backend:/app
-      - ./.codex:/workspace/.codex:ro
     depends_on:
       mysql:
         condition: service_healthy
