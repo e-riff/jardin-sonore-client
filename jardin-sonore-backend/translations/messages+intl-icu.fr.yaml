@@ -176,6 +176,7 @@ address_book:
     mairie: "Mairie - collectivité"
     ram: "Relais assistantes maternelles"
     mam: "Maison d’assistantes maternelles"
+    mediatheque: "Médiathèque"
     centre: "Centre social"
     garderie: "Garderie"
     unknown: "Inconnu"

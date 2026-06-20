@@ -63,6 +63,7 @@ final class OrganizationCrudController extends AbstractCrudController
             'address_book.organization_type.mairie' => OrganizationType::MAIRIE,
             'address_book.organization_type.ram' => OrganizationType::RAM,
             'address_book.organization_type.mam' => OrganizationType::MAM,
+            'address_book.organization_type.mediatheque' => OrganizationType::MEDIATHEQUE,
             'address_book.organization_type.centre' => OrganizationType::CENTRE,
             'address_book.organization_type.garderie' => OrganizationType::GARDERIE,
             'address_book.organization_type.unknown' => OrganizationType::UNKNOWN,

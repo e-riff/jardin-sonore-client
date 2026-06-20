@@ -10,6 +10,7 @@ enum OrganizationType: string
     case MAIRIE = 'mairie';
     case RAM = 'ram';
     case MAM = 'mam';
+    case MEDIATHEQUE = 'mediatheque';
     case CENTRE = 'centre';
     case GARDERIE = 'garderie';
     case UNKNOWN = 'unknown';
