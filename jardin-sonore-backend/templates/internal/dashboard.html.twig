@@ -1,0 +1,29 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'Accueil interne | Jardin Sonore' %}
+
+{% block internal_body %}
+    <section class="internal-hero">
+        <p class="internal-eyebrow">Espace metier</p>
+        <h1>Bienvenue dans l'atelier Jardin Sonore</h1>
+        <p>
+            La racine du backend devient l'espace de travail metier. EasyAdmin reste disponible pour les corrections techniques dans le backoffice.
+        </p>
+    </section>
+
+    <section class="internal-grid" aria-label="Modules internes">
+        <article class="internal-card">
+            <span class="internal-badge internal-badge--primary">Prochaine etape</span>
+            <h2>Newsletters</h2>
+            <p>Creer une campagne, preparer le contenu, cibler les destinataires, previsualiser et envoyer un test.</p>
+            <a class="internal-button" href="{{ path('mailing_index') }}">Ouvrir les newsletters</a>
+        </article>
+
+        <article class="internal-card">
+            <span class="internal-badge internal-badge--secondary">Technique</span>
+            <h2>Backoffice</h2>
+            <p>Consulter et corriger l'annuaire, les coordonnees, les territoires et les donnees techniques.</p>
+            <a class="internal-button internal-button--secondary" href="{{ path('admin') }}">Ouvrir EasyAdmin</a>
+        </article>
+    </section>
+{% endblock %}

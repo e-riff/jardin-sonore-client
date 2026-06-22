@@ -1,0 +1,27 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ title|default('Jardin Sonore Interne') }}{% endblock %}
+
+{% block body %}
+    <div class="internal-shell">
+        <header class="internal-header">
+            <a class="internal-brand" href="{{ path('internal_dashboard') }}" aria-label="Accueil interne Jardin Sonore">
+                <span class="internal-brand__mark">JS</span>
+                <span>
+                    <strong>Jardin Sonore</strong>
+                    <small>Interface interne</small>
+                </span>
+            </a>
+
+            <nav class="internal-nav" aria-label="Navigation interne">
+                <a href="{{ path('internal_dashboard') }}">Accueil</a>
+                <a href="{{ path('mailing_index') }}">Newsletters</a>
+                <a href="{{ path('admin') }}">Backoffice</a>
+            </nav>
+        </header>
+
+        <main class="internal-main">
+            {% block internal_body %}{% endblock %}
+        </main>
+    </div>
+{% endblock %}
