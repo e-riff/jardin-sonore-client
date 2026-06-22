@@ -1,0 +1,29 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'Newsletters | Jardin Sonore' %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">Newsletters</p>
+            <h1>Campagnes email</h1>
+            <p>Le module newsletter sera construit ici, hors EasyAdmin, avec un workflow metier dedie.</p>
+        </div>
+
+        <span class="internal-badge internal-badge--secondary">Socle en cours</span>
+    </section>
+
+    <section class="internal-card">
+        <h2>Roadmap V1.1</h2>
+        <p>
+            Premiere tranche prevue : brouillon, contenu simple, recommandations structurees, ciblage dynamique, preview et envoi test.
+        </p>
+
+        <ul class="internal-checklist">
+            <li>Modele domaine newsletter</li>
+            <li>Ciblage par annuaire et geographie</li>
+            <li>Preview Twig du mail</li>
+            <li>Envoi test via Symfony Mailer</li>
+        </ul>
+    </section>
+{% endblock %}

@@ -13,7 +13,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
-#[AdminDashboard(routePath: '/', routeName: 'admin')]
+#[AdminDashboard(routePath: '/backoffice', routeName: 'admin')]
 final class DashboardController extends AbstractDashboardController
 {
     public function __construct(
