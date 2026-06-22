@@ -48,6 +48,7 @@ rsync -az --delete \
 REMOTE_COMMANDS=(
   "set -euo pipefail"
   "cd '$CPANEL_BACKEND_PATH'"
+  'if [[ -d var/cache/prod ]]; then mv var/cache/prod "var/cache/prod.previous.$(date +%s)"; fi'
   "$CPANEL_COMPOSER_BIN install --no-dev --prefer-dist --no-interaction --optimize-autoloader"
   "$CPANEL_PHP_BIN bin/console asset-map:compile --env=prod --no-debug"
 )

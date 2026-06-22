@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Infrastructure\Admin;
 
 use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
@@ -32,11 +34,25 @@ final class ContactDetailsCrudController extends AbstractCrudController
             ->setPageTitle(Crud::PAGE_DETAIL, 'admin.contact_details.page.detail');
     }
 
+    public function configureActions(Actions $actions): Actions
+    {
+        return $actions->add(Crud::PAGE_INDEX, Action::DETAIL);
+    }
+
     public function configureFields(string $pageName): iterable
     {
-        yield IdField::new('id', 'admin.field.id')->hideOnForm();
-        yield TextField::new('uuid', 'admin.field.uuid')->hideOnForm();
-        yield AssociationField::new('directoryEntry', 'admin.field.directory_entry');
+        yield IdField::new('id', 'admin.field.id')->onlyOnDetail();
+        yield TextField::new('uuid', 'admin.field.uuid')->onlyOnDetail();
+        yield AssociationField::new('directoryEntry', 'admin.field.directory_entry')->autocomplete();
+        yield TextField::new('emailContactsSummary', 'admin.field.email_contacts')
+            ->formatValue(static fn (mixed $value): string => nl2br(htmlspecialchars((string) $value, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8')))
+            ->renderAsHtml();
+        yield TextField::new('phoneContactsSummary', 'admin.field.phone_contacts')
+            ->formatValue(static fn (mixed $value): string => nl2br(htmlspecialchars((string) $value, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8')))
+            ->renderAsHtml();
+        yield TextField::new('addressContactsSummary', 'admin.field.address_contacts')
+            ->formatValue(static fn (mixed $value): string => nl2br(htmlspecialchars((string) $value, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8')))
+            ->renderAsHtml();
         yield AssociationField::new('emailContacts', 'admin.field.email_contacts')->onlyOnDetail();
         yield AssociationField::new('phoneContacts', 'admin.field.phone_contacts')->onlyOnDetail();
         yield AssociationField::new('addressContacts', 'admin.field.address_contacts')->onlyOnDetail();

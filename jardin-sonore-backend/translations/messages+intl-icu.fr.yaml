@@ -15,6 +15,11 @@ admin:
     regions: "Régions"
     departments: "Départements"
     municipalities: "Communes"
+  action:
+    add_person: "Ajouter une personne"
+    add_email: "Ajouter un e-mail"
+    add_phone: "Ajouter un téléphone"
+    add_address: "Ajouter une adresse"
   field:
     id: "ID"
     uuid: "UUID"
