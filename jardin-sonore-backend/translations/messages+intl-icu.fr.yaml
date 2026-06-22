@@ -49,6 +49,8 @@ admin:
     type: "Type"
     source: "Source"
     opt_in_newsletter: "Newsletter"
+    unsubscribed_at: "Désinscrit le"
+    unsubscribe_token: "Token de désinscription"
     active: "Actif"
     region: "Région"
     department: "Département"

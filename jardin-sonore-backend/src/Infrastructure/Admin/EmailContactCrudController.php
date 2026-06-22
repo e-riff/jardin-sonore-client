@@ -17,11 +17,13 @@ use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\BooleanFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -66,6 +68,7 @@ final class EmailContactCrudController extends AbstractCrudController
             ->add(ChoiceFilter::new('type', 'admin.field.type')->setChoices($this->typeChoices())->setFormTypeOption('value_type_options.translation_domain', 'messages'))
             ->add(ChoiceFilter::new('source', 'admin.field.source')->setChoices($this->sourceChoices())->setFormTypeOption('value_type_options.translation_domain', 'messages'))
             ->add(BooleanFilter::new('optInNewsletter', 'admin.field.opt_in_newsletter'))
+            ->add(DateTimeFilter::new('unsubscribedAt', 'admin.field.unsubscribed_at'))
             ->add(BooleanFilter::new('active', 'admin.field.active'));
     }
 
@@ -79,6 +82,8 @@ final class EmailContactCrudController extends AbstractCrudController
         yield ChoiceField::new('type', 'admin.field.type')->setChoices($this->typeChoices());
         yield ChoiceField::new('source', 'admin.field.source')->setChoices($this->sourceChoices());
         yield BooleanField::new('optInNewsletter', 'admin.field.opt_in_newsletter');
+        yield DateTimeField::new('unsubscribedAt', 'admin.field.unsubscribed_at')->hideOnForm();
+        yield TextField::new('unsubscribeToken', 'admin.field.unsubscribe_token')->onlyOnDetail();
         yield BooleanField::new('active', 'admin.field.active');
     }
 

@@ -27,6 +27,8 @@ final class EmailContact implements IdentifiableInterface, UuidIdentifiableInter
         private bool $optInNewsletter = true,
         bool $active = true,
         private ContactDataSource $source = ContactDataSource::MANUAL,
+        private ?\DateTimeImmutable $unsubscribedAt = null,
+        ?string $unsubscribeToken = null,
         ?Uuid $uuid = null,
         ?int $id = null,
     ) {
@@ -34,7 +36,10 @@ final class EmailContact implements IdentifiableInterface, UuidIdentifiableInter
         $this->initializeUuid($uuid);
         $this->initializeLabel($label);
         $this->initializeActive($active);
+        $this->unsubscribeToken = $this->normalizeUnsubscribeToken($unsubscribeToken);
     }
+
+    private string $unsubscribeToken;
 
     public function getEmailAddress(): EmailAddress
     {
@@ -56,8 +61,42 @@ final class EmailContact implements IdentifiableInterface, UuidIdentifiableInter
         return $this->source;
     }
 
+    public function getUnsubscribeToken(): string
+    {
+        return $this->unsubscribeToken;
+    }
+
+    public function getUnsubscribedAt(): ?\DateTimeImmutable
+    {
+        return $this->unsubscribedAt;
+    }
+
+    public function isUnsubscribed(): bool
+    {
+        return $this->unsubscribedAt instanceof \DateTimeImmutable;
+    }
+
+    public function unsubscribe(?\DateTimeImmutable $unsubscribedAt = null): void
+    {
+        $this->unsubscribedAt = $unsubscribedAt ?? new \DateTimeImmutable();
+        $this->optInNewsletter = false;
+    }
+
+    public function resubscribe(): void
+    {
+        $this->unsubscribedAt = null;
+        $this->optInNewsletter = true;
+    }
+
     public function isReachableForNewsletter(): bool
     {
-        return $this->active && $this->optInNewsletter;
+        return $this->active && $this->optInNewsletter && !$this->isUnsubscribed();
+    }
+
+    private function normalizeUnsubscribeToken(?string $unsubscribeToken): string
+    {
+        $unsubscribeToken = null === $unsubscribeToken ? '' : trim($unsubscribeToken);
+
+        return '' === $unsubscribeToken ? str_replace('-', '', Uuid::v4()->toRfc4122()) : $unsubscribeToken;
     }
 }
