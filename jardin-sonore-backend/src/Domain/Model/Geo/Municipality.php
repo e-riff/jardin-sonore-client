@@ -35,6 +35,8 @@ final class Municipality implements IdentifiableInterface, UuidIdentifiableInter
         private ?Siren $siren = null,
         private ?Siret $siret = null,
         private ?array $geoShape = null,
+        private ?float $centerLatitude = null,
+        private ?float $centerLongitude = null,
         ?Uuid $uuid = null,
         ?int $id = null,
     ) {
@@ -96,6 +98,16 @@ final class Municipality implements IdentifiableInterface, UuidIdentifiableInter
         return $this->geoShape;
     }
 
+    public function getCenterLatitude(): ?float
+    {
+        return $this->centerLatitude;
+    }
+
+    public function getCenterLongitude(): ?float
+    {
+        return $this->centerLongitude;
+    }
+
     public function rename(string $name): void
     {
         $this->assertNameIsNotBlank($name);
@@ -128,6 +140,12 @@ final class Municipality implements IdentifiableInterface, UuidIdentifiableInter
     public function updateGeography(?array $geoShape): void
     {
         $this->geoShape = $geoShape;
+    }
+
+    public function updateCenter(?float $centerLatitude, ?float $centerLongitude): void
+    {
+        $this->centerLatitude = $centerLatitude;
+        $this->centerLongitude = $centerLongitude;
     }
 
     private function assertNameIsNotBlank(string $name): void

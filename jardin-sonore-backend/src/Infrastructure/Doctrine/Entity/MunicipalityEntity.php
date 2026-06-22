@@ -33,6 +33,10 @@ class MunicipalityEntity
      */
     private ?array $geoShape = null;
 
+    private ?float $centerLatitude = null;
+
+    private ?float $centerLongitude = null;
+
     private DepartmentEntity $department;
 
     public function __construct()
@@ -155,6 +159,30 @@ class MunicipalityEntity
     public function setGeoShape(?array $geoShape): static
     {
         $this->geoShape = $geoShape;
+
+        return $this;
+    }
+
+    public function getCenterLatitude(): ?float
+    {
+        return $this->centerLatitude;
+    }
+
+    public function setCenterLatitude(?float $centerLatitude): static
+    {
+        $this->centerLatitude = $centerLatitude;
+
+        return $this;
+    }
+
+    public function getCenterLongitude(): ?float
+    {
+        return $this->centerLongitude;
+    }
+
+    public function setCenterLongitude(?float $centerLongitude): static
+    {
+        $this->centerLongitude = $centerLongitude;
 
         return $this;
     }

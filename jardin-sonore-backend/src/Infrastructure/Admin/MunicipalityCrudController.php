@@ -11,6 +11,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\NumberField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 
@@ -48,6 +49,8 @@ final class MunicipalityCrudController extends AbstractCrudController
         yield TextareaField::new('address', 'admin.field.address')->hideOnIndex();
         yield TextField::new('siren', 'admin.field.siren')->hideOnIndex();
         yield TextField::new('siret', 'admin.field.siret')->hideOnIndex();
+        yield NumberField::new('centerLatitude', 'admin.field.center_latitude')->onlyOnDetail();
+        yield NumberField::new('centerLongitude', 'admin.field.center_longitude')->onlyOnDetail();
         yield ArrayField::new('geoShape', 'admin.field.geo_shape')->hideOnIndex();
     }
 }

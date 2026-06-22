@@ -99,6 +99,20 @@ return static function (ClassMetadata $metadata): void {
         'nullable' => true,
     ]);
 
+    $metadata->mapField([
+        'fieldName' => 'centerLatitude',
+        'columnName' => 'center_latitude',
+        'type' => Types::FLOAT,
+        'nullable' => true,
+    ]);
+
+    $metadata->mapField([
+        'fieldName' => 'centerLongitude',
+        'columnName' => 'center_longitude',
+        'type' => Types::FLOAT,
+        'nullable' => true,
+    ]);
+
     $metadata->mapManyToOne([
         'fieldName' => 'department',
         'targetEntity' => DepartmentEntity::class,
