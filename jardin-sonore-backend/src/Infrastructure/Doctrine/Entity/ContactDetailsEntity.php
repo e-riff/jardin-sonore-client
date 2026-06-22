@@ -153,4 +153,35 @@ class ContactDetailsEntity
 
         return $this;
     }
+
+    public function getEmailContactsSummary(): string
+    {
+        return $this->summarizeContacts(
+            $this->emailContacts->map(static fn (EmailContactEntity $emailContactEntity): string => (string) $emailContactEntity)->toArray(),
+        );
+    }
+
+    public function getPhoneContactsSummary(): string
+    {
+        return $this->summarizeContacts(
+            $this->phoneContacts->map(static fn (PhoneContactEntity $phoneContactEntity): string => (string) $phoneContactEntity)->toArray(),
+        );
+    }
+
+    public function getAddressContactsSummary(): string
+    {
+        return $this->summarizeContacts(
+            $this->addressContacts->map(static fn (AddressContactEntity $addressContactEntity): string => (string) $addressContactEntity)->toArray(),
+        );
+    }
+
+    /**
+     * @param list<string> $contacts
+     */
+    private function summarizeContacts(array $contacts): string
+    {
+        $contacts = array_values(array_filter(array_map('trim', $contacts)));
+
+        return [] === $contacts ? '—' : implode("\n", $contacts);
+    }
 }

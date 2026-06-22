@@ -9,19 +9,31 @@ use App\Domain\Model\AddressBook\DirectoryEntryType;
 use App\Domain\Model\AddressBook\OrganizationSector;
 use App\Domain\Model\AddressBook\OrganizationType;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\BooleanFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 
 /**
  * @extends AbstractCrudController<OrganizationEntity>
  */
 final class OrganizationCrudController extends AbstractCrudController
 {
+    public function __construct(
+        private readonly AdminUrlGenerator $adminUrlGenerator,
+    ) {
+    }
+
     public static function getEntityFqcn(): string
     {
         return OrganizationEntity::class;
@@ -35,22 +47,89 @@ final class OrganizationCrudController extends AbstractCrudController
             ->setPageTitle(Crud::PAGE_INDEX, 'admin.organization.page.index')
             ->setPageTitle(Crud::PAGE_NEW, 'admin.organization.page.new')
             ->setPageTitle(Crud::PAGE_EDIT, 'admin.organization.page.edit')
-            ->setPageTitle(Crud::PAGE_DETAIL, 'admin.organization.page.detail');
+            ->setPageTitle(Crud::PAGE_DETAIL, 'admin.organization.page.detail')
+            ->setDefaultSort(['name' => 'ASC'])
+            ->setSearchFields(['name']);
+    }
+
+    public function configureActions(Actions $actions): Actions
+    {
+        $addPerson = Action::new('addPerson', 'admin.action.add_person', 'fa fa-user-plus')
+            ->linkToUrl(fn (OrganizationEntity $organizationEntity): string => $this->generateNewPersonUrl($organizationEntity));
+        $addEmail = Action::new('addEmail', 'admin.action.add_email', 'fa fa-envelope')
+            ->displayIf(static fn (OrganizationEntity $organizationEntity): bool => null !== $organizationEntity->getContactDetails())
+            ->linkToUrl(fn (OrganizationEntity $organizationEntity): string => $this->generateNewContactUrl(EmailContactCrudController::class, $organizationEntity));
+        $addPhone = Action::new('addPhone', 'admin.action.add_phone', 'fa fa-phone')
+            ->displayIf(static fn (OrganizationEntity $organizationEntity): bool => null !== $organizationEntity->getContactDetails())
+            ->linkToUrl(fn (OrganizationEntity $organizationEntity): string => $this->generateNewContactUrl(PhoneContactCrudController::class, $organizationEntity));
+        $addAddress = Action::new('addAddress', 'admin.action.add_address', 'fa fa-location-dot')
+            ->displayIf(static fn (OrganizationEntity $organizationEntity): bool => null !== $organizationEntity->getContactDetails())
+            ->linkToUrl(fn (OrganizationEntity $organizationEntity): string => $this->generateNewContactUrl(AddressContactCrudController::class, $organizationEntity));
+
+        return $actions
+            ->add(Crud::PAGE_INDEX, Action::DETAIL)
+            ->add(Crud::PAGE_DETAIL, $addPerson)
+            ->add(Crud::PAGE_DETAIL, $addEmail)
+            ->add(Crud::PAGE_DETAIL, $addPhone)
+            ->add(Crud::PAGE_DETAIL, $addAddress);
+    }
+
+    public function configureFilters(Filters $filters): Filters
+    {
+        return $filters
+            ->add(ChoiceFilter::new('type', 'admin.field.organization_type')->setChoices($this->organizationTypeChoices())->setFormTypeOption('value_type_options.translation_domain', 'messages'))
+            ->add(ChoiceFilter::new('sector', 'admin.field.organization_sector')->setChoices($this->organizationSectorChoices())->setFormTypeOption('value_type_options.translation_domain', 'messages'))
+            ->add(ChoiceFilter::new('customerStatus', 'admin.field.customer_status')->setChoices($this->customerStatusChoices())->setFormTypeOption('value_type_options.translation_domain', 'messages'))
+            ->add(BooleanFilter::new('active', 'admin.field.active'))
+            ->add(EntityFilter::new('tags', 'admin.field.tags')->canSelectMultiple()->autocomplete());
     }
 
     public function configureFields(string $pageName): iterable
     {
-        yield IdField::new('id', 'admin.field.id')->hideOnForm();
-        yield TextField::new('uuid', 'admin.field.uuid')->hideOnForm();
+        yield IdField::new('id', 'admin.field.id')->onlyOnDetail();
+        yield TextField::new('uuid', 'admin.field.uuid')->onlyOnDetail();
         yield ChoiceField::new('entryType', 'admin.field.entry_type')->setChoices($this->entryTypeChoices())->hideOnForm();
         yield TextField::new('name', 'admin.field.name');
         yield ChoiceField::new('type', 'admin.field.organization_type')->setChoices($this->organizationTypeChoices());
         yield ChoiceField::new('sector', 'admin.field.organization_sector')->setChoices($this->organizationSectorChoices());
         yield ChoiceField::new('customerStatus', 'admin.field.customer_status')->setChoices($this->customerStatusChoices());
-        yield AssociationField::new('tags', 'admin.field.tags')->hideOnIndex();
+        yield AssociationField::new('tags', 'admin.field.tags')->autocomplete();
+        yield TextField::new('emailContactsSummary', 'admin.field.email_contacts')
+            ->formatValue(static fn (mixed $value): string => nl2br(htmlspecialchars((string) $value, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8')))
+            ->renderAsHtml();
+        yield TextField::new('phoneContactsSummary', 'admin.field.phone_contacts')
+            ->formatValue(static fn (mixed $value): string => nl2br(htmlspecialchars((string) $value, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8')))
+            ->renderAsHtml();
+        yield TextField::new('addressContactsSummary', 'admin.field.address_contacts')
+            ->formatValue(static fn (mixed $value): string => nl2br(htmlspecialchars((string) $value, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8')))
+            ->renderAsHtml()
+            ->onlyOnDetail();
         yield AssociationField::new('people', 'admin.field.people')->onlyOnDetail();
         yield AssociationField::new('contactDetails', 'admin.field.contact_details')->onlyOnDetail();
         yield BooleanField::new('active', 'admin.field.active');
+    }
+
+    private function generateNewPersonUrl(OrganizationEntity $organizationEntity): string
+    {
+        return $this->adminUrlGenerator
+            ->unsetAll()
+            ->setController(PersonCrudController::class)
+            ->setAction(Action::NEW)
+            ->set('organizationId', $organizationEntity->getId())
+            ->generateUrl();
+    }
+
+    /**
+     * @param class-string $crudController
+     */
+    private function generateNewContactUrl(string $crudController, OrganizationEntity $organizationEntity): string
+    {
+        return $this->adminUrlGenerator
+            ->unsetAll()
+            ->setController($crudController)
+            ->setAction(Action::NEW)
+            ->set('contactDetailsId', $organizationEntity->getContactDetails()?->getId())
+            ->generateUrl();
     }
 
     /**
