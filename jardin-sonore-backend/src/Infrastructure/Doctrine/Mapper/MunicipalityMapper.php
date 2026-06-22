@@ -38,6 +38,8 @@ final readonly class MunicipalityMapper
             siren: null !== $municipalityEntity->getSiren() ? new Siren($municipalityEntity->getSiren()) : null,
             siret: null !== $municipalityEntity->getSiret() ? new Siret($municipalityEntity->getSiret()) : null,
             geoShape: $municipalityEntity->getGeoShape(),
+            centerLatitude: $municipalityEntity->getCenterLatitude(),
+            centerLongitude: $municipalityEntity->getCenterLongitude(),
             uuid: $municipalityEntity->getUuid(),
             id: $municipalityEntity->getId(),
         );
@@ -58,6 +60,8 @@ final readonly class MunicipalityMapper
             ->setSiren($municipality->getSiren()?->value())
             ->setSiret($municipality->getSiret()?->value())
             ->setGeoShape($municipality->getGeoShape())
+            ->setCenterLatitude($municipality->getCenterLatitude())
+            ->setCenterLongitude($municipality->getCenterLongitude())
             ->setDepartment($this->departmentMapper->toEntity($municipality->getDepartment(), $municipalityEntity->getDepartment()));
 
         return $municipalityEntity;

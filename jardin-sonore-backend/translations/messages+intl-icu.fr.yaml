@@ -59,6 +59,8 @@ admin:
     address: "Adresse"
     siren: "SIREN"
     siret: "SIRET"
+    center_latitude: "Latitude du centre"
+    center_longitude: "Longitude du centre"
     geo_shape: "Contour géographique"
   region:
     page:
