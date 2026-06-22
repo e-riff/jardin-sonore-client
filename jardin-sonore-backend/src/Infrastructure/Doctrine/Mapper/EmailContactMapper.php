@@ -19,6 +19,8 @@ final readonly class EmailContactMapper
             optInNewsletter: $emailContactEntity->hasOptInNewsletter(),
             active: $emailContactEntity->isActive(),
             source: $emailContactEntity->getSource(),
+            unsubscribedAt: $emailContactEntity->getUnsubscribedAt(),
+            unsubscribeToken: $emailContactEntity->getUnsubscribeToken(),
             uuid: $emailContactEntity->getUuid(),
             id: $emailContactEntity->getId(),
         );
@@ -35,7 +37,9 @@ final readonly class EmailContactMapper
             ->setType($emailContact->getType())
             ->setOptInNewsletter($emailContact->hasNewsletterOptIn())
             ->setActive($emailContact->isActive())
-            ->setSource($emailContact->getSource());
+            ->setSource($emailContact->getSource())
+            ->setUnsubscribedAt($emailContact->getUnsubscribedAt())
+            ->setUnsubscribeToken($emailContact->getUnsubscribeToken());
 
         return $emailContactEntity;
     }

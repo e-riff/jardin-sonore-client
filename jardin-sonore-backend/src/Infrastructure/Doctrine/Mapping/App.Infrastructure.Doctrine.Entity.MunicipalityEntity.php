@@ -13,6 +13,7 @@ return static function (ClassMetadata $metadata): void {
         'indexes' => [
             'idx_municipality_department' => ['columns' => ['department_id']],
             'idx_municipality_postal_code' => ['columns' => ['postal_code']],
+            'idx_municipality_center' => ['columns' => ['center_latitude', 'center_longitude']],
         ],
         'uniqueConstraints' => [
             'uniq_municipality_uuid' => ['columns' => ['uuid']],

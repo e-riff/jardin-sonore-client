@@ -10,6 +10,7 @@ use App\Infrastructure\Doctrine\Entity\Behavior\ActivableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\NullableLabelTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\UuidIdentifiableTrait;
+use Symfony\Component\Uid\Uuid;
 
 class EmailContactEntity
 {
@@ -28,9 +29,14 @@ class EmailContactEntity
 
     private ContactDataSource $source = ContactDataSource::MANUAL;
 
+    private string $unsubscribeToken = '';
+
+    private ?\DateTimeImmutable $unsubscribedAt = null;
+
     public function __construct()
     {
         $this->initializeUuid();
+        $this->unsubscribeToken = self::generateUnsubscribeToken();
     }
 
     public function __toString(): string
@@ -96,5 +102,44 @@ class EmailContactEntity
         $this->source = $source;
 
         return $this;
+    }
+
+    public function getUnsubscribeToken(): string
+    {
+        if ('' === $this->unsubscribeToken) {
+            $this->unsubscribeToken = self::generateUnsubscribeToken();
+        }
+
+        return $this->unsubscribeToken;
+    }
+
+    public function setUnsubscribeToken(?string $unsubscribeToken): static
+    {
+        $unsubscribeToken = null === $unsubscribeToken ? '' : trim($unsubscribeToken);
+        $this->unsubscribeToken = '' === $unsubscribeToken ? self::generateUnsubscribeToken() : $unsubscribeToken;
+
+        return $this;
+    }
+
+    public function getUnsubscribedAt(): ?\DateTimeImmutable
+    {
+        return $this->unsubscribedAt;
+    }
+
+    public function setUnsubscribedAt(?\DateTimeImmutable $unsubscribedAt): static
+    {
+        $this->unsubscribedAt = $unsubscribedAt;
+
+        return $this;
+    }
+
+    public function isUnsubscribed(): bool
+    {
+        return $this->unsubscribedAt instanceof \DateTimeImmutable;
+    }
+
+    private static function generateUnsubscribeToken(): string
+    {
+        return str_replace('-', '', Uuid::v4()->toRfc4122());
     }
 }
