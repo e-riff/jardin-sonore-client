@@ -10,6 +10,7 @@ use App\Infrastructure\Doctrine\Entity\Behavior\ActivableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\NullableLabelTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\UuidIdentifiableTrait;
+use DateTimeImmutable;
 use Symfony\Component\Uid\Uuid;
 
 class EmailContactEntity
@@ -31,7 +32,7 @@ class EmailContactEntity
 
     private string $unsubscribeToken = '';
 
-    private ?\DateTimeImmutable $unsubscribedAt = null;
+    private ?DateTimeImmutable $unsubscribedAt = null;
 
     public function __construct()
     {
@@ -121,12 +122,12 @@ class EmailContactEntity
         return $this;
     }
 
-    public function getUnsubscribedAt(): ?\DateTimeImmutable
+    public function getUnsubscribedAt(): ?DateTimeImmutable
     {
         return $this->unsubscribedAt;
     }
 
-    public function setUnsubscribedAt(?\DateTimeImmutable $unsubscribedAt): static
+    public function setUnsubscribedAt(?DateTimeImmutable $unsubscribedAt): static
     {
         $this->unsubscribedAt = $unsubscribedAt;
 
@@ -135,7 +136,7 @@ class EmailContactEntity
 
     public function isUnsubscribed(): bool
     {
-        return $this->unsubscribedAt instanceof \DateTimeImmutable;
+        return $this->unsubscribedAt instanceof DateTimeImmutable;
     }
 
     private static function generateUnsubscribeToken(): string

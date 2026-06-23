@@ -11,6 +11,7 @@ use App\Domain\Model\Behavior\NullableLabelTrait;
 use App\Domain\Model\Behavior\UuidIdentifiableInterface;
 use App\Domain\Model\Behavior\UuidIdentifiableTrait;
 use App\Domain\Model\ValueObject\EmailAddress;
+use DateTimeImmutable;
 use Symfony\Component\Uid\Uuid;
 
 final class EmailContact implements IdentifiableInterface, UuidIdentifiableInterface
@@ -27,7 +28,7 @@ final class EmailContact implements IdentifiableInterface, UuidIdentifiableInter
         private bool $optInNewsletter = true,
         bool $active = true,
         private ?ContactDataSource $source = ContactDataSource::MANUAL,
-        private ?\DateTimeImmutable $unsubscribedAt = null,
+        private ?DateTimeImmutable $unsubscribedAt = null,
         ?string $unsubscribeToken = null,
         ?Uuid $uuid = null,
         ?int $id = null,
@@ -66,19 +67,19 @@ final class EmailContact implements IdentifiableInterface, UuidIdentifiableInter
         return $this->unsubscribeToken;
     }
 
-    public function getUnsubscribedAt(): ?\DateTimeImmutable
+    public function getUnsubscribedAt(): ?DateTimeImmutable
     {
         return $this->unsubscribedAt;
     }
 
     public function isUnsubscribed(): bool
     {
-        return $this->unsubscribedAt instanceof \DateTimeImmutable;
+        return $this->unsubscribedAt instanceof DateTimeImmutable;
     }
 
-    public function unsubscribe(?\DateTimeImmutable $unsubscribedAt = null): void
+    public function unsubscribe(?DateTimeImmutable $unsubscribedAt = null): void
     {
-        $this->unsubscribedAt = $unsubscribedAt ?? new \DateTimeImmutable();
+        $this->unsubscribedAt = $unsubscribedAt ?? new DateTimeImmutable();
         $this->optInNewsletter = false;
     }
 

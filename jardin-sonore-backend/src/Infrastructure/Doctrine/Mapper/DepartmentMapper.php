@@ -7,6 +7,7 @@ namespace App\Infrastructure\Doctrine\Mapper;
 use App\Domain\Model\Geo\Department;
 use App\Domain\Model\ValueObject\DepartmentCode;
 use App\Infrastructure\Doctrine\Entity\DepartmentEntity;
+use LogicException;
 
 final readonly class DepartmentMapper
 {
@@ -19,7 +20,7 @@ final readonly class DepartmentMapper
         $regionEntity = $departmentEntity->getRegion();
 
         if (null === $regionEntity) {
-            throw new \LogicException('Department entity must be attached to a region.');
+            throw new LogicException('Department entity must be attached to a region.');
         }
 
         return new Department(

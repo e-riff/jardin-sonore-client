@@ -10,6 +10,7 @@ use App\Domain\Model\Behavior\IdentifiableTrait;
 use App\Domain\Model\Behavior\UuidIdentifiableInterface;
 use App\Domain\Model\Behavior\UuidIdentifiableTrait;
 use App\Domain\Model\ValueObject\EmailAddress;
+use InvalidArgumentException;
 use Symfony\Component\Uid\Uuid;
 
 final class AdminUser implements IdentifiableInterface, UuidIdentifiableInterface
@@ -55,7 +56,7 @@ final class AdminUser implements IdentifiableInterface, UuidIdentifiableInterfac
     private function assertPasswordHashIsNotBlank(string $passwordHash): void
     {
         if ('' === trim($passwordHash)) {
-            throw new \InvalidArgumentException('Admin user password hash cannot be blank.');
+            throw new InvalidArgumentException('Admin user password hash cannot be blank.');
         }
     }
 }

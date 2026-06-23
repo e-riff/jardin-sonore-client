@@ -8,6 +8,7 @@ use App\Domain\Model\AddressBook\ContactDataSource;
 use App\Domain\Model\AddressBook\EmailContactType;
 use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
+use BackedEnum;
 use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
@@ -154,6 +155,6 @@ final class EmailContactCrudController extends AbstractCrudController
 
     private function translateEnumValue(string $translationPrefix, mixed $value): string
     {
-        return $value instanceof \BackedEnum ? $this->translator->trans($translationPrefix.'.'.$value->value) : '';
+        return $value instanceof BackedEnum ? $this->translator->trans($translationPrefix . '.' . $value->value) : '';
     }
 }

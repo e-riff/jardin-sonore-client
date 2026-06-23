@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Model\AddressBook;
 
+use InvalidArgumentException;
 use Symfony\Component\Uid\Uuid;
 
 final class Person extends DirectoryEntry
@@ -46,7 +47,7 @@ final class Person extends DirectoryEntry
     private function assertNamePartIsNotBlank(string $namePart, string $message): void
     {
         if ('' === trim($namePart)) {
-            throw new \InvalidArgumentException($message);
+            throw new InvalidArgumentException($message);
         }
     }
 }

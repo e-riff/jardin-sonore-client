@@ -14,6 +14,7 @@ use App\Domain\Model\ValueObject\PhoneNumber;
 use App\Domain\Model\ValueObject\PostalCode;
 use App\Domain\Model\ValueObject\Siren;
 use App\Domain\Model\ValueObject\Siret;
+use InvalidArgumentException;
 use Symfony\Component\Uid\Uuid;
 
 final class Municipality implements IdentifiableInterface, UuidIdentifiableInterface
@@ -151,7 +152,7 @@ final class Municipality implements IdentifiableInterface, UuidIdentifiableInter
     private function assertNameIsNotBlank(string $name): void
     {
         if ('' === trim($name)) {
-            throw new \InvalidArgumentException('Municipality name cannot be blank.');
+            throw new InvalidArgumentException('Municipality name cannot be blank.');
         }
     }
 }

@@ -42,7 +42,7 @@ final readonly class CreateAdminUserCommand
 
         $password ??= $io->askHidden('Admin password');
 
-        if (!is_string($password) || mb_strlen($password) < 12) {
+        if (!is_string($password) || 12 > mb_strlen($password)) {
             $io->error('The admin password must contain at least 12 characters.');
 
             return Command::FAILURE;

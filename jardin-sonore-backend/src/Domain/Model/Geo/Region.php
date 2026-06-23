@@ -9,6 +9,7 @@ use App\Domain\Model\Behavior\IdentifiableTrait;
 use App\Domain\Model\Behavior\UuidIdentifiableInterface;
 use App\Domain\Model\Behavior\UuidIdentifiableTrait;
 use App\Domain\Model\ValueObject\RegionCode;
+use InvalidArgumentException;
 use Symfony\Component\Uid\Uuid;
 
 final class Region implements IdentifiableInterface, UuidIdentifiableInterface
@@ -51,7 +52,7 @@ final class Region implements IdentifiableInterface, UuidIdentifiableInterface
     private function assertNameIsNotBlank(string $name): void
     {
         if ('' === trim($name)) {
-            throw new \InvalidArgumentException('Region name cannot be blank.');
+            throw new InvalidArgumentException('Region name cannot be blank.');
         }
     }
 }

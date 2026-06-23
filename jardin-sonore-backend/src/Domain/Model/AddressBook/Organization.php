@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Model\AddressBook;
 
+use InvalidArgumentException;
 use Symfony\Component\Uid\Uuid;
 
 final class Organization extends DirectoryEntry
@@ -45,7 +46,7 @@ final class Organization extends DirectoryEntry
     private function assertNameIsNotBlank(string $name): void
     {
         if ('' === trim($name)) {
-            throw new \InvalidArgumentException('Organization name cannot be blank.');
+            throw new InvalidArgumentException('Organization name cannot be blank.');
         }
     }
 }
