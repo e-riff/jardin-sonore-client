@@ -1,29 +1,29 @@
 {% extends 'internal/base.html.twig' %}
 
-{% set title = 'Accueil interne | Jardin Sonore' %}
+{% set title = 'internal.dashboard.title'|trans({}, 'internal') %}
 
 {% block internal_body %}
     <section class="internal-hero">
-        <p class="internal-eyebrow">Espace metier</p>
-        <h1>Bienvenue dans l'atelier Jardin Sonore</h1>
+        <p class="internal-eyebrow">{{ 'internal.dashboard.eyebrow'|trans({}, 'internal') }}</p>
+        <h1>{{ 'internal.dashboard.heading'|trans({}, 'internal') }}</h1>
         <p>
-            La racine du backend devient l'espace de travail metier. EasyAdmin reste disponible pour les corrections techniques dans le backoffice.
+            {{ 'internal.dashboard.description'|trans({}, 'internal') }}
         </p>
     </section>
 
-    <section class="internal-grid" aria-label="Modules internes">
+    <section class="internal-grid" aria-label="{{ 'internal.dashboard.modules_aria'|trans({}, 'internal') }}">
         <article class="internal-card">
-            <span class="internal-badge internal-badge--primary">Prochaine etape</span>
-            <h2>Newsletters</h2>
-            <p>Creer une campagne, preparer le contenu, cibler les destinataires, previsualiser et envoyer un test.</p>
-            <a class="internal-button" href="{{ path('mailing_index') }}">Ouvrir les newsletters</a>
+            <span class="internal-badge internal-badge--primary">{{ 'internal.dashboard.mailing.badge'|trans({}, 'internal') }}</span>
+            <h2>{{ 'internal.dashboard.mailing.title'|trans({}, 'internal') }}</h2>
+            <p>{{ 'internal.dashboard.mailing.description'|trans({}, 'internal') }}</p>
+            <a class="internal-button" href="{{ path('mailing_index') }}">{{ 'internal.dashboard.mailing.action'|trans({}, 'internal') }}</a>
         </article>
 
         <article class="internal-card">
-            <span class="internal-badge internal-badge--secondary">Technique</span>
-            <h2>Backoffice</h2>
-            <p>Consulter et corriger l'annuaire, les coordonnees, les territoires et les donnees techniques.</p>
-            <a class="internal-button internal-button--secondary" href="{{ path('admin') }}">Ouvrir EasyAdmin</a>
+            <span class="internal-badge internal-badge--secondary">{{ 'internal.dashboard.backoffice.badge'|trans({}, 'internal') }}</span>
+            <h2>{{ 'internal.dashboard.backoffice.title'|trans({}, 'internal') }}</h2>
+            <p>{{ 'internal.dashboard.backoffice.description'|trans({}, 'internal') }}</p>
+            <a class="internal-button internal-button--secondary" href="{{ path('admin') }}">{{ 'internal.dashboard.backoffice.action'|trans({}, 'internal') }}</a>
         </article>
     </section>
 {% endblock %}

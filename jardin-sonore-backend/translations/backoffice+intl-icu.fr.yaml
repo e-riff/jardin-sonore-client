@@ -1,0 +1,204 @@
+admin:
+  dashboard:
+    title: "Jardin Sonore"
+  menu:
+    dashboard: "Tableau de bord"
+    address_book: "Annuaire"
+    organizations: "Organisations"
+    people: "Personnes"
+    contact_details: "Coordonnées"
+    email_contacts: "E-mails"
+    phone_contacts: "Téléphones"
+    address_contacts: "Adresses"
+    tags: "Tags"
+    geography: "Territoires"
+    regions: "Régions"
+    departments: "Départements"
+    municipalities: "Communes"
+  action:
+    add_person: "Ajouter une personne"
+    add_email: "Ajouter un e-mail"
+    add_phone: "Ajouter un téléphone"
+    add_address: "Ajouter une adresse"
+  field:
+    id: "ID"
+    uuid: "UUID"
+    code: "Code"
+    name: "Nom"
+    first_name: "Prénom"
+    last_name: "Nom"
+    role: "Poste"
+    label: "Libellé"
+    organization: "Organisation"
+    organizations: "Organisations"
+    person: "Personne"
+    people: "Personnes"
+    directory_entry: "Entrée d’annuaire"
+    directory_entries: "Entrées d’annuaire"
+    entry_type: "Type d’entrée"
+    organization_type: "Type d’établissement"
+    organization_sector: "Secteur"
+    customer_status: "Statut client"
+    city: "Ville"
+    municipality: "Commune"
+    contact_details: "Coordonnées"
+    email_contacts: "E-mails"
+    phone_contacts: "Téléphones"
+    address_contacts: "Adresses"
+    tags: "Tags"
+    type: "Type"
+    source: "Source"
+    opt_in_newsletter: "Newsletter"
+    unsubscribed_at: "Désinscrit le"
+    unsubscribe_token: "Token de désinscription"
+    active: "Actif"
+    region: "Région"
+    department: "Département"
+    insee_code: "Code INSEE"
+    postal_code: "Code postal"
+    phone_number: "Téléphone"
+    email_address: "Adresse e-mail"
+    address: "Adresse"
+    siren: "SIREN"
+    siret: "SIRET"
+    center_latitude: "Latitude du centre"
+    center_longitude: "Longitude du centre"
+    geo_shape: "Contour géographique"
+  help:
+    phone_number: "Saisissez un numéro français ou international. Il sera stocké sans séparateurs, par exemple 06 12 34 56 78 deviendra +33612345678."
+  region:
+    page:
+      index: "Régions"
+      new: "Créer une région"
+      edit: "Modifier une région"
+      detail: "Détail de la région"
+  department:
+    page:
+      index: "Départements"
+      new: "Créer un département"
+      edit: "Modifier un département"
+      detail: "Détail du département"
+  municipality:
+    page:
+      index: "Communes"
+      new: "Créer une commune"
+      edit: "Modifier une commune"
+      detail: "Détail de la commune"
+  organization:
+    page:
+      index: "Organisations"
+      new: "Créer une organisation"
+      edit: "Modifier une organisation"
+      detail: "Détail de l’organisation"
+  person:
+    page:
+      index: "Personnes"
+      new: "Créer une personne"
+      edit: "Modifier une personne"
+      detail: "Détail de la personne"
+  contact_details:
+    page:
+      index: "Coordonnées"
+      new: "Créer des coordonnées"
+      edit: "Modifier les coordonnées"
+      detail: "Détail des coordonnées"
+  email_contact:
+    page:
+      index: "E-mails"
+      new: "Créer un e-mail"
+      edit: "Modifier un e-mail"
+      detail: "Détail de l’e-mail"
+  phone_contact:
+    page:
+      index: "Téléphones"
+      new: "Créer un téléphone"
+      edit: "Modifier un téléphone"
+      detail: "Détail du téléphone"
+  address_contact:
+    page:
+      index: "Adresses"
+      new: "Créer une adresse"
+      edit: "Modifier une adresse"
+      detail: "Détail de l’adresse"
+  tag:
+    page:
+      index: "Tags"
+      new: "Créer un tag"
+      edit: "Modifier un tag"
+      detail: "Détail du tag"
+
+geography:
+  region:
+    singular: "Région"
+    plural: "Régions"
+  department:
+    singular: "Département"
+    plural: "Départements"
+  municipality:
+    singular: "Commune"
+    plural: "Communes"
+
+address_book:
+  organization:
+    singular: "Organisation"
+    plural: "Organisations"
+  person:
+    singular: "Personne"
+    plural: "Personnes"
+  contact_details:
+    singular: "Coordonnées"
+    plural: "Coordonnées"
+  email_contact:
+    singular: "E-mail"
+    plural: "E-mails"
+  phone_contact:
+    singular: "Téléphone"
+    plural: "Téléphones"
+  address_contact:
+    singular: "Adresse"
+    plural: "Adresses"
+  tag:
+    singular: "Tag"
+    plural: "Tags"
+  directory_entry_type:
+    organization: "Organisation"
+    person: "Personne"
+  email_contact_type:
+    main: "Principal"
+    work: "Professionnel"
+    personal: "Personnel"
+    billing: "Facturation"
+    other: "Autre"
+  phone_contact_type:
+    main: "Principal"
+    mobile: "Mobile"
+    office: "Bureau"
+    home: "Personnel"
+    other: "Autre"
+  address_contact_type:
+    main: "Principale"
+    office: "Bureau"
+    billing: "Facturation"
+    delivery: "Livraison"
+    home: "Domicile"
+    other: "Autre"
+  organization_type:
+    creche: "Crèche - multi-accueil"
+    mairie: "Mairie - collectivité"
+    ram: "Relais assistantes maternelles"
+    mam: "Maison d’assistantes maternelles"
+    mediatheque: "Médiathèque"
+    centre: "Centre social"
+    garderie: "Garderie"
+  organization_sector:
+    association: "Association"
+    public: "Secteur public"
+    private: "Privé non associatif"
+  customer_status:
+    customer: "Client"
+    prospect: "Prospect"
+    former_customer: "Ancien client"
+  contact_source:
+    manual: "Saisie manuelle"
+    google_sheets: "Google Sheets"
+    legacy_import: "Ancien import"

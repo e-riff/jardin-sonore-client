@@ -1,29 +1,29 @@
 {% extends 'internal/base.html.twig' %}
 
-{% set title = 'Newsletters | Jardin Sonore' %}
+{% set title = 'mailing.index.title'|trans({}, 'mailing') %}
 
 {% block internal_body %}
     <section class="internal-page-heading">
         <div>
-            <p class="internal-eyebrow">Newsletters</p>
-            <h1>Campagnes email</h1>
-            <p>Le module newsletter sera construit ici, hors EasyAdmin, avec un workflow metier dedie.</p>
+            <p class="internal-eyebrow">{{ 'mailing.index.eyebrow'|trans({}, 'mailing') }}</p>
+            <h1>{{ 'mailing.index.heading'|trans({}, 'mailing') }}</h1>
+            <p>{{ 'mailing.index.description'|trans({}, 'mailing') }}</p>
         </div>
 
-        <span class="internal-badge internal-badge--secondary">Socle en cours</span>
+        <span class="internal-badge internal-badge--secondary">{{ 'mailing.index.status'|trans({}, 'mailing') }}</span>
     </section>
 
     <section class="internal-card">
-        <h2>Roadmap V1.1</h2>
+        <h2>{{ 'mailing.index.roadmap.title'|trans({}, 'mailing') }}</h2>
         <p>
-            Premiere tranche prevue : brouillon, contenu simple, recommandations structurees, ciblage dynamique, preview et envoi test.
+            {{ 'mailing.index.roadmap.description'|trans({}, 'mailing') }}
         </p>
 
         <ul class="internal-checklist">
-            <li>Modele domaine newsletter</li>
-            <li>Ciblage par annuaire et geographie</li>
-            <li>Preview Twig du mail</li>
-            <li>Envoi test via Symfony Mailer</li>
+            <li>{{ 'mailing.index.roadmap.item_model'|trans({}, 'mailing') }}</li>
+            <li>{{ 'mailing.index.roadmap.item_targeting'|trans({}, 'mailing') }}</li>
+            <li>{{ 'mailing.index.roadmap.item_preview'|trans({}, 'mailing') }}</li>
+            <li>{{ 'mailing.index.roadmap.item_test_send'|trans({}, 'mailing') }}</li>
         </ul>
     </section>
 {% endblock %}

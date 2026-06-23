@@ -67,7 +67,7 @@ final class AddressContactCrudController extends AbstractCrudController
     {
         return $filters
             ->add(EntityFilter::new('contactDetails', 'admin.field.contact_details')->autocomplete())
-            ->add(ChoiceFilter::new('type', 'admin.field.type')->setChoices($this->typeChoices())->setFormTypeOption('value_type_options.translation_domain', 'messages'))
+            ->add(ChoiceFilter::new('type', 'admin.field.type')->setChoices($this->typeChoices())->setFormTypeOption('value_type_options.translation_domain', 'backoffice'))
             ->add(TextFilter::new('postalCode', 'admin.field.postal_code'))
             ->add(TextFilter::new('city', 'admin.field.city'))
             ->add(EntityFilter::new('municipality', 'admin.field.municipality')->autocomplete())
@@ -138,6 +138,6 @@ final class AddressContactCrudController extends AbstractCrudController
 
     private function translateEnumValue(string $translationPrefix, mixed $value): string
     {
-        return $value instanceof BackedEnum ? $this->translator->trans($translationPrefix . '.' . $value->value) : '';
+        return $value instanceof BackedEnum ? $this->translator->trans("{$translationPrefix}.{$value->value}", [], 'backoffice') : '';
     }
 }

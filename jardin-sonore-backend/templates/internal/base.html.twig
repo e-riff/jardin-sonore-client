@@ -1,22 +1,22 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ title|default('Jardin Sonore Interne') }}{% endblock %}
+{% block title %}{{ title|default('internal.base.title'|trans({}, 'internal')) }}{% endblock %}
 
 {% block body %}
     <div class="internal-shell">
         <header class="internal-header">
-            <a class="internal-brand" href="{{ path('internal_dashboard') }}" aria-label="Accueil interne Jardin Sonore">
+            <a class="internal-brand" href="{{ path('internal_dashboard') }}" aria-label="{{ 'internal.base.brand_aria'|trans({}, 'internal') }}">
                 <span class="internal-brand__mark">JS</span>
                 <span>
-                    <strong>Jardin Sonore</strong>
-                    <small>Interface interne</small>
+                    <strong>{{ 'internal.base.brand'|trans({}, 'internal') }}</strong>
+                    <small>{{ 'internal.base.subtitle'|trans({}, 'internal') }}</small>
                 </span>
             </a>
 
-            <nav class="internal-nav" aria-label="Navigation interne">
-                <a href="{{ path('internal_dashboard') }}">Accueil</a>
-                <a href="{{ path('mailing_index') }}">Newsletters</a>
-                <a href="{{ path('admin') }}">Backoffice</a>
+            <nav class="internal-nav" aria-label="{{ 'internal.base.navigation_aria'|trans({}, 'internal') }}">
+                <a href="{{ path('internal_dashboard') }}">{{ 'internal.base.nav.dashboard'|trans({}, 'internal') }}</a>
+                <a href="{{ path('mailing_index') }}">{{ 'internal.base.nav.mailing'|trans({}, 'internal') }}</a>
+                <a href="{{ path('admin') }}">{{ 'internal.base.nav.backoffice'|trans({}, 'internal') }}</a>
             </nav>
         </header>
 

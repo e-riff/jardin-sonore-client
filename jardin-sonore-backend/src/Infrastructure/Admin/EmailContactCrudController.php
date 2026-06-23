@@ -70,8 +70,8 @@ final class EmailContactCrudController extends AbstractCrudController
     {
         return $filters
             ->add(EntityFilter::new('contactDetails', 'admin.field.contact_details')->autocomplete())
-            ->add(ChoiceFilter::new('type', 'admin.field.type')->setChoices($this->typeChoices())->setFormTypeOption('value_type_options.translation_domain', 'messages'))
-            ->add(ChoiceFilter::new('source', 'admin.field.source')->setChoices($this->sourceChoices())->setFormTypeOption('value_type_options.translation_domain', 'messages'))
+            ->add(ChoiceFilter::new('type', 'admin.field.type')->setChoices($this->typeChoices())->setFormTypeOption('value_type_options.translation_domain', 'backoffice'))
+            ->add(ChoiceFilter::new('source', 'admin.field.source')->setChoices($this->sourceChoices())->setFormTypeOption('value_type_options.translation_domain', 'backoffice'))
             ->add(BooleanFilter::new('optInNewsletter', 'admin.field.opt_in_newsletter'))
             ->add(DateTimeFilter::new('unsubscribedAt', 'admin.field.unsubscribed_at'))
             ->add(BooleanFilter::new('active', 'admin.field.active'));
@@ -161,6 +161,6 @@ final class EmailContactCrudController extends AbstractCrudController
 
     private function translateEnumValue(string $translationPrefix, mixed $value): string
     {
-        return $value instanceof BackedEnum ? $this->translator->trans($translationPrefix . '.' . $value->value) : '';
+        return $value instanceof BackedEnum ? $this->translator->trans("{$translationPrefix}.{$value->value}", [], 'backoffice') : '';
     }
 }

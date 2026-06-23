@@ -45,7 +45,7 @@ final class AddressContactFormType extends AbstractType
             ->add('type', ChoiceType::class, [
                 'label' => 'admin.field.type',
                 'choices' => $this->typeChoices(),
-                'choice_translation_domain' => 'messages',
+                'choice_translation_domain' => 'backoffice',
             ])
             ->add('active', CheckboxType::class, [
                 'label' => 'admin.field.active',
@@ -57,7 +57,7 @@ final class AddressContactFormType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => AddressContactEntity::class,
-            'translation_domain' => 'messages',
+            'translation_domain' => 'backoffice',
         ]);
     }
 
