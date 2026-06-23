@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Admin;
 
+use App\Infrastructure\Admin\Formatter\ContactDisplayFormatter;
 use App\Infrastructure\Doctrine\Entity\MunicipalityEntity;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
@@ -12,6 +13,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\NumberField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TelephoneField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 
@@ -46,9 +48,22 @@ final class MunicipalityCrudController extends AbstractCrudController
         yield TextField::new('postalCode', 'admin.field.postal_code');
         yield AssociationField::new('department', 'admin.field.department');
         yield TextField::new('phoneNumber', 'admin.field.phone_number')
-            ->setHelp('admin.help.phone_number')
+            ->formatValue(static fn (mixed $value): string => ContactDisplayFormatter::phoneLink($value))
+            ->renderAsHtml()
+            ->hideOnForm()
             ->hideOnIndex();
-        yield EmailField::new('emailAddress', 'admin.field.email_address')->hideOnIndex();
+        yield TelephoneField::new('phoneNumber', 'admin.field.phone_number')
+            ->setHelp('admin.help.phone_number')
+            ->onlyOnForms()
+            ->hideOnIndex();
+        yield TextField::new('emailAddress', 'admin.field.email_address')
+            ->formatValue(static fn (mixed $value): string => ContactDisplayFormatter::emailLink($value))
+            ->renderAsHtml()
+            ->hideOnForm()
+            ->hideOnIndex();
+        yield EmailField::new('emailAddress', 'admin.field.email_address')
+            ->onlyOnForms()
+            ->hideOnIndex();
         yield TextareaField::new('address', 'admin.field.address')->hideOnIndex();
         yield TextField::new('siren', 'admin.field.siren')->hideOnIndex();
         yield TextField::new('siret', 'admin.field.siret')->hideOnIndex();

@@ -1,0 +1,100 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Infrastructure\Admin\Formatter;
+
+final class ContactDisplayFormatter
+{
+    public static function emailLink(mixed $value): string
+    {
+        $emailAddress = trim((string) $value);
+
+        if ('' === $emailAddress || '—' === $emailAddress) {
+            return self::escape($emailAddress);
+        }
+
+        $escapedEmailAddress = self::escape($emailAddress);
+        $mailTo = self::escape("mailto:{$emailAddress}");
+
+        return sprintf('<a href="%s">%s</a>', $mailTo, $escapedEmailAddress);
+    }
+
+    public static function phoneLink(mixed $value): string
+    {
+        $phoneNumber = trim((string) $value);
+
+        if ('' === $phoneNumber || '—' === $phoneNumber) {
+            return self::escape($phoneNumber);
+        }
+
+        $callablePhoneNumber = self::callablePhoneNumber($phoneNumber);
+        $displayPhoneNumber = self::displayPhoneNumber($callablePhoneNumber);
+
+        return sprintf('<a href="tel:%s">%s</a>', self::escape($callablePhoneNumber), self::escape($displayPhoneNumber));
+    }
+
+    public static function emailSummary(mixed $value): string
+    {
+        return self::summary($value, self::emailLink(...));
+    }
+
+    public static function phoneSummary(mixed $value): string
+    {
+        return self::summary($value, self::phoneLink(...));
+    }
+
+    public static function textSummary(mixed $value): string
+    {
+        return nl2br(self::escape((string) $value));
+    }
+
+    private static function summary(mixed $value, callable $lineFormatter): string
+    {
+        $lines = preg_split('/\R/', (string) $value) ?: [];
+        $lines = array_values(array_filter(array_map('trim', $lines), static fn (string $line): bool => '' !== $line));
+
+        if ([] === $lines) {
+            return '';
+        }
+
+        return implode('<br>', array_map($lineFormatter, $lines));
+    }
+
+    private static function callablePhoneNumber(string $phoneNumber): string
+    {
+        $phoneNumber = preg_replace('/[^\d+]/', '', $phoneNumber) ?? '';
+
+        if (str_starts_with($phoneNumber, '00')) {
+            $phoneNumber = '+' . substr($phoneNumber, 2);
+        }
+
+        if (1 === preg_match('/^0\d{9}$/', $phoneNumber)) {
+            return '+33' . substr($phoneNumber, 1);
+        }
+
+        return $phoneNumber;
+    }
+
+    private static function displayPhoneNumber(string $phoneNumber): string
+    {
+        if (1 === preg_match('/^\+33\d{9}$/', $phoneNumber)) {
+            return '+33 ' . substr($phoneNumber, 3, 1) . ' ' . implode(' ', str_split(substr($phoneNumber, 4), 2));
+        }
+
+        if (str_starts_with($phoneNumber, '+')) {
+            return '+' . implode(' ', str_split(substr($phoneNumber, 1), 2));
+        }
+
+        if (1 === preg_match('/^0\d{9}$/', $phoneNumber)) {
+            return implode(' ', str_split($phoneNumber, 2));
+        }
+
+        return $phoneNumber;
+    }
+
+    private static function escape(string $value): string
+    {
+        return htmlspecialchars($value, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8');
+    }
+}

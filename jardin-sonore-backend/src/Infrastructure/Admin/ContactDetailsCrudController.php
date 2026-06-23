@@ -7,6 +7,7 @@ namespace App\Infrastructure\Admin;
 use App\Infrastructure\Admin\Form\AddressContactFormType;
 use App\Infrastructure\Admin\Form\EmailContactFormType;
 use App\Infrastructure\Admin\Form\PhoneContactFormType;
+use App\Infrastructure\Admin\Formatter\ContactDisplayFormatter;
 use App\Infrastructure\Doctrine\Entity\AddressContactEntity;
 use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
@@ -106,15 +107,15 @@ final class ContactDetailsCrudController extends AbstractCrudController
         yield TextField::new('uuid', 'admin.field.uuid')->onlyOnDetail();
         yield AssociationField::new('directoryEntry', 'admin.field.directory_entry')->hideOnForm();
         yield TextField::new('emailContactsSummary', 'admin.field.email_contacts')
-            ->formatValue(static fn (mixed $value): string => nl2br(htmlspecialchars((string) $value, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8')))
+            ->formatValue(static fn (mixed $value): string => ContactDisplayFormatter::emailSummary($value))
             ->renderAsHtml()
             ->hideOnForm();
         yield TextField::new('phoneContactsSummary', 'admin.field.phone_contacts')
-            ->formatValue(static fn (mixed $value): string => nl2br(htmlspecialchars((string) $value, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8')))
+            ->formatValue(static fn (mixed $value): string => ContactDisplayFormatter::phoneSummary($value))
             ->renderAsHtml()
             ->hideOnForm();
         yield TextField::new('addressContactsSummary', 'admin.field.address_contacts')
-            ->formatValue(static fn (mixed $value): string => nl2br(htmlspecialchars((string) $value, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8')))
+            ->formatValue(static fn (mixed $value): string => ContactDisplayFormatter::textSummary($value))
             ->renderAsHtml()
             ->hideOnForm();
         yield CollectionField::new('emailContacts', 'admin.field.email_contacts')

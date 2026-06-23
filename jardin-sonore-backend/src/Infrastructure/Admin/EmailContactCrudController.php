@@ -6,6 +6,7 @@ namespace App\Infrastructure\Admin;
 
 use App\Domain\Model\AddressBook\ContactDataSource;
 use App\Domain\Model\AddressBook\EmailContactType;
+use App\Infrastructure\Admin\Formatter\ContactDisplayFormatter;
 use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 use BackedEnum;
@@ -80,7 +81,11 @@ final class EmailContactCrudController extends AbstractCrudController
     {
         yield IdField::new('id', 'admin.field.id')->onlyOnDetail();
         yield TextField::new('uuid', 'admin.field.uuid')->onlyOnDetail();
-        yield EmailField::new('emailAddress', 'admin.field.email_address');
+        yield TextField::new('emailAddress', 'admin.field.email_address')
+            ->formatValue(static fn (mixed $value): string => ContactDisplayFormatter::emailLink($value))
+            ->renderAsHtml()
+            ->hideOnForm();
+        yield EmailField::new('emailAddress', 'admin.field.email_address')->onlyOnForms();
         yield TextField::new('label', 'admin.field.label');
         yield AssociationField::new('contactDetails', 'admin.field.contact_details')
             ->setCrudController(ContactDetailsCrudController::class)
