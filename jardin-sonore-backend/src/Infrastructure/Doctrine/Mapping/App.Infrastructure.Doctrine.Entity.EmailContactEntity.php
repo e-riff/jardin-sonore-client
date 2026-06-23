@@ -75,6 +75,7 @@ return static function (ClassMetadata $metadata): void {
         'fieldName' => 'source',
         'type' => Types::STRING,
         'length' => 32,
+        'nullable' => true,
         'enumType' => ContactDataSource::class,
     ]);
 

@@ -55,6 +55,7 @@ return static function (ClassMetadata $metadata): void {
         'targetEntity' => EmailContactEntity::class,
         'mappedBy' => 'contactDetails',
         'cascade' => ['persist'],
+        'orphanRemoval' => true,
     ]);
 
     $metadata->mapOneToMany([
@@ -62,6 +63,7 @@ return static function (ClassMetadata $metadata): void {
         'targetEntity' => PhoneContactEntity::class,
         'mappedBy' => 'contactDetails',
         'cascade' => ['persist'],
+        'orphanRemoval' => true,
     ]);
 
     $metadata->mapOneToMany([
@@ -69,5 +71,6 @@ return static function (ClassMetadata $metadata): void {
         'targetEntity' => AddressContactEntity::class,
         'mappedBy' => 'contactDetails',
         'cascade' => ['persist'],
+        'orphanRemoval' => true,
     ]);
 };

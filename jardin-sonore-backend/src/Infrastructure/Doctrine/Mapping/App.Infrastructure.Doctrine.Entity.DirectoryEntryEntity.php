@@ -61,6 +61,7 @@ return static function (ClassMetadata $metadata): void {
         'columnName' => 'customer_status',
         'type' => Types::STRING,
         'length' => 32,
+        'nullable' => true,
         'enumType' => CustomerStatus::class,
     ]);
 

@@ -9,5 +9,4 @@ enum OrganizationSector: string
     case ASSOCIATION = 'association';
     case PUBLIC = 'public';
     case PRIVATE = 'private';
-    case UNKNOWN = 'unknown';
 }

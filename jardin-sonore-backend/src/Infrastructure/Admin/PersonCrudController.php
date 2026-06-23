@@ -11,6 +11,8 @@ use App\Infrastructure\Doctrine\Entity\PersonEntity;
 use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Asset;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
@@ -24,6 +26,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * @extends AbstractCrudController<PersonEntity>
@@ -34,6 +37,7 @@ final class PersonCrudController extends AbstractCrudController
         private readonly AdminUrlGenerator $adminUrlGenerator,
         private readonly EntityManagerInterface $entityManager,
         private readonly RequestStack $requestStack,
+        private readonly TranslatorInterface $translator,
     ) {
     }
 
@@ -53,6 +57,11 @@ final class PersonCrudController extends AbstractCrudController
             ->setPageTitle(Crud::PAGE_DETAIL, 'admin.person.page.detail')
             ->setDefaultSort(['lastName' => 'ASC', 'firstName' => 'ASC'])
             ->setSearchFields(['firstName', 'lastName', 'role']);
+    }
+
+    public function configureAssets(Assets $assets): Assets
+    {
+        return $assets->addJsFile(Asset::fromEasyAdminAssetPackage('field-collection.js'));
     }
 
     public function configureActions(Actions $actions): Actions
@@ -87,19 +96,32 @@ final class PersonCrudController extends AbstractCrudController
     {
         yield IdField::new('id', 'admin.field.id')->onlyOnDetail();
         yield TextField::new('uuid', 'admin.field.uuid')->onlyOnDetail();
-        yield ChoiceField::new('entryType', 'admin.field.entry_type')->setChoices($this->entryTypeChoices())->hideOnForm();
+        yield ChoiceField::new('entryType', 'admin.field.entry_type')
+            ->setChoices($this->entryTypeChoices())
+            ->formatValue(fn (mixed $value): string => $this->translateEnumValue('address_book.directory_entry_type', $value))
+            ->hideOnForm();
         yield TextField::new('firstName', 'admin.field.first_name');
         yield TextField::new('lastName', 'admin.field.last_name');
         yield TextField::new('role', 'admin.field.role');
-        yield ChoiceField::new('customerStatus', 'admin.field.customer_status')->setChoices($this->customerStatusChoices());
+        yield ChoiceField::new('customerStatus', 'admin.field.customer_status')
+            ->setChoices($this->customerStatusChoices())
+            ->formatValue(fn (mixed $value): string => $this->translateEnumValue('address_book.customer_status', $value))
+            ->setFormTypeOption('required', false)
+            ->setFormTypeOption('placeholder', '');
         yield AssociationField::new('organization', 'admin.field.organization')->autocomplete();
         yield AssociationField::new('tags', 'admin.field.tags')->autocomplete();
+        yield AssociationField::new('contactDetails', 'admin.field.contact_details')
+            ->renderAsEmbeddedForm(ContactDetailsCrudController::class)
+            ->setColumns('col-md-12 col-xxl-10')
+            ->onlyOnForms();
         yield TextField::new('emailContactsSummary', 'admin.field.email_contacts')
             ->formatValue(static fn (mixed $value): string => nl2br(htmlspecialchars((string) $value, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8')))
-            ->renderAsHtml();
+            ->renderAsHtml()
+            ->hideOnForm();
         yield TextField::new('phoneContactsSummary', 'admin.field.phone_contacts')
             ->formatValue(static fn (mixed $value): string => nl2br(htmlspecialchars((string) $value, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8')))
-            ->renderAsHtml();
+            ->renderAsHtml()
+            ->hideOnForm();
         yield TextField::new('addressContactsSummary', 'admin.field.address_contacts')
             ->formatValue(static fn (mixed $value): string => nl2br(htmlspecialchars((string) $value, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8')))
             ->renderAsHtml()
@@ -150,7 +172,6 @@ final class PersonCrudController extends AbstractCrudController
             'address_book.customer_status.customer' => CustomerStatus::CUSTOMER,
             'address_book.customer_status.prospect' => CustomerStatus::PROSPECT,
             'address_book.customer_status.former_customer' => CustomerStatus::FORMER_CUSTOMER,
-            'address_book.customer_status.unknown' => CustomerStatus::UNKNOWN,
         ];
     }
 
@@ -162,5 +183,10 @@ final class PersonCrudController extends AbstractCrudController
         return [
             'address_book.directory_entry_type.person' => DirectoryEntryType::PERSON,
         ];
+    }
+
+    private function translateEnumValue(string $translationPrefix, mixed $value): string
+    {
+        return $value instanceof \BackedEnum ? $this->translator->trans($translationPrefix.'.'.$value->value) : '';
     }
 }

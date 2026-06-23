@@ -61,4 +61,5 @@
 - Si une migration est necessaire, la lancer et verifier son resultat avant de preparer le deploiement.
 - Toujours commit les changements deployes avant de deployer.
 - Toujours creer un tag git sur le commit deploye avant de deployer, pour identifier clairement ce qui part en production.
+- Quand un tag de deploiement est cree, toujours pousser aussi le tag distant, pas seulement la branche.
 - Ne deployer qu'apres commit et tag reussis, sauf demande explicite contraire de l'utilisateur.

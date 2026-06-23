@@ -13,7 +13,7 @@ final class Person extends DirectoryEntry
         private string $lastName,
         private Organization $organization,
         private ?string $role = null,
-        CustomerStatus $customerStatus = CustomerStatus::UNKNOWN,
+        ?CustomerStatus $customerStatus = null,
         bool $active = true,
         ?Uuid $uuid = null,
         ?int $id = null,

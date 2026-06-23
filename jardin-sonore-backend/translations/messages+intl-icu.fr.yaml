@@ -188,22 +188,18 @@ address_book:
     mediatheque: "Médiathèque"
     centre: "Centre social"
     garderie: "Garderie"
-    unknown: "Inconnu"
   organization_sector:
     association: "Association"
     public: "Secteur public"
     private: "Privé non associatif"
-    unknown: "Inconnu"
   customer_status:
     customer: "Client"
     prospect: "Prospect"
     former_customer: "Ancien client"
-    unknown: "Inconnu"
   contact_source:
     manual: "Saisie manuelle"
     google_sheets: "Google Sheets"
     legacy_import: "Ancien import"
-    unknown: "Inconnue"
 
 security:
   login:

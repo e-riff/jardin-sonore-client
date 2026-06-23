@@ -20,7 +20,7 @@ abstract class DirectoryEntryEntity
 
     private DirectoryEntryType $entryType;
 
-    private CustomerStatus $customerStatus = CustomerStatus::UNKNOWN;
+    private ?CustomerStatus $customerStatus = null;
 
     private ?ContactDetailsEntity $contactDetails = null;
 
@@ -49,12 +49,12 @@ abstract class DirectoryEntryEntity
         return $this;
     }
 
-    public function getCustomerStatus(): CustomerStatus
+    public function getCustomerStatus(): ?CustomerStatus
     {
         return $this->customerStatus;
     }
 
-    public function setCustomerStatus(CustomerStatus $customerStatus): static
+    public function setCustomerStatus(?CustomerStatus $customerStatus): static
     {
         $this->customerStatus = $customerStatus;
 
