@@ -36,8 +36,8 @@ final class Version20260623152000 extends AbstractMigration
         return <<<SQL
 UPDATE {$tableName}
 SET {$columnName} = CASE
-    WHEN {$compactPhoneNumber} REGEXP '^0[0-9]{9}$' THEN CONCAT('+33', SUBSTRING({$compactPhoneNumber}, 2))
-    WHEN {$compactPhoneNumber} REGEXP '^00[0-9]{6,15}$' THEN CONCAT('+', SUBSTRING({$compactPhoneNumber}, 3))
+    WHEN CHAR_LENGTH({$compactPhoneNumber}) = 10 AND {$compactPhoneNumber} LIKE '0%' THEN CONCAT('+33', SUBSTRING({$compactPhoneNumber}, 2))
+    WHEN CHAR_LENGTH({$compactPhoneNumber}) >= 8 AND {$compactPhoneNumber} LIKE '00%' THEN CONCAT('+', SUBSTRING({$compactPhoneNumber}, 3))
     ELSE {$compactPhoneNumber}
 END
 WHERE {$columnName} IS NOT NULL AND {$columnName} <> ''
