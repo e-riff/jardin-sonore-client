@@ -8,6 +8,7 @@ use App\Domain\Model\AddressBook\CustomerStatus;
 use App\Domain\Model\AddressBook\DirectoryEntryType;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\PersonEntity;
+use BackedEnum;
 use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
@@ -187,6 +188,6 @@ final class PersonCrudController extends AbstractCrudController
 
     private function translateEnumValue(string $translationPrefix, mixed $value): string
     {
-        return $value instanceof \BackedEnum ? $this->translator->trans($translationPrefix.'.'.$value->value) : '';
+        return $value instanceof BackedEnum ? $this->translator->trans($translationPrefix . '.' . $value->value) : '';
     }
 }

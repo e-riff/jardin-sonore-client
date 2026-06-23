@@ -12,6 +12,7 @@ use App\Domain\Model\ValueObject\PostalCode;
 use App\Domain\Model\ValueObject\Siren;
 use App\Domain\Model\ValueObject\Siret;
 use App\Infrastructure\Doctrine\Entity\MunicipalityEntity;
+use LogicException;
 
 final readonly class MunicipalityMapper
 {
@@ -24,7 +25,7 @@ final readonly class MunicipalityMapper
         $departmentEntity = $municipalityEntity->getDepartment();
 
         if (null === $departmentEntity) {
-            throw new \LogicException('Municipality entity must be attached to a department.');
+            throw new LogicException('Municipality entity must be attached to a department.');
         }
 
         return new Municipality(

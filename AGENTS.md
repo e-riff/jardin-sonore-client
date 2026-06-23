@@ -38,6 +38,17 @@
 - Ajouter `'use client';` seulement quand necessaire.
 - Respecter TypeScript strict, imports absolus `@/...`, composants React fonctionnels et Tailwind utilitaire.
 
+## PHP et Symfony
+
+- Toujours ajouter `declare(strict_types=1);` dans les nouveaux fichiers PHP, sauf fichier de configuration ou convention projet contraire.
+- Importer les classes natives PHP avec `use` pour eviter les references pleinement qualifiees comme `\DateTimeImmutable`, `\Throwable` ou `\BackedEnum`.
+- Ne pas importer les fonctions natives PHP avec `use function`, sauf convention contraire deja presente dans le projet.
+- Preferer l'interpolation de variables dans les chaines quand elle reste lisible, par exemple `"Bonjour {$name}"`, plutot que la concatenation.
+- Quand la concatenation reste plus claire ou necessaire, espacer le point: `"Bonjour " . $name`, pas `"Bonjour ".$name`.
+- Quand c'est pertinent pour suivre une relation entre deux classes, ajouter une reference PHPDoc courte avec `@see`, par exemple entre une commande et son handler. Eviter les `@see` decoratifs qui n'aident pas la navigation.
+- Utiliser autant que possible les attributs Symfony quand ils rendent le branchement plus explicite: autowiring/autoconfiguration ciblee, routes, listeners/subscribers, Monolog, validation, securite, mapping, etc.
+- Eviter les attributs dans le domaine ou dans les zones ou ils ajouteraient du couplage inutile; demander confirmation si un arbitrage est necessaire.
+
 ## Contact et captcha
 
 - Le formulaire de contact utilise ALTCHA.
@@ -61,5 +72,6 @@
 - Si une migration est necessaire, la lancer et verifier son resultat avant de preparer le deploiement.
 - Toujours commit les changements deployes avant de deployer.
 - Toujours creer un tag git sur le commit deploye avant de deployer, pour identifier clairement ce qui part en production.
+- Toujours pousser la branche distante avant de deployer.
 - Quand un tag de deploiement est cree, toujours pousser aussi le tag distant, pas seulement la branche.
 - Ne deployer qu'apres commit et tag reussis, sauf demande explicite contraire de l'utilisateur.

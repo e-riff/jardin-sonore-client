@@ -8,6 +8,7 @@ use App\Domain\Model\Behavior\IdentifiableInterface;
 use App\Domain\Model\Behavior\IdentifiableTrait;
 use App\Domain\Model\Behavior\UuidIdentifiableInterface;
 use App\Domain\Model\Behavior\UuidIdentifiableTrait;
+use InvalidArgumentException;
 use Symfony\Component\Uid\Uuid;
 
 final class Tag implements IdentifiableInterface, UuidIdentifiableInterface
@@ -39,7 +40,7 @@ final class Tag implements IdentifiableInterface, UuidIdentifiableInterface
     private function assertLabelIsNotBlank(string $label): void
     {
         if ('' === trim($label)) {
-            throw new \InvalidArgumentException('Tag label cannot be blank.');
+            throw new InvalidArgumentException('Tag label cannot be blank.');
         }
     }
 }

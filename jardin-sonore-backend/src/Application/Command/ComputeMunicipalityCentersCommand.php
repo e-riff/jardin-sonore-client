@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Application\Command;
 
 use Doctrine\ORM\EntityManagerInterface;
+use JsonException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Attribute\Option;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Throwable;
 
 #[AsCommand(
     name: 'app:geo:compute-municipality-centers',
@@ -27,7 +29,7 @@ final readonly class ComputeMunicipalityCentersCommand
         #[Option(description: 'Flush size used while updating municipalities.')]
         int $batchSize = 100,
     ): int {
-        if ($batchSize < 1) {
+        if (1 > $batchSize) {
             $io->error('Batch size must be greater than zero.');
 
             return Command::FAILURE;
@@ -70,7 +72,7 @@ final readonly class ComputeMunicipalityCentersCommand
                             ],
                         );
                         ++$updated;
-                    } catch (\Throwable) {
+                    } catch (Throwable) {
                         ++$errors;
                     }
                 }
@@ -98,7 +100,7 @@ final readonly class ComputeMunicipalityCentersCommand
 
         try {
             $decodedGeoShape = json_decode($geoShape, true, 512, \JSON_THROW_ON_ERROR);
-        } catch (\JsonException) {
+        } catch (JsonException) {
             return null;
         }
 

@@ -9,6 +9,7 @@ use App\Domain\Model\AddressBook\DirectoryEntryType;
 use App\Domain\Model\AddressBook\OrganizationSector;
 use App\Domain\Model\AddressBook\OrganizationType;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
+use BackedEnum;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Asset;
@@ -214,6 +215,6 @@ final class OrganizationCrudController extends AbstractCrudController
 
     private function translateEnumValue(string $translationPrefix, mixed $value): string
     {
-        return $value instanceof \BackedEnum ? $this->translator->trans($translationPrefix.'.'.$value->value) : '';
+        return $value instanceof BackedEnum ? $this->translator->trans($translationPrefix . '.' . $value->value) : '';
     }
 }

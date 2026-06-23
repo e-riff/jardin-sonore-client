@@ -6,6 +6,7 @@ namespace App\Infrastructure\Doctrine\Mapper;
 
 use App\Domain\Model\AddressBook\Person;
 use App\Infrastructure\Doctrine\Entity\PersonEntity;
+use LogicException;
 
 final readonly class PersonMapper
 {
@@ -18,7 +19,7 @@ final readonly class PersonMapper
         $organizationEntity = $personEntity->getOrganization();
 
         if (null === $organizationEntity) {
-            throw new \LogicException('Person entity must be attached to an organization.');
+            throw new LogicException('Person entity must be attached to an organization.');
         }
 
         return new Person(
