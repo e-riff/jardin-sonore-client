@@ -37,7 +37,7 @@ final class Version20260623143000 extends AbstractMigration
     private function normalizePhoneNumbersSql(string $tableName, string $columnName): string
     {
         $digits = "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE({$columnName}, ' ', ''), '.', ''), '-', ''), '(', ''), ')', '')";
-        $spaced = "TRIM(REGEXP_REPLACE(REPLACE(REPLACE(REPLACE(REPLACE({$columnName}, '.', ' '), '-', ' '), '(', ' '), ')', ' '), '[[:space:]]+', ' '))";
+        $spaced = "TRIM(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE({$columnName}, ' ', ' '), '.', ' '), '-', ' '), '(', ' '), ')', ' '))";
 
         return <<<SQL
 UPDATE {$tableName}
