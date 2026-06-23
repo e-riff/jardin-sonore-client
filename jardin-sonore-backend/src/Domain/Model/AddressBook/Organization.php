@@ -10,9 +10,9 @@ final class Organization extends DirectoryEntry
 {
     public function __construct(
         private string $name,
-        private OrganizationType $type = OrganizationType::UNKNOWN,
-        private OrganizationSector $sector = OrganizationSector::UNKNOWN,
-        CustomerStatus $customerStatus = CustomerStatus::UNKNOWN,
+        private ?OrganizationType $type = null,
+        private ?OrganizationSector $sector = null,
+        ?CustomerStatus $customerStatus = null,
         bool $active = true,
         ?Uuid $uuid = null,
         ?int $id = null,
@@ -26,12 +26,12 @@ final class Organization extends DirectoryEntry
         return $this->name;
     }
 
-    public function getType(): OrganizationType
+    public function getType(): ?OrganizationType
     {
         return $this->type;
     }
 
-    public function getSector(): OrganizationSector
+    public function getSector(): ?OrganizationSector
     {
         return $this->sector;
     }

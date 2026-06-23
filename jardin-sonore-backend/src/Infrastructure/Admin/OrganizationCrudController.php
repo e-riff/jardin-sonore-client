@@ -11,6 +11,8 @@ use App\Domain\Model\AddressBook\OrganizationType;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Asset;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
@@ -23,6 +25,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Filter\BooleanFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * @extends AbstractCrudController<OrganizationEntity>
@@ -31,6 +34,7 @@ final class OrganizationCrudController extends AbstractCrudController
 {
     public function __construct(
         private readonly AdminUrlGenerator $adminUrlGenerator,
+        private readonly TranslatorInterface $translator,
     ) {
     }
 
@@ -50,6 +54,11 @@ final class OrganizationCrudController extends AbstractCrudController
             ->setPageTitle(Crud::PAGE_DETAIL, 'admin.organization.page.detail')
             ->setDefaultSort(['name' => 'ASC'])
             ->setSearchFields(['name']);
+    }
+
+    public function configureAssets(Assets $assets): Assets
+    {
+        return $assets->addJsFile(Asset::fromEasyAdminAssetPackage('field-collection.js'));
     }
 
     public function configureActions(Actions $actions): Actions
@@ -88,18 +97,39 @@ final class OrganizationCrudController extends AbstractCrudController
     {
         yield IdField::new('id', 'admin.field.id')->onlyOnDetail();
         yield TextField::new('uuid', 'admin.field.uuid')->onlyOnDetail();
-        yield ChoiceField::new('entryType', 'admin.field.entry_type')->setChoices($this->entryTypeChoices())->hideOnForm();
+        yield ChoiceField::new('entryType', 'admin.field.entry_type')
+            ->setChoices($this->entryTypeChoices())
+            ->formatValue(fn (mixed $value): string => $this->translateEnumValue('address_book.directory_entry_type', $value))
+            ->hideOnForm();
         yield TextField::new('name', 'admin.field.name');
-        yield ChoiceField::new('type', 'admin.field.organization_type')->setChoices($this->organizationTypeChoices());
-        yield ChoiceField::new('sector', 'admin.field.organization_sector')->setChoices($this->organizationSectorChoices());
-        yield ChoiceField::new('customerStatus', 'admin.field.customer_status')->setChoices($this->customerStatusChoices());
+        yield ChoiceField::new('type', 'admin.field.organization_type')
+            ->setChoices($this->organizationTypeChoices())
+            ->formatValue(fn (mixed $value): string => $this->translateEnumValue('address_book.organization_type', $value))
+            ->setFormTypeOption('required', false)
+            ->setFormTypeOption('placeholder', '');
+        yield ChoiceField::new('sector', 'admin.field.organization_sector')
+            ->setChoices($this->organizationSectorChoices())
+            ->formatValue(fn (mixed $value): string => $this->translateEnumValue('address_book.organization_sector', $value))
+            ->setFormTypeOption('required', false)
+            ->setFormTypeOption('placeholder', '');
+        yield ChoiceField::new('customerStatus', 'admin.field.customer_status')
+            ->setChoices($this->customerStatusChoices())
+            ->formatValue(fn (mixed $value): string => $this->translateEnumValue('address_book.customer_status', $value))
+            ->setFormTypeOption('required', false)
+            ->setFormTypeOption('placeholder', '');
         yield AssociationField::new('tags', 'admin.field.tags')->autocomplete();
+        yield AssociationField::new('contactDetails', 'admin.field.contact_details')
+            ->renderAsEmbeddedForm(ContactDetailsCrudController::class)
+            ->setColumns('col-md-12 col-xxl-10')
+            ->onlyOnForms();
         yield TextField::new('emailContactsSummary', 'admin.field.email_contacts')
             ->formatValue(static fn (mixed $value): string => nl2br(htmlspecialchars((string) $value, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8')))
-            ->renderAsHtml();
+            ->renderAsHtml()
+            ->hideOnForm();
         yield TextField::new('phoneContactsSummary', 'admin.field.phone_contacts')
             ->formatValue(static fn (mixed $value): string => nl2br(htmlspecialchars((string) $value, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8')))
-            ->renderAsHtml();
+            ->renderAsHtml()
+            ->hideOnForm();
         yield TextField::new('addressContactsSummary', 'admin.field.address_contacts')
             ->formatValue(static fn (mixed $value): string => nl2br(htmlspecialchars((string) $value, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8')))
             ->renderAsHtml()
@@ -145,7 +175,6 @@ final class OrganizationCrudController extends AbstractCrudController
             'address_book.organization_type.mediatheque' => OrganizationType::MEDIATHEQUE,
             'address_book.organization_type.centre' => OrganizationType::CENTRE,
             'address_book.organization_type.garderie' => OrganizationType::GARDERIE,
-            'address_book.organization_type.unknown' => OrganizationType::UNKNOWN,
         ];
     }
 
@@ -158,7 +187,6 @@ final class OrganizationCrudController extends AbstractCrudController
             'address_book.organization_sector.association' => OrganizationSector::ASSOCIATION,
             'address_book.organization_sector.public' => OrganizationSector::PUBLIC,
             'address_book.organization_sector.private' => OrganizationSector::PRIVATE,
-            'address_book.organization_sector.unknown' => OrganizationSector::UNKNOWN,
         ];
     }
 
@@ -171,7 +199,6 @@ final class OrganizationCrudController extends AbstractCrudController
             'address_book.customer_status.customer' => CustomerStatus::CUSTOMER,
             'address_book.customer_status.prospect' => CustomerStatus::PROSPECT,
             'address_book.customer_status.former_customer' => CustomerStatus::FORMER_CUSTOMER,
-            'address_book.customer_status.unknown' => CustomerStatus::UNKNOWN,
         ];
     }
 
@@ -183,5 +210,10 @@ final class OrganizationCrudController extends AbstractCrudController
         return [
             'address_book.directory_entry_type.organization' => DirectoryEntryType::ORGANIZATION,
         ];
+    }
+
+    private function translateEnumValue(string $translationPrefix, mixed $value): string
+    {
+        return $value instanceof \BackedEnum ? $this->translator->trans($translationPrefix.'.'.$value->value) : '';
     }
 }

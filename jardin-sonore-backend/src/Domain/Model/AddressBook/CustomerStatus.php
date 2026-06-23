@@ -9,5 +9,4 @@ enum CustomerStatus: string
     case CUSTOMER = 'customer';
     case PROSPECT = 'prospect';
     case FORMER_CUSTOMER = 'former_customer';
-    case UNKNOWN = 'unknown';
 }

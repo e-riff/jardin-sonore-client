@@ -26,7 +26,7 @@ final class EmailContact implements IdentifiableInterface, UuidIdentifiableInter
         private EmailContactType $type = EmailContactType::MAIN,
         private bool $optInNewsletter = true,
         bool $active = true,
-        private ContactDataSource $source = ContactDataSource::MANUAL,
+        private ?ContactDataSource $source = ContactDataSource::MANUAL,
         private ?\DateTimeImmutable $unsubscribedAt = null,
         ?string $unsubscribeToken = null,
         ?Uuid $uuid = null,
@@ -56,7 +56,7 @@ final class EmailContact implements IdentifiableInterface, UuidIdentifiableInter
         return $this->type;
     }
 
-    public function getSource(): ContactDataSource
+    public function getSource(): ?ContactDataSource
     {
         return $this->source;
     }

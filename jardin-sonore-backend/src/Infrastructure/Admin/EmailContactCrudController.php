@@ -26,6 +26,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * @extends AbstractCrudController<EmailContactEntity>
@@ -35,6 +36,7 @@ final class EmailContactCrudController extends AbstractCrudController
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly RequestStack $requestStack,
+        private readonly TranslatorInterface $translator,
     ) {
     }
 
@@ -78,9 +80,17 @@ final class EmailContactCrudController extends AbstractCrudController
         yield TextField::new('uuid', 'admin.field.uuid')->onlyOnDetail();
         yield EmailField::new('emailAddress', 'admin.field.email_address');
         yield TextField::new('label', 'admin.field.label');
-        yield AssociationField::new('contactDetails', 'admin.field.contact_details')->autocomplete();
-        yield ChoiceField::new('type', 'admin.field.type')->setChoices($this->typeChoices());
-        yield ChoiceField::new('source', 'admin.field.source')->setChoices($this->sourceChoices());
+        yield AssociationField::new('contactDetails', 'admin.field.contact_details')
+            ->setCrudController(ContactDetailsCrudController::class)
+            ->autocomplete();
+        yield ChoiceField::new('type', 'admin.field.type')
+            ->setChoices($this->typeChoices())
+            ->formatValue(fn (mixed $value): string => $this->translateEnumValue('address_book.email_contact_type', $value));
+        yield ChoiceField::new('source', 'admin.field.source')
+            ->setChoices($this->sourceChoices())
+            ->formatValue(fn (mixed $value): string => $this->translateEnumValue('address_book.contact_source', $value))
+            ->setFormTypeOption('required', false)
+            ->setFormTypeOption('placeholder', '');
         yield BooleanField::new('optInNewsletter', 'admin.field.opt_in_newsletter');
         yield DateTimeField::new('unsubscribedAt', 'admin.field.unsubscribed_at')->hideOnForm();
         yield TextField::new('unsubscribeToken', 'admin.field.unsubscribe_token')->onlyOnDetail();
@@ -125,7 +135,6 @@ final class EmailContactCrudController extends AbstractCrudController
             'address_book.contact_source.manual' => ContactDataSource::MANUAL,
             'address_book.contact_source.google_sheets' => ContactDataSource::GOOGLE_SHEETS,
             'address_book.contact_source.legacy_import' => ContactDataSource::LEGACY_IMPORT,
-            'address_book.contact_source.unknown' => ContactDataSource::UNKNOWN,
         ];
     }
 
@@ -141,5 +150,10 @@ final class EmailContactCrudController extends AbstractCrudController
             'address_book.email_contact_type.billing' => EmailContactType::BILLING,
             'address_book.email_contact_type.other' => EmailContactType::OTHER,
         ];
+    }
+
+    private function translateEnumValue(string $translationPrefix, mixed $value): string
+    {
+        return $value instanceof \BackedEnum ? $this->translator->trans($translationPrefix.'.'.$value->value) : '';
     }
 }

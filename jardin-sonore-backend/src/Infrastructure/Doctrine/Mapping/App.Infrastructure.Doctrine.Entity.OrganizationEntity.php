@@ -26,6 +26,7 @@ return static function (ClassMetadata $metadata): void {
         'fieldName' => 'type',
         'type' => Types::STRING,
         'length' => 32,
+        'nullable' => true,
         'enumType' => OrganizationType::class,
     ]);
 
@@ -33,6 +34,7 @@ return static function (ClassMetadata $metadata): void {
         'fieldName' => 'sector',
         'type' => Types::STRING,
         'length' => 32,
+        'nullable' => true,
         'enumType' => OrganizationSector::class,
     ]);
 

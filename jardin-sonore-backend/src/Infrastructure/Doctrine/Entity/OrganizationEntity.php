@@ -14,9 +14,9 @@ class OrganizationEntity extends DirectoryEntryEntity
 {
     private string $name = '';
 
-    private OrganizationType $type = OrganizationType::UNKNOWN;
+    private ?OrganizationType $type = null;
 
-    private OrganizationSector $sector = OrganizationSector::UNKNOWN;
+    private ?OrganizationSector $sector = null;
 
     /**
      * @var Collection<int, PersonEntity>
@@ -46,24 +46,24 @@ class OrganizationEntity extends DirectoryEntryEntity
         return $this;
     }
 
-    public function getType(): OrganizationType
+    public function getType(): ?OrganizationType
     {
         return $this->type;
     }
 
-    public function setType(OrganizationType $type): static
+    public function setType(?OrganizationType $type): static
     {
         $this->type = $type;
 
         return $this;
     }
 
-    public function getSector(): OrganizationSector
+    public function getSector(): ?OrganizationSector
     {
         return $this->sector;
     }
 
-    public function setSector(OrganizationSector $sector): static
+    public function setSector(?OrganizationSector $sector): static
     {
         $this->sector = $sector;
 

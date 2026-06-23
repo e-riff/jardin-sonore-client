@@ -27,7 +27,7 @@ class EmailContactEntity
 
     private bool $optInNewsletter = true;
 
-    private ContactDataSource $source = ContactDataSource::MANUAL;
+    private ?ContactDataSource $source = ContactDataSource::MANUAL;
 
     private string $unsubscribeToken = '';
 
@@ -92,12 +92,12 @@ class EmailContactEntity
         return $this;
     }
 
-    public function getSource(): ContactDataSource
+    public function getSource(): ?ContactDataSource
     {
         return $this->source;
     }
 
-    public function setSource(ContactDataSource $source): static
+    public function setSource(?ContactDataSource $source): static
     {
         $this->source = $source;
 

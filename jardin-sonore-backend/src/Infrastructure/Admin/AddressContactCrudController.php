@@ -24,6 +24,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * @extends AbstractCrudController<AddressContactEntity>
@@ -33,6 +34,7 @@ final class AddressContactCrudController extends AbstractCrudController
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly RequestStack $requestStack,
+        private readonly TranslatorInterface $translator,
     ) {
     }
 
@@ -74,8 +76,12 @@ final class AddressContactCrudController extends AbstractCrudController
     {
         yield IdField::new('id', 'admin.field.id')->onlyOnDetail();
         yield TextField::new('uuid', 'admin.field.uuid')->onlyOnDetail();
-        yield AssociationField::new('contactDetails', 'admin.field.contact_details')->autocomplete();
-        yield ChoiceField::new('type', 'admin.field.type')->setChoices($this->typeChoices());
+        yield AssociationField::new('contactDetails', 'admin.field.contact_details')
+            ->setCrudController(ContactDetailsCrudController::class)
+            ->autocomplete();
+        yield ChoiceField::new('type', 'admin.field.type')
+            ->setChoices($this->typeChoices())
+            ->formatValue(fn (mixed $value): string => $this->translateEnumValue('address_book.address_contact_type', $value));
         yield TextField::new('label', 'admin.field.label');
         yield TextareaField::new('address', 'admin.field.address')->hideOnIndex();
         yield TextField::new('postalCode', 'admin.field.postal_code');
@@ -126,5 +132,10 @@ final class AddressContactCrudController extends AbstractCrudController
             'address_book.address_contact_type.home' => AddressContactType::HOME,
             'address_book.address_contact_type.other' => AddressContactType::OTHER,
         ];
+    }
+
+    private function translateEnumValue(string $translationPrefix, mixed $value): string
+    {
+        return $value instanceof \BackedEnum ? $this->translator->trans($translationPrefix.'.'.$value->value) : '';
     }
 }
