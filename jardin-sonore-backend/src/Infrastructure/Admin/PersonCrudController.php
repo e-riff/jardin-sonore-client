@@ -57,6 +57,7 @@ final class PersonCrudController extends AbstractCrudController
             ->setPageTitle(Crud::PAGE_EDIT, 'admin.person.page.edit')
             ->setPageTitle(Crud::PAGE_DETAIL, 'admin.person.page.detail')
             ->setDefaultSort(['lastName' => 'ASC', 'firstName' => 'ASC'])
+            ->showEntityActionsInlined()
             ->setSearchFields(['firstName', 'lastName', 'role']);
     }
 

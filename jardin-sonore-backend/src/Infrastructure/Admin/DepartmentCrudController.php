@@ -29,7 +29,8 @@ final class DepartmentCrudController extends AbstractCrudController
             ->setPageTitle(Crud::PAGE_INDEX, 'admin.department.page.index')
             ->setPageTitle(Crud::PAGE_NEW, 'admin.department.page.new')
             ->setPageTitle(Crud::PAGE_EDIT, 'admin.department.page.edit')
-            ->setPageTitle(Crud::PAGE_DETAIL, 'admin.department.page.detail');
+            ->setPageTitle(Crud::PAGE_DETAIL, 'admin.department.page.detail')
+            ->showEntityActionsInlined();
     }
 
     public function configureFields(string $pageName): iterable

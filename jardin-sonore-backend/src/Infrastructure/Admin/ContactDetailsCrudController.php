@@ -10,13 +10,21 @@ use App\Infrastructure\Admin\Form\PhoneContactFormType;
 use App\Infrastructure\Doctrine\Entity\AddressContactEntity;
 use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
+use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
+use App\Infrastructure\Doctrine\Entity\PersonEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactEntity;
+use Doctrine\ORM\Query\Expr\Join;
+use Doctrine\ORM\QueryBuilder;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Asset;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
@@ -40,7 +48,20 @@ final class ContactDetailsCrudController extends AbstractCrudController
             ->setPageTitle(Crud::PAGE_INDEX, 'admin.contact_details.page.index')
             ->setPageTitle(Crud::PAGE_NEW, 'admin.contact_details.page.new')
             ->setPageTitle(Crud::PAGE_EDIT, 'admin.contact_details.page.edit')
-            ->setPageTitle(Crud::PAGE_DETAIL, 'admin.contact_details.page.detail');
+            ->setPageTitle(Crud::PAGE_DETAIL, 'admin.contact_details.page.detail')
+            ->showEntityActionsInlined()
+            ->setSearchFields([
+                'uuid',
+                'directoryEntry.uuid',
+                'emailContacts.emailAddress',
+                'emailContacts.label',
+                'phoneContacts.phoneNumber',
+                'phoneContacts.label',
+                'addressContacts.address',
+                'addressContacts.postalCode',
+                'addressContacts.city',
+                'addressContacts.label',
+            ]);
     }
 
     public function configureAssets(Assets $assets): Assets
@@ -51,6 +72,32 @@ final class ContactDetailsCrudController extends AbstractCrudController
     public function configureActions(Actions $actions): Actions
     {
         return $actions->add(Crud::PAGE_INDEX, Action::DETAIL);
+    }
+
+    public function createIndexQueryBuilder(SearchDto $searchDto, EntityDto $entityDto, FieldCollection $fields, FilterCollection $filters): QueryBuilder
+    {
+        $queryBuilder = parent::createIndexQueryBuilder($searchDto, $entityDto, $fields, $filters);
+        $searchQuery = mb_strtolower($searchDto->getQuery());
+
+        if ('' === $searchQuery) {
+            return $queryBuilder;
+        }
+
+        $rootAlias = $queryBuilder->getRootAliases()[0];
+        $existingWhere = $queryBuilder->getDQLPart('where');
+
+        $queryBuilder
+            ->leftJoin("{$rootAlias}.directoryEntry", 'directoryEntrySearchEntry')
+            ->leftJoin(OrganizationEntity::class, 'directoryEntrySearchOrganization', Join::WITH, 'directoryEntrySearchOrganization.id = directoryEntrySearchEntry.id')
+            ->leftJoin(PersonEntity::class, 'directoryEntrySearchPerson', Join::WITH, 'directoryEntrySearchPerson.id = directoryEntrySearchEntry.id')
+            ->resetDQLPart('where')
+            ->andWhere(sprintf(
+                '(%s) OR LOWER(directoryEntrySearchOrganization.name) LIKE :directoryEntrySearch OR LOWER(directoryEntrySearchPerson.firstName) LIKE :directoryEntrySearch OR LOWER(directoryEntrySearchPerson.lastName) LIKE :directoryEntrySearch',
+                (string) $existingWhere,
+            ))
+            ->setParameter('directoryEntrySearch', "%{$searchQuery}%");
+
+        return $queryBuilder;
     }
 
     public function configureFields(string $pageName): iterable
@@ -97,8 +144,5 @@ final class ContactDetailsCrudController extends AbstractCrudController
             ->allowAdd()
             ->allowDelete()
             ->onlyOnForms();
-        yield AssociationField::new('emailContacts', 'admin.field.email_contacts')->onlyOnDetail();
-        yield AssociationField::new('phoneContacts', 'admin.field.phone_contacts')->onlyOnDetail();
-        yield AssociationField::new('addressContacts', 'admin.field.address_contacts')->onlyOnDetail();
     }
 }

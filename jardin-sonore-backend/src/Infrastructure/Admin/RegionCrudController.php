@@ -28,7 +28,8 @@ final class RegionCrudController extends AbstractCrudController
             ->setPageTitle(Crud::PAGE_INDEX, 'admin.region.page.index')
             ->setPageTitle(Crud::PAGE_NEW, 'admin.region.page.new')
             ->setPageTitle(Crud::PAGE_EDIT, 'admin.region.page.edit')
-            ->setPageTitle(Crud::PAGE_DETAIL, 'admin.region.page.detail');
+            ->setPageTitle(Crud::PAGE_DETAIL, 'admin.region.page.detail')
+            ->showEntityActionsInlined();
     }
 
     public function configureFields(string $pageName): iterable

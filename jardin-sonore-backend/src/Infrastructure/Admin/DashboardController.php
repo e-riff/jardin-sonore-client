@@ -34,6 +34,7 @@ final class DashboardController extends AbstractDashboardController
     {
         return Dashboard::new()
             ->setTitle($this->translator->trans('admin.dashboard.title'))
+            ->setFaviconPath('/favicon/favicon.ico')
             ->setTranslationDomain('messages')
             ->useEntityTranslations();
     }

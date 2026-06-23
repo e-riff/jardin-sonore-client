@@ -54,6 +54,7 @@ final class OrganizationCrudController extends AbstractCrudController
             ->setPageTitle(Crud::PAGE_EDIT, 'admin.organization.page.edit')
             ->setPageTitle(Crud::PAGE_DETAIL, 'admin.organization.page.detail')
             ->setDefaultSort(['name' => 'ASC'])
+            ->showEntityActionsInlined()
             ->setSearchFields(['name']);
     }
 

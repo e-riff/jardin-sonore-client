@@ -33,7 +33,8 @@ final class MunicipalityCrudController extends AbstractCrudController
             ->setPageTitle(Crud::PAGE_INDEX, 'admin.municipality.page.index')
             ->setPageTitle(Crud::PAGE_NEW, 'admin.municipality.page.new')
             ->setPageTitle(Crud::PAGE_EDIT, 'admin.municipality.page.edit')
-            ->setPageTitle(Crud::PAGE_DETAIL, 'admin.municipality.page.detail');
+            ->setPageTitle(Crud::PAGE_DETAIL, 'admin.municipality.page.detail')
+            ->showEntityActionsInlined();
     }
 
     public function configureFields(string $pageName): iterable
@@ -44,7 +45,9 @@ final class MunicipalityCrudController extends AbstractCrudController
         yield TextField::new('inseeCode', 'admin.field.insee_code');
         yield TextField::new('postalCode', 'admin.field.postal_code');
         yield AssociationField::new('department', 'admin.field.department');
-        yield TextField::new('phoneNumber', 'admin.field.phone_number')->hideOnIndex();
+        yield TextField::new('phoneNumber', 'admin.field.phone_number')
+            ->setHelp('admin.help.phone_number')
+            ->hideOnIndex();
         yield EmailField::new('emailAddress', 'admin.field.email_address')->hideOnIndex();
         yield TextareaField::new('address', 'admin.field.address')->hideOnIndex();
         yield TextField::new('siren', 'admin.field.siren')->hideOnIndex();
