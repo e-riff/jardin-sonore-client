@@ -37,7 +37,7 @@ return static function (ClassMetadata $metadata): void {
         'fieldName' => 'phoneNumber',
         'columnName' => 'phone_number',
         'type' => Types::STRING,
-        'length' => 20,
+        'length' => 32,
     ]);
 
     $metadata->mapField([

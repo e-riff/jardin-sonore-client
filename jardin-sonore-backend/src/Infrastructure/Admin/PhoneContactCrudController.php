@@ -53,6 +53,7 @@ final class PhoneContactCrudController extends AbstractCrudController
             ->setPageTitle(Crud::PAGE_EDIT, 'admin.phone_contact.page.edit')
             ->setPageTitle(Crud::PAGE_DETAIL, 'admin.phone_contact.page.detail')
             ->setDefaultSort(['phoneNumber' => 'ASC'])
+            ->showEntityActionsInlined()
             ->setSearchFields(['phoneNumber', 'label']);
     }
 
@@ -73,7 +74,8 @@ final class PhoneContactCrudController extends AbstractCrudController
     {
         yield IdField::new('id', 'admin.field.id')->onlyOnDetail();
         yield TextField::new('uuid', 'admin.field.uuid')->onlyOnDetail();
-        yield TelephoneField::new('phoneNumber', 'admin.field.phone_number');
+        yield TelephoneField::new('phoneNumber', 'admin.field.phone_number')
+            ->setHelp('admin.help.phone_number');
         yield TextField::new('label', 'admin.field.label');
         yield AssociationField::new('contactDetails', 'admin.field.contact_details')
             ->setCrudController(ContactDetailsCrudController::class)

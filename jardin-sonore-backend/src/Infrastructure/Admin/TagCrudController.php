@@ -29,7 +29,8 @@ final class TagCrudController extends AbstractCrudController
             ->setPageTitle(Crud::PAGE_INDEX, 'admin.tag.page.index')
             ->setPageTitle(Crud::PAGE_NEW, 'admin.tag.page.new')
             ->setPageTitle(Crud::PAGE_EDIT, 'admin.tag.page.edit')
-            ->setPageTitle(Crud::PAGE_DETAIL, 'admin.tag.page.detail');
+            ->setPageTitle(Crud::PAGE_DETAIL, 'admin.tag.page.detail')
+            ->showEntityActionsInlined();
     }
 
     public function configureFields(string $pageName): iterable

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Doctrine\Entity;
 
+use App\Domain\Model\ValueObject\PhoneNumber;
 use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\UuidIdentifiableTrait;
 
@@ -68,7 +69,8 @@ class MunicipalityEntity
 
     public function setPhoneNumber(?string $phoneNumber): static
     {
-        $this->phoneNumber = $phoneNumber;
+        $phoneNumber = null !== $phoneNumber ? trim($phoneNumber) : null;
+        $this->phoneNumber = null !== $phoneNumber && '' !== $phoneNumber ? (new PhoneNumber($phoneNumber))->value() : null;
 
         return $this;
     }

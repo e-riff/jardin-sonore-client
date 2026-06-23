@@ -56,6 +56,7 @@ final class EmailContactCrudController extends AbstractCrudController
             ->setPageTitle(Crud::PAGE_EDIT, 'admin.email_contact.page.edit')
             ->setPageTitle(Crud::PAGE_DETAIL, 'admin.email_contact.page.detail')
             ->setDefaultSort(['emailAddress' => 'ASC'])
+            ->showEntityActionsInlined()
             ->setSearchFields(['emailAddress', 'label']);
     }
 

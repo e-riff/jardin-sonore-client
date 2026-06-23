@@ -64,6 +64,8 @@ admin:
     center_latitude: "Latitude du centre"
     center_longitude: "Longitude du centre"
     geo_shape: "Contour géographique"
+  help:
+    phone_number: "Saisissez un numéro français ou international. Il sera stocké sans séparateurs, par exemple 06 12 34 56 78 deviendra +33612345678."
   region:
     page:
       index: "Régions"

@@ -54,6 +54,7 @@ final class AddressContactCrudController extends AbstractCrudController
             ->setPageTitle(Crud::PAGE_EDIT, 'admin.address_contact.page.edit')
             ->setPageTitle(Crud::PAGE_DETAIL, 'admin.address_contact.page.detail')
             ->setDefaultSort(['city' => 'ASC', 'postalCode' => 'ASC'])
+            ->showEntityActionsInlined()
             ->setSearchFields(['address', 'postalCode', 'city', 'label']);
     }
 

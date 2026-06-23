@@ -28,6 +28,7 @@ final class PhoneContactFormType extends AbstractType
         $builder
             ->add('phoneNumber', TelType::class, [
                 'label' => 'admin.field.phone_number',
+                'help' => 'admin.help.phone_number',
             ])
             ->add('label', TextType::class, [
                 'label' => 'admin.field.label',
