@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Admin;
 
 use App\Domain\Model\AddressBook\PhoneContactType;
+use App\Infrastructure\Admin\Formatter\ContactDisplayFormatter;
 use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactEntity;
 use BackedEnum;
@@ -74,8 +75,13 @@ final class PhoneContactCrudController extends AbstractCrudController
     {
         yield IdField::new('id', 'admin.field.id')->onlyOnDetail();
         yield TextField::new('uuid', 'admin.field.uuid')->onlyOnDetail();
+        yield TextField::new('phoneNumber', 'admin.field.phone_number')
+            ->formatValue(static fn (mixed $value): string => ContactDisplayFormatter::phoneLink($value))
+            ->renderAsHtml()
+            ->hideOnForm();
         yield TelephoneField::new('phoneNumber', 'admin.field.phone_number')
-            ->setHelp('admin.help.phone_number');
+            ->setHelp('admin.help.phone_number')
+            ->onlyOnForms();
         yield TextField::new('label', 'admin.field.label');
         yield AssociationField::new('contactDetails', 'admin.field.contact_details')
             ->setCrudController(ContactDetailsCrudController::class)

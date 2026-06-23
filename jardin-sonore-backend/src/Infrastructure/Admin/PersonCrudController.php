@@ -6,6 +6,7 @@ namespace App\Infrastructure\Admin;
 
 use App\Domain\Model\AddressBook\CustomerStatus;
 use App\Domain\Model\AddressBook\DirectoryEntryType;
+use App\Infrastructure\Admin\Formatter\ContactDisplayFormatter;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\PersonEntity;
 use BackedEnum;
@@ -117,15 +118,15 @@ final class PersonCrudController extends AbstractCrudController
             ->setColumns('col-md-12 col-xxl-10')
             ->onlyOnForms();
         yield TextField::new('emailContactsSummary', 'admin.field.email_contacts')
-            ->formatValue(static fn (mixed $value): string => nl2br(htmlspecialchars((string) $value, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8')))
+            ->formatValue(static fn (mixed $value): string => ContactDisplayFormatter::emailSummary($value))
             ->renderAsHtml()
             ->hideOnForm();
         yield TextField::new('phoneContactsSummary', 'admin.field.phone_contacts')
-            ->formatValue(static fn (mixed $value): string => nl2br(htmlspecialchars((string) $value, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8')))
+            ->formatValue(static fn (mixed $value): string => ContactDisplayFormatter::phoneSummary($value))
             ->renderAsHtml()
             ->hideOnForm();
         yield TextField::new('addressContactsSummary', 'admin.field.address_contacts')
-            ->formatValue(static fn (mixed $value): string => nl2br(htmlspecialchars((string) $value, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8')))
+            ->formatValue(static fn (mixed $value): string => ContactDisplayFormatter::textSummary($value))
             ->renderAsHtml()
             ->onlyOnDetail();
         yield AssociationField::new('contactDetails', 'admin.field.contact_details')->onlyOnDetail();
