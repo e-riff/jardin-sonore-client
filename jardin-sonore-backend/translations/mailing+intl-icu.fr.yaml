@@ -1,0 +1,14 @@
+mailing:
+  index:
+    title: "Newsletters | Jardin Sonore"
+    eyebrow: "Newsletters"
+    heading: "Campagnes e-mail"
+    description: "Le module newsletter sera construit ici, hors EasyAdmin, avec un workflow métier dédié."
+    status: "Socle en cours"
+    roadmap:
+      title: "Roadmap V1.1"
+      description: "Première tranche prévue : brouillon, contenu simple, recommandations structurées, ciblage dynamique, prévisualisation et envoi test."
+      item_model: "Modèle domaine newsletter"
+      item_targeting: "Ciblage par annuaire et géographie"
+      item_preview: "Prévisualisation Twig du mail"
+      item_test_send: "Envoi test via Symfony Mailer"

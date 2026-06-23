@@ -1,5 +1,10 @@
 security:
   login:
+    title: "Connexion admin"
+    heading: "Connexion admin"
+    email: "Adresse e-mail"
+    password: "Mot de passe"
+    submit: "Se connecter"
     disabled_account: "Ce compte administrateur est désactivé."
 
 Invalid credentials.: "Identifiants invalides."

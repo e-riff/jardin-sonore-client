@@ -1,0 +1,27 @@
+internal:
+  base:
+    title: "Jardin Sonore Interne"
+    brand: "Jardin Sonore"
+    brand_aria: "Accueil interne Jardin Sonore"
+    subtitle: "Interface interne"
+    navigation_aria: "Navigation interne"
+    nav:
+      dashboard: "Accueil"
+      mailing: "Newsletters"
+      backoffice: "Backoffice"
+  dashboard:
+    title: "Accueil interne | Jardin Sonore"
+    eyebrow: "Espace métier"
+    heading: "Bienvenue dans l’atelier Jardin Sonore"
+    description: "La racine du backend devient l’espace de travail métier. EasyAdmin reste disponible pour les corrections techniques dans le backoffice."
+    modules_aria: "Modules internes"
+    mailing:
+      badge: "Prochaine étape"
+      title: "Newsletters"
+      description: "Créer une campagne, préparer le contenu, cibler les destinataires, prévisualiser et envoyer un test."
+      action: "Ouvrir les newsletters"
+    backoffice:
+      badge: "Technique"
+      title: "Backoffice"
+      description: "Consulter et corriger l’annuaire, les coordonnées, les territoires et les données techniques."
+      action: "Ouvrir EasyAdmin"

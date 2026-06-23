@@ -67,7 +67,7 @@ final class PhoneContactCrudController extends AbstractCrudController
     {
         return $filters
             ->add(EntityFilter::new('contactDetails', 'admin.field.contact_details')->autocomplete())
-            ->add(ChoiceFilter::new('type', 'admin.field.type')->setChoices($this->typeChoices())->setFormTypeOption('value_type_options.translation_domain', 'messages'))
+            ->add(ChoiceFilter::new('type', 'admin.field.type')->setChoices($this->typeChoices())->setFormTypeOption('value_type_options.translation_domain', 'backoffice'))
             ->add(BooleanFilter::new('active', 'admin.field.active'));
     }
 
@@ -137,6 +137,6 @@ final class PhoneContactCrudController extends AbstractCrudController
 
     private function translateEnumValue(string $translationPrefix, mixed $value): string
     {
-        return $value instanceof BackedEnum ? $this->translator->trans($translationPrefix . '.' . $value->value) : '';
+        return $value instanceof BackedEnum ? $this->translator->trans("{$translationPrefix}.{$value->value}", [], 'backoffice') : '';
     }
 }

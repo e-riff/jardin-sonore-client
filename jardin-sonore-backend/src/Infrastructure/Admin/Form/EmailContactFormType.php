@@ -37,12 +37,12 @@ final class EmailContactFormType extends AbstractType
             ->add('type', ChoiceType::class, [
                 'label' => 'admin.field.type',
                 'choices' => $this->typeChoices(),
-                'choice_translation_domain' => 'messages',
+                'choice_translation_domain' => 'backoffice',
             ])
             ->add('source', ChoiceType::class, [
                 'label' => 'admin.field.source',
                 'choices' => $this->sourceChoices(),
-                'choice_translation_domain' => 'messages',
+                'choice_translation_domain' => 'backoffice',
                 'required' => false,
                 'placeholder' => '',
             ])
@@ -60,7 +60,7 @@ final class EmailContactFormType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => EmailContactEntity::class,
-            'translation_domain' => 'messages',
+            'translation_domain' => 'backoffice',
         ]);
     }
 

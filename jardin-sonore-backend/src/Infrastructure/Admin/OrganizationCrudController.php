@@ -89,9 +89,9 @@ final class OrganizationCrudController extends AbstractCrudController
     public function configureFilters(Filters $filters): Filters
     {
         return $filters
-            ->add(ChoiceFilter::new('type', 'admin.field.organization_type')->setChoices($this->organizationTypeChoices())->setFormTypeOption('value_type_options.translation_domain', 'messages'))
-            ->add(ChoiceFilter::new('sector', 'admin.field.organization_sector')->setChoices($this->organizationSectorChoices())->setFormTypeOption('value_type_options.translation_domain', 'messages'))
-            ->add(ChoiceFilter::new('customerStatus', 'admin.field.customer_status')->setChoices($this->customerStatusChoices())->setFormTypeOption('value_type_options.translation_domain', 'messages'))
+            ->add(ChoiceFilter::new('type', 'admin.field.organization_type')->setChoices($this->organizationTypeChoices())->setFormTypeOption('value_type_options.translation_domain', 'backoffice'))
+            ->add(ChoiceFilter::new('sector', 'admin.field.organization_sector')->setChoices($this->organizationSectorChoices())->setFormTypeOption('value_type_options.translation_domain', 'backoffice'))
+            ->add(ChoiceFilter::new('customerStatus', 'admin.field.customer_status')->setChoices($this->customerStatusChoices())->setFormTypeOption('value_type_options.translation_domain', 'backoffice'))
             ->add(BooleanFilter::new('active', 'admin.field.active'))
             ->add(EntityFilter::new('tags', 'admin.field.tags')->canSelectMultiple()->autocomplete());
     }
@@ -217,6 +217,6 @@ final class OrganizationCrudController extends AbstractCrudController
 
     private function translateEnumValue(string $translationPrefix, mixed $value): string
     {
-        return $value instanceof BackedEnum ? $this->translator->trans($translationPrefix . '.' . $value->value) : '';
+        return $value instanceof BackedEnum ? $this->translator->trans("{$translationPrefix}.{$value->value}", [], 'backoffice') : '';
     }
 }
