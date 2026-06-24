@@ -1,0 +1,198 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Domain\Model\Mailing;
+
+use App\Domain\Model\Behavior\UuidIdentifiableInterface;
+use App\Domain\Model\Behavior\UuidIdentifiableTrait;
+use DateTimeImmutable;
+use InvalidArgumentException;
+use Symfony\Component\Uid\Uuid;
+
+final class MailingCampaign implements UuidIdentifiableInterface
+{
+    use UuidIdentifiableTrait;
+
+    /**
+     * @param list<MailingRecommendation> $recommendations
+     */
+    public function __construct(
+        private string $internalTitle,
+        private string $emailSubject,
+        private string $publicTitle,
+        private string $mainText,
+        private string $templateKey,
+        private NewsletterAudienceFilter $audienceFilter,
+        private MailingCampaignStatus $status = MailingCampaignStatus::DRAFT,
+        private array $recommendations = [],
+        private DateTimeImmutable $createdAt = new DateTimeImmutable(),
+        private DateTimeImmutable $updatedAt = new DateTimeImmutable(),
+        private ?DateTimeImmutable $lastTestSentAt = null,
+        ?Uuid $uuid = null,
+    ) {
+        $this->initializeUuid($uuid);
+        $this->assertContentIsValid($internalTitle, $emailSubject, $publicTitle, $mainText, $templateKey);
+        $this->assertRecommendationList($recommendations);
+        $this->assertStatusIsConsistent($status, $lastTestSentAt);
+    }
+
+    public function getInternalTitle(): string
+    {
+        return $this->internalTitle;
+    }
+
+    public function getEmailSubject(): string
+    {
+        return $this->emailSubject;
+    }
+
+    public function getPublicTitle(): string
+    {
+        return $this->publicTitle;
+    }
+
+    public function getMainText(): string
+    {
+        return $this->mainText;
+    }
+
+    public function getTemplateKey(): string
+    {
+        return $this->templateKey;
+    }
+
+    public function getAudienceFilter(): NewsletterAudienceFilter
+    {
+        return $this->audienceFilter;
+    }
+
+    public function getStatus(): MailingCampaignStatus
+    {
+        return $this->status;
+    }
+
+    /**
+     * @return list<MailingRecommendation>
+     */
+    public function getRecommendations(): array
+    {
+        return $this->recommendations;
+    }
+
+    public function getCreatedAt(): DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function getUpdatedAt(): DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
+    public function getLastTestSentAt(): ?DateTimeImmutable
+    {
+        return $this->lastTestSentAt;
+    }
+
+    public function updateContent(
+        string $internalTitle,
+        string $emailSubject,
+        string $publicTitle,
+        string $mainText,
+        string $templateKey,
+    ): void {
+        $this->assertContentIsValid($internalTitle, $emailSubject, $publicTitle, $mainText, $templateKey);
+
+        $this->internalTitle = $internalTitle;
+        $this->emailSubject = $emailSubject;
+        $this->publicTitle = $publicTitle;
+        $this->mainText = $mainText;
+        $this->templateKey = $templateKey;
+        $this->markAsUpdated();
+    }
+
+    /**
+     * @param list<MailingRecommendation> $recommendations
+     */
+    public function replaceRecommendations(array $recommendations): void
+    {
+        $this->assertRecommendationList($recommendations);
+        $this->recommendations = $recommendations;
+        $this->markAsUpdated();
+    }
+
+    public function updateAudienceFilter(NewsletterAudienceFilter $audienceFilter): void
+    {
+        $this->audienceFilter = $audienceFilter;
+        $this->markAsUpdated();
+    }
+
+    public function markReadyForTest(): void
+    {
+        $this->status = MailingCampaignStatus::READY_FOR_TEST;
+        $this->markAsUpdated();
+    }
+
+    public function markTestSent(?DateTimeImmutable $sentAt = null): void
+    {
+        $this->lastTestSentAt = $sentAt ?? new DateTimeImmutable();
+        $this->status = MailingCampaignStatus::TEST_SENT;
+        $this->markAsUpdated($this->lastTestSentAt);
+    }
+
+    private function assertContentIsValid(
+        string $internalTitle,
+        string $emailSubject,
+        string $publicTitle,
+        string $mainText,
+        string $templateKey,
+    ): void {
+        $this->assertNotBlank($internalTitle, 'Mailing campaign internal title cannot be blank.');
+        $this->assertNotBlank($emailSubject, 'Mailing campaign email subject cannot be blank.');
+        $this->assertNotBlank($publicTitle, 'Mailing campaign public title cannot be blank.');
+        $this->assertNotBlank($mainText, 'Mailing campaign main text cannot be blank.');
+        $this->assertNotBlank($templateKey, 'Mailing campaign template key cannot be blank.');
+    }
+
+    /**
+     * @param list<mixed> $recommendations
+     */
+    private function assertRecommendationList(array $recommendations): void
+    {
+        $positions = [];
+
+        foreach ($recommendations as $recommendation) {
+            if (!$recommendation instanceof MailingRecommendation) {
+                throw new InvalidArgumentException('Mailing campaign recommendations must contain MailingRecommendation values only.');
+            }
+
+            $position = $recommendation->getPosition();
+
+            if (isset($positions[$position])) {
+                throw new InvalidArgumentException('Mailing campaign recommendation positions must be unique.');
+            }
+
+            $positions[$position] = true;
+        }
+    }
+
+    private function assertStatusIsConsistent(MailingCampaignStatus $status, ?DateTimeImmutable $lastTestSentAt): void
+    {
+        if (MailingCampaignStatus::TEST_SENT === $status && !$lastTestSentAt instanceof DateTimeImmutable) {
+            throw new InvalidArgumentException('Mailing campaign test sent status requires a last test sent date.');
+        }
+    }
+
+    private function assertNotBlank(string $value, string $message): void
+    {
+        if ('' === trim($value)) {
+            throw new InvalidArgumentException($message);
+        }
+    }
+
+    private function markAsUpdated(?DateTimeImmutable $updatedAt = null): void
+    {
+        $this->updatedAt = $updatedAt ?? new DateTimeImmutable();
+    }
+}
