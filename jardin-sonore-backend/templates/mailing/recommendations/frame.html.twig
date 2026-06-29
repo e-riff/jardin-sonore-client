@@ -1,0 +1,132 @@
+{% extends '@Turbo/layouts/frame.html.twig' %}
+
+{% block body %}
+    <turbo-frame id="campaign-recommendations">
+        <section class="internal-card mailing-recommendation-workspace">
+            <div class="mailing-recommendations__heading">
+                <div>
+                    <p class="internal-eyebrow">{{ 'mailing.content.recommendations.eyebrow'|trans({}, 'mailing') }}</p>
+                    <h2>{{ 'mailing.content.recommendations.title'|trans({}, 'mailing') }}</h2>
+                    <p>{{ 'mailing.content.recommendations.description'|trans({}, 'mailing') }}</p>
+                </div>
+
+                <div class="mailing-recommendations__primary-action">
+                    <a
+                        class="internal-button"
+                        href="{{ path('mailing_recommendation_catalog_new', { campaign: campaign.uuid }) }}"
+                    >
+                        {{ 'mailing.content.recommendations.create'|trans({}, 'mailing') }}
+                    </a>
+                    <small>{{ 'mailing.content.recommendations.create_help'|trans({}, 'mailing') }}</small>
+                </div>
+            </div>
+
+            <div class="mailing-recommendations">
+                {% for recommendation in campaign.recommendations %}
+                    <article class="mailing-recommendation mailing-recommendation--summary">
+                        {% if recommendation.imagePath %}
+                            <img
+                                class="mailing-recommendation__image"
+                                src="{{ asset(recommendation.imagePath) }}"
+                                alt=""
+                            >
+                        {% endif %}
+
+                        <div class="mailing-recommendation__content">
+                            <div>
+                                <h3>{{ recommendation.title }}</h3>
+                                <p>{{ recommendation.text }}</p>
+                            </div>
+
+                            <div class="mailing-recommendation__actions">
+                                <form method="post" action="{{ path('mailing_campaign_recommendation_move', {
+                                    campaignUuid: campaign.uuid,
+                                    recommendationUuid: recommendation.uuid,
+                                    direction: 'up'
+                                }) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('move-recommendation-' ~ recommendation.uuid) }}">
+                                    <button class="internal-button internal-button--secondary internal-button--compact" type="submit">
+                                        {{ 'mailing.content.recommendations.move_up'|trans({}, 'mailing') }}
+                                    </button>
+                                </form>
+                                <form method="post" action="{{ path('mailing_campaign_recommendation_move', {
+                                    campaignUuid: campaign.uuid,
+                                    recommendationUuid: recommendation.uuid,
+                                    direction: 'down'
+                                }) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('move-recommendation-' ~ recommendation.uuid) }}">
+                                    <button class="internal-button internal-button--secondary internal-button--compact" type="submit">
+                                        {{ 'mailing.content.recommendations.move_down'|trans({}, 'mailing') }}
+                                    </button>
+                                </form>
+                                <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_campaign_recommendation_edit', {
+                                    campaignUuid: campaign.uuid,
+                                    recommendationUuid: recommendation.uuid
+                                }) }}">
+                                    {{ 'mailing.content.recommendations.edit'|trans({}, 'mailing') }}
+                                </a>
+                                <form method="post" action="{{ path('mailing_campaign_recommendation_remove', {
+                                    campaignUuid: campaign.uuid,
+                                    recommendationUuid: recommendation.uuid
+                                }) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('remove-recommendation-' ~ recommendation.uuid) }}">
+                                    <button class="internal-button internal-button--danger internal-button--compact" type="submit">
+                                        {{ 'mailing.content.recommendations.remove'|trans({}, 'mailing') }}
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </article>
+                {% else %}
+                    <p class="internal-empty-state">{{ 'mailing.content.recommendations.empty'|trans({}, 'mailing') }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="mailing-catalog-picker">
+                <div>
+                    <p class="internal-eyebrow">{{ 'mailing.content.recommendations.catalog_eyebrow'|trans({}, 'mailing') }}</p>
+                    <h2>{{ 'mailing.content.recommendations.catalog_title'|trans({}, 'mailing') }}</h2>
+                </div>
+
+                <form class="internal-search" method="get" action="{{ path('mailing_campaign_recommendation_index', { campaignUuid: campaign.uuid }) }}">
+                    <label for="recommendation-query">{{ 'mailing.content.recommendations.search'|trans({}, 'mailing') }}</label>
+                    <div>
+                        <input id="recommendation-query" name="query" value="{{ query }}">
+                        <button class="internal-button internal-button--secondary" type="submit">
+                            {{ 'mailing.content.recommendations.search_submit'|trans({}, 'mailing') }}
+                        </button>
+                    </div>
+                </form>
+
+                <div class="mailing-catalog-grid mailing-catalog-grid--picker">
+                    {% for recommendation in availableRecommendations %}
+                        <article class="mailing-catalog-card{{ recommendation.imagePath ? ' mailing-catalog-card--with-image' : '' }}">
+                            {% if recommendation.imagePath %}
+                                <img src="{{ asset(recommendation.imagePath) }}" alt="">
+                            {% endif %}
+                            <div>
+                                <h3>{{ recommendation.title }}</h3>
+                                <p>{{ recommendation.text }}</p>
+                            </div>
+                            <form method="post" action="{{ path('mailing_campaign_recommendation_select', {
+                                campaignUuid: campaign.uuid,
+                                catalogUuid: recommendation.uuid
+                            }) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('select-recommendation-' ~ recommendation.uuid) }}">
+                                <button class="internal-button internal-button--secondary" type="submit">
+                                    {{ 'mailing.content.recommendations.select'|trans({}, 'mailing') }}
+                                </button>
+                            </form>
+                        </article>
+                    {% else %}
+                        <p class="internal-empty-state">{{ 'mailing.content.recommendations.catalog_empty'|trans({}, 'mailing') }}</p>
+                    {% endfor %}
+                </div>
+
+                <a class="internal-link" href="{{ path('mailing_recommendation_catalog_index') }}" data-turbo-frame="_top">
+                    {{ 'mailing.content.recommendations.open_catalog'|trans({}, 'mailing') }}
+                </a>
+            </div>
+        </section>
+    </turbo-frame>
+{% endblock %}

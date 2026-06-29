@@ -1,0 +1,31 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'mailing.catalog.new.title'|trans({}, 'mailing') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ 'mailing.catalog.new.eyebrow'|trans({}, 'mailing') }}</p>
+            <h1>{{ 'mailing.catalog.new.heading'|trans({}, 'mailing') }}</h1>
+            <p>{{ 'mailing.catalog.new.description'|trans({}, 'mailing') }}</p>
+        </div>
+        <a class="internal-button internal-button--secondary" href="{{ path('mailing_recommendation_catalog_index') }}">
+            {{ 'mailing.catalog.new.back'|trans({}, 'mailing') }}
+        </a>
+    </section>
+
+    <section class="internal-card">
+        {% if hasErrors %}
+            <div class="internal-alert internal-alert--error">
+                {{ 'mailing.catalog.form.error_notice'|trans({}, 'mailing') }}
+            </div>
+        {% endif %}
+
+        {{ form_start(form, {
+            action: path('mailing_recommendation_catalog_new'),
+            attr: { class: 'internal-form' }
+        }) }}
+            {{ form_widget(form) }}
+        {{ form_end(form) }}
+    </section>
+{% endblock %}

@@ -13,6 +13,7 @@ return static function (ClassMetadata $metadata): void {
         'indexes' => [
             'idx_mailing_recommendation_campaign' => ['columns' => ['campaign_id']],
             'idx_mailing_recommendation_position' => ['columns' => ['position']],
+            'idx_mailing_recommendation_source' => ['columns' => ['source_recommendation_uuid']],
         ],
         'uniqueConstraints' => [
             'uniq_mailing_recommendation_uuid' => ['columns' => ['uuid']],
@@ -69,6 +70,13 @@ return static function (ClassMetadata $metadata): void {
     $metadata->mapField([
         'fieldName' => 'position',
         'type' => Types::INTEGER,
+    ]);
+
+    $metadata->mapField([
+        'fieldName' => 'sourceRecommendationUuid',
+        'columnName' => 'source_recommendation_uuid',
+        'type' => UuidType::NAME,
+        'nullable' => true,
     ]);
 
     $metadata->mapField([

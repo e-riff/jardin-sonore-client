@@ -1,0 +1,53 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'mailing.catalog.index.title'|trans({}, 'mailing') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ 'mailing.catalog.index.eyebrow'|trans({}, 'mailing') }}</p>
+            <h1>{{ 'mailing.catalog.index.heading'|trans({}, 'mailing') }}</h1>
+            <p>{{ 'mailing.catalog.index.description'|trans({}, 'mailing') }}</p>
+        </div>
+
+        <a class="internal-button" href="{{ path('mailing_recommendation_catalog_new') }}">
+            {{ 'mailing.catalog.index.create'|trans({}, 'mailing') }}
+        </a>
+    </section>
+
+    <section class="internal-card">
+        <form class="internal-search" method="get">
+            <label for="catalog-query">{{ 'mailing.catalog.index.search'|trans({}, 'mailing') }}</label>
+            <div>
+                <input id="catalog-query" name="query" value="{{ query }}">
+                <button class="internal-button internal-button--secondary" type="submit">
+                    {{ 'mailing.catalog.index.search_submit'|trans({}, 'mailing') }}
+                </button>
+            </div>
+        </form>
+
+        <div class="mailing-catalog-grid">
+            {% for recommendation in recommendations %}
+                <article class="mailing-catalog-card">
+                    {% if recommendation.imagePath %}
+                        <img src="{{ asset(recommendation.imagePath) }}" alt="">
+                    {% endif %}
+                    <div>
+                        <span class="internal-badge internal-badge--{{ recommendation.active ? 'secondary' : 'primary' }}">
+                            {{ (recommendation.active ? 'mailing.catalog.status.active' : 'mailing.catalog.status.inactive')|trans({}, 'mailing') }}
+                        </span>
+                        <h2>{{ recommendation.title }}</h2>
+                        <p>{{ recommendation.text }}</p>
+                    </div>
+                    <a class="internal-button internal-button--secondary" href="{{ path('mailing_recommendation_catalog_edit', {
+                        uuid: recommendation.uuid
+                    }) }}">
+                        {{ 'mailing.catalog.index.edit'|trans({}, 'mailing') }}
+                    </a>
+                </article>
+            {% else %}
+                <p class="internal-empty-state">{{ 'mailing.catalog.index.empty'|trans({}, 'mailing') }}</p>
+            {% endfor %}
+        </div>
+    </section>
+{% endblock %}

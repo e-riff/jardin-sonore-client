@@ -23,6 +23,7 @@ final class MailingRecommendation implements UuidIdentifiableInterface
         private ?string $linkLabel = null,
         private ?string $imagePath = null,
         bool $active = true,
+        private ?Uuid $sourceRecommendationUuid = null,
         ?Uuid $uuid = null,
     ) {
         $this->initializeUuid($uuid);
@@ -30,6 +31,9 @@ final class MailingRecommendation implements UuidIdentifiableInterface
         $this->assertNotBlank($title, 'Mailing recommendation title cannot be blank.');
         $this->assertNotBlank($text, 'Mailing recommendation text cannot be blank.');
         $this->assertPositionIsValid($position);
+        $this->url = $this->normalizeNullableString($url);
+        $this->linkLabel = $this->normalizeNullableString($linkLabel);
+        $this->imagePath = $this->normalizeNullableString($imagePath);
     }
 
     public function getTitle(): string
@@ -60,6 +64,11 @@ final class MailingRecommendation implements UuidIdentifiableInterface
     public function getImagePath(): ?string
     {
         return $this->imagePath;
+    }
+
+    public function getSourceRecommendationUuid(): ?Uuid
+    {
+        return $this->sourceRecommendationUuid;
     }
 
     public function updateContent(string $title, string $text): void

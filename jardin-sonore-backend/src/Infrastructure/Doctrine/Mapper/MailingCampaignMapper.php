@@ -47,6 +47,11 @@ final readonly class MailingCampaignMapper
     public function toEntity(MailingCampaign $mailingCampaign, ?MailingCampaignEntity $mailingCampaignEntity = null): MailingCampaignEntity
     {
         $mailingCampaignEntity ??= new MailingCampaignEntity();
+        $existingRecommendationEntities = [];
+
+        foreach ($mailingCampaignEntity->getRecommendations() as $mailingRecommendationEntity) {
+            $existingRecommendationEntities[$mailingRecommendationEntity->getUuid()->toRfc4122()] = $mailingRecommendationEntity;
+        }
 
         $mailingCampaignEntity
             ->setUuid($mailingCampaign->getUuid())
@@ -59,11 +64,24 @@ final readonly class MailingCampaignMapper
             ->setAudienceFilter($this->audienceFilterToArray($mailingCampaign->getAudienceFilter()))
             ->setCreatedAt($mailingCampaign->getCreatedAt())
             ->setUpdatedAt($mailingCampaign->getUpdatedAt())
-            ->setLastTestSentAt($mailingCampaign->getLastTestSentAt())
-            ->clearRecommendations();
+            ->setLastTestSentAt($mailingCampaign->getLastTestSentAt());
+
+        $retainedRecommendationUuids = [];
 
         foreach ($mailingCampaign->getRecommendations() as $mailingRecommendation) {
-            $mailingCampaignEntity->addRecommendation($this->mailingRecommendationMapper->toEntity($mailingRecommendation));
+            $uuid = $mailingRecommendation->getUuid()->toRfc4122();
+            $mailingRecommendationEntity = $this->mailingRecommendationMapper->toEntity(
+                mailingRecommendation: $mailingRecommendation,
+                mailingRecommendationEntity: $existingRecommendationEntities[$uuid] ?? null,
+            );
+            $mailingCampaignEntity->addRecommendation($mailingRecommendationEntity);
+            $retainedRecommendationUuids[$uuid] = true;
+        }
+
+        foreach ($existingRecommendationEntities as $uuid => $mailingRecommendationEntity) {
+            if (!isset($retainedRecommendationUuids[$uuid])) {
+                $mailingCampaignEntity->removeRecommendation($mailingRecommendationEntity);
+            }
         }
 
         return $mailingCampaignEntity;
