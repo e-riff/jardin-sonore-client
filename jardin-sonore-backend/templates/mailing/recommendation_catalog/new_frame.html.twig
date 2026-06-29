@@ -1,0 +1,32 @@
+{% extends '@Turbo/layouts/frame.html.twig' %}
+
+{% block body %}
+    <turbo-frame id="campaign-recommendations">
+        <section class="internal-card">
+            <div>
+                <p class="internal-eyebrow">{{ 'mailing.catalog.new.eyebrow'|trans({}, 'mailing') }}</p>
+                <h2>{{ 'mailing.catalog.new.heading'|trans({}, 'mailing') }}</h2>
+                <p>{{ 'mailing.catalog.new.inline_description'|trans({}, 'mailing') }}</p>
+            </div>
+
+            {% if hasErrors %}
+                <div class="internal-alert internal-alert--error">
+                    {{ 'mailing.catalog.form.error_notice'|trans({}, 'mailing') }}
+                </div>
+            {% endif %}
+
+            {{ form_start(form, {
+                action: path('mailing_recommendation_catalog_new', { campaign: campaign.uuid }),
+                attr: { class: 'internal-form' }
+            }) }}
+                {{ form_widget(form) }}
+            {{ form_end(form) }}
+
+            <a class="internal-button internal-button--secondary" href="{{ path('mailing_campaign_recommendation_index', {
+                campaignUuid: campaign.uuid
+            }) }}">
+                {{ 'mailing.content.recommendations.cancel'|trans({}, 'mailing') }}
+            </a>
+        </section>
+    </turbo-frame>
+{% endblock %}

@@ -35,7 +35,12 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+COPY docker/backend/php/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
+COPY docker/backend/php/entrypoint.sh /usr/local/bin/jardin-sonore-php-entrypoint
+
+RUN chmod +x /usr/local/bin/jardin-sonore-php-entrypoint
 
 EXPOSE 9000
 
+ENTRYPOINT ["/usr/local/bin/jardin-sonore-php-entrypoint"]
 CMD ["php-fpm"]

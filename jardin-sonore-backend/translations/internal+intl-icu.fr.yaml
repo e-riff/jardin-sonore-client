@@ -8,6 +8,7 @@ internal:
     nav:
       dashboard: "Accueil"
       mailing: "Newsletters"
+      recommendations: "Catalogue"
       backoffice: "Backoffice"
   dashboard:
     title: "Accueil interne | Jardin Sonore"

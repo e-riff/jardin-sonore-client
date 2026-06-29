@@ -19,6 +19,7 @@ final readonly class MailingRecommendationMapper
             linkLabel: $mailingRecommendationEntity->getLinkLabel(),
             imagePath: $mailingRecommendationEntity->getImagePath(),
             active: $mailingRecommendationEntity->isActive(),
+            sourceRecommendationUuid: $mailingRecommendationEntity->getSourceRecommendationUuid(),
             uuid: $mailingRecommendationEntity->getUuid(),
         );
     }
@@ -35,7 +36,8 @@ final readonly class MailingRecommendationMapper
             ->setUrl($mailingRecommendation->getUrl())
             ->setLinkLabel($mailingRecommendation->getLinkLabel())
             ->setImagePath($mailingRecommendation->getImagePath())
-            ->setActive($mailingRecommendation->isActive());
+            ->setActive($mailingRecommendation->isActive())
+            ->setSourceRecommendationUuid($mailingRecommendation->getSourceRecommendationUuid());
 
         return $mailingRecommendationEntity;
     }

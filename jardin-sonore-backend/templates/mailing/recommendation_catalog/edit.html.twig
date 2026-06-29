@@ -1,0 +1,38 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'mailing.catalog.edit.title'|trans({ recommendation: recommendation.title }, 'mailing') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ 'mailing.catalog.edit.eyebrow'|trans({}, 'mailing') }}</p>
+            <h1>{{ recommendation.title }}</h1>
+            <p>{{ 'mailing.catalog.edit.description'|trans({}, 'mailing') }}</p>
+        </div>
+        <a class="internal-button internal-button--secondary" href="{{ path('mailing_recommendation_catalog_index') }}">
+            {{ 'mailing.catalog.edit.back'|trans({}, 'mailing') }}
+        </a>
+    </section>
+
+    <section class="internal-card">
+        {% if recommendation.imagePath %}
+            <div class="mailing-current-image">
+                <img src="{{ asset(recommendation.imagePath) }}" alt="">
+                <p>{{ 'mailing.catalog.edit.current_image'|trans({}, 'mailing') }}</p>
+            </div>
+        {% endif %}
+
+        {% if hasErrors %}
+            <div class="internal-alert internal-alert--error">
+                {{ 'mailing.catalog.form.error_notice'|trans({}, 'mailing') }}
+            </div>
+        {% endif %}
+
+        {{ form_start(form, {
+            action: path('mailing_recommendation_catalog_edit', { uuid: recommendation.uuid }),
+            attr: { class: 'internal-form' }
+        }) }}
+            {{ form_widget(form) }}
+        {{ form_end(form) }}
+    </section>
+{% endblock %}

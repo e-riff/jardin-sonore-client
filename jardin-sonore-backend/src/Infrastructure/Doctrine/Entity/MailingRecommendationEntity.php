@@ -7,6 +7,7 @@ namespace App\Infrastructure\Doctrine\Entity;
 use App\Infrastructure\Doctrine\Entity\Behavior\ActivableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\UuidIdentifiableTrait;
+use Symfony\Component\Uid\Uuid;
 
 class MailingRecommendationEntity
 {
@@ -27,6 +28,8 @@ class MailingRecommendationEntity
     private ?string $imagePath = null;
 
     private int $position = 1;
+
+    private ?Uuid $sourceRecommendationUuid = null;
 
     public function __construct()
     {
@@ -124,6 +127,18 @@ class MailingRecommendationEntity
     public function setPosition(int $position): static
     {
         $this->position = $position;
+
+        return $this;
+    }
+
+    public function getSourceRecommendationUuid(): ?Uuid
+    {
+        return $this->sourceRecommendationUuid;
+    }
+
+    public function setSourceRecommendationUuid(?Uuid $sourceRecommendationUuid): static
+    {
+        $this->sourceRecommendationUuid = $sourceRecommendationUuid;
 
         return $this;
     }

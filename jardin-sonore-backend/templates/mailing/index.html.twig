@@ -30,12 +30,17 @@
                         <th>{{ 'mailing.index.table.email_subject'|trans({}, 'mailing') }}</th>
                         <th>{{ 'mailing.index.table.status'|trans({}, 'mailing') }}</th>
                         <th>{{ 'mailing.index.table.updated_at'|trans({}, 'mailing') }}</th>
+                        <th>{{ 'mailing.index.table.actions'|trans({}, 'mailing') }}</th>
                     </tr>
                     </thead>
                     <tbody>
                     {% for campaign in campaigns %}
                         <tr>
-                            <td>{{ campaign.internalTitle }}</td>
+                            <td>
+                                <a class="internal-link" href="{{ path('mailing_content', { uuid: campaign.uuid }) }}">
+                                    {{ campaign.internalTitle }}
+                                </a>
+                            </td>
                             <td>{{ campaign.emailSubject }}</td>
                             <td>
                                 <span class="internal-badge internal-badge--secondary">
@@ -43,6 +48,11 @@
                                 </span>
                             </td>
                             <td>{{ campaign.updatedAt|date('d/m/Y H:i') }}</td>
+                            <td>
+                                <a class="internal-link" href="{{ path('mailing_content', { uuid: campaign.uuid }) }}">
+                                    {{ 'mailing.index.edit'|trans({}, 'mailing') }}
+                                </a>
+                            </td>
                         </tr>
                     {% endfor %}
                     </tbody>

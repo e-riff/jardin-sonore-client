@@ -26,15 +26,19 @@ final class CreateMailingCampaignType extends AbstractType
         $builder
             ->add('internalTitle', TextType::class, [
                 'label' => 'mailing.form.internal_title',
+                'help' => 'mailing.form.internal_title_help',
             ])
             ->add('emailSubject', TextType::class, [
                 'label' => 'mailing.form.email_subject',
+                'help' => 'mailing.form.email_subject_help',
             ])
             ->add('publicTitle', TextType::class, [
                 'label' => 'mailing.form.public_title',
+                'help' => 'mailing.form.public_title_help',
             ])
             ->add('mainText', TextareaType::class, [
                 'label' => 'mailing.form.main_text',
+                'help' => 'mailing.form.main_text_help',
                 'attr' => [
                     'rows' => 8,
                 ],

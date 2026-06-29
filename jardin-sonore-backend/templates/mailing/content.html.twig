@@ -1,0 +1,53 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'mailing.content.title'|trans({ campaign: campaign.internalTitle }, 'mailing') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ 'mailing.content.eyebrow'|trans({}, 'mailing') }}</p>
+            <h1>{{ campaign.internalTitle }}</h1>
+            <p>{{ 'mailing.content.description'|trans({}, 'mailing') }}</p>
+        </div>
+
+        <a class="internal-button internal-button--secondary" href="{{ path('mailing_index') }}">
+            {{ 'mailing.content.back'|trans({}, 'mailing') }}
+        </a>
+    </section>
+
+    {{ form_start(form, {
+        attr: {
+            class: 'internal-form internal-form--wide',
+            'data-controller': 'unsaved-changes',
+            'data-unsaved-changes-dirty-value': formSubmitted ? 'true' : 'false',
+            'data-unsaved-changes-message-value': 'mailing.content.unsaved_changes_warning'|trans({}, 'mailing')
+        }
+    }) }}
+        <section class="internal-card">
+            <div>
+                <p class="internal-eyebrow">{{ 'mailing.content.details.eyebrow'|trans({}, 'mailing') }}</p>
+                <h2>{{ 'mailing.content.details.title'|trans({}, 'mailing') }}</h2>
+            </div>
+
+            {{ form_row(form.internalTitle) }}
+            {{ form_row(form.emailSubject) }}
+            {{ form_row(form.publicTitle) }}
+            {{ form_row(form.mainText) }}
+            {{ form_row(form.templateKey) }}
+        </section>
+
+        <div class="internal-form__actions">
+            {{ form_widget(form.submit) }}
+        </div>
+    {{ form_end(form) }}
+
+    <turbo-frame
+        id="campaign-recommendations"
+        src="{{ path('mailing_campaign_recommendation_index', { campaignUuid: campaign.uuid }) }}"
+        loading="lazy"
+    >
+        <section class="internal-card">
+            <p>{{ 'mailing.content.recommendations.loading'|trans({}, 'mailing') }}</p>
+        </section>
+    </turbo-frame>
+{% endblock %}
