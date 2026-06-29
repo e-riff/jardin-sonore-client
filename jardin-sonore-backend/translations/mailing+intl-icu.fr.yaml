@@ -3,12 +3,32 @@ mailing:
     title: "Newsletters | Jardin Sonore"
     eyebrow: "Newsletters"
     heading: "Campagnes e-mail"
-    description: "Le module newsletter sera construit ici, hors EasyAdmin, avec un workflow métier dédié."
-    status: "Socle en cours"
-    roadmap:
-      title: "Roadmap V1.1"
-      description: "Première tranche prévue : brouillon, contenu simple, recommandations structurées, ciblage dynamique, prévisualisation et envoi test."
-      item_model: "Modèle domaine newsletter"
-      item_targeting: "Ciblage par annuaire et géographie"
-      item_preview: "Prévisualisation Twig du mail"
-      item_test_send: "Envoi test via Symfony Mailer"
+    description: "Créez les brouillons de newsletters avant de préparer le contenu, le ciblage, la prévisualisation et l’envoi test."
+    create: "Nouvelle campagne"
+    empty: "Aucune campagne newsletter n’a encore été créée."
+    empty_action: "Créer le premier brouillon"
+    list:
+      title: "Campagnes"
+    table:
+      internal_title: "Titre interne"
+      email_subject: "Sujet"
+      status: "Statut"
+      updated_at: "Dernière modification"
+  new:
+    title: "Nouvelle newsletter | Jardin Sonore"
+    eyebrow: "Newsletters"
+    heading: "Créer un brouillon"
+    description: "Cette première étape enregistre le socle de la campagne. Les recommandations, le ciblage et l’envoi test seront configurés ensuite."
+    back: "Retour aux campagnes"
+  form:
+    internal_title: "Titre interne"
+    email_subject: "Sujet de l’e-mail"
+    public_title: "Titre public"
+    main_text: "Texte principal"
+    submit: "Créer le brouillon"
+  flash:
+    created: "La campagne newsletter a été créée."
+  status:
+    draft: "Brouillon"
+    ready_for_test: "Prête pour test"
+    test_sent: "Test envoyé"

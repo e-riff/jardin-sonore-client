@@ -10,20 +10,44 @@
             <p>{{ 'mailing.index.description'|trans({}, 'mailing') }}</p>
         </div>
 
-        <span class="internal-badge internal-badge--secondary">{{ 'mailing.index.status'|trans({}, 'mailing') }}</span>
+        <a class="internal-button" href="{{ path('mailing_new') }}">{{ 'mailing.index.create'|trans({}, 'mailing') }}</a>
     </section>
 
     <section class="internal-card">
-        <h2>{{ 'mailing.index.roadmap.title'|trans({}, 'mailing') }}</h2>
-        <p>
-            {{ 'mailing.index.roadmap.description'|trans({}, 'mailing') }}
-        </p>
+        <h2>{{ 'mailing.index.list.title'|trans({}, 'mailing') }}</h2>
 
-        <ul class="internal-checklist">
-            <li>{{ 'mailing.index.roadmap.item_model'|trans({}, 'mailing') }}</li>
-            <li>{{ 'mailing.index.roadmap.item_targeting'|trans({}, 'mailing') }}</li>
-            <li>{{ 'mailing.index.roadmap.item_preview'|trans({}, 'mailing') }}</li>
-            <li>{{ 'mailing.index.roadmap.item_test_send'|trans({}, 'mailing') }}</li>
-        </ul>
+        {% if campaigns is empty %}
+            <div class="internal-empty">
+                <p>{{ 'mailing.index.empty'|trans({}, 'mailing') }}</p>
+                <a class="internal-button" href="{{ path('mailing_new') }}">{{ 'mailing.index.empty_action'|trans({}, 'mailing') }}</a>
+            </div>
+        {% else %}
+            <div class="internal-table-wrapper">
+                <table class="internal-table">
+                    <thead>
+                    <tr>
+                        <th>{{ 'mailing.index.table.internal_title'|trans({}, 'mailing') }}</th>
+                        <th>{{ 'mailing.index.table.email_subject'|trans({}, 'mailing') }}</th>
+                        <th>{{ 'mailing.index.table.status'|trans({}, 'mailing') }}</th>
+                        <th>{{ 'mailing.index.table.updated_at'|trans({}, 'mailing') }}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for campaign in campaigns %}
+                        <tr>
+                            <td>{{ campaign.internalTitle }}</td>
+                            <td>{{ campaign.emailSubject }}</td>
+                            <td>
+                                <span class="internal-badge internal-badge--secondary">
+                                    {{ ('mailing.status.' ~ campaign.status.value)|trans({}, 'mailing') }}
+                                </span>
+                            </td>
+                            <td>{{ campaign.updatedAt|date('d/m/Y H:i') }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
     </section>
 {% endblock %}

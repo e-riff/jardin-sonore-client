@@ -1,0 +1,28 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'mailing.new.title'|trans({}, 'mailing') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ 'mailing.new.eyebrow'|trans({}, 'mailing') }}</p>
+            <h1>{{ 'mailing.new.heading'|trans({}, 'mailing') }}</h1>
+            <p>{{ 'mailing.new.description'|trans({}, 'mailing') }}</p>
+        </div>
+
+        <a class="internal-button internal-button--secondary" href="{{ path('mailing_index') }}">{{ 'mailing.new.back'|trans({}, 'mailing') }}</a>
+    </section>
+
+    <section class="internal-card">
+        {{ form_start(form, { attr: { class: 'internal-form' } }) }}
+            {{ form_row(form.internalTitle) }}
+            {{ form_row(form.emailSubject) }}
+            {{ form_row(form.publicTitle) }}
+            {{ form_row(form.mainText) }}
+
+            <div class="internal-form__actions">
+                {{ form_widget(form.submit) }}
+            </div>
+        {{ form_end(form) }}
+    </section>
+{% endblock %}

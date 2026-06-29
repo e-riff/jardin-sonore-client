@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 use App\Domain\Repository\AdminUserRepositoryInterface;
 use App\Domain\Repository\DepartmentRepositoryInterface;
+use App\Domain\Repository\MailingCampaignRepositoryInterface;
 use App\Domain\Repository\MunicipalityRepositoryInterface;
 use App\Domain\Repository\RegionRepositoryInterface;
 use App\Infrastructure\Doctrine\Repository\AdminUserDoctrineRepository;
 use App\Infrastructure\Doctrine\Repository\DepartmentDoctrineRepository;
+use App\Infrastructure\Doctrine\Repository\MailingCampaignDoctrineRepository;
 use App\Infrastructure\Doctrine\Repository\MunicipalityDoctrineRepository;
 use App\Infrastructure\Doctrine\Repository\RegionDoctrineRepository;
 use Gedmo\Sluggable\SluggableListener;
@@ -31,6 +33,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
     $services->alias(DepartmentRepositoryInterface::class, DepartmentDoctrineRepository::class);
     $services->alias(MunicipalityRepositoryInterface::class, MunicipalityDoctrineRepository::class);
     $services->alias(AdminUserRepositoryInterface::class, AdminUserDoctrineRepository::class);
+    $services->alias(MailingCampaignRepositoryInterface::class, MailingCampaignDoctrineRepository::class);
 
     $services->set(TimestampableListener::class)
         ->tag('doctrine.event_subscriber', [

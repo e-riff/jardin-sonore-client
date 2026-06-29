@@ -248,6 +248,114 @@ a {
     color: var(--color-primary);
 }
 
+.internal-alert {
+    margin-bottom: 24px;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 14px;
+    padding: 14px 16px;
+    background: var(--color-surface-container-lowest);
+    color: var(--color-on-surface-variant);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.internal-alert--success {
+    border-color: color-mix(in oklab, var(--color-secondary) 32%, white);
+    background: color-mix(in oklab, var(--color-secondary-container) 58%, white);
+    color: var(--color-secondary);
+}
+
+.internal-empty {
+    display: grid;
+    gap: 16px;
+}
+
+.internal-form {
+    display: grid;
+    gap: 18px;
+    max-width: 760px;
+}
+
+.internal-form > div {
+    display: grid;
+    gap: 8px;
+}
+
+.internal-form label {
+    color: var(--color-secondary);
+    font-family: var(--font-sans);
+    font-size: 0.84rem;
+    font-weight: 700;
+}
+
+.internal-form input,
+.internal-form textarea {
+    width: 100%;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 12px;
+    padding: 12px 14px;
+    background: var(--color-surface-container);
+    color: var(--color-on-background);
+    font: inherit;
+}
+
+.internal-form textarea {
+    resize: vertical;
+}
+
+.internal-form input:focus,
+.internal-form textarea:focus {
+    border-color: var(--color-primary);
+    outline: 3px solid color-mix(in oklab, var(--color-primary-fixed) 72%, transparent);
+}
+
+.internal-form ul {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    color: var(--color-primary);
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    list-style: none;
+}
+
+.internal-form__actions {
+    display: flex;
+    margin-top: 8px;
+}
+
+.internal-table-wrapper {
+    overflow-x: auto;
+}
+
+.internal-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+}
+
+.internal-table th,
+.internal-table td {
+    border-bottom: 1px solid var(--color-outline-variant);
+    padding: 14px 12px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.internal-table th {
+    color: var(--color-secondary);
+    font-size: 0.76rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.internal-table td {
+    color: var(--color-on-surface-variant);
+}
+
 .internal-checklist {
     display: grid;
     gap: 10px;
