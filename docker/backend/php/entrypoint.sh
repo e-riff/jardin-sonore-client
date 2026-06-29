@@ -2,10 +2,12 @@
 
 set -eu
 
-UPLOAD_DIRECTORY=/app/public/uploads/mailing/recommendations
+if [ "$(id -u)" -eq 0 ]; then
+    UPLOAD_DIRECTORY=/app/public/uploads/mailing/recommendations
 
-mkdir -p "$UPLOAD_DIRECTORY"
-chown -R www-data:www-data /app/public/uploads/mailing
-chmod -R ug+rwX,o+rX /app/public/uploads/mailing
+    mkdir -p "$UPLOAD_DIRECTORY"
+    chown -R www-data:www-data /app/public/uploads/mailing
+    chmod -R ug+rwX,o+rX /app/public/uploads/mailing
+fi
 
 exec "$@"
