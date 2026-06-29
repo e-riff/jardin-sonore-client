@@ -21,6 +21,14 @@
         </header>
 
         <main class="internal-main">
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="internal-alert internal-alert--{{ label }}">
+                        {{ message|trans({}, 'mailing') }}
+                    </div>
+                {% endfor %}
+            {% endfor %}
+
             {% block internal_body %}{% endblock %}
         </main>
     </div>
