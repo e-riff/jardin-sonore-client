@@ -190,6 +190,7 @@ address_book:
     mediatheque: "Médiathèque"
     centre: "Centre social"
     garderie: "Garderie"
+    test: "Test mailing"
   organization_sector:
     association: "Association"
     public: "Secteur public"

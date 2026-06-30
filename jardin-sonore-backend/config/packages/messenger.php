@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Application\Mailing\Message\SendMailingCampaignTestMessage;
 use App\Application\Mailing\Message\SendMailingCampaignRecipientMessage;
+use App\Application\Mailing\Message\SendMailingCampaignTestMessage;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 return static function (ContainerConfigurator $containerConfigurator): void {

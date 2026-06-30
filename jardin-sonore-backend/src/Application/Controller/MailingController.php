@@ -25,13 +25,13 @@ use App\Application\Mailing\UpdateMailingCampaignInput;
 use App\Domain\Model\Mailing\MailingRecommendation;
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
 use InvalidArgumentException;
-use Throwable;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Uid\Uuid;
+use Throwable;
 
 #[Route('/mailing', name: 'mailing_')]
 final class MailingController extends AbstractController

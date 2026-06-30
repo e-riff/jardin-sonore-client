@@ -13,4 +13,5 @@ enum OrganizationType: string
     case MEDIATHEQUE = 'mediatheque';
     case CENTRE = 'centre';
     case GARDERIE = 'garderie';
+    case TEST = 'test';
 }

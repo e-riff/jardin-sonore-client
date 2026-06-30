@@ -28,10 +28,10 @@ use App\Infrastructure\Doctrine\Repository\OrganizationDoctrineRepository;
 use App\Infrastructure\Doctrine\Repository\PersonDoctrineRepository;
 use App\Infrastructure\Doctrine\Repository\PhoneContactDoctrineRepository;
 use App\Infrastructure\Doctrine\Repository\RegionDoctrineRepository;
+use App\Infrastructure\Mailer\SymfonyNewsletterMailSender;
 use App\Infrastructure\Mailing\DoctrineNewsletterAudienceOptionsProvider;
 use App\Infrastructure\Mailing\DoctrineNewsletterAudienceResolver;
 use App\Infrastructure\Mailing\TwigNewsletterRenderer;
-use App\Infrastructure\Mailer\SymfonyNewsletterMailSender;
 use App\Infrastructure\Storage\LocalMailingBannerImageStorage;
 use App\Infrastructure\Storage\LocalRecommendationImageStorage;
 use Gedmo\Sluggable\SluggableListener;
@@ -42,7 +42,8 @@ return static function (ContainerConfigurator $containerConfigurator): void {
     $containerConfigurator->parameters()
         ->set('app.mailing.home_latitude', '')
         ->set('app.mailing.home_longitude', '')
-        ->set('app.mailing.hourly_limit', 45)
+        ->set('app.mailing.window_limit', 45)
+        ->set('app.mailing.window_minutes', 60)
         ->set('app.mailing.dispatch_batch_size', 15);
     $containerConfigurator->parameters()
         ->set('app.mailing.from_email', 'contact@jardinsonore.fr')

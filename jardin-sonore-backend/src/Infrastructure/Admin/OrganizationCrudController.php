@@ -178,6 +178,7 @@ final class OrganizationCrudController extends AbstractCrudController
             'address_book.organization_type.mediatheque' => OrganizationType::MEDIATHEQUE,
             'address_book.organization_type.centre' => OrganizationType::CENTRE,
             'address_book.organization_type.garderie' => OrganizationType::GARDERIE,
+            'address_book.organization_type.test' => OrganizationType::TEST,
         ];
     }
 
