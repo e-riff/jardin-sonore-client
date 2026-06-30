@@ -18,7 +18,7 @@ final class MailingTestType extends AbstractType
 {
     /**
      * @param FormBuilderInterface<MailingTestFormModel|null> $builder
-     * @param array<string, mixed>                             $options
+     * @param array<string, mixed>                            $options
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {

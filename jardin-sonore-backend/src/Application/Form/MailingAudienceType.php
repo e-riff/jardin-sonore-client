@@ -181,6 +181,7 @@ final class MailingAudienceType extends AbstractType
             'address_book.organization_type.mediatheque' => OrganizationType::MEDIATHEQUE,
             'address_book.organization_type.centre' => OrganizationType::CENTRE,
             'address_book.organization_type.garderie' => OrganizationType::GARDERIE,
+            'address_book.organization_type.test' => OrganizationType::TEST,
         ];
     }
 
@@ -221,8 +222,7 @@ final class MailingAudienceType extends AbstractType
         $newsletterAudienceOptionsProvider = $this->newsletterAudienceOptionsProvider;
         $municipalityInseeCodeChoiceLoader = $this->municipalityInseeCodeChoiceLoader;
 
-        return new class($selectedInseeCodes, $newsletterAudienceOptionsProvider, $municipalityInseeCodeChoiceLoader) implements ChoiceLoaderInterface
-        {
+        return new class($selectedInseeCodes, $newsletterAudienceOptionsProvider, $municipalityInseeCodeChoiceLoader) implements ChoiceLoaderInterface {
             /**
              * @param list<string> $selectedInseeCodes
              */

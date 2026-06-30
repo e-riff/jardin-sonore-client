@@ -265,7 +265,7 @@ mailing:
       eyebrow: "Confirmation"
       title: "Mettre la campagne en file"
       description: "La campagne sera préparée puis dispatchée progressivement par la commande cron dédiée, avant traitement par Messenger."
-      cron_notice: "Le rythme réel dépend de la limite horaire et de la taille de vague configurées dans l’environnement."
+      cron_notice: "Le rythme réel dépend de la limite par fenêtre, de sa durée en minutes et de la taille de vague configurées dans l’environnement."
       submit: "Lancer l’envoi"
   unsubscribe:
     title: "Désabonnement newsletter | Jardin Sonore"

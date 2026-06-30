@@ -7,17 +7,17 @@ namespace App\Application\Mailing\MessageHandler;
 use App\Application\Mailing\Message\SendMailingCampaignRecipientMessage;
 use App\Application\Mailing\NewsletterMailSenderInterface;
 use App\Application\Mailing\NewsletterRendererInterface;
-use App\Domain\Model\Mailing\NewsletterRecipient;
 use App\Domain\Model\Mailing\MailingCampaignStatus;
+use App\Domain\Model\Mailing\NewsletterRecipient;
 use App\Domain\Model\ValueObject\EmailAddress;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
 use App\Infrastructure\Mailing\MailingDeliveryRecipientStore;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
-use Throwable;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Uid\Uuid;
+use Throwable;
 
 #[AsMessageHandler]
 final readonly class SendMailingCampaignRecipientMessageHandler

@@ -9,7 +9,6 @@ use App\Application\Mailing\RenderedNewsletter;
 use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Model\Mailing\MailingRecommendation;
 use InvalidArgumentException;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Twig\Environment;
 

@@ -20,7 +20,7 @@ use Symfony\Component\Uid\Uuid;
 
 #[AsCommand(
     name: 'app:mailing:dispatch-pending-campaigns',
-    description: 'Dispatch the next newsletter delivery waves to Messenger respecting the hourly limit.',
+    description: 'Dispatch the next newsletter delivery waves to Messenger respecting the configured time window limit.',
 )]
 final readonly class DispatchPendingMailingCampaignsCommand
 {
@@ -28,8 +28,10 @@ final readonly class DispatchPendingMailingCampaignsCommand
         private MailingDeliveryRecipientStore $mailingDeliveryRecipientStore,
         private MailingCampaignRepositoryInterface $mailingCampaignRepository,
         private MessageBusInterface $messageBus,
-        #[Autowire('%env(default:app.mailing.hourly_limit:MAILING_HOURLY_LIMIT)%')]
-        private int $mailingHourlyLimit,
+        #[Autowire('%env(default:app.mailing.window_limit:MAILING_WINDOW_LIMIT)%')]
+        private int $mailingWindowLimit,
+        #[Autowire('%env(default:app.mailing.window_minutes:MAILING_WINDOW_MINUTES)%')]
+        private int $mailingWindowMinutes,
         #[Autowire('%env(default:app.mailing.dispatch_batch_size:MAILING_DISPATCH_BATCH_SIZE)%')]
         private int $mailingDispatchBatchSize,
         #[Autowire(service: 'monolog.logger.mailing_delivery')]
@@ -39,19 +41,21 @@ final readonly class DispatchPendingMailingCampaignsCommand
 
     public function __invoke(SymfonyStyle $io): int
     {
-        $hourlyLimit = max(1, $this->mailingHourlyLimit);
+        $windowLimit = max(1, $this->mailingWindowLimit);
+        $windowMinutes = max(1, $this->mailingWindowMinutes);
         $dispatchBatchSize = max(1, $this->mailingDispatchBatchSize);
         $alreadyDispatched = $this->mailingDeliveryRecipientStore->countRecentlyDispatched(
-            (new DateTimeImmutable())->sub(new DateInterval('PT1H')),
+            (new DateTimeImmutable())->sub(new DateInterval("PT{$windowMinutes}M")),
         );
-        $remainingCapacity = max(0, $hourlyLimit - $alreadyDispatched);
+        $remainingCapacity = max(0, $windowLimit - $alreadyDispatched);
 
         if (0 === $remainingCapacity) {
-            $this->mailingDeliveryLogger->info('Newsletter dispatch skipped because hourly capacity is exhausted.', [
-                'hourly_limit' => $hourlyLimit,
-                'already_dispatched_last_hour' => $alreadyDispatched,
+            $this->mailingDeliveryLogger->info('Newsletter dispatch skipped because window capacity is exhausted.', [
+                'window_limit' => $windowLimit,
+                'window_minutes' => $windowMinutes,
+                'already_dispatched_in_window' => $alreadyDispatched,
             ]);
-            $io->note('Hourly mailing capacity already reached.');
+            $io->note("Mailing capacity already reached for the last {$windowMinutes} minute(s).");
 
             return Command::SUCCESS;
         }
@@ -59,7 +63,7 @@ final readonly class DispatchPendingMailingCampaignsCommand
         $dispatchedCount = 0;
 
         foreach ($this->mailingDeliveryRecipientStore->findCampaignUuidsWithPendingRecipients() as $campaignUuid) {
-            if ($remainingCapacity <= 0 || !Uuid::isValid($campaignUuid)) {
+            if (0 >= $remainingCapacity || !Uuid::isValid($campaignUuid)) {
                 break;
             }
 
@@ -94,7 +98,9 @@ final readonly class DispatchPendingMailingCampaignsCommand
                 'campaign_uuid' => $mailingCampaign->getUuid()->toRfc4122(),
                 'campaign_title' => $mailingCampaign->getInternalTitle(),
                 'wave_size' => count($claimedRecipients),
-                'remaining_hourly_capacity_before_wave' => $remainingCapacity,
+                'remaining_window_capacity_before_wave' => $remainingCapacity,
+                'window_limit' => $windowLimit,
+                'window_minutes' => $windowMinutes,
                 'recipient_emails' => array_map(
                     static fn (array $claimedRecipient): string => $claimedRecipient['email_address'],
                     $claimedRecipients,
@@ -112,7 +118,7 @@ final readonly class DispatchPendingMailingCampaignsCommand
                 ++$dispatchedCount;
                 --$remainingCapacity;
 
-                if ($remainingCapacity <= 0) {
+                if (0 >= $remainingCapacity) {
                     break;
                 }
             }
@@ -120,8 +126,9 @@ final readonly class DispatchPendingMailingCampaignsCommand
 
         $this->mailingDeliveryLogger->info('Newsletter dispatch command completed.', [
             'dispatched_count' => $dispatchedCount,
-            'hourly_limit' => $hourlyLimit,
-            'already_dispatched_last_hour' => $alreadyDispatched,
+            'window_limit' => $windowLimit,
+            'window_minutes' => $windowMinutes,
+            'already_dispatched_in_window' => $alreadyDispatched,
         ]);
         $io->success("{$dispatchedCount} newsletter recipient(s) dispatched to Messenger.");
 
