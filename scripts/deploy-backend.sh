@@ -39,6 +39,7 @@ rsync -az --delete \
   -e "${SSH_COMMAND[*]}" \
   --exclude '.env.local' \
   --exclude '.env.*.local' \
+  --exclude 'public/assets/' \
   --exclude 'var/' \
   --exclude 'vendor/' \
   --exclude '.php-cs-fixer.cache' \
