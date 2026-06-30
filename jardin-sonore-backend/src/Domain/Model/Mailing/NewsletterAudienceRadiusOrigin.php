@@ -8,4 +8,5 @@ enum NewsletterAudienceRadiusOrigin: string
 {
     case MUNICIPALITY = 'municipality';
     case HOME = 'home';
+    case CUSTOM = 'custom';
 }

@@ -16,6 +16,8 @@ final readonly class MailingCampaignSummary
         public string $emailSubject,
         public MailingCampaignStatus $status,
         public DateTimeImmutable $updatedAt,
+        public bool $hasAudienceCriteria,
+        public ?int $audienceRecipientCount,
     ) {
     }
 }

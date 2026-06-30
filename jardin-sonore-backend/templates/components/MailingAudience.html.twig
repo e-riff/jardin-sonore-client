@@ -1,0 +1,157 @@
+<div {{ attributes }} class="mailing-audience">
+    {% form_theme form 'form/mailing_audience_theme.html.twig' %}
+    {% set audience_attributes = stimulus_controller('audience-mode')
+        |stimulus_controller('mailing-audience')
+        |stimulus_action('live', 'action:prevent', 'submit', { action: 'save' })
+    %}
+
+    {% if saved %}
+        <div class="internal-alert internal-alert--success">
+            {{ 'mailing.audience.saved'|trans({}, 'mailing') }}
+        </div>
+    {% endif %}
+
+    {{ form_start(form, {
+        attr: audience_attributes|merge({
+            class: 'internal-form internal-form--wide'
+        })
+    }) }}
+        <fieldset
+            class="internal-card mailing-audience__fieldset mailing-audience__radius"
+            {{ stimulus_target('audience-mode', 'radiusFieldset') }}
+        >
+            <div>
+                <p class="internal-eyebrow">{{ 'mailing.audience.criteria.radius_eyebrow'|trans({}, 'mailing') }}</p>
+                <h2>{{ 'mailing.audience.criteria.radius'|trans({}, 'mailing') }}</h2>
+                <p>{{ 'mailing.audience.criteria.radius_description'|trans({}, 'mailing') }}</p>
+            </div>
+
+            <div class="internal-form__grid">
+                {{ form_row(form.radiusKilometers) }}
+                {{ form_row(form.radiusOrigin) }}
+            </div>
+
+            {% if this.municipalityRadiusOrigin %}
+                {{ form_row(form.radiusOriginMunicipalityInseeCode) }}
+            {% else %}
+                <div hidden>
+                    {{ form_row(form.radiusOriginMunicipalityInseeCode) }}
+                </div>
+            {% endif %}
+
+            <div hidden>
+                {{ form_widget(form.radiusOriginCustomLatitude) }}
+                {{ form_widget(form.radiusOriginCustomLongitude) }}
+            </div>
+
+            <div class="mailing-audience__map-card">
+                <div class="mailing-audience__map-heading">
+                    <strong>{{ 'mailing.audience.map.title'|trans({}, 'mailing') }}</strong>
+                    <p>{{ 'mailing.audience.map.description'|trans({}, 'mailing') }}</p>
+                </div>
+
+                {{ ux_map(audienceMap, {
+                    class: 'mailing-audience__map',
+                }|merge(stimulus_controller('audience-map', {
+                    origin_select_id: form.radiusOrigin.vars.id,
+                    latitude_field_id: form.radiusOriginCustomLatitude.vars.id,
+                    longitude_field_id: form.radiusOriginCustomLongitude.vars.id
+                }))) }}
+
+                <p class="mailing-audience__map-help">
+                    {{ 'mailing.audience.map.help'|trans({}, 'mailing') }}
+                </p>
+
+                {% if this.customRadiusOrigin and form.radiusOriginCustomLatitude.vars.value and form.radiusOriginCustomLongitude.vars.value %}
+                    <p class="mailing-audience__map-coordinates">
+                        {{ 'mailing.audience.map.coordinates'|trans({
+                            latitude: form.radiusOriginCustomLatitude.vars.value,
+                            longitude: form.radiusOriginCustomLongitude.vars.value
+                        }, 'mailing') }}
+                    </p>
+                {% endif %}
+            </div>
+        </fieldset>
+
+        <section class="internal-card">
+            <div>
+                <p class="internal-eyebrow">{{ 'mailing.audience.criteria.eyebrow'|trans({}, 'mailing') }}</p>
+                <h2>{{ 'mailing.audience.criteria.title'|trans({}, 'mailing') }}</h2>
+                <p>{{ 'mailing.audience.criteria.description'|trans({}, 'mailing') }}</p>
+            </div>
+
+            <div class="mailing-audience__groups">
+                <fieldset class="mailing-audience__fieldset">
+                    <legend>{{ 'mailing.audience.criteria.organization'|trans({}, 'mailing') }}</legend>
+                    <p class="mailing-audience__fieldset-description">{{ 'mailing.audience.criteria.organization_description'|trans({}, 'mailing') }}</p>
+                    {{ form_row(form.organizationTypes) }}
+                    {{ form_row(form.organizationSectors) }}
+                    {{ form_row(form.customerStatuses) }}
+                    {{ form_row(form.tagUuids) }}
+                </fieldset>
+
+                <fieldset
+                    class="mailing-audience__fieldset"
+                    {{ stimulus_target('audience-mode', 'locationFieldset') }}
+                    {% if this.radiusModeActive %}disabled{% endif %}
+                >
+                    <legend>{{ 'mailing.audience.criteria.geography'|trans({}, 'mailing') }}</legend>
+                    <p class="mailing-audience__fieldset-description">{{ 'mailing.audience.criteria.geography_description'|trans({}, 'mailing') }}</p>
+                    {{ form_row(form.municipalityInseeCodes) }}
+                    {{ form_row(form.departmentCodes) }}
+                    {{ form_row(form.regionCodes) }}
+                </fieldset>
+            </div>
+
+            <div class="internal-form__actions">
+                {{ form_widget(form.submit) }}
+            </div>
+        </section>
+    {{ form_end(form) }}
+
+    <section class="internal-card mailing-audience__result">
+        <div>
+            <p class="internal-eyebrow">{{ 'mailing.audience.result.eyebrow'|trans({}, 'mailing') }}</p>
+            <h2>{{ 'mailing.audience.result.title'|trans({}, 'mailing') }}</h2>
+        </div>
+
+        {% set resolution = this.audienceResolution %}
+
+        {% if this.audienceResolutionError %}
+            <div class="internal-alert internal-alert--error">
+                {{ this.audienceResolutionError|trans({}, 'mailing') }}
+            </div>
+        {% elseif resolution %}
+            <p class="mailing-audience__total">
+                {{ 'mailing.audience.result.total'|trans({ count: resolution.total }, 'mailing') }}
+            </p>
+
+            {% if resolution.recipients is empty %}
+                <p>{{ 'mailing.audience.result.empty'|trans({}, 'mailing') }}</p>
+            {% else %}
+                <div class="internal-table-wrapper">
+                    <table class="internal-table">
+                        <thead>
+                            <tr>
+                                <th>{{ 'mailing.audience.result.name'|trans({}, 'mailing') }}</th>
+                                <th>{{ 'mailing.audience.result.email'|trans({}, 'mailing') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for recipient in resolution.recipients %}
+                                <tr>
+                                    <td>{{ recipient.displayName ?? '—' }}</td>
+                                    <td>{{ recipient.emailAddress.value }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if resolution.truncated %}
+                    <p class="help-text">{{ 'mailing.audience.result.truncated'|trans({}, 'mailing') }}</p>
+                {% endif %}
+            {% endif %}
+        {% endif %}
+    </section>
+</div>

@@ -1,0 +1,12 @@
+mailing:
+  audience:
+    validation:
+      insee_code: "Le code INSEE doit contenir exactement cinq chiffres."
+      latitude: "La latitude doit rester comprise entre -90 et 90."
+      longitude: "La longitude doit rester comprise entre -180 et 180."
+      exclusive_modes: "Choisissez soit un rayon, soit des communes, départements ou régions."
+      invalid_configuration: "Complétez correctement le rayon et son origine avant d’enregistrer."
+      radius_required: "Indiquez une distance pour utiliser une origine de rayon."
+      radius_origin_required: "Choisissez le point de départ du rayon."
+      radius_municipality_required: "Indiquez le code INSEE de la commune de départ."
+      radius_custom_point_required: "Sélectionnez un point sur la carte pour utiliser un point personnalisé."

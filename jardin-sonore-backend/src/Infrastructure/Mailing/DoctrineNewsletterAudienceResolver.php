@@ -165,10 +165,10 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
         QueryBuilder $queryBuilder,
         NewsletterAudienceFilter $newsletterAudienceFilter,
     ): void {
-        $geographicConditions = [];
+        $geographicTargets = [];
 
         if ([] !== $newsletterAudienceFilter->getRegionCodes()) {
-            $geographicConditions[] = 'region.code IN (:regionCodes)';
+            $geographicTargets[] = 'region.code IN (:regionCodes)';
             $queryBuilder->setParameter(
                 'regionCodes',
                 $newsletterAudienceFilter->getRegionCodes(),
@@ -177,7 +177,7 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
         }
 
         if ([] !== $newsletterAudienceFilter->getDepartmentCodes()) {
-            $geographicConditions[] = 'department.code IN (:departmentCodes)';
+            $geographicTargets[] = 'department.code IN (:departmentCodes)';
             $queryBuilder->setParameter(
                 'departmentCodes',
                 $newsletterAudienceFilter->getDepartmentCodes(),
@@ -186,7 +186,7 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
         }
 
         if ([] !== $newsletterAudienceFilter->getMunicipalityInseeCodes()) {
-            $geographicConditions[] = 'municipality.insee_code IN (:municipalityInseeCodes)';
+            $geographicTargets[] = 'municipality.insee_code IN (:municipalityInseeCodes)';
             $queryBuilder->setParameter(
                 'municipalityInseeCodes',
                 $newsletterAudienceFilter->getMunicipalityInseeCodes(),
@@ -196,21 +196,22 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
 
         if (null !== $newsletterAudienceFilter->getRadiusKilometers()) {
             [$originLatitude, $originLongitude] = $this->resolveRadiusOrigin($newsletterAudienceFilter);
-            $geographicConditions[] = 'municipality.center_latitude IS NOT NULL';
-            $geographicConditions[] = 'municipality.center_longitude IS NOT NULL';
-            $geographicConditions[] = '
+            $geographicTargets[] = '(
+                municipality.center_latitude IS NOT NULL
+                AND municipality.center_longitude IS NOT NULL
+                AND
                 ST_DISTANCE_SPHERE(
                     POINT(municipality.center_longitude, municipality.center_latitude),
                     POINT(:originLongitude, :originLatitude)
                 ) <= :radiusMeters
-            ';
+            )';
             $queryBuilder
                 ->setParameter('originLatitude', $originLatitude)
                 ->setParameter('originLongitude', $originLongitude)
                 ->setParameter('radiusMeters', $newsletterAudienceFilter->getRadiusKilometers() * 1000);
         }
 
-        if ([] === $geographicConditions) {
+        if ([] === $geographicTargets) {
             return;
         }
 
@@ -223,9 +224,9 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
                 INNER JOIN region ON region.id = department.region_id
                 WHERE address.active = 1
                 AND (address.contact_details_id = contact.id OR address.contact_details_id = organization_contact.id)
-                AND %s
+                AND (%s)
             )',
-            implode("\nAND ", $geographicConditions),
+            implode("\nOR ", $geographicTargets),
         ));
     }
 
@@ -240,6 +241,17 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
             }
 
             return [(float) $this->homeLatitude, (float) $this->homeLongitude];
+        }
+
+        if (NewsletterAudienceRadiusOrigin::CUSTOM === $newsletterAudienceFilter->getRadiusOrigin()) {
+            $latitude = $newsletterAudienceFilter->getRadiusOriginCustomLatitude();
+            $longitude = $newsletterAudienceFilter->getRadiusOriginCustomLongitude();
+
+            if (null === $latitude || null === $longitude) {
+                throw new InvalidArgumentException('Newsletter custom radius origin coordinates are missing.');
+            }
+
+            return [$latitude, $longitude];
         }
 
         $municipalityInseeCode = $newsletterAudienceFilter->getRadiusOriginMunicipalityInseeCode();

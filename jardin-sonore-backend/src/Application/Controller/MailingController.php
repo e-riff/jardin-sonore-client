@@ -12,9 +12,13 @@ use App\Application\Mailing\CreateMailingCampaign;
 use App\Application\Mailing\CreateMailingCampaignInput;
 use App\Application\Mailing\GetMailingCampaign;
 use App\Application\Mailing\ListMailingCampaigns;
+use App\Application\Mailing\NewsletterAudienceOptionsProviderInterface;
+use App\Application\Mailing\NewsletterAudienceResolverInterface;
 use App\Application\Mailing\UpdateMailingCampaign;
 use App\Application\Mailing\UpdateMailingCampaignInput;
+use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -28,6 +32,33 @@ final class MailingController extends AbstractController
     {
         return $this->render('mailing/index.html.twig', [
             'campaigns' => $listMailingCampaigns(),
+        ]);
+    }
+
+    #[Route('/audience/municipalities/autocomplete', name: 'audience_municipalities_autocomplete', methods: ['GET'])]
+    public function autocompleteMunicipalities(
+        Request $request,
+        NewsletterAudienceOptionsProviderInterface $newsletterAudienceOptionsProvider,
+    ): JsonResponse {
+        $page = max(1, $request->query->getInt('page', 1));
+        $limit = 50;
+        $autocompleteChoices = $newsletterAudienceOptionsProvider->searchMunicipalityAutocompleteChoices(
+            query: $request->query->getString('query'),
+            page: $page,
+            limit: $limit,
+        );
+
+        return $this->json([
+            'results' => [
+                'options' => $autocompleteChoices['results'],
+                'optgroups' => $autocompleteChoices['optgroups'],
+            ],
+            'next_page' => $autocompleteChoices['has_next_page']
+                ? $this->generateUrl('mailing_audience_municipalities_autocomplete', [
+                    'query' => $request->query->getString('query'),
+                    'page' => $page + 1,
+                ])
+                : null,
         ]);
     }
 
@@ -62,16 +93,13 @@ final class MailingController extends AbstractController
 
     #[Route('/{uuid}/content', name: 'content', methods: ['GET', 'POST'])]
     public function content(
-        string $uuid,
+        Uuid $uuid,
         Request $request,
         GetMailingCampaign $getMailingCampaign,
         UpdateMailingCampaign $updateMailingCampaign,
+        NewsletterAudienceResolverInterface $newsletterAudienceResolver,
     ): Response {
-        if (!Uuid::isValid($uuid)) {
-            throw $this->createNotFoundException();
-        }
-
-        $mailingCampaign = $getMailingCampaign(Uuid::fromString($uuid));
+        $mailingCampaign = $getMailingCampaign($uuid);
 
         if (null === $mailingCampaign) {
             throw $this->createNotFoundException();
@@ -97,14 +125,44 @@ final class MailingController extends AbstractController
             ]);
         }
 
+        $audienceRecipientCount = null;
+
+        if ($mailingCampaign->getAudienceFilter()->hasActiveCriteria()) {
+            try {
+                $audienceRecipientCount = $newsletterAudienceResolver->resolve($mailingCampaign->getAudienceFilter(), 1)->getTotal();
+            } catch (InvalidArgumentException) {
+                $audienceRecipientCount = null;
+            }
+        }
+
         return $this->render(
             'mailing/content.html.twig',
             [
                 'campaign' => $mailingCampaign,
+                'hasAudienceCriteria' => $mailingCampaign->getAudienceFilter()->hasActiveCriteria(),
+                'audienceRecipientCount' => $audienceRecipientCount,
                 'form' => $form->createView(),
                 'formSubmitted' => $form->isSubmitted(),
             ],
             $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null,
         );
+    }
+
+    #[Route('/{uuid}/audience', name: 'audience', methods: ['GET'])]
+    public function audience(
+        Uuid $uuid,
+        Request $request,
+        GetMailingCampaign $getMailingCampaign,
+    ): Response {
+        $mailingCampaign = $getMailingCampaign($uuid);
+
+        if (null === $mailingCampaign) {
+            throw $this->createNotFoundException();
+        }
+
+        return $this->render('mailing/audience.html.twig', [
+            'campaign' => $mailingCampaign,
+            'returnTo' => $request->query->getString('returnTo'),
+        ]);
     }
 }

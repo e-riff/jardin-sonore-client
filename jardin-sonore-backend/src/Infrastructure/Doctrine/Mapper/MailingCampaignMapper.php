@@ -103,6 +103,8 @@ final readonly class MailingCampaignMapper
             radiusKilometers: $this->nullableFloat($audienceFilter, 'radiusKilometers'),
             radiusOrigin: $this->nullableEnum($audienceFilter, 'radiusOrigin', NewsletterAudienceRadiusOrigin::class),
             radiusOriginMunicipalityInseeCode: $this->nullableString($audienceFilter, 'radiusOriginMunicipalityInseeCode'),
+            radiusOriginCustomLatitude: $this->nullableFloat($audienceFilter, 'radiusOriginCustomLatitude'),
+            radiusOriginCustomLongitude: $this->nullableFloat($audienceFilter, 'radiusOriginCustomLongitude'),
         );
     }
 
@@ -122,6 +124,8 @@ final readonly class MailingCampaignMapper
             'radiusKilometers' => $audienceFilter->getRadiusKilometers(),
             'radiusOrigin' => $audienceFilter->getRadiusOrigin()?->value,
             'radiusOriginMunicipalityInseeCode' => $audienceFilter->getRadiusOriginMunicipalityInseeCode(),
+            'radiusOriginCustomLatitude' => $audienceFilter->getRadiusOriginCustomLatitude(),
+            'radiusOriginCustomLongitude' => $audienceFilter->getRadiusOriginCustomLongitude(),
         ];
     }
 
