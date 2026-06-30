@@ -1,0 +1,95 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'mailing.send.title'|trans({ campaign: campaign.internalTitle }, 'mailing') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ 'mailing.send.eyebrow'|trans({}, 'mailing') }}</p>
+            <h1>{{ campaign.internalTitle }}</h1>
+            <p>{{ 'mailing.send.description'|trans({}, 'mailing') }}</p>
+        </div>
+
+        <div class="internal-heading-actions">
+            <a class="internal-button internal-button--secondary" href="{{ path('mailing_preview', { uuid: campaign.uuid }) }}">
+                {{ 'mailing.send.back_to_preview'|trans({}, 'mailing') }}
+            </a>
+            <a class="internal-button internal-button--secondary" href="{{ path('mailing_content', { uuid: campaign.uuid }) }}">
+                {{ 'mailing.send.back_to_content'|trans({}, 'mailing') }}
+            </a>
+        </div>
+    </section>
+
+    <section class="internal-card mailing-preview-meta">
+        <div>
+            <p class="internal-eyebrow">{{ 'mailing.send.summary.eyebrow'|trans({}, 'mailing') }}</p>
+            <h2>{{ 'mailing.send.summary.title'|trans({}, 'mailing') }}</h2>
+        </div>
+
+        {% if audienceError %}
+            <div class="internal-alert internal-alert--error">
+                {{ audienceError|trans({}, 'mailing') }}
+            </div>
+        {% elseif audienceResolution %}
+            <div class="mailing-preview-meta__grid">
+                <article class="mailing-preview-meta__item">
+                    <strong>{{ 'mailing.send.summary.subject'|trans({}, 'mailing') }}</strong>
+                    <p>{{ campaign.emailSubject }}</p>
+                </article>
+                <article class="mailing-preview-meta__item">
+                    <strong>{{ 'mailing.send.summary.recipients'|trans({}, 'mailing') }}</strong>
+                    <p>{{ 'mailing.index.audience.recipients'|trans({ count: audienceResolution.total }, 'mailing') }}</p>
+                </article>
+                <article class="mailing-preview-meta__item">
+                    <strong>{{ 'mailing.send.summary.status'|trans({}, 'mailing') }}</strong>
+                    <p>{{ ('mailing.status.' ~ campaign.status.value)|trans({}, 'mailing') }}</p>
+                </article>
+            </div>
+
+            {% if audienceResolution.recipients is not empty %}
+                <p class="help-text">{{ 'mailing.send.summary.sample'|trans({}, 'mailing') }}</p>
+                <ul class="internal-list">
+                    {% for recipient in audienceResolution.recipients %}
+                        <li>{{ recipient.displayName ?: recipient.emailAddress.value }}{% if recipient.displayName %} — {{ recipient.emailAddress.value }}{% endif %}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endif %}
+    </section>
+
+    <section class="internal-card">
+        <div>
+            <p class="internal-eyebrow">{{ 'mailing.send.confirm.eyebrow'|trans({}, 'mailing') }}</p>
+            <h2>{{ 'mailing.send.confirm.title'|trans({}, 'mailing') }}</h2>
+            <p>{{ 'mailing.send.confirm.description'|trans({}, 'mailing') }}</p>
+            {% if queueWillUseCron %}
+                <p class="help-text">{{ 'mailing.send.confirm.cron_notice'|trans({}, 'mailing') }}</p>
+            {% endif %}
+        </div>
+
+        {% if campaign.canStopDelivery %}
+            <div class="internal-form__actions">
+                <form method="post" action="{{ path('mailing_stop', { uuid: campaign.uuid }) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('mailing_stop_' ~ campaign.uuid) }}">
+                    <button class="internal-button internal-button--danger" type="submit">
+                        {{ 'mailing.preview.stop_campaign'|trans({}, 'mailing') }}
+                    </button>
+                </form>
+            </div>
+        {% elseif campaign.editable %}
+            <form method="post" class="internal-form">
+                <input type="hidden" name="_token" value="{{ csrfToken }}">
+
+                <div class="internal-form__actions">
+                    <button class="internal-button" type="submit" {% if audienceError or not audienceResolution or audienceResolution.total == 0 %}disabled{% endif %}>
+                        {{ 'mailing.send.confirm.submit'|trans({}, 'mailing') }}
+                    </button>
+                </div>
+            </form>
+        {% else %}
+            <div class="internal-alert">
+                {{ 'mailing.flash.locked'|trans({}, 'mailing') }}
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}

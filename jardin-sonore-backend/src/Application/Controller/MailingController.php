@@ -17,7 +17,9 @@ use App\Application\Mailing\ListMailingCampaigns;
 use App\Application\Mailing\NewsletterAudienceOptionsProviderInterface;
 use App\Application\Mailing\NewsletterAudienceResolverInterface;
 use App\Application\Mailing\NewsletterRendererInterface;
+use App\Application\Mailing\SendMailingCampaign;
 use App\Application\Mailing\SendMailingCampaignTest;
+use App\Application\Mailing\StopMailingCampaignDelivery;
 use App\Application\Mailing\UpdateMailingCampaign;
 use App\Application\Mailing\UpdateMailingCampaignInput;
 use App\Domain\Model\Mailing\MailingRecommendation;
@@ -117,8 +119,19 @@ final class MailingController extends AbstractController
         }
 
         $formModel = EditMailingCampaignFormModel::fromMailingCampaign($mailingCampaign);
-        $form = $this->createForm(EditMailingCampaignType::class, $formModel);
+        $campaignLocked = !$mailingCampaign->isEditable();
+        $form = $this->createForm(EditMailingCampaignType::class, $formModel, [
+            'locked' => $campaignLocked,
+        ]);
         $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $campaignLocked) {
+            $this->addFlash('error', 'mailing.flash.locked');
+
+            return $this->redirectToRoute('mailing_content', [
+                'uuid' => $mailingCampaign->getUuid(),
+            ]);
+        }
 
         if ($form->isSubmitted() && $form->isValid()) {
             $updateMailingCampaign($mailingCampaign, new UpdateMailingCampaignInput(
@@ -130,6 +143,7 @@ final class MailingController extends AbstractController
                 callToActionLabel: $formModel->callToActionLabel,
                 callToActionUrl: $formModel->callToActionUrl,
                 bannerImageFile: $formModel->bannerImageFile,
+                removeBannerImage: $formModel->removeBannerImage,
                 templateKey: $formModel->templateKey,
             ));
 
@@ -156,6 +170,7 @@ final class MailingController extends AbstractController
                 'campaign' => $mailingCampaign,
                 'hasAudienceCriteria' => $mailingCampaign->getAudienceFilter()->hasActiveCriteria(),
                 'audienceRecipientCount' => $audienceRecipientCount,
+                'campaignLocked' => $campaignLocked,
                 'form' => $form->createView(),
                 'formSubmitted' => $form->isSubmitted(),
             ],
@@ -177,6 +192,7 @@ final class MailingController extends AbstractController
 
         return $this->render('mailing/audience.html.twig', [
             'campaign' => $mailingCampaign,
+            'campaignLocked' => !$mailingCampaign->isEditable(),
             'returnTo' => $request->query->getString('returnTo'),
         ]);
     }
@@ -186,6 +202,7 @@ final class MailingController extends AbstractController
         Uuid $uuid,
         GetMailingCampaign $getMailingCampaign,
         NewsletterRendererInterface $newsletterRenderer,
+        NewsletterAudienceResolverInterface $newsletterAudienceResolver,
     ): Response {
         $mailingCampaign = $getMailingCampaign($uuid);
 
@@ -198,12 +215,107 @@ final class MailingController extends AbstractController
             static fn (MailingRecommendation $mailingRecommendation): bool => $mailingRecommendation->isActive(),
         ));
 
+        $audienceRecipientCount = null;
+
+        if ($mailingCampaign->getAudienceFilter()->hasActiveCriteria()) {
+            try {
+                $audienceRecipientCount = $newsletterAudienceResolver->resolve($mailingCampaign->getAudienceFilter(), 1)->getTotal();
+            } catch (InvalidArgumentException) {
+                $audienceRecipientCount = null;
+            }
+        }
+
         return $this->render('mailing/preview.html.twig', [
             'campaign' => $mailingCampaign,
             'renderedNewsletter' => $newsletterRenderer->render($mailingCampaign),
             'activeRecommendationCount' => $activeRecommendationCount,
             'hasAudienceCriteria' => $mailingCampaign->getAudienceFilter()->hasActiveCriteria(),
+            'audienceRecipientCount' => $audienceRecipientCount,
         ]);
+    }
+
+    #[Route('/{uuid}/send', name: 'send', methods: ['GET', 'POST'])]
+    public function send(
+        Uuid $uuid,
+        Request $request,
+        GetMailingCampaign $getMailingCampaign,
+        NewsletterAudienceResolverInterface $newsletterAudienceResolver,
+        SendMailingCampaign $sendMailingCampaign,
+    ): Response {
+        $mailingCampaign = $getMailingCampaign($uuid);
+
+        if (null === $mailingCampaign) {
+            throw $this->createNotFoundException();
+        }
+
+        try {
+            $audienceResolution = $newsletterAudienceResolver->resolve($mailingCampaign->getAudienceFilter(), 10);
+            $audienceError = null;
+        } catch (InvalidArgumentException) {
+            $audienceResolution = null;
+            $audienceError = 'mailing.send.invalid_audience';
+        }
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('mailing_send_' . $mailingCampaign->getUuid()->toRfc4122(), (string) $request->request->get('_token'))) {
+                throw $this->createAccessDeniedException();
+            }
+
+            try {
+                $sendMailingCampaign($mailingCampaign);
+                $this->addFlash('success', 'mailing.flash.delivery_queued');
+
+                return $this->redirectToRoute('mailing_index');
+            } catch (InvalidArgumentException $invalidArgumentException) {
+                $message = $invalidArgumentException->getMessage();
+                $translationKey = match ($message) {
+                    'Mailing campaign audience is empty.' => 'mailing.flash.delivery_empty',
+                    'Mailing campaign delivery is already queued.' => 'mailing.flash.delivery_already_queued',
+                    default => 'mailing.flash.delivery_failed',
+                };
+                $this->addFlash('error', $translationKey);
+
+                return $this->redirectToRoute('mailing_send', [
+                    'uuid' => $mailingCampaign->getUuid(),
+                ]);
+            }
+        }
+
+        return $this->render('mailing/send.html.twig', [
+            'campaign' => $mailingCampaign,
+            'audienceResolution' => $audienceResolution,
+            'audienceError' => $audienceError,
+            'queueWillUseCron' => true,
+            'csrfToken' => $this->container->get('security.csrf.token_manager')->getToken('mailing_send_' . $mailingCampaign->getUuid()->toRfc4122())->getValue(),
+        ]);
+    }
+
+    #[Route('/{uuid}/stop', name: 'stop', methods: ['POST'])]
+    public function stop(
+        Uuid $uuid,
+        Request $request,
+        GetMailingCampaign $getMailingCampaign,
+        StopMailingCampaignDelivery $stopMailingCampaignDelivery,
+    ): Response {
+        $mailingCampaign = $getMailingCampaign($uuid);
+
+        if (null === $mailingCampaign) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$this->isCsrfTokenValid('mailing_stop_' . $mailingCampaign->getUuid()->toRfc4122(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        try {
+            $stopMailingCampaignDelivery($mailingCampaign);
+            $this->addFlash('success', 'mailing.flash.delivery_stopped');
+            $this->addFlash('info', 'mailing.flash.delivery_stopped_details');
+        } catch (InvalidArgumentException) {
+            $this->addFlash('error', 'mailing.flash.delivery_stop_failed');
+        }
+
+        return $this->redirectToRoute('mailing_index');
     }
 
     #[Route('/{uuid}/test', name: 'test', methods: ['GET', 'POST'])]

@@ -41,11 +41,6 @@ final class MailingAudienceType extends AbstractType
         $selectedMunicipalityChoices = $this->selectedMunicipalityChoices(
             $formModel instanceof MailingAudienceFormModel ? $formModel->municipalityInseeCodes : [],
         );
-        $selectedRadiusOriginMunicipalityChoices = $this->selectedMunicipalityChoices(
-            $formModel instanceof MailingAudienceFormModel && null !== $formModel->radiusOriginMunicipalityInseeCode
-                ? [$formModel->radiusOriginMunicipalityInseeCode]
-                : [],
-        );
         $expandedMultipleOptions = [
             'expanded' => true,
             'multiple' => true,
@@ -134,10 +129,10 @@ final class MailingAudienceType extends AbstractType
                 ],
             ])
             ->add('radiusOriginMunicipalityInseeCode', ChoiceType::class, [
-                ...$municipalityAutocompleteOptions,
                 'label' => 'mailing.audience.form.radius_origin_municipality',
                 'help' => 'mailing.audience.form.radius_origin_municipality_help',
-                'choices' => $selectedRadiusOriginMunicipalityChoices,
+                'autocomplete' => true,
+                'choices' => $this->newsletterAudienceOptionsProvider->getMunicipalityChoices(),
                 'required' => false,
                 'placeholder' => 'mailing.audience.form.radius_origin_municipality_placeholder',
             ])

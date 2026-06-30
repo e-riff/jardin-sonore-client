@@ -58,11 +58,19 @@
         </div>
     </section>
 
+    {% if campaignLocked %}
+        <section class="internal-card">
+            <div class="internal-alert">
+                {{ 'mailing.content.locked_notice'|trans({}, 'mailing') }}
+            </div>
+        </section>
+    {% endif %}
+
     {{ form_start(form, {
         attr: {
             class: 'internal-form internal-form--wide',
-            'data-controller': 'unsaved-changes',
-            'data-unsaved-changes-dirty-value': formSubmitted ? 'true' : 'false',
+            'data-controller': campaignLocked ? '' : 'unsaved-changes',
+            'data-unsaved-changes-dirty-value': campaignLocked ? 'false' : (formSubmitted ? 'true' : 'false'),
             'data-unsaved-changes-message-value': 'mailing.content.unsaved_changes_warning'|trans({}, 'mailing')
         }
     }) }}
@@ -89,12 +97,17 @@
                 {{ form_row(form.callToActionUrl) }}
             </div>
             {{ form_row(form.bannerImageFile) }}
+            {% if form.removeBannerImage is defined and form.vars.data.bannerImagePath %}
+                {{ form_row(form.removeBannerImage) }}
+            {% endif %}
             {{ form_row(form.templateKey) }}
         </section>
 
-        <div class="internal-form__actions">
-            {{ form_widget(form.submit) }}
-        </div>
+        {% if not campaignLocked %}
+            <div class="internal-form__actions">
+                {{ form_widget(form.submit) }}
+            </div>
+        {% endif %}
     {{ form_end(form) }}
 
     <turbo-frame

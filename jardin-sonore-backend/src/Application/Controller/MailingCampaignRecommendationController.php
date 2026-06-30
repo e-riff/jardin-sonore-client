@@ -66,6 +66,7 @@ final class MailingCampaignRecommendationController extends AbstractController
     ): Response {
         $this->assertCsrfToken($request, "select-recommendation-{$catalogUuid}");
         $mailingCampaign = $this->getMailingCampaign($campaignUuid, $getMailingCampaign);
+        $this->assertCampaignEditable($mailingCampaign);
         $newsletterRecommendation = Uuid::isValid($catalogUuid)
             ? $newsletterRecommendationRepository->findByUuid(Uuid::fromString($catalogUuid))
             : null;
@@ -89,6 +90,7 @@ final class MailingCampaignRecommendationController extends AbstractController
     ): Response {
         $this->assertCsrfToken($request, "remove-recommendation-{$recommendationUuid}");
         $mailingCampaign = $this->getMailingCampaign($campaignUuid, $getMailingCampaign);
+        $this->assertCampaignEditable($mailingCampaign);
 
         if (!Uuid::isValid($recommendationUuid)
             || !$removeMailingRecommendation($mailingCampaign, Uuid::fromString($recommendationUuid))) {
@@ -109,6 +111,7 @@ final class MailingCampaignRecommendationController extends AbstractController
     ): Response {
         $this->assertCsrfToken($request, "move-recommendation-{$recommendationUuid}");
         $mailingCampaign = $this->getMailingCampaign($campaignUuid, $getMailingCampaign);
+        $this->assertCampaignEditable($mailingCampaign);
         $offset = 'up' === $direction ? -1 : ('down' === $direction ? 1 : 0);
 
         if (!Uuid::isValid($recommendationUuid)
@@ -128,6 +131,7 @@ final class MailingCampaignRecommendationController extends AbstractController
         UpdateMailingRecommendation $updateMailingRecommendation,
     ): Response {
         $mailingCampaign = $this->getMailingCampaign($campaignUuid, $getMailingCampaign);
+        $this->assertCampaignEditable($mailingCampaign);
         $mailingRecommendation = $this->findRecommendation($mailingCampaign, $recommendationUuid);
         $formModel = MailingRecommendationFormModel::fromMailingRecommendation($mailingRecommendation);
         $form = $this->createForm(MailingRecommendationType::class, $formModel);
@@ -196,6 +200,15 @@ final class MailingCampaignRecommendationController extends AbstractController
         if (!$this->isCsrfTokenValid($tokenId, $request->getPayload()->getString('_token'))) {
             throw $this->createAccessDeniedException();
         }
+    }
+
+    private function assertCampaignEditable(MailingCampaign $mailingCampaign): void
+    {
+        if ($mailingCampaign->isEditable()) {
+            return;
+        }
+
+        throw $this->createAccessDeniedException();
     }
 
     private function redirectToRecommendations(MailingCampaign $mailingCampaign): Response

@@ -33,6 +33,8 @@ final class EditMailingCampaignFormModel
 
     public ?string $bannerImagePath = null;
 
+    public bool $removeBannerImage = false;
+
     #[Image(
         maxSize: '5M',
         mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],

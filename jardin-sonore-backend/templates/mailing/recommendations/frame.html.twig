@@ -10,16 +10,24 @@
                     <p>{{ 'mailing.content.recommendations.description'|trans({}, 'mailing') }}</p>
                 </div>
 
-                <div class="mailing-recommendations__primary-action">
-                    <a
-                        class="internal-button"
-                        href="{{ path('mailing_recommendation_catalog_new', { campaign: campaign.uuid }) }}"
-                    >
-                        {{ 'mailing.content.recommendations.create'|trans({}, 'mailing') }}
-                    </a>
-                    <small>{{ 'mailing.content.recommendations.create_help'|trans({}, 'mailing') }}</small>
-                </div>
+                {% if campaign.editable %}
+                    <div class="mailing-recommendations__primary-action">
+                        <a
+                            class="internal-button"
+                            href="{{ path('mailing_recommendation_catalog_new', { campaign: campaign.uuid }) }}"
+                        >
+                            {{ 'mailing.content.recommendations.create'|trans({}, 'mailing') }}
+                        </a>
+                        <small>{{ 'mailing.content.recommendations.create_help'|trans({}, 'mailing') }}</small>
+                    </div>
+                {% endif %}
             </div>
+
+            {% if not campaign.editable %}
+                <div class="internal-alert">
+                    {{ 'mailing.content.recommendations.locked_notice'|trans({}, 'mailing') }}
+                </div>
+            {% endif %}
 
             <div class="mailing-recommendations">
                 {% for recommendation in campaign.recommendations %}
@@ -38,6 +46,7 @@
                                 <p>{{ recommendation.text }}</p>
                             </div>
 
+                            {% if campaign.editable %}
                             <div class="mailing-recommendation__actions">
                                 <form method="post" action="{{ path('mailing_campaign_recommendation_move', {
                                     campaignUuid: campaign.uuid,
@@ -75,6 +84,7 @@
                                     </button>
                                 </form>
                             </div>
+                            {% endif %}
                         </div>
                     </article>
                 {% else %}
@@ -88,15 +98,17 @@
                     <h2>{{ 'mailing.content.recommendations.catalog_title'|trans({}, 'mailing') }}</h2>
                 </div>
 
-                <form class="internal-search" method="get" action="{{ path('mailing_campaign_recommendation_index', { campaignUuid: campaign.uuid }) }}">
-                    <label for="recommendation-query">{{ 'mailing.content.recommendations.search'|trans({}, 'mailing') }}</label>
-                    <div>
-                        <input id="recommendation-query" name="query" value="{{ query }}">
-                        <button class="internal-button internal-button--secondary" type="submit">
-                            {{ 'mailing.content.recommendations.search_submit'|trans({}, 'mailing') }}
-                        </button>
-                    </div>
-                </form>
+                {% if campaign.editable %}
+                    <form class="internal-search" method="get" action="{{ path('mailing_campaign_recommendation_index', { campaignUuid: campaign.uuid }) }}">
+                        <label for="recommendation-query">{{ 'mailing.content.recommendations.search'|trans({}, 'mailing') }}</label>
+                        <div>
+                            <input id="recommendation-query" name="query" value="{{ query }}">
+                            <button class="internal-button internal-button--secondary" type="submit">
+                                {{ 'mailing.content.recommendations.search_submit'|trans({}, 'mailing') }}
+                            </button>
+                        </div>
+                    </form>
+                {% endif %}
 
                 <div class="mailing-catalog-grid mailing-catalog-grid--picker">
                     {% for recommendation in availableRecommendations %}
@@ -108,15 +120,17 @@
                                 <h3>{{ recommendation.title }}</h3>
                                 <p>{{ recommendation.text }}</p>
                             </div>
-                            <form method="post" action="{{ path('mailing_campaign_recommendation_select', {
-                                campaignUuid: campaign.uuid,
-                                catalogUuid: recommendation.uuid
-                            }) }}">
-                                <input type="hidden" name="_token" value="{{ csrf_token('select-recommendation-' ~ recommendation.uuid) }}">
-                                <button class="internal-button internal-button--secondary" type="submit">
-                                    {{ 'mailing.content.recommendations.select'|trans({}, 'mailing') }}
-                                </button>
-                            </form>
+                            {% if campaign.editable %}
+                                <form method="post" action="{{ path('mailing_campaign_recommendation_select', {
+                                    campaignUuid: campaign.uuid,
+                                    catalogUuid: recommendation.uuid
+                                }) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('select-recommendation-' ~ recommendation.uuid) }}">
+                                    <button class="internal-button internal-button--secondary" type="submit">
+                                        {{ 'mailing.content.recommendations.select'|trans({}, 'mailing') }}
+                                    </button>
+                                </form>
+                            {% endif %}
                         </article>
                     {% else %}
                         <p class="internal-empty-state">{{ 'mailing.content.recommendations.catalog_empty'|trans({}, 'mailing') }}</p>

@@ -18,6 +18,8 @@ final readonly class MailingCampaignSummary
         public DateTimeImmutable $updatedAt,
         public bool $hasAudienceCriteria,
         public ?int $audienceRecipientCount,
+        public bool $isEditable,
+        public bool $canStopDelivery,
     ) {
     }
 }

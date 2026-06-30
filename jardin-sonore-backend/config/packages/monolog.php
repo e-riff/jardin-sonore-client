@@ -8,6 +8,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
     $monologConfig = [
         'channels' => [
             'deprecation',
+            'mailing_delivery',
         ],
     ];
 
@@ -23,6 +24,13 @@ return static function (ContainerConfigurator $containerConfigurator): void {
                 'type' => 'console',
                 'process_psr_3_messages' => false,
                 'channels' => ['!event', '!doctrine', '!console'],
+            ],
+            'mailing_delivery' => [
+                'type' => 'rotating_file',
+                'path' => '%kernel.logs_dir%/mailing_delivery.log',
+                'level' => 'info',
+                'max_files' => 30,
+                'channels' => ['mailing_delivery'],
             ],
         ];
     }
@@ -40,6 +48,13 @@ return static function (ContainerConfigurator $containerConfigurator): void {
                 'type' => 'stream',
                 'path' => '%kernel.logs_dir%/%kernel.environment%.log',
                 'level' => 'debug',
+            ],
+            'mailing_delivery' => [
+                'type' => 'rotating_file',
+                'path' => '%kernel.logs_dir%/mailing_delivery.log',
+                'level' => 'info',
+                'max_files' => 30,
+                'channels' => ['mailing_delivery'],
             ],
         ];
     }
@@ -70,6 +85,13 @@ return static function (ContainerConfigurator $containerConfigurator): void {
                 'channels' => ['deprecation'],
                 'path' => 'php://stderr',
                 'formatter' => 'monolog.formatter.json',
+            ],
+            'mailing_delivery' => [
+                'type' => 'rotating_file',
+                'path' => '%kernel.logs_dir%/mailing_delivery.log',
+                'level' => 'info',
+                'max_files' => 30,
+                'channels' => ['mailing_delivery'],
             ],
         ];
     }

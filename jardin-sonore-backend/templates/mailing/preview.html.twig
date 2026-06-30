@@ -11,6 +11,18 @@
         </div>
 
         <div class="internal-heading-actions">
+            {% if campaign.canStopDelivery %}
+                <form method="post" action="{{ path('mailing_stop', { uuid: campaign.uuid }) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('mailing_stop_' ~ campaign.uuid) }}">
+                    <button class="internal-button internal-button--danger" type="submit">
+                        {{ 'mailing.preview.stop_campaign'|trans({}, 'mailing') }}
+                    </button>
+                </form>
+            {% elseif campaign.editable %}
+                <a class="internal-button" href="{{ path('mailing_send', { uuid: campaign.uuid }) }}">
+                    {{ 'mailing.preview.send_campaign'|trans({}, 'mailing') }}
+                </a>
+            {% endif %}
             <a class="internal-button" href="{{ path('mailing_test', { uuid: campaign.uuid }) }}">
                 {{ 'mailing.preview.send_test'|trans({}, 'mailing') }}
             </a>
@@ -38,6 +50,16 @@
             <article class="mailing-preview-meta__item">
                 <strong>{{ 'mailing.preview.meta.recommendations'|trans({}, 'mailing') }}</strong>
                 <p>{{ activeRecommendationCount }}</p>
+            </article>
+            <article class="mailing-preview-meta__item">
+                <strong>{{ 'mailing.preview.meta.recipients'|trans({}, 'mailing') }}</strong>
+                <p>
+                    {% if audienceRecipientCount is not null %}
+                        {{ 'mailing.index.audience.recipients'|trans({ count: audienceRecipientCount }, 'mailing') }}
+                    {% else %}
+                        {{ 'mailing.index.audience.count_unavailable'|trans({}, 'mailing') }}
+                    {% endif %}
+                </p>
             </article>
         </div>
 

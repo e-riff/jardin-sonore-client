@@ -71,18 +71,33 @@
                                     <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_content', { uuid: campaign.uuid }) }}">
                                         {{ 'mailing.index.edit'|trans({}, 'mailing') }}
                                     </a>
-                                    <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_audience', {
-                                        uuid: campaign.uuid,
-                                        returnTo: path('mailing_index')
-                                    }) }}">
-                                        {{ 'mailing.index.audience.edit'|trans({}, 'mailing') }}
-                                    </a>
+                                    {% if campaign.isEditable %}
+                                        <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_audience', {
+                                            uuid: campaign.uuid,
+                                            returnTo: path('mailing_index')
+                                        }) }}">
+                                            {{ 'mailing.index.audience.edit'|trans({}, 'mailing') }}
+                                        </a>
+                                    {% endif %}
                                     <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_preview', { uuid: campaign.uuid }) }}">
                                         {{ 'mailing.index.preview'|trans({}, 'mailing') }}
                                     </a>
                                     <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_test', { uuid: campaign.uuid }) }}">
                                         {{ 'mailing.index.test'|trans({}, 'mailing') }}
                                     </a>
+                                    {% if campaign.isEditable %}
+                                        <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_send', { uuid: campaign.uuid }) }}">
+                                            {{ 'mailing.index.send'|trans({}, 'mailing') }}
+                                        </a>
+                                    {% endif %}
+                                    {% if campaign.canStopDelivery %}
+                                        <form method="post" action="{{ path('mailing_stop', { uuid: campaign.uuid }) }}">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('mailing_stop_' ~ campaign.uuid) }}">
+                                            <button class="internal-button internal-button--danger internal-button--compact" type="submit">
+                                                {{ 'mailing.index.stop'|trans({}, 'mailing') }}
+                                            </button>
+                                        </form>
+                                    {% endif %}
                                 </div>
                             </td>
                         </tr>

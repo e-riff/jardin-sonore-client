@@ -238,6 +238,7 @@ a {
     width: fit-content;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
     border: 1px solid var(--color-primary);
     border-radius: 999px;
     padding: 12px 20px;
@@ -247,11 +248,13 @@ a {
     font-size: 0.9rem;
     font-weight: 700;
     text-decoration: none;
-    transition: transform 180ms ease, background 180ms ease;
+    transition: transform 180ms ease, background 180ms ease, color 180ms ease, border-color 180ms ease;
 }
 
-.internal-button:hover {
+.internal-button:hover,
+.internal-button:focus-visible {
     background: var(--color-primary-container);
+    color: var(--color-on-primary);
     transform: translateY(-1px);
 }
 
@@ -260,15 +263,35 @@ a {
     color: var(--color-primary);
 }
 
-.internal-button--danger {
-    border-color: color-mix(in oklab, var(--color-primary) 45%, var(--color-outline-variant));
-    background: transparent;
+.internal-button--secondary:hover,
+.internal-button--secondary:focus-visible {
+    background: color-mix(in oklab, var(--color-primary-fixed) 45%, white);
     color: var(--color-primary);
+}
+
+.internal-button--danger {
+    border-color: #9e2f24;
+    background: #9e2f24;
+    color: #ffffff;
+}
+
+.internal-button--danger:hover,
+.internal-button--danger:focus-visible {
+    border-color: #84261d;
+    background: #84261d;
+    color: #ffffff;
 }
 
 .internal-button--compact {
     padding: 8px 14px;
     font-size: 0.78rem;
+}
+
+.internal-button:disabled,
+.internal-button[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.65;
+    transform: none;
 }
 
 .internal-link {
@@ -545,7 +568,10 @@ a {
 
 .mailing-current-image img {
     width: 100%;
+    max-height: 184px;
+    aspect-ratio: 16 / 7;
     border-radius: 12px;
+    object-fit: cover;
 }
 
 .mailing-current-image p {

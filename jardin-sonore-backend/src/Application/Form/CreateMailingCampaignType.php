@@ -6,13 +6,13 @@ namespace App\Application\Form;
 
 use App\Application\Form\Model\CreateMailingCampaignFormModel;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\UrlType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\UX\Dropzone\Form\DropzoneType;
 
 /**
  * @extends AbstractType<CreateMailingCampaignFormModel>
@@ -60,10 +60,14 @@ final class CreateMailingCampaignType extends AbstractType
                 'help' => 'mailing.form.call_to_action_url_help',
                 'required' => false,
             ])
-            ->add('bannerImageFile', FileType::class, [
+            ->add('bannerImageFile', DropzoneType::class, [
                 'label' => 'mailing.form.banner_image',
                 'help' => 'mailing.form.banner_image_help',
                 'required' => false,
+                'attr' => [
+                    'accept' => 'image/jpeg,image/png,image/webp',
+                    'placeholder' => 'mailing.form.banner_image_placeholder',
+                ],
             ])
             ->add('submit', SubmitType::class, [
                 'label' => 'mailing.form.submit',

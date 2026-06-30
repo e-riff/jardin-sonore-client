@@ -18,9 +18,11 @@ final readonly class UpdateMailingCampaign
 
     public function __invoke(MailingCampaign $mailingCampaign, UpdateMailingCampaignInput $input): void
     {
-        $bannerImagePath = null === $input->bannerImageFile
-            ? $mailingCampaign->getBannerImagePath()
-            : $this->mailingBannerImageStorage->store($input->bannerImageFile);
+        $bannerImagePath = $input->removeBannerImage
+            ? null
+            : (null === $input->bannerImageFile
+                ? $mailingCampaign->getBannerImagePath()
+                : $this->mailingBannerImageStorage->store($input->bannerImageFile));
 
         $mailingCampaign->updateContent(
             internalTitle: $input->internalTitle,

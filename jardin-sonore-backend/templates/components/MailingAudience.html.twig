@@ -5,6 +5,14 @@
         |stimulus_action('live', 'action:prevent', 'submit', { action: 'save' })
     %}
 
+    {% if locked %}
+        <section class="internal-card">
+            <div class="internal-alert">
+                {{ 'mailing.audience.locked_notice'|trans({}, 'mailing') }}
+            </div>
+        </section>
+    {% endif %}
+
     {% if saved %}
         <div class="internal-alert internal-alert--success">
             {{ 'mailing.audience.saved'|trans({}, 'mailing') }}
@@ -19,6 +27,7 @@
         <fieldset
             class="internal-card mailing-audience__fieldset mailing-audience__radius"
             {{ stimulus_target('audience-mode', 'radiusFieldset') }}
+            {% if locked %}disabled{% endif %}
         >
             <div>
                 <p class="internal-eyebrow">{{ 'mailing.audience.criteria.radius_eyebrow'|trans({}, 'mailing') }}</p>
@@ -93,7 +102,7 @@
                 <fieldset
                     class="mailing-audience__fieldset"
                     {{ stimulus_target('audience-mode', 'locationFieldset') }}
-                    {% if this.radiusModeActive %}disabled{% endif %}
+                    {% if locked or this.radiusModeActive %}disabled{% endif %}
                 >
                     <legend>{{ 'mailing.audience.criteria.geography'|trans({}, 'mailing') }}</legend>
                     <p class="mailing-audience__fieldset-description">{{ 'mailing.audience.criteria.geography_description'|trans({}, 'mailing') }}</p>
@@ -103,9 +112,11 @@
                 </fieldset>
             </div>
 
-            <div class="internal-form__actions">
-                {{ form_widget(form.submit) }}
-            </div>
+            {% if not locked %}
+                <div class="internal-form__actions">
+                    {{ form_widget(form.submit) }}
+                </div>
+            {% endif %}
         </section>
     {{ form_end(form) }}
 
