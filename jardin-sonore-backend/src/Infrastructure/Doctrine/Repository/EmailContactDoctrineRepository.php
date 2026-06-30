@@ -36,6 +36,15 @@ final readonly class EmailContactDoctrineRepository implements EmailContactRepos
         return $emailContactEntity instanceof EmailContactEntity ? $this->emailContactMapper->toDomain($emailContactEntity) : null;
     }
 
+    public function findByUnsubscribeToken(string $unsubscribeToken): ?EmailContact
+    {
+        $emailContactEntity = $this->entityManager->getRepository(EmailContactEntity::class)->findOneBy([
+            'unsubscribeToken' => trim($unsubscribeToken),
+        ]);
+
+        return $emailContactEntity instanceof EmailContactEntity ? $this->emailContactMapper->toDomain($emailContactEntity) : null;
+    }
+
     public function save(EmailContact $emailContact): void
     {
         $emailContactEntity = $this->entityManager->getRepository(EmailContactEntity::class)->findOneBy(['uuid' => $emailContact->getUuid()]);

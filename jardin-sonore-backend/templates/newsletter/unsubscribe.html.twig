@@ -1,0 +1,19 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'mailing.unsubscribe.title'|trans({}, 'mailing') }}{% endblock %}
+
+{% block body %}
+    <main style="min-height:100vh; padding:24px; background:#f3ede9; font-family:Georgia,serif;">
+        <section style="max-width:680px; margin:48px auto; padding:32px 28px; background:#fffdfa; border:1px solid #eadfd7;">
+            <p style="margin:0 0 12px; color:#7a6461; font-family:Arial,sans-serif; font-size:12px; line-height:18px; text-transform:uppercase;">
+                {{ 'mailing.unsubscribe.eyebrow'|trans({}, 'mailing') }}
+            </p>
+            <h1 style="margin:0 0 16px; color:#692019; font-size:32px; line-height:1.2;">
+                {{ ('mailing.unsubscribe.' ~ (success ? 'success_title' : 'invalid_title'))|trans({}, 'mailing') }}
+            </h1>
+            <p style="margin:0; color:#554240; font-size:16px; line-height:1.8;">
+                {{ ('mailing.unsubscribe.' ~ (success ? 'success_description' : 'invalid_description'))|trans({}, 'mailing') }}
+            </p>
+        </section>
+    </main>
+{% endblock %}
