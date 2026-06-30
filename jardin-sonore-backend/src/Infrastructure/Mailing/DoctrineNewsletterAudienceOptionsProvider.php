@@ -8,6 +8,7 @@ use App\Application\Mailing\NewsletterAudienceOptionsProviderInterface;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
+use Symfony\Component\Uid\Uuid;
 
 final readonly class DoctrineNewsletterAudienceOptionsProvider implements NewsletterAudienceOptionsProviderInterface
 {
@@ -17,11 +18,20 @@ final readonly class DoctrineNewsletterAudienceOptionsProvider implements Newsle
 
     public function getTagChoices(): array
     {
-        return $this->connection->fetchAllKeyValue(
-            'SELECT label, BIN_TO_UUID(uuid)
+        /** @var list<array{label: string, uuid: string}> $tags */
+        $tags = $this->connection->fetchAllAssociative(
+            'SELECT label, uuid
             FROM tag
             ORDER BY label',
         );
+
+        $choices = [];
+
+        foreach ($tags as $tag) {
+            $choices[$tag['label']] = Uuid::fromBinary($tag['uuid'])->toRfc4122();
+        }
+
+        return $choices;
     }
 
     public function getRegionChoices(): array
