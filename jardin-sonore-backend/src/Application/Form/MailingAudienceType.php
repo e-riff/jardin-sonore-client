@@ -12,6 +12,9 @@ use App\Domain\Model\AddressBook\OrganizationSector;
 use App\Domain\Model\AddressBook\OrganizationType;
 use App\Domain\Model\Mailing\NewsletterAudienceRadiusOrigin;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\ChoiceList\ArrayChoiceList;
+use Symfony\Component\Form\ChoiceList\ChoiceListInterface;
+use Symfony\Component\Form\ChoiceList\Loader\ChoiceLoaderInterface;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
@@ -61,7 +64,6 @@ final class MailingAudienceType extends AbstractType
         $municipalityAutocompleteOptions = [
             'autocomplete' => true,
             'autocomplete_url' => $this->urlGenerator->generate('mailing_audience_municipalities_autocomplete'),
-            'choice_loader' => $this->municipalityInseeCodeChoiceLoader,
             'choice_label' => $this->municipalityChoiceLabel(...),
             'min_characters' => 2,
             'max_results' => 50,
@@ -106,7 +108,7 @@ final class MailingAudienceType extends AbstractType
                 ...$municipalityAutocompleteOptions,
                 'label' => 'mailing.audience.form.municipalities',
                 'help' => 'mailing.audience.form.municipalities_help',
-                'choices' => $selectedMunicipalityChoices,
+                'choice_loader' => $this->createMunicipalityChoiceLoader($selectedMunicipalityChoices),
                 'multiple' => true,
                 'required' => false,
             ])
@@ -138,7 +140,7 @@ final class MailingAudienceType extends AbstractType
                 'label' => 'mailing.audience.form.radius_origin_municipality',
                 'help' => 'mailing.audience.form.radius_origin_municipality_help',
                 'choice_value' => static fn (?string $inseeCode): string => $inseeCode ?? '',
-                'choices' => $selectedRadiusOriginMunicipalityChoices,
+                'choice_loader' => $this->createMunicipalityChoiceLoader($selectedRadiusOriginMunicipalityChoices),
                 'required' => false,
                 'placeholder' => 'mailing.audience.form.radius_origin_municipality_placeholder',
             ])
@@ -212,25 +214,52 @@ final class MailingAudienceType extends AbstractType
     }
 
     /**
+     * @param list<string> $selectedInseeCodes
+     */
+    private function createMunicipalityChoiceLoader(array $selectedInseeCodes): ChoiceLoaderInterface
+    {
+        $newsletterAudienceOptionsProvider = $this->newsletterAudienceOptionsProvider;
+        $municipalityInseeCodeChoiceLoader = $this->municipalityInseeCodeChoiceLoader;
+
+        return new class($selectedInseeCodes, $newsletterAudienceOptionsProvider, $municipalityInseeCodeChoiceLoader) implements ChoiceLoaderInterface
+        {
+            /**
+             * @param list<string> $selectedInseeCodes
+             */
+            public function __construct(
+                private readonly array $selectedInseeCodes,
+                private readonly NewsletterAudienceOptionsProviderInterface $newsletterAudienceOptionsProvider,
+                private readonly MunicipalityInseeCodeChoiceLoader $municipalityInseeCodeChoiceLoader,
+            ) {
+            }
+
+            public function loadChoiceList(?callable $value = null): ChoiceListInterface
+            {
+                return new ArrayChoiceList(
+                    $this->newsletterAudienceOptionsProvider->getExistingMunicipalityInseeCodes($this->selectedInseeCodes),
+                    $value,
+                );
+            }
+
+            public function loadChoicesForValues(array $values, ?callable $value = null): array
+            {
+                return $this->municipalityInseeCodeChoiceLoader->loadChoicesForValues($values, $value);
+            }
+
+            public function loadValuesForChoices(array $choices, ?callable $value = null): array
+            {
+                return $this->municipalityInseeCodeChoiceLoader->loadValuesForChoices($choices, $value);
+            }
+        };
+    }
+
+    /**
      * @param list<string> $inseeCodes
      *
-     * @return array<string, string>
+     * @return list<string>
      */
     private function selectedMunicipalityChoices(array $inseeCodes): array
     {
-        $labelsByInseeCode = $this->newsletterAudienceOptionsProvider->getMunicipalityLabelsByInseeCodes($inseeCodes);
-        $choices = [];
-
-        foreach ($inseeCodes as $inseeCode) {
-            $label = $labelsByInseeCode[$inseeCode] ?? null;
-
-            if (null === $label) {
-                continue;
-            }
-
-            $choices[$label] = $inseeCode;
-        }
-
-        return $choices;
+        return $this->newsletterAudienceOptionsProvider->getExistingMunicipalityInseeCodes($inseeCodes);
     }
 }
