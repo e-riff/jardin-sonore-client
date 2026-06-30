@@ -6,6 +6,7 @@ namespace App\Infrastructure\Mailer;
 
 use App\Application\Mailing\NewsletterMailSenderInterface;
 use App\Application\Mailing\RenderedNewsletter;
+use App\Domain\Model\Mailing\NewsletterRecipient;
 use App\Domain\Model\ValueObject\EmailAddress;
 use App\Domain\Repository\EmailContactRepositoryInterface;
 use App\Infrastructure\Mailing\TwigNewsletterRenderer;
@@ -39,6 +40,29 @@ final readonly class SymfonyNewsletterMailSender implements NewsletterMailSender
 
         if (null !== $text && '' !== trim($text)) {
             $email->text($text);
+        }
+
+        $this->mailer->send($email);
+    }
+
+    public function sendToRecipient(RenderedNewsletter $renderedNewsletter, NewsletterRecipient $newsletterRecipient): void
+    {
+        $email = (new Email())
+            ->from(new Address($this->fromEmail, $this->fromName))
+            ->to($newsletterRecipient->getEmailAddress()->value())
+            ->subject($renderedNewsletter->subject)
+            ->html(str_replace(
+                TwigNewsletterRenderer::UNSUBSCRIBE_TOKEN_PLACEHOLDER,
+                $newsletterRecipient->getUnsubscribeToken(),
+                $renderedNewsletter->html,
+            ));
+
+        if (null !== $renderedNewsletter->text && '' !== trim($renderedNewsletter->text)) {
+            $email->text(str_replace(
+                TwigNewsletterRenderer::UNSUBSCRIBE_TOKEN_PLACEHOLDER,
+                $newsletterRecipient->getUnsubscribeToken(),
+                $renderedNewsletter->text,
+            ));
         }
 
         $this->mailer->send($email);

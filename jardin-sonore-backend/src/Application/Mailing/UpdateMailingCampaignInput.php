@@ -17,6 +17,7 @@ final readonly class UpdateMailingCampaignInput
         public ?string $callToActionLabel,
         public ?string $callToActionUrl,
         public ?UploadedFile $bannerImageFile,
+        public bool $removeBannerImage,
         public string $templateKey,
     ) {
     }

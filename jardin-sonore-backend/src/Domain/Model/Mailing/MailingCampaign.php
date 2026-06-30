@@ -135,6 +135,7 @@ final class MailingCampaign implements UuidIdentifiableInterface
         ?string $callToActionUrl,
         ?string $bannerImagePath,
     ): void {
+        $this->assertEditable();
         $this->assertContentIsValid($internalTitle, $emailSubject, $publicTitle, $mainText, $templateKey);
         $subtitle = $this->normalizeNullableString($subtitle);
         $callToActionLabel = $this->normalizeNullableString($callToActionLabel);
@@ -159,6 +160,7 @@ final class MailingCampaign implements UuidIdentifiableInterface
      */
     public function replaceRecommendations(array $recommendations): void
     {
+        $this->assertEditable();
         $this->assertRecommendationList($recommendations);
         $this->recommendations = $recommendations;
         $this->markAsUpdated();
@@ -166,6 +168,7 @@ final class MailingCampaign implements UuidIdentifiableInterface
 
     public function updateAudienceFilter(NewsletterAudienceFilter $audienceFilter): void
     {
+        $this->assertEditable();
         $this->audienceFilter = $audienceFilter;
         $this->markAsUpdated();
     }
@@ -180,6 +183,60 @@ final class MailingCampaign implements UuidIdentifiableInterface
     {
         $this->lastTestSentAt = $sentAt ?? new DateTimeImmutable();
         $this->markAsUpdated($this->lastTestSentAt);
+    }
+
+    public function markDeliveryQueued(): void
+    {
+        $this->status = MailingCampaignStatus::DELIVERY_QUEUED;
+        $this->markAsUpdated();
+    }
+
+    public function markDeliverySending(): void
+    {
+        $this->status = MailingCampaignStatus::DELIVERY_SENDING;
+        $this->markAsUpdated();
+    }
+
+    public function markDeliveryStopped(): void
+    {
+        $this->status = MailingCampaignStatus::DELIVERY_STOPPED;
+        $this->markAsUpdated();
+    }
+
+    public function markDeliverySent(): void
+    {
+        $this->status = MailingCampaignStatus::DELIVERY_SENT;
+        $this->markAsUpdated();
+    }
+
+    public function markDeliveryFailed(): void
+    {
+        $this->status = MailingCampaignStatus::DELIVERY_FAILED;
+        $this->markAsUpdated();
+    }
+
+    public function hasDeliveryStarted(): bool
+    {
+        return in_array($this->status, [
+            MailingCampaignStatus::DELIVERY_QUEUED,
+            MailingCampaignStatus::DELIVERY_SENDING,
+            MailingCampaignStatus::DELIVERY_STOPPED,
+            MailingCampaignStatus::DELIVERY_SENT,
+            MailingCampaignStatus::DELIVERY_FAILED,
+        ], true);
+    }
+
+    public function isEditable(): bool
+    {
+        return !$this->hasDeliveryStarted();
+    }
+
+    public function canStopDelivery(): bool
+    {
+        return in_array($this->status, [
+            MailingCampaignStatus::DELIVERY_QUEUED,
+            MailingCampaignStatus::DELIVERY_SENDING,
+        ], true);
     }
 
     private function assertContentIsValid(
@@ -216,6 +273,15 @@ final class MailingCampaign implements UuidIdentifiableInterface
 
             $positions[$position] = true;
         }
+    }
+
+    private function assertEditable(): void
+    {
+        if ($this->isEditable()) {
+            return;
+        }
+
+        throw new InvalidArgumentException('Mailing campaign can no longer be edited.');
     }
 
     private function assertStatusIsConsistent(MailingCampaignStatus $status, ?DateTimeImmutable $lastTestSentAt): void

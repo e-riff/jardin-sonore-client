@@ -19,6 +19,7 @@
 
     {{ component('MailingAudience', {
         campaignUuid: campaign.uuid.toRfc4122,
+        locked: campaignLocked,
         returnTo: returnTo ?: path('mailing_content', { uuid: campaign.uuid })
     }) }}
 {% endblock %}

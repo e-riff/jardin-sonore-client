@@ -42,6 +42,8 @@ final readonly class ListMailingCampaigns
                 updatedAt: $mailingCampaign->getUpdatedAt(),
                 hasAudienceCriteria: $audienceFilter->hasActiveCriteria(),
                 audienceRecipientCount: $audienceRecipientCount,
+                isEditable: $mailingCampaign->isEditable(),
+                canStopDelivery: $mailingCampaign->canStopDelivery(),
             );
         }
 

@@ -55,6 +55,9 @@ final class MailingAudience
     #[LiveProp]
     public string $returnTo = '';
 
+    #[LiveProp]
+    public bool $locked = false;
+
     private ?MailingCampaign $mailingCampaign = null;
 
     private ?NewsletterAudienceResolution $audienceResolution = null;
@@ -80,6 +83,10 @@ final class MailingAudience
     #[LiveAction]
     public function save(): void
     {
+        if ($this->locked || !$this->resolveMailingCampaign()->isEditable()) {
+            return;
+        }
+
         $this->submitForm();
         $formModel = $this->getForm()->getData();
 
