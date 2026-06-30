@@ -20,6 +20,9 @@
             <a class="internal-button internal-button--secondary" href="{{ path('mailing_preview', { uuid: campaign.uuid }) }}">
                 {{ 'mailing.content.preview'|trans({}, 'mailing') }}
             </a>
+            <a class="internal-button internal-button--secondary" href="{{ path('mailing_test', { uuid: campaign.uuid }) }}">
+                {{ 'mailing.content.send_test'|trans({}, 'mailing') }}
+            </a>
             <a class="internal-button internal-button--secondary" href="{{ path('mailing_index') }}">
                 {{ 'mailing.content.back'|trans({}, 'mailing') }}
             </a>
@@ -69,12 +72,12 @@
                 <h2>{{ 'mailing.content.details.title'|trans({}, 'mailing') }}</h2>
             </div>
 
-            {% if form.vars.data.bannerImagePath %}
-                <div class="mailing-current-image">
-                    <img src="{{ asset(form.vars.data.bannerImagePath) }}" alt="">
-                    <p>{{ 'mailing.form.banner_image_current'|trans({}, 'mailing') }}</p>
-                </div>
-            {% endif %}
+            <div class="mailing-current-image">
+                <img src="{{ asset(form.vars.data.bannerImagePath ?: 'images/mailing/default-banner.webp') }}" alt="">
+                <p>
+                    {{ (form.vars.data.bannerImagePath ? 'mailing.form.banner_image_current' : 'mailing.form.banner_image_default')|trans({}, 'mailing') }}
+                </p>
+            </div>
 
             {{ form_row(form.internalTitle) }}
             {{ form_row(form.emailSubject) }}

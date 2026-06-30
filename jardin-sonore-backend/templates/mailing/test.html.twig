@@ -1,0 +1,38 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'mailing.test.title'|trans({ campaign: campaign.internalTitle }, 'mailing') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ 'mailing.test.eyebrow'|trans({}, 'mailing') }}</p>
+            <h1>{{ campaign.internalTitle }}</h1>
+            <p>{{ 'mailing.test.description'|trans({}, 'mailing') }}</p>
+        </div>
+
+        <div class="internal-heading-actions">
+            <a class="internal-button internal-button--secondary" href="{{ path('mailing_preview', { uuid: campaign.uuid }) }}">
+                {{ 'mailing.test.back_to_preview'|trans({}, 'mailing') }}
+            </a>
+            <a class="internal-button internal-button--secondary" href="{{ path('mailing_content', { uuid: campaign.uuid }) }}">
+                {{ 'mailing.test.back_to_content'|trans({}, 'mailing') }}
+            </a>
+        </div>
+    </section>
+
+    <section class="internal-card">
+        <div>
+            <p class="internal-eyebrow">{{ 'mailing.test.form.eyebrow'|trans({}, 'mailing') }}</p>
+            <h2>{{ 'mailing.test.form.title'|trans({}, 'mailing') }}</h2>
+            <p>{{ 'mailing.test.form.description'|trans({}, 'mailing') }}</p>
+        </div>
+
+        {{ form_start(form, { attr: { class: 'internal-form' } }) }}
+            {{ form_row(form.recipientEmail) }}
+
+            <div class="internal-form__actions">
+                {{ form_widget(form.submit) }}
+            </div>
+        {{ form_end(form) }}
+    </section>
+{% endblock %}

@@ -9,12 +9,18 @@ use App\Application\Mailing\RenderedNewsletter;
 use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Model\Mailing\MailingRecommendation;
 use InvalidArgumentException;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Twig\Environment;
 
 final readonly class TwigNewsletterRenderer implements NewsletterRendererInterface
 {
-    public function __construct(private Environment $twig)
-    {
+    private const DEFAULT_BANNER_IMAGE_PATH = 'images/mailing/default-banner.webp';
+
+    public function __construct(
+        private Environment $twig,
+        #[Autowire('%env(default:app.mailing.from_email:DEFAULT_CONTACT)%')]
+        private string $contactEmail,
+    ) {
     }
 
     public function render(MailingCampaign $mailingCampaign): RenderedNewsletter
@@ -24,13 +30,14 @@ final readonly class TwigNewsletterRenderer implements NewsletterRendererInterfa
             $mailingCampaign->getRecommendations(),
             static fn (MailingRecommendation $mailingRecommendation): bool => $mailingRecommendation->isActive(),
         ));
-        $heroImagePath = $mailingCampaign->getBannerImagePath();
+        $heroImagePath = $mailingCampaign->getBannerImagePath() ?? self::DEFAULT_BANNER_IMAGE_PATH;
 
         $context = [
             'campaign' => $mailingCampaign,
             'activeRecommendations' => $activeRecommendations,
             'preheader' => $mailingCampaign->getEmailSubject(),
-            'unsubscribeUrl' => '#unsubscribe-preview',
+            'unsubscribeUrl' => "mailto:{$this->contactEmail}?subject=" . rawurlencode('Desinscription newsletter'),
+            'contactEmail' => $this->contactEmail,
             'heroImagePath' => $heroImagePath,
         ];
 

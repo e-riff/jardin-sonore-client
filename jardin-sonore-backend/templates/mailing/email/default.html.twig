@@ -5,69 +5,66 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>{{ campaign.emailSubject }}</title>
     </head>
-    <body style="margin:0; padding:0; background:#f3ede9; color:#1c1b1a; font-family:Georgia, serif;">
-        <div style="display:none; max-height:0; overflow:hidden; opacity:0; mso-hide:all;">
-            {{ preheader }}
-        </div>
-
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f3ede9; padding:32px 12px;">
+    <body bgcolor="#f3ede9" style="margin:0; padding:0; background-color:#f3ede9; color:#1c1b1a; font-family:Georgia, serif;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
             <tr>
-                <td align="center">
-                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px; margin:0 auto; background:#fffdfa; border-radius:32px; overflow:hidden; box-shadow:0 10px 30px -5px rgba(135,54,45,0.12);">
+                <td style="font-size:1px; line-height:1px; color:#f3ede9; display:none;">
+                    {{ preheader }}
+                </td>
+            </tr>
+        </table>
+
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f3ede9">
+            <tr>
+                <td align="center" style="padding:24px 12px;">
+                    <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" bgcolor="#fffdfa" style="width:600px; max-width:600px; background-color:#fffdfa;">
                         <tr>
-                            <td align="center" style="padding:42px 32px 18px; background:#fffdfa;">
-                                <h1 style="margin:0; color:#692019; font-size:24px; line-height:1.2; font-weight:700;">
+                            <td align="center" style="padding:32px 24px 18px 24px;">
+                                <h1 style="margin:0; color:#692019; font-size:24px; line-height:30px; font-weight:bold;">
                                     Jardin <span style="color:#47664b;">Sonore</span>
                                 </h1>
-                                <div style="width:42px; height:4px; margin:12px auto 0; border-radius:999px; background:#A64D43;"></div>
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-top:12px;">
+                                    <tr>
+                                        <td width="42" height="4" bgcolor="#A64D43" style="font-size:0; line-height:0;">&nbsp;</td>
+                                    </tr>
+                                </table>
                             </td>
                         </tr>
                         <tr>
                             <td style="padding:0;">
-                                {% if heroImagePath %}
-                                    <div style="padding:0 8px;">
-                                        <div style="position:relative;">
-                                            <img
-                                                src="{{ absolute_url(asset(heroImagePath)) }}"
-                                                alt=""
-                                                width="584"
-                                                style="display:block; width:100%; height:auto; max-height:260px; object-fit:cover;"
-                                            >
-                                            <div style="padding:0 24px; margin-top:-165px; margin-bottom:62px; position:relative; z-index:1;">
-                                                <div style="padding:24px 20px; border:1px solid rgba(255,255,255,0.4); border-radius:32px; background:rgba(253,248,245,0.88); text-align:center;">
-                                                    <h2 style="margin:0 0 10px; color:#692019; font-size:32px; line-height:1.2; font-weight:700;">{{ campaign.publicTitle }}</h2>
-                                                    {% if campaign.subtitle %}
-                                                        <p style="margin:0; color:#554240; font-family:Arial, sans-serif; font-size:14px; font-weight:600; letter-spacing:0.18em; text-transform:uppercase;">{{ campaign.subtitle }}</p>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% else %}
-                                    <div style="padding:8px 8px 0;">
-                                        <div style="padding:64px 24px; background:linear-gradient(135deg, #f8f3f0 0%, #ece7e4 100%); text-align:center;">
-                                            <div style="display:inline-block; padding:24px 20px; border-radius:32px; background:#fffdfa;">
-                                                <h2 style="margin:0 0 10px; color:#692019; font-size:32px; line-height:1.2; font-weight:700;">{{ campaign.publicTitle }}</h2>
-                                                {% if campaign.subtitle %}
-                                                    <p style="margin:0; color:#554240; font-family:Arial, sans-serif; font-size:14px; font-weight:600; letter-spacing:0.18em; text-transform:uppercase;">{{ campaign.subtitle }}</p>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
+                                <img
+                                    src="{{ absolute_url(asset(heroImagePath)) }}"
+                                    alt=""
+                                    width="600"
+                                    style="display:block; width:100%; height:auto; border:0; outline:none; text-decoration:none;"
+                                >
+                            </td>
+                        </tr>
+                        <tr>
+                            <td align="center" bgcolor="#f8f3f0" style="padding:28px 24px 24px 24px; background-color:#f8f3f0;">
+                                <h2 style="margin:0; color:#692019; font-size:30px; line-height:36px; font-weight:bold;">{{ campaign.publicTitle }}</h2>
+                                {% if campaign.subtitle %}
+                                    <p style="margin:12px 0 0 0; color:#554240; font-family:Arial, sans-serif; font-size:13px; line-height:18px; font-weight:bold; text-transform:uppercase;">{{ campaign.subtitle }}</p>
                                 {% endif %}
                             </td>
                         </tr>
                         <tr>
-                            <td style="padding:36px 28px 20px;">
-                                <div style="margin:0 0 32px; color:#554240; font-size:16px; line-height:1.85; white-space:pre-line;">{{ campaign.mainText }}</div>
+                            <td style="padding:32px 28px 20px 28px;">
+                                <div style="color:#554240; font-size:16px; line-height:28px; white-space:pre-line;">{{ campaign.mainText }}</div>
                                 {% if campaign.callToActionLabel and campaign.callToActionUrl %}
-                                    <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
+                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top:24px;">
                                         <tr>
                                             <td align="center">
-                                                <a
-                                                    href="{{ campaign.callToActionUrl }}"
-                                                    style="display:inline-block; min-width:320px; max-width:100%; padding:16px 28px; border-radius:999px; background:#A64D43; box-shadow:0 10px 20px rgba(135,54,45,0.14); color:#ffffff; font-family:Arial, sans-serif; font-size:14px; font-weight:700; text-decoration:none;"
-                                                >{{ campaign.callToActionLabel }}</a>
+                                                <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                                                    <tr>
+                                                        <td align="center" bgcolor="#A64D43" style="padding:14px 28px; background-color:#A64D43;">
+                                                            <a
+                                                                href="{{ campaign.callToActionUrl }}"
+                                                                style="color:#ffffff; font-family:Arial, sans-serif; font-size:14px; line-height:18px; font-weight:bold; text-decoration:none;"
+                                                            >{{ campaign.callToActionLabel }}</a>
+                                                        </td>
+                                                    </tr>
+                                                </table>
                                             </td>
                                         </tr>
                                     </table>
@@ -77,11 +74,11 @@
 
                         {% if activeRecommendations is not empty %}
                             <tr>
-                                <td style="padding:28px 28px 10px; background:#f8f3f0;">
-                                    <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
+                                <td align="center" bgcolor="#f8f3f0" style="padding:28px 28px 12px 28px; background-color:#f8f3f0;">
+                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                                         <tr>
                                             <td align="center">
-                                                <h3 style="margin:0; color:#53320b; font-size:24px; line-height:1.35; font-weight:600;">
+                                                <h3 style="margin:0; color:#53320b; font-size:24px; line-height:32px; font-weight:bold;">
                                                     {{ 'mailing.preview.email.recommendations_title'|trans({}, 'mailing') }}
                                                 </h3>
                                             </td>
@@ -92,32 +89,36 @@
 
                             {% for recommendation in activeRecommendations %}
                                 <tr>
-                                    <td style="padding:0 28px 22px; background:#f8f3f0;">
-                                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f8f3f0;">
+                                    <td bgcolor="#f8f3f0" style="padding:0 28px 20px 28px; background-color:#f8f3f0;">
+                                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#fffdfa" style="background-color:#fffdfa; border:1px solid #eadfd7;">
                                             <tr>
-                                                <td width="92" valign="top" style="padding-right:18px;">
+                                                <td width="160" valign="top" style="padding:16px 0 16px 16px;">
                                                     {% if recommendation.imagePath %}
                                                         <img
                                                             src="{{ absolute_url(asset(recommendation.imagePath)) }}"
                                                             alt=""
-                                                            width="92"
-                                                            style="display:block; width:92px; height:92px; border-radius:999px; object-fit:cover;"
+                                                            width="128"
+                                                            style="display:block; width:128px; height:auto; border:0; outline:none; text-decoration:none;"
                                                         >
                                                     {% else %}
-                                                        <div style="width:92px; height:92px; border-radius:999px; background:linear-gradient(135deg, #c66934 0%, #f3d8ab 100%);"></div>
+                                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                                                            <tr>
+                                                                <td width="128" height="96" bgcolor="#eadfd7" style="font-size:0; line-height:0;">&nbsp;</td>
+                                                            </tr>
+                                                        </table>
                                                     {% endif %}
                                                 </td>
-                                                <td valign="top" style="padding-top:2px;">
-                                                    <p style="margin:0 0 6px; color:{{ loop.index is odd ? '#692019' : '#47664b' }}; font-family:Arial, sans-serif; font-size:14px; font-weight:600;">{{ 'mailing.preview.email.recommendation_source'|trans({}, 'mailing') }}</p>
-                                                    <h4 style="margin:0 0 10px; color:#1c1b1a; font-size:18px; line-height:1.35; font-weight:600;">{{ recommendation.title }}</h4>
+                                                <td valign="top" style="padding:16px 16px 16px 12px;">
+                                                    <p style="margin:0 0 6px 0; color:{{ loop.index is odd ? '#692019' : '#47664b' }}; font-family:Arial, sans-serif; font-size:14px; line-height:18px; font-weight:bold;">{{ 'mailing.preview.email.recommendation_source'|trans({}, 'mailing') }}</p>
+                                                    <h4 style="margin:0 0 10px 0; color:#1c1b1a; font-size:18px; line-height:26px; font-weight:bold;">{{ recommendation.title }}</h4>
                                                     <div style="color:#554240; font-size:14px; line-height:1.7; white-space:pre-line;">{{ recommendation.text }}</div>
                                                     {% if recommendation.url and recommendation.linkLabel %}
-                                                        <table role="presentation" cellspacing="0" cellpadding="0" style="margin-top:12px;">
+                                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-top:12px;">
                                                             <tr>
                                                                 <td>
                                                                     <a
                                                                         href="{{ recommendation.url }}"
-                                                                        style="color:#692019; font-family:Arial, sans-serif; font-size:14px; font-weight:700; text-decoration:underline;"
+                                                                        style="color:#692019; font-family:Arial, sans-serif; font-size:14px; line-height:18px; font-weight:bold; text-decoration:underline;"
                                                                     >{{ recommendation.linkLabel }}</a>
                                                                 </td>
                                                             </tr>
@@ -132,16 +133,16 @@
                         {% endif %}
 
                         <tr>
-                            <td align="center" style="padding:36px 28px 40px; background:#ece7e4;">
-                                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:400px;">
+                            <td align="center" bgcolor="#ece7e4" style="padding:32px 24px 36px 24px; background-color:#ece7e4;">
+                                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                                     <tr>
                                         <td align="center">
-                                            <p style="margin:0; color:#7a6461; font-family:Arial, sans-serif; font-size:12px; line-height:1.7;">
+                                            <p style="margin:0; color:#7a6461; font-family:Arial, sans-serif; font-size:12px; line-height:18px;">
                                                 {{ 'mailing.preview.email.footer_notice'|trans({'year': "now"|date('Y')}, 'mailing')|nl2br }}
                                             </p>
-                                            <p style="margin:12px 0 0; color:#7a6461; font-family:Arial, sans-serif; font-size:12px; line-height:1.7;">
-                                                <a href="mailto:contact@jardinsonore.fr" style="color:#692019; text-decoration:underline;">contact@jardinsonore.fr</a>
-                                                |
+                                            <p style="margin:12px 0 0 0; color:#7a6461; font-family:Arial, sans-serif; font-size:12px; line-height:18px;">
+                                                <a href="mailto:{{ contactEmail }}" style="color:#692019; text-decoration:underline;">{{ contactEmail }}</a>
+                                                <br>
                                                 <a href="{{ unsubscribeUrl }}" style="color:#7a6461; text-decoration:underline;">{{ 'mailing.preview.email.unsubscribe'|trans({}, 'mailing') }}</a>
                                             </p>
                                         </td>

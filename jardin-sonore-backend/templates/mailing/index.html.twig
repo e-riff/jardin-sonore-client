@@ -80,6 +80,9 @@
                                     <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_preview', { uuid: campaign.uuid }) }}">
                                         {{ 'mailing.index.preview'|trans({}, 'mailing') }}
                                     </a>
+                                    <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_test', { uuid: campaign.uuid }) }}">
+                                        {{ 'mailing.index.test'|trans({}, 'mailing') }}
+                                    </a>
                                 </div>
                             </td>
                         </tr>

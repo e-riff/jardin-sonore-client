@@ -24,6 +24,7 @@ mailing:
       count_unavailable: "Volume à recalculer"
       edit: "Ciblage"
     preview: "Prévisualiser"
+    test: "Envoi test"
     edit: "Modifier"
   new:
     title: "Nouvelle newsletter | Jardin Sonore"
@@ -47,8 +48,9 @@ mailing:
     call_to_action_url: "URL du call to action"
     call_to_action_url_help: "Optionnel. Renseignez-la avec le texte du bouton. Exemple : https://…"
     banner_image: "Image de bannière"
-    banner_image_help: "Optionnel. JPEG, PNG ou WebP, 5 Mo maximum. Format conseillé : 1600 × 700 px minimum, zone utile centrée."
+    banner_image_help: "Optionnel. JPEG, PNG ou WebP, 5 Mo maximum. Laisser vide pour utiliser l’image par défaut. Format conseillé : 1600 × 700 px minimum, zone utile centrée."
     banner_image_current: "Image de bannière actuellement enregistrée. Envoyez un nouveau fichier pour la remplacer."
+    banner_image_default: "Bannière par défaut actuellement utilisée. Envoyez un fichier pour la remplacer."
     banner_image_invalid_type: "Utilisez une image JPEG, PNG ou WebP pour la bannière."
     banner_image_invalid_size: "L’image de bannière ne doit pas dépasser 5 Mo."
     template: "Mise en page"
@@ -75,6 +77,8 @@ mailing:
     recommendation_created: "La recommandation a été ajoutée au catalogue."
     recommendation_created_and_selected: "La recommandation a été créée et ajoutée à la campagne."
     recommendation_updated: "La recommandation a été mise à jour."
+    test_queued: "L’e-mail de test a été mis en file d’envoi."
+    test_failed: "L’e-mail de test n’a pas pu être envoyé."
   status:
     draft: "Brouillon"
     ready_for_test: "Prête pour test"
@@ -87,6 +91,7 @@ mailing:
     back: "Retour aux campagnes"
     configure_audience: "Configurer le ciblage"
     preview: "Prévisualiser l’e-mail"
+    send_test: "Envoyer un test"
     audience:
       eyebrow: "Ciblage actuel"
       title: "Audience"
@@ -176,6 +181,7 @@ mailing:
     eyebrow: "Prévisualisation de la newsletter"
     description: "Contrôlez le rendu HTML de l’e-mail avant de passer à l’envoi test."
     back: "Retour au contenu"
+    send_test: "Envoyer un test"
     meta:
       eyebrow: "Résumé"
       title: "Paramètres du rendu"
@@ -197,6 +203,26 @@ mailing:
     text:
       eyebrow: "Version texte"
       title: "Aperçu texte brut"
+  test:
+    title: "Envoi test de {campaign} | Jardin Sonore"
+    eyebrow: "Envoi test"
+    description: "Envoyez la newsletter à une adresse e-mail de contrôle avant tout envoi plus large."
+    back_to_preview: "Retour à la preview"
+    back_to_content: "Retour au contenu"
+    status:
+      eyebrow: "Suivi"
+      title: "État de la campagne"
+      subject: "Sujet"
+      current: "Statut"
+      last_sent: "Dernier test envoyé"
+      never_sent: "Jamais"
+    form:
+      eyebrow: "Destinataire"
+      title: "Envoyer un e-mail de test"
+      description: "Le rendu HTML et texte actuel sera mis en file puis envoyé à cette adresse, sans toucher à l’audience réelle."
+      recipient_email: "Adresse e-mail de test"
+      recipient_email_help: "Par défaut, votre adresse administrateur est proposée."
+      submit: "Envoyer le test"
   catalog:
     status:
       active: "Disponible"
