@@ -10,9 +10,46 @@
             <p>{{ 'mailing.content.description'|trans({}, 'mailing') }}</p>
         </div>
 
-        <a class="internal-button internal-button--secondary" href="{{ path('mailing_index') }}">
-            {{ 'mailing.content.back'|trans({}, 'mailing') }}
-        </a>
+        <div class="internal-heading-actions">
+            <a class="internal-button" href="{{ path('mailing_audience', {
+                uuid: campaign.uuid,
+                returnTo: path('mailing_content', { uuid: campaign.uuid })
+            }) }}">
+                {{ 'mailing.content.configure_audience'|trans({}, 'mailing') }}
+            </a>
+            <a class="internal-button internal-button--secondary" href="{{ path('mailing_index') }}">
+                {{ 'mailing.content.back'|trans({}, 'mailing') }}
+            </a>
+        </div>
+    </section>
+
+    <section class="internal-card mailing-content-audience">
+        <div>
+            <p class="internal-eyebrow">{{ 'mailing.content.audience.eyebrow'|trans({}, 'mailing') }}</p>
+            <h2>{{ 'mailing.content.audience.title'|trans({}, 'mailing') }}</h2>
+        </div>
+
+        <div class="mailing-content-audience__status">
+            {% if hasAudienceCriteria %}
+                <span class="internal-badge internal-badge--primary">
+                    {{ 'mailing.index.audience.configured'|trans({}, 'mailing') }}
+                </span>
+                <span class="internal-table-note">
+                    {% if audienceRecipientCount is not null %}
+                        {{ 'mailing.index.audience.recipients'|trans({ count: audienceRecipientCount }, 'mailing') }}
+                    {% else %}
+                        {{ 'mailing.index.audience.count_unavailable'|trans({}, 'mailing') }}
+                    {% endif %}
+                </span>
+            {% else %}
+                <span class="internal-badge internal-badge--muted">
+                    {{ 'mailing.index.audience.empty'|trans({}, 'mailing') }}
+                </span>
+                <span class="internal-table-note">
+                    {{ 'mailing.index.audience.empty_help'|trans({}, 'mailing') }}
+                </span>
+            {% endif %}
+        </div>
     </section>
 
     {{ form_start(form, {

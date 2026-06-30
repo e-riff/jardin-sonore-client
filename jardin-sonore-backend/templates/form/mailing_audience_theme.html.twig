@@ -1,0 +1,19 @@
+{% block choice_widget_expanded %}
+    {% set attr = attr|merge({
+        class: (attr.class|default('') ~ ' mailing-audience__choice-list')|trim
+    }) %}
+    <div {{ block('widget_container_attributes') }}>
+        {% for child in form %}
+            <label class="mailing-audience__choice">
+                {{ form_widget(child, {
+                    attr: {
+                        class: 'mailing-audience__choice-input'
+                    }
+                }) }}
+                <span class="mailing-audience__choice-label">
+                    {{ child.vars.label|trans(child.vars.label_translation_parameters, child.vars.translation_domain) }}
+                </span>
+            </label>
+        {% endfor %}
+    </div>
+{% endblock %}

@@ -136,6 +136,13 @@ a {
     gap: 24px;
 }
 
+.internal-heading-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
 .internal-eyebrow {
     margin: 0 0 10px;
     color: var(--color-secondary);
@@ -219,6 +226,11 @@ a {
 .internal-badge--secondary {
     background: color-mix(in oklab, var(--color-secondary-container) 72%, white);
     color: var(--color-secondary);
+}
+
+.internal-badge--muted {
+    background: color-mix(in oklab, var(--color-outline-variant) 35%, white);
+    color: var(--color-on-surface-variant);
 }
 
 .internal-button {
@@ -625,6 +637,14 @@ a {
     color: var(--color-on-surface-variant);
 }
 
+.internal-table-note {
+    display: block;
+    margin-top: 6px;
+    color: var(--color-on-surface-variant);
+    font-size: 0.82rem;
+    line-height: 1.35;
+}
+
 .internal-checklist {
     display: grid;
     gap: 10px;
@@ -648,6 +668,206 @@ a {
     font-weight: 700;
 }
 
+.mailing-audience {
+    display: grid;
+    gap: 28px;
+}
+
+.mailing-audience__groups {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.mailing-audience__fieldset {
+    display: grid;
+    min-width: 0;
+    align-content: start;
+    gap: 16px;
+    margin: 0;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 14px;
+    padding: 20px;
+}
+
+.mailing-audience__fieldset legend {
+    padding: 0 8px;
+    color: var(--color-primary);
+    font-family: var(--font-sans);
+    font-weight: 700;
+}
+
+.mailing-audience__fieldset-description {
+    margin: -4px 0 0;
+    color: var(--color-on-surface-variant);
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    line-height: 1.5;
+}
+
+.mailing-audience__fieldset > div {
+    min-width: 0;
+}
+
+.mailing-audience__choice-list {
+    display: grid;
+    gap: 10px;
+}
+
+.mailing-audience__choice {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid color-mix(in oklab, var(--color-outline-variant) 82%, white);
+    border-radius: 12px;
+    padding: 12px 14px;
+    background: color-mix(in oklab, var(--color-surface-container) 65%, white);
+    cursor: pointer;
+}
+
+.mailing-audience__choice:has(input:checked) {
+    border-color: color-mix(in oklab, var(--color-secondary) 45%, white);
+    background: color-mix(in oklab, var(--color-secondary-container) 70%, white);
+}
+
+.mailing-audience__choice-input {
+    flex: 0 0 18px;
+    margin: 0;
+}
+
+.mailing-audience__choice-label {
+    color: var(--color-on-background);
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.mailing-audience__map-card {
+    display: grid;
+    gap: 12px;
+}
+
+.mailing-audience__map-heading {
+    display: grid;
+    gap: 6px;
+}
+
+.mailing-audience__map-heading strong {
+    color: var(--color-secondary);
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+}
+
+.mailing-audience__map-heading p,
+.mailing-audience__map-help,
+.mailing-audience__map-coordinates {
+    margin: 0;
+    color: var(--color-on-surface-variant);
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    line-height: 1.5;
+}
+
+.mailing-audience__map {
+    min-height: 320px;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.mailing-audience__map-coordinates {
+    color: var(--color-secondary);
+    font-weight: 700;
+}
+
+.internal-form .ts-wrapper {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    font-family: var(--font-sans);
+}
+
+.internal-form .ts-wrapper.dropdown-active {
+    z-index: 5000;
+}
+
+.internal-form .ts-control {
+    min-height: 48px;
+    border-color: var(--color-outline-variant);
+    border-radius: 12px;
+    padding: 10px 12px;
+    background: var(--color-surface-container);
+    box-shadow: none;
+}
+
+.internal-form .ts-wrapper.focus .ts-control {
+    border-color: var(--color-primary);
+    outline: 3px solid color-mix(in oklab, var(--color-primary-fixed) 72%, transparent);
+    outline-offset: 2px;
+}
+
+.internal-form .ts-control input {
+    width: auto;
+    min-width: 7rem;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    outline: 0;
+}
+
+.internal-form .ts-wrapper.multi .ts-control > div {
+    margin: 4px 6px 4px 0;
+    border: 1px solid color-mix(in oklab, var(--color-secondary) 22%, white);
+    border-radius: 999px;
+    padding: 6px 10px;
+    background: color-mix(in oklab, var(--color-secondary-container) 78%, white);
+    color: var(--color-secondary);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.internal-form .ts-wrapper.multi .ts-control > div.active {
+    background: color-mix(in oklab, var(--color-secondary) 16%, white);
+    color: var(--color-secondary);
+}
+
+.internal-form .ts-wrapper.multi .ts-control > div .remove {
+    margin-left: 8px;
+    border-left-color: color-mix(in oklab, var(--color-secondary) 24%, white);
+    color: inherit;
+}
+
+.internal-form .ts-wrapper.disabled .ts-control,
+.mailing-audience__fieldset[disabled] .ts-control {
+    background: color-mix(in oklab, var(--color-surface-container) 85%, white);
+    opacity: 0.7;
+}
+
+.internal-form .ts-dropdown {
+    z-index: 5001;
+    border-color: var(--color-outline-variant);
+    font-family: var(--font-sans);
+}
+
+.internal-form .ts-dropdown .optgroup-header {
+    color: var(--color-secondary);
+    font-weight: 700;
+}
+
+.mailing-audience__total {
+    margin: 0;
+    color: var(--color-secondary);
+    font-family: var(--font-sans);
+    font-size: clamp(1.45rem, 3vw, 2.2rem);
+    font-weight: 700;
+}
+
+.mailing-content-audience__status {
+    display: grid;
+    gap: 6px;
+}
+
 @media (max-width: 760px) {
     .internal-header,
     .internal-page-heading {
@@ -659,8 +879,26 @@ a {
         grid-template-columns: 1fr;
     }
 
+    .internal-heading-actions,
+    .mailing-audience__groups {
+        grid-template-columns: 1fr;
+    }
+
+    .internal-heading-actions {
+        display: grid;
+        width: 100%;
+    }
+
+    .internal-heading-actions .internal-button {
+        width: 100%;
+    }
+
     .internal-form__grid {
         grid-template-columns: 1fr;
+    }
+
+    .mailing-audience__map {
+        min-height: 260px;
     }
 
     .mailing-recommendations__heading,

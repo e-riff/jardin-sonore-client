@@ -1,0 +1,24 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'mailing.audience.title'|trans({ campaign: campaign.internalTitle }, 'mailing') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ 'mailing.audience.eyebrow'|trans({}, 'mailing') }}</p>
+            <h1>{{ campaign.internalTitle }}</h1>
+            <p>{{ 'mailing.audience.description'|trans({}, 'mailing') }}</p>
+        </div>
+
+        <div class="internal-heading-actions">
+            <a class="internal-button internal-button--secondary" href="{{ returnTo ?: path('mailing_content', { uuid: campaign.uuid }) }}">
+                {{ 'mailing.audience.back'|trans({}, 'mailing') }}
+            </a>
+        </div>
+    </section>
+
+    {{ component('MailingAudience', {
+        campaignUuid: campaign.uuid.toRfc4122,
+        returnTo: returnTo ?: path('mailing_content', { uuid: campaign.uuid })
+    }) }}
+{% endblock %}

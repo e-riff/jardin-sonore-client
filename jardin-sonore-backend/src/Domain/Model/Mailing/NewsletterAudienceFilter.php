@@ -31,6 +31,8 @@ final readonly class NewsletterAudienceFilter
         private ?float $radiusKilometers = null,
         private ?NewsletterAudienceRadiusOrigin $radiusOrigin = null,
         private ?string $radiusOriginMunicipalityInseeCode = null,
+        private ?float $radiusOriginCustomLatitude = null,
+        private ?float $radiusOriginCustomLongitude = null,
     ) {
         $this->assertEnumList($organizationTypes, OrganizationType::class, 'organization types');
         $this->assertEnumList($organizationSectors, OrganizationSector::class, 'organization sectors');
@@ -118,6 +120,16 @@ final readonly class NewsletterAudienceFilter
         return $this->radiusOriginMunicipalityInseeCode;
     }
 
+    public function getRadiusOriginCustomLatitude(): ?float
+    {
+        return $this->radiusOriginCustomLatitude;
+    }
+
+    public function getRadiusOriginCustomLongitude(): ?float
+    {
+        return $this->radiusOriginCustomLongitude;
+    }
+
     public function hasActiveCriteria(): bool
     {
         return [] !== $this->organizationTypes
@@ -157,8 +169,16 @@ final readonly class NewsletterAudienceFilter
 
     private function assertRadiusIsConsistent(): void
     {
+        if (([] !== $this->regionCodes || [] !== $this->departmentCodes || [] !== $this->municipalityInseeCodes)
+            && (null !== $this->radiusKilometers || null !== $this->radiusOrigin || null !== $this->radiusOriginMunicipalityInseeCode)) {
+            throw new InvalidArgumentException('Newsletter audience radius mode cannot be combined with administrative locations.');
+        }
+
         if (null === $this->radiusKilometers) {
-            if (null !== $this->radiusOrigin || null !== $this->radiusOriginMunicipalityInseeCode) {
+            if (null !== $this->radiusOrigin
+                || null !== $this->radiusOriginMunicipalityInseeCode
+                || null !== $this->radiusOriginCustomLatitude
+                || null !== $this->radiusOriginCustomLongitude) {
                 throw new InvalidArgumentException('Newsletter audience radius origin requires a radius.');
             }
 
@@ -173,8 +193,35 @@ final readonly class NewsletterAudienceFilter
             throw new InvalidArgumentException('Newsletter audience radius origin is required when radius is defined.');
         }
 
-        if (NewsletterAudienceRadiusOrigin::MUNICIPALITY === $this->radiusOrigin && (null === $this->radiusOriginMunicipalityInseeCode || '' === trim($this->radiusOriginMunicipalityInseeCode))) {
-            throw new InvalidArgumentException('Newsletter audience municipality radius origin requires an INSEE code.');
+        if (NewsletterAudienceRadiusOrigin::MUNICIPALITY === $this->radiusOrigin) {
+            if (null === $this->radiusOriginMunicipalityInseeCode || '' === trim($this->radiusOriginMunicipalityInseeCode)) {
+                throw new InvalidArgumentException('Newsletter audience municipality radius origin requires an INSEE code.');
+            }
+
+            if (null !== $this->radiusOriginCustomLatitude || null !== $this->radiusOriginCustomLongitude) {
+                throw new InvalidArgumentException('Newsletter audience custom radius origin coordinates cannot be combined with a municipality origin.');
+            }
+        }
+
+        if (NewsletterAudienceRadiusOrigin::CUSTOM === $this->radiusOrigin) {
+            if (null === $this->radiusOriginCustomLatitude || null === $this->radiusOriginCustomLongitude) {
+                throw new InvalidArgumentException('Newsletter audience custom radius origin requires coordinates.');
+            }
+
+            if (-90 > $this->radiusOriginCustomLatitude || 90 < $this->radiusOriginCustomLatitude) {
+                throw new InvalidArgumentException('Newsletter audience custom radius origin latitude must be between -90 and 90.');
+            }
+
+            if (-180 > $this->radiusOriginCustomLongitude || 180 < $this->radiusOriginCustomLongitude) {
+                throw new InvalidArgumentException('Newsletter audience custom radius origin longitude must be between -180 and 180.');
+            }
+        }
+
+        if (NewsletterAudienceRadiusOrigin::HOME === $this->radiusOrigin
+            && (null !== $this->radiusOriginMunicipalityInseeCode
+                || null !== $this->radiusOriginCustomLatitude
+                || null !== $this->radiusOriginCustomLongitude)) {
+            throw new InvalidArgumentException('Newsletter audience home radius origin cannot carry municipality or custom point data.');
         }
     }
 }

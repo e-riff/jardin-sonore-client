@@ -29,6 +29,7 @@
                         <th>{{ 'mailing.index.table.internal_title'|trans({}, 'mailing') }}</th>
                         <th>{{ 'mailing.index.table.email_subject'|trans({}, 'mailing') }}</th>
                         <th>{{ 'mailing.index.table.status'|trans({}, 'mailing') }}</th>
+                        <th>{{ 'mailing.index.table.audience'|trans({}, 'mailing') }}</th>
                         <th>{{ 'mailing.index.table.updated_at'|trans({}, 'mailing') }}</th>
                         <th>{{ 'mailing.index.table.actions'|trans({}, 'mailing') }}</th>
                     </tr>
@@ -47,10 +48,37 @@
                                     {{ ('mailing.status.' ~ campaign.status.value)|trans({}, 'mailing') }}
                                 </span>
                             </td>
+                            <td>
+                                {% if campaign.hasAudienceCriteria %}
+                                    <span class="internal-badge internal-badge--primary">
+                                        {{ 'mailing.index.audience.configured'|trans({}, 'mailing') }}
+                                    </span>
+                                    <span class="internal-table-note">
+                                        {% if campaign.audienceRecipientCount is not null %}
+                                            {{ 'mailing.index.audience.recipients'|trans({ count: campaign.audienceRecipientCount }, 'mailing') }}
+                                        {% else %}
+                                            {{ 'mailing.index.audience.count_unavailable'|trans({}, 'mailing') }}
+                                        {% endif %}
+                                    </span>
+                                {% else %}
+                                    <span class="internal-badge internal-badge--muted">
+                                        {{ 'mailing.index.audience.empty'|trans({}, 'mailing') }}
+                                    </span>
+                                    <span class="internal-table-note">
+                                        {{ 'mailing.index.audience.empty_help'|trans({}, 'mailing') }}
+                                    </span>
+                                {% endif %}
+                            </td>
                             <td>{{ campaign.updatedAt|date('d/m/Y H:i') }}</td>
                             <td>
                                 <a class="internal-link" href="{{ path('mailing_content', { uuid: campaign.uuid }) }}">
                                     {{ 'mailing.index.edit'|trans({}, 'mailing') }}
+                                </a>
+                                <a class="internal-link" href="{{ path('mailing_audience', {
+                                    uuid: campaign.uuid,
+                                    returnTo: path('mailing_index')
+                                }) }}">
+                                    {{ 'mailing.index.audience.edit'|trans({}, 'mailing') }}
                                 </a>
                             </td>
                         </tr>
