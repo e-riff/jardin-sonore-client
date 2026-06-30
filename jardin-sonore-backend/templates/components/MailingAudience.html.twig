@@ -21,7 +21,8 @@
 
     {{ form_start(form, {
         attr: audience_attributes|merge({
-            class: 'internal-form internal-form--wide'
+            class: 'internal-form internal-form--wide',
+            'data-audience-mode-radius-origin-municipality-insee-code-value': form.radiusOriginMunicipalityInseeCode.vars.value ?? ''
         })
     }) }}
         <fieldset
