@@ -2,16 +2,22 @@ import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
     static targets = ['radiusFieldset', 'locationFieldset'];
+    static values = {
+        radiusOriginMunicipalityInseeCode: String,
+    };
 
     connect() {
         this.isUpdating = false;
+        this.syncTimeoutId = null;
         this.handleChange = this.handleChange.bind(this);
         this.element.addEventListener('change', this.handleChange);
         this.updateState();
+        this.scheduleRadiusOriginMunicipalitySync();
     }
 
     disconnect() {
         this.element.removeEventListener('change', this.handleChange);
+        this.clearSyncTimeout();
     }
 
     handleChange() {
@@ -32,6 +38,7 @@ export default class extends Controller {
             this.disableFieldset(this.locationFieldsetTarget, true);
             this.disableFieldset(this.radiusFieldsetTarget, false);
             this.isUpdating = false;
+            this.scheduleRadiusOriginMunicipalitySync();
 
             return;
         }
@@ -39,6 +46,7 @@ export default class extends Controller {
         this.disableFieldset(this.radiusFieldsetTarget, false);
         this.disableFieldset(this.locationFieldsetTarget, false);
         this.isUpdating = false;
+        this.scheduleRadiusOriginMunicipalitySync();
     }
 
     hasFilledValue(selector) {
@@ -97,6 +105,68 @@ export default class extends Controller {
 
             fieldElement.dispatchEvent(new Event('change', { bubbles: true }));
         });
+    }
+
+    scheduleRadiusOriginMunicipalitySync(attempt = 0) {
+        this.clearSyncTimeout();
+
+        if (!this.hasRadiusOriginMunicipalityInseeCodeValue || '' === this.radiusOriginMunicipalityInseeCodeValue.trim()) {
+            return;
+        }
+
+        this.syncTimeoutId = window.setTimeout(() => {
+            const synced = this.syncRadiusOriginMunicipalitySelection();
+
+            if (!synced && attempt < 10) {
+                this.scheduleRadiusOriginMunicipalitySync(attempt + 1);
+            }
+        }, 80);
+    }
+
+    syncRadiusOriginMunicipalitySelection() {
+        const selectElement = this.element.querySelector('select[name$="[radiusOriginMunicipalityInseeCode]"]');
+
+        if (!(selectElement instanceof HTMLSelectElement)) {
+            return true;
+        }
+
+        const inseeCode = this.radiusOriginMunicipalityInseeCodeValue.trim();
+
+        if ('' === inseeCode) {
+            return true;
+        }
+
+        const optionElement = Array.from(selectElement.options).find((candidateOptionElement) => candidateOptionElement.value === inseeCode);
+
+        if (selectElement.value !== inseeCode) {
+            selectElement.value = inseeCode;
+        }
+
+        if (!('tomselect' in selectElement) || !selectElement.tomselect) {
+            return false;
+        }
+
+        if (optionElement instanceof HTMLOptionElement) {
+            selectElement.tomselect.addOption({
+                value: inseeCode,
+                text: optionElement.text,
+            });
+        }
+
+        if (selectElement.tomselect.getValue() !== inseeCode) {
+            selectElement.tomselect.setValue(inseeCode, true);
+        }
+
+        return true;
+    }
+
+    clearSyncTimeout() {
+        if (null === this.syncTimeoutId) {
+            return;
+        }
+
+        window.clearTimeout(this.syncTimeoutId);
+        this.syncTimeoutId = null;
     }
 }
 
