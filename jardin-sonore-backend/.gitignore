@@ -21,3 +21,5 @@
 
 /data/*.sql
 !/data/*.sql.xz
+
+/public/uploads/

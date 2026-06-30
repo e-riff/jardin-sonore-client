@@ -6,8 +6,10 @@ namespace App\Application\Controller;
 
 use App\Application\Form\CreateMailingCampaignType;
 use App\Application\Form\EditMailingCampaignType;
+use App\Application\Form\MailingTestType;
 use App\Application\Form\Model\CreateMailingCampaignFormModel;
 use App\Application\Form\Model\EditMailingCampaignFormModel;
+use App\Application\Form\Model\MailingTestFormModel;
 use App\Application\Mailing\CreateMailingCampaign;
 use App\Application\Mailing\CreateMailingCampaignInput;
 use App\Application\Mailing\GetMailingCampaign;
@@ -15,10 +17,13 @@ use App\Application\Mailing\ListMailingCampaigns;
 use App\Application\Mailing\NewsletterAudienceOptionsProviderInterface;
 use App\Application\Mailing\NewsletterAudienceResolverInterface;
 use App\Application\Mailing\NewsletterRendererInterface;
+use App\Application\Mailing\SendMailingCampaignTest;
 use App\Application\Mailing\UpdateMailingCampaign;
 use App\Application\Mailing\UpdateMailingCampaignInput;
 use App\Domain\Model\Mailing\MailingRecommendation;
+use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
 use InvalidArgumentException;
+use Throwable;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -199,5 +204,49 @@ final class MailingController extends AbstractController
             'activeRecommendationCount' => $activeRecommendationCount,
             'hasAudienceCriteria' => $mailingCampaign->getAudienceFilter()->hasActiveCriteria(),
         ]);
+    }
+
+    #[Route('/{uuid}/test', name: 'test', methods: ['GET', 'POST'])]
+    public function test(
+        Uuid $uuid,
+        Request $request,
+        GetMailingCampaign $getMailingCampaign,
+        SendMailingCampaignTest $sendMailingCampaignTest,
+    ): Response {
+        $mailingCampaign = $getMailingCampaign($uuid);
+
+        if (null === $mailingCampaign) {
+            throw $this->createNotFoundException();
+        }
+
+        $formModel = new MailingTestFormModel();
+        $user = $this->getUser();
+
+        if ($user instanceof AdminUserEntity) {
+            $formModel->recipientEmail = $user->getEmail();
+        }
+
+        $form = $this->createForm(MailingTestType::class, $formModel);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            try {
+                $sendMailingCampaignTest($mailingCampaign, $formModel->recipientEmail);
+                $this->addFlash('success', 'mailing.flash.test_queued');
+
+                return $this->redirectToRoute('mailing_index');
+            } catch (Throwable) {
+                $this->addFlash('error', 'mailing.flash.test_failed');
+            }
+        }
+
+        return $this->render(
+            'mailing/test.html.twig',
+            [
+                'campaign' => $mailingCampaign,
+                'form' => $form->createView(),
+            ],
+            $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null,
+        );
     }
 }

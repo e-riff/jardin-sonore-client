@@ -179,7 +179,6 @@ final class MailingCampaign implements UuidIdentifiableInterface
     public function markTestSent(?DateTimeImmutable $sentAt = null): void
     {
         $this->lastTestSentAt = $sentAt ?? new DateTimeImmutable();
-        $this->status = MailingCampaignStatus::TEST_SENT;
         $this->markAsUpdated($this->lastTestSentAt);
     }
 

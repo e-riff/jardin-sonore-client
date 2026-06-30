@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Application\Mailing\NewsletterAudienceOptionsProviderInterface;
 use App\Application\Mailing\NewsletterAudienceResolverInterface;
+use App\Application\Mailing\NewsletterMailSenderInterface;
 use App\Application\Mailing\NewsletterRendererInterface;
 use App\Application\Storage\MailingBannerImageStorageInterface;
 use App\Application\Storage\RecommendationImageStorageInterface;
@@ -22,6 +23,7 @@ use App\Infrastructure\Doctrine\Repository\RegionDoctrineRepository;
 use App\Infrastructure\Mailing\DoctrineNewsletterAudienceOptionsProvider;
 use App\Infrastructure\Mailing\DoctrineNewsletterAudienceResolver;
 use App\Infrastructure\Mailing\TwigNewsletterRenderer;
+use App\Infrastructure\Mailer\SymfonyNewsletterMailSender;
 use App\Infrastructure\Storage\LocalMailingBannerImageStorage;
 use App\Infrastructure\Storage\LocalRecommendationImageStorage;
 use Gedmo\Sluggable\SluggableListener;
@@ -32,6 +34,9 @@ return static function (ContainerConfigurator $containerConfigurator): void {
     $containerConfigurator->parameters()
         ->set('app.mailing.home_latitude', '')
         ->set('app.mailing.home_longitude', '');
+    $containerConfigurator->parameters()
+        ->set('app.mailing.from_email', 'contact@jardinsonore.fr')
+        ->set('app.mailing.from_name', 'Jardin Sonore');
 
     $services = $containerConfigurator->services();
 
@@ -55,6 +60,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
     $services->alias(RecommendationImageStorageInterface::class, LocalRecommendationImageStorage::class);
     $services->alias(NewsletterAudienceResolverInterface::class, DoctrineNewsletterAudienceResolver::class);
     $services->alias(NewsletterAudienceOptionsProviderInterface::class, DoctrineNewsletterAudienceOptionsProvider::class);
+    $services->alias(NewsletterMailSenderInterface::class, SymfonyNewsletterMailSender::class);
     $services->alias(NewsletterRendererInterface::class, TwigNewsletterRenderer::class);
 
     $services->set(TimestampableListener::class)
