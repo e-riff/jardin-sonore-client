@@ -18,7 +18,13 @@
             {{ form_row(form.internalTitle) }}
             {{ form_row(form.emailSubject) }}
             {{ form_row(form.publicTitle) }}
+            {{ form_row(form.subtitle) }}
             {{ form_row(form.mainText) }}
+            <div class="internal-form__grid">
+                {{ form_row(form.callToActionLabel) }}
+                {{ form_row(form.callToActionUrl) }}
+            </div>
+            {{ form_row(form.bannerImageFile) }}
 
             <div class="internal-form__actions">
                 {{ form_widget(form.submit) }}

@@ -37,11 +37,7 @@
                     <tbody>
                     {% for campaign in campaigns %}
                         <tr>
-                            <td>
-                                <a class="internal-link" href="{{ path('mailing_content', { uuid: campaign.uuid }) }}">
-                                    {{ campaign.internalTitle }}
-                                </a>
-                            </td>
+                            <td>{{ campaign.internalTitle }}</td>
                             <td>{{ campaign.emailSubject }}</td>
                             <td>
                                 <span class="internal-badge internal-badge--secondary">
@@ -71,15 +67,20 @@
                             </td>
                             <td>{{ campaign.updatedAt|date('d/m/Y H:i') }}</td>
                             <td>
-                                <a class="internal-link" href="{{ path('mailing_content', { uuid: campaign.uuid }) }}">
-                                    {{ 'mailing.index.edit'|trans({}, 'mailing') }}
-                                </a>
-                                <a class="internal-link" href="{{ path('mailing_audience', {
-                                    uuid: campaign.uuid,
-                                    returnTo: path('mailing_index')
-                                }) }}">
-                                    {{ 'mailing.index.audience.edit'|trans({}, 'mailing') }}
-                                </a>
+                                <div class="mailing-index__actions">
+                                    <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_content', { uuid: campaign.uuid }) }}">
+                                        {{ 'mailing.index.edit'|trans({}, 'mailing') }}
+                                    </a>
+                                    <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_audience', {
+                                        uuid: campaign.uuid,
+                                        returnTo: path('mailing_index')
+                                    }) }}">
+                                        {{ 'mailing.index.audience.edit'|trans({}, 'mailing') }}
+                                    </a>
+                                    <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_preview', { uuid: campaign.uuid }) }}">
+                                        {{ 'mailing.index.preview'|trans({}, 'mailing') }}
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     {% endfor %}

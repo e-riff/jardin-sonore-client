@@ -1,0 +1,72 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'mailing.preview.title'|trans({ campaign: campaign.internalTitle }, 'mailing') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ 'mailing.preview.eyebrow'|trans({}, 'mailing') }}</p>
+            <h1>{{ campaign.internalTitle }}</h1>
+            <p>{{ 'mailing.preview.description'|trans({}, 'mailing') }}</p>
+        </div>
+
+        <div class="internal-heading-actions">
+            <a class="internal-button internal-button--secondary" href="{{ path('mailing_content', { uuid: campaign.uuid }) }}">
+                {{ 'mailing.preview.back'|trans({}, 'mailing') }}
+            </a>
+        </div>
+    </section>
+
+    <section class="internal-card mailing-preview-meta">
+        <div>
+            <p class="internal-eyebrow">{{ 'mailing.preview.meta.eyebrow'|trans({}, 'mailing') }}</p>
+            <h2>{{ 'mailing.preview.meta.title'|trans({}, 'mailing') }}</h2>
+        </div>
+
+        <div class="mailing-preview-meta__grid">
+            <article class="mailing-preview-meta__item">
+                <strong>{{ 'mailing.preview.meta.subject'|trans({}, 'mailing') }}</strong>
+                <p>{{ renderedNewsletter.subject }}</p>
+            </article>
+            <article class="mailing-preview-meta__item">
+                <strong>{{ 'mailing.preview.meta.template'|trans({}, 'mailing') }}</strong>
+                <p>{{ campaign.templateKey }}</p>
+            </article>
+            <article class="mailing-preview-meta__item">
+                <strong>{{ 'mailing.preview.meta.recommendations'|trans({}, 'mailing') }}</strong>
+                <p>{{ activeRecommendationCount }}</p>
+            </article>
+        </div>
+
+        {% if not hasAudienceCriteria %}
+            <div class="internal-alert">
+                {{ 'mailing.preview.meta.audience_notice'|trans({}, 'mailing') }}
+            </div>
+        {% endif %}
+    </section>
+
+    <section class="internal-card mailing-preview-card">
+        <div>
+            <p class="internal-eyebrow">{{ 'mailing.preview.render.eyebrow'|trans({}, 'mailing') }}</p>
+            <h2>{{ 'mailing.preview.render.title'|trans({}, 'mailing') }}</h2>
+            <p>{{ 'mailing.preview.render.description'|trans({}, 'mailing') }}</p>
+        </div>
+
+        <iframe
+            class="mailing-preview-card__frame"
+            title="{{ 'mailing.preview.render.frame_title'|trans({}, 'mailing') }}"
+            srcdoc="{{ renderedNewsletter.html|e('html_attr') }}"
+        ></iframe>
+    </section>
+
+    {% if renderedNewsletter.text %}
+        <section class="internal-card mailing-preview-text">
+            <div>
+                <p class="internal-eyebrow">{{ 'mailing.preview.text.eyebrow'|trans({}, 'mailing') }}</p>
+                <h2>{{ 'mailing.preview.text.title'|trans({}, 'mailing') }}</h2>
+            </div>
+
+            <pre>{{ renderedNewsletter.text }}</pre>
+        </section>
+    {% endif %}
+{% endblock %}

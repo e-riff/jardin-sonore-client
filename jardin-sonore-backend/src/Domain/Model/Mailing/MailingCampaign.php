@@ -24,6 +24,10 @@ final class MailingCampaign implements UuidIdentifiableInterface
         private string $mainText,
         private string $templateKey,
         private NewsletterAudienceFilter $audienceFilter,
+        private ?string $subtitle = null,
+        private ?string $callToActionLabel = null,
+        private ?string $callToActionUrl = null,
+        private ?string $bannerImagePath = null,
         private MailingCampaignStatus $status = MailingCampaignStatus::DRAFT,
         private array $recommendations = [],
         private DateTimeImmutable $createdAt = new DateTimeImmutable(),
@@ -33,6 +37,11 @@ final class MailingCampaign implements UuidIdentifiableInterface
     ) {
         $this->initializeUuid($uuid);
         $this->assertContentIsValid($internalTitle, $emailSubject, $publicTitle, $mainText, $templateKey);
+        $this->subtitle = $this->normalizeNullableString($subtitle);
+        $this->callToActionLabel = $this->normalizeNullableString($callToActionLabel);
+        $this->callToActionUrl = $this->normalizeNullableString($callToActionUrl);
+        $this->bannerImagePath = $this->normalizeNullableString($bannerImagePath);
+        $this->assertCallToActionIsConsistent($this->callToActionLabel, $this->callToActionUrl);
         $this->assertRecommendationList($recommendations);
         $this->assertStatusIsConsistent($status, $lastTestSentAt);
     }
@@ -55,6 +64,26 @@ final class MailingCampaign implements UuidIdentifiableInterface
     public function getMainText(): string
     {
         return $this->mainText;
+    }
+
+    public function getSubtitle(): ?string
+    {
+        return $this->subtitle;
+    }
+
+    public function getCallToActionLabel(): ?string
+    {
+        return $this->callToActionLabel;
+    }
+
+    public function getCallToActionUrl(): ?string
+    {
+        return $this->callToActionUrl;
+    }
+
+    public function getBannerImagePath(): ?string
+    {
+        return $this->bannerImagePath;
     }
 
     public function getTemplateKey(): string
@@ -101,13 +130,26 @@ final class MailingCampaign implements UuidIdentifiableInterface
         string $publicTitle,
         string $mainText,
         string $templateKey,
+        ?string $subtitle,
+        ?string $callToActionLabel,
+        ?string $callToActionUrl,
+        ?string $bannerImagePath,
     ): void {
         $this->assertContentIsValid($internalTitle, $emailSubject, $publicTitle, $mainText, $templateKey);
+        $subtitle = $this->normalizeNullableString($subtitle);
+        $callToActionLabel = $this->normalizeNullableString($callToActionLabel);
+        $callToActionUrl = $this->normalizeNullableString($callToActionUrl);
+        $bannerImagePath = $this->normalizeNullableString($bannerImagePath);
+        $this->assertCallToActionIsConsistent($callToActionLabel, $callToActionUrl);
 
         $this->internalTitle = $internalTitle;
         $this->emailSubject = $emailSubject;
         $this->publicTitle = $publicTitle;
         $this->mainText = $mainText;
+        $this->subtitle = $subtitle;
+        $this->callToActionLabel = $callToActionLabel;
+        $this->callToActionUrl = $callToActionUrl;
+        $this->bannerImagePath = $bannerImagePath;
         $this->templateKey = $templateKey;
         $this->markAsUpdated();
     }
@@ -189,6 +231,24 @@ final class MailingCampaign implements UuidIdentifiableInterface
         if ('' === trim($value)) {
             throw new InvalidArgumentException($message);
         }
+    }
+
+    private function assertCallToActionIsConsistent(?string $callToActionLabel, ?string $callToActionUrl): void
+    {
+        if ((null === $callToActionLabel) !== (null === $callToActionUrl)) {
+            throw new InvalidArgumentException('Mailing campaign call to action label and URL must either both be filled or both be empty.');
+        }
+    }
+
+    private function normalizeNullableString(?string $value): ?string
+    {
+        if (null === $value) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        return '' === $value ? null : $value;
     }
 
     private function markAsUpdated(?DateTimeImmutable $updatedAt = null): void

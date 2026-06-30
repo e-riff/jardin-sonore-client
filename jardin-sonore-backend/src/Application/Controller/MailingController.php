@@ -14,8 +14,10 @@ use App\Application\Mailing\GetMailingCampaign;
 use App\Application\Mailing\ListMailingCampaigns;
 use App\Application\Mailing\NewsletterAudienceOptionsProviderInterface;
 use App\Application\Mailing\NewsletterAudienceResolverInterface;
+use App\Application\Mailing\NewsletterRendererInterface;
 use App\Application\Mailing\UpdateMailingCampaign;
 use App\Application\Mailing\UpdateMailingCampaignInput;
+use App\Domain\Model\Mailing\MailingRecommendation;
 use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -75,6 +77,10 @@ final class MailingController extends AbstractController
                 emailSubject: $formModel->emailSubject,
                 publicTitle: $formModel->publicTitle,
                 mainText: $formModel->mainText,
+                subtitle: $formModel->subtitle,
+                callToActionLabel: $formModel->callToActionLabel,
+                callToActionUrl: $formModel->callToActionUrl,
+                bannerImageFile: $formModel->bannerImageFile,
             ));
 
             $this->addFlash('success', 'mailing.flash.created');
@@ -115,6 +121,10 @@ final class MailingController extends AbstractController
                 emailSubject: $formModel->emailSubject,
                 publicTitle: $formModel->publicTitle,
                 mainText: $formModel->mainText,
+                subtitle: $formModel->subtitle,
+                callToActionLabel: $formModel->callToActionLabel,
+                callToActionUrl: $formModel->callToActionUrl,
+                bannerImageFile: $formModel->bannerImageFile,
                 templateKey: $formModel->templateKey,
             ));
 
@@ -163,6 +173,31 @@ final class MailingController extends AbstractController
         return $this->render('mailing/audience.html.twig', [
             'campaign' => $mailingCampaign,
             'returnTo' => $request->query->getString('returnTo'),
+        ]);
+    }
+
+    #[Route('/{uuid}/preview', name: 'preview', methods: ['GET'])]
+    public function preview(
+        Uuid $uuid,
+        GetMailingCampaign $getMailingCampaign,
+        NewsletterRendererInterface $newsletterRenderer,
+    ): Response {
+        $mailingCampaign = $getMailingCampaign($uuid);
+
+        if (null === $mailingCampaign) {
+            throw $this->createNotFoundException();
+        }
+
+        $activeRecommendationCount = count(array_filter(
+            $mailingCampaign->getRecommendations(),
+            static fn (MailingRecommendation $mailingRecommendation): bool => $mailingRecommendation->isActive(),
+        ));
+
+        return $this->render('mailing/preview.html.twig', [
+            'campaign' => $mailingCampaign,
+            'renderedNewsletter' => $newsletterRenderer->render($mailingCampaign),
+            'activeRecommendationCount' => $activeRecommendationCount,
+            'hasAudienceCriteria' => $mailingCampaign->getAudienceFilter()->hasActiveCriteria(),
         ]);
     }
 }

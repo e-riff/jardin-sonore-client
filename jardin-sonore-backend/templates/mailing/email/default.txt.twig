@@ -1,0 +1,26 @@
+{{ campaign.publicTitle }}
+
+{% if campaign.subtitle %}
+{{ campaign.subtitle }}
+
+{% endif %}
+{{ campaign.mainText }}
+
+{% if campaign.callToActionLabel and campaign.callToActionUrl %}
+
+{{ campaign.callToActionLabel }} : {{ campaign.callToActionUrl }}
+{% endif %}
+
+{% if activeRecommendations is not empty %}
+Sélection Jardin Sonore
+{% for recommendation in activeRecommendations %}
+
+- {{ recommendation.title }}
+{{ recommendation.text }}
+{% if recommendation.url and recommendation.linkLabel %}
+{{ recommendation.linkLabel }} : {{ recommendation.url }}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+Se désinscrire : {{ unsubscribeUrl }}

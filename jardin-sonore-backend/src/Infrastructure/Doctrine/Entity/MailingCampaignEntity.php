@@ -24,6 +24,14 @@ class MailingCampaignEntity
 
     private string $mainText = '';
 
+    private ?string $subtitle = null;
+
+    private ?string $callToActionLabel = null;
+
+    private ?string $callToActionUrl = null;
+
+    private ?string $bannerImagePath = null;
+
     private string $templateKey = 'default';
 
     private MailingCampaignStatus $status = MailingCampaignStatus::DRAFT;
@@ -101,6 +109,54 @@ class MailingCampaignEntity
     public function setMainText(string $mainText): static
     {
         $this->mainText = $mainText;
+
+        return $this;
+    }
+
+    public function getSubtitle(): ?string
+    {
+        return $this->subtitle;
+    }
+
+    public function setSubtitle(?string $subtitle): static
+    {
+        $this->subtitle = $subtitle;
+
+        return $this;
+    }
+
+    public function getCallToActionLabel(): ?string
+    {
+        return $this->callToActionLabel;
+    }
+
+    public function setCallToActionLabel(?string $callToActionLabel): static
+    {
+        $this->callToActionLabel = $callToActionLabel;
+
+        return $this;
+    }
+
+    public function getCallToActionUrl(): ?string
+    {
+        return $this->callToActionUrl;
+    }
+
+    public function setCallToActionUrl(?string $callToActionUrl): static
+    {
+        $this->callToActionUrl = $callToActionUrl;
+
+        return $this;
+    }
+
+    public function getBannerImagePath(): ?string
+    {
+        return $this->bannerImagePath;
+    }
+
+    public function setBannerImagePath(?string $bannerImagePath): static
+    {
+        $this->bannerImagePath = $bannerImagePath;
 
         return $this;
     }
