@@ -61,6 +61,38 @@ return static function (ClassMetadata $metadata): void {
     ]);
 
     $metadata->mapField([
+        'fieldName' => 'subtitle',
+        'columnName' => 'subtitle',
+        'type' => Types::STRING,
+        'length' => 255,
+        'nullable' => true,
+    ]);
+
+    $metadata->mapField([
+        'fieldName' => 'callToActionLabel',
+        'columnName' => 'cta_label',
+        'type' => Types::STRING,
+        'length' => 255,
+        'nullable' => true,
+    ]);
+
+    $metadata->mapField([
+        'fieldName' => 'callToActionUrl',
+        'columnName' => 'cta_url',
+        'type' => Types::STRING,
+        'length' => 2048,
+        'nullable' => true,
+    ]);
+
+    $metadata->mapField([
+        'fieldName' => 'bannerImagePath',
+        'columnName' => 'banner_image_path',
+        'type' => Types::STRING,
+        'length' => 255,
+        'nullable' => true,
+    ]);
+
+    $metadata->mapField([
         'fieldName' => 'templateKey',
         'columnName' => 'template_key',
         'type' => Types::STRING,

@@ -17,6 +17,9 @@
             }) }}">
                 {{ 'mailing.content.configure_audience'|trans({}, 'mailing') }}
             </a>
+            <a class="internal-button internal-button--secondary" href="{{ path('mailing_preview', { uuid: campaign.uuid }) }}">
+                {{ 'mailing.content.preview'|trans({}, 'mailing') }}
+            </a>
             <a class="internal-button internal-button--secondary" href="{{ path('mailing_index') }}">
                 {{ 'mailing.content.back'|trans({}, 'mailing') }}
             </a>
@@ -66,10 +69,23 @@
                 <h2>{{ 'mailing.content.details.title'|trans({}, 'mailing') }}</h2>
             </div>
 
+            {% if form.vars.data.bannerImagePath %}
+                <div class="mailing-current-image">
+                    <img src="{{ asset(form.vars.data.bannerImagePath) }}" alt="">
+                    <p>{{ 'mailing.form.banner_image_current'|trans({}, 'mailing') }}</p>
+                </div>
+            {% endif %}
+
             {{ form_row(form.internalTitle) }}
             {{ form_row(form.emailSubject) }}
             {{ form_row(form.publicTitle) }}
+            {{ form_row(form.subtitle) }}
             {{ form_row(form.mainText) }}
+            <div class="internal-form__grid">
+                {{ form_row(form.callToActionLabel) }}
+                {{ form_row(form.callToActionUrl) }}
+            </div>
+            {{ form_row(form.bannerImageFile) }}
             {{ form_row(form.templateKey) }}
         </section>
 

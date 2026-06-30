@@ -23,6 +23,7 @@ mailing:
       recipients: "{count, plural, =0 {Aucun destinataire} one {# destinataire} other {# destinataires}}"
       count_unavailable: "Volume à recalculer"
       edit: "Ciblage"
+    preview: "Prévisualiser"
     edit: "Modifier"
   new:
     title: "Nouvelle newsletter | Jardin Sonore"
@@ -37,8 +38,19 @@ mailing:
     email_subject_help: "Texte affiché dans la boîte de réception du destinataire."
     public_title: "Titre affiché dans l’e-mail"
     public_title_help: "Titre principal que le lecteur verra en ouvrant la newsletter."
+    subtitle: "Sous-titre de la bannière"
+    subtitle_help: "Optionnel. Placé sous le titre dans le cartouche de la bannière."
     main_text: "Introduction de la newsletter"
     main_text_help: "Texte éditorial placé sous le titre principal, avant les recommandations."
+    call_to_action_label: "Texte du call to action"
+    call_to_action_label_help: "Optionnel. Le libellé du bouton affiché juste après votre texte."
+    call_to_action_url: "URL du call to action"
+    call_to_action_url_help: "Optionnel. Renseignez-la avec le texte du bouton. Exemple : https://…"
+    banner_image: "Image de bannière"
+    banner_image_help: "Optionnel. JPEG, PNG ou WebP, 5 Mo maximum. Format conseillé : 1600 × 700 px minimum, zone utile centrée."
+    banner_image_current: "Image de bannière actuellement enregistrée. Envoyez un nouveau fichier pour la remplacer."
+    banner_image_invalid_type: "Utilisez une image JPEG, PNG ou WebP pour la bannière."
+    banner_image_invalid_size: "L’image de bannière ne doit pas dépasser 5 Mo."
     template: "Mise en page"
     template_help: "Structure graphique utilisée pour générer l’e-mail."
     template_default: "Modèle Jardin Sonore"
@@ -74,6 +86,7 @@ mailing:
     unsaved_changes_warning: "Des modifications de la campagne ne sont pas enregistrées. Quitter cette page et les perdre ?"
     back: "Retour aux campagnes"
     configure_audience: "Configurer le ciblage"
+    preview: "Prévisualiser l’e-mail"
     audience:
       eyebrow: "Ciblage actuel"
       title: "Audience"
@@ -158,6 +171,32 @@ mailing:
       email: "Adresse e-mail"
       truncated: "Les dix premiers destinataires sont affichés."
       invalid_filter: "Complétez les paramètres du rayon pour calculer l’audience."
+  preview:
+    title: "Prévisualisation de {campaign} | Jardin Sonore"
+    eyebrow: "Prévisualisation de la newsletter"
+    description: "Contrôlez le rendu HTML de l’e-mail avant de passer à l’envoi test."
+    back: "Retour au contenu"
+    meta:
+      eyebrow: "Résumé"
+      title: "Paramètres du rendu"
+      subject: "Sujet"
+      template: "Template"
+      recommendations: "Recommandations actives"
+      audience_notice: "Le ciblage n’est pas encore défini. En l’état, l’envoi retiendrait tous les contacts éligibles."
+    render:
+      eyebrow: "Rendu HTML"
+      title: "Aperçu de l’e-mail"
+      description: "Cette preview affiche le HTML généré avec le template actuel et les recommandations actives de la campagne."
+      frame_title: "Prévisualisation de la newsletter"
+    email:
+      primary_cta: "Plus d'informations sur notre plaquette"
+      recommendations_title: "Les conseils de ce mois"
+      recommendation_source: "Jardin Sonore"
+      footer_notice: "© {year} Jardin Sonore. Éveil musical et bienveillant."
+      unsubscribe: "Se désabonner"
+    text:
+      eyebrow: "Version texte"
+      title: "Aperçu texte brut"
   catalog:
     status:
       active: "Disponible"

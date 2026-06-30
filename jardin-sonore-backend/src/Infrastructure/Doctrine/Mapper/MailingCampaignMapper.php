@@ -33,6 +33,10 @@ final readonly class MailingCampaignMapper
             emailSubject: $mailingCampaignEntity->getEmailSubject(),
             publicTitle: $mailingCampaignEntity->getPublicTitle(),
             mainText: $mailingCampaignEntity->getMainText(),
+            subtitle: $mailingCampaignEntity->getSubtitle(),
+            callToActionLabel: $mailingCampaignEntity->getCallToActionLabel(),
+            callToActionUrl: $mailingCampaignEntity->getCallToActionUrl(),
+            bannerImagePath: $mailingCampaignEntity->getBannerImagePath(),
             templateKey: $mailingCampaignEntity->getTemplateKey(),
             audienceFilter: $this->audienceFilterToDomain($mailingCampaignEntity->getAudienceFilter()),
             status: $mailingCampaignEntity->getStatus(),
@@ -59,6 +63,10 @@ final readonly class MailingCampaignMapper
             ->setEmailSubject($mailingCampaign->getEmailSubject())
             ->setPublicTitle($mailingCampaign->getPublicTitle())
             ->setMainText($mailingCampaign->getMainText())
+            ->setSubtitle($mailingCampaign->getSubtitle())
+            ->setCallToActionLabel($mailingCampaign->getCallToActionLabel())
+            ->setCallToActionUrl($mailingCampaign->getCallToActionUrl())
+            ->setBannerImagePath($mailingCampaign->getBannerImagePath())
             ->setTemplateKey($mailingCampaign->getTemplateKey())
             ->setStatus($mailingCampaign->getStatus())
             ->setAudienceFilter($this->audienceFilterToArray($mailingCampaign->getAudienceFilter()))

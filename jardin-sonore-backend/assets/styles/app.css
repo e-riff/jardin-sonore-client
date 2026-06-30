@@ -868,6 +868,77 @@ a {
     gap: 6px;
 }
 
+.mailing-index__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.mailing-index__actions .internal-button {
+    min-width: 0;
+    white-space: nowrap;
+}
+
+.mailing-preview-meta,
+.mailing-preview-card,
+.mailing-preview-text {
+    margin-bottom: 28px;
+}
+
+.mailing-preview-meta__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.mailing-preview-meta__item {
+    display: grid;
+    gap: 8px;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 14px;
+    padding: 18px;
+    background: var(--color-surface-container);
+}
+
+.mailing-preview-meta__item strong {
+    color: var(--color-secondary);
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.mailing-preview-meta__item p {
+    margin: 0;
+    color: var(--color-on-background);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.mailing-preview-card__frame {
+    width: 100%;
+    min-height: 980px;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 18px;
+    background: #f3ede9;
+}
+
+.mailing-preview-text pre {
+    overflow-x: auto;
+    margin: 0;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 14px;
+    padding: 18px;
+    background: var(--color-surface-container);
+    color: var(--color-on-background);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+}
+
 @media (max-width: 760px) {
     .internal-header,
     .internal-page-heading {
@@ -880,7 +951,8 @@ a {
     }
 
     .internal-heading-actions,
-    .mailing-audience__groups {
+    .mailing-audience__groups,
+    .mailing-preview-meta__grid {
         grid-template-columns: 1fr;
     }
 
@@ -987,6 +1059,10 @@ a {
 
     .internal-table {
         min-width: 680px;
+    }
+
+    .mailing-index__actions {
+        min-width: 220px;
     }
 
     .mailing-recommendation {
