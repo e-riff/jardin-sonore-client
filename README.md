@@ -138,6 +138,12 @@ Le backend Symfony se deploie avec la meme configuration SSH :
 make deploy-backend
 ```
 
+Le script backend peut aussi stopper proprement les workers Messenger apres le deploiement avec :
+
+```dotenv
+CPANEL_BACKEND_STOP_MESSENGER_WORKERS=1
+```
+
 Le sous-domaine backend doit pointer vers le dossier `public/` de `CPANEL_BACKEND_PATH`.
 
 Pour ajouter l'alias local backend :

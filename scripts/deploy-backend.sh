@@ -19,6 +19,7 @@ fi
 : "${CPANEL_PHP_BIN:=php}"
 : "${CPANEL_COMPOSER_BIN:=composer}"
 : "${CPANEL_BACKEND_RUN_MIGRATIONS:=1}"
+: "${CPANEL_BACKEND_STOP_MESSENGER_WORKERS:=1}"
 
 SSH_KEY_OPTION=()
 if [[ -n "${CPANEL_SSH_KEY:-}" ]]; then
@@ -60,6 +61,10 @@ fi
 REMOTE_COMMANDS+=(
   "$CPANEL_PHP_BIN bin/console cache:clear --env=prod --no-debug"
 )
+
+if [[ "$CPANEL_BACKEND_STOP_MESSENGER_WORKERS" == "1" ]]; then
+  REMOTE_COMMANDS+=("$CPANEL_PHP_BIN bin/console messenger:stop-workers --env=prod --no-debug")
+fi
 
 "${SSH_COMMAND[@]}" "$REMOTE" "$(printf '%s && ' "${REMOTE_COMMANDS[@]}") true"
 
