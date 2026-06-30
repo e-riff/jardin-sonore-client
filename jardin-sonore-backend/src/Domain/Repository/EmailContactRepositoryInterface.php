@@ -14,5 +14,7 @@ interface EmailContactRepositoryInterface
 
     public function findByEmailAddress(EmailAddress $emailAddress): ?EmailContact;
 
+    public function findByUnsubscribeToken(string $unsubscribeToken): ?EmailContact;
+
     public function save(EmailContact $emailContact): void;
 }

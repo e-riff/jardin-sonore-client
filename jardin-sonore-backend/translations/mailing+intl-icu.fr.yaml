@@ -223,6 +223,13 @@ mailing:
       recipient_email: "Adresse e-mail de test"
       recipient_email_help: "Par défaut, votre adresse administrateur est proposée."
       submit: "Envoyer le test"
+  unsubscribe:
+    title: "Désabonnement newsletter | Jardin Sonore"
+    eyebrow: "Newsletter"
+    success_title: "Vous êtes désinscrit"
+    success_description: "Votre adresse ne recevra plus les newsletters Jardin Sonore."
+    invalid_title: "Lien invalide ou expiré"
+    invalid_description: "Ce lien de désinscription n’est pas reconnu. Si besoin, contactez directement Jardin Sonore."
   catalog:
     status:
       active: "Disponible"
