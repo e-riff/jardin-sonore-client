@@ -44,11 +44,6 @@ final class Version20260630213000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $this->abortIf(
-            !str_contains($this->connection->getDatabasePlatform()::class, 'MySQL'),
-            'This migration only supports MySQL.',
-        );
-
         $existingSeedCount = (int) $this->connection->fetchOne(
             'SELECT COUNT(*) FROM email_contact WHERE email_address IN (:emails)',
             [
