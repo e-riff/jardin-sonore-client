@@ -9,4 +9,6 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 interface MailingBannerImageStorageInterface
 {
     public function store(UploadedFile $uploadedFile): string;
+
+    public function delete(?string $storedPath): void;
 }

@@ -12,6 +12,7 @@ use App\Application\Form\Model\EditMailingCampaignFormModel;
 use App\Application\Form\Model\MailingTestFormModel;
 use App\Application\Mailing\CreateMailingCampaign;
 use App\Application\Mailing\CreateMailingCampaignInput;
+use App\Application\Mailing\DeleteMailingCampaign;
 use App\Application\Mailing\GetMailingCampaign;
 use App\Application\Mailing\ListMailingCampaigns;
 use App\Application\Mailing\NewsletterAudienceOptionsProviderInterface;
@@ -313,6 +314,33 @@ final class MailingController extends AbstractController
             $this->addFlash('info', 'mailing.flash.delivery_stopped_details');
         } catch (InvalidArgumentException) {
             $this->addFlash('error', 'mailing.flash.delivery_stop_failed');
+        }
+
+        return $this->redirectToRoute('mailing_index');
+    }
+
+    #[Route('/{uuid}/delete', name: 'delete', methods: ['POST'])]
+    public function delete(
+        Uuid $uuid,
+        Request $request,
+        GetMailingCampaign $getMailingCampaign,
+        DeleteMailingCampaign $deleteMailingCampaign,
+    ): Response {
+        $mailingCampaign = $getMailingCampaign($uuid);
+
+        if (null === $mailingCampaign) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$this->isCsrfTokenValid('mailing_delete_' . $mailingCampaign->getUuid()->toRfc4122(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        try {
+            $deleteMailingCampaign($mailingCampaign);
+            $this->addFlash('success', 'mailing.flash.deleted');
+        } catch (InvalidArgumentException) {
+            $this->addFlash('error', 'mailing.flash.delete_failed');
         }
 
         return $this->redirectToRoute('mailing_index');

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Admin\Form;
 
-use App\Domain\Model\AddressBook\ContactDataSource;
 use App\Domain\Model\AddressBook\EmailContactType;
 use App\Infrastructure\Doctrine\Entity\EmailContactLinkEntity;
 use Symfony\Component\Form\AbstractType;
@@ -39,19 +38,8 @@ final class EmailContactLinkFormType extends AbstractType
                 'choices' => $this->typeChoices(),
                 'choice_translation_domain' => 'backoffice',
             ])
-            ->add('source', ChoiceType::class, [
-                'label' => 'admin.field.source',
-                'choices' => $this->sourceChoices(),
-                'choice_translation_domain' => 'backoffice',
-                'required' => false,
-                'placeholder' => '',
-            ])
-            ->add('optInNewsletter', CheckboxType::class, [
-                'label' => 'admin.field.opt_in_newsletter',
-                'required' => false,
-            ])
             ->add('active', CheckboxType::class, [
-                'label' => 'admin.field.active',
+                'label' => 'admin.field.link_active',
                 'required' => false,
             ]);
     }
@@ -62,19 +50,6 @@ final class EmailContactLinkFormType extends AbstractType
             'data_class' => EmailContactLinkEntity::class,
             'translation_domain' => 'backoffice',
         ]);
-    }
-
-    /**
-     * @return array<string, ContactDataSource>
-     */
-    private function sourceChoices(): array
-    {
-        return [
-            'address_book.contact_source.manual' => ContactDataSource::MANUAL,
-            'address_book.contact_source.google_sheets' => ContactDataSource::GOOGLE_SHEETS,
-            'address_book.contact_source.legacy_import' => ContactDataSource::LEGACY_IMPORT,
-            'address_book.contact_source.directory_import' => ContactDataSource::DIRECTORY_IMPORT,
-        ];
     }
 
     /**

@@ -41,11 +41,10 @@ final class DashboardController extends AbstractDashboardController
 
     public function configureMenuItems(): iterable
     {
-        yield MenuItem::linkToDashboard('admin.menu.dashboard', 'fa fa-home');
+        yield MenuItem::linkToRoute('admin.menu.internal_dashboard', 'fa fa-house', 'internal_dashboard');
         yield MenuItem::section('admin.menu.address_book');
         yield MenuItem::linkTo(OrganizationCrudController::class, 'admin.menu.organizations', 'fa fa-building');
         yield MenuItem::linkTo(PersonCrudController::class, 'admin.menu.people', 'fa fa-user');
-        yield MenuItem::linkTo(ContactDetailsCrudController::class, 'admin.menu.contact_details', 'fa fa-address-card');
         yield MenuItem::linkTo(EmailContactCrudController::class, 'admin.menu.email_contacts', 'fa fa-envelope');
         yield MenuItem::linkTo(PhoneContactCrudController::class, 'admin.menu.phone_contacts', 'fa fa-phone');
         yield MenuItem::linkTo(AddressContactCrudController::class, 'admin.menu.address_contacts', 'fa fa-location-dot');

@@ -27,6 +27,7 @@ mailing:
     test: "Envoi test"
     send: "Envoyer"
     stop: "Stopper"
+    delete: "Supprimer"
     edit: "Modifier"
   new:
     title: "Nouvelle newsletter | Jardin Sonore"
@@ -91,6 +92,8 @@ mailing:
     delivery_stopped: "L’envoi de la campagne a été stoppé."
     delivery_stopped_details: "Les futures vagues sont arrêtées. Les destinataires déjà partis dans la vague en cours peuvent toutefois finir d’être traités."
     delivery_stop_failed: "Cette campagne ne peut pas être stoppée dans son état actuel."
+    deleted: "La campagne a été supprimée."
+    delete_failed: "Cette campagne ne peut pas être supprimée tant qu’un envoi est encore actif."
     locked: "Cette campagne est verrouillée depuis le démarrage de son envoi."
   status:
     draft: "Brouillon"

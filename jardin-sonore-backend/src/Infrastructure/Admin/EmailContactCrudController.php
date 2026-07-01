@@ -90,7 +90,7 @@ final class EmailContactCrudController extends AbstractCrudController
         yield BooleanField::new('optInNewsletter', 'admin.field.opt_in_newsletter');
         yield DateTimeField::new('unsubscribedAt', 'admin.field.unsubscribed_at')->hideOnForm();
         yield TextField::new('unsubscribeToken', 'admin.field.unsubscribe_token')->onlyOnDetail();
-        yield BooleanField::new('active', 'admin.field.active');
+        yield BooleanField::new('active', 'admin.field.shared_active');
     }
 
     /**
