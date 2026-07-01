@@ -39,11 +39,13 @@ PORT=3001 make docker-up
 ## Structure du projet
 
 - `jardin-sonore-client/`: application front Next.js.
+- `jardin-sonore-backend/`: backend Symfony, backoffice, annuaire et mailing.
 - `jardin-sonore-client/src/app/`: App Router, page principale et routes API.
 - `jardin-sonore-client/src/components/`: composants reutilisables.
 - `jardin-sonore-client/src/components/sections/`: sections de la page d'accueil.
 - `jardin-sonore-client/src/i18n/`: dictionnaire et types de traduction.
 - `jardin-sonore-client/public/`: images et assets publics.
+- `jardin-sonore-backend/docs/`: documentation technique et metier du backend.
 - `docker-compose.yml`, `docker/`, `Makefile`: orchestration locale.
 - `.codex/jardin-sonore-guidelines.md`: notes projet et conventions pour les assistants/devs.
 
@@ -59,6 +61,8 @@ make shell
 make lint
 make app-build
 make deploy-client
+make backend-lint
+make deploy-backend
 ```
 
 Commandes npm possibles depuis `jardin-sonore-client/`:
@@ -174,3 +178,18 @@ Avant de deployer, verifier:
 - `CONTACT_PHONE`;
 - les variables Symfony backend en prod: `APP_ENV`, `APP_SECRET`, `DATABASE_URL`, `MAILER_DSN`;
 - le build avec `make app-build`.
+
+## Backend
+
+Le backend Symfony porte aujourd'hui :
+
+- le backoffice interne ;
+- l'annuaire et ses imports ;
+- le module de mailing newsletter ;
+- les routes publiques liees au mailing, comme la desinscription.
+
+Documentation recommandee :
+
+- [Backend README](jardin-sonore-backend/README.md)
+- [Import annuaire](jardin-sonore-backend/docs/directory-import.md)
+- [Mailing](jardin-sonore-backend/docs/mailing.md)

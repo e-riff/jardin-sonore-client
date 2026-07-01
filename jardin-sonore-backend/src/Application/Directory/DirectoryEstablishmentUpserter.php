@@ -10,6 +10,7 @@ use App\Domain\Model\AddressBook\CustomerStatus;
 use App\Domain\Model\AddressBook\EmailContactType;
 use App\Domain\Model\AddressBook\OrganizationType;
 use App\Domain\Model\AddressBook\PhoneContactType;
+use App\Domain\Model\ValueObject\PhoneNumber;
 use App\Infrastructure\Doctrine\Entity\AddressContactEntity;
 use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
 use App\Infrastructure\Doctrine\Entity\DirectoryImportLinkEntity;
@@ -20,6 +21,7 @@ use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactLinkEntity;
 use Doctrine\ORM\EntityManagerInterface;
+use InvalidArgumentException;
 
 final readonly class DirectoryEstablishmentUpserter
 {
@@ -214,9 +216,17 @@ final readonly class DirectoryEstablishmentUpserter
             return null;
         }
 
-        $phoneNumber = preg_replace('/[^\d+]/', '', $phoneNumber) ?? '';
+        $phoneNumber = trim($phoneNumber);
 
-        return '' === $phoneNumber ? null : $phoneNumber;
+        if ('' === $phoneNumber) {
+            return null;
+        }
+
+        try {
+            return PhoneNumber::normalize($phoneNumber);
+        } catch (InvalidArgumentException) {
+            return null;
+        }
     }
 
     private function extractPostalCode(?string $address): ?string

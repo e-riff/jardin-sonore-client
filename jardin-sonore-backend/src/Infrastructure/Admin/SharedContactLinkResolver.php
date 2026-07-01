@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Admin;
 
+use App\Domain\Model\ValueObject\PhoneNumber;
 use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactEntity;
 use Doctrine\ORM\EntityManagerInterface;
+use InvalidArgumentException;
 
 final readonly class SharedContactLinkResolver
 {
@@ -106,6 +108,14 @@ final readonly class SharedContactLinkResolver
 
         $phoneNumber = trim($phoneNumber);
 
-        return '' === $phoneNumber ? null : $phoneNumber;
+        if ('' === $phoneNumber) {
+            return null;
+        }
+
+        try {
+            return PhoneNumber::normalize($phoneNumber);
+        } catch (InvalidArgumentException) {
+            return null;
+        }
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Doctrine\EventSubscriber;
 
+use App\Domain\Model\ValueObject\PhoneNumber;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 use App\Infrastructure\Doctrine\Entity\EmailContactLinkEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactEntity;
@@ -13,6 +14,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\UnitOfWork;
+use InvalidArgumentException;
 
 final class SharedContactSubscriber implements EventSubscriber
 {
@@ -86,8 +88,14 @@ final class SharedContactSubscriber implements EventSubscriber
             return;
         }
 
+        $normalizedPhoneNumber = $this->normalizePhone($phoneNumber);
+
+        if (null === $normalizedPhoneNumber) {
+            return;
+        }
+
         $existingPhoneContact = $entityManager->getRepository(PhoneContactEntity::class)->findOneBy([
-            'phoneNumber' => trim($phoneNumber),
+            'phoneNumber' => $normalizedPhoneNumber,
         ]);
 
         if (!$existingPhoneContact instanceof PhoneContactEntity || $existingPhoneContact === $phoneContact) {
@@ -127,5 +135,24 @@ final class SharedContactSubscriber implements EventSubscriber
         $entities = $unitOfWork->getIdentityMap()[$className] ?? [];
 
         return array_values($entities);
+    }
+
+    private function normalizePhone(?string $phoneNumber): ?string
+    {
+        if (null === $phoneNumber) {
+            return null;
+        }
+
+        $phoneNumber = trim($phoneNumber);
+
+        if ('' === $phoneNumber) {
+            return null;
+        }
+
+        try {
+            return PhoneNumber::normalize($phoneNumber);
+        } catch (InvalidArgumentException) {
+            return null;
+        }
     }
 }

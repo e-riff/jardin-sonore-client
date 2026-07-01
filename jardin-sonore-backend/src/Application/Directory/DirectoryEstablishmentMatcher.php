@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace App\Application\Directory;
 
+use App\Domain\Model\ValueObject\PhoneNumber;
 use App\Infrastructure\Doctrine\Entity\DirectoryImportLinkEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use Doctrine\ORM\EntityManagerInterface;
+use InvalidArgumentException;
 
 final readonly class DirectoryEstablishmentMatcher
 {
     private const array MATCH_SCORE_THRESHOLDS = [
         'auto_match' => 90,
-        'candidate' => 70,
+        'candidate' => 80,
     ];
     private const float COMMUNE_COMPATIBILITY_THRESHOLD = 92.0;
     private const array SCORE_BONUSES = [
@@ -44,12 +46,12 @@ final readonly class DirectoryEstablishmentMatcher
         'strong_name' => 60,
         'very_strong_name' => 70,
     ];
-    private const CANDIDATE_QUERY_LIMIT = 200;
+    private const int CANDIDATE_QUERY_LIMIT = 200;
 
     /**
      * @var list<string>
      */
-    private const GENERIC_NAME_TOKENS = [
+    private const array GENERIC_NAME_TOKENS = [
         'accueil',
         'centre',
         'collective',
@@ -343,9 +345,17 @@ final readonly class DirectoryEstablishmentMatcher
             return null;
         }
 
-        $phoneNumber = preg_replace('/[^\d+]/', '', $phoneNumber) ?? '';
+        $phoneNumber = trim($phoneNumber);
 
-        return '' === $phoneNumber ? null : $phoneNumber;
+        if ('' === $phoneNumber) {
+            return null;
+        }
+
+        try {
+            return PhoneNumber::normalize($phoneNumber);
+        } catch (InvalidArgumentException) {
+            return null;
+        }
     }
 
     private function normalizeWebsite(?string $websiteUrl): ?string

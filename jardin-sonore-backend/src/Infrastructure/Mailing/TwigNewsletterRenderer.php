@@ -14,8 +14,8 @@ use Twig\Environment;
 
 final readonly class TwigNewsletterRenderer implements NewsletterRendererInterface
 {
-    private const DEFAULT_BANNER_IMAGE_PATH = 'images/mailing/default-banner.webp';
-    public const UNSUBSCRIBE_TOKEN_PLACEHOLDER = '__unsubscribe_token__';
+    private const string DEFAULT_BANNER_IMAGE_PATH = 'images/mailing/default-banner.webp';
+    public const string UNSUBSCRIBE_TOKEN_PLACEHOLDER = '__unsubscribe_token__';
 
     public function __construct(
         private Environment $twig,
