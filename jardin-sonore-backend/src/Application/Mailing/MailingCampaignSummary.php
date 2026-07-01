@@ -20,6 +20,7 @@ final readonly class MailingCampaignSummary
         public ?int $audienceRecipientCount,
         public bool $isEditable,
         public bool $canStopDelivery,
+        public bool $canBeDeleted,
     ) {
     }
 }

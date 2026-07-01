@@ -5,92 +5,65 @@ declare(strict_types=1);
 namespace App\Application\Command;
 
 use App\Application\Directory\DirectoryEstablishmentImportItem;
-use App\Domain\Model\AddressBook\AddressContactType;
-use App\Domain\Model\AddressBook\ContactDataSource;
-use App\Domain\Model\AddressBook\CustomerStatus;
-use App\Domain\Model\AddressBook\EmailContactType;
-use App\Domain\Model\AddressBook\OrganizationType;
-use App\Domain\Model\AddressBook\PhoneContactType;
-use App\Infrastructure\Doctrine\Entity\AddressContactEntity;
-use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
-use App\Infrastructure\Doctrine\Entity\DirectoryImportLinkEntity;
-use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
-use App\Infrastructure\Doctrine\Entity\EmailContactLinkEntity;
-use App\Infrastructure\Doctrine\Entity\MunicipalityEntity;
+use App\Application\Directory\DirectoryEstablishmentMatch;
+use App\Application\Directory\DirectoryEstablishmentMatcher;
+use App\Application\Directory\DirectoryEstablishmentUpserter;
+use App\Application\Directory\DirectoryImportFileException;
+use App\Application\Directory\DirectoryImportFileLoader;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
-use App\Infrastructure\Doctrine\Entity\PhoneContactEntity;
-use App\Infrastructure\Doctrine\Entity\PhoneContactLinkEntity;
 use Doctrine\ORM\EntityManagerInterface;
-use JsonException;
+use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Attribute\Option;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[AsCommand(
     name: 'app:directory:import-establishments',
-    description: 'Import establishments into the directory from a JSON export.',
+    description: 'Import establishments into the directory from a CAF JSON export.',
 )]
 final class ImportDirectoryEstablishmentsCommand extends Command
 {
     public function __construct(
+        private readonly DirectoryImportFileLoader $fileLoader,
+        private readonly DirectoryEstablishmentMatcher $matcher,
+        private readonly DirectoryEstablishmentUpserter $upserter,
         private readonly EntityManagerInterface $entityManager,
         private readonly ValidatorInterface $validator,
     ) {
         parent::__construct();
     }
 
-    protected function configure(): void
-    {
-        $this
-            ->addArgument('file', InputArgument::REQUIRED, 'Path to the JSON file to import.')
-            ->addOption('source', null, InputOption::VALUE_REQUIRED, 'Import source identifier.', 'directory')
-            ->addOption('apply', null, InputOption::VALUE_NONE, 'Persist changes instead of running a dry-run.')
-            ->addOption('interactive', null, InputOption::VALUE_NONE, 'Ask for confirmation when a match is ambiguous.')
-            ->addOption('limit', null, InputOption::VALUE_REQUIRED, 'Optional line limit for debugging.');
-    }
-
-    protected function execute(InputInterface $input, OutputInterface $output): int
-    {
+    public function __invoke(
+        InputInterface $input,
+        OutputInterface $output,
+        #[Argument(description: 'JSON file path. Accepts an absolute path, /data/... or a path relative to data/imports/.')]
+        string $file,
+        #[Option(description: 'Import source identifier.')]
+        string $source = 'caf',
+        #[Option(description: 'Persist changes instead of running a dry-run.')]
+        bool $apply = false,
+        #[Option(description: 'Optional line offset for debugging or batch processing.')]
+        int $offset = 0,
+        #[Option(description: 'Optional line limit for debugging.')]
+        ?int $limit = null,
+    ): int {
         $io = new SymfonyStyle($input, $output);
-        $filePath = (string) $input->getArgument('file');
-        $source = trim((string) $input->getOption('source'));
-        $apply = (bool) $input->getOption('apply');
-        $interactive = (bool) $input->getOption('interactive');
-        $limit = $input->getOption('limit');
-        $limit = is_numeric($limit) ? max(1, (int) $limit) : null;
-
-        if (!is_file($filePath) || !is_readable($filePath)) {
-            $io->error("JSON file not readable: {$filePath}");
-
-            return Command::FAILURE;
-        }
+        $fileArgument = trim($file);
+        $source = trim($source);
+        $interactive = $input->isInteractive();
+        $offset = max(0, $offset);
+        $limit = null !== $limit ? max(1, $limit) : null;
 
         try {
-            $payload = json_decode((string) file_get_contents($filePath), true, 512, JSON_THROW_ON_ERROR);
-        } catch (JsonException $jsonException) {
-            $io->error("Invalid JSON: {$jsonException->getMessage()}");
+            $items = $this->fileLoader->load($fileArgument, $offset, $limit);
+        } catch (DirectoryImportFileException $exception) {
+            $io->error($exception->getMessage());
 
             return Command::FAILURE;
-        }
-
-        if (!is_array($payload) || !is_array($payload['mainResults'] ?? null)) {
-            $io->error('The JSON must contain a mainResults array.');
-
-            return Command::FAILURE;
-        }
-
-        $items = array_map(
-            static fn (array $row): DirectoryEstablishmentImportItem => DirectoryEstablishmentImportItem::fromArray($row),
-            array_values(array_filter($payload['mainResults'], 'is_array')),
-        );
-
-        if (null !== $limit) {
-            $items = array_slice($items, 0, $limit);
         }
 
         $stats = [
@@ -103,89 +76,59 @@ final class ImportDirectoryEstablishmentsCommand extends Command
             'ignored' => 0,
             'validationErrors' => 0,
             'ambiguous' => 0,
+            'linkedByExternalId' => 0,
         ];
-
-        $organizationCandidates = $this->entityManager->getRepository(OrganizationEntity::class)->findAll();
 
         foreach ($items as $index => $item) {
             $violations = $this->validator->validate($item);
 
             if (0 < count($violations)) {
                 ++$stats['validationErrors'];
-                $io->warning(sprintf('Line %d ignored because validation failed: %s', $index + 1, (string) $violations));
+                $io->warning(sprintf('Line %d ignored because validation failed: %s', $index + 1 + $offset, (string) $violations));
 
                 continue;
             }
 
-            $importLink = $this->entityManager->getRepository(DirectoryImportLinkEntity::class)->findOneBy([
-                'source' => $source,
-                'externalId' => $item->externalId,
-            ]);
+            $importLink = $this->matcher->findImportLinkByExternalId($source, $item);
+            $organization = $this->matcher->findOrganizationLinkedByExternalIdentifiers($source, $item);
 
-            $organization = $importLink instanceof DirectoryImportLinkEntity ? $importLink->getDirectoryEntry() : null;
+            if ($organization instanceof OrganizationEntity) {
+                ++$stats['linkedByExternalId'];
+            }
 
             if (!$organization instanceof OrganizationEntity) {
-                $candidates = $this->findOrganizationCandidates($organizationCandidates, $item);
+                $organization = $this->resolveOrganization($io, $item, $interactive, $stats);
 
-                if ([] !== $candidates) {
-                    $topCandidate = $candidates[0];
-
-                    if (85 <= $topCandidate['score']) {
-                        $organization = $topCandidate['organization'];
-                    } elseif (55 <= $topCandidate['score']) {
-                        ++$stats['ambiguous'];
-
-                        if ($interactive) {
-                            $resolvedCandidate = $this->resolveInteractiveCandidate($io, $item, $candidates);
-
-                            if (false === $resolvedCandidate) {
-                                ++$stats['ignored'];
-
-                                continue;
-                            }
-
-                            $organization = $resolvedCandidate;
-                        } else {
-                            ++$stats['ignored'];
-                            $io->note(sprintf(
-                                'Ambiguous match ignored for "%s" (best candidate: %s, score: %d%%).',
-                                $item->name ?? $item->externalId,
-                                $topCandidate['organization']->getName(),
-                                $topCandidate['score'],
-                            ));
-
-                            continue;
-                        }
-                    }
+                if (false === $organization) {
+                    continue;
                 }
             }
 
             if (!$organization instanceof OrganizationEntity) {
                 $organization = new OrganizationEntity();
-                $organizationCandidates[] = $organization;
                 ++$stats['createdOrganizations'];
             } else {
                 ++$stats['updatedOrganizations'];
             }
 
-            $this->hydrateOrganization($organization, $item);
+            $this->upserter->hydrateOrganization($organization, $item);
 
             if ($apply) {
                 $this->entityManager->persist($organization);
             }
 
-            [$createdEmail, $reusedEmail] = $this->upsertEmailLink($organization->getContactDetails(), $item, $apply);
+            [$createdEmail, $reusedEmail] = $this->upserter->upsertEmailLink($organization->getContactDetails(), $item, $apply);
             $stats['createdEmails'] += (int) $createdEmail;
             $stats['reusedEmails'] += (int) $reusedEmail;
 
-            [$createdPhone, $reusedPhone] = $this->upsertPhoneLink($organization->getContactDetails(), $item, $apply);
+            [$createdPhone, $reusedPhone] = $this->upserter->upsertPhoneLink($organization->getContactDetails(), $item, $apply);
             $stats['createdPhones'] += (int) $createdPhone;
             $stats['reusedPhones'] += (int) $reusedPhone;
 
-            $this->upsertAddressContact($organization->getContactDetails(), $item);
+            $this->upserter->upsertAddressContact($organization->getContactDetails(), $item);
 
             if ($apply) {
-                $this->persistImportLink($organization, $importLink, $item, $source);
+                $this->upserter->persistImportLink($organization, $importLink, $item, $source);
                 $this->entityManager->flush();
             }
         }
@@ -195,6 +138,7 @@ final class ImportDirectoryEstablishmentsCommand extends Command
             [
                 ['Organizations created', (string) $stats['createdOrganizations']],
                 ['Organizations updated', (string) $stats['updatedOrganizations']],
+                ['Matched via external ids', (string) $stats['linkedByExternalId']],
                 ['Emails created', (string) $stats['createdEmails']],
                 ['Emails reused', (string) $stats['reusedEmails']],
                 ['Phones created', (string) $stats['createdPhones']],
@@ -215,87 +159,103 @@ final class ImportDirectoryEstablishmentsCommand extends Command
     }
 
     /**
-     * @param list<OrganizationEntity> $organizationCandidates
-     *
-     * @return list<array{organization: OrganizationEntity, score: int, email: string, commune: string}>
+     * @param array<string, int> $stats
      */
-    private function findOrganizationCandidates(array $organizationCandidates, DirectoryEstablishmentImportItem $item): array
-    {
-        $matches = [];
+    private function resolveOrganization(
+        SymfonyStyle $io,
+        DirectoryEstablishmentImportItem $item,
+        bool $interactive,
+        array &$stats,
+    ): false|OrganizationEntity|null {
+        $candidates = $this->matcher->findOrganizationCandidates($item);
 
-        foreach ($organizationCandidates as $organizationCandidate) {
-            $score = $this->computeCandidateScore($organizationCandidate, $item);
-
-            if (35 > $score) {
-                continue;
-            }
-
-            $matches[] = [
-                'organization' => $organizationCandidate,
-                'score' => $score,
-                'email' => $this->firstOrganizationEmail($organizationCandidate),
-                'commune' => $this->firstOrganizationCommune($organizationCandidate),
-            ];
+        if ([] === $candidates) {
+            return null;
         }
 
-        usort($matches, static fn (array $left, array $right): int => $right['score'] <=> $left['score']);
+        $topCandidate = $candidates[0];
 
-        return array_slice($matches, 0, 5);
-    }
-
-    private function computeCandidateScore(OrganizationEntity $organization, DirectoryEstablishmentImportItem $item): int
-    {
-        $score = 0;
-
-        $importEmail = $this->normalizeEmail($item->emailAddress);
-        $organizationEmail = $this->normalizeEmail($this->firstOrganizationEmail($organization));
-
-        if (null !== $importEmail && null !== $organizationEmail && $importEmail === $organizationEmail) {
-            $score += 55;
+        if ($topCandidate->score >= $this->matcher->getAutoMatchScoreThreshold()) {
+            return $topCandidate->organization;
         }
 
-        $nameSimilarity = $this->similarityPercentage($organization->getName(), $item->name);
-        $score += (int) round($nameSimilarity * 0.35);
+        ++$stats['ambiguous'];
 
-        $communeSimilarity = $this->similarityPercentage($this->firstOrganizationCommune($organization), $item->commune);
-        $score += (int) round($communeSimilarity * 0.1);
+        if (!$interactive) {
+            ++$stats['ignored'];
+            $io->note(sprintf(
+                'Ambiguous match ignored for "%s" (best candidate: %s, score: %d%%). Run interactively to resolve it.',
+                $item->name ?? $item->externalId,
+                $topCandidate->organization->getName(),
+                $topCandidate->score,
+            ));
 
-        $addressSimilarity = $this->similarityPercentage($this->firstOrganizationAddress($organization), $item->address);
-        $score += (int) round($addressSimilarity * 0.15);
+            return false;
+        }
 
-        return min(100, $score);
+        $resolvedCandidate = $this->resolveInteractiveCandidate($io, $item, $candidates);
+
+        if (false === $resolvedCandidate) {
+            ++$stats['ignored'];
+        }
+
+        return $resolvedCandidate;
     }
 
     /**
-     * @param list<array{organization: OrganizationEntity, score: int, email: string, commune: string}> $candidates
+     * @param list<DirectoryEstablishmentMatch> $candidates
      */
     private function resolveInteractiveCandidate(SymfonyStyle $io, DirectoryEstablishmentImportItem $item, array $candidates): false|OrganizationEntity|null
     {
         $rows = [];
         $choices = ['new' => 'Créer un nouvel établissement', 'skip' => 'Ignorer cette ligne'];
 
+        $io->definitionList(
+            ['Nom import' => $item->name ?? '—'],
+            ['Type import' => $item->type],
+            ['Email import' => $item->emailAddress ?? '—'],
+            ['Téléphone import' => $item->phoneNumber ?? '—'],
+            ['Commune import' => $item->commune ?? '—'],
+            ['Adresse import' => $item->address ?? '—'],
+            ['Site import' => $item->websiteUrl ?? '—'],
+        );
+
         foreach ($candidates as $candidate) {
-            $organization = $candidate['organization'];
+            $organization = $candidate->organization;
             $choiceKey = (string) $organization->getId();
             $choices[$choiceKey] = sprintf(
                 'Lier à #%d %s (%d%%)',
                 $organization->getId(),
                 $organization->getName(),
-                $candidate['score'],
+                $candidate->score,
             );
             $rows[] = [
                 $organization->getId(),
                 $organization->getName(),
-                $candidate['email'],
-                $candidate['commune'],
-                $candidate['score'] . '%',
+                $candidate->email,
+                $candidate->phone,
+                $candidate->commune,
+                $candidate->score . '%',
             ];
         }
 
-        $io->section(sprintf('Ambiguity for %s', $item->name ?? $item->externalId));
-        $io->table(['ID', 'Organization', 'Email', 'Commune', 'Score'], $rows);
+        $io->section(sprintf('Doute pour %s', $item->name ?? $item->externalId));
+        $io->table(['ID', 'Organisation', 'Email', 'Téléphone', 'Commune', 'Score'], $rows);
 
-        $selection = $io->choice('Choose how to resolve this row', array_values($choices));
+        foreach ($candidates as $candidate) {
+            $organization = $candidate->organization;
+
+            $io->definitionList(
+                [sprintf('Candidat #%d', $organization->getId()) => $organization->getName()],
+                ['Email base' => $candidate->email !== '' ? $candidate->email : '—'],
+                ['Téléphone base' => $candidate->phone !== '' ? $candidate->phone : '—'],
+                ['Commune base' => $candidate->commune !== '' ? $candidate->commune : '—'],
+                ['Adresse base' => $candidate->address !== '' ? $candidate->address : '—'],
+                ['Site base' => $candidate->website !== '' ? $candidate->website : '—'],
+            );
+        }
+
+        $selection = $io->choice('Choisir comment résoudre cette ligne', array_values($choices));
         $selectedKey = array_search($selection, $choices, true);
 
         if ('new' === $selectedKey || false === $selectedKey) {
@@ -307,265 +267,11 @@ final class ImportDirectoryEstablishmentsCommand extends Command
         }
 
         foreach ($candidates as $candidate) {
-            if ((string) $candidate['organization']->getId() === $selectedKey) {
-                return $candidate['organization'];
+            if ((string) $candidate->organization->getId() === $selectedKey) {
+                return $candidate->organization;
             }
         }
 
         return null;
-    }
-
-    private function hydrateOrganization(OrganizationEntity $organization, DirectoryEstablishmentImportItem $item): void
-    {
-        $organization->setName($item->name ?? $organization->getName());
-        $organization->setWebsiteUrl($item->websiteUrl ?? $organization->getWebsiteUrl());
-
-        if (null === $organization->getType() && 'EAJE' === strtoupper($item->type)) {
-            $organization->setType(OrganizationType::CRECHE);
-        }
-
-        if (null === $organization->getCustomerStatus()) {
-            $organization->setCustomerStatus(CustomerStatus::PROSPECT);
-        }
-    }
-
-    /**
-     * @return array{bool, bool}
-     */
-    private function upsertEmailLink(ContactDetailsEntity $contactDetails, DirectoryEstablishmentImportItem $item, bool $apply): array
-    {
-        $emailAddress = $this->normalizeEmail($item->emailAddress);
-
-        if (null === $emailAddress) {
-            return [false, false];
-        }
-
-        foreach ($contactDetails->getEmailContactLinks() as $existingLink) {
-            if ($emailAddress === $this->normalizeEmail($existingLink->getEmailAddress())) {
-                return [false, true];
-            }
-        }
-
-        $emailContact = $this->entityManager->getRepository(EmailContactEntity::class)->findOneBy(['emailAddress' => $emailAddress]);
-        $created = false;
-
-        if (!$emailContact instanceof EmailContactEntity) {
-            $emailContact = (new EmailContactEntity())
-                ->setEmailAddress($emailAddress)
-                ->setSource(ContactDataSource::DIRECTORY_IMPORT)
-                ->setOptInNewsletter(true);
-            $created = true;
-        }
-
-        $emailContactLink = (new EmailContactLinkEntity())
-            ->setEmailContact($emailContact)
-            ->setType(EmailContactType::MAIN)
-            ->setActive(true);
-
-        $contactDetails->addEmailContactLink($emailContactLink);
-
-        if ($apply) {
-            $this->entityManager->persist($contactDetails);
-        }
-
-        return [$created, !$created];
-    }
-
-    /**
-     * @return array{bool, bool}
-     */
-    private function upsertPhoneLink(ContactDetailsEntity $contactDetails, DirectoryEstablishmentImportItem $item, bool $apply): array
-    {
-        $phoneNumber = $this->normalizePhone($item->phoneNumber);
-
-        if (null === $phoneNumber) {
-            return [false, false];
-        }
-
-        foreach ($contactDetails->getPhoneContactLinks() as $existingLink) {
-            if ($phoneNumber === $this->normalizePhone($existingLink->getPhoneNumber())) {
-                return [false, true];
-            }
-        }
-
-        $phoneContact = $this->entityManager->getRepository(PhoneContactEntity::class)->findOneBy(['phoneNumber' => $phoneNumber]);
-        $created = false;
-
-        if (!$phoneContact instanceof PhoneContactEntity) {
-            $phoneContact = (new PhoneContactEntity())->setPhoneNumber($phoneNumber);
-            $created = true;
-        }
-
-        $phoneContactLink = (new PhoneContactLinkEntity())
-            ->setPhoneContact($phoneContact)
-            ->setType(PhoneContactType::MAIN)
-            ->setActive(true);
-
-        $contactDetails->addPhoneContactLink($phoneContactLink);
-
-        if ($apply) {
-            $this->entityManager->persist($contactDetails);
-        }
-
-        return [$created, !$created];
-    }
-
-    private function upsertAddressContact(ContactDetailsEntity $contactDetails, DirectoryEstablishmentImportItem $item): void
-    {
-        if (null === $item->address && null === $item->commune) {
-            return;
-        }
-
-        $addressContact = $contactDetails->getAddressContacts()->first();
-
-        if (!$addressContact instanceof AddressContactEntity) {
-            $addressContact = (new AddressContactEntity())
-                ->setType(AddressContactType::MAIN)
-                ->setActive(true);
-            $contactDetails->addAddressContact($addressContact);
-        }
-
-        $addressContact
-            ->setAddress($item->address ?? $addressContact->getAddress())
-            ->setCity($item->commune ?? $addressContact->getCity())
-            ->setPostalCode($this->extractPostalCode($item->address) ?? $addressContact->getPostalCode())
-            ->setMunicipality($this->findMunicipality($item));
-    }
-
-    private function persistImportLink(
-        OrganizationEntity $organization,
-        ?DirectoryImportLinkEntity $existingImportLink,
-        DirectoryEstablishmentImportItem $item,
-        string $source,
-    ): void {
-        $importLink = $existingImportLink ?? new DirectoryImportLinkEntity();
-        $importLink
-            ->setDirectoryEntry($organization)
-            ->setSource($source)
-            ->setExternalId($item->externalId)
-            ->setExternalOrganizationId($item->externalOrganizationId)
-            ->setPayloadHash(hash('sha256', json_encode($item->rawPayload, JSON_THROW_ON_ERROR)));
-
-        $this->entityManager->persist($importLink);
-    }
-
-    private function findMunicipality(DirectoryEstablishmentImportItem $item): ?MunicipalityEntity
-    {
-        $postalCode = $this->extractPostalCode($item->address);
-        $commune = $item->commune;
-
-        if (null === $commune) {
-            return null;
-        }
-
-        $criteria = ['name' => $commune];
-
-        if (null !== $postalCode) {
-            $criteria['postalCode'] = $postalCode;
-        }
-
-        $municipality = $this->entityManager->getRepository(MunicipalityEntity::class)->findOneBy($criteria);
-
-        return $municipality instanceof MunicipalityEntity ? $municipality : null;
-    }
-
-    private function firstOrganizationEmail(OrganizationEntity $organization): string
-    {
-        foreach ($organization->getContactDetails()?->getEmailContactLinks() ?? [] as $emailContactLink) {
-            $emailAddress = $emailContactLink->getEmailAddress();
-
-            if (null !== $emailAddress && '' !== trim($emailAddress)) {
-                return $emailAddress;
-            }
-        }
-
-        return '';
-    }
-
-    private function firstOrganizationCommune(OrganizationEntity $organization): string
-    {
-        foreach ($organization->getContactDetails()?->getAddressContacts() ?? [] as $addressContact) {
-            if (null !== $addressContact->getCity() && '' !== trim($addressContact->getCity())) {
-                return $addressContact->getCity();
-            }
-        }
-
-        return '';
-    }
-
-    private function firstOrganizationAddress(OrganizationEntity $organization): string
-    {
-        foreach ($organization->getContactDetails()?->getAddressContacts() ?? [] as $addressContact) {
-            if (null !== $addressContact->getAddress() && '' !== trim($addressContact->getAddress())) {
-                return $addressContact->getAddress();
-            }
-        }
-
-        return '';
-    }
-
-    private function normalizeEmail(?string $emailAddress): ?string
-    {
-        if (null === $emailAddress) {
-            return null;
-        }
-
-        $emailAddress = mb_strtolower(trim($emailAddress));
-
-        return '' === $emailAddress ? null : $emailAddress;
-    }
-
-    private function normalizePhone(?string $phoneNumber): ?string
-    {
-        if (null === $phoneNumber) {
-            return null;
-        }
-
-        $phoneNumber = preg_replace('/[^\d+]/', '', $phoneNumber) ?? '';
-
-        return '' === $phoneNumber ? null : $phoneNumber;
-    }
-
-    private function normalizeText(?string $value): string
-    {
-        $value = null === $value ? '' : trim($value);
-
-        if ('' === $value) {
-            return '';
-        }
-
-        $asciiValue = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $value);
-        $asciiValue = false === $asciiValue ? $value : $asciiValue;
-        $asciiValue = mb_strtolower($asciiValue);
-        $asciiValue = preg_replace('/[^a-z0-9]+/', ' ', $asciiValue) ?? $asciiValue;
-
-        return trim(preg_replace('/\s+/', ' ', $asciiValue) ?? $asciiValue);
-    }
-
-    private function similarityPercentage(?string $left, ?string $right): int
-    {
-        $left = $this->normalizeText($left);
-        $right = $this->normalizeText($right);
-
-        if ('' === $left || '' === $right) {
-            return 0;
-        }
-
-        similar_text($left, $right, $percentage);
-
-        return (int) round($percentage);
-    }
-
-    private function extractPostalCode(?string $address): ?string
-    {
-        if (null === $address) {
-            return null;
-        }
-
-        if (1 !== preg_match('/\b(\d{5})\b/', $address, $matches)) {
-            return null;
-        }
-
-        return $matches[1];
     }
 }

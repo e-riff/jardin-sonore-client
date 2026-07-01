@@ -49,6 +49,7 @@ next-env.d.ts
 # logs
 logs/
 *.log
+jardin-sonore-backend/data/*.json
 
 # ide
 .idea/

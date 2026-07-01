@@ -12,6 +12,7 @@ final readonly class DirectoryEstablishmentImportItem
         #[Assert\NotBlank]
         public string $externalId,
         public ?string $externalOrganizationId,
+        public ?string $externalDetailsUuid,
         #[Assert\NotBlank]
         public string $type,
         public ?string $name,
@@ -37,6 +38,7 @@ final readonly class DirectoryEstablishmentImportItem
         return new self(
             externalId: trim((string) ($payload['id'] ?? '')),
             externalOrganizationId: self::nullableString($payload['organizationId'] ?? null),
+            externalDetailsUuid: self::nullableString($payload['detailsUuid'] ?? null),
             type: trim((string) ($payload['type'] ?? '')),
             name: self::nullableString($payload['name'] ?? null),
             websiteUrl: self::nullableString($payload['siteWeb'] ?? null),
