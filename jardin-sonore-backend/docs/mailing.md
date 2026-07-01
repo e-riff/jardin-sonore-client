@@ -4,22 +4,19 @@
 
 Le module de mailing permet de preparer une newsletter dans le backoffice, de definir son audience a partir de l'annuaire, d'envoyer un test, puis de lancer un envoi reel cadence dans le temps.
 
-L'idee generale est volontairement decouplee :
+L'architecture se decoupe en trois couches fonctionnelles :
 
 1. la campagne stocke le contenu, les recommandations et les regles de ciblage ;
-2. le calcul d'audience determine quels contacts sont eligibles ;
-3. l'envoi reel ne part pas immediatement : il peuple d'abord une file interne ;
-4. un cron cadence l'ouverture des vagues d'envoi ;
-5. Messenger envoie ensuite les e-mails un par un ;
-6. chaque recipient garde son propre statut et son historique d'erreur.
+2. la resolution d'audience determine quels contacts sont eligibles ;
+3. la livraison met en file, cadence et trace chaque envoi recipient par recipient.
 
-Cette architecture permet :
+Cette separation permet :
 
-- de preparer une campagne sans l'envoyer ;
-- de mesurer l'audience avant envoi ;
-- de throttler finement les vagues ;
-- de reprendre un envoi apres une interruption ;
-- d'isoler les erreurs recipient par recipient.
+- de preparer une campagne sans envoyer immediatement ;
+- de mesurer et verifier l'audience avant lancement ;
+- de throttler les envois sur une fenetre glissante ;
+- de reprendre un envoi sans recalculer toute la campagne ;
+- d'isoler les erreurs par destinataire.
 
 ## Parcours fonctionnel
 
@@ -45,7 +42,7 @@ Le contenu comprend notamment :
 - CTA ;
 - recommandations associees.
 
-La previsualisation HTML et texte s'appuie ensuite sur ce contenu.
+Le rendu HTML et texte s'appuie directement sur ce contenu.
 
 ### 3. Configuration de l'audience
 
@@ -62,7 +59,7 @@ L'audience peut combiner :
 
 Le point d'origine du rayon peut etre :
 
-- le point favori de Jardin Sonore ;
+- le point maison configure par environnement ;
 - une commune de depart ;
 - un point personnalise.
 
@@ -86,15 +83,19 @@ Quand l'utilisateur confirme l'envoi reel :
 2. la liste des recipients est figee dans `mailing_delivery_recipient` ;
 3. chaque ligne est initialement en `pending`.
 
-Cette etape est importante : la campagne part ensuite sur cet instantane, pas sur un recalcul a chaque e-mail.
+La campagne part ensuite sur cet instantane, pas sur un recalcul a chaque e-mail.
 
 ### 6. Dispatch par vagues
 
-Un cron lance periodiquement la commande de dispatch.
+Un cron lance periodiquement la commande de dispatch :
+
+```bash
+php bin/console app:mailing:dispatch-pending-campaigns
+```
 
 La commande :
 
-1. verifie la capacite disponible dans la fenetre glissante ;
+1. mesure la capacite disponible dans la fenetre glissante ;
 2. reclame un lot limite de recipients `pending` ;
 3. les passe en `processing` ;
 4. publie un message Messenger par recipient.
@@ -147,16 +148,15 @@ Certaines combinaisons de filtres geographiques sont refusees, par exemple :
 
 - rayon actif sans point d'origine exploitable ;
 - commune de depart sans code INSEE ;
-- point personnalise sans latitude/longitude.
+- point personnalise sans latitude/longitude ;
+- point maison non configure dans l'environnement.
 
-Le backoffice essaye de remonter ces erreurs de maniere fonctionnelle, mais une mauvaise configuration d'infrastructure peut aussi provoquer une erreur plus basse si les prerequis ne sont pas respectes.
+## Vue technique
 
-## Architecture PHP
-
-## Controleurs et ecrans
+### Points d'entree code
 
 - `src/Application/Controller/MailingController.php`
-  Porte la creation, l'edition contenu, l'ecran audience, la previsualisation, l'envoi test et l'envoi reel.
+  Porte la creation, l'edition du contenu, l'audience, la preview, l'envoi test et l'envoi reel.
 - `src/Application/Controller/NewsletterController.php`
   Porte la route publique de desinscription.
 - `templates/mailing/*.html.twig`
@@ -165,7 +165,7 @@ Le backoffice essaye de remonter ces erreurs de maniere fonctionnelle, mais une 
 - `templates/mailing/email/default.txt.twig`
   Templates d'e-mail.
 
-## Composants et formulaires
+### Composants et formulaires
 
 - `src/Application/Twig/Component/MailingAudience.php`
   Live component de configuration de l'audience.
@@ -176,7 +176,7 @@ Le backoffice essaye de remonter ces erreurs de maniere fonctionnelle, mais une 
 - `src/Application/Form/*Mailing*.php`
   Autres formulaires du module.
 
-## Domaine et application
+### Domaine et cas d'usage
 
 - `src/Domain/Model/Mailing/MailingCampaign.php`
   Aggregate principal de campagne.
@@ -185,24 +185,24 @@ Le backoffice essaye de remonter ces erreurs de maniere fonctionnelle, mais une 
 - `src/Application/Mailing/SendMailingCampaign.php`
   Fige l'audience et cree la queue d'envoi reel.
 - `src/Application/Mailing/SendMailingCampaignTest.php`
-  Prepare l'envoi test.
+  Enfile l'envoi test via Messenger.
 - `src/Application/Mailing/UpdateMailingCampaignAudience.php`
   Met a jour les regles de ciblage.
 
-## Infrastructure
+### Infrastructure
 
 - `src/Infrastructure/Mailing/DoctrineNewsletterAudienceResolver.php`
-  Traduit `NewsletterAudienceFilter` en requetes SQL Doctrine DBAL.
+  Traduit `NewsletterAudienceFilter` en requetes SQL Doctrine DBAL et dedoublonne les destinataires par adresse.
 - `src/Infrastructure/Mailing/DoctrineNewsletterAudienceOptionsProvider.php`
   Fournit les choix de formulaire pour tags, regions, departements et communes.
 - `src/Infrastructure/Mailing/TwigNewsletterRenderer.php`
-  Construit les versions HTML et texte.
+  Construit les versions HTML et texte et injecte le placeholder de desinscription.
 - `src/Infrastructure/Mailing/MailingDeliveryRecipientStore.php`
   Gere la queue d'envoi et les transitions de statuts.
 - `src/Infrastructure/Mailer/SymfonyNewsletterMailSender.php`
   Envoi effectif via Symfony Mailer.
 
-## Messenger
+### Messenger et livraison
 
 - `src/Application/Mailing/MessageHandler/SendMailingCampaignRecipientMessageHandler.php`
   Envoi reel recipient par recipient.
@@ -211,9 +211,17 @@ Le backoffice essaye de remonter ces erreurs de maniere fonctionnelle, mais une 
 - `src/Application/Command/DispatchPendingMailingCampaignsCommand.php`
   Ouvre les vagues d'envoi selon la capacite disponible.
 
-## Tables et donnees
+Variables de cadence importantes :
 
-### `mailing_campaign`
+- `MAILING_WINDOW_LIMIT`
+- `MAILING_WINDOW_MINUTES`
+- `MAILING_DISPATCH_BATCH_SIZE`
+- `MAILING_HOME_LATITUDE`
+- `MAILING_HOME_LONGITUDE`
+
+### Tables et donnees
+
+#### `mailing_campaign`
 
 Contient notamment :
 
@@ -221,11 +229,11 @@ Contient notamment :
 - le statut global ;
 - `audience_filter`, stocke sous forme de structure serialisee Doctrine.
 
-### `mailing_recommendation`
+#### `mailing_recommendation`
 
 Porte les recommandations integrees a la newsletter.
 
-### `mailing_delivery_recipient`
+#### `mailing_delivery_recipient`
 
 File d'attente technique de l'envoi reel.
 
@@ -247,7 +255,7 @@ Cette table est la source de verite pour suivre l'execution d'une campagne reell
 
 ### Statut de campagne
 
-Le module manipule un statut global de campagne, notamment pour verrouiller certaines actions une fois l'envoi engage.
+Le module manipule un statut global de campagne pour verrouiller les actions incompatibles avec un envoi deja engage.
 
 ### Statut de recipient
 
@@ -258,6 +266,22 @@ Les statuts principaux de `mailing_delivery_recipient` sont :
 - `sent` ;
 - `failed` ;
 - `cancelled`.
+
+## Commandes et verifications utiles
+
+Exemples :
+
+```bash
+php bin/console app:mailing:dispatch-pending-campaigns
+php bin/console messenger:consume async
+```
+
+Avant un changement de flux mailing :
+
+- verifier le rendu des templates Twig ;
+- verifier l'audience resolue sur une campagne de test ;
+- verifier le cycle test -> queue -> dispatch -> envoi unitaire ;
+- verifier la route publique de desinscription.
 
 Lecture pratique :
 

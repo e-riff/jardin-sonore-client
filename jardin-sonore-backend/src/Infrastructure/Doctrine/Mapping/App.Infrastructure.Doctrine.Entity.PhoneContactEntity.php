@@ -15,6 +15,7 @@ return static function (ClassMetadata $metadata): void {
         ],
         'uniqueConstraints' => [
             'uniq_phone_contact_uuid' => ['columns' => ['uuid']],
+            'uniq_phone_contact_phone_number' => ['columns' => ['phone_number']],
         ],
     ]);
 

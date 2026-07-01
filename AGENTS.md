@@ -41,6 +41,7 @@
 ## PHP et Symfony
 
 - Toujours ajouter `declare(strict_types=1);` dans les nouveaux fichiers PHP, sauf fichier de configuration ou convention projet contraire.
+- Toujours typer explicitement les constantes quand la version PHP du projet le permet.
 - Importer les classes natives PHP avec `use` pour eviter les references pleinement qualifiees comme `\DateTimeImmutable`, `\Throwable` ou `\BackedEnum`.
 - Ne pas importer les fonctions natives PHP avec `use function`, sauf convention contraire deja presente dans le projet.
 - Preferer l'interpolation de variables dans les chaines quand elle reste lisible, par exemple `"Bonjour {$name}"`, plutot que la concatenation.

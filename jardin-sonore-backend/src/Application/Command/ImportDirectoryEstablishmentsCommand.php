@@ -179,7 +179,7 @@ final class ImportDirectoryEstablishmentsCommand extends Command
 
         $topCandidate = $candidates[0];
 
-        if ($topCandidate->score >= $this->matcher->getAutoMatchScoreThreshold()) {
+        if ($topCandidate->score > $this->matcher->getAutoMatchScoreThreshold()) {
             return $topCandidate->organization;
         }
 
