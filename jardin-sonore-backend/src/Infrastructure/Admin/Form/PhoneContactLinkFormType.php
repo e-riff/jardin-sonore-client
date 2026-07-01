@@ -40,7 +40,7 @@ final class PhoneContactLinkFormType extends AbstractType
                 'choice_translation_domain' => 'backoffice',
             ])
             ->add('active', CheckboxType::class, [
-                'label' => 'admin.field.active',
+                'label' => 'admin.field.link_active',
                 'required' => false,
             ]);
     }

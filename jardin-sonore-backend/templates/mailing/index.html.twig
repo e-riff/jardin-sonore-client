@@ -97,6 +97,13 @@
                                                 {{ 'mailing.index.stop'|trans({}, 'mailing') }}
                                             </button>
                                         </form>
+                                    {% elseif campaign.canBeDeleted %}
+                                        <form method="post" action="{{ path('mailing_delete', { uuid: campaign.uuid }) }}">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('mailing_delete_' ~ campaign.uuid) }}">
+                                            <button class="internal-button internal-button--danger internal-button--compact" type="submit">
+                                                {{ 'mailing.index.delete'|trans({}, 'mailing') }}
+                                            </button>
+                                        </form>
                                     {% endif %}
                                 </div>
                             </td>

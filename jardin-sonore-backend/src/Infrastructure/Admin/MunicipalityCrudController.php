@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace App\Infrastructure\Admin;
 
 use App\Infrastructure\Admin\Formatter\ContactDisplayFormatter;
+use App\Infrastructure\Doctrine\Entity\DepartmentEntity;
 use App\Infrastructure\Doctrine\Entity\MunicipalityEntity;
+use App\Infrastructure\Doctrine\Entity\RegionEntity;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
@@ -16,6 +19,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\NumberField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TelephoneField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
 
 /**
  * @extends AbstractCrudController<MunicipalityEntity>
@@ -36,7 +40,15 @@ final class MunicipalityCrudController extends AbstractCrudController
             ->setPageTitle(Crud::PAGE_NEW, 'admin.municipality.page.new')
             ->setPageTitle(Crud::PAGE_EDIT, 'admin.municipality.page.edit')
             ->setPageTitle(Crud::PAGE_DETAIL, 'admin.municipality.page.detail')
+            ->setSearchFields(['name', 'postalCode', 'inseeCode'])
             ->showEntityActionsInlined();
+    }
+
+    public function configureFilters(Filters $filters): Filters
+    {
+        return $filters
+            ->add(EntityFilter::new('department', 'admin.field.department')->setFormTypeOption('value_type_options.class', DepartmentEntity::class)->autocomplete())
+            ->add(EntityFilter::new('department.region', 'admin.field.region')->setFormTypeOption('value_type_options.class', RegionEntity::class)->autocomplete());
     }
 
     public function configureFields(string $pageName): iterable

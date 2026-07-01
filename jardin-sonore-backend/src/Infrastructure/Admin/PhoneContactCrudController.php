@@ -69,6 +69,6 @@ final class PhoneContactCrudController extends AbstractCrudController
             ->formatValue(static fn (mixed $value): string => ContactDisplayFormatter::textSummary($value))
             ->renderAsHtml()
             ->hideOnForm();
-        yield BooleanField::new('active', 'admin.field.active');
+        yield BooleanField::new('active', 'admin.field.shared_active');
     }
 }

@@ -218,4 +218,11 @@ final readonly class MailingDeliveryRecipientStore
 
         return $counts;
     }
+
+    public function deleteCampaignRecipients(string $campaignUuid): void
+    {
+        $this->connection->delete('mailing_delivery_recipient', [
+            'campaign_uuid' => $campaignUuid,
+        ]);
+    }
 }

@@ -86,7 +86,7 @@ final class PhoneContactLinkCrudController extends AbstractCrudController
         yield ChoiceField::new('type', 'admin.field.type')
             ->setChoices($this->typeChoices())
             ->formatValue(fn (mixed $value): string => $this->translateEnumValue('address_book.phone_contact_type', $value));
-        yield BooleanField::new('active', 'admin.field.active');
+        yield BooleanField::new('active', 'admin.field.link_active');
     }
 
     public function createEntity(string $entityFqcn): object

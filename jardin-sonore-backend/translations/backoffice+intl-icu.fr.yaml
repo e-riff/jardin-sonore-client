@@ -3,6 +3,7 @@ admin:
     title: "Jardin Sonore"
   menu:
     dashboard: "Tableau de bord"
+    internal_dashboard: "Gestion interne"
     address_book: "Annuaire"
     organizations: "Organisations"
     people: "Personnes"
@@ -52,6 +53,8 @@ admin:
     unsubscribed_at: "Désinscrit le"
     unsubscribe_token: "Token de désinscription"
     active: "Actif"
+    shared_active: "Actif global"
+    link_active: "Actif pour cet établissement"
     region: "Région"
     department: "Département"
     insee_code: "Code INSEE"

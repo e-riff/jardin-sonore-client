@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Admin;
 
-use App\Domain\Model\AddressBook\ContactDataSource;
 use App\Domain\Model\AddressBook\EmailContactType;
 use App\Infrastructure\Admin\Formatter\ContactDisplayFormatter;
 use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
@@ -19,12 +18,10 @@ use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\BooleanFilter;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -66,7 +63,7 @@ final class EmailContactLinkCrudController extends AbstractCrudController
     {
         return $filters
             ->add(EntityFilter::new('contactDetails', 'admin.field.contact_details')->autocomplete())
-            ->add(ChoiceFilter::new('type', 'admin.field.type')->setChoices($this->typeChoices())->setFormTypeOption('value_type_options.translation_domain', 'backoffice'))
+            ->add(\EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter::new('type', 'admin.field.type')->setChoices($this->typeChoices())->setFormTypeOption('value_type_options.translation_domain', 'backoffice'))
             ->add(BooleanFilter::new('active', 'admin.field.active'));
     }
 
@@ -86,15 +83,7 @@ final class EmailContactLinkCrudController extends AbstractCrudController
         yield ChoiceField::new('type', 'admin.field.type')
             ->setChoices($this->typeChoices())
             ->formatValue(fn (mixed $value): string => $this->translateEnumValue('address_book.email_contact_type', $value));
-        yield ChoiceField::new('source', 'admin.field.source')
-            ->setChoices($this->sourceChoices())
-            ->formatValue(fn (mixed $value): string => $this->translateEnumValue('address_book.contact_source', $value))
-            ->setFormTypeOption('required', false)
-            ->setFormTypeOption('placeholder', '');
-        yield BooleanField::new('optInNewsletter', 'admin.field.opt_in_newsletter');
-        yield DateTimeField::new('unsubscribedAt', 'admin.field.unsubscribed_at')->hideOnForm();
-        yield TextField::new('unsubscribeToken', 'admin.field.unsubscribe_token')->onlyOnDetail();
-        yield BooleanField::new('active', 'admin.field.active');
+        yield BooleanField::new('active', 'admin.field.link_active');
     }
 
     public function createEntity(string $entityFqcn): object
@@ -142,19 +131,6 @@ final class EmailContactLinkCrudController extends AbstractCrudController
         }
 
         parent::updateEntity($entityManager, $entityInstance);
-    }
-
-    /**
-     * @return array<string, ContactDataSource>
-     */
-    private function sourceChoices(): array
-    {
-        return [
-            'address_book.contact_source.manual' => ContactDataSource::MANUAL,
-            'address_book.contact_source.google_sheets' => ContactDataSource::GOOGLE_SHEETS,
-            'address_book.contact_source.legacy_import' => ContactDataSource::LEGACY_IMPORT,
-            'address_book.contact_source.directory_import' => ContactDataSource::DIRECTORY_IMPORT,
-        ];
     }
 
     /**

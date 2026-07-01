@@ -239,6 +239,14 @@ final class MailingCampaign implements UuidIdentifiableInterface
         ], true);
     }
 
+    public function canBeDeleted(): bool
+    {
+        return !in_array($this->status, [
+            MailingCampaignStatus::DELIVERY_QUEUED,
+            MailingCampaignStatus::DELIVERY_SENDING,
+        ], true);
+    }
+
     private function assertContentIsValid(
         string $internalTitle,
         string $emailSubject,

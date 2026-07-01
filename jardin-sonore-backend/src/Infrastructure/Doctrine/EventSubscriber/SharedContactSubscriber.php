@@ -69,11 +69,6 @@ final class SharedContactSubscriber implements EventSubscriber
             return;
         }
 
-        if (null === $existingEmailContact->getSource() && null !== $emailContact->getSource()) {
-            $existingEmailContact->setSource($emailContact->getSource());
-            $unitOfWork->recomputeSingleEntityChangeSet($entityManager->getClassMetadata(EmailContactEntity::class), $existingEmailContact);
-        }
-
         $entityManager->detach($emailContact);
         $emailContactLink->setEmailContact($existingEmailContact);
         $unitOfWork->recomputeSingleEntityChangeSet($entityManager->getClassMetadata(EmailContactLinkEntity::class), $emailContactLink);
