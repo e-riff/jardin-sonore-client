@@ -1451,6 +1451,14 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         },
  *     }>,
  * }
+ * @psalm-type WebProfilerConfig = array{
+ *     toolbar?: bool|array{ // Profiler toolbar configuration
+ *         enabled?: bool|Param, // Default: false
+ *         ajax_replace?: bool|Param, // Replace toolbar on AJAX requests // Default: false
+ *     },
+ *     intercept_redirects?: bool|Param, // Default: false
+ *     excluded_ajax_paths?: scalar|Param|null, // Default: "^/((index|app(_[\\w]+)?)\\.php/)?_wdt"
+ * }
  * @psalm-type MakerConfig = array{
  *     root_namespace?: scalar|Param|null, // Default: "App"
  *     generate_final_classes?: bool|Param, // Default: true
@@ -1492,6 +1500,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     twig_component?: TwigComponentConfig,
  *     security?: SecurityConfig,
  *     monolog?: MonologConfig,
+ *     web_profiler?: WebProfilerConfig,
  *     stimulus?: StimulusConfig,
  *     live_component?: LiveComponentConfig,
  *     turbo?: TurboConfig,
@@ -1508,6 +1517,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         twig_component?: TwigComponentConfig,
  *         security?: SecurityConfig,
  *         monolog?: MonologConfig,
+ *         web_profiler?: WebProfilerConfig,
  *         maker?: MakerConfig,
  *         stimulus?: StimulusConfig,
  *         live_component?: LiveComponentConfig,
@@ -1526,6 +1536,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         twig_component?: TwigComponentConfig,
  *         security?: SecurityConfig,
  *         monolog?: MonologConfig,
+ *         web_profiler?: WebProfilerConfig,
  *         stimulus?: StimulusConfig,
  *         live_component?: LiveComponentConfig,
  *         turbo?: TurboConfig,

@@ -17,5 +17,13 @@ return static function (ContainerConfigurator $containerConfigurator): void {
         ];
     }
 
+    if ('dev' === $containerConfigurator->env()) {
+        $frameworkConfig['profiler'] = [
+            'collect' => true,
+            'only_exceptions' => false,
+            'only_main_requests' => false,
+        ];
+    }
+
     $containerConfigurator->extension('framework', $frameworkConfig);
 };

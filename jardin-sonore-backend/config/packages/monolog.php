@@ -71,9 +71,8 @@ return static function (ContainerConfigurator $containerConfigurator): void {
             ],
             'nested' => [
                 'type' => 'stream',
-                'path' => 'php://stderr',
-                'level' => 'debug',
-                'formatter' => 'monolog.formatter.json',
+                'path' => '%kernel.logs_dir%/%kernel.environment%.log',
+                'level' => 'info',
             ],
             'console' => [
                 'type' => 'console',
@@ -83,8 +82,8 @@ return static function (ContainerConfigurator $containerConfigurator): void {
             'deprecation' => [
                 'type' => 'stream',
                 'channels' => ['deprecation'],
-                'path' => 'php://stderr',
-                'formatter' => 'monolog.formatter.json',
+                'path' => '%kernel.logs_dir%/%kernel.environment%.deprecations.log',
+                'level' => 'notice',
             ],
             'mailing_delivery' => [
                 'type' => 'rotating_file',
