@@ -10,32 +10,41 @@ use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class DirectoryEstablishmentMatcher
 {
-    private const AUTO_MATCH_SCORE_THRESHOLD = 90;
-    private const CANDIDATE_SCORE_THRESHOLD = 50;
-    private const COMMUNE_COMPATIBILITY_THRESHOLD = 92.0;
-    private const EMAIL_EXACT_SCORE = 45;
-    private const PHONE_EXACT_SCORE = 25;
-    private const WEBSITE_EXACT_SCORE = 15;
-    private const BUSINESS_NAME_EXACT_SCORE = 20;
-    private const STREET_ADDRESS_EXACT_SCORE = 20;
-    private const PHONE_STREET_ADDRESS_STRONG_COMBO_SCORE = 25;
-    private const BUSINESS_NAME_STREET_ADDRESS_EXACT_COMBO_SCORE = 25;
-    private const STRONG_ADDRESS_NAME_COMBO_SCORE = 25;
-    private const ADDRESS_NAME_COMBO_SCORE = 15;
-    private const NAME_CLOSE_ADDRESS_FAR_PENALTY = 20;
-    private const NAME_SIMILARITY_WEIGHT = 0.2;
-    private const BUSINESS_NAME_SIMILARITY_WEIGHT = 0.35;
-    private const COMMUNE_SIMILARITY_WEIGHT = 0.1;
-    private const ADDRESS_SIMILARITY_WEIGHT = 0.35;
-    private const STREET_ADDRESS_SIMILARITY_WEIGHT = 0.25;
-    private const STRONG_ADDRESS_THRESHOLD = 85;
-    private const STRONG_STREET_ADDRESS_THRESHOLD = 90;
-    private const ADDRESS_THRESHOLD = 70;
-    private const STREET_ADDRESS_THRESHOLD = 75;
-    private const FAR_ADDRESS_THRESHOLD = 35;
-    private const FAR_STREET_ADDRESS_THRESHOLD = 40;
-    private const STRONG_NAME_THRESHOLD = 60;
-    private const VERY_STRONG_NAME_THRESHOLD = 70;
+    private const array MATCH_SCORE_THRESHOLDS = [
+        'auto_match' => 90,
+        'candidate' => 70,
+        'interactive_confirmation' => 80,
+    ];
+    private const float COMMUNE_COMPATIBILITY_THRESHOLD = 92.0;
+    private const array SCORE_BONUSES = [
+        'email_exact' => 45,
+        'phone_exact' => 25,
+        'website_exact' => 15,
+        'business_name_exact' => 20,
+        'street_address_exact' => 20,
+        'phone_street_address_strong_combo' => 25,
+        'business_name_street_address_exact_combo' => 25,
+        'strong_address_name_combo' => 25,
+        'address_name_combo' => 15,
+        'name_close_address_far_penalty' => 20,
+    ];
+    private const array SIMILARITY_WEIGHTS = [
+        'name' => 0.2,
+        'business_name' => 0.35,
+        'commune' => 0.1,
+        'address' => 0.35,
+        'street_address' => 0.25,
+    ];
+    private const array SIMILARITY_THRESHOLDS = [
+        'strong_address' => 85,
+        'strong_street_address' => 90,
+        'address' => 70,
+        'street_address' => 75,
+        'far_address' => 35,
+        'far_street_address' => 40,
+        'strong_name' => 60,
+        'very_strong_name' => 70,
+    ];
     private const CANDIDATE_QUERY_LIMIT = 200;
 
     /**
@@ -73,7 +82,12 @@ final readonly class DirectoryEstablishmentMatcher
 
     public function getAutoMatchScoreThreshold(): int
     {
-        return self::AUTO_MATCH_SCORE_THRESHOLD;
+        return self::MATCH_SCORE_THRESHOLDS['auto_match'];
+    }
+
+    public function getInteractiveConfirmationScoreThreshold(): int
+    {
+        return self::MATCH_SCORE_THRESHOLDS['interactive_confirmation'];
     }
 
     public function findImportLinkByExternalId(string $source, DirectoryEstablishmentImportItem $item): ?DirectoryImportLinkEntity
@@ -124,7 +138,7 @@ final readonly class DirectoryEstablishmentMatcher
         foreach ($this->findRawOrganizationCandidates($item) as $rawCandidate) {
             $score = $this->computeCandidateScore($rawCandidate, $item);
 
-            if ($score < self::CANDIDATE_SCORE_THRESHOLD) {
+            if ($score < self::MATCH_SCORE_THRESHOLDS['candidate']) {
                 continue;
             }
 
@@ -160,50 +174,50 @@ final readonly class DirectoryEstablishmentMatcher
         $importEmail = $this->normalizeEmail($item->emailAddress);
         $organizationEmail = $this->normalizeEmail($organization['email']);
         if (null !== $importEmail && null !== $organizationEmail && $importEmail === $organizationEmail) {
-            $score += self::EMAIL_EXACT_SCORE;
+            $score += self::SCORE_BONUSES['email_exact'];
         }
 
         $importPhone = $this->normalizePhone($item->phoneNumber);
         $organizationPhone = $this->normalizePhone($organization['phone']);
         if (null !== $importPhone && null !== $organizationPhone && $importPhone === $organizationPhone) {
-            $score += self::PHONE_EXACT_SCORE;
+            $score += self::SCORE_BONUSES['phone_exact'];
         }
 
         $importWebsite = $this->normalizeWebsite($item->websiteUrl);
         $organizationWebsite = $this->normalizeWebsite($organization['website_url']);
         if (null !== $importWebsite && null !== $organizationWebsite && $importWebsite === $organizationWebsite) {
-            $score += self::WEBSITE_EXACT_SCORE;
+            $score += self::SCORE_BONUSES['website_exact'];
         }
 
         $nameSimilarity = $this->similarityPercentage($organization['name'], $item->name);
-        $score += (int) round($nameSimilarity * self::NAME_SIMILARITY_WEIGHT);
+        $score += (int) round($nameSimilarity * self::SIMILARITY_WEIGHTS['name']);
 
         $businessNameSimilarity = $this->businessNameSimilarityPercentage($organization['name'], $item->name);
-        $score += (int) round($businessNameSimilarity * self::BUSINESS_NAME_SIMILARITY_WEIGHT);
+        $score += (int) round($businessNameSimilarity * self::SIMILARITY_WEIGHTS['business_name']);
 
         $normalizedOrganizationBusinessName = $this->normalizeBusinessName($organization['name']);
         $normalizedImportBusinessName = $this->normalizeBusinessName($item->name);
         if ('' !== $normalizedOrganizationBusinessName && $normalizedOrganizationBusinessName === $normalizedImportBusinessName) {
-            $score += self::BUSINESS_NAME_EXACT_SCORE;
+            $score += self::SCORE_BONUSES['business_name_exact'];
         }
 
         $communeSimilarity = $this->similarityPercentage($organization['commune'], $item->commune);
-        $score += (int) round($communeSimilarity * self::COMMUNE_SIMILARITY_WEIGHT);
+        $score += (int) round($communeSimilarity * self::SIMILARITY_WEIGHTS['commune']);
 
         $addressSimilarity = $this->similarityPercentage($organization['address'], $item->address);
-        $score += (int) round($addressSimilarity * self::ADDRESS_SIMILARITY_WEIGHT);
+        $score += (int) round($addressSimilarity * self::SIMILARITY_WEIGHTS['address']);
 
         $streetAddressSimilarity = $this->streetAddressSimilarityPercentage($organization['address'], $item->address);
-        $score += (int) round($streetAddressSimilarity * self::STREET_ADDRESS_SIMILARITY_WEIGHT);
+        $score += (int) round($streetAddressSimilarity * self::SIMILARITY_WEIGHTS['street_address']);
 
         $normalizedOrganizationStreetAddress = $this->normalizeStreetAddress($organization['address']);
         $normalizedImportStreetAddress = $this->normalizeStreetAddress($item->address);
         if ('' !== $normalizedOrganizationStreetAddress && $normalizedOrganizationStreetAddress === $normalizedImportStreetAddress) {
-            $score += self::STREET_ADDRESS_EXACT_SCORE;
+            $score += self::SCORE_BONUSES['street_address_exact'];
         }
 
-        if (null !== $importPhone && null !== $organizationPhone && $importPhone === $organizationPhone && $streetAddressSimilarity >= self::STRONG_ADDRESS_THRESHOLD) {
-            $score += self::PHONE_STREET_ADDRESS_STRONG_COMBO_SCORE;
+        if (null !== $importPhone && null !== $organizationPhone && $importPhone === $organizationPhone && $streetAddressSimilarity >= self::SIMILARITY_THRESHOLDS['strong_address']) {
+            $score += self::SCORE_BONUSES['phone_street_address_strong_combo'];
         }
 
         if (
@@ -212,15 +226,15 @@ final readonly class DirectoryEstablishmentMatcher
             && '' !== $normalizedOrganizationStreetAddress
             && $normalizedOrganizationStreetAddress === $normalizedImportStreetAddress
         ) {
-            $score += self::BUSINESS_NAME_STREET_ADDRESS_EXACT_COMBO_SCORE;
+            $score += self::SCORE_BONUSES['business_name_street_address_exact_combo'];
         }
 
-        if (($addressSimilarity >= self::STRONG_ADDRESS_THRESHOLD || $streetAddressSimilarity >= self::STRONG_STREET_ADDRESS_THRESHOLD) && $businessNameSimilarity >= self::STRONG_NAME_THRESHOLD) {
-            $score += self::STRONG_ADDRESS_NAME_COMBO_SCORE;
-        } elseif (($addressSimilarity >= self::ADDRESS_THRESHOLD || $streetAddressSimilarity >= self::STREET_ADDRESS_THRESHOLD) && $nameSimilarity >= self::STRONG_NAME_THRESHOLD) {
-            $score += self::ADDRESS_NAME_COMBO_SCORE;
-        } elseif ($addressSimilarity <= self::FAR_ADDRESS_THRESHOLD && $streetAddressSimilarity <= self::FAR_STREET_ADDRESS_THRESHOLD && ($nameSimilarity >= self::VERY_STRONG_NAME_THRESHOLD || $businessNameSimilarity >= self::VERY_STRONG_NAME_THRESHOLD)) {
-            $score -= self::NAME_CLOSE_ADDRESS_FAR_PENALTY;
+        if (($addressSimilarity >= self::SIMILARITY_THRESHOLDS['strong_address'] || $streetAddressSimilarity >= self::SIMILARITY_THRESHOLDS['strong_street_address']) && $businessNameSimilarity >= self::SIMILARITY_THRESHOLDS['strong_name']) {
+            $score += self::SCORE_BONUSES['strong_address_name_combo'];
+        } elseif (($addressSimilarity >= self::SIMILARITY_THRESHOLDS['address'] || $streetAddressSimilarity >= self::SIMILARITY_THRESHOLDS['street_address']) && $nameSimilarity >= self::SIMILARITY_THRESHOLDS['strong_name']) {
+            $score += self::SCORE_BONUSES['address_name_combo'];
+        } elseif ($addressSimilarity <= self::SIMILARITY_THRESHOLDS['far_address'] && $streetAddressSimilarity <= self::SIMILARITY_THRESHOLDS['far_street_address'] && ($nameSimilarity >= self::SIMILARITY_THRESHOLDS['very_strong_name'] || $businessNameSimilarity >= self::SIMILARITY_THRESHOLDS['very_strong_name'])) {
+            $score -= self::SCORE_BONUSES['name_close_address_far_penalty'];
         }
 
         return min(100, $score);
@@ -513,6 +527,6 @@ final readonly class DirectoryEstablishmentMatcher
 
         similar_text($normalizedImportCommune, $normalizedCandidateCommune, $percentage);
 
-        return $percentage >= self::COMMUNE_COMPATIBILITY_THRESHOLD;
+        return self::COMMUNE_COMPATIBILITY_THRESHOLD <= $percentage;
     }
 }

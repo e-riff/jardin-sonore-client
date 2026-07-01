@@ -58,6 +58,8 @@ final class ImportDirectoryEstablishmentsCommand extends Command
         $offset = max(0, $offset);
         $limit = null !== $limit ? max(1, $limit) : null;
 
+        $organizationRank = 0;
+
         try {
             $items = $this->fileLoader->load($fileArgument, $offset, $limit);
         } catch (DirectoryImportFileException $exception) {
@@ -80,6 +82,7 @@ final class ImportDirectoryEstablishmentsCommand extends Command
         ];
 
         foreach ($items as $index => $item) {
+            ++$organizationRank;
             $violations = $this->validator->validate($item);
 
             if (0 < count($violations)) {
@@ -97,7 +100,7 @@ final class ImportDirectoryEstablishmentsCommand extends Command
             }
 
             if (!$organization instanceof OrganizationEntity) {
-                $organization = $this->resolveOrganization($io, $item, $interactive, $stats);
+                $organization = $this->resolveOrganization($io, $item, $organizationRank, $interactive, $stats);
 
                 if (false === $organization) {
                     continue;
@@ -164,6 +167,7 @@ final class ImportDirectoryEstablishmentsCommand extends Command
     private function resolveOrganization(
         SymfonyStyle $io,
         DirectoryEstablishmentImportItem $item,
+        int $organizationRank,
         bool $interactive,
         array &$stats,
     ): false|OrganizationEntity|null {
@@ -177,6 +181,20 @@ final class ImportDirectoryEstablishmentsCommand extends Command
 
         if ($topCandidate->score >= $this->matcher->getAutoMatchScoreThreshold()) {
             return $topCandidate->organization;
+        }
+
+        if ($topCandidate->score < $this->matcher->getInteractiveConfirmationScoreThreshold()) {
+            ++$stats['ignored'];
+            $io->note(sprintf(
+                'Ligne #%d ignorée pour "%s" (meilleur candidat: %s, score: %d%%, seuil de confirmation interactive: %d%%).',
+                $organizationRank,
+                $item->name ?? $item->externalId,
+                $topCandidate->organization->getName(),
+                $topCandidate->score,
+                $this->matcher->getInteractiveConfirmationScoreThreshold(),
+            ));
+
+            return false;
         }
 
         ++$stats['ambiguous'];
@@ -193,7 +211,7 @@ final class ImportDirectoryEstablishmentsCommand extends Command
             return false;
         }
 
-        $resolvedCandidate = $this->resolveInteractiveCandidate($io, $item, $candidates);
+        $resolvedCandidate = $this->resolveInteractiveCandidate($io, $item, $organizationRank, $candidates);
 
         if (false === $resolvedCandidate) {
             ++$stats['ignored'];
@@ -205,7 +223,7 @@ final class ImportDirectoryEstablishmentsCommand extends Command
     /**
      * @param list<DirectoryEstablishmentMatch> $candidates
      */
-    private function resolveInteractiveCandidate(SymfonyStyle $io, DirectoryEstablishmentImportItem $item, array $candidates): false|OrganizationEntity|null
+    private function resolveInteractiveCandidate(SymfonyStyle $io, DirectoryEstablishmentImportItem $item, int $organizationRank, array $candidates): false|OrganizationEntity|null
     {
         $rows = [];
         $choices = ['new' => 'Créer un nouvel établissement', 'skip' => 'Ignorer cette ligne'];
@@ -239,7 +257,7 @@ final class ImportDirectoryEstablishmentsCommand extends Command
             ];
         }
 
-        $io->section(sprintf('Doute pour %s', $item->name ?? $item->externalId));
+        $io->section(sprintf('[%d] Doute pour %s', $organizationRank, $item->name ?? $item->externalId));
         $io->table(['ID', 'Organisation', 'Email', 'Téléphone', 'Commune', 'Score'], $rows);
 
         foreach ($candidates as $candidate) {
@@ -247,11 +265,11 @@ final class ImportDirectoryEstablishmentsCommand extends Command
 
             $io->definitionList(
                 [sprintf('Candidat #%d', $organization->getId()) => $organization->getName()],
-                ['Email base' => $candidate->email !== '' ? $candidate->email : '—'],
-                ['Téléphone base' => $candidate->phone !== '' ? $candidate->phone : '—'],
-                ['Commune base' => $candidate->commune !== '' ? $candidate->commune : '—'],
-                ['Adresse base' => $candidate->address !== '' ? $candidate->address : '—'],
-                ['Site base' => $candidate->website !== '' ? $candidate->website : '—'],
+                ['Email base' => '' !== $candidate->email ? $candidate->email : '—'],
+                ['Téléphone base' => '' !== $candidate->phone ? $candidate->phone : '—'],
+                ['Commune base' => '' !== $candidate->commune ? $candidate->commune : '—'],
+                ['Adresse base' => '' !== $candidate->address ? $candidate->address : '—'],
+                ['Site base' => '' !== $candidate->website ? $candidate->website : '—'],
             );
         }
 
