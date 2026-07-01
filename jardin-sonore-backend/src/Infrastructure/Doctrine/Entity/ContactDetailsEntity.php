@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Doctrine\Entity;
 
 use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
+use App\Infrastructure\Doctrine\Entity\Behavior\TimestampableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\UuidIdentifiableTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -12,19 +13,20 @@ use Doctrine\Common\Collections\Collection;
 class ContactDetailsEntity
 {
     use IdentifiableTrait;
+    use TimestampableTrait;
     use UuidIdentifiableTrait;
 
     private DirectoryEntryEntity $directoryEntry;
 
     /**
-     * @var Collection<int, EmailContactEntity>
+     * @var Collection<int, EmailContactLinkEntity>
      */
-    private Collection $emailContacts;
+    private Collection $emailContactLinks;
 
     /**
-     * @var Collection<int, PhoneContactEntity>
+     * @var Collection<int, PhoneContactLinkEntity>
      */
-    private Collection $phoneContacts;
+    private Collection $phoneContactLinks;
 
     /**
      * @var Collection<int, AddressContactEntity>
@@ -34,8 +36,9 @@ class ContactDetailsEntity
     public function __construct()
     {
         $this->initializeUuid();
-        $this->emailContacts = new ArrayCollection();
-        $this->phoneContacts = new ArrayCollection();
+        $this->initializeTimestamps();
+        $this->emailContactLinks = new ArrayCollection();
+        $this->phoneContactLinks = new ArrayCollection();
         $this->addressContacts = new ArrayCollection();
     }
 
@@ -65,33 +68,85 @@ class ContactDetailsEntity
     }
 
     /**
-     * @return Collection<int, EmailContactEntity>
+     * @return Collection<int, EmailContactLinkEntity>
      */
-    public function getEmailContacts(): Collection
+    public function getEmailContactLinks(): Collection
     {
-        return $this->emailContacts;
+        return $this->emailContactLinks;
     }
 
     public function hasEmailContacts(): bool
     {
-        return !$this->emailContacts->isEmpty();
+        return !$this->emailContactLinks->isEmpty();
     }
 
-    public function addEmailContact(EmailContactEntity $emailContactEntity): static
+    public function addEmailContactLink(EmailContactLinkEntity $emailContactLink): static
     {
-        if (!$this->emailContacts->contains($emailContactEntity)) {
-            $this->emailContacts->add($emailContactEntity);
-            $emailContactEntity->setContactDetails($this);
+        if (!$this->emailContactLinks->contains($emailContactLink)) {
+            $this->emailContactLinks->add($emailContactLink);
+            $emailContactLink->setContactDetails($this);
         }
 
         return $this;
     }
 
-    public function removeEmailContact(EmailContactEntity $emailContactEntity): static
+    public function removeEmailContactLink(EmailContactLinkEntity $emailContactLink): static
     {
-        $this->emailContacts->removeElement($emailContactEntity);
+        if ($this->emailContactLinks->removeElement($emailContactLink)) {
+            $emailContactLink->getEmailContact()?->removeEmailContactLink($emailContactLink);
+
+            if ($emailContactLink->getContactDetails() === $this) {
+                $emailContactLink->setContactDetails(null);
+            }
+        }
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, PhoneContactLinkEntity>
+     */
+    public function getPhoneContactLinks(): Collection
+    {
+        return $this->phoneContactLinks;
+    }
+
+    public function hasPhoneContacts(): bool
+    {
+        return !$this->phoneContactLinks->isEmpty();
+    }
+
+    public function addPhoneContactLink(PhoneContactLinkEntity $phoneContactLink): static
+    {
+        if (!$this->phoneContactLinks->contains($phoneContactLink)) {
+            $this->phoneContactLinks->add($phoneContactLink);
+            $phoneContactLink->setContactDetails($this);
+        }
+
+        return $this;
+    }
+
+    public function removePhoneContactLink(PhoneContactLinkEntity $phoneContactLink): static
+    {
+        if ($this->phoneContactLinks->removeElement($phoneContactLink)) {
+            $phoneContactLink->getPhoneContact()?->removePhoneContactLink($phoneContactLink);
+
+            if ($phoneContactLink->getContactDetails() === $this) {
+                $phoneContactLink->setContactDetails(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, EmailContactEntity>
+     */
+    public function getEmailContacts(): Collection
+    {
+        return new ArrayCollection($this->emailContactLinks->map(
+            static fn (EmailContactLinkEntity $emailContactLink): ?EmailContactEntity => $emailContactLink->getEmailContact(),
+        )->filter(static fn (?EmailContactEntity $emailContactEntity): bool => $emailContactEntity instanceof EmailContactEntity)->toArray());
     }
 
     /**
@@ -99,29 +154,9 @@ class ContactDetailsEntity
      */
     public function getPhoneContacts(): Collection
     {
-        return $this->phoneContacts;
-    }
-
-    public function hasPhoneContacts(): bool
-    {
-        return !$this->phoneContacts->isEmpty();
-    }
-
-    public function addPhoneContact(PhoneContactEntity $phoneContactEntity): static
-    {
-        if (!$this->phoneContacts->contains($phoneContactEntity)) {
-            $this->phoneContacts->add($phoneContactEntity);
-            $phoneContactEntity->setContactDetails($this);
-        }
-
-        return $this;
-    }
-
-    public function removePhoneContact(PhoneContactEntity $phoneContactEntity): static
-    {
-        $this->phoneContacts->removeElement($phoneContactEntity);
-
-        return $this;
+        return new ArrayCollection($this->phoneContactLinks->map(
+            static fn (PhoneContactLinkEntity $phoneContactLink): ?PhoneContactEntity => $phoneContactLink->getPhoneContact(),
+        )->filter(static fn (?PhoneContactEntity $phoneContactEntity): bool => $phoneContactEntity instanceof PhoneContactEntity)->toArray());
     }
 
     /**
@@ -149,7 +184,9 @@ class ContactDetailsEntity
 
     public function removeAddressContact(AddressContactEntity $addressContactEntity): static
     {
-        $this->addressContacts->removeElement($addressContactEntity);
+        if ($this->addressContacts->removeElement($addressContactEntity) && $addressContactEntity->getContactDetails() === $this) {
+            $addressContactEntity->setContactDetails(null);
+        }
 
         return $this;
     }
@@ -157,14 +194,14 @@ class ContactDetailsEntity
     public function getEmailContactsSummary(): string
     {
         return $this->summarizeContacts(
-            $this->emailContacts->map(static fn (EmailContactEntity $emailContactEntity): string => (string) $emailContactEntity)->toArray(),
+            $this->emailContactLinks->map(static fn (EmailContactLinkEntity $emailContactLink): string => (string) $emailContactLink)->toArray(),
         );
     }
 
     public function getPhoneContactsSummary(): string
     {
         return $this->summarizeContacts(
-            $this->phoneContacts->map(static fn (PhoneContactEntity $phoneContactEntity): string => (string) $phoneContactEntity)->toArray(),
+            $this->phoneContactLinks->map(static fn (PhoneContactLinkEntity $phoneContactLink): string => (string) $phoneContactLink)->toArray(),
         );
     }
 

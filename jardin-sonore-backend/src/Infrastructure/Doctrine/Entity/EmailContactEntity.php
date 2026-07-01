@@ -5,26 +5,23 @@ declare(strict_types=1);
 namespace App\Infrastructure\Doctrine\Entity;
 
 use App\Domain\Model\AddressBook\ContactDataSource;
-use App\Domain\Model\AddressBook\EmailContactType;
 use App\Infrastructure\Doctrine\Entity\Behavior\ActivableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
-use App\Infrastructure\Doctrine\Entity\Behavior\NullableLabelTrait;
+use App\Infrastructure\Doctrine\Entity\Behavior\TimestampableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\UuidIdentifiableTrait;
 use DateTimeImmutable;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Symfony\Component\Uid\Uuid;
 
 class EmailContactEntity
 {
     use ActivableTrait;
     use IdentifiableTrait;
-    use NullableLabelTrait;
+    use TimestampableTrait;
     use UuidIdentifiableTrait;
 
-    private ContactDetailsEntity $contactDetails;
-
     private string $emailAddress = '';
-
-    private EmailContactType $type = EmailContactType::MAIN;
 
     private bool $optInNewsletter = true;
 
@@ -34,9 +31,17 @@ class EmailContactEntity
 
     private ?DateTimeImmutable $unsubscribedAt = null;
 
+    /**
+     * @var Collection<int, EmailContactLinkEntity>
+     */
+    private Collection $emailContactLinks;
+
     public function __construct()
     {
         $this->initializeUuid();
+        $this->initializeTimestamps();
+        $this->setActive(true);
+        $this->emailContactLinks = new ArrayCollection();
         $this->unsubscribeToken = self::generateUnsubscribeToken();
     }
 
@@ -53,30 +58,6 @@ class EmailContactEntity
     public function setEmailAddress(string $emailAddress): static
     {
         $this->emailAddress = mb_strtolower(trim($emailAddress));
-
-        return $this;
-    }
-
-    public function getContactDetails(): ?ContactDetailsEntity
-    {
-        return $this->contactDetails ?? null;
-    }
-
-    public function setContactDetails(ContactDetailsEntity $contactDetails): static
-    {
-        $this->contactDetails = $contactDetails;
-
-        return $this;
-    }
-
-    public function getType(): EmailContactType
-    {
-        return $this->type;
-    }
-
-    public function setType(EmailContactType $type): static
-    {
-        $this->type = $type;
 
         return $this;
     }
@@ -137,6 +118,44 @@ class EmailContactEntity
     public function isUnsubscribed(): bool
     {
         return $this->unsubscribedAt instanceof DateTimeImmutable;
+    }
+
+    /**
+     * @return Collection<int, EmailContactLinkEntity>
+     */
+    public function getEmailContactLinks(): Collection
+    {
+        return $this->emailContactLinks;
+    }
+
+    public function addEmailContactLink(EmailContactLinkEntity $emailContactLink): static
+    {
+        if (!$this->emailContactLinks->contains($emailContactLink)) {
+            $this->emailContactLinks->add($emailContactLink);
+
+            if ($emailContactLink->getEmailContact() !== $this) {
+                $emailContactLink->setEmailContact($this);
+            }
+        }
+
+        return $this;
+    }
+
+    public function removeEmailContactLink(EmailContactLinkEntity $emailContactLink): static
+    {
+        $this->emailContactLinks->removeElement($emailContactLink);
+
+        return $this;
+    }
+
+    public function getLinkedDirectoryEntriesSummary(): string
+    {
+        $directoryEntries = $this->emailContactLinks->map(
+            static fn (EmailContactLinkEntity $emailContactLink): string => (string) ($emailContactLink->getContactDetails()?->getDirectoryEntry() ?? ''),
+        )->toArray();
+        $directoryEntries = array_values(array_unique(array_filter(array_map('trim', $directoryEntries))));
+
+        return [] === $directoryEntries ? '—' : implode("\n", $directoryEntries);
     }
 
     private static function generateUnsubscribeToken(): string

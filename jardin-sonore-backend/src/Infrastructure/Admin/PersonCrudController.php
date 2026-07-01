@@ -7,6 +7,7 @@ namespace App\Infrastructure\Admin;
 use App\Domain\Model\AddressBook\CustomerStatus;
 use App\Domain\Model\AddressBook\DirectoryEntryType;
 use App\Infrastructure\Admin\Formatter\ContactDisplayFormatter;
+use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\PersonEntity;
 use BackedEnum;
@@ -39,6 +40,7 @@ final class PersonCrudController extends AbstractCrudController
         private readonly AdminUrlGenerator $adminUrlGenerator,
         private readonly EntityManagerInterface $entityManager,
         private readonly RequestStack $requestStack,
+        private readonly SharedContactLinkResolver $sharedContactLinkResolver,
         private readonly TranslatorInterface $translator,
     ) {
     }
@@ -71,10 +73,10 @@ final class PersonCrudController extends AbstractCrudController
     {
         $addEmail = Action::new('addEmail', 'admin.action.add_email', 'fa fa-envelope')
             ->displayIf(static fn (PersonEntity $personEntity): bool => null !== $personEntity->getContactDetails())
-            ->linkToUrl(fn (PersonEntity $personEntity): string => $this->generateNewContactUrl(EmailContactCrudController::class, $personEntity));
+            ->linkToUrl(fn (PersonEntity $personEntity): string => $this->generateNewContactUrl(EmailContactLinkCrudController::class, $personEntity));
         $addPhone = Action::new('addPhone', 'admin.action.add_phone', 'fa fa-phone')
             ->displayIf(static fn (PersonEntity $personEntity): bool => null !== $personEntity->getContactDetails())
-            ->linkToUrl(fn (PersonEntity $personEntity): string => $this->generateNewContactUrl(PhoneContactCrudController::class, $personEntity));
+            ->linkToUrl(fn (PersonEntity $personEntity): string => $this->generateNewContactUrl(PhoneContactLinkCrudController::class, $personEntity));
         $addAddress = Action::new('addAddress', 'admin.action.add_address', 'fa fa-location-dot')
             ->displayIf(static fn (PersonEntity $personEntity): bool => null !== $personEntity->getContactDetails())
             ->linkToUrl(fn (PersonEntity $personEntity): string => $this->generateNewContactUrl(AddressContactCrudController::class, $personEntity));
@@ -151,6 +153,24 @@ final class PersonCrudController extends AbstractCrudController
         }
 
         return $personEntity;
+    }
+
+    public function persistEntity(EntityManagerInterface $entityManager, $entityInstance): void
+    {
+        if ($entityInstance->getContactDetails() instanceof ContactDetailsEntity) {
+            $this->sharedContactLinkResolver->resolveContactDetails($entityInstance->getContactDetails());
+        }
+
+        parent::persistEntity($entityManager, $entityInstance);
+    }
+
+    public function updateEntity(EntityManagerInterface $entityManager, $entityInstance): void
+    {
+        if ($entityInstance->getContactDetails() instanceof ContactDetailsEntity) {
+            $this->sharedContactLinkResolver->resolveContactDetails($entityInstance->getContactDetails());
+        }
+
+        parent::updateEntity($entityManager, $entityInstance);
     }
 
     /**

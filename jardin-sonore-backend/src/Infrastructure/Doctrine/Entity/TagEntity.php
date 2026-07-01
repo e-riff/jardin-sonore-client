@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Doctrine\Entity;
 
 use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
+use App\Infrastructure\Doctrine\Entity\Behavior\TimestampableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\UuidIdentifiableTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -12,6 +13,7 @@ use Doctrine\Common\Collections\Collection;
 class TagEntity
 {
     use IdentifiableTrait;
+    use TimestampableTrait;
     use UuidIdentifiableTrait;
 
     private string $label = '';
@@ -24,6 +26,7 @@ class TagEntity
     public function __construct()
     {
         $this->initializeUuid();
+        $this->initializeTimestamps();
         $this->directoryEntries = new ArrayCollection();
     }
 

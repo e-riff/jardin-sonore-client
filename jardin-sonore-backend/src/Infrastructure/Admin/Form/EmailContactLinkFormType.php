@@ -6,7 +6,7 @@ namespace App\Infrastructure\Admin\Form;
 
 use App\Domain\Model\AddressBook\ContactDataSource;
 use App\Domain\Model\AddressBook\EmailContactType;
-use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
+use App\Infrastructure\Doctrine\Entity\EmailContactLinkEntity;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -16,13 +16,13 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
- * @extends AbstractType<EmailContactEntity>
+ * @extends AbstractType<EmailContactLinkEntity>
  */
-final class EmailContactFormType extends AbstractType
+final class EmailContactLinkFormType extends AbstractType
 {
     /**
-     * @param FormBuilderInterface<EmailContactEntity|null> $builder
-     * @param array<string, mixed>                          $options
+     * @param FormBuilderInterface<EmailContactLinkEntity|null> $builder
+     * @param array<string, mixed>                              $options
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -59,9 +59,22 @@ final class EmailContactFormType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'data_class' => EmailContactEntity::class,
+            'data_class' => EmailContactLinkEntity::class,
             'translation_domain' => 'backoffice',
         ]);
+    }
+
+    /**
+     * @return array<string, ContactDataSource>
+     */
+    private function sourceChoices(): array
+    {
+        return [
+            'address_book.contact_source.manual' => ContactDataSource::MANUAL,
+            'address_book.contact_source.google_sheets' => ContactDataSource::GOOGLE_SHEETS,
+            'address_book.contact_source.legacy_import' => ContactDataSource::LEGACY_IMPORT,
+            'address_book.contact_source.directory_import' => ContactDataSource::DIRECTORY_IMPORT,
+        ];
     }
 
     /**
@@ -75,19 +88,6 @@ final class EmailContactFormType extends AbstractType
             'address_book.email_contact_type.personal' => EmailContactType::PERSONAL,
             'address_book.email_contact_type.billing' => EmailContactType::BILLING,
             'address_book.email_contact_type.other' => EmailContactType::OTHER,
-        ];
-    }
-
-    /**
-     * @return array<string, ContactDataSource>
-     */
-    private function sourceChoices(): array
-    {
-        return [
-            'address_book.contact_source.manual' => ContactDataSource::MANUAL,
-            'address_book.contact_source.google_sheets' => ContactDataSource::GOOGLE_SHEETS,
-            'address_book.contact_source.legacy_import' => ContactDataSource::LEGACY_IMPORT,
-            'address_book.contact_source.directory_import' => ContactDataSource::DIRECTORY_IMPORT,
         ];
     }
 }

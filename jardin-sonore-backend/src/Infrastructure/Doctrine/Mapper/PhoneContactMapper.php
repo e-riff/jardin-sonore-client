@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Doctrine\Mapper;
 
 use App\Domain\Model\AddressBook\PhoneContact;
+use App\Domain\Model\AddressBook\PhoneContactType;
 use App\Domain\Model\ValueObject\PhoneNumber;
 use App\Infrastructure\Doctrine\Entity\PhoneContactEntity;
 
@@ -14,8 +15,8 @@ final readonly class PhoneContactMapper
     {
         return new PhoneContact(
             phoneNumber: new PhoneNumber($phoneContactEntity->getPhoneNumber()),
-            label: $phoneContactEntity->getLabel(),
-            type: $phoneContactEntity->getType(),
+            label: null,
+            type: PhoneContactType::MAIN,
             active: $phoneContactEntity->isActive(),
             uuid: $phoneContactEntity->getUuid(),
             id: $phoneContactEntity->getId(),
@@ -29,8 +30,6 @@ final readonly class PhoneContactMapper
         $phoneContactEntity
             ->setUuid($phoneContact->getUuid())
             ->setPhoneNumber($phoneContact->getPhoneNumber()->value())
-            ->setLabel($phoneContact->getLabel())
-            ->setType($phoneContact->getType())
             ->setActive($phoneContact->isActive());
 
         return $phoneContactEntity;

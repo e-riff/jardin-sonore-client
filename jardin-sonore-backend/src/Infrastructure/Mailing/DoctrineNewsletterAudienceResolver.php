@@ -82,7 +82,8 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
                 "CASE WHEN person.id IS NOT NULL THEN TRIM(CONCAT(person.first_name, ' ', person.last_name)) ELSE organization.name END AS display_name",
             )
             ->from('email_contact', 'email')
-            ->innerJoin('email', 'contact_details', 'contact', 'contact.id = email.contact_details_id')
+            ->innerJoin('email', 'contact_details_email_link', 'email_link', 'email_link.email_contact_id = email.id')
+            ->innerJoin('email_link', 'contact_details', 'contact', 'contact.id = email_link.contact_details_id')
             ->innerJoin('contact', 'directory_entry', 'entry', 'entry.id = contact.directory_entry_id')
             ->leftJoin('entry', 'person', 'person', 'person.id = entry.id')
             ->leftJoin('entry', 'organization', 'organization', 'organization.id = entry.id')
@@ -90,6 +91,7 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
             ->leftJoin('person_organization', 'directory_entry', 'organization_entry', 'organization_entry.id = person_organization.id')
             ->leftJoin('organization_entry', 'contact_details', 'organization_contact', 'organization_contact.directory_entry_id = organization_entry.id')
             ->where('email.active = 1')
+            ->andWhere('email_link.active = 1')
             ->andWhere('email.opt_in_newsletter = 1')
             ->andWhere('email.unsubscribed_at IS NULL')
             ->andWhere("TRIM(email.email_address) <> ''")

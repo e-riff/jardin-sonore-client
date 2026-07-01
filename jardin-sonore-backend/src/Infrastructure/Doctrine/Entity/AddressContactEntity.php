@@ -8,6 +8,7 @@ use App\Domain\Model\AddressBook\AddressContactType;
 use App\Infrastructure\Doctrine\Entity\Behavior\ActivableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\NullableLabelTrait;
+use App\Infrastructure\Doctrine\Entity\Behavior\TimestampableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\UuidIdentifiableTrait;
 
 class AddressContactEntity
@@ -15,9 +16,12 @@ class AddressContactEntity
     use ActivableTrait;
     use IdentifiableTrait;
     use NullableLabelTrait;
+    use TimestampableTrait;
     use UuidIdentifiableTrait;
 
-    private ContactDetailsEntity $contactDetails;
+    // transient null allowed for orphan removal
+    // @phpstan-ignore-next-line
+    private ?ContactDetailsEntity $contactDetails = null;
 
     private AddressContactType $type = AddressContactType::MAIN;
 
@@ -32,6 +36,7 @@ class AddressContactEntity
     public function __construct()
     {
         $this->initializeUuid();
+        $this->initializeTimestamps();
     }
 
     public function __toString(): string
@@ -44,7 +49,7 @@ class AddressContactEntity
         return $this->contactDetails ?? null;
     }
 
-    public function setContactDetails(ContactDetailsEntity $contactDetails): static
+    public function setContactDetails(?ContactDetailsEntity $contactDetails): static
     {
         $this->contactDetails = $contactDetails;
 

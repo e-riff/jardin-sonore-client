@@ -2,23 +2,21 @@
 
 declare(strict_types=1);
 
-use App\Domain\Model\AddressBook\AddressContactType;
-use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
-use App\Infrastructure\Doctrine\Entity\MunicipalityEntity;
+use App\Infrastructure\Doctrine\Entity\DirectoryEntryEntity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 
 return static function (ClassMetadata $metadata): void {
     $metadata->setPrimaryTable([
-        'name' => 'address_contact',
+        'name' => 'directory_import_link',
         'indexes' => [
-            'idx_address_contact_details' => ['columns' => ['contact_details_id']],
-            'idx_address_contact_municipality' => ['columns' => ['municipality_id']],
-            'idx_address_contact_postal_code' => ['columns' => ['postal_code']],
+            'idx_directory_import_link_directory_entry' => ['columns' => ['directory_entry_id']],
+            'idx_directory_import_link_source' => ['columns' => ['source']],
         ],
         'uniqueConstraints' => [
-            'uniq_address_contact_uuid' => ['columns' => ['uuid']],
+            'uniq_directory_import_link_uuid' => ['columns' => ['uuid']],
+            'uniq_directory_import_link_source_external_id' => ['columns' => ['source', 'external_id']],
         ],
     ]);
 
@@ -58,69 +56,42 @@ return static function (ClassMetadata $metadata): void {
     ]);
 
     $metadata->mapField([
-        'fieldName' => 'type',
+        'fieldName' => 'source',
         'type' => Types::STRING,
-        'length' => 32,
-        'enumType' => AddressContactType::class,
+        'length' => 64,
     ]);
 
     $metadata->mapField([
-        'fieldName' => 'label',
+        'fieldName' => 'externalId',
+        'columnName' => 'external_id',
+        'type' => Types::STRING,
+        'length' => 255,
+    ]);
+
+    $metadata->mapField([
+        'fieldName' => 'externalOrganizationId',
+        'columnName' => 'external_organization_id',
         'type' => Types::STRING,
         'length' => 255,
         'nullable' => true,
     ]);
 
     $metadata->mapField([
-        'fieldName' => 'address',
-        'type' => Types::TEXT,
-        'nullable' => true,
-    ]);
-
-    $metadata->mapField([
-        'fieldName' => 'postalCode',
-        'columnName' => 'postal_code',
+        'fieldName' => 'payloadHash',
+        'columnName' => 'payload_hash',
         'type' => Types::STRING,
-        'length' => 5,
-        'nullable' => true,
-    ]);
-
-    $metadata->mapField([
-        'fieldName' => 'city',
-        'type' => Types::STRING,
-        'length' => 255,
-        'nullable' => true,
-    ]);
-
-    $metadata->mapField([
-        'fieldName' => 'active',
-        'type' => Types::BOOLEAN,
-        'options' => ['default' => true],
+        'length' => 64,
     ]);
 
     $metadata->mapManyToOne([
-        'fieldName' => 'contactDetails',
-        'targetEntity' => ContactDetailsEntity::class,
-        'inversedBy' => 'addressContacts',
+        'fieldName' => 'directoryEntry',
+        'targetEntity' => DirectoryEntryEntity::class,
         'joinColumns' => [
             [
-                'name' => 'contact_details_id',
+                'name' => 'directory_entry_id',
                 'referencedColumnName' => 'id',
                 'nullable' => false,
                 'onDelete' => 'CASCADE',
-            ],
-        ],
-    ]);
-
-    $metadata->mapManyToOne([
-        'fieldName' => 'municipality',
-        'targetEntity' => MunicipalityEntity::class,
-        'joinColumns' => [
-            [
-                'name' => 'municipality_id',
-                'referencedColumnName' => 'id',
-                'nullable' => true,
-                'onDelete' => 'SET NULL',
             ],
         ],
     ]);

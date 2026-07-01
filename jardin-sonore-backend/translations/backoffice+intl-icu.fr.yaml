@@ -58,6 +58,7 @@ admin:
     postal_code: "Code postal"
     phone_number: "Téléphone"
     email_address: "Adresse e-mail"
+    website_url: "Site web"
     address: "Adresse"
     siren: "SIREN"
     siret: "SIRET"
@@ -203,3 +204,4 @@ address_book:
     manual: "Saisie manuelle"
     google_sheets: "Google Sheets"
     legacy_import: "Ancien import"
+    directory_import: "Import annuaire"

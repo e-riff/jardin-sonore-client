@@ -8,6 +8,7 @@ use App\Domain\Model\AddressBook\CustomerStatus;
 use App\Domain\Model\AddressBook\DirectoryEntryType;
 use App\Infrastructure\Doctrine\Entity\Behavior\ActivableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
+use App\Infrastructure\Doctrine\Entity\Behavior\TimestampableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\UuidIdentifiableTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -16,6 +17,7 @@ abstract class DirectoryEntryEntity
 {
     use ActivableTrait;
     use IdentifiableTrait;
+    use TimestampableTrait;
     use UuidIdentifiableTrait;
 
     private DirectoryEntryType $entryType;
@@ -32,6 +34,7 @@ abstract class DirectoryEntryEntity
     protected function __construct(DirectoryEntryType $entryType)
     {
         $this->initializeUuid();
+        $this->initializeTimestamps();
         $this->entryType = $entryType;
         $this->tags = new ArrayCollection();
         $this->setContactDetails(new ContactDetailsEntity());
@@ -108,32 +111,16 @@ abstract class DirectoryEntryEntity
 
     public function getEmailContactsSummary(): string
     {
-        return $this->summarizeContacts(
-            $this->contactDetails?->getEmailContacts()->map(static fn (EmailContactEntity $emailContactEntity): string => (string) $emailContactEntity)->toArray() ?? [],
-        );
+        return $this->contactDetails?->getEmailContactsSummary() ?? '—';
     }
 
     public function getPhoneContactsSummary(): string
     {
-        return $this->summarizeContacts(
-            $this->contactDetails?->getPhoneContacts()->map(static fn (PhoneContactEntity $phoneContactEntity): string => (string) $phoneContactEntity)->toArray() ?? [],
-        );
+        return $this->contactDetails?->getPhoneContactsSummary() ?? '—';
     }
 
     public function getAddressContactsSummary(): string
     {
-        return $this->summarizeContacts(
-            $this->contactDetails?->getAddressContacts()->map(static fn (AddressContactEntity $addressContactEntity): string => (string) $addressContactEntity)->toArray() ?? [],
-        );
-    }
-
-    /**
-     * @param list<string> $contacts
-     */
-    private function summarizeContacts(array $contacts): string
-    {
-        $contacts = array_values(array_filter(array_map('trim', $contacts)));
-
-        return [] === $contacts ? '—' : implode("\n", $contacts);
+        return $this->contactDetails?->getAddressContactsSummary() ?? '—';
     }
 }
