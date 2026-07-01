@@ -183,20 +183,6 @@ final class ImportDirectoryEstablishmentsCommand extends Command
             return $topCandidate->organization;
         }
 
-        if ($topCandidate->score < $this->matcher->getInteractiveConfirmationScoreThreshold()) {
-            ++$stats['ignored'];
-            $io->note(sprintf(
-                'Ligne #%d ignorée pour "%s" (meilleur candidat: %s, score: %d%%, seuil de confirmation interactive: %d%%).',
-                $organizationRank,
-                $item->name ?? $item->externalId,
-                $topCandidate->organization->getName(),
-                $topCandidate->score,
-                $this->matcher->getInteractiveConfirmationScoreThreshold(),
-            ));
-
-            return false;
-        }
-
         ++$stats['ambiguous'];
 
         if (!$interactive) {

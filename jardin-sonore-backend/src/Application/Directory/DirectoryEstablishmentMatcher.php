@@ -13,7 +13,6 @@ final readonly class DirectoryEstablishmentMatcher
     private const array MATCH_SCORE_THRESHOLDS = [
         'auto_match' => 90,
         'candidate' => 70,
-        'interactive_confirmation' => 80,
     ];
     private const float COMMUNE_COMPATIBILITY_THRESHOLD = 92.0;
     private const array SCORE_BONUSES = [
@@ -83,11 +82,6 @@ final readonly class DirectoryEstablishmentMatcher
     public function getAutoMatchScoreThreshold(): int
     {
         return self::MATCH_SCORE_THRESHOLDS['auto_match'];
-    }
-
-    public function getInteractiveConfirmationScoreThreshold(): int
-    {
-        return self::MATCH_SCORE_THRESHOLDS['interactive_confirmation'];
     }
 
     public function findImportLinkByExternalId(string $source, DirectoryEstablishmentImportItem $item): ?DirectoryImportLinkEntity
