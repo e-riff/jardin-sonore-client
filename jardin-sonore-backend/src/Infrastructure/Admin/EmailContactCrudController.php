@@ -5,18 +5,14 @@ declare(strict_types=1);
 namespace App\Infrastructure\Admin;
 
 use App\Domain\Model\AddressBook\ContactDataSource;
-use App\Domain\Model\AddressBook\EmailContactType;
 use App\Infrastructure\Admin\Formatter\ContactDisplayFormatter;
-use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 use BackedEnum;
-use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
-use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
@@ -26,8 +22,6 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\BooleanFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
@@ -36,8 +30,6 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 final class EmailContactCrudController extends AbstractCrudController
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
-        private readonly RequestStack $requestStack,
         private readonly TranslatorInterface $translator,
     ) {
     }
@@ -58,19 +50,19 @@ final class EmailContactCrudController extends AbstractCrudController
             ->setPageTitle(Crud::PAGE_DETAIL, 'admin.email_contact.page.detail')
             ->setDefaultSort(['emailAddress' => 'ASC'])
             ->showEntityActionsInlined()
-            ->setSearchFields(['emailAddress', 'label']);
+            ->setSearchFields(['emailAddress']);
     }
 
     public function configureActions(Actions $actions): Actions
     {
-        return $actions->add(Crud::PAGE_INDEX, Action::DETAIL);
+        return $actions
+            ->add(Crud::PAGE_INDEX, Action::DETAIL)
+            ->disable(Action::NEW);
     }
 
     public function configureFilters(Filters $filters): Filters
     {
         return $filters
-            ->add(EntityFilter::new('contactDetails', 'admin.field.contact_details')->autocomplete())
-            ->add(ChoiceFilter::new('type', 'admin.field.type')->setChoices($this->typeChoices())->setFormTypeOption('value_type_options.translation_domain', 'backoffice'))
             ->add(ChoiceFilter::new('source', 'admin.field.source')->setChoices($this->sourceChoices())->setFormTypeOption('value_type_options.translation_domain', 'backoffice'))
             ->add(BooleanFilter::new('optInNewsletter', 'admin.field.opt_in_newsletter'))
             ->add(DateTimeFilter::new('unsubscribedAt', 'admin.field.unsubscribed_at'))
@@ -86,13 +78,10 @@ final class EmailContactCrudController extends AbstractCrudController
             ->renderAsHtml()
             ->hideOnForm();
         yield EmailField::new('emailAddress', 'admin.field.email_address')->onlyOnForms();
-        yield TextField::new('label', 'admin.field.label');
-        yield AssociationField::new('contactDetails', 'admin.field.contact_details')
-            ->setCrudController(ContactDetailsCrudController::class)
-            ->autocomplete();
-        yield ChoiceField::new('type', 'admin.field.type')
-            ->setChoices($this->typeChoices())
-            ->formatValue(fn (mixed $value): string => $this->translateEnumValue('address_book.email_contact_type', $value));
+        yield TextField::new('linkedDirectoryEntriesSummary', 'admin.field.contact_details')
+            ->formatValue(static fn (mixed $value): string => ContactDisplayFormatter::textSummary($value))
+            ->renderAsHtml()
+            ->hideOnForm();
         yield ChoiceField::new('source', 'admin.field.source')
             ->setChoices($this->sourceChoices())
             ->formatValue(fn (mixed $value): string => $this->translateEnumValue('address_book.contact_source', $value))
@@ -104,35 +93,6 @@ final class EmailContactCrudController extends AbstractCrudController
         yield BooleanField::new('active', 'admin.field.active');
     }
 
-    public function createEntity(string $entityFqcn): object
-    {
-        if (EmailContactEntity::class !== $entityFqcn) {
-            return parent::createEntity($entityFqcn);
-        }
-
-        $emailContactEntity = new EmailContactEntity();
-        $contactDetailsEntity = $this->findRequestedContactDetails();
-
-        if ($contactDetailsEntity instanceof ContactDetailsEntity) {
-            $emailContactEntity->setContactDetails($contactDetailsEntity);
-        }
-
-        return $emailContactEntity;
-    }
-
-    private function findRequestedContactDetails(): ?ContactDetailsEntity
-    {
-        $contactDetailsId = $this->requestStack->getCurrentRequest()?->query->get('contactDetailsId');
-
-        if (!is_scalar($contactDetailsId) || !ctype_digit((string) $contactDetailsId)) {
-            return null;
-        }
-
-        $contactDetailsEntity = $this->entityManager->find(ContactDetailsEntity::class, (int) $contactDetailsId);
-
-        return $contactDetailsEntity instanceof ContactDetailsEntity ? $contactDetailsEntity : null;
-    }
-
     /**
      * @return array<string, ContactDataSource>
      */
@@ -142,20 +102,7 @@ final class EmailContactCrudController extends AbstractCrudController
             'address_book.contact_source.manual' => ContactDataSource::MANUAL,
             'address_book.contact_source.google_sheets' => ContactDataSource::GOOGLE_SHEETS,
             'address_book.contact_source.legacy_import' => ContactDataSource::LEGACY_IMPORT,
-        ];
-    }
-
-    /**
-     * @return array<string, EmailContactType>
-     */
-    private function typeChoices(): array
-    {
-        return [
-            'address_book.email_contact_type.main' => EmailContactType::MAIN,
-            'address_book.email_contact_type.work' => EmailContactType::WORK,
-            'address_book.email_contact_type.personal' => EmailContactType::PERSONAL,
-            'address_book.email_contact_type.billing' => EmailContactType::BILLING,
-            'address_book.email_contact_type.other' => EmailContactType::OTHER,
+            'address_book.contact_source.directory_import' => ContactDataSource::DIRECTORY_IMPORT,
         ];
     }
 

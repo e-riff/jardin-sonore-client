@@ -9,8 +9,10 @@ use App\Domain\Model\AddressBook\DirectoryEntryType;
 use App\Domain\Model\AddressBook\OrganizationSector;
 use App\Domain\Model\AddressBook\OrganizationType;
 use App\Infrastructure\Admin\Formatter\ContactDisplayFormatter;
+use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use BackedEnum;
+use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Asset;
@@ -23,6 +25,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\UrlField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\BooleanFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
@@ -36,6 +39,7 @@ final class OrganizationCrudController extends AbstractCrudController
 {
     public function __construct(
         private readonly AdminUrlGenerator $adminUrlGenerator,
+        private readonly SharedContactLinkResolver $sharedContactLinkResolver,
         private readonly TranslatorInterface $translator,
     ) {
     }
@@ -56,7 +60,7 @@ final class OrganizationCrudController extends AbstractCrudController
             ->setPageTitle(Crud::PAGE_DETAIL, 'admin.organization.page.detail')
             ->setDefaultSort(['name' => 'ASC'])
             ->showEntityActionsInlined()
-            ->setSearchFields(['name']);
+            ->setSearchFields(['name', 'websiteUrl']);
     }
 
     public function configureAssets(Assets $assets): Assets
@@ -70,10 +74,10 @@ final class OrganizationCrudController extends AbstractCrudController
             ->linkToUrl(fn (OrganizationEntity $organizationEntity): string => $this->generateNewPersonUrl($organizationEntity));
         $addEmail = Action::new('addEmail', 'admin.action.add_email', 'fa fa-envelope')
             ->displayIf(static fn (OrganizationEntity $organizationEntity): bool => null !== $organizationEntity->getContactDetails())
-            ->linkToUrl(fn (OrganizationEntity $organizationEntity): string => $this->generateNewContactUrl(EmailContactCrudController::class, $organizationEntity));
+            ->linkToUrl(fn (OrganizationEntity $organizationEntity): string => $this->generateNewContactUrl(EmailContactLinkCrudController::class, $organizationEntity));
         $addPhone = Action::new('addPhone', 'admin.action.add_phone', 'fa fa-phone')
             ->displayIf(static fn (OrganizationEntity $organizationEntity): bool => null !== $organizationEntity->getContactDetails())
-            ->linkToUrl(fn (OrganizationEntity $organizationEntity): string => $this->generateNewContactUrl(PhoneContactCrudController::class, $organizationEntity));
+            ->linkToUrl(fn (OrganizationEntity $organizationEntity): string => $this->generateNewContactUrl(PhoneContactLinkCrudController::class, $organizationEntity));
         $addAddress = Action::new('addAddress', 'admin.action.add_address', 'fa fa-location-dot')
             ->displayIf(static fn (OrganizationEntity $organizationEntity): bool => null !== $organizationEntity->getContactDetails())
             ->linkToUrl(fn (OrganizationEntity $organizationEntity): string => $this->generateNewContactUrl(AddressContactCrudController::class, $organizationEntity));
@@ -105,6 +109,9 @@ final class OrganizationCrudController extends AbstractCrudController
             ->formatValue(fn (mixed $value): string => $this->translateEnumValue('address_book.directory_entry_type', $value))
             ->hideOnForm();
         yield TextField::new('name', 'admin.field.name');
+        yield UrlField::new('websiteUrl', 'admin.field.website_url')
+            ->setFormTypeOption('required', false)
+            ->hideOnIndex();
         yield ChoiceField::new('type', 'admin.field.organization_type')
             ->setChoices($this->organizationTypeChoices())
             ->formatValue(fn (mixed $value): string => $this->translateEnumValue('address_book.organization_type', $value))
@@ -140,6 +147,24 @@ final class OrganizationCrudController extends AbstractCrudController
         yield AssociationField::new('people', 'admin.field.people')->onlyOnDetail();
         yield AssociationField::new('contactDetails', 'admin.field.contact_details')->onlyOnDetail();
         yield BooleanField::new('active', 'admin.field.active');
+    }
+
+    public function persistEntity(EntityManagerInterface $entityManager, $entityInstance): void
+    {
+        if ($entityInstance->getContactDetails() instanceof ContactDetailsEntity) {
+            $this->sharedContactLinkResolver->resolveContactDetails($entityInstance->getContactDetails());
+        }
+
+        parent::persistEntity($entityManager, $entityInstance);
+    }
+
+    public function updateEntity(EntityManagerInterface $entityManager, $entityInstance): void
+    {
+        if ($entityInstance->getContactDetails() instanceof ContactDetailsEntity) {
+            $this->sharedContactLinkResolver->resolveContactDetails($entityInstance->getContactDetails());
+        }
+
+        parent::updateEntity($entityManager, $entityInstance);
     }
 
     private function generateNewPersonUrl(OrganizationEntity $organizationEntity): string

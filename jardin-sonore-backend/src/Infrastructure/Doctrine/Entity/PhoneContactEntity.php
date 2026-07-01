@@ -4,29 +4,34 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Doctrine\Entity;
 
-use App\Domain\Model\AddressBook\PhoneContactType;
 use App\Domain\Model\ValueObject\PhoneNumber;
 use App\Infrastructure\Doctrine\Entity\Behavior\ActivableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
-use App\Infrastructure\Doctrine\Entity\Behavior\NullableLabelTrait;
+use App\Infrastructure\Doctrine\Entity\Behavior\TimestampableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\UuidIdentifiableTrait;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
 class PhoneContactEntity
 {
     use ActivableTrait;
     use IdentifiableTrait;
-    use NullableLabelTrait;
+    use TimestampableTrait;
     use UuidIdentifiableTrait;
 
-    private ContactDetailsEntity $contactDetails;
-
-    private PhoneContactType $type = PhoneContactType::MAIN;
-
     private string $phoneNumber = '';
+
+    /**
+     * @var Collection<int, PhoneContactLinkEntity>
+     */
+    private Collection $phoneContactLinks;
 
     public function __construct()
     {
         $this->initializeUuid();
+        $this->initializeTimestamps();
+        $this->setActive(true);
+        $this->phoneContactLinks = new ArrayCollection();
     }
 
     public function __toString(): string
@@ -46,27 +51,41 @@ class PhoneContactEntity
         return $this;
     }
 
-    public function getContactDetails(): ?ContactDetailsEntity
+    /**
+     * @return Collection<int, PhoneContactLinkEntity>
+     */
+    public function getPhoneContactLinks(): Collection
     {
-        return $this->contactDetails ?? null;
+        return $this->phoneContactLinks;
     }
 
-    public function setContactDetails(ContactDetailsEntity $contactDetails): static
+    public function addPhoneContactLink(PhoneContactLinkEntity $phoneContactLink): static
     {
-        $this->contactDetails = $contactDetails;
+        if (!$this->phoneContactLinks->contains($phoneContactLink)) {
+            $this->phoneContactLinks->add($phoneContactLink);
+
+            if ($phoneContactLink->getPhoneContact() !== $this) {
+                $phoneContactLink->setPhoneContact($this);
+            }
+        }
 
         return $this;
     }
 
-    public function getType(): PhoneContactType
+    public function removePhoneContactLink(PhoneContactLinkEntity $phoneContactLink): static
     {
-        return $this->type;
-    }
-
-    public function setType(PhoneContactType $type): static
-    {
-        $this->type = $type;
+        $this->phoneContactLinks->removeElement($phoneContactLink);
 
         return $this;
+    }
+
+    public function getLinkedDirectoryEntriesSummary(): string
+    {
+        $directoryEntries = $this->phoneContactLinks->map(
+            static fn (PhoneContactLinkEntity $phoneContactLink): string => (string) ($phoneContactLink->getContactDetails()?->getDirectoryEntry() ?? ''),
+        )->toArray();
+        $directoryEntries = array_values(array_unique(array_filter(array_map('trim', $directoryEntries))));
+
+        return [] === $directoryEntries ? '—' : implode("\n", $directoryEntries);
     }
 }

@@ -18,6 +18,8 @@ class OrganizationEntity extends DirectoryEntryEntity
 
     private ?OrganizationSector $sector = null;
 
+    private ?string $websiteUrl = null;
+
     /**
      * @var Collection<int, PersonEntity>
      */
@@ -66,6 +68,18 @@ class OrganizationEntity extends DirectoryEntryEntity
     public function setSector(?OrganizationSector $sector): static
     {
         $this->sector = $sector;
+
+        return $this;
+    }
+
+    public function getWebsiteUrl(): ?string
+    {
+        return $this->websiteUrl;
+    }
+
+    public function setWebsiteUrl(?string $websiteUrl): static
+    {
+        $this->websiteUrl = $websiteUrl;
 
         return $this;
     }

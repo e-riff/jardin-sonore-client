@@ -2,8 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Domain\Model\AddressBook\PhoneContactType;
-use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
+use App\Infrastructure\Doctrine\Entity\PhoneContactLinkEntity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Symfony\Bridge\Doctrine\Types\UuidType;
@@ -12,7 +11,6 @@ return static function (ClassMetadata $metadata): void {
     $metadata->setPrimaryTable([
         'name' => 'phone_contact',
         'indexes' => [
-            'idx_phone_contact_details' => ['columns' => ['contact_details_id']],
             'idx_phone_contact_phone_number' => ['columns' => ['phone_number']],
         ],
         'uniqueConstraints' => [
@@ -34,24 +32,32 @@ return static function (ClassMetadata $metadata): void {
     ]);
 
     $metadata->mapField([
+        'fieldName' => 'createdAt',
+        'columnName' => 'created_at',
+        'type' => Types::DATETIME_IMMUTABLE,
+        'options' => [
+            'gedmo' => [
+                'timestampable' => ['on' => 'create'],
+            ],
+        ],
+    ]);
+
+    $metadata->mapField([
+        'fieldName' => 'updatedAt',
+        'columnName' => 'updated_at',
+        'type' => Types::DATETIME_IMMUTABLE,
+        'options' => [
+            'gedmo' => [
+                'timestampable' => ['on' => 'update'],
+            ],
+        ],
+    ]);
+
+    $metadata->mapField([
         'fieldName' => 'phoneNumber',
         'columnName' => 'phone_number',
         'type' => Types::STRING,
         'length' => 32,
-    ]);
-
-    $metadata->mapField([
-        'fieldName' => 'label',
-        'type' => Types::STRING,
-        'length' => 255,
-        'nullable' => true,
-    ]);
-
-    $metadata->mapField([
-        'fieldName' => 'type',
-        'type' => Types::STRING,
-        'length' => 32,
-        'enumType' => PhoneContactType::class,
     ]);
 
     $metadata->mapField([
@@ -60,17 +66,9 @@ return static function (ClassMetadata $metadata): void {
         'options' => ['default' => true],
     ]);
 
-    $metadata->mapManyToOne([
-        'fieldName' => 'contactDetails',
-        'targetEntity' => ContactDetailsEntity::class,
-        'inversedBy' => 'phoneContacts',
-        'joinColumns' => [
-            [
-                'name' => 'contact_details_id',
-                'referencedColumnName' => 'id',
-                'nullable' => false,
-                'onDelete' => 'CASCADE',
-            ],
-        ],
+    $metadata->mapOneToMany([
+        'fieldName' => 'phoneContactLinks',
+        'targetEntity' => PhoneContactLinkEntity::class,
+        'mappedBy' => 'phoneContact',
     ]);
 };

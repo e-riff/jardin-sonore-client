@@ -87,6 +87,7 @@ final class EmailContactFormType extends AbstractType
             'address_book.contact_source.manual' => ContactDataSource::MANUAL,
             'address_book.contact_source.google_sheets' => ContactDataSource::GOOGLE_SHEETS,
             'address_book.contact_source.legacy_import' => ContactDataSource::LEGACY_IMPORT,
+            'address_book.contact_source.directory_import' => ContactDataSource::DIRECTORY_IMPORT,
         ];
     }
 }

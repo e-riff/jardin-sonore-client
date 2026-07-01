@@ -18,6 +18,7 @@ use App\Domain\Repository\OrganizationRepositoryInterface;
 use App\Domain\Repository\PersonRepositoryInterface;
 use App\Domain\Repository\PhoneContactRepositoryInterface;
 use App\Domain\Repository\RegionRepositoryInterface;
+use App\Infrastructure\Doctrine\EventSubscriber\SharedContactSubscriber;
 use App\Infrastructure\Doctrine\Repository\AdminUserDoctrineRepository;
 use App\Infrastructure\Doctrine\Repository\DepartmentDoctrineRepository;
 use App\Infrastructure\Doctrine\Repository\EmailContactDoctrineRepository;
@@ -84,6 +85,11 @@ return static function (ContainerConfigurator $containerConfigurator): void {
         ]);
 
     $services->set(SluggableListener::class)
+        ->tag('doctrine.event_subscriber', [
+            'connection' => 'default',
+        ]);
+
+    $services->set(SharedContactSubscriber::class)
         ->tag('doctrine.event_subscriber', [
             'connection' => 'default',
         ]);

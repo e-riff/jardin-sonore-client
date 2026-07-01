@@ -38,6 +38,14 @@ return static function (ClassMetadata $metadata): void {
         'enumType' => OrganizationSector::class,
     ]);
 
+    $metadata->mapField([
+        'fieldName' => 'websiteUrl',
+        'columnName' => 'website_url',
+        'type' => Types::STRING,
+        'length' => 2048,
+        'nullable' => true,
+    ]);
+
     $metadata->mapOneToMany([
         'fieldName' => 'people',
         'targetEntity' => PersonEntity::class,

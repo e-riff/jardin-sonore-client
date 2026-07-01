@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Doctrine\Mapper;
 
 use App\Domain\Model\AddressBook\EmailContact;
+use App\Domain\Model\AddressBook\EmailContactType;
 use App\Domain\Model\ValueObject\EmailAddress;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 
@@ -14,8 +15,8 @@ final readonly class EmailContactMapper
     {
         return new EmailContact(
             emailAddress: new EmailAddress($emailContactEntity->getEmailAddress()),
-            label: $emailContactEntity->getLabel(),
-            type: $emailContactEntity->getType(),
+            label: null,
+            type: EmailContactType::MAIN,
             optInNewsletter: $emailContactEntity->hasOptInNewsletter(),
             active: $emailContactEntity->isActive(),
             source: $emailContactEntity->getSource(),
@@ -33,8 +34,6 @@ final readonly class EmailContactMapper
         $emailContactEntity
             ->setUuid($emailContact->getUuid())
             ->setEmailAddress($emailContact->getEmailAddress()->value())
-            ->setLabel($emailContact->getLabel())
-            ->setType($emailContact->getType())
             ->setOptInNewsletter($emailContact->hasNewsletterOptIn())
             ->setActive($emailContact->isActive())
             ->setSource($emailContact->getSource())

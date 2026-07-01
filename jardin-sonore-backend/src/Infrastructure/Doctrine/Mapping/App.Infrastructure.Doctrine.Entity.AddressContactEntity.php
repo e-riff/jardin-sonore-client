@@ -36,6 +36,28 @@ return static function (ClassMetadata $metadata): void {
     ]);
 
     $metadata->mapField([
+        'fieldName' => 'createdAt',
+        'columnName' => 'created_at',
+        'type' => Types::DATETIME_IMMUTABLE,
+        'options' => [
+            'gedmo' => [
+                'timestampable' => ['on' => 'create'],
+            ],
+        ],
+    ]);
+
+    $metadata->mapField([
+        'fieldName' => 'updatedAt',
+        'columnName' => 'updated_at',
+        'type' => Types::DATETIME_IMMUTABLE,
+        'options' => [
+            'gedmo' => [
+                'timestampable' => ['on' => 'update'],
+            ],
+        ],
+    ]);
+
+    $metadata->mapField([
         'fieldName' => 'type',
         'type' => Types::STRING,
         'length' => 32,

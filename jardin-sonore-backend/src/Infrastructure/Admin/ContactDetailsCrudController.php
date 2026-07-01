@@ -5,15 +5,16 @@ declare(strict_types=1);
 namespace App\Infrastructure\Admin;
 
 use App\Infrastructure\Admin\Form\AddressContactFormType;
-use App\Infrastructure\Admin\Form\EmailContactFormType;
-use App\Infrastructure\Admin\Form\PhoneContactFormType;
+use App\Infrastructure\Admin\Form\EmailContactLinkFormType;
+use App\Infrastructure\Admin\Form\PhoneContactLinkFormType;
 use App\Infrastructure\Admin\Formatter\ContactDisplayFormatter;
 use App\Infrastructure\Doctrine\Entity\AddressContactEntity;
 use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
-use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
+use App\Infrastructure\Doctrine\Entity\EmailContactLinkEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\PersonEntity;
-use App\Infrastructure\Doctrine\Entity\PhoneContactEntity;
+use App\Infrastructure\Doctrine\Entity\PhoneContactLinkEntity;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
@@ -36,6 +37,10 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
  */
 final class ContactDetailsCrudController extends AbstractCrudController
 {
+    public function __construct(private readonly SharedContactLinkResolver $sharedContactLinkResolver)
+    {
+    }
+
     public static function getEntityFqcn(): string
     {
         return ContactDetailsEntity::class;
@@ -54,10 +59,10 @@ final class ContactDetailsCrudController extends AbstractCrudController
             ->setSearchFields([
                 'uuid',
                 'directoryEntry.uuid',
-                'emailContacts.emailAddress',
-                'emailContacts.label',
-                'phoneContacts.phoneNumber',
-                'phoneContacts.label',
+                'emailContactLinks.emailContact.emailAddress',
+                'emailContactLinks.label',
+                'phoneContactLinks.phoneContact.phoneNumber',
+                'phoneContactLinks.label',
                 'addressContacts.address',
                 'addressContacts.postalCode',
                 'addressContacts.city',
@@ -118,21 +123,25 @@ final class ContactDetailsCrudController extends AbstractCrudController
             ->formatValue(static fn (mixed $value): string => ContactDisplayFormatter::textSummary($value))
             ->renderAsHtml()
             ->hideOnForm();
-        yield CollectionField::new('emailContacts', 'admin.field.email_contacts')
-            ->setEntryType(EmailContactFormType::class)
+        yield CollectionField::new('emailContactLinks', 'admin.field.email_contacts')
+            ->setEntryType(EmailContactLinkFormType::class)
             ->setEntryIsComplex()
             ->setColumns('col-md-12 col-xxl-10')
-            ->setFormTypeOption('prototype_data', new EmailContactEntity())
-            ->setFormTypeOption('entry_options.empty_data', static fn (): EmailContactEntity => new EmailContactEntity())
+            ->setFormTypeOption('by_reference', false)
+            ->setFormTypeOption('delete_empty', static fn (mixed $emailContactLink): bool => $emailContactLink instanceof EmailContactLinkEntity && $emailContactLink->isPendingRemoval())
+            ->setFormTypeOption('prototype_data', new EmailContactLinkEntity())
+            ->setFormTypeOption('entry_options.empty_data', static fn (): EmailContactLinkEntity => new EmailContactLinkEntity())
             ->allowAdd()
             ->allowDelete()
             ->onlyOnForms();
-        yield CollectionField::new('phoneContacts', 'admin.field.phone_contacts')
-            ->setEntryType(PhoneContactFormType::class)
+        yield CollectionField::new('phoneContactLinks', 'admin.field.phone_contacts')
+            ->setEntryType(PhoneContactLinkFormType::class)
             ->setEntryIsComplex()
             ->setColumns('col-md-12 col-xxl-10')
-            ->setFormTypeOption('prototype_data', new PhoneContactEntity())
-            ->setFormTypeOption('entry_options.empty_data', static fn (): PhoneContactEntity => new PhoneContactEntity())
+            ->setFormTypeOption('by_reference', false)
+            ->setFormTypeOption('delete_empty', static fn (mixed $phoneContactLink): bool => $phoneContactLink instanceof PhoneContactLinkEntity && $phoneContactLink->isPendingRemoval())
+            ->setFormTypeOption('prototype_data', new PhoneContactLinkEntity())
+            ->setFormTypeOption('entry_options.empty_data', static fn (): PhoneContactLinkEntity => new PhoneContactLinkEntity())
             ->allowAdd()
             ->allowDelete()
             ->onlyOnForms();
@@ -140,10 +149,25 @@ final class ContactDetailsCrudController extends AbstractCrudController
             ->setEntryType(AddressContactFormType::class)
             ->setEntryIsComplex()
             ->setColumns('col-md-12 col-xxl-10')
+            ->setFormTypeOption('by_reference', false)
             ->setFormTypeOption('prototype_data', new AddressContactEntity())
             ->setFormTypeOption('entry_options.empty_data', static fn (): AddressContactEntity => new AddressContactEntity())
             ->allowAdd()
             ->allowDelete()
             ->onlyOnForms();
+    }
+
+    public function persistEntity(EntityManagerInterface $entityManager, $entityInstance): void
+    {
+        $this->sharedContactLinkResolver->resolveContactDetails($entityInstance);
+
+        parent::persistEntity($entityManager, $entityInstance);
+    }
+
+    public function updateEntity(EntityManagerInterface $entityManager, $entityInstance): void
+    {
+        $this->sharedContactLinkResolver->resolveContactDetails($entityInstance);
+
+        parent::updateEntity($entityManager, $entityInstance);
     }
 }
