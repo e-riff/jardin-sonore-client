@@ -31,6 +31,11 @@ final class NewsletterRecommendationType extends AbstractType
                 'label' => 'mailing.catalog.form.title',
                 'help' => 'mailing.catalog.form.title_help',
             ])
+            ->add('tag', TextType::class, [
+                'label' => 'mailing.catalog.form.tag',
+                'help' => 'mailing.catalog.form.tag_help',
+                'required' => false,
+            ])
             ->add('text', TextareaType::class, [
                 'label' => 'mailing.catalog.form.text',
                 'help' => 'mailing.catalog.form.text_help',

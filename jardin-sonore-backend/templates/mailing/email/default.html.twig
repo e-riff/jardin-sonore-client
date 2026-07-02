@@ -92,34 +92,46 @@
                                     <td bgcolor="#f8f3f0" style="padding:0 28px 20px 28px; background-color:#f8f3f0;">
                                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#fffdfa" style="background-color:#fffdfa; border:1px solid #eadfd7;">
                                             <tr>
-                                                <td width="160" valign="top" style="padding:16px 0 16px 16px;">
+                                                <td width="152" valign="middle" align="center" style="padding:16px 8px 16px 16px;">
                                                     {% if recommendation.imagePath %}
-                                                        <img
-                                                            src="{{ absolute_url(asset(recommendation.imagePath)) }}"
-                                                            alt=""
-                                                            width="128"
-                                                            style="display:block; width:128px; height:auto; border:0; outline:none; text-decoration:none;"
-                                                        >
+                                                        {% if recommendation.url %}
+                                                            <a href="{{ recommendation.url }}" style="display:block; text-decoration:none;">
+                                                                <img
+                                                                    src="{{ absolute_url(asset(recommendation.imagePath)) }}"
+                                                                    alt=""
+                                                                    width="128"
+                                                                    height="128"
+                                                                    style="display:block; width:128px; height:128px; margin:0 auto; border:0; outline:none; text-decoration:none; object-fit:cover;"
+                                                                >
+                                                            </a>
+                                                        {% else %}
+                                                            <img
+                                                                src="{{ absolute_url(asset(recommendation.imagePath)) }}"
+                                                                alt=""
+                                                                width="128"
+                                                                height="128"
+                                                                style="display:block; width:128px; height:128px; margin:0 auto; border:0; outline:none; text-decoration:none; object-fit:cover;"
+                                                            >
+                                                        {% endif %}
                                                     {% else %}
-                                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center">
                                                             <tr>
-                                                                <td width="128" height="96" bgcolor="#eadfd7" style="font-size:0; line-height:0;">&nbsp;</td>
+                                                                <td width="128" height="128" bgcolor="#eadfd7" style="font-size:0; line-height:0;">&nbsp;</td>
                                                             </tr>
                                                         </table>
                                                     {% endif %}
                                                 </td>
                                                 <td valign="top" style="padding:16px 16px 16px 12px;">
-                                                    <p style="margin:0 0 6px 0; color:{{ loop.index is odd ? '#692019' : '#47664b' }}; font-family:Arial, sans-serif; font-size:14px; line-height:18px; font-weight:bold;">{{ 'mailing.preview.email.recommendation_source'|trans({}, 'mailing') }}</p>
                                                     <h4 style="margin:0 0 10px 0; color:#1c1b1a; font-size:18px; line-height:26px; font-weight:bold;">{{ recommendation.title }}</h4>
-                                                    <div style="color:#554240; font-size:14px; line-height:1.7; white-space:pre-line;">{{ recommendation.text }}</div>
-                                                    {% if recommendation.url and recommendation.linkLabel %}
+                                                    <div style="color:#554240; font-size:14px; line-height:1.7; white-space:pre-line;">{% if recommendation.tag %}<span style="color:{{ loop.index is odd ? '#692019' : '#47664b' }}; font-family:Arial, sans-serif; font-weight:bold;">{{ recommendation.tag }}</span> - {% endif %}{{ recommendation.text }}</div>
+                                                    {% if recommendation.url %}
                                                         <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-top:12px;">
                                                             <tr>
                                                                 <td>
                                                                     <a
                                                                         href="{{ recommendation.url }}"
                                                                         style="color:#692019; font-family:Arial, sans-serif; font-size:14px; line-height:18px; font-weight:bold; text-decoration:underline;"
-                                                                    >{{ recommendation.linkLabel }}</a>
+                                                                    >{{ recommendation.linkLabel ?: ('mailing.preview.email.recommendation_default_link_label'|trans({}, 'mailing')) }}</a>
                                                                 </td>
                                                             </tr>
                                                         </table>

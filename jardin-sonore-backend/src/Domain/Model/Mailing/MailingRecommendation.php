@@ -17,6 +17,7 @@ final class MailingRecommendation implements UuidIdentifiableInterface
 
     public function __construct(
         private string $title,
+        private ?string $tag,
         private string $text,
         private int $position,
         private ?string $url = null,
@@ -31,6 +32,10 @@ final class MailingRecommendation implements UuidIdentifiableInterface
         $this->assertNotBlank($title, 'Mailing recommendation title cannot be blank.');
         $this->assertNotBlank($text, 'Mailing recommendation text cannot be blank.');
         $this->assertPositionIsValid($position);
+        $this->title = trim($title);
+        $this->tag = $this->normalizeNullableString($tag);
+        $this->text = trim($text);
+        $this->position = $position;
         $this->url = $this->normalizeNullableString($url);
         $this->linkLabel = $this->normalizeNullableString($linkLabel);
         $this->imagePath = $this->normalizeNullableString($imagePath);
@@ -44,6 +49,11 @@ final class MailingRecommendation implements UuidIdentifiableInterface
     public function getText(): string
     {
         return $this->text;
+    }
+
+    public function getTag(): ?string
+    {
+        return $this->tag;
     }
 
     public function getPosition(): int
@@ -71,13 +81,14 @@ final class MailingRecommendation implements UuidIdentifiableInterface
         return $this->sourceRecommendationUuid;
     }
 
-    public function updateContent(string $title, string $text): void
+    public function updateContent(string $title, ?string $tag, string $text): void
     {
         $this->assertNotBlank($title, 'Mailing recommendation title cannot be blank.');
         $this->assertNotBlank($text, 'Mailing recommendation text cannot be blank.');
 
-        $this->title = $title;
-        $this->text = $text;
+        $this->title = trim($title);
+        $this->tag = $this->normalizeNullableString($tag);
+        $this->text = trim($text);
     }
 
     public function updateLink(?string $url, ?string $linkLabel): void

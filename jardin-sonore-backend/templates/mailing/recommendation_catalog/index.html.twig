@@ -30,12 +30,23 @@
             {% for recommendation in recommendations %}
                 <article class="mailing-catalog-card">
                     {% if recommendation.imagePath %}
-                        <img src="{{ asset(recommendation.imagePath) }}" alt="">
+                        {% if recommendation.url %}
+                            <a class="mailing-catalog-card__media" href="{{ recommendation.url }}" target="_blank" rel="noopener noreferrer">
+                                <img src="{{ asset(recommendation.imagePath) }}" alt="">
+                            </a>
+                        {% else %}
+                            <div class="mailing-catalog-card__media">
+                                <img src="{{ asset(recommendation.imagePath) }}" alt="">
+                            </div>
+                        {% endif %}
                     {% endif %}
                     <div>
                         <span class="internal-badge internal-badge--{{ recommendation.active ? 'secondary' : 'primary' }}">
                             {{ (recommendation.active ? 'mailing.catalog.status.active' : 'mailing.catalog.status.inactive')|trans({}, 'mailing') }}
                         </span>
+                        {% if recommendation.tag %}
+                            <p class="mailing-catalog-card__tag">{{ recommendation.tag }}</p>
+                        {% endif %}
                         <h2>{{ recommendation.title }}</h2>
                         <p>{{ recommendation.text }}</p>
                     </div>

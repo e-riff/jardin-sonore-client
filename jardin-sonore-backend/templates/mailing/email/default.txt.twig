@@ -12,13 +12,13 @@
 {% endif %}
 
 {% if activeRecommendations is not empty %}
-Sélection Jardin Sonore
+Nos recommandations
 {% for recommendation in activeRecommendations %}
 
 - {{ recommendation.title }}
-{{ recommendation.text }}
-{% if recommendation.url and recommendation.linkLabel %}
-{{ recommendation.linkLabel }} : {{ recommendation.url }}
+{% if recommendation.tag %}{{ recommendation.tag }} - {% endif %}{{ recommendation.text }}
+{% if recommendation.url %}
+{{ recommendation.linkLabel ?: ('mailing.preview.email.recommendation_default_link_label'|trans({}, 'mailing')) }} : {{ recommendation.url }}
 {% endif %}
 {% endfor %}
 {% endif %}

@@ -24,6 +24,7 @@ final readonly class CreateNewsletterRecommendation
 
         $recommendation = new NewsletterRecommendation(
             title: $input->title,
+            tag: $input->tag,
             text: $input->text,
             url: $input->url,
             linkLabel: $input->linkLabel,

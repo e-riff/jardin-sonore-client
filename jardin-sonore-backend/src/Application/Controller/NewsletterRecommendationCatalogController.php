@@ -122,6 +122,7 @@ final class NewsletterRecommendationCatalogController extends AbstractController
     {
         return new CreateNewsletterRecommendationInput(
             title: $formModel->title,
+            tag: $formModel->tag,
             text: $formModel->text,
             url: $formModel->url,
             linkLabel: $formModel->linkLabel,

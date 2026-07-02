@@ -40,6 +40,13 @@ return static function (ClassMetadata $metadata): void {
     ]);
 
     $metadata->mapField([
+        'fieldName' => 'tag',
+        'type' => Types::STRING,
+        'length' => 40,
+        'nullable' => true,
+    ]);
+
+    $metadata->mapField([
         'fieldName' => 'text',
         'type' => Types::TEXT,
     ]);

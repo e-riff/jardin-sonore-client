@@ -32,6 +32,11 @@ final class MailingRecommendationType extends AbstractType
                 'label' => 'mailing.form.recommendation.title',
                 'help' => 'mailing.form.recommendation.title_help',
             ])
+            ->add('tag', TextType::class, [
+                'label' => 'mailing.form.recommendation.tag',
+                'help' => 'mailing.form.recommendation.tag_help',
+                'required' => false,
+            ])
             ->add('text', TextareaType::class, [
                 'label' => 'mailing.form.recommendation.text',
                 'help' => 'mailing.form.recommendation.text_help',

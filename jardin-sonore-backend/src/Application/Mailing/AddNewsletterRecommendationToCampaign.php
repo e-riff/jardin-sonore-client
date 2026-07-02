@@ -33,6 +33,7 @@ final readonly class AddNewsletterRecommendationToCampaign
         $recommendations = $mailingCampaign->getRecommendations();
         $recommendations[] = new MailingRecommendation(
             title: $newsletterRecommendation->getTitle(),
+            tag: $newsletterRecommendation->getTag(),
             text: $newsletterRecommendation->getText(),
             position: count($recommendations) + 1,
             url: $newsletterRecommendation->getUrl(),

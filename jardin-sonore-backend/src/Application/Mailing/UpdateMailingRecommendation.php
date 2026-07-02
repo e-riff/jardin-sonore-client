@@ -24,7 +24,7 @@ final readonly class UpdateMailingRecommendation
                 continue;
             }
 
-            $recommendation->updateContent($input->title, $input->text);
+            $recommendation->updateContent($input->title, $input->tag, $input->text);
             $recommendation->updateLink($input->url, $input->linkLabel);
 
             if ($input->active) {
