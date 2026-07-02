@@ -18,6 +18,7 @@ final class NewsletterRecommendation implements UuidIdentifiableInterface
 
     public function __construct(
         private string $title,
+        private ?string $tag = null,
         private string $text,
         private ?string $url = null,
         private ?string $linkLabel = null,
@@ -29,7 +30,7 @@ final class NewsletterRecommendation implements UuidIdentifiableInterface
     ) {
         $this->initializeUuid($uuid);
         $this->initializeActive($active);
-        $this->setContent($title, $text, $url, $linkLabel, $imagePath);
+        $this->setContent($title, $tag, $text, $url, $linkLabel, $imagePath);
     }
 
     public function getTitle(): string
@@ -40,6 +41,11 @@ final class NewsletterRecommendation implements UuidIdentifiableInterface
     public function getText(): string
     {
         return $this->text;
+    }
+
+    public function getTag(): ?string
+    {
+        return $this->tag;
     }
 
     public function getUrl(): ?string
@@ -69,17 +75,19 @@ final class NewsletterRecommendation implements UuidIdentifiableInterface
 
     public function updateContent(
         string $title,
+        ?string $tag,
         string $text,
         ?string $url,
         ?string $linkLabel,
         ?string $imagePath,
     ): void {
-        $this->setContent($title, $text, $url, $linkLabel, $imagePath);
+        $this->setContent($title, $tag, $text, $url, $linkLabel, $imagePath);
         $this->updatedAt = new DateTimeImmutable();
     }
 
     private function setContent(
         string $title,
+        ?string $tag,
         string $text,
         ?string $url,
         ?string $linkLabel,
@@ -94,6 +102,7 @@ final class NewsletterRecommendation implements UuidIdentifiableInterface
         }
 
         $this->title = trim($title);
+        $this->tag = $this->normalizeNullableString($tag);
         $this->text = trim($text);
         $this->url = $this->normalizeNullableString($url);
         $this->linkLabel = $this->normalizeNullableString($linkLabel);

@@ -31,17 +31,37 @@
 
             <div class="mailing-recommendations">
                 {% for recommendation in campaign.recommendations %}
-                    <article class="mailing-recommendation mailing-recommendation--summary">
+                    <article class="mailing-recommendation mailing-recommendation--summary{{ recommendation.imagePath ? '' : ' mailing-recommendation--without-image' }}">
                         {% if recommendation.imagePath %}
-                            <img
-                                class="mailing-recommendation__image"
-                                src="{{ asset(recommendation.imagePath) }}"
-                                alt=""
-                            >
+                            {% if recommendation.url %}
+                                <a
+                                    class="mailing-recommendation__media"
+                                    href="{{ recommendation.url }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    <img
+                                        class="mailing-recommendation__image"
+                                        src="{{ asset(recommendation.imagePath) }}"
+                                        alt=""
+                                    >
+                                </a>
+                            {% else %}
+                                <div class="mailing-recommendation__media">
+                                    <img
+                                        class="mailing-recommendation__image"
+                                        src="{{ asset(recommendation.imagePath) }}"
+                                        alt=""
+                                    >
+                                </div>
+                            {% endif %}
                         {% endif %}
 
                         <div class="mailing-recommendation__content">
                             <div>
+                                {% if recommendation.tag %}
+                                    <p class="mailing-recommendation__tag">{{ recommendation.tag }}</p>
+                                {% endif %}
                                 <h3>{{ recommendation.title }}</h3>
                                 <p>{{ recommendation.text }}</p>
                             </div>
@@ -114,9 +134,20 @@
                     {% for recommendation in availableRecommendations %}
                         <article class="mailing-catalog-card{{ recommendation.imagePath ? ' mailing-catalog-card--with-image' : '' }}">
                             {% if recommendation.imagePath %}
-                                <img src="{{ asset(recommendation.imagePath) }}" alt="">
+                                {% if recommendation.url %}
+                                    <a class="mailing-catalog-card__media" href="{{ recommendation.url }}" target="_blank" rel="noopener noreferrer">
+                                        <img src="{{ asset(recommendation.imagePath) }}" alt="">
+                                    </a>
+                                {% else %}
+                                    <div class="mailing-catalog-card__media">
+                                        <img src="{{ asset(recommendation.imagePath) }}" alt="">
+                                    </div>
+                                {% endif %}
                             {% endif %}
                             <div>
+                                {% if recommendation.tag %}
+                                    <p class="mailing-catalog-card__tag">{{ recommendation.tag }}</p>
+                                {% endif %}
                                 <h3>{{ recommendation.title }}</h3>
                                 <p>{{ recommendation.text }}</p>
                             </div>

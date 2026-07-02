@@ -144,6 +144,7 @@ final class MailingCampaignRecommendationController extends AbstractController
                 new UpdateMailingRecommendationInput(
                     uuid: $mailingRecommendation->getUuid(),
                     title: $formModel->title,
+                    tag: $formModel->tag,
                     text: $formModel->text,
                     url: $formModel->url,
                     linkLabel: $formModel->linkLabel,

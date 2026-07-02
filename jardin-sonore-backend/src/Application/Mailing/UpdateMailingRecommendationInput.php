@@ -11,6 +11,7 @@ final readonly class UpdateMailingRecommendationInput
     public function __construct(
         public ?Uuid $uuid,
         public string $title,
+        public ?string $tag,
         public string $text,
         public ?string $url,
         public ?string $linkLabel,

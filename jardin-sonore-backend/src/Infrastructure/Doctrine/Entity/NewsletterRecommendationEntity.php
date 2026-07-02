@@ -17,6 +17,8 @@ class NewsletterRecommendationEntity
 
     private string $title = '';
 
+    private ?string $tag = null;
+
     private string $text = '';
 
     private ?string $url = null;
@@ -56,6 +58,18 @@ class NewsletterRecommendationEntity
     public function getText(): string
     {
         return $this->text;
+    }
+
+    public function getTag(): ?string
+    {
+        return $this->tag;
+    }
+
+    public function setTag(?string $tag): static
+    {
+        $this->tag = $tag;
+
+        return $this;
     }
 
     public function setText(string $text): static

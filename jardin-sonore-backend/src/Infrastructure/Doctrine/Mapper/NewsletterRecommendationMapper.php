@@ -13,6 +13,7 @@ final readonly class NewsletterRecommendationMapper
     {
         return new NewsletterRecommendation(
             title: $newsletterRecommendationEntity->getTitle(),
+            tag: $newsletterRecommendationEntity->getTag(),
             text: $newsletterRecommendationEntity->getText(),
             url: $newsletterRecommendationEntity->getUrl(),
             linkLabel: $newsletterRecommendationEntity->getLinkLabel(),
@@ -33,6 +34,7 @@ final readonly class NewsletterRecommendationMapper
         $newsletterRecommendationEntity
             ->setUuid($newsletterRecommendation->getUuid())
             ->setTitle($newsletterRecommendation->getTitle())
+            ->setTag($newsletterRecommendation->getTag())
             ->setText($newsletterRecommendation->getText())
             ->setUrl($newsletterRecommendation->getUrl())
             ->setLinkLabel($newsletterRecommendation->getLinkLabel())

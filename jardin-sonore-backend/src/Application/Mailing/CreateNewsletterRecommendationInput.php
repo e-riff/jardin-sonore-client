@@ -10,6 +10,7 @@ final readonly class CreateNewsletterRecommendationInput
 {
     public function __construct(
         public string $title,
+        public ?string $tag,
         public string $text,
         public ?string $url,
         public ?string $linkLabel,

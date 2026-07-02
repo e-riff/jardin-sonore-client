@@ -11,14 +11,20 @@ use Symfony\Component\Validator\Constraints as Assert;
 final class NewsletterRecommendationFormModel
 {
     #[Assert\NotBlank]
+    #[Assert\Length(max: 110)]
     public string $title = '';
 
+    #[Assert\Length(max: 40)]
+    public ?string $tag = null;
+
     #[Assert\NotBlank]
+    #[Assert\Length(max: 320)]
     public string $text = '';
 
     #[Assert\Url]
     public ?string $url = null;
 
+    #[Assert\Length(max: 60)]
     public ?string $linkLabel = null;
 
     #[Assert\Image(
@@ -33,6 +39,7 @@ final class NewsletterRecommendationFormModel
     {
         $formModel = new self();
         $formModel->title = $recommendation->getTitle();
+        $formModel->tag = $recommendation->getTag();
         $formModel->text = $recommendation->getText();
         $formModel->url = $recommendation->getUrl();
         $formModel->linkLabel = $recommendation->getLinkLabel();

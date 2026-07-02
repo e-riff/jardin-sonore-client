@@ -13,6 +13,7 @@ final readonly class MailingRecommendationMapper
     {
         return new MailingRecommendation(
             title: $mailingRecommendationEntity->getTitle(),
+            tag: $mailingRecommendationEntity->getTag(),
             text: $mailingRecommendationEntity->getText(),
             position: $mailingRecommendationEntity->getPosition(),
             url: $mailingRecommendationEntity->getUrl(),
@@ -31,6 +32,7 @@ final readonly class MailingRecommendationMapper
         $mailingRecommendationEntity
             ->setUuid($mailingRecommendation->getUuid())
             ->setTitle($mailingRecommendation->getTitle())
+            ->setTag($mailingRecommendation->getTag())
             ->setText($mailingRecommendation->getText())
             ->setPosition($mailingRecommendation->getPosition())
             ->setUrl($mailingRecommendation->getUrl())
