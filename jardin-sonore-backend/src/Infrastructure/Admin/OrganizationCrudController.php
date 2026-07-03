@@ -4,15 +4,21 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Admin;
 
+use App\Domain\Model\AddressBook\AddressContactType;
 use App\Domain\Model\AddressBook\CustomerStatus;
 use App\Domain\Model\AddressBook\DirectoryEntryType;
 use App\Domain\Model\AddressBook\OrganizationSector;
 use App\Domain\Model\AddressBook\OrganizationType;
+use App\Infrastructure\Admin\Filter\OrganizationDepartmentFilter;
 use App\Infrastructure\Admin\Formatter\ContactDisplayFormatter;
 use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
+use App\Infrastructure\Doctrine\Entity\DepartmentEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use BackedEnum;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\QueryBuilder;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Asset;
@@ -20,6 +26,8 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
@@ -97,6 +105,23 @@ final class OrganizationCrudController extends AbstractCrudController
             ->add(ChoiceFilter::new('sector', 'admin.field.organization_sector')->setChoices($this->organizationSectorChoices())->setFormTypeOption('value_type_options.translation_domain', 'backoffice'))
             ->add(ChoiceFilter::new('customerStatus', 'admin.field.customer_status')->setChoices($this->customerStatusChoices())->setFormTypeOption('value_type_options.translation_domain', 'backoffice'))
             ->add(BooleanFilter::new('active', 'admin.field.active'))
+            ->add(
+                OrganizationDepartmentFilter::new(label: 'admin.field.department')
+                    ->setFormTypeOption('autocomplete', true)
+                    ->setFormTypeOption('value_type_options.class', DepartmentEntity::class)
+                    ->setFormTypeOption('value_type_options.choice_label', static fn (DepartmentEntity $department): string => "{$department->getCode()} — {$department->getName()}")
+                    ->setFormTypeOption('value_type_options.attr.data-ea-autocomplete-endpoint-url', $this->adminUrlGenerator
+                        ->unsetAll()
+                        ->set('page', 1)
+                        ->setController(DepartmentCrudController::class)
+                        ->setAction('autocomplete')
+                        ->set('autocompleteContext', [
+                            'propertyName' => 'organizationDepartment',
+                            'originatingPage' => Crud::PAGE_INDEX,
+                        ])
+                        ->generateUrl())
+                    ->setFormTypeOption('value_type_options.attr.data-ea-widget', 'ea-autocomplete'),
+            )
             ->add(EntityFilter::new('tags', 'admin.field.tags')->canSelectMultiple()->autocomplete());
     }
 
@@ -140,6 +165,14 @@ final class OrganizationCrudController extends AbstractCrudController
             ->formatValue(static fn (mixed $value): string => ContactDisplayFormatter::phoneSummary($value))
             ->renderAsHtml()
             ->hideOnForm();
+        yield TextField::new('municipalitySummary', 'admin.field.municipality')
+            ->setSortable(true)
+            ->hideOnForm()
+            ->hideOnDetail();
+        yield TextField::new('departmentSummary', 'admin.field.department')
+            ->setSortable(true)
+            ->hideOnForm()
+            ->hideOnDetail();
         yield TextField::new('addressContactsSummary', 'admin.field.address_contacts')
             ->formatValue(static fn (mixed $value): string => ContactDisplayFormatter::textSummary($value))
             ->renderAsHtml()
@@ -168,6 +201,37 @@ final class OrganizationCrudController extends AbstractCrudController
         }
 
         parent::updateEntity($entityManager, $entityInstance);
+    }
+
+    public function createIndexQueryBuilder(SearchDto $searchDto, EntityDto $entityDto, FieldCollection $fields, FilterCollection $filters): QueryBuilder
+    {
+        $queryBuilder = parent::createIndexQueryBuilder($searchDto, $entityDto, $fields, $filters);
+        $customSort = $searchDto->getCustomSort();
+
+        if (!isset($customSort['municipalitySummary'])) {
+            if (!isset($customSort['departmentSummary'])) {
+                return $queryBuilder;
+            }
+        }
+
+        $sortProperty = isset($customSort['municipalitySummary']) ? 'municipalitySummary' : 'departmentSummary';
+        $sortOrder = strtoupper($customSort[$sortProperty]);
+        $sortOrder = 'DESC' === $sortOrder ? 'DESC' : 'ASC';
+
+        $queryBuilder
+            ->leftJoin('entity.contactDetails', 'contactDetailsSort')
+            ->leftJoin('contactDetailsSort.addressContacts', 'addressContactSort', 'WITH', 'addressContactSort.type = :mainAddressType')
+            ->leftJoin('addressContactSort.municipality', 'municipalitySort')
+            ->leftJoin('municipalitySort.department', 'departmentSort')
+            ->addSelect('MIN(municipalitySort.name) AS HIDDEN municipalitySummarySort')
+            ->addSelect('MIN(departmentSort.code) AS HIDDEN departmentSummarySort')
+            ->groupBy('entity.id')
+            ->resetDQLPart('orderBy')
+            ->addOrderBy('municipalitySummary' === $sortProperty ? 'municipalitySummarySort' : 'departmentSummarySort', $sortOrder)
+            ->addOrderBy('entity.name', 'ASC')
+            ->setParameter('mainAddressType', AddressContactType::MAIN);
+
+        return $queryBuilder;
     }
 
     private function generateNewPersonUrl(OrganizationEntity $organizationEntity): string
