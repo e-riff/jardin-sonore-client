@@ -40,6 +40,7 @@ rsync -az --delete \
   --exclude '.env.local' \
   --exclude '.env.*.local' \
   --exclude 'public/assets/' \
+  --exclude 'public/uploads/' \
   --exclude 'var/' \
   --exclude 'vendor/' \
   --exclude '.php-cs-fixer.cache' \

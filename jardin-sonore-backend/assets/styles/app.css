@@ -606,6 +606,26 @@ a {
     font-size: 0.8rem;
 }
 
+.mailing-banner-upload {
+    display: grid;
+    gap: 10px;
+}
+
+.mailing-banner-upload > .help-text {
+    margin-top: -2px;
+}
+
+.mailing-banner-upload__reset {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    width: fit-content;
+}
+
+.mailing-banner-upload__reset label {
+    margin: 0;
+}
+
 .mailing-catalog-card img {
     width: 100%;
     aspect-ratio: 1;
