@@ -50,7 +50,7 @@
                         </tr>
                         <tr>
                             <td style="padding:32px 28px 20px 28px;">
-                                <div style="color:#554240; font-size:16px; line-height:28px; white-space:pre-line;">{{ campaign.mainText }}</div>
+                                <div style="color:#554240; font-size:16px; line-height:28px;">{{ mainTextHtml|raw }}</div>
                                 {% if campaign.callToActionLabel and campaign.callToActionUrl %}
                                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top:24px;">
                                         <tr>
@@ -95,7 +95,7 @@
                                                 <td width="152" valign="middle" align="center" style="padding:16px 8px 16px 16px;">
                                                     {% if recommendation.imagePath %}
                                                         {% if recommendation.url %}
-                                                            <a href="{{ recommendation.url }}" style="display:block; text-decoration:none;">
+                                                            <a href="{{ recommendation.url }}" target="_blank" style="display:block; text-decoration:none;">
                                                                 <img
                                                                     src="{{ absolute_url(asset(recommendation.imagePath)) }}"
                                                                     alt=""

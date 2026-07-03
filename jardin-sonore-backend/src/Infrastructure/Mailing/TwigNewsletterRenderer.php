@@ -20,6 +20,7 @@ final readonly class TwigNewsletterRenderer implements NewsletterRendererInterfa
     public function __construct(
         private Environment $twig,
         private UrlGeneratorInterface $urlGenerator,
+        private NewsletterMainTextFormatter $newsletterMainTextFormatter,
     ) {
     }
 
@@ -31,6 +32,7 @@ final readonly class TwigNewsletterRenderer implements NewsletterRendererInterfa
             static fn (MailingRecommendation $mailingRecommendation): bool => $mailingRecommendation->isActive(),
         ));
         $heroImagePath = $mailingCampaign->getBannerImagePath() ?? self::DEFAULT_BANNER_IMAGE_PATH;
+        $formattedMainText = $this->newsletterMainTextFormatter->format($mailingCampaign->getMainText());
 
         $unsubscribeUrl = $this->urlGenerator->generate('newsletter_unsubscribe', [
             'token' => self::UNSUBSCRIBE_TOKEN_PLACEHOLDER,
@@ -42,6 +44,8 @@ final readonly class TwigNewsletterRenderer implements NewsletterRendererInterfa
             'preheader' => $mailingCampaign->getEmailSubject(),
             'unsubscribeUrl' => $unsubscribeUrl,
             'heroImagePath' => $heroImagePath,
+            'mainTextHtml' => $formattedMainText->html,
+            'mainTextText' => $formattedMainText->text,
         ];
 
         return new RenderedNewsletter(
