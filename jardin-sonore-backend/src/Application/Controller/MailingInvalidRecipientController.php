@@ -8,6 +8,7 @@ use App\Application\Form\InvalidRecipientBatchType;
 use App\Application\Form\Model\InvalidRecipientBatchFormModel;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 use App\Infrastructure\Doctrine\Entity\EmailContactLinkEntity;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
@@ -56,7 +57,7 @@ final class MailingInvalidRecipientController extends AbstractController
                 $hasProcessingError = true;
             } else {
                 foreach ($emails as $email) {
-                    $results[] = $this->processEmail($email);
+                    $results[] = $this->processEmail($email, $formModel->action);
                 }
 
                 $this->entityManager->flush();
@@ -95,7 +96,7 @@ final class MailingInvalidRecipientController extends AbstractController
      *     notes:list<string>
      * }
      */
-    private function processEmail(string $email): array
+    private function processEmail(string $email, string $action): array
     {
         $emailContact = $this->entityManager->getRepository(EmailContactEntity::class)->findOneBy([
             'emailAddress' => $email,
@@ -111,22 +112,29 @@ final class MailingInvalidRecipientController extends AbstractController
             ];
         }
 
-        $emailContact
-            ->setOptInNewsletter(false)
-            ->setActive(false);
+        $emailContact->setOptInNewsletter(false);
 
         $linksDisabled = 0;
         $labelsUpdated = 0;
+        $notes = [];
 
-        foreach ($emailContact->getEmailContactLinks() as $emailContactLink) {
-            if (!$emailContactLink instanceof EmailContactLinkEntity) {
-                continue;
+        if ('unsubscribe' === $action) {
+            $emailContact->setUnsubscribedAt(new DateTimeImmutable());
+            $notes[] = 'mailing.invalid_recipient.result.unsubscribed_note';
+        } else {
+            $emailContact->setActive(false);
+            $notes[] = 'mailing.invalid_recipient.result.invalid_recipient_note';
+
+            foreach ($emailContact->getEmailContactLinks() as $emailContactLink) {
+                if (!$emailContactLink instanceof EmailContactLinkEntity) {
+                    continue;
+                }
+
+                $emailContactLink->setActive(false);
+                ++$linksDisabled;
+                $emailContactLink->setLabel($this->mergeInvalidRecipientLabel($emailContactLink->getLabel()));
+                ++$labelsUpdated;
             }
-
-            $emailContactLink->setActive(false);
-            ++$linksDisabled;
-            $emailContactLink->setLabel($this->mergeInvalidRecipientLabel($emailContactLink->getLabel()));
-            ++$labelsUpdated;
         }
 
         $this->entityManager->persist($emailContact);
@@ -136,7 +144,7 @@ final class MailingInvalidRecipientController extends AbstractController
             'status' => 'updated',
             'links_disabled' => $linksDisabled,
             'labels_updated' => $labelsUpdated,
-            'notes' => ['mailing.invalid_recipient.result.updated_note'],
+            'notes' => $notes,
         ];
     }
 

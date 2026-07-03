@@ -6,6 +6,7 @@ namespace App\Application\Form;
 
 use App\Application\Form\Model\InvalidRecipientBatchFormModel;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -23,6 +24,16 @@ final class InvalidRecipientBatchType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
+            ->add('action', ChoiceType::class, [
+                'label' => 'mailing.invalid_recipient.form.action',
+                'help' => 'mailing.invalid_recipient.form.action_help',
+                'choices' => [
+                    'mailing.invalid_recipient.form.action_invalid_recipient' => 'invalid_recipient',
+                    'mailing.invalid_recipient.form.action_unsubscribe' => 'unsubscribe',
+                ],
+                'expanded' => true,
+                'multiple' => false,
+            ])
             ->add('emails', TextareaType::class, [
                 'label' => 'mailing.invalid_recipient.form.emails',
                 'help' => 'mailing.invalid_recipient.form.emails_help',

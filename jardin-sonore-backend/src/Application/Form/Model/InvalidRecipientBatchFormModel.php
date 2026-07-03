@@ -6,5 +6,7 @@ namespace App\Application\Form\Model;
 
 final class InvalidRecipientBatchFormModel
 {
+    public string $action = 'invalid_recipient';
+
     public string $emails = '';
 }
