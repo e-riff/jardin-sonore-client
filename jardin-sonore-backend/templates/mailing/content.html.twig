@@ -96,10 +96,17 @@
                 {{ form_row(form.callToActionLabel) }}
                 {{ form_row(form.callToActionUrl) }}
             </div>
-            {{ form_row(form.bannerImageFile) }}
-            {% if form.removeBannerImage is defined and form.vars.data.bannerImagePath %}
-                {{ form_row(form.removeBannerImage) }}
-            {% endif %}
+            <div class="mailing-banner-upload">
+                {{ form_row(form.bannerImageFile) }}
+                {% if form.removeBannerImage is defined and form.vars.data.bannerImagePath %}
+                    <div class="mailing-banner-upload__reset">
+                        {{ form_widget(form.removeBannerImage) }}
+                        {{ form_label(form.removeBannerImage) }}
+                    </div>
+                    {{ form_help(form.removeBannerImage) }}
+                    {{ form_errors(form.removeBannerImage) }}
+                {% endif %}
+            </div>
             {{ form_row(form.templateKey) }}
         </section>
 
