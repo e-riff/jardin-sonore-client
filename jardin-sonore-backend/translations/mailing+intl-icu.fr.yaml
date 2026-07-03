@@ -45,7 +45,7 @@ mailing:
     subtitle: "Sous-titre de la bannière"
     subtitle_help: "Optionnel. Placé sous le titre dans le cartouche de la bannière."
     main_text: "Introduction de la newsletter"
-    main_text_help: "Texte éditorial placé sous le titre principal, avant les recommandations."
+    main_text_help: "Texte éditorial placé sous le titre principal, avant les recommandations.<br><br>Balises autorisées : <code>&lt;strong&gt;</code>, <code>&lt;em&gt;</code>, <code>&lt;br&gt;</code> et <code>&lt;span style=&quot;color:#A64D43&quot;&gt;...&lt;/span&gt;</code> avec uniquement ces couleurs : <code>#A64D43</code>, <code>#692019</code>, <code>#47664B</code>.<br><br>Exemples : <code>&lt;strong&gt;Texte en gras&lt;/strong&gt;</code> ou <code>&lt;span style=&quot;color:#47664B&quot;&gt;Texte mis en avant&lt;/span&gt;</code>. Tout autre HTML sera ignoré."
     call_to_action_label: "Texte du call to action"
     call_to_action_label_help: "Optionnel. Le libellé du bouton affiché juste après votre texte."
     call_to_action_url: "URL du call to action"

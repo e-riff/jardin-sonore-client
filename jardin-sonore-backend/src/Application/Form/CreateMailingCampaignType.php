@@ -41,6 +41,7 @@ final class CreateMailingCampaignType extends AbstractType
             ->add('mainText', TextareaType::class, [
                 'label' => 'mailing.form.main_text',
                 'help' => 'mailing.form.main_text_help',
+                'help_html' => true,
                 'attr' => [
                     'rows' => 8,
                 ],
