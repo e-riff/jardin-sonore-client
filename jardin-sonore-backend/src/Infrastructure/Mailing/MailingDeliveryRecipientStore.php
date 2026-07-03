@@ -43,6 +43,24 @@ final readonly class MailingDeliveryRecipientStore
         }
     }
 
+    /**
+     * @return list<string>
+     */
+    public function findCampaignRecipientEmailAddresses(string $campaignUuid): array
+    {
+        /** @var list<string> $emailAddresses */
+        $emailAddresses = $this->connection->fetchFirstColumn(
+            'SELECT DISTINCT LOWER(TRIM(email_address))
+            FROM mailing_delivery_recipient
+            WHERE campaign_uuid = :campaignUuid',
+            [
+                'campaignUuid' => $campaignUuid,
+            ],
+        );
+
+        return array_values(array_filter($emailAddresses, static fn (string $emailAddress): bool => '' !== $emailAddress));
+    }
+
     public function countRecentlyDispatched(DateTimeImmutable $since): int
     {
         return (int) $this->connection->fetchOne(
