@@ -102,9 +102,13 @@ mailing:
     title: "Adresses invalides | Jardin Sonore"
     eyebrow: "Maintenance newsletter"
     heading: "Désactiver des adresses invalides"
-    description: "Collez un ou plusieurs e-mails. Chaque adresse trouvée sera retirée de la newsletter, désactivée globalement, désactivée sur ses relations et annotée `invalid_recipient` dans le libellé de chaque relation e-mail."
+    description: "Collez un ou plusieurs e-mails et choisissez l’action à appliquer. Chaque adresse trouvée est traitée individuellement, sans bloquer le reste du lot si l’une d’elles est absente."
     back: "Retour aux newsletters"
     form:
+      action: "Action à appliquer"
+      action_help: "Choisissez si l’adresse doit être considérée invalide, ou simplement retirée des envois newsletter."
+      action_invalid_recipient: "Adresse n’existant plus"
+      action_unsubscribe: "Juste désinscrire de la newsletter"
       emails: "Adresses e-mail"
       emails_help: "Vous pouvez coller une adresse seule ou une liste séparée par des virgules, des points-virgules ou des espaces."
       emails_placeholder: "contact-1@example.org, contact-2@example.org; contact-3@example.org"
@@ -124,7 +128,8 @@ mailing:
         updated: "Mis à jour"
         not_found: "Introuvable"
     result:
-      updated_note: "Adresse mise hors newsletter, inactive et libellé `invalid_recipient` appliqué sur chaque relation e-mail liée."
+      invalid_recipient_note: "Adresse mise hors newsletter, inactive et libellé `invalid_recipient` appliqué sur chaque relation e-mail liée."
+      unsubscribed_note: "Adresse simplement désinscrite de la newsletter avec une date de désinscription."
       not_found_note: "Adresse absente de la base, aucune erreur bloquante."
   status:
     draft: "Brouillon"
