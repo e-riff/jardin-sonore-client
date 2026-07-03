@@ -123,4 +123,39 @@ abstract class DirectoryEntryEntity
     {
         return $this->contactDetails?->getAddressContactsSummary() ?? '—';
     }
+
+    public function getMunicipalitySummary(): string
+    {
+        foreach ($this->contactDetails?->getAddressContacts() ?? [] as $addressContactEntity) {
+            $municipalityEntity = $addressContactEntity->getMunicipality();
+
+            if (null === $municipalityEntity) {
+                continue;
+            }
+
+            $postalCode = $municipalityEntity->getPostalCode();
+            $label = null !== $postalCode && '' !== $postalCode
+                ? "{$postalCode} — {$municipalityEntity->getName()}"
+                : $municipalityEntity->getName();
+
+            return $label;
+        }
+
+        return '—';
+    }
+
+    public function getDepartmentSummary(): string
+    {
+        foreach ($this->contactDetails?->getAddressContacts() ?? [] as $addressContactEntity) {
+            $departmentEntity = $addressContactEntity->getMunicipality()?->getDepartment();
+
+            if (null === $departmentEntity) {
+                continue;
+            }
+
+            return "{$departmentEntity->getCode()} — {$departmentEntity->getName()}";
+        }
+
+        return '—';
+    }
 }
