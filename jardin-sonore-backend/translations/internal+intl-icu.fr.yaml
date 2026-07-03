@@ -8,6 +8,7 @@ internal:
     nav:
       dashboard: "Accueil"
       mailing: "Newsletters"
+      invalid_recipients: "Adresses invalides"
       recommendations: "Catalogue"
       backoffice: "Backoffice"
   dashboard:

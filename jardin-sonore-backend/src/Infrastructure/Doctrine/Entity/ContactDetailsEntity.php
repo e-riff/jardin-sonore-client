@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Doctrine\Entity;
 
+use App\Infrastructure\Admin\Formatter\ContactDisplayFormatter;
 use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\TimestampableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\UuidIdentifiableTrait;
@@ -194,14 +195,18 @@ class ContactDetailsEntity
     public function getEmailContactsSummary(): string
     {
         return $this->summarizeContacts(
-            $this->emailContactLinks->map(static fn (EmailContactLinkEntity $emailContactLink): string => (string) $emailContactLink)->toArray(),
+            $this->emailContactLinks->map(
+                static fn (EmailContactLinkEntity $emailContactLink): string => self::summarizeEmailContactLink($emailContactLink),
+            )->toArray(),
         );
     }
 
     public function getPhoneContactsSummary(): string
     {
         return $this->summarizeContacts(
-            $this->phoneContactLinks->map(static fn (PhoneContactLinkEntity $phoneContactLink): string => (string) $phoneContactLink)->toArray(),
+            $this->phoneContactLinks->map(
+                static fn (PhoneContactLinkEntity $phoneContactLink): string => self::summarizePhoneContactLink($phoneContactLink),
+            )->toArray(),
         );
     }
 
@@ -220,5 +225,27 @@ class ContactDetailsEntity
         $contacts = array_values(array_filter(array_map('trim', $contacts)));
 
         return [] === $contacts ? '—' : implode("\n", $contacts);
+    }
+
+    private static function summarizeEmailContactLink(EmailContactLinkEntity $emailContactLink): string
+    {
+        $emailAddress = (string) $emailContactLink->getEmailAddress();
+
+        if (!$emailContactLink->isActive() || !($emailContactLink->getEmailContact()?->isActive() ?? true)) {
+            return ContactDisplayFormatter::inactiveValue($emailAddress);
+        }
+
+        return $emailAddress;
+    }
+
+    private static function summarizePhoneContactLink(PhoneContactLinkEntity $phoneContactLink): string
+    {
+        $phoneNumber = (string) $phoneContactLink->getPhoneNumber();
+
+        if (!$phoneContactLink->isActive() || !($phoneContactLink->getPhoneContact()?->isActive() ?? true)) {
+            return ContactDisplayFormatter::inactiveValue($phoneNumber);
+        }
+
+        return $phoneNumber;
     }
 }

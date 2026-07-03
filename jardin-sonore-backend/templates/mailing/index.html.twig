@@ -9,8 +9,12 @@
             <h1>{{ 'mailing.index.heading'|trans({}, 'mailing') }}</h1>
             <p>{{ 'mailing.index.description'|trans({}, 'mailing') }}</p>
         </div>
-
-        <a class="internal-button" href="{{ path('mailing_new') }}">{{ 'mailing.index.create'|trans({}, 'mailing') }}</a>
+        <div class="internal-heading-actions">
+            <a class="internal-button internal-button--secondary" href="{{ path('mailing_invalid_recipients_index') }}">
+                {{ 'mailing.index.invalid_recipients'|trans({}, 'mailing') }}
+            </a>
+            <a class="internal-button" href="{{ path('mailing_new') }}">{{ 'mailing.index.create'|trans({}, 'mailing') }}</a>
+        </div>
     </section>
 
     <section class="internal-card">

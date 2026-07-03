@@ -6,15 +6,22 @@ namespace App\Infrastructure\Admin\Formatter;
 
 final class ContactDisplayFormatter
 {
+    private const string INACTIVE_PREFIX = '__inactive__:';
+
     public static function emailLink(mixed $value): string
     {
-        $emailAddress = trim((string) $value);
+        [$emailAddress, $inactive] = self::extractInactiveState($value);
 
         if ('' === $emailAddress || '—' === $emailAddress) {
             return self::escape($emailAddress);
         }
 
         $escapedEmailAddress = self::escape($emailAddress);
+
+        if ($inactive) {
+            return sprintf('<span style="color:#7a746f; font-style:italic;">%s</span>', $escapedEmailAddress);
+        }
+
         $mailTo = self::escape("mailto:{$emailAddress}");
 
         return sprintf('<a href="%s">%s</a>', $mailTo, $escapedEmailAddress);
@@ -22,7 +29,7 @@ final class ContactDisplayFormatter
 
     public static function phoneLink(mixed $value): string
     {
-        $phoneNumber = trim((string) $value);
+        [$phoneNumber, $inactive] = self::extractInactiveState($value);
 
         if ('' === $phoneNumber || '—' === $phoneNumber) {
             return self::escape($phoneNumber);
@@ -30,6 +37,10 @@ final class ContactDisplayFormatter
 
         $callablePhoneNumber = self::callablePhoneNumber($phoneNumber);
         $displayPhoneNumber = self::displayPhoneNumber($callablePhoneNumber);
+
+        if ($inactive) {
+            return sprintf('<span style="color:#7a746f; font-style:italic;">%s</span>', self::escape($displayPhoneNumber));
+        }
 
         return sprintf('<a href="tel:%s">%s</a>', self::escape($callablePhoneNumber), self::escape($displayPhoneNumber));
     }
@@ -59,6 +70,11 @@ final class ContactDisplayFormatter
         }
 
         return implode('<br>', array_map($lineFormatter, $lines));
+    }
+
+    public static function inactiveValue(string $value): string
+    {
+        return self::INACTIVE_PREFIX . $value;
     }
 
     private static function callablePhoneNumber(string $phoneNumber): string
@@ -96,5 +112,19 @@ final class ContactDisplayFormatter
     private static function escape(string $value): string
     {
         return htmlspecialchars($value, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8');
+    }
+
+    /**
+     * @return array{string, bool}
+     */
+    private static function extractInactiveState(mixed $value): array
+    {
+        $stringValue = trim((string) $value);
+
+        if (!str_starts_with($stringValue, self::INACTIVE_PREFIX)) {
+            return [$stringValue, false];
+        }
+
+        return [substr($stringValue, strlen(self::INACTIVE_PREFIX)), true];
     }
 }

@@ -1,0 +1,72 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'mailing.invalid_recipient.title'|trans({}, 'mailing') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ 'mailing.invalid_recipient.eyebrow'|trans({}, 'mailing') }}</p>
+            <h1>{{ 'mailing.invalid_recipient.heading'|trans({}, 'mailing') }}</h1>
+            <p>{{ 'mailing.invalid_recipient.description'|trans({}, 'mailing') }}</p>
+        </div>
+
+        <a class="internal-button internal-button--secondary" href="{{ path('mailing_index') }}">
+            {{ 'mailing.invalid_recipient.back'|trans({}, 'mailing') }}
+        </a>
+    </section>
+
+    <section class="internal-card">
+        {{ form_start(form, { attr: {
+            class: 'internal-form internal-form--wide',
+            'data-turbo': 'false'
+        } }) }}
+            {{ form_row(form.emails) }}
+            <div class="internal-form__actions">
+                {{ form_widget(form.submit) }}
+            </div>
+        {{ form_end(form) }}
+    </section>
+
+    {% if results is not empty %}
+        <section class="internal-card">
+            <div>
+                <p class="internal-eyebrow">{{ 'mailing.invalid_recipient.results.eyebrow'|trans({}, 'mailing') }}</p>
+                <h2>{{ 'mailing.invalid_recipient.results.title'|trans({}, 'mailing') }}</h2>
+                <p>{{ 'mailing.invalid_recipient.results.description'|trans({}, 'mailing') }}</p>
+            </div>
+
+            <div class="internal-table-wrapper">
+                <table class="internal-table">
+                    <thead>
+                    <tr>
+                        <th>{{ 'mailing.invalid_recipient.results.table.email'|trans({}, 'mailing') }}</th>
+                        <th>{{ 'mailing.invalid_recipient.results.table.status'|trans({}, 'mailing') }}</th>
+                        <th>{{ 'mailing.invalid_recipient.results.table.links'|trans({}, 'mailing') }}</th>
+                        <th>{{ 'mailing.invalid_recipient.results.table.labels'|trans({}, 'mailing') }}</th>
+                        <th>{{ 'mailing.invalid_recipient.results.table.note'|trans({}, 'mailing') }}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for result in results %}
+                        <tr>
+                            <td>{{ result.email }}</td>
+                            <td>
+                                <span class="internal-badge internal-badge--{{ result.status == 'updated' ? 'secondary' : 'muted' }}">
+                                    {{ ('mailing.invalid_recipient.results.status.' ~ result.status)|trans({}, 'mailing') }}
+                                </span>
+                            </td>
+                            <td>{{ result.links_disabled }}</td>
+                            <td>{{ result.labels_updated }}</td>
+                            <td>
+                                {% for note in result.notes %}
+                                    <span class="internal-table-note">{{ note|trans({}, 'mailing') }}</span>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    {% endif %}
+{% endblock %}

@@ -110,4 +110,12 @@ class OrganizationEntity extends DirectoryEntryEntity
 
         return $this;
     }
+
+    public function getPeopleSummary(): string
+    {
+        $people = $this->people->map(static fn (PersonEntity $personEntity): string => trim((string) $personEntity))->toArray();
+        $people = array_values(array_filter(array_map('trim', $people)));
+
+        return [] === $people ? '—' : implode("\n", $people);
+    }
 }

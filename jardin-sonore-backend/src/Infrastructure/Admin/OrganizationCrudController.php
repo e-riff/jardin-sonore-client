@@ -144,7 +144,10 @@ final class OrganizationCrudController extends AbstractCrudController
             ->formatValue(static fn (mixed $value): string => ContactDisplayFormatter::textSummary($value))
             ->renderAsHtml()
             ->onlyOnDetail();
-        yield AssociationField::new('people', 'admin.field.people')->onlyOnDetail();
+        yield TextField::new('peopleSummary', 'admin.field.people')
+            ->formatValue(static fn (mixed $value): string => ContactDisplayFormatter::textSummary($value))
+            ->renderAsHtml()
+            ->onlyOnDetail();
         yield AssociationField::new('contactDetails', 'admin.field.contact_details')->onlyOnDetail();
         yield BooleanField::new('active', 'admin.field.active');
     }

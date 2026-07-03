@@ -5,6 +5,7 @@ mailing:
     heading: "Campagnes e-mail"
     description: "Créez les brouillons de newsletters avant de préparer le contenu, le ciblage, la prévisualisation et l’envoi test."
     create: "Nouvelle campagne"
+    invalid_recipients: "Adresses invalides"
     empty: "Aucune campagne newsletter n’a encore été créée."
     empty_action: "Créer le premier brouillon"
     list:
@@ -97,6 +98,34 @@ mailing:
     deleted: "La campagne a été supprimée."
     delete_failed: "Cette campagne ne peut pas être supprimée tant qu’un envoi est encore actif."
     locked: "Cette campagne est verrouillée depuis le démarrage de son envoi."
+  invalid_recipient:
+    title: "Adresses invalides | Jardin Sonore"
+    eyebrow: "Maintenance newsletter"
+    heading: "Désactiver des adresses invalides"
+    description: "Collez un ou plusieurs e-mails. Chaque adresse trouvée sera retirée de la newsletter, désactivée globalement, désactivée sur ses relations et annotée `invalid_recipient` dans le libellé de chaque relation e-mail."
+    back: "Retour aux newsletters"
+    form:
+      emails: "Adresses e-mail"
+      emails_help: "Vous pouvez coller une adresse seule ou une liste séparée par des virgules, des points-virgules ou des espaces."
+      emails_placeholder: "contact-1@example.org, contact-2@example.org; contact-3@example.org"
+      emails_empty: "Collez au moins une adresse e-mail à traiter."
+      submit: "Appliquer les désactivations"
+    results:
+      eyebrow: "Résultats"
+      title: "Traitement terminé"
+      description: "Chaque adresse est traitée individuellement. Une adresse absente de la base ne bloque pas le reste du lot."
+      table:
+        email: "E-mail"
+        status: "Statut"
+        links: "Relations désactivées"
+        labels: "Libellés mis à jour"
+        note: "Détail"
+      status:
+        updated: "Mis à jour"
+        not_found: "Introuvable"
+    result:
+      updated_note: "Adresse mise hors newsletter, inactive et libellé `invalid_recipient` appliqué sur chaque relation e-mail liée."
+      not_found_note: "Adresse absente de la base, aucune erreur bloquante."
   status:
     draft: "Brouillon"
     ready_for_test: "Prête pour test"
