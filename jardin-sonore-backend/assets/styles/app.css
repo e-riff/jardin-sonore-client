@@ -60,6 +60,13 @@ a {
     background: color-mix(in oklab, var(--color-background) 92%, white);
 }
 
+.internal-header__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
 .internal-brand {
     display: inline-flex;
     align-items: center;
@@ -96,26 +103,63 @@ a {
     font-size: 0.78rem;
 }
 
+.internal-nav-shell {
+    display: block;
+}
+
+.internal-nav-shell.is-collapsed .internal-nav {
+    display: none;
+}
+
+.internal-nav-toggle {
+    display: none;
+    width: 100%;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 14px;
+    padding: 14px 16px;
+    background: var(--color-surface-container-lowest);
+    color: var(--color-primary);
+    font-family: var(--font-sans);
+    font-size: 0.96rem;
+    font-weight: 700;
+    text-align: left;
+}
+
 .internal-nav {
     display: flex;
     flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 10px;
     font-family: var(--font-sans);
     font-size: 0.9rem;
     font-weight: 700;
 }
 
+.internal-nav__group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.internal-nav__label {
+    color: var(--color-on-background);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
 .internal-nav a {
     padding: 10px 14px;
     border: 1px solid transparent;
     border-radius: 999px;
-    color: var(--color-secondary);
+    color: var(--color-primary);
     text-decoration: none;
 }
 
 .internal-nav a:hover {
-    border-color: color-mix(in oklab, var(--color-secondary) 35%, transparent);
-    background: color-mix(in oklab, var(--color-secondary-container) 38%, transparent);
+    border-color: color-mix(in oklab, var(--color-primary) 24%, transparent);
+    background: color-mix(in oklab, var(--color-primary-fixed) 42%, white);
 }
 
 .internal-main {
@@ -231,6 +275,21 @@ a {
 .internal-badge--muted {
     background: color-mix(in oklab, var(--color-outline-variant) 35%, white);
     color: var(--color-on-surface-variant);
+}
+
+.internal-badge--success {
+    background: color-mix(in oklab, #d8f0dd 78%, white);
+    color: #2f6f44;
+}
+
+.internal-badge--warning {
+    background: color-mix(in oklab, #f8e3b2 74%, white);
+    color: #8a5a0a;
+}
+
+.internal-badge--danger {
+    background: color-mix(in oklab, #f4c8c2 72%, white);
+    color: #9e2f24;
 }
 
 .internal-button {
@@ -1198,14 +1257,61 @@ a {
         padding: 16px;
     }
 
-    .internal-nav {
-        display: grid;
+    .internal-nav-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        cursor: pointer;
+        text-align: left;
+    }
+
+    .internal-nav-toggle::after {
+        content: "+";
+        font-size: 1.2rem;
+        line-height: 1;
+    }
+
+    .internal-nav-toggle[aria-expanded="true"]::after {
+        content: "−";
+    }
+
+    .internal-nav-shell {
         width: 100%;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        border: 1px solid var(--color-outline-variant);
+        border-radius: 16px;
+        background: var(--color-surface-container-lowest);
+        padding: 10px 12px;
+    }
+
+    .internal-nav-shell:not(.is-open) .internal-nav {
+        display: none;
+    }
+
+    .internal-nav-shell.is-open .internal-nav {
+        display: grid;
+    }
+
+    .internal-nav {
+        grid-template-columns: 1fr;
+        justify-content: stretch;
+        margin-top: 12px;
+    }
+
+    .internal-nav__group {
+        display: grid;
+        gap: 8px;
+        padding-top: 12px;
+        border-top: 1px solid color-mix(in oklab, var(--color-outline-variant) 65%, white);
+    }
+
+    .internal-nav__group:first-child {
+        padding-top: 0;
+        border-top: 0;
     }
 
     .internal-nav a {
-        text-align: center;
+        text-align: left;
     }
 
     .internal-main {

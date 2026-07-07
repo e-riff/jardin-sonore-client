@@ -37,10 +37,7 @@
 
         <div class="mailing-content-audience__status">
             {% if hasAudienceCriteria %}
-                <span class="internal-badge internal-badge--primary">
-                    {{ 'mailing.index.audience.configured'|trans({}, 'mailing') }}
-                </span>
-                <span class="internal-table-note">
+                <span class="internal-badge internal-badge--{{ audienceRecipientCount is not null ? 'success' : 'warning' }}">
                     {% if audienceRecipientCount is not null %}
                         {{ 'mailing.index.audience.recipients'|trans({ count: audienceRecipientCount }, 'mailing') }}
                     {% else %}

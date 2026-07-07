@@ -6,11 +6,14 @@ internal:
     subtitle: "Interface interne"
     navigation_aria: "Navigation interne"
     nav:
+      toggle: "Menu"
+      newsletters_group: "Newsletters"
+      sessions_group: "Séances"
+      utility_group: "Général"
       dashboard: "Accueil"
       instruments: "Instruments"
-      mailing: "Newsletters"
+      mailing: "Campagnes"
       invalid_recipients: "Adresses invalides"
-      recommendations: "Catalogue"
       backoffice: "Backoffice"
   dashboard:
     title: "Accueil interne | Jardin Sonore"
@@ -18,17 +21,15 @@ internal:
     heading: "Bienvenue dans l’atelier Jardin Sonore"
     description: "La racine du backend devient l’espace de travail métier. EasyAdmin reste disponible pour les corrections techniques dans le backoffice."
     modules_aria: "Modules internes"
-    instruments:
-      title: "Catalogue instruments"
-      description: "Retrouver rapidement les instruments, leurs tonalités, quantités, notes et tags de classement."
-      action: "Ouvrir le catalogue"
     mailing:
-      badge: "Prochaine étape"
       title: "Newsletters"
-      description: "Créer une campagne, préparer le contenu, cibler les destinataires, prévisualiser et envoyer un test."
+      description: "Créer une campagne, préparer le contenu, gérer les recommandations réutilisables, cibler les destinataires et piloter l’envoi."
       action: "Ouvrir les newsletters"
+    sessions:
+      title: "Séances"
+      description: "Centraliser les instruments aujourd’hui, puis demain les chansons, comptines, fonds sonores et déroulés."
+      action: "Ouvrir les ressources"
     backoffice:
-      badge: "Technique"
       title: "Backoffice"
       description: "Consulter et corriger l’annuaire, les coordonnées, les territoires et les données techniques."
       action: "Ouvrir EasyAdmin"

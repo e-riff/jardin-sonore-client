@@ -13,15 +13,15 @@
 
     <section class="internal-grid" aria-label="{{ 'internal.dashboard.modules_aria'|trans({}, 'internal') }}">
         <article class="internal-card">
-            <h2>{{ 'internal.dashboard.instruments.title'|trans({}, 'internal') }}</h2>
-            <p>{{ 'internal.dashboard.instruments.description'|trans({}, 'internal') }}</p>
-            <a class="internal-button" href="{{ path('instrument_index') }}">{{ 'internal.dashboard.instruments.action'|trans({}, 'internal') }}</a>
-        </article>
-
-        <article class="internal-card">
             <h2>{{ 'internal.dashboard.mailing.title'|trans({}, 'internal') }}</h2>
             <p>{{ 'internal.dashboard.mailing.description'|trans({}, 'internal') }}</p>
             <a class="internal-button" href="{{ path('mailing_index') }}">{{ 'internal.dashboard.mailing.action'|trans({}, 'internal') }}</a>
+        </article>
+
+        <article class="internal-card">
+            <h2>{{ 'internal.dashboard.sessions.title'|trans({}, 'internal') }}</h2>
+            <p>{{ 'internal.dashboard.sessions.description'|trans({}, 'internal') }}</p>
+            <a class="internal-button" href="{{ path('instrument_index') }}">{{ 'internal.dashboard.sessions.action'|trans({}, 'internal') }}</a>
         </article>
 
         <article class="internal-card">

@@ -4,23 +4,51 @@
 
 {% block body %}
     <div class="internal-shell">
-        <header class="internal-header">
-            <a class="internal-brand" href="{{ path('internal_dashboard') }}" aria-label="{{ 'internal.base.brand_aria'|trans({}, 'internal') }}">
-                <span class="internal-brand__mark">JS</span>
-                <span>
-                    <strong>{{ 'internal.base.brand'|trans({}, 'internal') }}</strong>
-                    <small>{{ 'internal.base.subtitle'|trans({}, 'internal') }}</small>
-                </span>
-            </a>
+        <header class="internal-header" {{ stimulus_controller('internal-nav') }}>
+            <div class="internal-header__top">
+                <a class="internal-brand" href="{{ path('internal_dashboard') }}" aria-label="{{ 'internal.base.brand_aria'|trans({}, 'internal') }}">
+                    <span class="internal-brand__mark">JS</span>
+                    <span>
+                        <strong>{{ 'internal.base.brand'|trans({}, 'internal') }}</strong>
+                        <small>{{ 'internal.base.subtitle'|trans({}, 'internal') }}</small>
+                    </span>
+                </a>
+            </div>
 
-            <nav class="internal-nav" aria-label="{{ 'internal.base.navigation_aria'|trans({}, 'internal') }}">
-                <a href="{{ path('internal_dashboard') }}">{{ 'internal.base.nav.dashboard'|trans({}, 'internal') }}</a>
-                <a href="{{ path('instrument_index') }}">{{ 'internal.base.nav.instruments'|trans({}, 'internal') }}</a>
-                <a href="{{ path('mailing_index') }}">{{ 'internal.base.nav.mailing'|trans({}, 'internal') }}</a>
-                <a href="{{ path('mailing_invalid_recipients_index') }}">{{ 'internal.base.nav.invalid_recipients'|trans({}, 'internal') }}</a>
-                <a href="{{ path('mailing_recommendation_catalog_index') }}">{{ 'internal.base.nav.recommendations'|trans({}, 'internal') }}</a>
-                <a href="{{ path('admin') }}">{{ 'internal.base.nav.backoffice'|trans({}, 'internal') }}</a>
-            </nav>
+            <div class="internal-nav-shell" {{ stimulus_target('internal-nav', 'shell') }}>
+                <button
+                    class="internal-nav-toggle"
+                    type="button"
+                    aria-expanded="false"
+                    {{ stimulus_action('internal-nav', 'toggle') }}
+                    {{ stimulus_target('internal-nav', 'button') }}
+                >
+                    <span>{{ 'internal.base.nav.toggle'|trans({}, 'internal') }}</span>
+                </button>
+
+                <nav
+                    class="internal-nav"
+                    aria-label="{{ 'internal.base.navigation_aria'|trans({}, 'internal') }}"
+                    {{ stimulus_target('internal-nav', 'panel') }}
+                >
+                    <div class="internal-nav__group">
+                        <span class="internal-nav__label">{{ 'internal.base.nav.newsletters_group'|trans({}, 'internal') }}</span>
+                        <a href="{{ path('mailing_index') }}">{{ 'internal.base.nav.mailing'|trans({}, 'internal') }}</a>
+                        <a href="{{ path('mailing_invalid_recipients_index') }}">{{ 'internal.base.nav.invalid_recipients'|trans({}, 'internal') }}</a>
+                    </div>
+
+                    <div class="internal-nav__group">
+                        <span class="internal-nav__label">{{ 'internal.base.nav.sessions_group'|trans({}, 'internal') }}</span>
+                        <a href="{{ path('instrument_index') }}">{{ 'internal.base.nav.instruments'|trans({}, 'internal') }}</a>
+                    </div>
+
+                    <div class="internal-nav__group internal-nav__group--utility">
+                        <span class="internal-nav__label">{{ 'internal.base.nav.utility_group'|trans({}, 'internal') }}</span>
+                        <a href="{{ path('internal_dashboard') }}">{{ 'internal.base.nav.dashboard'|trans({}, 'internal') }}</a>
+                        <a href="{{ path('admin') }}">{{ 'internal.base.nav.backoffice'|trans({}, 'internal') }}</a>
+                    </div>
+                </nav>
+            </div>
         </header>
 
         <main class="internal-main">
