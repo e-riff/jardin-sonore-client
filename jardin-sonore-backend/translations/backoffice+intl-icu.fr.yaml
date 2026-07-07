@@ -12,6 +12,9 @@ admin:
     phone_contacts: "Téléphones"
     address_contacts: "Adresses"
     tags: "Tags"
+    content_catalog: "Catalogue pédagogique"
+    instruments: "Instruments"
+    instrument_tags: "Tags instruments"
     geography: "Territoires"
     regions: "Régions"
     departments: "Départements"
@@ -36,6 +39,7 @@ admin:
     title: "Titre"
     tag: "Tag"
     label: "Libellé"
+    quantity: "Quantité"
     organization: "Organisation"
     organizations: "Organisations"
     person: "Personne"
@@ -73,6 +77,7 @@ admin:
     internal_title: "Titre interne"
     public_title: "Titre public"
     email_subject: "Sujet e-mail"
+    tuning: "Tonalité"
     template_key: "Template"
     audience_filter: "Filtre d’audience"
     has_audience_criteria: "Ciblage défini"
@@ -82,6 +87,8 @@ admin:
     last_test_sent_at: "Dernier test envoyé le"
     link_label: "Libellé du lien"
     image_path: "Image"
+    instruments: "Instruments"
+    notes: "Notes"
     address: "Adresse"
     siren: "SIREN"
     siret: "SIRET"
@@ -95,6 +102,7 @@ admin:
     dispatched_at: "Pris en charge le"
     sent_at: "Envoyé le"
     failed_at: "Échec le"
+    created_at: "Créé le"
     updated_at: "Mis à jour le"
     last_error: "Dernière erreur"
   help:
@@ -161,6 +169,18 @@ admin:
     page:
       index: "Campagnes newsletter"
       detail: "Détail de la campagne newsletter"
+  instrument:
+    page:
+      index: "Instruments"
+      new: "Créer un instrument"
+      edit: "Modifier un instrument"
+      detail: "Détail de l’instrument"
+  instrument_tag:
+    page:
+      index: "Tags instruments"
+      new: "Créer un tag instrument"
+      edit: "Modifier un tag instrument"
+      detail: "Détail du tag instrument"
   newsletter_recommendation:
     page:
       index: "Recommandations newsletter"
@@ -214,6 +234,13 @@ address_book:
   recommendation:
     singular: "Recommandation newsletter"
     plural: "Recommandations newsletter"
+content_catalog:
+  instrument:
+    singular: "Instrument"
+    plural: "Instruments"
+  instrument_tag:
+    singular: "Tag instrument"
+    plural: "Tags instruments"
   directory_entry_type:
     organization: "Organisation"
     person: "Personne"

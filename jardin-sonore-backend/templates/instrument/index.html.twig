@@ -1,0 +1,24 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'catalog.instrument.index.title'|trans({}, 'catalog') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ 'catalog.instrument.index.eyebrow'|trans({}, 'catalog') }}</p>
+            <h1>{{ 'catalog.instrument.index.heading'|trans({}, 'catalog') }}</h1>
+            <p>{{ 'catalog.instrument.index.description'|trans({}, 'catalog') }}</p>
+        </div>
+
+        <div class="internal-heading-actions">
+            <a class="internal-button internal-button--secondary" href="{{ path('admin') }}">
+                {{ 'catalog.instrument.index.backoffice'|trans({}, 'catalog') }}
+            </a>
+            <a class="internal-button" href="{{ path('instrument_new') }}">
+                {{ 'catalog.instrument.index.create'|trans({}, 'catalog') }}
+            </a>
+        </div>
+    </section>
+
+    {{ component('InstrumentCatalogTable') }}
+{% endblock %}

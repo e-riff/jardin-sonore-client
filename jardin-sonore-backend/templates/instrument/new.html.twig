@@ -1,0 +1,17 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'catalog.instrument.new.title'|trans({}, 'catalog') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ 'catalog.instrument.new.eyebrow'|trans({}, 'catalog') }}</p>
+            <h1>{{ 'catalog.instrument.new.heading'|trans({}, 'catalog') }}</h1>
+            <p>{{ 'catalog.instrument.new.description'|trans({}, 'catalog') }}</p>
+        </div>
+    </section>
+
+    <section class="internal-card">
+        {{ include('instrument/_form.html.twig', { form: form }) }}
+    </section>
+{% endblock %}

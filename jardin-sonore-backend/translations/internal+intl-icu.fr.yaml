@@ -7,6 +7,7 @@ internal:
     navigation_aria: "Navigation interne"
     nav:
       dashboard: "Accueil"
+      instruments: "Instruments"
       mailing: "Newsletters"
       invalid_recipients: "Adresses invalides"
       recommendations: "Catalogue"
@@ -17,6 +18,10 @@ internal:
     heading: "Bienvenue dans l’atelier Jardin Sonore"
     description: "La racine du backend devient l’espace de travail métier. EasyAdmin reste disponible pour les corrections techniques dans le backoffice."
     modules_aria: "Modules internes"
+    instruments:
+      title: "Catalogue instruments"
+      description: "Retrouver rapidement les instruments, leurs tonalités, quantités, notes et tags de classement."
+      action: "Ouvrir le catalogue"
     mailing:
       badge: "Prochaine étape"
       title: "Newsletters"

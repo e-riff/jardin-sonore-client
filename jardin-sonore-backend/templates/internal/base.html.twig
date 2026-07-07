@@ -15,6 +15,7 @@
 
             <nav class="internal-nav" aria-label="{{ 'internal.base.navigation_aria'|trans({}, 'internal') }}">
                 <a href="{{ path('internal_dashboard') }}">{{ 'internal.base.nav.dashboard'|trans({}, 'internal') }}</a>
+                <a href="{{ path('instrument_index') }}">{{ 'internal.base.nav.instruments'|trans({}, 'internal') }}</a>
                 <a href="{{ path('mailing_index') }}">{{ 'internal.base.nav.mailing'|trans({}, 'internal') }}</a>
                 <a href="{{ path('mailing_invalid_recipients_index') }}">{{ 'internal.base.nav.invalid_recipients'|trans({}, 'internal') }}</a>
                 <a href="{{ path('mailing_recommendation_catalog_index') }}">{{ 'internal.base.nav.recommendations'|trans({}, 'internal') }}</a>
@@ -26,7 +27,11 @@
             {% for label, messages in app.flashes %}
                 {% for message in messages %}
                     <div class="internal-alert internal-alert--{{ label }}">
-                        {{ message|trans({}, 'mailing') }}
+                        {% if message is iterable and message.message is defined %}
+                            {{ message.message|trans(message.parameters|default({}), message.domain|default('messages')) }}
+                        {% else %}
+                            {{ message|trans({}, 'mailing') }}
+                        {% endif %}
                     </div>
                 {% endfor %}
             {% endfor %}
