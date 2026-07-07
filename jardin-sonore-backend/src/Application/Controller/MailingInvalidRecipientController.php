@@ -7,7 +7,6 @@ namespace App\Application\Controller;
 use App\Application\Form\InvalidRecipientBatchType;
 use App\Application\Form\Model\InvalidRecipientBatchFormModel;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
-use App\Infrastructure\Doctrine\Entity\EmailContactLinkEntity;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -15,15 +14,17 @@ use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Translation\TranslatableMessage;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[Route('/mailing/invalid-recipients', name: 'mailing_invalid_recipients_', methods: ['GET', 'POST'])]
 final class MailingInvalidRecipientController extends AbstractController
 {
     private const string INVALID_RECIPIENT_LABEL = 'invalid_recipient';
 
-    public function __construct(private EntityManagerInterface $entityManager)
-    {
+    public function __construct(
+        private EntityManagerInterface $entityManager,
+        private TranslatorInterface $translator,
+    ) {
     }
 
     #[Route('', name: 'index')]
@@ -49,7 +50,7 @@ final class MailingInvalidRecipientController extends AbstractController
             $emails = $this->parseEmails($formModel->emails);
 
             if ([] === $emails) {
-                $form->get('emails')->addError(new FormError(new TranslatableMessage(
+                $form->get('emails')->addError(new FormError($this->translator->trans(
                     'mailing.invalid_recipient.form.emails_empty',
                     [],
                     'mailing',
@@ -126,10 +127,6 @@ final class MailingInvalidRecipientController extends AbstractController
             $notes[] = 'mailing.invalid_recipient.result.invalid_recipient_note';
 
             foreach ($emailContact->getEmailContactLinks() as $emailContactLink) {
-                if (!$emailContactLink instanceof EmailContactLinkEntity) {
-                    continue;
-                }
-
                 $emailContactLink->setActive(false);
                 ++$linksDisabled;
                 $emailContactLink->setLabel($this->mergeInvalidRecipientLabel($emailContactLink->getLabel()));

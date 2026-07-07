@@ -12,6 +12,8 @@ use Doctrine\Common\Collections\Collection;
 
 class OrganizationEntity extends DirectoryEntryEntity
 {
+    private const string INACTIVE_CONTACT_PREFIX = '__inactive__:';
+
     private string $name = '';
 
     private ?OrganizationType $type = null;
@@ -113,9 +115,87 @@ class OrganizationEntity extends DirectoryEntryEntity
 
     public function getPeopleSummary(): string
     {
-        $people = $this->people->map(static fn (PersonEntity $personEntity): string => trim((string) $personEntity))->toArray();
+        $people = $this->people->map(function (PersonEntity $personEntity): string {
+            $summaryParts = [trim((string) $personEntity)];
+
+            if (null !== $personEntity->getRole() && '' !== trim($personEntity->getRole())) {
+                $summaryParts[] = trim($personEntity->getRole());
+            }
+
+            $emails = self::displaySummaryLines($personEntity->getEmailContactsSummary());
+            if ([] !== $emails) {
+                $summaryParts[] = implode(', ', $emails);
+            }
+
+            $phones = self::displaySummaryLines($personEntity->getPhoneContactsSummary());
+            if ([] !== $phones) {
+                $summaryParts[] = implode(', ', $phones);
+            }
+
+            return implode(' — ', array_values(array_filter($summaryParts, static fn (string $value): bool => '' !== trim($value))));
+        })->toArray();
         $people = array_values(array_filter(array_map('trim', $people)));
 
         return [] === $people ? '—' : implode("\n", $people);
+    }
+
+    public function getEmailContactsSummary(): string
+    {
+        $personEmailLines = [];
+
+        foreach ($this->people as $personEntity) {
+            array_push($personEmailLines, ...self::summaryLines($personEntity->getEmailContactsSummary()));
+        }
+
+        return self::implodeSummaryLines(array_merge(
+            self::summaryLines(parent::getEmailContactsSummary()),
+            $personEmailLines,
+        ));
+    }
+
+    public function getPhoneContactsSummary(): string
+    {
+        $personPhoneLines = [];
+
+        foreach ($this->people as $personEntity) {
+            array_push($personPhoneLines, ...self::summaryLines($personEntity->getPhoneContactsSummary()));
+        }
+
+        return self::implodeSummaryLines(array_merge(
+            self::summaryLines(parent::getPhoneContactsSummary()),
+            $personPhoneLines,
+        ));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function summaryLines(string $summary): array
+    {
+        $lines = preg_split('/\R/', $summary) ?: [];
+        $lines = array_values(array_filter(array_map('trim', $lines), static fn (string $line): bool => '' !== $line && '—' !== $line));
+
+        return array_values(array_unique($lines));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function displaySummaryLines(string $summary): array
+    {
+        return array_map(
+            static fn (string $line): string => str_starts_with($line, self::INACTIVE_CONTACT_PREFIX) ? substr($line, strlen(self::INACTIVE_CONTACT_PREFIX)) : $line,
+            self::summaryLines($summary),
+        );
+    }
+
+    /**
+     * @param list<string> $lines
+     */
+    private static function implodeSummaryLines(array $lines): string
+    {
+        $lines = array_values(array_unique(array_filter(array_map('trim', $lines), static fn (string $line): bool => '' !== $line)));
+
+        return [] === $lines ? '—' : implode("\n", $lines);
     }
 }

@@ -13,14 +13,12 @@
 
     <section class="internal-grid" aria-label="{{ 'internal.dashboard.modules_aria'|trans({}, 'internal') }}">
         <article class="internal-card">
-            <span class="internal-badge internal-badge--primary">{{ 'internal.dashboard.mailing.badge'|trans({}, 'internal') }}</span>
             <h2>{{ 'internal.dashboard.mailing.title'|trans({}, 'internal') }}</h2>
             <p>{{ 'internal.dashboard.mailing.description'|trans({}, 'internal') }}</p>
             <a class="internal-button" href="{{ path('mailing_index') }}">{{ 'internal.dashboard.mailing.action'|trans({}, 'internal') }}</a>
         </article>
 
         <article class="internal-card">
-            <span class="internal-badge internal-badge--secondary">{{ 'internal.dashboard.backoffice.badge'|trans({}, 'internal') }}</span>
             <h2>{{ 'internal.dashboard.backoffice.title'|trans({}, 'internal') }}</h2>
             <p>{{ 'internal.dashboard.backoffice.description'|trans({}, 'internal') }}</p>
             <a class="internal-button internal-button--secondary" href="{{ path('admin') }}">{{ 'internal.dashboard.backoffice.action'|trans({}, 'internal') }}</a>

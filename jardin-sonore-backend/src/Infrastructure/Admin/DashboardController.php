@@ -53,5 +53,9 @@ final class DashboardController extends AbstractDashboardController
         yield MenuItem::linkTo(RegionCrudController::class, 'admin.menu.regions', 'fa fa-map');
         yield MenuItem::linkTo(DepartmentCrudController::class, 'admin.menu.departments', 'fa fa-map-location-dot');
         yield MenuItem::linkTo(MunicipalityCrudController::class, 'admin.menu.municipalities', 'fa fa-city');
+        yield MenuItem::section('admin.menu.mailing');
+        yield MenuItem::linkTo(MailingCampaignCrudController::class, 'admin.menu.mailing_campaigns', 'fa fa-paper-plane');
+        yield MenuItem::linkTo(NewsletterRecommendationCrudController::class, 'admin.menu.mailing_recommendations', 'fa fa-newspaper');
+        yield MenuItem::linkTo(MailingDeliveryRecipientCrudController::class, 'admin.menu.mailing_delivery_recipients', 'fa fa-envelope-circle-check');
     }
 }
