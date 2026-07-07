@@ -1,0 +1,17 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'catalog.instrument.edit.title'|trans({ name: instrument.name }, 'catalog') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ 'catalog.instrument.edit.eyebrow'|trans({}, 'catalog') }}</p>
+            <h1>{{ instrument.name }}</h1>
+            <p>{{ 'catalog.instrument.edit.description'|trans({}, 'catalog') }}</p>
+        </div>
+    </section>
+
+    <section class="internal-card">
+        {{ include('instrument/_form.html.twig', { form: form }) }}
+    </section>
+{% endblock %}

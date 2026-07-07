@@ -49,6 +49,7 @@
 - Quand c'est pertinent pour suivre une relation entre deux classes, ajouter une reference PHPDoc courte avec `@see`, par exemple entre une commande et son handler. Eviter les `@see` decoratifs qui n'aident pas la navigation.
 - Utiliser autant que possible les attributs Symfony quand ils rendent le branchement plus explicite: autowiring/autoconfiguration ciblee, routes, listeners/subscribers, Monolog, validation, securite, mapping, etc.
 - Eviter les attributs dans le domaine ou dans les zones ou ils ajouteraient du couplage inutile; demander confirmation si un arbitrage est necessaire.
+- Pour les requetes Doctrine `QueryBuilder`, preferer une construction lisible et composee: utiliser autant que possible `expr()`, `andX()`/`orX()` ou des methodes/helpers prives dedies plutot que de longues chaines SQL/DQL inline, surtout des que plusieurs conditions se combinent.
 
 ## Contact et captcha
 
@@ -63,6 +64,7 @@
 ## Verification
 
 - Pour les changements significatifs: lancer au minimum `npm run lint`; lancer `npm run build` pour les changements de build/runtime.
+- Pour une migration Doctrine, verifier avant commit que le diff de schema est propre: il doit correspondre uniquement au besoin de la tache et ne plus rester aucun changement parasite ou hors scope a generer.
 - Ne pas laisser un serveur dev supplementaire actif si l'utilisateur ne l'a pas demande.
 - Signaler les commandes executees et les fichiers modifies.
 - Proposer un message de commit conventional commit en fin de tache quand il y a des changements.

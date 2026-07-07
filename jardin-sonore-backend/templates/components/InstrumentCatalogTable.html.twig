@@ -1,0 +1,178 @@
+<div {{ attributes }} class="instrument-catalog">
+    {% set result = this.catalogResult %}
+
+    <section class="internal-card">
+        <div class="instrument-catalog__controls">
+            <div class="internal-search">
+                <label for="instrument-query">{{ 'catalog.instrument.filters.query'|trans({}, 'catalog') }}</label>
+                <div>
+                    <input
+                        id="instrument-query"
+                        type="search"
+                        value="{{ query }}"
+                        data-model="debounce(300)|query"
+                        placeholder="{{ 'catalog.instrument.filters.query_placeholder'|trans({}, 'catalog') }}"
+                    >
+                </div>
+            </div>
+
+            <div class="instrument-catalog__filters">
+                <div>
+                    <label for="instrument-tags">{{ 'catalog.instrument.filters.tags'|trans({}, 'catalog') }}</label>
+                    <select id="instrument-tags" data-model="on(change)|tagUuids" multiple size="{{ max(3, min(this.tagOptions|length, 6)) }}">
+                        {% for tagOption in this.tagOptions %}
+                            <option value="{{ tagOption.uuid }}" {% if tagOption.uuid in tagUuids %}selected{% endif %}>
+                                {{ tagOption.label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="instrument-active">{{ 'catalog.instrument.filters.active'|trans({}, 'catalog') }}</label>
+                    <select id="instrument-active" data-model="on(change)|activeFilter">
+                        <option value="">{{ 'catalog.instrument.filters.all'|trans({}, 'catalog') }}</option>
+                        <option value="active" {% if activeFilter == 'active' %}selected{% endif %}>{{ 'catalog.instrument.filters.active_only'|trans({}, 'catalog') }}</option>
+                        <option value="inactive" {% if activeFilter == 'inactive' %}selected{% endif %}>{{ 'catalog.instrument.filters.inactive_only'|trans({}, 'catalog') }}</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="instrument-quantity">{{ 'catalog.instrument.filters.quantity'|trans({}, 'catalog') }}</label>
+                    <select id="instrument-quantity" data-model="on(change)|quantityFilter">
+                        <option value="">{{ 'catalog.instrument.filters.all'|trans({}, 'catalog') }}</option>
+                        <option value="with" {% if quantityFilter == 'with' %}selected{% endif %}>{{ 'catalog.instrument.filters.with_value'|trans({}, 'catalog') }}</option>
+                        <option value="without" {% if quantityFilter == 'without' %}selected{% endif %}>{{ 'catalog.instrument.filters.without_value'|trans({}, 'catalog') }}</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="instrument-tuning">{{ 'catalog.instrument.filters.tuning'|trans({}, 'catalog') }}</label>
+                    <select id="instrument-tuning" data-model="on(change)|tuningFilter">
+                        <option value="">{{ 'catalog.instrument.filters.all'|trans({}, 'catalog') }}</option>
+                        <option value="with" {% if tuningFilter == 'with' %}selected{% endif %}>{{ 'catalog.instrument.filters.with_value'|trans({}, 'catalog') }}</option>
+                        <option value="without" {% if tuningFilter == 'without' %}selected{% endif %}>{{ 'catalog.instrument.filters.without_value'|trans({}, 'catalog') }}</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="instrument-catalog__meta">
+            <p>{{ 'catalog.instrument.index.total'|trans({ count: result.total }, 'catalog') }}</p>
+
+            {% if this.hasActiveFilters %}
+                <button
+                    type="button"
+                    class="internal-button internal-button--secondary internal-button--compact"
+                    data-action="live#action"
+                    data-live-action-param="resetFilters"
+                >
+                    {{ 'catalog.instrument.filters.reset'|trans({}, 'catalog') }}
+                </button>
+            {% endif %}
+        </div>
+
+        {% if result.items is empty %}
+            <div class="internal-empty-state">
+                {{ 'catalog.instrument.index.empty'|trans({}, 'catalog') }}
+            </div>
+        {% else %}
+            <div class="internal-table-wrapper">
+                <table class="internal-table">
+                    <thead>
+                        <tr>
+                            {% for column, label in {
+                                name: 'catalog.instrument.table.name',
+                                tuning: 'catalog.instrument.table.tuning',
+                                quantity: 'catalog.instrument.table.quantity',
+                                active: 'catalog.instrument.table.active',
+                                updatedAt: 'catalog.instrument.table.updated_at'
+                            } %}
+                                <th>
+                                    <button
+                                        type="button"
+                                        class="instrument-catalog__sort-button{% if this.isSortedBy(column) %} is-active{% endif %}"
+                                        data-action="live#action"
+                                        data-live-action-param="sort"
+                                        data-live-column-param="{{ column }}"
+                                    >
+                                        <span>{{ label|trans({}, 'catalog') }}</span>
+                                        <span aria-hidden="true">{{ this.sortIconFor(column) }}</span>
+                                    </button>
+                                </th>
+                            {% endfor %}
+                            <th>{{ 'catalog.instrument.table.tags'|trans({}, 'catalog') }}</th>
+                            <th>{{ 'catalog.instrument.table.actions'|trans({}, 'catalog') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for instrument in result.items %}
+                            <tr>
+                                <td>
+                                    <strong>{{ instrument.name }}</strong>
+                                    {% if instrument.notes %}
+                                        <span class="internal-table-note">
+                                            {{ instrument.notes|length > 110 ? instrument.notes|slice(0, 110) ~ '…' : instrument.notes }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ instrument.tuning ?? '—' }}</td>
+                                <td>{{ instrument.quantity ?? '—' }}</td>
+                                <td>
+                                    <span class="internal-badge internal-badge--{{ instrument.active ? 'secondary' : 'muted' }}">
+                                        {{ (instrument.active ? 'catalog.instrument.status.active' : 'catalog.instrument.status.inactive')|trans({}, 'catalog') }}
+                                    </span>
+                                </td>
+                                <td>{{ instrument.updatedAt|date('d/m/Y H:i') }}</td>
+                                <td>
+                                    {% if instrument.tags is empty %}
+                                        <span class="internal-table-note">—</span>
+                                    {% else %}
+                                        <div class="instrument-catalog__tags">
+                                            {% for tagLabel in instrument.tags %}
+                                                <span class="internal-badge internal-badge--primary">{{ tagLabel }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="instrument-catalog__actions">
+                                        <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('instrument_edit', { uuid: instrument.uuid.toRfc4122 }) }}">
+                                            {{ 'catalog.instrument.table.edit'|trans({}, 'catalog') }}
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if this.pageCount > 1 %}
+                <div class="instrument-catalog__pagination">
+                    <button
+                        type="button"
+                        class="internal-button internal-button--secondary internal-button--compact"
+                        data-action="live#action"
+                        data-live-action-param="previousPage"
+                        {% if page <= 1 %}disabled{% endif %}
+                    >
+                        {{ 'catalog.instrument.pagination.previous'|trans({}, 'catalog') }}
+                    </button>
+
+                    <span>{{ 'catalog.instrument.pagination.page'|trans({ current: page, total: this.pageCount }, 'catalog') }}</span>
+
+                    <button
+                        type="button"
+                        class="internal-button internal-button--secondary internal-button--compact"
+                        data-action="live#action"
+                        data-live-action-param="nextPage"
+                        {% if page >= this.pageCount %}disabled{% endif %}
+                    >
+                        {{ 'catalog.instrument.pagination.next'|trans({}, 'catalog') }}
+                    </button>
+                </div>
+            {% endif %}
+        {% endif %}
+    </section>
+</div>

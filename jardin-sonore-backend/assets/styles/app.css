@@ -716,6 +716,108 @@ a {
     line-height: 1.35;
 }
 
+.instrument-catalog {
+    display: grid;
+    gap: 20px;
+}
+
+.instrument-catalog__controls {
+    display: grid;
+    gap: 20px;
+}
+
+.instrument-catalog__filters {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.instrument-catalog__filters > div {
+    display: grid;
+    gap: 8px;
+}
+
+.instrument-catalog__filters label,
+.instrument-catalog__meta,
+.instrument-catalog__pagination {
+    font-family: var(--font-sans);
+}
+
+.instrument-catalog__filters label {
+    color: var(--color-secondary);
+    font-size: 0.84rem;
+    font-weight: 700;
+}
+
+.instrument-catalog__filters select {
+    width: 100%;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 12px;
+    padding: 12px 14px;
+    background: var(--color-surface-container);
+    color: var(--color-on-background);
+    font: inherit;
+}
+
+.instrument-catalog__filters select[multiple] {
+    min-height: 148px;
+}
+
+.instrument-catalog__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.instrument-catalog__meta p {
+    margin: 0;
+}
+
+.instrument-catalog__sort-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+}
+
+.instrument-catalog__sort-button.is-active {
+    color: var(--color-primary);
+}
+
+.instrument-catalog__sort-button:hover {
+    cursor: pointer;
+    color: var(--color-primary);
+}
+
+.instrument-catalog__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.instrument-catalog__tags .internal-badge {
+    font-size: 0.72rem;
+}
+
+.instrument-catalog__actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.instrument-catalog__pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
 .internal-checklist {
     display: grid;
     gap: 10px;
@@ -1023,7 +1125,8 @@ a {
 
     .internal-heading-actions,
     .mailing-audience__groups,
-    .mailing-preview-meta__grid {
+    .mailing-preview-meta__grid,
+    .instrument-catalog__filters {
         grid-template-columns: 1fr;
     }
 
@@ -1079,6 +1182,12 @@ a {
 
     .internal-search > div {
         align-items: stretch;
+        flex-direction: column;
+    }
+
+    .instrument-catalog__meta,
+    .instrument-catalog__pagination {
+        align-items: flex-start;
         flex-direction: column;
     }
 }

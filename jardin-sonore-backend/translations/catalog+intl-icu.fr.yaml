@@ -1,0 +1,62 @@
+catalog:
+  instrument:
+    status:
+      active: "Actif"
+      inactive: "Inactif"
+    flash:
+      created: "L’instrument a été créé."
+      updated: "L’instrument a été mis à jour."
+    index:
+      title: "Catalogue instruments | Jardin Sonore"
+      eyebrow: "Catalogue pédagogique"
+      heading: "Instruments"
+      description: "Un catalogue vivant pour préparer les futurs déroulés, retrouver un instrument rapidement et garder une mémoire de l’atelier."
+      create: "Créer un instrument"
+      backoffice: "Ouvrir le backoffice"
+      total: "{count, plural, =0 {Aucun instrument} one {# instrument} other {# instruments}}"
+      empty: "Aucun instrument ne correspond aux filtres actuels."
+    table:
+      name: "Instrument"
+      tuning: "Tonalité"
+      quantity: "Quantité"
+      active: "Statut"
+      updated_at: "Mis à jour"
+      tags: "Tags"
+      actions: "Actions"
+      edit: "Modifier"
+    filters:
+      query: "Recherche directe"
+      query_placeholder: "Nom, tonalité, note ou tag…"
+      tags: "Tags"
+      active: "Statut"
+      quantity: "Quantité"
+      tuning: "Tonalité"
+      all: "Tous"
+      active_only: "Actifs"
+      inactive_only: "Inactifs"
+      with_value: "Renseigné"
+      without_value: "Vide"
+      reset: "Réinitialiser"
+    pagination:
+      previous: "Page précédente"
+      next: "Page suivante"
+      page: "Page {current} sur {total}"
+    form:
+      name: "Nom"
+      tuning: "Tonalité"
+      quantity: "Quantité"
+      notes: "Notes"
+      tags: "Tags"
+      tags_help: "Maintenez Ctrl ou Cmd pour sélectionner plusieurs tags. Les tags se gèrent dans le backoffice EasyAdmin."
+      active: "Instrument actif"
+      submit: "Enregistrer"
+      back: "Retour au catalogue"
+    new:
+      title: "Nouvel instrument | Jardin Sonore"
+      eyebrow: "Catalogue pédagogique"
+      heading: "Créer un instrument"
+      description: "Ajoutez une fiche simple et utile: nom, tonalité, quantité, tags et notes libres."
+    edit:
+      title: "Modifier {name} | Jardin Sonore"
+      eyebrow: "Catalogue pédagogique"
+      description: "Mettez à jour les détails de l’instrument et sa classification pour mieux le retrouver ensuite."

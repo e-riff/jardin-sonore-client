@@ -1,0 +1,25 @@
+{{ form_start(form, {
+    attr: {
+        class: 'internal-form'
+    }
+}) }}
+    <div class="internal-form__grid">
+        {{ form_row(form.name) }}
+        {{ form_row(form.tuning) }}
+    </div>
+
+    <div class="internal-form__grid">
+        {{ form_row(form.quantity) }}
+        {{ form_row(form.active) }}
+    </div>
+
+    {{ form_row(form.tagUuids) }}
+    {{ form_row(form.notes) }}
+
+    <div class="internal-form__actions">
+        {{ form_widget(form.submit) }}
+        <a class="internal-button internal-button--secondary" href="{{ path('instrument_index') }}">
+            {{ 'catalog.instrument.form.back'|trans({}, 'catalog') }}
+        </a>
+    </div>
+{{ form_end(form) }}
