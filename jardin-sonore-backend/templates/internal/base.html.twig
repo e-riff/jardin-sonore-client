@@ -31,6 +31,12 @@
                     aria-label="{{ 'internal.base.navigation_aria'|trans({}, 'internal') }}"
                     {{ stimulus_target('internal-nav', 'panel') }}
                 >
+                    <div class="internal-nav__group internal-nav__group--utility">
+                        <span class="internal-nav__label">{{ 'internal.base.nav.utility_group'|trans({}, 'internal') }}</span>
+                        <a href="{{ path('internal_dashboard') }}">{{ 'internal.base.nav.dashboard'|trans({}, 'internal') }}</a>
+                        <a href="{{ path('admin') }}">{{ 'internal.base.nav.backoffice'|trans({}, 'internal') }}</a>
+                    </div>
+
                     <div class="internal-nav__group">
                         <span class="internal-nav__label">{{ 'internal.base.nav.newsletters_group'|trans({}, 'internal') }}</span>
                         <a href="{{ path('mailing_index') }}">{{ 'internal.base.nav.mailing'|trans({}, 'internal') }}</a>
@@ -40,12 +46,6 @@
                     <div class="internal-nav__group">
                         <span class="internal-nav__label">{{ 'internal.base.nav.sessions_group'|trans({}, 'internal') }}</span>
                         <a href="{{ path('instrument_index') }}">{{ 'internal.base.nav.instruments'|trans({}, 'internal') }}</a>
-                    </div>
-
-                    <div class="internal-nav__group internal-nav__group--utility">
-                        <span class="internal-nav__label">{{ 'internal.base.nav.utility_group'|trans({}, 'internal') }}</span>
-                        <a href="{{ path('internal_dashboard') }}">{{ 'internal.base.nav.dashboard'|trans({}, 'internal') }}</a>
-                        <a href="{{ path('admin') }}">{{ 'internal.base.nav.backoffice'|trans({}, 'internal') }}</a>
                     </div>
                 </nav>
             </div>
