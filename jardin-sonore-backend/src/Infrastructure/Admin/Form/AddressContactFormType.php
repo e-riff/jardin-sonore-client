@@ -38,6 +38,10 @@ final class AddressContactFormType extends AbstractType
                 'label' => 'admin.field.city',
                 'required' => false,
             ])
+            ->add('municipality', MunicipalityAutocompleteType::class, [
+                'label' => 'admin.field.municipality',
+                'required' => false,
+            ])
             ->add('label', TextType::class, [
                 'label' => 'admin.field.label',
                 'required' => false,

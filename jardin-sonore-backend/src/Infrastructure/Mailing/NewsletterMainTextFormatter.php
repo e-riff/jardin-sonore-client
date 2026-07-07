@@ -59,14 +59,11 @@ final readonly class NewsletterMainTextFormatter
         }
 
         $lastParagraphIndex = array_key_last($formattedParagraphs);
-
-        if (null !== $lastParagraphIndex) {
-            $formattedParagraphs[$lastParagraphIndex] = str_replace(
-                'margin:0 0 16px 0;',
-                'margin:0;',
-                $formattedParagraphs[$lastParagraphIndex],
-            );
-        }
+        $formattedParagraphs[$lastParagraphIndex] = str_replace(
+            'margin:0 0 16px 0;',
+            'margin:0;',
+            $formattedParagraphs[$lastParagraphIndex],
+        );
 
         return implode('', $formattedParagraphs);
     }
@@ -131,7 +128,7 @@ final readonly class NewsletterMainTextFormatter
             '</strong>' === $lowerTag => '</strong>',
             '<em>' === $lowerTag => '<em>',
             '</em>' === $lowerTag => '</em>',
-            preg_match('/^<br\s*\/?>$/', $lowerTag) === 1 => '<br>',
+            1 === preg_match('/^<br\s*\/?>$/', $lowerTag) => '<br>',
             '</span>' === $lowerTag => '</span>',
             default => $this->canonicalizeSpanTag($tag),
         };
@@ -139,7 +136,7 @@ final readonly class NewsletterMainTextFormatter
 
     private function canonicalizeSpanTag(string $tag): string
     {
-        if (preg_match('/^<span\s+style\s*=\s*"color\s*:\s*(#[0-9a-fA-F]{6})\s*"\s*>$/i', trim($tag), $matches) !== 1) {
+        if (1 !== preg_match('/^<span\s+style\s*=\s*"color\s*:\s*(#[0-9a-fA-F]{6})\s*"\s*>$/i', trim($tag), $matches)) {
             return '';
         }
 

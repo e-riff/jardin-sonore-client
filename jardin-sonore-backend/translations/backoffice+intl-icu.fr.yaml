@@ -16,6 +16,10 @@ admin:
     regions: "Régions"
     departments: "Départements"
     municipalities: "Communes"
+    mailing: "Mailing"
+    mailing_campaigns: "Campagnes newsletter"
+    mailing_recommendations: "Catalogue newsletter"
+    mailing_delivery_recipients: "Destinataires diffusés"
   action:
     add_person: "Ajouter une personne"
     add_email: "Ajouter un e-mail"
@@ -29,6 +33,8 @@ admin:
     first_name: "Prénom"
     last_name: "Nom"
     role: "Poste"
+    title: "Titre"
+    tag: "Tag"
     label: "Libellé"
     organization: "Organisation"
     organizations: "Organisations"
@@ -62,12 +68,35 @@ admin:
     phone_number: "Téléphone"
     email_address: "Adresse e-mail"
     website_url: "Site web"
+    url: "URL"
+    text: "Texte"
+    internal_title: "Titre interne"
+    public_title: "Titre public"
+    email_subject: "Sujet e-mail"
+    template_key: "Template"
+    audience_filter: "Filtre d’audience"
+    has_audience_criteria: "Ciblage défini"
+    recommendation_count: "Recos"
+    active_recommendation_count: "Recos actives"
+    recommendations: "Recommandations"
+    last_test_sent_at: "Dernier test envoyé le"
+    link_label: "Libellé du lien"
+    image_path: "Image"
     address: "Adresse"
     siren: "SIREN"
     siret: "SIRET"
     center_latitude: "Latitude du centre"
     center_longitude: "Longitude du centre"
     geo_shape: "Contour géographique"
+    campaign_uuid: "UUID campagne"
+    display_name: "Nom affiché"
+    status: "Statut"
+    queued_at: "Mis en file le"
+    dispatched_at: "Pris en charge le"
+    sent_at: "Envoyé le"
+    failed_at: "Échec le"
+    updated_at: "Mis à jour le"
+    last_error: "Dernière erreur"
   help:
     phone_number: "Saisissez un numéro français ou international. Il sera stocké sans séparateurs, par exemple 06 12 34 56 78 deviendra +33612345678."
   region:
@@ -124,6 +153,18 @@ admin:
       new: "Créer une adresse"
       edit: "Modifier une adresse"
       detail: "Détail de l’adresse"
+  mailing_delivery_recipient:
+    page:
+      index: "Destinataires diffusés"
+      detail: "Détail du destinataire diffusé"
+  mailing_campaign:
+    page:
+      index: "Campagnes newsletter"
+      detail: "Détail de la campagne newsletter"
+  newsletter_recommendation:
+    page:
+      index: "Recommandations newsletter"
+      detail: "Détail de la recommandation newsletter"
   tag:
     page:
       index: "Tags"
@@ -164,6 +205,15 @@ address_book:
   tag:
     singular: "Tag"
     plural: "Tags"
+  mailing_delivery_recipient:
+    singular: "Destinataire diffusé"
+    plural: "Destinataires diffusés"
+  mailing_campaign:
+    singular: "Campagne newsletter"
+    plural: "Campagnes newsletter"
+  recommendation:
+    singular: "Recommandation newsletter"
+    plural: "Recommandations newsletter"
   directory_entry_type:
     organization: "Organisation"
     person: "Personne"

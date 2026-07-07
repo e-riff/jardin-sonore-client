@@ -40,7 +40,7 @@ final class MunicipalityCrudController extends AbstractCrudController
             ->setPageTitle(Crud::PAGE_NEW, 'admin.municipality.page.new')
             ->setPageTitle(Crud::PAGE_EDIT, 'admin.municipality.page.edit')
             ->setPageTitle(Crud::PAGE_DETAIL, 'admin.municipality.page.detail')
-            ->setSearchFields(['name', 'postalCode', 'inseeCode'])
+            ->setSearchFields(['name', 'postalCode', 'inseeCode', 'department.code', 'department.name'])
             ->showEntityActionsInlined();
     }
 

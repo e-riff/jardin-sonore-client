@@ -18,8 +18,8 @@ final class NewsletterRecommendation implements UuidIdentifiableInterface
 
     public function __construct(
         private string $title,
-        private ?string $tag = null,
         private string $text,
+        private ?string $tag = null,
         private ?string $url = null,
         private ?string $linkLabel = null,
         private ?string $imagePath = null,

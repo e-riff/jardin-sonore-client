@@ -36,4 +36,64 @@ class MailingDeliveryRecipientEntity
     private DateTimeImmutable $updatedAt;
 
     private ?string $lastError = null;
+
+    public function __toString(): string
+    {
+        return $this->emailAddress;
+    }
+
+    public function getCampaignUuid(): string
+    {
+        return $this->campaignUuid;
+    }
+
+    public function getEmailAddress(): string
+    {
+        return $this->emailAddress;
+    }
+
+    public function getUnsubscribeToken(): string
+    {
+        return $this->unsubscribeToken;
+    }
+
+    public function getDisplayName(): ?string
+    {
+        return $this->displayName;
+    }
+
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
+
+    public function getQueuedAt(): DateTimeImmutable
+    {
+        return $this->queuedAt;
+    }
+
+    public function getDispatchedAt(): ?DateTimeImmutable
+    {
+        return $this->dispatchedAt;
+    }
+
+    public function getSentAt(): ?DateTimeImmutable
+    {
+        return $this->sentAt;
+    }
+
+    public function getFailedAt(): ?DateTimeImmutable
+    {
+        return $this->failedAt;
+    }
+
+    public function getUpdatedAt(): DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
+    public function getLastError(): ?string
+    {
+        return $this->lastError;
+    }
 }

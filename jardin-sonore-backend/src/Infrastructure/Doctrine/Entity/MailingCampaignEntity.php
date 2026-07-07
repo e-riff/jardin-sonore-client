@@ -276,4 +276,58 @@ class MailingCampaignEntity
 
         return $this;
     }
+
+    public function getRecommendationCount(): int
+    {
+        return $this->recommendations->count();
+    }
+
+    public function getActiveRecommendationCount(): int
+    {
+        return $this->recommendations->filter(
+            static fn (MailingRecommendationEntity $mailingRecommendationEntity): bool => $mailingRecommendationEntity->isActive(),
+        )->count();
+    }
+
+    public function hasAudienceCriteria(): bool
+    {
+        foreach ($this->audienceFilter as $value) {
+            if (is_array($value) && [] !== $value) {
+                return true;
+            }
+
+            if (is_string($value) && '' !== trim($value)) {
+                return true;
+            }
+
+            if (is_int($value) || is_float($value)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function getRecommendationsSummary(): string
+    {
+        $recommendations = $this->recommendations->map(
+            static fn (MailingRecommendationEntity $mailingRecommendationEntity): string => $mailingRecommendationEntity->isActive()
+                ? $mailingRecommendationEntity->getTitle()
+                : '[inactive] ' . $mailingRecommendationEntity->getTitle(),
+        )->toArray();
+        $recommendations = array_values(array_filter(array_map('trim', $recommendations)));
+
+        return [] === $recommendations ? '—' : implode("\n", $recommendations);
+    }
+
+    public function getAudienceFilterJson(): string
+    {
+        if ([] === $this->audienceFilter) {
+            return '—';
+        }
+
+        $json = json_encode($this->audienceFilter, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        return false === $json ? '—' : $json;
+    }
 }

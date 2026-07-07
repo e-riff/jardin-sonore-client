@@ -7,7 +7,6 @@ namespace App\Application\Command;
 use App\Infrastructure\Doctrine\Entity\MunicipalityEntity;
 use Doctrine\ORM\EntityManagerInterface;
 use JsonException;
-use Traversable;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -16,6 +15,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Traversable;
 
 #[AsCommand(
     name: 'app:municipality:sync-geo-gouv',
@@ -307,7 +307,7 @@ final class SyncMunicipalitiesFromGeoGouvCommand extends Command
                     continue;
                 }
 
-                if (null !== $remaining && $remaining <= 0) {
+                if (null !== $remaining && 0 >= $remaining) {
                     return;
                 }
 
@@ -318,7 +318,7 @@ final class SyncMunicipalitiesFromGeoGouvCommand extends Command
                 yield $this->normalizeMunicipalitySnapshotRow($municipalityRow);
             }
 
-            if (null !== $remaining && $remaining <= 0) {
+            if (null !== $remaining && 0 >= $remaining) {
                 return;
             }
         }
@@ -349,7 +349,7 @@ final class SyncMunicipalitiesFromGeoGouvCommand extends Command
             return null;
         }
 
-        if (null !== $statusCode && $statusCode >= 400) {
+        if (null !== $statusCode && 400 <= $statusCode) {
             throw new RuntimeException(sprintf('geo.api.gouv.fr returned HTTP %d for INSEE %s.', $statusCode, $inseeCode));
         }
 
@@ -474,9 +474,6 @@ final class SyncMunicipalitiesFromGeoGouvCommand extends Command
         }
     }
 
-    /**
-     * @param mixed $codesPostaux
-     */
     private function resolvePostalCode(?string $currentPostalCode, mixed $codesPostaux): ?string
     {
         if (!is_array($codesPostaux)) {
@@ -500,8 +497,6 @@ final class SyncMunicipalitiesFromGeoGouvCommand extends Command
     }
 
     /**
-     * @param mixed $centre
-     *
      * @return array{?float, ?float}
      */
     private function extractCenterCoordinates(mixed $centre): array
@@ -541,10 +536,4 @@ final class SyncMunicipalitiesFromGeoGouvCommand extends Command
 
         return '' === $value ? null : $value;
     }
-
-    /**
-     * @param array<string, mixed> $changes
-     *
-     * @return list<string>
-     */
 }
