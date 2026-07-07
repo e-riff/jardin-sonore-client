@@ -3,6 +3,17 @@
 {% set title = 'mailing.index.title'|trans({}, 'mailing') %}
 
 {% block internal_body %}
+    {% set statusBadgeVariants = {
+        draft: 'muted',
+        ready_for_test: 'primary',
+        test_sent: 'secondary',
+        delivery_queued: 'warning',
+        delivery_sending: 'primary',
+        delivery_stopped: 'muted',
+        delivery_sent: 'success',
+        delivery_failed: 'danger'
+    } %}
+
     <section class="internal-page-heading">
         <div>
             <p class="internal-eyebrow">{{ 'mailing.index.eyebrow'|trans({}, 'mailing') }}</p>
@@ -44,16 +55,13 @@
                             <td>{{ campaign.internalTitle }}</td>
                             <td>{{ campaign.emailSubject }}</td>
                             <td>
-                                <span class="internal-badge internal-badge--secondary">
+                                <span class="internal-badge internal-badge--{{ statusBadgeVariants[campaign.status.value]|default('muted') }}">
                                     {{ ('mailing.status.' ~ campaign.status.value)|trans({}, 'mailing') }}
                                 </span>
                             </td>
                             <td>
                                 {% if campaign.hasAudienceCriteria %}
-                                    <span class="internal-badge internal-badge--primary">
-                                        {{ 'mailing.index.audience.configured'|trans({}, 'mailing') }}
-                                    </span>
-                                    <span class="internal-table-note">
+                                    <span class="internal-badge internal-badge--{{ campaign.audienceRecipientCount is not null ? 'success' : 'warning' }}">
                                         {% if campaign.audienceRecipientCount is not null %}
                                             {{ 'mailing.index.audience.recipients'|trans({ count: campaign.audienceRecipientCount }, 'mailing') }}
                                         {% else %}
@@ -63,9 +71,6 @@
                                 {% else %}
                                     <span class="internal-badge internal-badge--muted">
                                         {{ 'mailing.index.audience.empty'|trans({}, 'mailing') }}
-                                    </span>
-                                    <span class="internal-table-note">
-                                        {{ 'mailing.index.audience.empty_help'|trans({}, 'mailing') }}
                                     </span>
                                 {% endif %}
                             </td>
