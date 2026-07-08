@@ -28,11 +28,11 @@ final readonly class DispatchPendingMailingCampaignsCommand
         private MailingDeliveryRecipientStoreInterface $mailingDeliveryRecipientStore,
         private MailingCampaignRepositoryInterface $mailingCampaignRepository,
         private MessageBusInterface $messageBus,
-        #[Autowire('%env(default:app.mailing.window_limit:MAILING_WINDOW_LIMIT)%')]
+        #[Autowire('%app.mailing.window_limit%')]
         private int $mailingWindowLimit,
-        #[Autowire('%env(default:app.mailing.window_minutes:MAILING_WINDOW_MINUTES)%')]
+        #[Autowire('%app.mailing.window_minutes%')]
         private int $mailingWindowMinutes,
-        #[Autowire('%env(default:app.mailing.dispatch_batch_size:MAILING_DISPATCH_BATCH_SIZE)%')]
+        #[Autowire('%app.mailing.dispatch_batch_size%')]
         private int $mailingDispatchBatchSize,
         #[Autowire(service: 'monolog.logger.mailing_delivery')]
         private LoggerInterface $mailingDeliveryLogger,

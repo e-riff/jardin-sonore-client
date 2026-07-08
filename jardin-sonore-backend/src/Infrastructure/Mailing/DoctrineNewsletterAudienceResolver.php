@@ -33,9 +33,9 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
 
     public function __construct(
         private Connection $connection,
-        #[Autowire('%env(default:app.mailing.home_latitude:MAILING_HOME_LATITUDE)%')]
+        #[Autowire('%app.mailing.home_latitude%')]
         private string $homeLatitude,
-        #[Autowire('%env(default:app.mailing.home_longitude:MAILING_HOME_LONGITUDE)%')]
+        #[Autowire('%app.mailing.home_longitude%')]
         private string $homeLongitude,
     ) {
     }
