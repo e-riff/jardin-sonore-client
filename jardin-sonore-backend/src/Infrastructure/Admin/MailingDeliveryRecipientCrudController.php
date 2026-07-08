@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Admin;
 
+use App\Domain\Model\Mailing\MailingDeliveryRecipientStatus;
 use App\Infrastructure\Admin\Formatter\ContactDisplayFormatter;
 use App\Infrastructure\Doctrine\Entity\MailingDeliveryRecipientEntity;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
@@ -81,11 +82,11 @@ final class MailingDeliveryRecipientCrudController extends AbstractCrudControlle
     private function statusChoices(): array
     {
         return [
-            'pending' => 'pending',
-            'processing' => 'processing',
-            'sent' => 'sent',
-            'failed' => 'failed',
-            'cancelled' => 'cancelled',
+            MailingDeliveryRecipientStatus::PENDING->value => MailingDeliveryRecipientStatus::PENDING->value,
+            MailingDeliveryRecipientStatus::PROCESSING->value => MailingDeliveryRecipientStatus::PROCESSING->value,
+            MailingDeliveryRecipientStatus::SENT->value => MailingDeliveryRecipientStatus::SENT->value,
+            MailingDeliveryRecipientStatus::FAILED->value => MailingDeliveryRecipientStatus::FAILED->value,
+            MailingDeliveryRecipientStatus::CANCELLED->value => MailingDeliveryRecipientStatus::CANCELLED->value,
         ];
     }
 }

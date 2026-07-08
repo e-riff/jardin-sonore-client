@@ -11,7 +11,10 @@
                     }
                 }) }}
                 <span class="mailing-audience__choice-label">
-                    {{ child.vars.label|trans(child.vars.label_translation_parameters, child.vars.translation_domain) }}
+                    {{ child.vars.label|trans(
+                        child.vars.label_translation_parameters,
+                        child.vars.choice_translation_domain ?? form.vars.choice_translation_domain ?? child.vars.translation_domain
+                    ) }}
                 </span>
             </label>
         {% endfor %}

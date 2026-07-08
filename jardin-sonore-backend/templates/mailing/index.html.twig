@@ -77,9 +77,15 @@
                             <td>{{ campaign.updatedAt|date('d/m/Y H:i') }}</td>
                             <td>
                                 <div class="mailing-index__actions">
-                                    <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_content', { uuid: campaign.uuid }) }}">
-                                        {{ 'mailing.index.edit'|trans({}, 'mailing') }}
-                                    </a>
+                                    {% if campaign.isEditable %}
+                                        <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_content', { uuid: campaign.uuid }) }}">
+                                            {{ 'mailing.index.edit'|trans({}, 'mailing') }}
+                                        </a>
+                                    {% else %}
+                                        <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_preview', { uuid: campaign.uuid }) }}">
+                                            {{ 'mailing.index.preview'|trans({}, 'mailing') }}
+                                        </a>
+                                    {% endif %}
                                     {% if campaign.isEditable %}
                                         <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_audience', {
                                             uuid: campaign.uuid,
@@ -88,9 +94,11 @@
                                             {{ 'mailing.index.audience.edit'|trans({}, 'mailing') }}
                                         </a>
                                     {% endif %}
-                                    <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_preview', { uuid: campaign.uuid }) }}">
-                                        {{ 'mailing.index.preview'|trans({}, 'mailing') }}
-                                    </a>
+                                    {% if campaign.isEditable %}
+                                        <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_preview', { uuid: campaign.uuid }) }}">
+                                            {{ 'mailing.index.preview'|trans({}, 'mailing') }}
+                                        </a>
+                                    {% endif %}
                                     <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_test', { uuid: campaign.uuid }) }}">
                                         {{ 'mailing.index.test'|trans({}, 'mailing') }}
                                     </a>

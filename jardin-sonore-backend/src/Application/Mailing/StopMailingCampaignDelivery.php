@@ -6,7 +6,6 @@ namespace App\Application\Mailing;
 
 use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
-use App\Infrastructure\Mailing\MailingDeliveryRecipientStore;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -15,7 +14,7 @@ final readonly class StopMailingCampaignDelivery
 {
     public function __construct(
         private MailingCampaignRepositoryInterface $mailingCampaignRepository,
-        private MailingDeliveryRecipientStore $mailingDeliveryRecipientStore,
+        private MailingDeliveryRecipientStoreInterface $mailingDeliveryRecipientStore,
         #[Autowire(service: 'monolog.logger.mailing_delivery')]
         private LoggerInterface $mailingDeliveryLogger,
     ) {

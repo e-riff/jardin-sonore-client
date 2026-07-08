@@ -7,7 +7,6 @@ namespace App\Application\Mailing;
 use App\Application\Storage\MailingBannerImageStorageInterface;
 use App\Domain\Model\Mailing\MailingCampaign;
 use App\Infrastructure\Doctrine\Entity\MailingCampaignEntity;
-use App\Infrastructure\Mailing\MailingDeliveryRecipientStore;
 use Doctrine\ORM\EntityManagerInterface;
 use InvalidArgumentException;
 
@@ -16,7 +15,7 @@ final readonly class DeleteMailingCampaign
     public function __construct(
         private EntityManagerInterface $entityManager,
         private MailingBannerImageStorageInterface $mailingBannerImageStorage,
-        private MailingDeliveryRecipientStore $mailingDeliveryRecipientStore,
+        private MailingDeliveryRecipientStoreInterface $mailingDeliveryRecipientStore,
     ) {
     }
 
