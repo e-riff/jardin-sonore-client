@@ -178,6 +178,9 @@ final class MailingAudience
             MailingAudienceFormModel::fromAudienceFilter(
                 $this->resolveMailingCampaign()->getAudienceFilter(),
             ),
+            [
+                'locked' => $this->locked || !$this->resolveMailingCampaign()->isEditable(),
+            ],
         );
     }
 

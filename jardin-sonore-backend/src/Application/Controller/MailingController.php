@@ -366,8 +366,19 @@ final class MailingController extends AbstractController
             $formModel->recipientEmail = $user->getEmail();
         }
 
-        $form = $this->createForm(MailingTestType::class, $formModel);
+        $campaignLocked = !$mailingCampaign->isEditable();
+        $form = $this->createForm(MailingTestType::class, $formModel, [
+            'locked' => $campaignLocked,
+        ]);
         $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $campaignLocked) {
+            $this->addFlash('error', 'mailing.flash.locked');
+
+            return $this->redirectToRoute('mailing_test', [
+                'uuid' => $mailingCampaign->getUuid(),
+            ]);
+        }
 
         if ($form->isSubmitted() && $form->isValid()) {
             try {
@@ -384,6 +395,7 @@ final class MailingController extends AbstractController
             'mailing/test.html.twig',
             [
                 'campaign' => $mailingCampaign,
+                'campaignLocked' => $campaignLocked,
                 'form' => $form->createView(),
             ],
             $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null,

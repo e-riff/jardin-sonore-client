@@ -11,6 +11,14 @@ use Doctrine\DBAL\Connection;
 
 final readonly class MailingDeliveryRecipientStore
 {
+    private const string TABLE = 'mailing_delivery_recipient';
+    private const string TIMESTAMP_FORMAT = 'Y-m-d H:i:s';
+    private const string STATUS_PENDING = 'pending';
+    private const string STATUS_PROCESSING = 'processing';
+    private const string STATUS_SENT = 'sent';
+    private const string STATUS_FAILED = 'failed';
+    private const string STATUS_CANCELLED = 'cancelled';
+
     public function __construct(private Connection $connection)
     {
     }
@@ -20,15 +28,15 @@ final readonly class MailingDeliveryRecipientStore
      */
     public function seedCampaignRecipients(string $campaignUuid, array $newsletterRecipients): void
     {
-        $queuedAt = (new DateTimeImmutable())->format('Y-m-d H:i:s');
+        $queuedAt = $this->currentTimestamp();
 
         foreach ($newsletterRecipients as $newsletterRecipient) {
-            $this->connection->insert('mailing_delivery_recipient', [
+            $this->connection->insert(self::TABLE, [
                 'campaign_uuid' => $campaignUuid,
                 'email_address' => $newsletterRecipient->getEmailAddress()->value(),
                 'unsubscribe_token' => $newsletterRecipient->getUnsubscribeToken(),
                 'display_name' => $newsletterRecipient->getDisplayName(),
-                'status' => 'pending',
+                'status' => self::STATUS_PENDING,
                 'queued_at' => $queuedAt,
                 'updated_at' => $queuedAt,
             ], [
@@ -49,24 +57,26 @@ final readonly class MailingDeliveryRecipientStore
     public function findCampaignRecipientEmailAddresses(string $campaignUuid): array
     {
         /** @var list<string> $emailAddresses */
-        $emailAddresses = $this->connection->fetchFirstColumn(
-            'SELECT DISTINCT LOWER(TRIM(email_address))
-            FROM mailing_delivery_recipient
-            WHERE campaign_uuid = :campaignUuid',
-            [
-                'campaignUuid' => $campaignUuid,
-            ],
-        );
+        $emailAddresses = $this->connection->createQueryBuilder()
+            ->select('DISTINCT LOWER(TRIM(email_address))')
+            ->from(self::TABLE)
+            ->where('campaign_uuid = :campaignUuid')
+            ->setParameter('campaignUuid', $campaignUuid)
+            ->executeQuery()
+            ->fetchFirstColumn();
 
         return array_values(array_filter($emailAddresses, static fn (string $emailAddress): bool => '' !== $emailAddress));
     }
 
     public function countRecentlyDispatched(DateTimeImmutable $since): int
     {
-        return (int) $this->connection->fetchOne(
-            'SELECT COUNT(*) FROM mailing_delivery_recipient WHERE dispatched_at >= :since',
-            ['since' => $since->format('Y-m-d H:i:s')],
-        );
+        return (int) $this->connection->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(self::TABLE)
+            ->where('dispatched_at >= :since')
+            ->setParameter('since', $since->format(self::TIMESTAMP_FORMAT))
+            ->executeQuery()
+            ->fetchOne();
     }
 
     /**
@@ -75,14 +85,16 @@ final readonly class MailingDeliveryRecipientStore
     public function findCampaignUuidsWithPendingRecipients(): array
     {
         /** @var list<string> $campaignUuids */
-        $campaignUuids = $this->connection->fetchFirstColumn(
-            'SELECT campaign_uuid
-            FROM mailing_delivery_recipient
-            WHERE status = :status
-            GROUP BY campaign_uuid
-            ORDER BY MIN(queued_at) ASC, MIN(id) ASC',
-            ['status' => 'pending'],
-        );
+        $campaignUuids = $this->connection->createQueryBuilder()
+            ->select('campaign_uuid')
+            ->from(self::TABLE)
+            ->where('status = :status')
+            ->groupBy('campaign_uuid')
+            ->orderBy('MIN(queued_at)', 'ASC')
+            ->addOrderBy('MIN(id)', 'ASC')
+            ->setParameter('status', self::STATUS_PENDING)
+            ->executeQuery()
+            ->fetchFirstColumn();
 
         return $campaignUuids;
     }
@@ -97,32 +109,32 @@ final readonly class MailingDeliveryRecipientStore
         }
 
         /** @var list<array{id:int, campaign_uuid:string, email_address:string, unsubscribe_token:string, display_name:?string}> $rows */
-        $rows = $this->connection->fetchAllAssociative(
-            'SELECT id, campaign_uuid, email_address, unsubscribe_token, display_name
-            FROM mailing_delivery_recipient
-            WHERE campaign_uuid = :campaignUuid
-            AND status = :status
-            ORDER BY queued_at ASC, id ASC
-            LIMIT ' . $limit,
-            [
-                'campaignUuid' => $campaignUuid,
-                'status' => 'pending',
-            ],
-        );
+        $rows = $this->connection->createQueryBuilder()
+            ->select('id', 'campaign_uuid', 'email_address', 'unsubscribe_token', 'display_name')
+            ->from(self::TABLE)
+            ->where('campaign_uuid = :campaignUuid')
+            ->andWhere('status = :status')
+            ->orderBy('queued_at', 'ASC')
+            ->addOrderBy('id', 'ASC')
+            ->setMaxResults($limit)
+            ->setParameter('campaignUuid', $campaignUuid)
+            ->setParameter('status', self::STATUS_PENDING)
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         if ([] === $rows) {
             return [];
         }
 
         $ids = array_map(static fn (array $row): int => (int) $row['id'], $rows);
-        $now = (new DateTimeImmutable())->format('Y-m-d H:i:s');
+        $now = $this->currentTimestamp();
 
         $this->connection->executeStatement(
-            'UPDATE mailing_delivery_recipient
+            'UPDATE ' . self::TABLE . '
             SET status = :status, dispatched_at = :dispatchedAt, updated_at = :updatedAt
             WHERE id IN (:ids)',
             [
-                'status' => 'processing',
+                'status' => self::STATUS_PROCESSING,
                 'dispatchedAt' => $now,
                 'updatedAt' => $now,
                 'ids' => $ids,
@@ -137,10 +149,10 @@ final readonly class MailingDeliveryRecipientStore
 
     public function markSent(int $deliveryRecipientId): void
     {
-        $now = (new DateTimeImmutable())->format('Y-m-d H:i:s');
+        $now = $this->currentTimestamp();
 
-        $this->connection->update('mailing_delivery_recipient', [
-            'status' => 'sent',
+        $this->connection->update(self::TABLE, [
+            'status' => self::STATUS_SENT,
             'sent_at' => $now,
             'updated_at' => $now,
             'last_error' => null,
@@ -151,10 +163,10 @@ final readonly class MailingDeliveryRecipientStore
 
     public function markFailed(int $deliveryRecipientId, string $lastError): void
     {
-        $now = (new DateTimeImmutable())->format('Y-m-d H:i:s');
+        $now = $this->currentTimestamp();
 
-        $this->connection->update('mailing_delivery_recipient', [
-            'status' => 'failed',
+        $this->connection->update(self::TABLE, [
+            'status' => self::STATUS_FAILED,
             'failed_at' => $now,
             'updated_at' => $now,
             'last_error' => mb_substr($lastError, 0, 65535),
@@ -165,51 +177,46 @@ final readonly class MailingDeliveryRecipientStore
 
     public function cancelPendingRecipients(string $campaignUuid): int
     {
-        $now = (new DateTimeImmutable())->format('Y-m-d H:i:s');
+        $now = $this->currentTimestamp();
 
         return $this->connection->executeStatement(
-            'UPDATE mailing_delivery_recipient
+            'UPDATE ' . self::TABLE . '
             SET status = :status, updated_at = :updatedAt
             WHERE campaign_uuid = :campaignUuid
             AND status = :currentStatus',
             [
-                'status' => 'cancelled',
+                'status' => self::STATUS_CANCELLED,
                 'updatedAt' => $now,
                 'campaignUuid' => $campaignUuid,
-                'currentStatus' => 'pending',
+                'currentStatus' => self::STATUS_PENDING,
             ],
         );
     }
 
     public function hasOutstandingRecipients(string $campaignUuid): bool
     {
-        return 0 < (int) $this->connection->fetchOne(
-            'SELECT COUNT(*)
-            FROM mailing_delivery_recipient
-            WHERE campaign_uuid = :campaignUuid
-            AND status IN (:statuses)',
-            [
-                'campaignUuid' => $campaignUuid,
-                'statuses' => ['pending', 'processing'],
-            ],
-            [
-                'statuses' => ArrayParameterType::STRING,
-            ],
-        );
+        return 0 < (int) $this->connection->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(self::TABLE)
+            ->where('campaign_uuid = :campaignUuid')
+            ->andWhere('status IN (:statuses)')
+            ->setParameter('campaignUuid', $campaignUuid)
+            ->setParameter('statuses', [self::STATUS_PENDING, self::STATUS_PROCESSING], ArrayParameterType::STRING)
+            ->executeQuery()
+            ->fetchOne();
     }
 
     public function hasFailedRecipients(string $campaignUuid): bool
     {
-        return 0 < (int) $this->connection->fetchOne(
-            'SELECT COUNT(*)
-            FROM mailing_delivery_recipient
-            WHERE campaign_uuid = :campaignUuid
-            AND status = :status',
-            [
-                'campaignUuid' => $campaignUuid,
-                'status' => 'failed',
-            ],
-        );
+        return 0 < (int) $this->connection->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(self::TABLE)
+            ->where('campaign_uuid = :campaignUuid')
+            ->andWhere('status = :status')
+            ->setParameter('campaignUuid', $campaignUuid)
+            ->setParameter('status', self::STATUS_FAILED)
+            ->executeQuery()
+            ->fetchOne();
     }
 
     /**
@@ -218,15 +225,14 @@ final readonly class MailingDeliveryRecipientStore
     public function getCampaignDeliveryCounts(string $campaignUuid): array
     {
         /** @var list<array{status:string, total:string|int}> $rows */
-        $rows = $this->connection->fetchAllAssociative(
-            'SELECT status, COUNT(*) AS total
-            FROM mailing_delivery_recipient
-            WHERE campaign_uuid = :campaignUuid
-            GROUP BY status',
-            [
-                'campaignUuid' => $campaignUuid,
-            ],
-        );
+        $rows = $this->connection->createQueryBuilder()
+            ->select('status', 'COUNT(*) AS total')
+            ->from(self::TABLE)
+            ->where('campaign_uuid = :campaignUuid')
+            ->groupBy('status')
+            ->setParameter('campaignUuid', $campaignUuid)
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         $counts = [];
 
@@ -239,8 +245,13 @@ final readonly class MailingDeliveryRecipientStore
 
     public function deleteCampaignRecipients(string $campaignUuid): void
     {
-        $this->connection->delete('mailing_delivery_recipient', [
+        $this->connection->delete(self::TABLE, [
             'campaign_uuid' => $campaignUuid,
         ]);
+    }
+
+    private function currentTimestamp(): string
+    {
+        return (new DateTimeImmutable())->format(self::TIMESTAMP_FORMAT);
     }
 }

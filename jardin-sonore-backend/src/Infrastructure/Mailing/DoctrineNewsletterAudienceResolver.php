@@ -13,6 +13,7 @@ use App\Domain\Model\ValueObject\EmailAddress;
 use BackedEnum;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Query\Expression\CompositeExpression;
 use Doctrine\DBAL\Query\QueryBuilder;
 use InvalidArgumentException;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -20,6 +21,16 @@ use Symfony\Component\Uid\Uuid;
 
 final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAudienceResolverInterface
 {
+    private const string EMAIL_ALIAS = 'email';
+    private const string EMAIL_LINK_ALIAS = 'email_link';
+    private const string CONTACT_ALIAS = 'contact';
+    private const string ENTRY_ALIAS = 'entry';
+    private const string PERSON_ALIAS = 'person';
+    private const string ORGANIZATION_ALIAS = 'organization';
+    private const string PERSON_ORGANIZATION_ALIAS = 'person_organization';
+    private const string ORGANIZATION_ENTRY_ALIAS = 'organization_entry';
+    private const string ORGANIZATION_CONTACT_ALIAS = 'organization_contact';
+
     public function __construct(
         private Connection $connection,
         #[Autowire('%env(default:app.mailing.home_latitude:MAILING_HOME_LATITUDE)%')]
@@ -43,26 +54,7 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
         $this->applyTagFilter($queryBuilder, $newsletterAudienceFilter);
         $this->applyGeographicFilters($queryBuilder, $newsletterAudienceFilter);
 
-        /** @var list<array{email_address: string, unsubscribe_token: string, display_name: ?string}> $rows */
-        $rows = $queryBuilder->executeQuery()->fetchAllAssociative();
-        $recipientsByEmailAddress = [];
-
-        foreach ($rows as $row) {
-            $emailAddress = mb_strtolower(trim($row['email_address']));
-
-            try {
-                $newsletterRecipient = new NewsletterRecipient(
-                    emailAddress: new EmailAddress($emailAddress),
-                    unsubscribeToken: $row['unsubscribe_token'],
-                    displayName: $this->normalizeDisplayName($row['display_name']),
-                );
-            } catch (InvalidArgumentException) {
-                continue;
-            }
-
-            $recipientsByEmailAddress[$emailAddress] = $newsletterRecipient;
-        }
-
+        $recipientsByEmailAddress = $this->mapRecipientsByEmailAddress($queryBuilder);
         $recipients = array_values($recipientsByEmailAddress);
         $total = count($recipients);
 
@@ -75,30 +67,42 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
 
     private function createQueryBuilder(): QueryBuilder
     {
-        return $this->connection->createQueryBuilder()
+        $queryBuilder = $this->connection->createQueryBuilder();
+        $expr = $queryBuilder->expr();
+
+        return $queryBuilder
             ->select(
-                'email.email_address',
-                'email.unsubscribe_token',
-                "CASE WHEN person.id IS NOT NULL THEN TRIM(CONCAT(person.first_name, ' ', person.last_name)) ELSE organization.name END AS display_name",
+                self::EMAIL_ALIAS . '.email_address',
+                self::EMAIL_ALIAS . '.unsubscribe_token',
+                sprintf(
+                    'CASE WHEN %s.id IS NOT NULL THEN TRIM(CONCAT(%s.first_name, \' \', %s.last_name)) ELSE %s.name END AS display_name',
+                    self::PERSON_ALIAS,
+                    self::PERSON_ALIAS,
+                    self::PERSON_ALIAS,
+                    self::ORGANIZATION_ALIAS,
+                ),
             )
-            ->from('email_contact', 'email')
-            ->innerJoin('email', 'contact_details_email_link', 'email_link', 'email_link.email_contact_id = email.id')
-            ->innerJoin('email_link', 'contact_details', 'contact', 'contact.id = email_link.contact_details_id')
-            ->innerJoin('contact', 'directory_entry', 'entry', 'entry.id = contact.directory_entry_id')
-            ->leftJoin('entry', 'person', 'person', 'person.id = entry.id')
-            ->leftJoin('entry', 'organization', 'organization', 'organization.id = entry.id')
-            ->leftJoin('person', 'organization', 'person_organization', 'person_organization.id = person.organization_id')
-            ->leftJoin('person_organization', 'directory_entry', 'organization_entry', 'organization_entry.id = person_organization.id')
-            ->leftJoin('organization_entry', 'contact_details', 'organization_contact', 'organization_contact.directory_entry_id = organization_entry.id')
-            ->where('email.active = 1')
-            ->andWhere('email_link.active = 1')
-            ->andWhere('email.opt_in_newsletter = 1')
-            ->andWhere('email.unsubscribed_at IS NULL')
-            ->andWhere("TRIM(email.email_address) <> ''")
-            ->andWhere("TRIM(email.unsubscribe_token) <> ''")
-            ->andWhere('entry.active = 1')
-            ->andWhere('(organization_entry.id IS NULL OR organization_entry.active = 1)')
-            ->orderBy('email.email_address', 'ASC');
+            ->from('email_contact', self::EMAIL_ALIAS)
+            ->innerJoin(self::EMAIL_ALIAS, 'contact_details_email_link', self::EMAIL_LINK_ALIAS, self::EMAIL_LINK_ALIAS . '.email_contact_id = ' . self::EMAIL_ALIAS . '.id')
+            ->innerJoin(self::EMAIL_LINK_ALIAS, 'contact_details', self::CONTACT_ALIAS, self::CONTACT_ALIAS . '.id = ' . self::EMAIL_LINK_ALIAS . '.contact_details_id')
+            ->innerJoin(self::CONTACT_ALIAS, 'directory_entry', self::ENTRY_ALIAS, self::ENTRY_ALIAS . '.id = ' . self::CONTACT_ALIAS . '.directory_entry_id')
+            ->leftJoin(self::ENTRY_ALIAS, 'person', self::PERSON_ALIAS, self::PERSON_ALIAS . '.id = ' . self::ENTRY_ALIAS . '.id')
+            ->leftJoin(self::ENTRY_ALIAS, 'organization', self::ORGANIZATION_ALIAS, self::ORGANIZATION_ALIAS . '.id = ' . self::ENTRY_ALIAS . '.id')
+            ->leftJoin(self::PERSON_ALIAS, 'organization', self::PERSON_ORGANIZATION_ALIAS, self::PERSON_ORGANIZATION_ALIAS . '.id = ' . self::PERSON_ALIAS . '.organization_id')
+            ->leftJoin(self::PERSON_ORGANIZATION_ALIAS, 'directory_entry', self::ORGANIZATION_ENTRY_ALIAS, self::ORGANIZATION_ENTRY_ALIAS . '.id = ' . self::PERSON_ORGANIZATION_ALIAS . '.id')
+            ->leftJoin(self::ORGANIZATION_ENTRY_ALIAS, 'contact_details', self::ORGANIZATION_CONTACT_ALIAS, self::ORGANIZATION_CONTACT_ALIAS . '.directory_entry_id = ' . self::ORGANIZATION_ENTRY_ALIAS . '.id')
+            ->where($expr->eq(self::EMAIL_ALIAS . '.active', '1'))
+            ->andWhere($expr->eq(self::EMAIL_LINK_ALIAS . '.active', '1'))
+            ->andWhere($expr->eq(self::EMAIL_ALIAS . '.opt_in_newsletter', '1'))
+            ->andWhere($expr->isNull(self::EMAIL_ALIAS . '.unsubscribed_at'))
+            ->andWhere('TRIM(' . self::EMAIL_ALIAS . ".email_address) <> ''")
+            ->andWhere('TRIM(' . self::EMAIL_ALIAS . ".unsubscribe_token) <> ''")
+            ->andWhere($expr->eq(self::ENTRY_ALIAS . '.active', '1'))
+            ->andWhere($expr->or(
+                $expr->isNull(self::ORGANIZATION_ENTRY_ALIAS . '.id'),
+                $expr->eq(self::ORGANIZATION_ENTRY_ALIAS . '.active', '1'),
+            ))
+            ->orderBy(self::EMAIL_ALIAS . '.email_address', 'ASC');
     }
 
     private function applyOrganizationFilters(
@@ -109,7 +113,11 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
 
         if ([] !== $organizationTypes) {
             $queryBuilder
-                ->andWhere('(organization.type IN (:organizationTypes) OR person_organization.type IN (:organizationTypes))')
+                ->andWhere($this->organizationFieldMatchesExpression(
+                    $queryBuilder,
+                    'type',
+                    ':organizationTypes',
+                ))
                 ->setParameter('organizationTypes', $organizationTypes, ArrayParameterType::STRING);
         }
 
@@ -117,7 +125,11 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
 
         if ([] !== $organizationSectors) {
             $queryBuilder
-                ->andWhere('(organization.sector IN (:organizationSectors) OR person_organization.sector IN (:organizationSectors))')
+                ->andWhere($this->organizationFieldMatchesExpression(
+                    $queryBuilder,
+                    'sector',
+                    ':organizationSectors',
+                ))
                 ->setParameter('organizationSectors', $organizationSectors, ArrayParameterType::STRING);
         }
     }
@@ -133,7 +145,13 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
         }
 
         $queryBuilder
-            ->andWhere('COALESCE(organization_entry.customer_status, entry.customer_status) IN (:customerStatuses)')
+            ->andWhere(
+                sprintf(
+                    'COALESCE(%s.customer_status, %s.customer_status) IN (:customerStatuses)',
+                    self::ORGANIZATION_ENTRY_ALIAS,
+                    self::ENTRY_ALIAS,
+                ),
+            )
             ->setParameter('customerStatuses', $customerStatuses, ArrayParameterType::STRING);
     }
 
@@ -152,13 +170,17 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
 
         $queryBuilder
             ->andWhere(
-                'EXISTS (
+                sprintf(
+                    'EXISTS (
                     SELECT 1
                     FROM directory_entry_tag entry_tag
                     INNER JOIN tag ON tag.id = entry_tag.tag_id
-                    WHERE entry_tag.directory_entry_id IN (entry.id, organization_entry.id)
+                    WHERE entry_tag.directory_entry_id IN (%s.id, %s.id)
                     AND tag.uuid IN (:tagUuids)
                 )',
+                    self::ENTRY_ALIAS,
+                    self::ORGANIZATION_ENTRY_ALIAS,
+                ),
             )
             ->setParameter('tagUuids', $tagUuids, ArrayParameterType::BINARY);
     }
@@ -168,9 +190,10 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
         NewsletterAudienceFilter $newsletterAudienceFilter,
     ): void {
         $geographicTargets = [];
+        $expr = $queryBuilder->expr();
 
         if ([] !== $newsletterAudienceFilter->getRegionCodes()) {
-            $geographicTargets[] = 'region.code IN (:regionCodes)';
+            $geographicTargets[] = $expr->in('region.code', ':regionCodes');
             $queryBuilder->setParameter(
                 'regionCodes',
                 $newsletterAudienceFilter->getRegionCodes(),
@@ -179,7 +202,7 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
         }
 
         if ([] !== $newsletterAudienceFilter->getDepartmentCodes()) {
-            $geographicTargets[] = 'department.code IN (:departmentCodes)';
+            $geographicTargets[] = $expr->in('department.code', ':departmentCodes');
             $queryBuilder->setParameter(
                 'departmentCodes',
                 $newsletterAudienceFilter->getDepartmentCodes(),
@@ -188,7 +211,7 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
         }
 
         if ([] !== $newsletterAudienceFilter->getMunicipalityInseeCodes()) {
-            $geographicTargets[] = 'municipality.insee_code IN (:municipalityInseeCodes)';
+            $geographicTargets[] = $expr->in('municipality.insee_code', ':municipalityInseeCodes');
             $queryBuilder->setParameter(
                 'municipalityInseeCodes',
                 $newsletterAudienceFilter->getMunicipalityInseeCodes(),
@@ -198,15 +221,7 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
 
         if (null !== $newsletterAudienceFilter->getRadiusKilometers()) {
             [$originLatitude, $originLongitude] = $this->resolveRadiusOrigin($newsletterAudienceFilter);
-            $geographicTargets[] = '(
-                municipality.center_latitude IS NOT NULL
-                AND municipality.center_longitude IS NOT NULL
-                AND
-                ST_DISTANCE_SPHERE(
-                    POINT(municipality.center_longitude, municipality.center_latitude),
-                    POINT(:originLongitude, :originLatitude)
-                ) <= :radiusMeters
-            )';
+            $geographicTargets[] = $this->radiusTargetExpression();
             $queryBuilder
                 ->setParameter('originLatitude', $originLatitude)
                 ->setParameter('originLongitude', $originLongitude)
@@ -225,9 +240,11 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
                 INNER JOIN department ON department.id = municipality.department_id
                 INNER JOIN region ON region.id = department.region_id
                 WHERE address.active = 1
-                AND (address.contact_details_id = contact.id OR address.contact_details_id = organization_contact.id)
+                AND (address.contact_details_id = %s.id OR address.contact_details_id = %s.id)
                 AND (%s)
             )',
+            self::CONTACT_ALIAS,
+            self::ORGANIZATION_CONTACT_ALIAS,
             implode("\nOR ", $geographicTargets),
         ));
     }
@@ -257,12 +274,13 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
         }
 
         $municipalityInseeCode = $newsletterAudienceFilter->getRadiusOriginMunicipalityInseeCode();
-        $municipality = $this->connection->fetchAssociative(
-            'SELECT center_latitude, center_longitude
-            FROM municipality
-            WHERE insee_code = :inseeCode',
-            ['inseeCode' => $municipalityInseeCode],
-        );
+        $municipality = $this->connection->createQueryBuilder()
+            ->select('center_latitude', 'center_longitude')
+            ->from('municipality')
+            ->where('insee_code = :inseeCode')
+            ->setParameter('inseeCode', $municipalityInseeCode)
+            ->executeQuery()
+            ->fetchAssociative();
 
         if (false === $municipality
             || null === $municipality['center_latitude']
@@ -288,5 +306,58 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
         $displayName = null === $displayName ? null : trim($displayName);
 
         return null === $displayName || '' === $displayName ? null : $displayName;
+    }
+
+    /**
+     * @return array<string, NewsletterRecipient>
+     */
+    private function mapRecipientsByEmailAddress(QueryBuilder $queryBuilder): array
+    {
+        /** @var list<array{email_address: string, unsubscribe_token: string, display_name: ?string}> $rows */
+        $rows = $queryBuilder->executeQuery()->fetchAllAssociative();
+        $recipientsByEmailAddress = [];
+
+        foreach ($rows as $row) {
+            $emailAddress = mb_strtolower(trim($row['email_address']));
+
+            try {
+                $newsletterRecipient = new NewsletterRecipient(
+                    emailAddress: new EmailAddress($emailAddress),
+                    unsubscribeToken: $row['unsubscribe_token'],
+                    displayName: $this->normalizeDisplayName($row['display_name']),
+                );
+            } catch (InvalidArgumentException) {
+                continue;
+            }
+
+            $recipientsByEmailAddress[$emailAddress] = $newsletterRecipient;
+        }
+
+        return $recipientsByEmailAddress;
+    }
+
+    private function organizationFieldMatchesExpression(
+        QueryBuilder $queryBuilder,
+        string $field,
+        string $parameter,
+    ): CompositeExpression {
+        $expr = $queryBuilder->expr();
+
+        return $expr->or(
+            $expr->in(self::ORGANIZATION_ALIAS . ".{$field}", $parameter),
+            $expr->in(self::PERSON_ORGANIZATION_ALIAS . ".{$field}", $parameter),
+        );
+    }
+
+    private function radiusTargetExpression(): string
+    {
+        return '(
+            municipality.center_latitude IS NOT NULL
+            AND municipality.center_longitude IS NOT NULL
+            AND ST_DISTANCE_SPHERE(
+                POINT(municipality.center_longitude, municipality.center_latitude),
+                POINT(:originLongitude, :originLatitude)
+            ) <= :radiusMeters
+        )';
     }
 }
