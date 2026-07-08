@@ -7,30 +7,38 @@ namespace App\Infrastructure\Directory;
 use App\Application\Directory\DirectoryOrganizationLookupInterface;
 use App\Infrastructure\Doctrine\Entity\DirectoryImportLinkEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
-use App\Infrastructure\Doctrine\Repository\DirectoryImportLinkEntityRepository;
-use App\Infrastructure\Doctrine\Repository\OrganizationEntityRepository;
+use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class DoctrineDirectoryOrganizationLookup implements DirectoryOrganizationLookupInterface
 {
     public function __construct(
-        private DirectoryImportLinkEntityRepository $directoryImportLinkEntityRepository,
-        private OrganizationEntityRepository $organizationEntityRepository,
+        private EntityManagerInterface $entityManager,
     ) {
     }
 
     public function findImportLinkByExternalId(string $source, string $externalId): ?DirectoryImportLinkEntity
     {
-        return $this->directoryImportLinkEntityRepository->findOneBySourceAndExternalId($source, $externalId);
+        $importLink = $this->entityManager->getRepository(DirectoryImportLinkEntity::class)->findOneBy([
+            'source' => $source,
+            'externalId' => $externalId,
+        ]);
+
+        return $importLink instanceof DirectoryImportLinkEntity ? $importLink : null;
     }
 
     public function findImportLinkByExternalOrganizationId(string $source, string $externalOrganizationId): ?DirectoryImportLinkEntity
     {
-        return $this->directoryImportLinkEntityRepository->findOneBySourceAndExternalOrganizationId($source, $externalOrganizationId);
+        $importLink = $this->entityManager->getRepository(DirectoryImportLinkEntity::class)->findOneBy([
+            'source' => $source,
+            'externalOrganizationId' => $externalOrganizationId,
+        ]);
+
+        return $importLink instanceof DirectoryImportLinkEntity ? $importLink : null;
     }
 
     public function findOrganizationById(int $organizationId): ?OrganizationEntity
     {
-        $organization = $this->organizationEntityRepository->find($organizationId);
+        $organization = $this->entityManager->find(OrganizationEntity::class, $organizationId);
 
         return $organization instanceof OrganizationEntity ? $organization : null;
     }

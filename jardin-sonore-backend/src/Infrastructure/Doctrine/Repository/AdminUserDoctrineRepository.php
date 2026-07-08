@@ -41,6 +41,13 @@ final class AdminUserDoctrineRepository extends ServiceEntityRepository implemen
         return $adminUserEntity instanceof AdminUserEntity ? $this->adminUserMapper->toDomain($adminUserEntity) : null;
     }
 
+    public function findEntityByEmailAddress(string $emailAddress): ?AdminUserEntity
+    {
+        $adminUserEntity = $this->findOneBy(['email' => mb_strtolower(trim($emailAddress))]);
+
+        return $adminUserEntity instanceof AdminUserEntity ? $adminUserEntity : null;
+    }
+
     public function save(AdminUser $adminUser): void
     {
         $adminUserEntity = $this->findOneBy(['uuid' => $adminUser->getUuid()]);

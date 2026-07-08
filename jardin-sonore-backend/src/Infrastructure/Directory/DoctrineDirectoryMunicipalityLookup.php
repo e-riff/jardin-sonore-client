@@ -6,12 +6,12 @@ namespace App\Infrastructure\Directory;
 
 use App\Application\Directory\DirectoryMunicipalityLookupInterface;
 use App\Infrastructure\Doctrine\Entity\MunicipalityEntity;
-use App\Infrastructure\Doctrine\Repository\MunicipalityEntityRepository;
+use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class DoctrineDirectoryMunicipalityLookup implements DirectoryMunicipalityLookupInterface
 {
     public function __construct(
-        private MunicipalityEntityRepository $municipalityEntityRepository,
+        private EntityManagerInterface $entityManager,
     ) {
     }
 
@@ -21,6 +21,14 @@ final readonly class DoctrineDirectoryMunicipalityLookup implements DirectoryMun
             return null;
         }
 
-        return $this->municipalityEntityRepository->findOneByNameAndPostalCode($commune, $postalCode);
+        $criteria = ['name' => $commune];
+
+        if (null !== $postalCode) {
+            $criteria['postalCode'] = $postalCode;
+        }
+
+        $municipality = $this->entityManager->getRepository(MunicipalityEntity::class)->findOneBy($criteria);
+
+        return $municipality instanceof MunicipalityEntity ? $municipality : null;
     }
 }

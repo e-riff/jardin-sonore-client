@@ -49,11 +49,7 @@ final class InstrumentTagDoctrineRepository extends ServiceEntityRepository impl
             return [];
         }
 
-        $entities = $this->createQueryBuilder('instrumentTag')
-            ->andWhere('instrumentTag.uuid IN (:uuids)')
-            ->setParameter('uuids', array_map(static fn (string $uuid): Uuid => Uuid::fromString($uuid), $normalizedUuids))
-            ->getQuery()
-            ->getResult();
+        $entities = $this->findEntitiesByUuids($normalizedUuids);
 
         $byUuid = [];
 
@@ -70,6 +66,29 @@ final class InstrumentTagDoctrineRepository extends ServiceEntityRepository impl
         }
 
         return $tags;
+    }
+
+    /**
+     * @param list<string> $uuids
+     *
+     * @return list<InstrumentTagEntity>
+     */
+    public function findEntitiesByUuids(array $uuids): array
+    {
+        if ([] === $uuids) {
+            return [];
+        }
+
+        $entities = $this->createQueryBuilder('instrumentTag')
+            ->andWhere('instrumentTag.uuid IN (:uuids)')
+            ->setParameter('uuids', array_map(static fn (string $uuid): Uuid => Uuid::fromString($uuid), $uuids))
+            ->getQuery()
+            ->getResult();
+
+        return array_values(array_filter(
+            $entities,
+            static fn (mixed $entity): bool => $entity instanceof InstrumentTagEntity,
+        ));
     }
 
     public function findAllOrderedByLabel(): array

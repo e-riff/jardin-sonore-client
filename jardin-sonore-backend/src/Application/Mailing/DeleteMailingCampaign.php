@@ -6,15 +6,13 @@ namespace App\Application\Mailing;
 
 use App\Application\Storage\MailingBannerImageStorageInterface;
 use App\Domain\Model\Mailing\MailingCampaign;
-use App\Infrastructure\Doctrine\Repository\MailingCampaignEntityRepository;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Domain\Repository\MailingCampaignRepositoryInterface;
 use InvalidArgumentException;
 
 final readonly class DeleteMailingCampaign
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private MailingCampaignEntityRepository $mailingCampaignEntityRepository,
+        private MailingCampaignRepositoryInterface $mailingCampaignRepository,
         private MailingBannerImageStorageInterface $mailingBannerImageStorage,
         private MailingDeliveryRecipientStoreInterface $mailingDeliveryRecipientStore,
     ) {
@@ -30,15 +28,8 @@ final readonly class DeleteMailingCampaign
             throw new InvalidArgumentException('Mailing campaign still has outstanding recipients.');
         }
 
-        $mailingCampaignEntity = $this->mailingCampaignEntityRepository->findOneByUuid($mailingCampaign->getUuid());
-
-        if (null === $mailingCampaignEntity) {
-            return;
-        }
-
-        $this->mailingBannerImageStorage->delete($mailingCampaignEntity->getBannerImagePath());
+        $this->mailingBannerImageStorage->delete($mailingCampaign->getBannerImagePath());
         $this->mailingDeliveryRecipientStore->deleteCampaignRecipients($mailingCampaign->getUuid()->toRfc4122());
-        $this->entityManager->remove($mailingCampaignEntity);
-        $this->entityManager->flush();
+        $this->mailingCampaignRepository->delete($mailingCampaign);
     }
 }

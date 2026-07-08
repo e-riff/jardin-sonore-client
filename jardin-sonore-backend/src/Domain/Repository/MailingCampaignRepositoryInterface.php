@@ -17,4 +17,6 @@ interface MailingCampaignRepositoryInterface
     public function findAllOrderedByCreatedAtDesc(): array;
 
     public function save(MailingCampaign $mailingCampaign): void;
+
+    public function delete(MailingCampaign $mailingCampaign): void;
 }

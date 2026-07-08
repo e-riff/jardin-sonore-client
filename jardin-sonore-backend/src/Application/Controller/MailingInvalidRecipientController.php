@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Application\Controller;
 
+use App\Application\Directory\DirectorySharedContactLookupInterface;
 use App\Application\Form\InvalidRecipientBatchType;
 use App\Application\Form\Model\InvalidRecipientBatchFormModel;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
-use App\Infrastructure\Doctrine\Repository\EmailContactEntityRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -24,7 +24,7 @@ final class MailingInvalidRecipientController extends AbstractController
 
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private EmailContactEntityRepository $emailContactEntityRepository,
+        private DirectorySharedContactLookupInterface $directorySharedContactLookup,
         private TranslatorInterface $translator,
     ) {
     }
@@ -101,7 +101,7 @@ final class MailingInvalidRecipientController extends AbstractController
      */
     private function processEmail(string $email, string $action): array
     {
-        $emailContact = $this->emailContactEntityRepository->findOneByEmailAddress($email);
+        $emailContact = $this->directorySharedContactLookup->findEmailContactByEmailAddress($email);
 
         if (!$emailContact instanceof EmailContactEntity) {
             return [

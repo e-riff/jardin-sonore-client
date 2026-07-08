@@ -147,7 +147,8 @@ final readonly class DirectoryEstablishmentMatcher
             }
 
             $matches[] = new DirectoryEstablishmentMatch(
-                organization: $organization,
+                organizationId: $organization->getId(),
+                organizationName: $organization->getName(),
                 score: $score,
                 email: $organizationCandidate->email,
                 phone: $organizationCandidate->phone,

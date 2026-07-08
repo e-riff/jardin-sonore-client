@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Doctrine\EventSubscriber;
 
+use App\Application\Directory\DirectorySharedContactLookupInterface;
 use App\Domain\Model\ValueObject\PhoneNumber;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 use App\Infrastructure\Doctrine\Entity\EmailContactLinkEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactLinkEntity;
-use App\Infrastructure\Doctrine\Repository\EmailContactEntityRepository;
-use App\Infrastructure\Doctrine\Repository\PhoneContactEntityRepository;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsDoctrineListener;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\OnFlushEventArgs;
@@ -22,8 +21,7 @@ use InvalidArgumentException;
 final class SharedContactSubscriber
 {
     public function __construct(
-        private readonly EmailContactEntityRepository $emailContactEntityRepository,
-        private readonly PhoneContactEntityRepository $phoneContactEntityRepository,
+        private readonly DirectorySharedContactLookupInterface $directorySharedContactLookup,
     ) {
     }
 
@@ -67,7 +65,7 @@ final class SharedContactSubscriber
             return;
         }
 
-        $existingEmailContact = $this->emailContactEntityRepository->findOneByEmailAddress(mb_strtolower(trim($emailAddress)));
+        $existingEmailContact = $this->directorySharedContactLookup->findEmailContactByEmailAddress($emailAddress);
 
         if (!$existingEmailContact instanceof EmailContactEntity || $existingEmailContact === $emailContact) {
             return;
@@ -96,7 +94,7 @@ final class SharedContactSubscriber
             return;
         }
 
-        $existingPhoneContact = $this->phoneContactEntityRepository->findOneByPhoneNumber($normalizedPhoneNumber);
+        $existingPhoneContact = $this->directorySharedContactLookup->findPhoneContactByPhoneNumber($normalizedPhoneNumber);
 
         if (!$existingPhoneContact instanceof PhoneContactEntity || $existingPhoneContact === $phoneContact) {
             return;
