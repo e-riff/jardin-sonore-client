@@ -5,20 +5,19 @@ declare(strict_types=1);
 namespace App\Application\ContentCatalog;
 
 use App\Infrastructure\Doctrine\Entity\InstrumentEntity;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Infrastructure\Doctrine\Repository\InstrumentEntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Symfony\Component\Uid\Uuid;
 
 final readonly class FindInstrumentCatalogItems
 {
-    public function __construct(private EntityManagerInterface $entityManager)
+    public function __construct(private InstrumentEntityRepository $instrumentEntityRepository)
     {
     }
 
     public function __invoke(InstrumentCatalogCriteria $criteria): InstrumentCatalogResult
     {
-        $repository = $this->entityManager->getRepository(InstrumentEntity::class);
-        $idsQueryBuilder = $repository->createQueryBuilder('instrument')
+        $idsQueryBuilder = $this->instrumentEntityRepository->createQueryBuilder('instrument')
             ->select('instrument.id AS id')
             ->addSelect('MIN(instrument.name) AS sort_name')
             ->addSelect('MIN(COALESCE(instrument.tuning, \'\')) AS sort_tuning')
@@ -44,7 +43,7 @@ final readonly class FindInstrumentCatalogItems
             return new InstrumentCatalogResult([], $total);
         }
 
-        $entities = $repository->createQueryBuilder('instrument')
+        $entities = $this->instrumentEntityRepository->createQueryBuilder('instrument')
             ->addSelect('tag')
             ->leftJoin('instrument.tags', 'tag')
             ->andWhere('instrument.id IN (:ids)')
