@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+
 use Doctrine\DBAL\Platforms\MySQL84Platform;
 use LongitudeOne\Spatial\DBAL\Types\Geometry\MultiPolygonType;
 use LongitudeOne\Spatial\DBAL\Types\Geometry\PointType;
@@ -21,10 +23,9 @@ use Scienta\DoctrineJsonFunctions\Query\AST\Functions\Mysql\JsonExtract;
 use Scienta\DoctrineJsonFunctions\Query\AST\Functions\Mysql\JsonLength;
 use Scienta\DoctrineJsonFunctions\Query\AST\Functions\Mysql\JsonSearch;
 use Scienta\DoctrineJsonFunctions\Query\AST\Functions\Mysql\JsonUnquote;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
-return static function (ContainerConfigurator $containerConfigurator): void {
-    $doctrineConfig = [
+return App::config([
+    'doctrine' => [
         'dbal' => [
             'url' => '%env(resolve:DATABASE_URL)%',
             'types' => [
@@ -73,23 +74,16 @@ return static function (ContainerConfigurator $containerConfigurator): void {
                 'datetime_functions' => [],
             ],
         ],
-    ];
-
-    if ('test' === $containerConfigurator->env()) {
-        $doctrineConfig['dbal']['dbname_suffix'] = '_test%env(default::TEST_TOKEN)%';
-    }
-
-    if ('prod' === $containerConfigurator->env()) {
-        $doctrineConfig['orm']['query_cache_driver'] = [
-            'type' => 'pool',
-            'pool' => 'doctrine.system_cache_pool',
-        ];
-        $doctrineConfig['orm']['result_cache_driver'] = [
-            'type' => 'pool',
-            'pool' => 'doctrine.result_cache_pool',
-        ];
-
-        $containerConfigurator->extension('framework', [
+    ],
+    'when@test' => [
+        'doctrine' => [
+            'dbal' => [
+                'dbname_suffix' => '_test%env(default::TEST_TOKEN)%',
+            ],
+        ],
+    ],
+    'when@prod' => [
+        'framework' => [
             'cache' => [
                 'pools' => [
                     'doctrine.result_cache_pool' => [
@@ -100,8 +94,18 @@ return static function (ContainerConfigurator $containerConfigurator): void {
                     ],
                 ],
             ],
-        ]);
-    }
-
-    $containerConfigurator->extension('doctrine', $doctrineConfig);
-};
+        ],
+        'doctrine' => [
+            'orm' => [
+                'query_cache_driver' => [
+                    'type' => 'pool',
+                    'pool' => 'doctrine.system_cache_pool',
+                ],
+                'result_cache_driver' => [
+                    'type' => 'pool',
+                    'pool' => 'doctrine.result_cache_pool',
+                ],
+            ],
+        ],
+    ],
+]);

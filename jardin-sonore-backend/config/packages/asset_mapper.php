@@ -2,15 +2,22 @@
 
 declare(strict_types=1);
 
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-return static function (ContainerConfigurator $containerConfigurator): void {
-    $containerConfigurator->extension('framework', [
+return App::config([
+    'framework' => [
         'asset_mapper' => [
             'paths' => [
                 'assets/',
             ],
-            'missing_import_mode' => 'prod' === $containerConfigurator->env() ? 'warn' : 'strict',
+            'missing_import_mode' => 'strict',
         ],
-    ]);
-};
+    ],
+    'when@prod' => [
+        'framework' => [
+            'asset_mapper' => [
+                'missing_import_mode' => 'warn',
+            ],
+        ],
+    ],
+]);
