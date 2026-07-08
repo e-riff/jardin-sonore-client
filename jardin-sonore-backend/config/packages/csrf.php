@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-return static function (ContainerConfigurator $containerConfigurator): void {
-    $containerConfigurator->extension('framework', [
+return App::config([
+    'framework' => [
         'form' => [
             'csrf_protection' => [
                 'token_id' => 'submit',
@@ -19,5 +19,5 @@ return static function (ContainerConfigurator $containerConfigurator): void {
                 'logout',
             ],
         ],
-    ]);
-};
+    ],
+]);

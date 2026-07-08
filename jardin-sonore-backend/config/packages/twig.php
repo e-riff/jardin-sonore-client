@@ -2,16 +2,15 @@
 
 declare(strict_types=1);
 
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-return static function (ContainerConfigurator $containerConfigurator): void {
-    $twigConfig = [
+return App::config([
+    'twig' => [
         'file_name_pattern' => '*.twig',
-    ];
-
-    if ('test' === $containerConfigurator->env()) {
-        $twigConfig['strict_variables'] = true;
-    }
-
-    $containerConfigurator->extension('twig', $twigConfig);
-};
+    ],
+    'when@test' => [
+        'twig' => [
+            'strict_variables' => true,
+        ],
+    ],
+]);

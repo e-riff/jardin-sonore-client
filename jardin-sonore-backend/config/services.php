@@ -2,33 +2,33 @@
 
 declare(strict_types=1);
 
+namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+
 use Gedmo\Sluggable\SluggableListener;
 use Gedmo\Timestampable\TimestampableListener;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
-return static function (ContainerConfigurator $containerConfigurator): void {
-    $containerConfigurator->import('parameters.yaml.dist', 'yaml');
-    $containerConfigurator->import('parameters.yaml', 'yaml', true);
-
-    $services = $containerConfigurator->services();
-
-    $services->defaults()
-        ->autowire()
-        ->autoconfigure();
-
-    $services->load('App\\', '../src/')
-        ->exclude([
-            '../src/Infrastructure/Doctrine/Mapping',
-            '../src/Kernel.php',
-        ]);
-
-    $services->set(TimestampableListener::class)
-        ->tag('doctrine.event_subscriber', [
-            'connection' => 'default',
-        ]);
-
-    $services->set(SluggableListener::class)
-        ->tag('doctrine.event_subscriber', [
-            'connection' => 'default',
-        ]);
-};
+return App::config([
+    'imports' => [
+        ['resource' => 'parameters.yaml.dist', 'type' => 'yaml'],
+        ['resource' => 'parameters.yaml', 'type' => 'yaml', 'ignore_errors' => 'not_found'],
+    ],
+    'services' => [
+        'App\\' => [
+            'resource' => '../src/',
+            'exclude' => [
+                '../src/Infrastructure/Doctrine/Mapping',
+                '../src/Kernel.php',
+            ],
+        ],
+        TimestampableListener::class => [
+            'tags' => [
+                ['doctrine.event_subscriber' => ['connection' => 'default']],
+            ],
+        ],
+        SluggableListener::class => [
+            'tags' => [
+                ['doctrine.event_subscriber' => ['connection' => 'default']],
+            ],
+        ],
+    ],
+]);

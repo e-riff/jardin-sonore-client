@@ -2,16 +2,17 @@
 
 declare(strict_types=1);
 
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-return static function (ContainerConfigurator $containerConfigurator): void {
-    $validatorConfig = [
+return App::config([
+    'framework' => [
         'validation' => [],
-    ];
-
-    if ('test' === $containerConfigurator->env()) {
-        $validatorConfig['validation']['not_compromised_password'] = false;
-    }
-
-    $containerConfigurator->extension('framework', $validatorConfig);
-};
+    ],
+    'when@test' => [
+        'framework' => [
+            'validation' => [
+                'not_compromised_password' => false,
+            ],
+        ],
+    ],
+]);

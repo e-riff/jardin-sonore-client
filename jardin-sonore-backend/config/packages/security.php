@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
+namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+
 use App\Application\Security\AdminUserChecker;
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
-return static function (ContainerConfigurator $containerConfigurator): void {
-    $securityConfig = [
+return App::config([
+    'security' => [
         'password_hashers' => [
             PasswordAuthenticatedUserInterface::class => 'auto',
         ],
@@ -52,16 +53,17 @@ return static function (ContainerConfigurator $containerConfigurator): void {
                 'roles' => 'ROLE_ADMIN',
             ],
         ],
-    ];
-
-    if ('test' === $containerConfigurator->env()) {
-        $securityConfig['password_hashers'][PasswordAuthenticatedUserInterface::class] = [
-            'algorithm' => 'auto',
-            'cost' => 4,
-            'time_cost' => 3,
-            'memory_cost' => 10,
-        ];
-    }
-
-    $containerConfigurator->extension('security', $securityConfig);
-};
+    ],
+    'when@test' => [
+        'security' => [
+            'password_hashers' => [
+                PasswordAuthenticatedUserInterface::class => [
+                    'algorithm' => 'auto',
+                    'cost' => 4,
+                    'time_cost' => 3,
+                    'memory_cost' => 10,
+                ],
+            ],
+        ],
+    ],
+]);
