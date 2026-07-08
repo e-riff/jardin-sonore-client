@@ -239,7 +239,7 @@ Lecture de l'audit :
 
 ### Lot 5. Refacto Annuaire Et Geographie
 
-- Statut : En cours
+- Statut : Quasi termine
 - Objectif : reduire les requetes techniques dispersees dans `Application` quand elles devraient vivre en infrastructure dediee.
 - Perimetre probable :
   - `DirectoryEstablishmentMatcher`
@@ -254,10 +254,41 @@ Lecture de l'audit :
   - [x] extraire les lookups de commune et de contacts partages hors `DirectoryEstablishmentUpserter` ;
   - [x] remplacer les `EntityManager->getRepository(...)` simples par des repositories Doctrine injectables quand un acces cible suffisait ;
   - [x] sortir la lecture et l'ecriture techniques de `SyncMunicipalitiesFromGeoGouvCommand` vers des services d'infrastructure dedies ;
-  - [ ] deplacer les lectures DBAL trop techniques restantes hors `Application` ;
-  - [ ] garder les commandes orientees cas d'usage, pas SQL ;
-  - [ ] mutualiser les helpers geographiques seulement si la repetition est reelle.
+  - [x] deplacer les lectures DBAL trop techniques restantes hors `Application` ;
+  - [x] garder les commandes orientees cas d'usage, pas SQL ;
+  - [x] limiter les usages restants de `EntityManagerInterface` aux writers ORM, au CRUD admin et aux subscribers legitimes ;
+  - [x] recabler les readers geographiques techniques sur `Connection` quand ils n'avaient pas besoin de l'ORM ;
+  - [ ] mutualiser les helpers geographiques seulement si la repetition devient reelle.
 - Commit attendu : `refactor(directory): move low-level reads behind infrastructure services`
+
+### Lot 6. Stabilisation Admin Et Audience Mailing
+
+- Statut : Termine
+- Objectif : terminer les derniers nettoyages utiles autour des contacts partages admin et simplifier l'etat du composant de ciblage mailing.
+- Perimetre :
+  - `SharedContactLinkResolver`
+  - CRUD admin des liens email/telephone et creation de personne
+  - `Application/Twig/Component/MailingAudience`
+  - `Application/Form/Model/MailingAudienceFormModel`
+- Criteres de fin :
+  - les recuperations d'entites techniques passent par des repositories dedies ;
+  - le composant Live `MailingAudience` s'appuie davantage sur le form model ;
+  - les libelles metier du composant ne restent pas hardcodes.
+- Checklist :
+  - [x] recabler `SharedContactLinkResolver` sur des repositories dedies ;
+  - [x] recabler les CRUD admin qui recuperaient `ContactDetails` ou `Organization` directement par `EntityManager` ;
+  - [x] enrichir `MailingAudienceFormModel` avec les etats derives utiles au composant ;
+  - [x] alleger `MailingAudience` en supprimant la logique de normalisation dupliquee ;
+  - [x] sortir les libelles de point de carte dans les traductions `mailing`.
+- Commit attendu : `refactor(admin): simplify shared contact resolution and audience state`
+
+## Suite Recommandee
+
+- Clore ce cycle de refacto structurel.
+- Reprendre un sujet plus fonctionnel de la roadmap produit.
+- Proposition prioritaire pour la prochaine session :
+  - cadrage et demarrage du module `resumes de seances` ;
+  - ou, si vous voulez rester encore un peu sur l'existant, consolidation fonctionnelle du workflow mailing plutot qu'un nouveau nettoyage d'architecture.
 
 ### Lot 6. Nommage Et Patterns Structurels
 

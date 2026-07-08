@@ -52,17 +52,22 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 
 ### Lot 5. Refacto Annuaire Et Geographie
 
-- Statut : En cours
+- Statut : Quasi termine
 - Extraction en cours des lectures bas niveau hors `Application`, en commencant par l'import annuaire.
 - Le lot a aussi servi a normaliser les acces ORM simples via repositories Doctrine injectables plutot que `EntityManager->getRepository(...)`.
 - `SyncMunicipalitiesFromGeoGouvCommand` delegue maintenant sa lecture/ecriture technique a des services d'infrastructure, et `FindInstrumentCatalogItems` n'injecte plus l'`EntityManager` directement.
-- Prochaine etape : finir le decoupage des derniers hotspots geographiques restants, surtout ce qui peut encore etre mutualise utilement sans ceremonie en trop.
+- Les readers geographiques purement techniques injectent maintenant `Connection`, et les derniers lookups simples passent par des repositories dedies.
+- Reste seulement un petit reliquat legitime : writers ORM, CRUD admin et subscribers techniques.
 
 ### Lot 6. Nommage Et Patterns Structurels
 
-- Stabiliser les noms `Repository / Query / Provider / Mapper` selon le role reel de chaque service.
-- Continuer a sortir les lectures techniques de `Application` uniquement la ou cela clarifie vraiment.
-- Revoir les doublons entre repositories de domaine et repositories d'entite Doctrine pour viser un seul point d'acces quand le double niveau n'apporte pas assez. L'ideal et de n'avoir qu'une classe par élément (à préciser)
+- Statut : Terminee sur le perimetre utile
+- Les noms ont ete stabilises la ou le gain etait net : `Query`, `Lookup`, `Queue`, `Resolver`, `Storage`.
+- Les derniers nettoyages utiles ont ete faits sur :
+  - hash admin derriere un contrat applicatif ;
+  - `SharedContactLinkResolver` et les CRUD admin de contacts ;
+  - etat du composant `MailingAudience`.
+- Decision : ne plus poursuivre de renommages cosmetiques. Le gain devient trop marginal.
 
 ### Lot 7. Conventions Symfony Et Configuration
 
@@ -73,6 +78,7 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 
 ### Lot 8. Preparation Du Prochain Module Metier
 
+- Statut : Prochain vrai sujet recommande
 - Preparer le cadrage des resumes de seances.
 - Identifier les briques reutilisables deja en place :
   - layout interne ;
@@ -107,3 +113,4 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 - 2026-07-08 : les repositories Doctrine sont normalises vers `ServiceEntityRepository` + `ManagerRegistry`, avec mappers explicites conserves pour les adapters de domaine.
 - 2026-07-08 : le lot 5 avance encore avec `FindInstrumentCatalogItems` sans `EntityManager` direct et la commande de sync communes branchee sur des readers/writers d'infrastructure.
 - 2026-07-08 : point ouvert pour le lot 6 : reduire les doublons entre `*DoctrineRepository` et `*EntityRepository` quand un seul repository suffit.
+- 2026-07-08 : la phase de refacto fine est consideree comme suffisamment mure pour s'arreter ; les derniers gains ont porte sur les readers geographiques DBAL, la resolution admin des contacts partages et la simplification de l'etat `MailingAudience`.
