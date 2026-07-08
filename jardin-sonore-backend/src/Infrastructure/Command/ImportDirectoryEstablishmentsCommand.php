@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Command;
+namespace App\Infrastructure\Command;
 
 use App\Application\Directory\DirectoryEstablishmentImportItem;
 use App\Application\Directory\DirectoryEstablishmentMatch;
 use App\Application\Directory\DirectoryEstablishmentMatcher;
-use App\Application\Directory\DirectoryEstablishmentUpserter;
 use App\Application\Directory\DirectoryImportFileException;
 use App\Application\Directory\DirectoryImportFileLoader;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
+use App\Infrastructure\Directory\DirectoryEstablishmentUpserter;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;

@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Directory;
+namespace App\Infrastructure\Directory;
 
+use App\Application\Directory\DirectoryEstablishmentImportItem;
+use App\Application\Directory\DirectoryMunicipalityLookupInterface;
+use App\Application\Directory\DirectorySharedContactLookupInterface;
 use App\Domain\Model\AddressBook\AddressContactType;
 use App\Domain\Model\AddressBook\ContactDataSource;
 use App\Domain\Model\AddressBook\CustomerStatus;
@@ -16,6 +19,7 @@ use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
 use App\Infrastructure\Doctrine\Entity\DirectoryImportLinkEntity;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 use App\Infrastructure\Doctrine\Entity\EmailContactLinkEntity;
+use App\Infrastructure\Doctrine\Entity\MunicipalityEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactLinkEntity;
@@ -166,7 +170,7 @@ final readonly class DirectoryEstablishmentUpserter
             commune: $item->commune,
             postalCode: $postalCode,
         );
-        $municipality = null !== $municipalityId ? $this->entityManager->getRepository(\App\Infrastructure\Doctrine\Entity\MunicipalityEntity::class)->find($municipalityId) : null;
+        $municipality = null !== $municipalityId ? $this->entityManager->getRepository(MunicipalityEntity::class)->find($municipalityId) : null;
         $addressContact->setMunicipality($municipality);
     }
 
