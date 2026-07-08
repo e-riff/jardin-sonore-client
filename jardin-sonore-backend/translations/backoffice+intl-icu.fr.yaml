@@ -234,13 +234,6 @@ address_book:
   recommendation:
     singular: "Recommandation newsletter"
     plural: "Recommandations newsletter"
-content_catalog:
-  instrument:
-    singular: "Instrument"
-    plural: "Instruments"
-  instrument_tag:
-    singular: "Tag instrument"
-    plural: "Tags instruments"
   directory_entry_type:
     organization: "Organisation"
     person: "Personne"
@@ -285,3 +278,10 @@ content_catalog:
     google_sheets: "Google Sheets"
     legacy_import: "Ancien import"
     directory_import: "Import annuaire"
+content_catalog:
+  instrument:
+    singular: "Instrument"
+    plural: "Instruments"
+  instrument_tag:
+    singular: "Tag instrument"
+    plural: "Tags instruments"
