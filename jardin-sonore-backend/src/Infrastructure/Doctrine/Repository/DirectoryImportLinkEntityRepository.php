@@ -37,4 +37,11 @@ final class DirectoryImportLinkEntityRepository extends ServiceEntityRepository
 
         return $importLink instanceof DirectoryImportLinkEntity ? $importLink : null;
     }
+
+    public function findById(int $id): ?DirectoryImportLinkEntity
+    {
+        $importLink = $this->find($id);
+
+        return $importLink instanceof DirectoryImportLinkEntity ? $importLink : null;
+    }
 }

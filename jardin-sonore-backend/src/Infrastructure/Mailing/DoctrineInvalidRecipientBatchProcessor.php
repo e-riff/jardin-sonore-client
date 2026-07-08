@@ -8,6 +8,7 @@ use App\Application\Directory\DirectorySharedContactLookupInterface;
 use App\Application\Mailing\InvalidRecipientBatchProcessorInterface;
 use App\Application\Mailing\InvalidRecipientProcessResult;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
+use App\Infrastructure\Doctrine\Repository\EmailContactDoctrineRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -18,6 +19,7 @@ final class DoctrineInvalidRecipientBatchProcessor implements InvalidRecipientBa
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly DirectorySharedContactLookupInterface $directorySharedContactLookup,
+        private readonly EmailContactDoctrineRepository $emailContactDoctrineRepository,
     ) {
     }
 
@@ -37,7 +39,7 @@ final class DoctrineInvalidRecipientBatchProcessor implements InvalidRecipientBa
     private function processEmail(string $email, string $action): InvalidRecipientProcessResult
     {
         $emailContactId = $this->directorySharedContactLookup->findEmailContactIdByEmailAddress($email);
-        $emailContact = null !== $emailContactId ? $this->entityManager->getRepository(EmailContactEntity::class)->find($emailContactId) : null;
+        $emailContact = null !== $emailContactId ? $this->emailContactDoctrineRepository->findEntityById($emailContactId) : null;
 
         if (!$emailContact instanceof EmailContactEntity) {
             return new InvalidRecipientProcessResult(

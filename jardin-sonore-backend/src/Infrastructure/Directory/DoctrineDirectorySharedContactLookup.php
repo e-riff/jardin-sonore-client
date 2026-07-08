@@ -7,29 +7,27 @@ namespace App\Infrastructure\Directory;
 use App\Application\Directory\DirectorySharedContactLookupInterface;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactEntity;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Infrastructure\Doctrine\Repository\EmailContactDoctrineRepository;
+use App\Infrastructure\Doctrine\Repository\PhoneContactDoctrineRepository;
 
 final readonly class DoctrineDirectorySharedContactLookup implements DirectorySharedContactLookupInterface
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
+        private EmailContactDoctrineRepository $emailContactDoctrineRepository,
+        private PhoneContactDoctrineRepository $phoneContactDoctrineRepository,
     ) {
     }
 
     public function findEmailContactIdByEmailAddress(string $emailAddress): ?int
     {
-        $emailContact = $this->entityManager->getRepository(EmailContactEntity::class)->findOneBy([
-            'emailAddress' => mb_strtolower(trim($emailAddress)),
-        ]);
+        $emailContact = $this->emailContactDoctrineRepository->findEntityByEmailAddress($emailAddress);
 
         return $emailContact instanceof EmailContactEntity ? $emailContact->getId() : null;
     }
 
     public function findPhoneContactIdByPhoneNumber(string $phoneNumber): ?int
     {
-        $phoneContact = $this->entityManager->getRepository(PhoneContactEntity::class)->findOneBy([
-            'phoneNumber' => trim($phoneNumber),
-        ]);
+        $phoneContact = $this->phoneContactDoctrineRepository->findEntityByPhoneNumber($phoneNumber);
 
         return $phoneContact instanceof PhoneContactEntity ? $phoneContact->getId() : null;
     }

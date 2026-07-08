@@ -59,6 +59,13 @@ final class EmailContactDoctrineRepository extends ServiceEntityRepository imple
         return $emailContactEntity instanceof EmailContactEntity ? $emailContactEntity : null;
     }
 
+    public function findEntityById(int $id): ?EmailContactEntity
+    {
+        $emailContactEntity = $this->find($id);
+
+        return $emailContactEntity instanceof EmailContactEntity ? $emailContactEntity : null;
+    }
+
     public function save(EmailContact $emailContact): void
     {
         $emailContactEntity = $this->findOneBy(['uuid' => $emailContact->getUuid()]);

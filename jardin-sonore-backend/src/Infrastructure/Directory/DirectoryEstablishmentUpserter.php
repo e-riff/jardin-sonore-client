@@ -23,6 +23,10 @@ use App\Infrastructure\Doctrine\Entity\MunicipalityEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactLinkEntity;
+use App\Infrastructure\Doctrine\Repository\DirectoryImportLinkEntityRepository;
+use App\Infrastructure\Doctrine\Repository\EmailContactDoctrineRepository;
+use App\Infrastructure\Doctrine\Repository\MunicipalityDoctrineRepository;
+use App\Infrastructure\Doctrine\Repository\PhoneContactDoctrineRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use InvalidArgumentException;
 
@@ -32,6 +36,10 @@ final readonly class DirectoryEstablishmentUpserter
         private EntityManagerInterface $entityManager,
         private DirectoryMunicipalityLookupInterface $directoryMunicipalityLookup,
         private DirectorySharedContactLookupInterface $directorySharedContactLookup,
+        private EmailContactDoctrineRepository $emailContactDoctrineRepository,
+        private PhoneContactDoctrineRepository $phoneContactDoctrineRepository,
+        private MunicipalityDoctrineRepository $municipalityDoctrineRepository,
+        private DirectoryImportLinkEntityRepository $directoryImportLinkEntityRepository,
     ) {
     }
 
@@ -73,7 +81,7 @@ final readonly class DirectoryEstablishmentUpserter
         }
 
         $emailContactId = $this->directorySharedContactLookup->findEmailContactIdByEmailAddress($emailAddress);
-        $emailContact = null !== $emailContactId ? $this->entityManager->getRepository(EmailContactEntity::class)->find($emailContactId) : null;
+        $emailContact = null !== $emailContactId ? $this->emailContactDoctrineRepository->findEntityById($emailContactId) : null;
         $created = false;
 
         if (!$emailContact instanceof EmailContactEntity) {
@@ -116,7 +124,7 @@ final readonly class DirectoryEstablishmentUpserter
         }
 
         $phoneContactId = $this->directorySharedContactLookup->findPhoneContactIdByPhoneNumber($phoneNumber);
-        $phoneContact = null !== $phoneContactId ? $this->entityManager->getRepository(PhoneContactEntity::class)->find($phoneContactId) : null;
+        $phoneContact = null !== $phoneContactId ? $this->phoneContactDoctrineRepository->findEntityById($phoneContactId) : null;
         $created = false;
 
         if (!$phoneContact instanceof PhoneContactEntity) {
@@ -170,7 +178,7 @@ final readonly class DirectoryEstablishmentUpserter
             commune: $item->commune,
             postalCode: $postalCode,
         );
-        $municipality = null !== $municipalityId ? $this->entityManager->getRepository(MunicipalityEntity::class)->find($municipalityId) : null;
+        $municipality = null !== $municipalityId ? $this->municipalityDoctrineRepository->findEntityById($municipalityId) : null;
         $addressContact->setMunicipality($municipality);
     }
 
@@ -180,7 +188,7 @@ final readonly class DirectoryEstablishmentUpserter
         DirectoryEstablishmentImportItem $item,
         string $source,
     ): void {
-        $existingImportLink = null !== $existingImportLinkId ? $this->entityManager->getRepository(DirectoryImportLinkEntity::class)->find($existingImportLinkId) : null;
+        $existingImportLink = null !== $existingImportLinkId ? $this->directoryImportLinkEntityRepository->findById($existingImportLinkId) : null;
         $importLink = $existingImportLink instanceof DirectoryImportLinkEntity ? $existingImportLink : new DirectoryImportLinkEntity();
         $importLink
             ->setDirectoryEntry($organization)
