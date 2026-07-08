@@ -46,8 +46,6 @@ final readonly class DirectoryEstablishmentMatcher
         'strong_name' => 60,
         'very_strong_name' => 70,
     ];
-    private const int CANDIDATE_QUERY_LIMIT = 200;
-
     /**
      * @var list<string>
      */
@@ -78,6 +76,7 @@ final readonly class DirectoryEstablishmentMatcher
 
     public function __construct(
         private EntityManagerInterface $entityManager,
+        private DirectoryOrganizationCandidateLookupInterface $directoryOrganizationCandidateLookup,
     ) {
     }
 
@@ -131,27 +130,34 @@ final readonly class DirectoryEstablishmentMatcher
     {
         $matches = [];
 
-        foreach ($this->findRawOrganizationCandidates($item) as $rawCandidate) {
-            $score = $this->computeCandidateScore($rawCandidate, $item);
+        foreach ($this->directoryOrganizationCandidateLookup->findOrganizationCandidates($item) as $organizationCandidate) {
+            if (!$this->isCommuneCompatible(
+                $this->normalizeCommune($item->commune),
+                $this->normalizeCommune($organizationCandidate->commune),
+            )) {
+                continue;
+            }
+
+            $score = $this->computeCandidateScore($organizationCandidate, $item);
 
             if ($score < self::MATCH_SCORE_THRESHOLDS['candidate']) {
                 continue;
             }
 
-            $organizationCandidate = $this->entityManager->find(OrganizationEntity::class, $rawCandidate['id']);
+            $organization = $this->entityManager->find(OrganizationEntity::class, $organizationCandidate->organizationId);
 
-            if (!$organizationCandidate instanceof OrganizationEntity) {
+            if (!$organization instanceof OrganizationEntity) {
                 continue;
             }
 
             $matches[] = new DirectoryEstablishmentMatch(
-                organization: $organizationCandidate,
+                organization: $organization,
                 score: $score,
-                email: $rawCandidate['email'],
-                phone: $rawCandidate['phone'],
-                commune: $rawCandidate['commune'],
-                address: $rawCandidate['address'],
-                website: $rawCandidate['website_url'] ?? '',
+                email: $organizationCandidate->email,
+                phone: $organizationCandidate->phone,
+                commune: $organizationCandidate->commune,
+                address: $organizationCandidate->address,
+                website: $organizationCandidate->websiteUrl ?? '',
             );
         }
 
@@ -160,53 +166,50 @@ final readonly class DirectoryEstablishmentMatcher
         return array_slice($matches, 0, 5);
     }
 
-    /**
-     * @param array{id:int, name:string, website_url:?string, email:string, phone:string, commune:string, address:string} $organization
-     */
-    private function computeCandidateScore(array $organization, DirectoryEstablishmentImportItem $item): int
+    private function computeCandidateScore(DirectoryOrganizationCandidate $organizationCandidate, DirectoryEstablishmentImportItem $item): int
     {
         $score = 0;
 
         $importEmail = $this->normalizeEmail($item->emailAddress);
-        $organizationEmail = $this->normalizeEmail($organization['email']);
+        $organizationEmail = $this->normalizeEmail($organizationCandidate->email);
         if (null !== $importEmail && null !== $organizationEmail && $importEmail === $organizationEmail) {
             $score += self::SCORE_BONUSES['email_exact'];
         }
 
         $importPhone = $this->normalizePhone($item->phoneNumber);
-        $organizationPhone = $this->normalizePhone($organization['phone']);
+        $organizationPhone = $this->normalizePhone($organizationCandidate->phone);
         if (null !== $importPhone && null !== $organizationPhone && $importPhone === $organizationPhone) {
             $score += self::SCORE_BONUSES['phone_exact'];
         }
 
         $importWebsite = $this->normalizeWebsite($item->websiteUrl);
-        $organizationWebsite = $this->normalizeWebsite($organization['website_url']);
+        $organizationWebsite = $this->normalizeWebsite($organizationCandidate->websiteUrl);
         if (null !== $importWebsite && null !== $organizationWebsite && $importWebsite === $organizationWebsite) {
             $score += self::SCORE_BONUSES['website_exact'];
         }
 
-        $nameSimilarity = $this->similarityPercentage($organization['name'], $item->name);
+        $nameSimilarity = $this->similarityPercentage($organizationCandidate->name, $item->name);
         $score += (int) round($nameSimilarity * self::SIMILARITY_WEIGHTS['name']);
 
-        $businessNameSimilarity = $this->businessNameSimilarityPercentage($organization['name'], $item->name);
+        $businessNameSimilarity = $this->businessNameSimilarityPercentage($organizationCandidate->name, $item->name);
         $score += (int) round($businessNameSimilarity * self::SIMILARITY_WEIGHTS['business_name']);
 
-        $normalizedOrganizationBusinessName = $this->normalizeBusinessName($organization['name']);
+        $normalizedOrganizationBusinessName = $this->normalizeBusinessName($organizationCandidate->name);
         $normalizedImportBusinessName = $this->normalizeBusinessName($item->name);
         if ('' !== $normalizedOrganizationBusinessName && $normalizedOrganizationBusinessName === $normalizedImportBusinessName) {
             $score += self::SCORE_BONUSES['business_name_exact'];
         }
 
-        $communeSimilarity = $this->similarityPercentage($organization['commune'], $item->commune);
+        $communeSimilarity = $this->similarityPercentage($organizationCandidate->commune, $item->commune);
         $score += (int) round($communeSimilarity * self::SIMILARITY_WEIGHTS['commune']);
 
-        $addressSimilarity = $this->similarityPercentage($organization['address'], $item->address);
+        $addressSimilarity = $this->similarityPercentage($organizationCandidate->address, $item->address);
         $score += (int) round($addressSimilarity * self::SIMILARITY_WEIGHTS['address']);
 
-        $streetAddressSimilarity = $this->streetAddressSimilarityPercentage($organization['address'], $item->address);
+        $streetAddressSimilarity = $this->streetAddressSimilarityPercentage($organizationCandidate->address, $item->address);
         $score += (int) round($streetAddressSimilarity * self::SIMILARITY_WEIGHTS['street_address']);
 
-        $normalizedOrganizationStreetAddress = $this->normalizeStreetAddress($organization['address']);
+        $normalizedOrganizationStreetAddress = $this->normalizeStreetAddress($organizationCandidate->address);
         $normalizedImportStreetAddress = $this->normalizeStreetAddress($item->address);
         if ('' !== $normalizedOrganizationStreetAddress && $normalizedOrganizationStreetAddress === $normalizedImportStreetAddress) {
             $score += self::SCORE_BONUSES['street_address_exact'];
@@ -234,98 +237,6 @@ final readonly class DirectoryEstablishmentMatcher
         }
 
         return min(100, $score);
-    }
-
-    /**
-     * @return list<array{id:int, name:string, website_url:?string, email:string, phone:string, commune:string, address:string}>
-     */
-    private function findRawOrganizationCandidates(DirectoryEstablishmentImportItem $item): array
-    {
-        $queryBuilder = $this->entityManager->getConnection()->createQueryBuilder()
-            ->select(
-                'organization.id',
-                'organization.name',
-                'organization.website_url',
-                'COALESCE(MIN(email.email_address), \'\') AS email',
-                'COALESCE(MIN(phone.phone_number), \'\') AS phone',
-                'COALESCE(MIN(address.city), \'\') AS commune',
-                'COALESCE(MIN(address.address), \'\') AS address',
-            )
-            ->from('organization', 'organization')
-            ->leftJoin('organization', 'contact_details', 'contact', 'contact.directory_entry_id = organization.id')
-            ->leftJoin('contact', 'contact_details_email_link', 'email_link', 'email_link.contact_details_id = contact.id')
-            ->leftJoin('email_link', 'email_contact', 'email', 'email.id = email_link.email_contact_id')
-            ->leftJoin('contact', 'contact_details_phone_link', 'phone_link', 'phone_link.contact_details_id = contact.id')
-            ->leftJoin('phone_link', 'phone_contact', 'phone', 'phone.id = phone_link.phone_contact_id')
-            ->leftJoin('contact', 'address_contact', 'address', 'address.contact_details_id = contact.id')
-            ->groupBy('organization.id', 'organization.name', 'organization.website_url')
-            ->setMaxResults(self::CANDIDATE_QUERY_LIMIT);
-
-        $orWhere = [];
-
-        $nameTerms = $this->extractRelevantNameTerms($item->name);
-        if ([] !== $nameTerms) {
-            $quotedName = $this->extractQuotedName($item->name);
-
-            if (null !== $quotedName) {
-                $orWhere[] = 'LOWER(organization.name) LIKE :quotedName';
-                $queryBuilder->setParameter('quotedName', '%' . $quotedName . '%');
-            }
-
-            foreach (array_slice($nameTerms, 0, 3) as $index => $nameTerm) {
-                $parameterName = "nameTerm{$index}";
-                $orWhere[] = "LOWER(organization.name) LIKE :{$parameterName}";
-                $queryBuilder->setParameter($parameterName, '%' . $nameTerm . '%');
-            }
-        }
-
-        $emailAddress = $this->normalizeEmail($item->emailAddress);
-        if (null !== $emailAddress) {
-            $orWhere[] = 'LOWER(email.email_address) = :emailAddress';
-            $queryBuilder->setParameter('emailAddress', $emailAddress);
-        }
-
-        $phoneNumber = $this->normalizePhone($item->phoneNumber);
-        if (null !== $phoneNumber) {
-            $orWhere[] = 'phone.phone_number = :phoneNumber';
-            $queryBuilder->setParameter('phoneNumber', $phoneNumber);
-        }
-
-        if (null !== $item->commune) {
-            $orWhere[] = 'LOWER(address.city) = :commune';
-            $queryBuilder->setParameter('commune', mb_strtolower($item->commune));
-        }
-
-        $websiteUrl = $this->normalizeWebsite($item->websiteUrl);
-        if (null !== $websiteUrl) {
-            $orWhere[] = 'LOWER(organization.website_url) LIKE :websiteUrl';
-            $queryBuilder->setParameter('websiteUrl', '%' . $websiteUrl . '%');
-        }
-
-        if ([] === $orWhere) {
-            return [];
-        }
-
-        $queryBuilder->andWhere('(' . implode(' OR ', $orWhere) . ')');
-
-        /** @var list<array{id:int|string, name:string, website_url:?string, email:string, phone:string, commune:string, address:string}> $rows */
-        $rows = $queryBuilder->executeQuery()->fetchAllAssociative();
-
-        $normalizedImportCommune = $this->normalizeCommune($item->commune);
-        $rows = array_filter($rows, fn (array $row): bool => $this->isCommuneCompatible(
-            $normalizedImportCommune,
-            $this->normalizeCommune((string) $row['commune']),
-        ));
-
-        return array_map(static fn (array $row): array => [
-            'id' => (int) $row['id'],
-            'name' => (string) $row['name'],
-            'website_url' => is_string($row['website_url']) ? $row['website_url'] : null,
-            'email' => (string) $row['email'],
-            'phone' => (string) $row['phone'],
-            'commune' => (string) $row['commune'],
-            'address' => (string) $row['address'],
-        ], $rows);
     }
 
     private function normalizeEmail(?string $emailAddress): ?string
@@ -429,21 +340,6 @@ final readonly class DirectoryEstablishmentMatcher
         return [] === $terms
             ? array_values(array_filter(explode(' ', $normalized), static fn (string $term): bool => 2 <= mb_strlen($term)))
             : $terms;
-    }
-
-    private function extractQuotedName(?string $value): ?string
-    {
-        if (null === $value) {
-            return null;
-        }
-
-        if (1 !== preg_match('/["“](.+?)["”]/u', $value, $matches)) {
-            return null;
-        }
-
-        $quotedName = $this->normalizeText($matches[1]);
-
-        return '' === $quotedName ? null : $quotedName;
     }
 
     private function similarityPercentage(?string $left, ?string $right): int

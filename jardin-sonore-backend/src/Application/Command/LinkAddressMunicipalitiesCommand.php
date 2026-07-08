@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Application\Command;
 
+use App\Application\Geography\AddressContactSnapshot;
+use App\Application\Geography\AddressMunicipalityCandidate;
+use App\Application\Geography\AddressMunicipalityLinkingReaderInterface;
 use App\Infrastructure\Doctrine\Entity\AddressContactEntity;
 use App\Infrastructure\Doctrine\Entity\MunicipalityEntity;
 use DateTimeImmutable;
-use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -22,11 +24,12 @@ use Throwable;
 )]
 final readonly class LinkAddressMunicipalitiesCommand
 {
-    private const int READ_BATCH_SIZE = 200;
     private const int FLUSH_BATCH_SIZE = 100;
 
-    public function __construct(private EntityManagerInterface $entityManager)
-    {
+    public function __construct(
+        private EntityManagerInterface $entityManager,
+        private AddressMunicipalityLinkingReaderInterface $addressMunicipalityLinkingReader,
+    ) {
     }
 
     public function __invoke(
@@ -55,7 +58,7 @@ final readonly class LinkAddressMunicipalitiesCommand
         $pendingChangesSinceLastFlush = false;
         $lastFlushedProcessed = 0;
 
-        foreach ($this->iterateAddressSnapshots() as $addressSnapshot) {
+        foreach ($this->addressMunicipalityLinkingReader->iterateUnlinkedAddressSnapshots() as $addressSnapshot) {
             ++$stats['processed'];
 
             $postalCode = $this->resolvePostalCode($addressSnapshot);
@@ -72,7 +75,7 @@ final readonly class LinkAddressMunicipalitiesCommand
                 continue;
             }
 
-            $normalizedCity = $this->normalizeCommune($addressSnapshot['city']);
+            $normalizedCity = $this->normalizeCommune($addressSnapshot->city);
             if ('' === $normalizedCity) {
                 ++$stats['missingCity'];
                 $this->recordUnmatchedAddress(
@@ -86,14 +89,14 @@ final readonly class LinkAddressMunicipalitiesCommand
                 continue;
             }
 
-            $postalCodeCandidatesCache[$postalCode] ??= $this->loadMunicipalityCandidatesByPostalCode($postalCode);
+            $postalCodeCandidatesCache[$postalCode] ??= $this->addressMunicipalityLinkingReader->findMunicipalityCandidatesByPostalCode($postalCode);
             $candidates = $postalCodeCandidatesCache[$postalCode];
 
             if ([] === $candidates) {
                 $departmentCode = $this->inferDepartmentCodeFromPostalCode($postalCode);
 
                 if (null !== $departmentCode) {
-                    $departmentCandidatesCache[$departmentCode] ??= $this->loadMunicipalityCandidatesByDepartmentCode($departmentCode);
+                    $departmentCandidatesCache[$departmentCode] ??= $this->addressMunicipalityLinkingReader->findMunicipalityCandidatesByDepartmentCode($departmentCode);
                     $resolution = $this->resolveMunicipalityCandidateWithinDepartment($normalizedCity, $departmentCandidatesCache[$departmentCode]);
 
                     if (null !== $resolution) {
@@ -102,7 +105,7 @@ final readonly class LinkAddressMunicipalitiesCommand
 
                         if ($apply) {
                             try {
-                                $addressContact = $this->entityManager->find(AddressContactEntity::class, $addressSnapshot['id']);
+                                $addressContact = $this->entityManager->find(AddressContactEntity::class, $addressSnapshot->id);
                                 $municipality = $this->entityManager->find(MunicipalityEntity::class, $resolution['municipalityId']);
 
                                 if ($addressContact instanceof AddressContactEntity && $municipality instanceof MunicipalityEntity) {
@@ -167,7 +170,7 @@ final readonly class LinkAddressMunicipalitiesCommand
 
             if ($apply) {
                 try {
-                    $addressContact = $this->entityManager->find(AddressContactEntity::class, $addressSnapshot['id']);
+                    $addressContact = $this->entityManager->find(AddressContactEntity::class, $addressSnapshot->id);
                     $municipality = $this->entityManager->find(MunicipalityEntity::class, $resolution['municipalityId']);
 
                     if ($addressContact instanceof AddressContactEntity && $municipality instanceof MunicipalityEntity) {
@@ -246,19 +249,18 @@ final readonly class LinkAddressMunicipalitiesCommand
 
     /**
      * @param list<array{id:int, postalCode:?string, city:?string, address:?string, reason:string, details:string}> $unmatchedAddresses
-     * @param array{id:int, postalCode:?string, city:?string, address:?string}                                      $addressSnapshot
      */
     private function recordUnmatchedAddress(
         array &$unmatchedAddresses,
-        array $addressSnapshot,
+        AddressContactSnapshot $addressSnapshot,
         string $reason,
         string $details,
     ): void {
         $unmatchedAddresses[] = [
-            'id' => $addressSnapshot['id'],
-            'postalCode' => $addressSnapshot['postalCode'],
-            'city' => $addressSnapshot['city'],
-            'address' => $addressSnapshot['address'],
+            'id' => $addressSnapshot->id,
+            'postalCode' => $addressSnapshot->postalCode,
+            'city' => $addressSnapshot->city,
+            'address' => $addressSnapshot->address,
             'reason' => $reason,
             'details' => $details,
         ];
@@ -303,40 +305,6 @@ final readonly class LinkAddressMunicipalitiesCommand
         fclose($handle);
 
         return $filePath;
-    }
-
-    /**
-     * @return iterable<int, array{id:int, postalCode:?string, city:?string, address:?string}>
-     */
-    private function iterateAddressSnapshots(): iterable
-    {
-        $connection = $this->entityManager->getConnection();
-        $lastId = 0;
-
-        do {
-            $queryBuilder = $connection->createQueryBuilder()
-                ->select('address.id', 'address.postal_code', 'address.city', 'address.address')
-                ->from('address_contact', 'address')
-                ->andWhere('address.id > :lastId')
-                ->andWhere('address.municipality_id IS NULL')
-                ->setParameter('lastId', $lastId)
-                ->orderBy('address.id', 'ASC')
-                ->setMaxResults(self::READ_BATCH_SIZE);
-
-            /** @var list<array{id:int|string, postal_code:?string, city:?string, address:?string}> $rows */
-            $rows = $queryBuilder->executeQuery()->fetchAllAssociative();
-
-            foreach ($rows as $row) {
-                $lastId = (int) $row['id'];
-
-                yield [
-                    'id' => (int) $row['id'],
-                    'postalCode' => is_string($row['postal_code']) ? trim($row['postal_code']) : null,
-                    'city' => is_string($row['city']) ? trim($row['city']) : null,
-                    'address' => is_string($row['address']) ? trim($row['address']) : null,
-                ];
-            }
-        } while ([] !== $rows);
     }
 
     /**
@@ -385,84 +353,7 @@ final readonly class LinkAddressMunicipalitiesCommand
     }
 
     /**
-     * @return list<array{id:int, normalizedName:string}>
-     */
-    private function loadMunicipalityCandidatesByPostalCode(string $postalCode): array
-    {
-        $connection = $this->entityManager->getConnection();
-
-        /** @var list<array{id:int|string, name:string}> $rows */
-        $rows = $connection->fetchAllAssociative(
-            'SELECT municipality.id, municipality.name
-            FROM municipality
-            WHERE municipality.postal_code = :postalCode',
-            [
-                'postalCode' => $postalCode,
-            ],
-            [
-                'postalCode' => ParameterType::STRING,
-            ],
-        );
-
-        $candidates = [];
-
-        foreach ($rows as $row) {
-            $name = trim((string) $row['name']);
-
-            if ('' === $name) {
-                continue;
-            }
-
-            $candidates[] = [
-                'id' => (int) $row['id'],
-                'normalizedName' => $this->normalizeCommune($name),
-            ];
-        }
-
-        return $candidates;
-    }
-
-    /**
-     * @return list<array{id:int, normalizedName:string}>
-     */
-    private function loadMunicipalityCandidatesByDepartmentCode(string $departmentCode): array
-    {
-        $connection = $this->entityManager->getConnection();
-
-        /** @var list<array{id:int|string, name:string}> $rows */
-        $rows = $connection->fetchAllAssociative(
-            'SELECT municipality.id, municipality.name
-            FROM municipality
-            INNER JOIN department ON department.id = municipality.department_id
-            WHERE department.code = :departmentCode',
-            [
-                'departmentCode' => $departmentCode,
-            ],
-            [
-                'departmentCode' => ParameterType::STRING,
-            ],
-        );
-
-        $candidates = [];
-
-        foreach ($rows as $row) {
-            $name = trim((string) $row['name']);
-
-            if ('' === $name) {
-                continue;
-            }
-
-            $candidates[] = [
-                'id' => (int) $row['id'],
-                'normalizedName' => $this->normalizeCommune($name),
-            ];
-        }
-
-        return $candidates;
-    }
-
-    /**
-     * @param list<array{id:int, normalizedName:string}> $candidates
+     * @param list<AddressMunicipalityCandidate> $candidates
      *
      * @return array{status:'exact'|'postal_unique'|'best_city', municipalityId:int}|null
      */
@@ -470,34 +361,36 @@ final readonly class LinkAddressMunicipalitiesCommand
     {
         $exactCandidates = array_values(array_filter(
             $candidates,
-            static fn (array $candidate): bool => $candidate['normalizedName'] === $normalizedCity,
+            fn (AddressMunicipalityCandidate $candidate): bool => $this->normalizeCommune($candidate->name) === $normalizedCity,
         ));
 
         if (1 === count($exactCandidates)) {
             return [
                 'status' => 'exact',
-                'municipalityId' => $exactCandidates[0]['id'],
+                'municipalityId' => $exactCandidates[0]->municipalityId,
             ];
         }
 
         if (1 === count($candidates)) {
             return [
                 'status' => 'postal_unique',
-                'municipalityId' => $candidates[0]['id'],
+                'municipalityId' => $candidates[0]->municipalityId,
             ];
         }
 
         $bestCandidate = null;
 
         foreach ($candidates as $candidate) {
-            if ('' === $candidate['normalizedName']) {
+            $normalizedCandidateName = $this->normalizeCommune($candidate->name);
+
+            if ('' === $normalizedCandidateName) {
                 continue;
             }
 
-            similar_text($normalizedCity, $candidate['normalizedName'], $score);
+            similar_text($normalizedCity, $normalizedCandidateName, $score);
             $candidateScore = (int) round($score);
             $candidateData = [
-                'id' => $candidate['id'],
+                'id' => $candidate->municipalityId,
                 'score' => $candidateScore,
             ];
 
@@ -519,7 +412,7 @@ final readonly class LinkAddressMunicipalitiesCommand
     }
 
     /**
-     * @param list<array{id:int, normalizedName:string}> $candidates
+     * @param list<AddressMunicipalityCandidate> $candidates
      *
      * @return array{status:'department_fallback', municipalityId:int}|null
      */
@@ -527,39 +420,41 @@ final readonly class LinkAddressMunicipalitiesCommand
     {
         $exactCandidates = array_values(array_filter(
             $candidates,
-            static fn (array $candidate): bool => $candidate['normalizedName'] === $normalizedCity,
+            fn (AddressMunicipalityCandidate $candidate): bool => $this->normalizeCommune($candidate->name) === $normalizedCity,
         ));
 
         if (1 === count($exactCandidates)) {
             return [
                 'status' => 'department_fallback',
-                'municipalityId' => $exactCandidates[0]['id'],
+                'municipalityId' => $exactCandidates[0]->municipalityId,
             ];
         }
 
         $containingCandidates = array_values(array_filter(
             $candidates,
-            static fn (array $candidate): bool => '' !== $candidate['normalizedName']
-                && (str_contains($candidate['normalizedName'], $normalizedCity) || str_contains($normalizedCity, $candidate['normalizedName'])),
+            fn (AddressMunicipalityCandidate $candidate): bool => '' !== $this->normalizeCommune($candidate->name)
+                && (str_contains($this->normalizeCommune($candidate->name), $normalizedCity) || str_contains($normalizedCity, $this->normalizeCommune($candidate->name))),
         ));
 
         if (1 === count($containingCandidates)) {
             return [
                 'status' => 'department_fallback',
-                'municipalityId' => $containingCandidates[0]['id'],
+                'municipalityId' => $containingCandidates[0]->municipalityId,
             ];
         }
 
         $scoredCandidates = [];
 
         foreach ($candidates as $candidate) {
-            if ('' === $candidate['normalizedName']) {
+            $normalizedCandidateName = $this->normalizeCommune($candidate->name);
+
+            if ('' === $normalizedCandidateName) {
                 continue;
             }
 
-            similar_text($normalizedCity, $candidate['normalizedName'], $score);
+            similar_text($normalizedCity, $normalizedCandidateName, $score);
             $scoredCandidates[] = [
-                'id' => $candidate['id'],
+                'id' => $candidate->municipalityId,
                 'score' => (int) round($score),
             ];
         }
@@ -593,18 +488,15 @@ final readonly class LinkAddressMunicipalitiesCommand
         ];
     }
 
-    /**
-     * @param array{postalCode:?string, address:?string} $addressSnapshot
-     */
-    private function resolvePostalCode(array $addressSnapshot): ?string
+    private function resolvePostalCode(AddressContactSnapshot $addressSnapshot): ?string
     {
-        $postalCode = $addressSnapshot['postalCode'];
+        $postalCode = $addressSnapshot->postalCode;
 
         if (is_string($postalCode) && preg_match('/^\d{5}$/', $postalCode)) {
             return $postalCode;
         }
 
-        $address = $addressSnapshot['address'];
+        $address = $addressSnapshot->address;
 
         if (!is_string($address) || 1 !== preg_match('/\b(\d{5})\b/', $address, $matches)) {
             return null;
@@ -639,12 +531,12 @@ final readonly class LinkAddressMunicipalitiesCommand
     }
 
     /**
-     * @param list<array{id:int, normalizedName:string}> $candidates
+     * @param list<AddressMunicipalityCandidate> $candidates
      */
     private function buildUnmatchedCandidatesDetail(string $postalCode, string $normalizedCity, array $candidates): string
     {
         $candidateNames = array_values(array_filter(array_map(
-            static fn (array $candidate): string => $candidate['normalizedName'],
+            fn (AddressMunicipalityCandidate $candidate): string => $this->normalizeCommune($candidate->name),
             $candidates,
         )));
 
@@ -654,7 +546,7 @@ final readonly class LinkAddressMunicipalitiesCommand
     }
 
     /**
-     * @param list<array{id:int, normalizedName:string}> $departmentCandidates
+     * @param list<AddressMunicipalityCandidate> $departmentCandidates
      */
     private function buildDepartmentFallbackDetail(
         string $postalCode,
@@ -667,7 +559,7 @@ final readonly class LinkAddressMunicipalitiesCommand
         }
 
         $departmentCandidateNames = array_values(array_filter(array_map(
-            static fn (array $candidate): string => $candidate['normalizedName'],
+            fn (AddressMunicipalityCandidate $candidate): string => $this->normalizeCommune($candidate->name),
             $departmentCandidates,
         )));
 
