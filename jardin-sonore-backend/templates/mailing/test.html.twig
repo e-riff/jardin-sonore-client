@@ -27,12 +27,20 @@
             <p>{{ 'mailing.test.form.description'|trans({}, 'mailing') }}</p>
         </div>
 
+        {% if campaignLocked %}
+            <div class="internal-alert">
+                {{ 'mailing.flash.locked'|trans({}, 'mailing') }}
+            </div>
+        {% endif %}
+
         {{ form_start(form, { attr: { class: 'internal-form' } }) }}
             {{ form_row(form.recipientEmail) }}
 
-            <div class="internal-form__actions">
-                {{ form_widget(form.submit) }}
-            </div>
+            {% if not campaignLocked %}
+                <div class="internal-form__actions">
+                    {{ form_widget(form.submit) }}
+                </div>
+            {% endif %}
         {{ form_end(form) }}
     </section>
 {% endblock %}

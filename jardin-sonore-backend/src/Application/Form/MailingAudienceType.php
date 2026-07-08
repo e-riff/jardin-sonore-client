@@ -40,6 +40,7 @@ final class MailingAudienceType extends AbstractType
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $locked = true === $options['locked'];
         $formModel = $builder->getData();
         $selectedMunicipalityChoices = $this->selectedMunicipalityChoices(
             $formModel instanceof MailingAudienceFormModel ? $formModel->municipalityInseeCodes : [],
@@ -75,33 +76,39 @@ final class MailingAudienceType extends AbstractType
                 ...$expandedMultipleOptions,
                 'label' => 'mailing.audience.form.organization_types',
                 'help' => 'mailing.audience.form.organization_types_help',
+                'disabled' => $locked,
                 'choices' => $this->organizationTypeChoices(),
             ])
             ->add('organizationSectors', ChoiceType::class, [
                 ...$expandedMultipleOptions,
                 'label' => 'mailing.audience.form.organization_sectors',
+                'disabled' => $locked,
                 'choices' => $this->organizationSectorChoices(),
             ])
             ->add('customerStatuses', ChoiceType::class, [
                 ...$expandedMultipleOptions,
                 'label' => 'mailing.audience.form.customer_statuses',
+                'disabled' => $locked,
                 'choices' => $this->customerStatusChoices(),
             ])
             ->add('tagUuids', ChoiceType::class, [
                 ...$multipleOptions,
                 'label' => 'mailing.audience.form.tags',
+                'disabled' => $locked,
                 'choices' => $this->newsletterAudienceOptionsProvider->getTagChoices(),
             ])
             ->add('regionCodes', ChoiceType::class, [
                 ...$multipleOptions,
                 'label' => 'mailing.audience.form.regions',
                 'help' => 'mailing.audience.form.regions_help',
+                'disabled' => $locked,
                 'choices' => $this->newsletterAudienceOptionsProvider->getRegionChoices(),
             ])
             ->add('departmentCodes', ChoiceType::class, [
                 ...$multipleOptions,
                 'label' => 'mailing.audience.form.departments',
                 'help' => 'mailing.audience.form.departments_help',
+                'disabled' => $locked,
                 'choices' => $this->newsletterAudienceOptionsProvider->getDepartmentChoices(),
             ])
             ->add('municipalityInseeCodes', ChoiceType::class, [
@@ -111,11 +118,13 @@ final class MailingAudienceType extends AbstractType
                 'choice_loader' => $this->createMunicipalityChoiceLoader($selectedMunicipalityChoices),
                 'multiple' => true,
                 'required' => false,
+                'disabled' => $locked,
             ])
             ->add('radiusKilometers', NumberType::class, [
                 'label' => 'mailing.audience.form.radius',
                 'help' => 'mailing.audience.form.radius_help',
                 'required' => true,
+                'disabled' => $locked,
                 'empty_data' => '1',
                 'scale' => 0,
                 'html5' => true,
@@ -127,6 +136,7 @@ final class MailingAudienceType extends AbstractType
             ->add('radiusOrigin', ChoiceType::class, [
                 'label' => 'mailing.audience.form.radius_origin',
                 'required' => false,
+                'disabled' => $locked,
                 'placeholder' => 'mailing.audience.form.radius_origin_placeholder',
                 'choice_value' => static fn (?NewsletterAudienceRadiusOrigin $newsletterAudienceRadiusOrigin): string => null === $newsletterAudienceRadiusOrigin ? '' : $newsletterAudienceRadiusOrigin->value,
                 'choices' => [
@@ -142,18 +152,22 @@ final class MailingAudienceType extends AbstractType
                 'choice_value' => static fn (?string $inseeCode): string => $inseeCode ?? '',
                 'choice_loader' => $this->createMunicipalityChoiceLoader($selectedRadiusOriginMunicipalityChoices),
                 'required' => false,
+                'disabled' => $locked,
                 'placeholder' => 'mailing.audience.form.radius_origin_municipality_placeholder',
             ])
             ->add('radiusOriginCustomLatitude', NumberType::class, [
                 'required' => false,
+                'disabled' => $locked,
                 'html5' => false,
             ])
             ->add('radiusOriginCustomLongitude', NumberType::class, [
                 'required' => false,
+                'disabled' => $locked,
                 'html5' => false,
             ])
             ->add('submit', SubmitType::class, [
                 'label' => 'mailing.audience.form.save',
+                'disabled' => $locked,
                 'attr' => [
                     'class' => 'internal-button',
                 ],
@@ -164,6 +178,7 @@ final class MailingAudienceType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => MailingAudienceFormModel::class,
+            'locked' => false,
             'translation_domain' => 'mailing',
         ]);
     }

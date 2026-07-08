@@ -22,13 +22,17 @@ final class MailingTestType extends AbstractType
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $locked = true === $options['locked'];
+
         $builder
             ->add('recipientEmail', EmailType::class, [
                 'label' => 'mailing.test.form.recipient_email',
                 'help' => 'mailing.test.form.recipient_email_help',
+                'disabled' => $locked,
             ])
             ->add('submit', SubmitType::class, [
                 'label' => 'mailing.test.form.submit',
+                'disabled' => $locked,
                 'attr' => [
                     'class' => 'internal-button',
                 ],
@@ -39,6 +43,7 @@ final class MailingTestType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => MailingTestFormModel::class,
+            'locked' => false,
             'translation_domain' => 'mailing',
         ]);
     }

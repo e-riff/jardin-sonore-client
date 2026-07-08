@@ -2,8 +2,10 @@
     {% form_theme form 'form/mailing_audience_theme.html.twig' %}
     {% set audience_attributes = stimulus_controller('audience-mode')
         |stimulus_controller('mailing-audience')
-        |stimulus_action('live', 'action:prevent', 'submit', { action: 'save' })
     %}
+    {% if not locked %}
+        {% set audience_attributes = audience_attributes|stimulus_action('live', 'action:prevent', 'submit', { action: 'save' }) %}
+    {% endif %}
 
     {% if locked %}
         <section class="internal-card">
@@ -61,12 +63,16 @@
                 </div>
 
                 {{ ux_map(audienceMap, {
-                    class: 'mailing-audience__map',
-                }|merge(stimulus_controller('audience-map', {
-                    origin_select_id: form.radiusOrigin.vars.id,
-                    latitude_field_id: form.radiusOriginCustomLatitude.vars.id,
-                    longitude_field_id: form.radiusOriginCustomLongitude.vars.id
-                }))) }}
+                    class: locked ? 'mailing-audience__map mailing-audience__map--locked' : 'mailing-audience__map',
+                }|merge(
+                    locked
+                        ? {}
+                        : stimulus_controller('audience-map', {
+                            origin_select_id: form.radiusOrigin.vars.id,
+                            latitude_field_id: form.radiusOriginCustomLatitude.vars.id,
+                            longitude_field_id: form.radiusOriginCustomLongitude.vars.id
+                        })
+                )) }}
 
                 <p class="mailing-audience__map-help">
                     {{ 'mailing.audience.map.help'|trans({}, 'mailing') }}
@@ -91,7 +97,7 @@
             </div>
 
             <div class="mailing-audience__groups">
-                <fieldset class="mailing-audience__fieldset">
+                <fieldset class="mailing-audience__fieldset" {% if locked %}disabled{% endif %}>
                     <legend>{{ 'mailing.audience.criteria.organization'|trans({}, 'mailing') }}</legend>
                     <p class="mailing-audience__fieldset-description">{{ 'mailing.audience.criteria.organization_description'|trans({}, 'mailing') }}</p>
                     {{ form_row(form.organizationTypes) }}

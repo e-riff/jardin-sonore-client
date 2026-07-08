@@ -7,11 +7,18 @@ namespace App\Infrastructure\Mailing;
 use App\Application\Mailing\NewsletterAudienceOptionsProviderInterface;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\ParameterType;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Symfony\Component\Uid\Uuid;
 
 final readonly class DoctrineNewsletterAudienceOptionsProvider implements NewsletterAudienceOptionsProviderInterface
 {
+    /**
+     * @var list<string>
+     */
+    private const array PREFERRED_DEPARTMENT_CODES = ['42', '69', '43', '07'];
+    private const string PREFERRED_DEPARTMENT_GROUP = 'mailing.audience.form.department_group_preferred';
+    private const string ALL_DEPARTMENT_GROUP = 'mailing.audience.form.department_group_all';
+
     public function __construct(private Connection $connection)
     {
     }
@@ -19,11 +26,12 @@ final readonly class DoctrineNewsletterAudienceOptionsProvider implements Newsle
     public function getTagChoices(): array
     {
         /** @var list<array{label: string, uuid: string}> $tags */
-        $tags = $this->connection->fetchAllAssociative(
-            'SELECT label, uuid
-            FROM tag
-            ORDER BY label',
-        );
+        $tags = $this->connection->createQueryBuilder()
+            ->select('label', 'uuid')
+            ->from('tag')
+            ->orderBy('label', 'ASC')
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         $choices = [];
 
@@ -36,41 +44,32 @@ final readonly class DoctrineNewsletterAudienceOptionsProvider implements Newsle
 
     public function getRegionChoices(): array
     {
-        return $this->connection->fetchAllKeyValue(
-            "SELECT CONCAT(code, ' — ', name), code
-            FROM region
-            ORDER BY code",
-        );
+        return $this->connection->createQueryBuilder()
+            ->select("CONCAT(code, ' — ', name)", 'code')
+            ->from('region')
+            ->orderBy('code', 'ASC')
+            ->executeQuery()
+            ->fetchAllKeyValue();
     }
 
     public function getDepartmentChoices(): array
     {
-        $preferredDepartmentCodes = ['42', '69', '43', '07'];
-
         /** @var list<array{code: string, name: string}> $departments */
-        $departments = $this->connection->fetchAllAssociative(
-            "SELECT code, name
-            FROM department
-            ORDER BY
-                CASE code
-                    WHEN '42' THEN 0
-                    WHEN '69' THEN 1
-                    WHEN '43' THEN 2
-                    WHEN '07' THEN 3
-                    ELSE 4
-                END,
-                code",
-        );
+        $departments = $this->preferredDepartmentOrderQueryBuilder('department')
+            ->select('code', 'name')
+            ->from('department')
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         $choices = [
-            'mailing.audience.form.department_group_preferred' => [],
-            'mailing.audience.form.department_group_all' => [],
+            self::PREFERRED_DEPARTMENT_GROUP => [],
+            self::ALL_DEPARTMENT_GROUP => [],
         ];
 
         foreach ($departments as $department) {
-            $group = in_array($department['code'], $preferredDepartmentCodes, true)
-                ? 'mailing.audience.form.department_group_preferred'
-                : 'mailing.audience.form.department_group_all';
+            $group = in_array($department['code'], self::PREFERRED_DEPARTMENT_CODES, true)
+                ? self::PREFERRED_DEPARTMENT_GROUP
+                : self::ALL_DEPARTMENT_GROUP;
 
             $choices[$group]["{$department['code']} — {$department['name']}"] = $department['code'];
         }
@@ -80,45 +79,12 @@ final readonly class DoctrineNewsletterAudienceOptionsProvider implements Newsle
 
     public function getMunicipalityChoices(): array
     {
-        /** @var list<array{
-         *     insee_code: string,
-         *     name: string,
-         *     postal_code: ?string,
-         *     department_code: string,
-         *     department_name: string
-         * }> $municipalities
-         */
-        $municipalities = $this->connection->fetchAllAssociative(
-            "SELECT DISTINCT
-                municipality.insee_code,
-                municipality.name,
-                municipality.postal_code,
-                department.code AS department_code,
-                department.name AS department_name
-            FROM municipality
-            INNER JOIN department ON department.id = municipality.department_id
-            WHERE municipality.insee_code IS NOT NULL
-            ORDER BY
-                CASE department.code
-                    WHEN '42' THEN 0
-                    WHEN '69' THEN 1
-                    WHEN '43' THEN 2
-                    WHEN '07' THEN 3
-                    ELSE 4
-                END,
-                department.code,
-                municipality.name,
-                municipality.postal_code",
-        );
+        $municipalities = $this->fetchMunicipalitiesForChoices();
 
         $choices = [];
 
         foreach ($municipalities as $municipality) {
-            $departmentLabel = "{$municipality['department_code']} — {$municipality['department_name']}";
-            $municipalityLabel = null !== $municipality['postal_code'] && '' !== $municipality['postal_code']
-                ? "{$municipality['postal_code']} — {$municipality['name']}"
-                : $municipality['name'];
-            $choices[$departmentLabel][$municipalityLabel] = $municipality['insee_code'];
+            $choices[$this->departmentLabel($municipality)][$this->municipalityLabel($municipality)] = $municipality['insee_code'];
         }
 
         return $choices;
@@ -133,17 +99,13 @@ final readonly class DoctrineNewsletterAudienceOptionsProvider implements Newsle
         }
 
         /** @var list<string> $existingInseeCodes */
-        $existingInseeCodes = $this->connection->fetchFirstColumn(
-            'SELECT municipality.insee_code
-            FROM municipality
-            WHERE municipality.insee_code IN (:inseeCodes)',
-            [
-                'inseeCodes' => $inseeCodes,
-            ],
-            [
-                'inseeCodes' => ArrayParameterType::STRING,
-            ],
-        );
+        $existingInseeCodes = $this->connection->createQueryBuilder()
+            ->select('municipality.insee_code')
+            ->from('municipality', 'municipality')
+            ->where('municipality.insee_code IN (:inseeCodes)')
+            ->setParameter('inseeCodes', $inseeCodes, ArrayParameterType::STRING)
+            ->executeQuery()
+            ->fetchFirstColumn();
         $existingInseeCodes = array_flip($existingInseeCodes);
 
         return array_values(array_filter(
@@ -161,17 +123,13 @@ final readonly class DoctrineNewsletterAudienceOptionsProvider implements Newsle
         }
 
         /** @var list<array{insee_code: string, name: string, postal_code: ?string}> $municipalities */
-        $municipalities = $this->connection->fetchAllAssociative(
-            'SELECT municipality.insee_code, municipality.name, municipality.postal_code
-            FROM municipality
-            WHERE municipality.insee_code IN (:inseeCodes)',
-            [
-                'inseeCodes' => $inseeCodes,
-            ],
-            [
-                'inseeCodes' => ArrayParameterType::STRING,
-            ],
-        );
+        $municipalities = $this->connection->createQueryBuilder()
+            ->select('municipality.insee_code', 'municipality.name', 'municipality.postal_code')
+            ->from('municipality', 'municipality')
+            ->where('municipality.insee_code IN (:inseeCodes)')
+            ->setParameter('inseeCodes', $inseeCodes, ArrayParameterType::STRING)
+            ->executeQuery()
+            ->fetchAllAssociative();
         $labelsByInseeCode = [];
 
         foreach ($municipalities as $municipality) {
@@ -197,46 +155,7 @@ final readonly class DoctrineNewsletterAudienceOptionsProvider implements Newsle
          *     department_name: string
          * }> $municipalities
          */
-        $municipalities = $this->connection->fetchAllAssociative(
-            "SELECT
-                municipality.insee_code,
-                municipality.name,
-                municipality.postal_code,
-                department.code AS department_code,
-                department.name AS department_name
-            FROM municipality
-            INNER JOIN department ON department.id = municipality.department_id
-            WHERE municipality.insee_code IS NOT NULL
-                AND (
-                    :query = ''
-                    OR municipality.name LIKE :likeQuery
-                    OR municipality.postal_code LIKE :likeQuery
-                    OR municipality.insee_code LIKE :likeQuery
-                    OR department.code LIKE :likeQuery
-                )
-            ORDER BY
-                CASE department.code
-                    WHEN '42' THEN 0
-                    WHEN '69' THEN 1
-                    WHEN '43' THEN 2
-                    WHEN '07' THEN 3
-                    ELSE 4
-                END,
-                department.code,
-                municipality.name,
-                municipality.postal_code
-            LIMIT :limitPlusOne OFFSET :offset",
-            [
-                'query' => $query,
-                'likeQuery' => $likeQuery,
-                'limitPlusOne' => $limit + 1,
-                'offset' => $offset,
-            ],
-            [
-                'limitPlusOne' => ParameterType::INTEGER,
-                'offset' => ParameterType::INTEGER,
-            ],
-        );
+        $municipalities = $this->searchMunicipalities($query, $likeQuery, $offset, $limit + 1);
 
         $hasNextPage = count($municipalities) > $limit;
         $municipalities = array_slice($municipalities, 0, $limit);
@@ -244,7 +163,7 @@ final readonly class DoctrineNewsletterAudienceOptionsProvider implements Newsle
         $results = [];
 
         foreach ($municipalities as $municipality) {
-            $departmentLabel = "{$municipality['department_code']} — {$municipality['department_name']}";
+            $departmentLabel = $this->departmentLabel($municipality);
             $optgroups[$departmentLabel] = [
                 'value' => $departmentLabel,
                 'label' => $departmentLabel,
@@ -287,5 +206,102 @@ final readonly class DoctrineNewsletterAudienceOptionsProvider implements Newsle
         return null !== $municipality['postal_code'] && '' !== $municipality['postal_code']
             ? "{$municipality['postal_code']} — {$municipality['name']}"
             : $municipality['name'];
+    }
+
+    private function preferredDepartmentOrderQueryBuilder(string $departmentAlias): QueryBuilder
+    {
+        $queryBuilder = $this->connection->createQueryBuilder();
+        $queryBuilder->addOrderBy(
+            sprintf(
+                "CASE %s.code
+                    WHEN '42' THEN 0
+                    WHEN '69' THEN 1
+                    WHEN '43' THEN 2
+                    WHEN '07' THEN 3
+                    ELSE 4
+                END",
+                $departmentAlias,
+            ),
+            'ASC',
+        );
+        $queryBuilder->addOrderBy("{$departmentAlias}.code", 'ASC');
+
+        return $queryBuilder;
+    }
+
+    /**
+     * @return list<array{
+     *     insee_code: string,
+     *     name: string,
+     *     postal_code: ?string,
+     *     department_code: string,
+     *     department_name: string
+     * }>
+     */
+    private function fetchMunicipalitiesForChoices(): array
+    {
+        return $this->baseMunicipalityQueryBuilder()
+            ->distinct()
+            ->where('municipality.insee_code IS NOT NULL')
+            ->addOrderBy('municipality.name', 'ASC')
+            ->addOrderBy('municipality.postal_code', 'ASC')
+            ->executeQuery()
+            ->fetchAllAssociative();
+    }
+
+    /**
+     * @return list<array{
+     *     insee_code: string,
+     *     name: string,
+     *     postal_code: ?string,
+     *     department_code: string,
+     *     department_name: string
+     * }>
+     */
+    private function searchMunicipalities(string $query, string $likeQuery, int $offset, int $limit): array
+    {
+        $queryBuilder = $this->baseMunicipalityQueryBuilder()
+            ->where('municipality.insee_code IS NOT NULL')
+            ->addOrderBy('municipality.name', 'ASC')
+            ->addOrderBy('municipality.postal_code', 'ASC')
+            ->setFirstResult($offset)
+            ->setMaxResults($limit)
+            ->setParameter('likeQuery', $likeQuery);
+
+        if ('' !== $query) {
+            $expr = $queryBuilder->expr();
+            $queryBuilder->andWhere($expr->or(
+                $expr->like('municipality.name', ':likeQuery'),
+                $expr->like('municipality.postal_code', ':likeQuery'),
+                $expr->like('municipality.insee_code', ':likeQuery'),
+                $expr->like('department.code', ':likeQuery'),
+            ));
+        }
+
+        return $queryBuilder->executeQuery()->fetchAllAssociative();
+    }
+
+    private function baseMunicipalityQueryBuilder(): QueryBuilder
+    {
+        $queryBuilder = $this->preferredDepartmentOrderQueryBuilder('department');
+
+        return $queryBuilder
+            ->select(
+                'municipality.insee_code',
+                'municipality.name',
+                'municipality.postal_code',
+                'department.code AS department_code',
+                'department.name AS department_name',
+            )
+            ->from('municipality', 'municipality')
+            ->innerJoin('municipality', 'department', 'department', 'department.id = municipality.department_id');
+    }
+
+    /**
+     * @param array{department_code: string, department_name: string} $municipality
+     */
+    private function departmentLabel(array $municipality): string
+    {
+        return "{$municipality['department_code']} — {$municipality['department_name']}";
     }
 }
