@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Command;
 
-use App\Application\Mailing\MailingDeliveryRecipientStoreInterface;
+use App\Application\Mailing\MailingDeliveryQueueInterface;
 use App\Application\Mailing\NewsletterAudienceResolverInterface;
 use App\Domain\Model\Mailing\MailingCampaignStatus;
 use App\Domain\Model\Mailing\NewsletterRecipient;
@@ -25,7 +25,7 @@ final readonly class BackfillMailingCampaignRecipientsCommand
     public function __construct(
         private MailingCampaignRepositoryInterface $mailingCampaignRepository,
         private NewsletterAudienceResolverInterface $newsletterAudienceResolver,
-        private MailingDeliveryRecipientStoreInterface $mailingDeliveryRecipientStore,
+        private MailingDeliveryQueueInterface $mailingDeliveryQueue,
     ) {
     }
 
@@ -58,7 +58,7 @@ final readonly class BackfillMailingCampaignRecipientsCommand
 
         $audienceResolution = $this->newsletterAudienceResolver->resolve($mailingCampaign->getAudienceFilter());
         $resolvedRecipients = $audienceResolution->getRecipients();
-        $existingRecipientEmailAddresses = $this->mailingDeliveryRecipientStore->findCampaignRecipientEmailAddresses($campaignUuid);
+        $existingRecipientEmailAddresses = $this->mailingDeliveryQueue->findCampaignRecipientEmailAddresses($campaignUuid);
         $existingRecipientEmailAddressesLookup = array_fill_keys($existingRecipientEmailAddresses, true);
         $alreadyCoveredRecipients = array_values(array_filter(
             $resolvedRecipients,
@@ -109,7 +109,7 @@ final readonly class BackfillMailingCampaignRecipientsCommand
             return Command::SUCCESS;
         }
 
-        $this->mailingDeliveryRecipientStore->seedCampaignRecipients($campaignUuid, $missingRecipients);
+        $this->mailingDeliveryQueue->seedCampaignRecipients($campaignUuid, $missingRecipients);
 
         if (!in_array($mailingCampaign->getStatus(), [
             MailingCampaignStatus::DELIVERY_QUEUED,

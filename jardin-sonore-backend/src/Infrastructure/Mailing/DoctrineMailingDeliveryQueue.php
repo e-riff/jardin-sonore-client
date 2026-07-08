@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Mailing;
 
-use App\Application\Mailing\MailingDeliveryRecipientStoreInterface;
+use App\Application\Mailing\MailingDeliveryQueueInterface;
 use App\Domain\Model\Mailing\MailingDeliveryRecipientStatus;
 use App\Domain\Model\Mailing\NewsletterRecipient;
 use DateTimeImmutable;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 
-final readonly class DoctrineMailingDeliveryRecipientStore implements MailingDeliveryRecipientStoreInterface
+final readonly class DoctrineMailingDeliveryQueue implements MailingDeliveryQueueInterface
 {
     private const string TABLE = 'mailing_delivery_recipient';
     private const string TIMESTAMP_FORMAT = 'Y-m-d H:i:s';

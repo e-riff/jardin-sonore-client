@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Command;
 
-use App\Application\Mailing\MailingDeliveryRecipientStoreInterface;
+use App\Application\Mailing\MailingDeliveryQueueInterface;
 use App\Application\Mailing\Message\SendMailingCampaignRecipientMessage;
 use App\Domain\Model\Mailing\MailingCampaignStatus;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
@@ -25,7 +25,7 @@ use Symfony\Component\Uid\Uuid;
 final readonly class DispatchPendingMailingCampaignsCommand
 {
     public function __construct(
-        private MailingDeliveryRecipientStoreInterface $mailingDeliveryRecipientStore,
+        private MailingDeliveryQueueInterface $mailingDeliveryQueue,
         private MailingCampaignRepositoryInterface $mailingCampaignRepository,
         private MessageBusInterface $messageBus,
         #[Autowire('%app.mailing.window_limit%')]
@@ -44,7 +44,7 @@ final readonly class DispatchPendingMailingCampaignsCommand
         $windowLimit = max(1, $this->mailingWindowLimit);
         $windowMinutes = max(1, $this->mailingWindowMinutes);
         $dispatchBatchSize = max(1, $this->mailingDispatchBatchSize);
-        $alreadyDispatched = $this->mailingDeliveryRecipientStore->countRecentlyDispatched(
+        $alreadyDispatched = $this->mailingDeliveryQueue->countRecentlyDispatched(
             (new DateTimeImmutable())->sub(new DateInterval("PT{$windowMinutes}M")),
         );
         $remainingCapacity = max(0, $windowLimit - $alreadyDispatched);
@@ -62,7 +62,7 @@ final readonly class DispatchPendingMailingCampaignsCommand
 
         $dispatchedCount = 0;
 
-        foreach ($this->mailingDeliveryRecipientStore->findCampaignUuidsWithPendingRecipients() as $campaignUuid) {
+        foreach ($this->mailingDeliveryQueue->findCampaignUuidsWithPendingRecipients() as $campaignUuid) {
             if (0 >= $remainingCapacity || !Uuid::isValid($campaignUuid)) {
                 break;
             }
@@ -80,7 +80,7 @@ final readonly class DispatchPendingMailingCampaignsCommand
                 continue;
             }
 
-            $claimedRecipients = $this->mailingDeliveryRecipientStore->claimPendingRecipients(
+            $claimedRecipients = $this->mailingDeliveryQueue->claimPendingRecipients(
                 $campaignUuid,
                 min($dispatchBatchSize, $remainingCapacity),
             );
