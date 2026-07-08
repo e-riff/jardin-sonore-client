@@ -101,7 +101,8 @@ final class MailingInvalidRecipientController extends AbstractController
      */
     private function processEmail(string $email, string $action): array
     {
-        $emailContact = $this->directorySharedContactLookup->findEmailContactByEmailAddress($email);
+        $emailContactId = $this->directorySharedContactLookup->findEmailContactIdByEmailAddress($email);
+        $emailContact = null !== $emailContactId ? $this->entityManager->getRepository(EmailContactEntity::class)->find($emailContactId) : null;
 
         if (!$emailContact instanceof EmailContactEntity) {
             return [

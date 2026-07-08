@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace App\Application\Directory;
 
 use App\Domain\Model\ValueObject\PhoneNumber;
-use App\Infrastructure\Doctrine\Entity\DirectoryImportLinkEntity;
-use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use InvalidArgumentException;
 
 final readonly class DirectoryEstablishmentMatcher
@@ -85,35 +83,30 @@ final readonly class DirectoryEstablishmentMatcher
         return self::MATCH_SCORE_THRESHOLDS['auto_match'];
     }
 
-    public function findImportLinkByExternalId(string $source, DirectoryEstablishmentImportItem $item): ?DirectoryImportLinkEntity
+    public function findImportLinkIdByExternalId(string $source, DirectoryEstablishmentImportItem $item): ?int
     {
-        return $this->directoryOrganizationLookup->findImportLinkByExternalId(
+        return $this->directoryOrganizationLookup->findImportLinkIdByExternalId(
             source: $source,
             externalId: $item->externalId,
         );
     }
 
-    public function findOrganizationLinkedByExternalIdentifiers(string $source, DirectoryEstablishmentImportItem $item): ?OrganizationEntity
+    public function findOrganizationIdLinkedByExternalIdentifiers(string $source, DirectoryEstablishmentImportItem $item): ?int
     {
-        $exactImportLink = $this->findImportLinkByExternalId($source, $item);
+        $exactOrganizationId = $this->directoryOrganizationLookup->findOrganizationIdByExternalId(
+            source: $source,
+            externalId: $item->externalId,
+        );
 
-        if ($exactImportLink instanceof DirectoryImportLinkEntity) {
-            $directoryEntry = $exactImportLink->getDirectoryEntry();
-
-            return $directoryEntry instanceof OrganizationEntity ? $directoryEntry : null;
+        if (null !== $exactOrganizationId) {
+            return $exactOrganizationId;
         }
 
         if (null !== $item->externalOrganizationId) {
-            $importLink = $this->directoryOrganizationLookup->findImportLinkByExternalOrganizationId(
+            return $this->directoryOrganizationLookup->findOrganizationIdByExternalOrganizationId(
                 source: $source,
                 externalOrganizationId: $item->externalOrganizationId,
             );
-
-            if ($importLink instanceof DirectoryImportLinkEntity) {
-                $directoryEntry = $importLink->getDirectoryEntry();
-
-                return $directoryEntry instanceof OrganizationEntity ? $directoryEntry : null;
-            }
         }
 
         return null;
@@ -140,15 +133,9 @@ final readonly class DirectoryEstablishmentMatcher
                 continue;
             }
 
-            $organization = $this->directoryOrganizationLookup->findOrganizationById($organizationCandidate->organizationId);
-
-            if (!$organization instanceof OrganizationEntity) {
-                continue;
-            }
-
             $matches[] = new DirectoryEstablishmentMatch(
-                organizationId: $organization->getId(),
-                organizationName: $organization->getName(),
+                organizationId: $organizationCandidate->organizationId,
+                organizationName: $organizationCandidate->name,
                 score: $score,
                 email: $organizationCandidate->email,
                 phone: $organizationCandidate->phone,

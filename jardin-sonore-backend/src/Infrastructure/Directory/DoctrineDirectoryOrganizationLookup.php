@@ -16,30 +16,37 @@ final readonly class DoctrineDirectoryOrganizationLookup implements DirectoryOrg
     ) {
     }
 
-    public function findImportLinkByExternalId(string $source, string $externalId): ?DirectoryImportLinkEntity
+    public function findImportLinkIdByExternalId(string $source, string $externalId): ?int
     {
         $importLink = $this->entityManager->getRepository(DirectoryImportLinkEntity::class)->findOneBy([
             'source' => $source,
             'externalId' => $externalId,
         ]);
 
-        return $importLink instanceof DirectoryImportLinkEntity ? $importLink : null;
+        return $importLink instanceof DirectoryImportLinkEntity ? $importLink->getId() : null;
     }
 
-    public function findImportLinkByExternalOrganizationId(string $source, string $externalOrganizationId): ?DirectoryImportLinkEntity
+    public function findOrganizationIdByExternalId(string $source, string $externalId): ?int
+    {
+        $importLink = $this->entityManager->getRepository(DirectoryImportLinkEntity::class)->findOneBy([
+            'source' => $source,
+            'externalId' => $externalId,
+        ]);
+
+        $directoryEntry = $importLink instanceof DirectoryImportLinkEntity ? $importLink->getDirectoryEntry() : null;
+
+        return $directoryEntry instanceof OrganizationEntity ? $directoryEntry->getId() : null;
+    }
+
+    public function findOrganizationIdByExternalOrganizationId(string $source, string $externalOrganizationId): ?int
     {
         $importLink = $this->entityManager->getRepository(DirectoryImportLinkEntity::class)->findOneBy([
             'source' => $source,
             'externalOrganizationId' => $externalOrganizationId,
         ]);
 
-        return $importLink instanceof DirectoryImportLinkEntity ? $importLink : null;
-    }
+        $directoryEntry = $importLink instanceof DirectoryImportLinkEntity ? $importLink->getDirectoryEntry() : null;
 
-    public function findOrganizationById(int $organizationId): ?OrganizationEntity
-    {
-        $organization = $this->entityManager->find(OrganizationEntity::class, $organizationId);
-
-        return $organization instanceof OrganizationEntity ? $organization : null;
+        return $directoryEntry instanceof OrganizationEntity ? $directoryEntry->getId() : null;
     }
 }

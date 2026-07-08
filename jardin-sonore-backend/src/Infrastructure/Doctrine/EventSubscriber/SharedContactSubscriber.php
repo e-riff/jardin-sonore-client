@@ -65,7 +65,8 @@ final class SharedContactSubscriber
             return;
         }
 
-        $existingEmailContact = $this->directorySharedContactLookup->findEmailContactByEmailAddress($emailAddress);
+        $existingEmailContactId = $this->directorySharedContactLookup->findEmailContactIdByEmailAddress($emailAddress);
+        $existingEmailContact = null !== $existingEmailContactId ? $entityManager->getRepository(EmailContactEntity::class)->find($existingEmailContactId) : null;
 
         if (!$existingEmailContact instanceof EmailContactEntity || $existingEmailContact === $emailContact) {
             return;
@@ -94,7 +95,8 @@ final class SharedContactSubscriber
             return;
         }
 
-        $existingPhoneContact = $this->directorySharedContactLookup->findPhoneContactByPhoneNumber($normalizedPhoneNumber);
+        $existingPhoneContactId = $this->directorySharedContactLookup->findPhoneContactIdByPhoneNumber($normalizedPhoneNumber);
+        $existingPhoneContact = null !== $existingPhoneContactId ? $entityManager->getRepository(PhoneContactEntity::class)->find($existingPhoneContactId) : null;
 
         if (!$existingPhoneContact instanceof PhoneContactEntity || $existingPhoneContact === $phoneContact) {
             return;

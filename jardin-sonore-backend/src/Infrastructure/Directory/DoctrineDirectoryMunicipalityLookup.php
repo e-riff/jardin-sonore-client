@@ -15,7 +15,7 @@ final readonly class DoctrineDirectoryMunicipalityLookup implements DirectoryMun
     ) {
     }
 
-    public function findByNameAndPostalCode(?string $commune, ?string $postalCode): ?MunicipalityEntity
+    public function findIdByNameAndPostalCode(?string $commune, ?string $postalCode): ?int
     {
         if (null === $commune) {
             return null;
@@ -29,6 +29,6 @@ final readonly class DoctrineDirectoryMunicipalityLookup implements DirectoryMun
 
         $municipality = $this->entityManager->getRepository(MunicipalityEntity::class)->findOneBy($criteria);
 
-        return $municipality instanceof MunicipalityEntity ? $municipality : null;
+        return $municipality instanceof MunicipalityEntity ? $municipality->getId() : null;
     }
 }
