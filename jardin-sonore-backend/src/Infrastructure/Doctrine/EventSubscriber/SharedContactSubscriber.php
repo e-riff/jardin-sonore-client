@@ -9,6 +9,8 @@ use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 use App\Infrastructure\Doctrine\Entity\EmailContactLinkEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactLinkEntity;
+use App\Infrastructure\Doctrine\Repository\EmailContactEntityRepository;
+use App\Infrastructure\Doctrine\Repository\PhoneContactEntityRepository;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsDoctrineListener;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\OnFlushEventArgs;
@@ -19,6 +21,12 @@ use InvalidArgumentException;
 #[AsDoctrineListener(event: Events::onFlush, connection: 'default')]
 final class SharedContactSubscriber
 {
+    public function __construct(
+        private readonly EmailContactEntityRepository $emailContactEntityRepository,
+        private readonly PhoneContactEntityRepository $phoneContactEntityRepository,
+    ) {
+    }
+
     public function onFlush(OnFlushEventArgs $eventArgs): void
     {
         $entityManager = $eventArgs->getObjectManager();
@@ -59,9 +67,7 @@ final class SharedContactSubscriber
             return;
         }
 
-        $existingEmailContact = $entityManager->getRepository(EmailContactEntity::class)->findOneBy([
-            'emailAddress' => mb_strtolower(trim($emailAddress)),
-        ]);
+        $existingEmailContact = $this->emailContactEntityRepository->findOneByEmailAddress(mb_strtolower(trim($emailAddress)));
 
         if (!$existingEmailContact instanceof EmailContactEntity || $existingEmailContact === $emailContact) {
             return;
@@ -90,9 +96,7 @@ final class SharedContactSubscriber
             return;
         }
 
-        $existingPhoneContact = $entityManager->getRepository(PhoneContactEntity::class)->findOneBy([
-            'phoneNumber' => $normalizedPhoneNumber,
-        ]);
+        $existingPhoneContact = $this->phoneContactEntityRepository->findOneByPhoneNumber($normalizedPhoneNumber);
 
         if (!$existingPhoneContact instanceof PhoneContactEntity || $existingPhoneContact === $phoneContact) {
             return;

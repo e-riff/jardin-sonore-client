@@ -9,39 +9,44 @@ use App\Domain\Model\ValueObject\InseeCode;
 use App\Domain\Repository\MunicipalityRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\MunicipalityEntity;
 use App\Infrastructure\Doctrine\Mapper\MunicipalityMapper;
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
 
-final readonly class MunicipalityDoctrineRepository implements MunicipalityRepositoryInterface
+/**
+ * @extends ServiceEntityRepository<MunicipalityEntity>
+ */
+final class MunicipalityDoctrineRepository extends ServiceEntityRepository implements MunicipalityRepositoryInterface
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private MunicipalityMapper $municipalityMapper,
+        ManagerRegistry $managerRegistry,
+        private readonly MunicipalityMapper $municipalityMapper,
     ) {
+        parent::__construct($managerRegistry, MunicipalityEntity::class);
     }
 
     public function findByUuid(Uuid $uuid): ?Municipality
     {
-        $municipalityEntity = $this->entityManager->getRepository(MunicipalityEntity::class)->findOneBy(['uuid' => $uuid]);
+        $municipalityEntity = $this->findOneBy(['uuid' => $uuid]);
 
         return $municipalityEntity instanceof MunicipalityEntity ? $this->municipalityMapper->toDomain($municipalityEntity) : null;
     }
 
     public function findByInseeCode(InseeCode $inseeCode): ?Municipality
     {
-        $municipalityEntity = $this->entityManager->getRepository(MunicipalityEntity::class)->findOneBy(['inseeCode' => $inseeCode->value()]);
+        $municipalityEntity = $this->findOneBy(['inseeCode' => $inseeCode->value()]);
 
         return $municipalityEntity instanceof MunicipalityEntity ? $this->municipalityMapper->toDomain($municipalityEntity) : null;
     }
 
     public function save(Municipality $municipality): void
     {
-        $municipalityEntity = $this->entityManager->getRepository(MunicipalityEntity::class)->findOneBy(['uuid' => $municipality->getUuid()]);
+        $municipalityEntity = $this->findOneBy(['uuid' => $municipality->getUuid()]);
 
-        $this->entityManager->persist($this->municipalityMapper->toEntity(
+        $this->getEntityManager()->persist($this->municipalityMapper->toEntity(
             municipality: $municipality,
             municipalityEntity: $municipalityEntity instanceof MunicipalityEntity ? $municipalityEntity : null,
         ));
-        $this->entityManager->flush();
+        $this->getEntityManager()->flush();
     }
 }

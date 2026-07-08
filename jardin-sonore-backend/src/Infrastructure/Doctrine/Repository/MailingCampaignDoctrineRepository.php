@@ -8,27 +8,32 @@ use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\MailingCampaignEntity;
 use App\Infrastructure\Doctrine\Mapper\MailingCampaignMapper;
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
 
-final readonly class MailingCampaignDoctrineRepository implements MailingCampaignRepositoryInterface
+/**
+ * @extends ServiceEntityRepository<MailingCampaignEntity>
+ */
+final class MailingCampaignDoctrineRepository extends ServiceEntityRepository implements MailingCampaignRepositoryInterface
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private MailingCampaignMapper $mailingCampaignMapper,
+        ManagerRegistry $managerRegistry,
+        private readonly MailingCampaignMapper $mailingCampaignMapper,
     ) {
+        parent::__construct($managerRegistry, MailingCampaignEntity::class);
     }
 
     public function findByUuid(Uuid $uuid): ?MailingCampaign
     {
-        $mailingCampaignEntity = $this->entityManager->getRepository(MailingCampaignEntity::class)->findOneBy(['uuid' => $uuid]);
+        $mailingCampaignEntity = $this->findOneBy(['uuid' => $uuid]);
 
         return $mailingCampaignEntity instanceof MailingCampaignEntity ? $this->mailingCampaignMapper->toDomain($mailingCampaignEntity) : null;
     }
 
     public function findAllOrderedByCreatedAtDesc(): array
     {
-        $mailingCampaignEntities = $this->entityManager->getRepository(MailingCampaignEntity::class)->findBy([], [
+        $mailingCampaignEntities = $this->findBy([], [
             'createdAt' => 'DESC',
             'id' => 'DESC',
         ]);
@@ -44,12 +49,12 @@ final readonly class MailingCampaignDoctrineRepository implements MailingCampaig
 
     public function save(MailingCampaign $mailingCampaign): void
     {
-        $mailingCampaignEntity = $this->entityManager->getRepository(MailingCampaignEntity::class)->findOneBy(['uuid' => $mailingCampaign->getUuid()]);
+        $mailingCampaignEntity = $this->findOneBy(['uuid' => $mailingCampaign->getUuid()]);
 
-        $this->entityManager->persist($this->mailingCampaignMapper->toEntity(
+        $this->getEntityManager()->persist($this->mailingCampaignMapper->toEntity(
             mailingCampaign: $mailingCampaign,
             mailingCampaignEntity: $mailingCampaignEntity instanceof MailingCampaignEntity ? $mailingCampaignEntity : null,
         ));
-        $this->entityManager->flush();
+        $this->getEntityManager()->flush();
     }
 }

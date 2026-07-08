@@ -49,6 +49,21 @@
 - Quand c'est pertinent pour suivre une relation entre deux classes, ajouter une reference PHPDoc courte avec `@see`, par exemple entre une commande et son handler. Eviter les `@see` decoratifs qui n'aident pas la navigation.
 - Utiliser autant que possible les attributs Symfony quand ils rendent le branchement plus explicite: autowiring/autoconfiguration ciblee, routes, listeners/subscribers, Monolog, validation, securite, mapping, etc.
 - Eviter les attributs dans le domaine ou dans les zones ou ils ajouteraient du couplage inutile; demander confirmation si un arbitrage est necessaire.
+- Pour les controllers metier Symfony, preferer les attributs de mapping (`MapQueryString`, `MapRequestPayload`, etc.) vers des DTO applicatifs quand cela clarifie l'entree HTTP.
+- Pour les listeners et subscribers Symfony/Doctrine applicatifs ou d'infrastructure, preferer les attributs (`AsEventListener`, `AsDoctrineListener`, etc.) quand ils remplacent utilement une declaration diffuse dans les services.
+- Garder les tags explicites dans `config/services.php` pour les listeners tiers qui ne sont pas autoconfigures par le framework ou le bundle en place.
+- Pour les injections de parametres scalaires ou de chemins, preferer `#[Autowire('%...%')]` dans les classes plutot qu'un cablage dedie dans `services.php` quand cela rend l'origine de la valeur plus lisible.
+- Pour la configuration Symfony en PHP, preferer le format declaratif le plus recent `namespace Symfony\Component\DependencyInjection\Loader\Configurator;` puis `return App::config([...]);`.
+- Quand un package est configure en PHP, preferer `config/packages/*.php` avec `App::config([...])` plutot que les configurateurs imperatifs anciens, sauf contrainte concrete.
+- Pour les repositories Doctrine:
+  - quand un vrai repository de domaine existe, garder un adapter d'infrastructure dedie avec mapper explicite ;
+  - preferer le pattern `ServiceEntityRepository` + `ManagerRegistry` plutot qu'injecter `EntityManagerInterface` uniquement pour faire des `getRepository(...)` ;
+  - pour les acces ORM purement techniques sans realite metier de domaine, un repository d'entite infrastructure injectable est acceptable ;
+  - ne garder `EntityManagerInterface` injecte directement que lorsqu'il sert reellement a autre chose qu'a recuperer un repository.
+- Pour les parametres applicatifs:
+  - versionner `config/parameters.yaml.dist` comme reference ;
+  - garder `config/parameters.yaml` local et non versionne ;
+  - faire resoudre les valeurs par les `.env` / `.env.local` ou les surcharges locales plutot que remettre des secrets en dur dans `services.php`.
 - Pour les requetes Doctrine `QueryBuilder`, preferer une construction lisible et composee: utiliser autant que possible `expr()`, `andX()`/`orX()` ou des methodes/helpers prives dedies plutot que de longues chaines SQL/DQL inline, surtout des que plusieurs conditions se combinent.
 
 ## Contact et captcha

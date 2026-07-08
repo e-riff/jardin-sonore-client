@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Command;
 
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
+use App\Infrastructure\Doctrine\Repository\AdminUserEntityRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -21,6 +22,7 @@ final readonly class CreateAdminUserCommand
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
+        private AdminUserEntityRepository $adminUserEntityRepository,
         private UserPasswordHasherInterface $passwordHasher,
     ) {
     }
@@ -48,7 +50,7 @@ final readonly class CreateAdminUserCommand
             return Command::FAILURE;
         }
 
-        $adminUserEntity = $this->entityManager->getRepository(AdminUserEntity::class)->findOneBy(['email' => $email]);
+        $adminUserEntity = $this->adminUserEntityRepository->findOneByEmailAddress($email);
         $created = false;
 
         if (!$adminUserEntity instanceof AdminUserEntity) {

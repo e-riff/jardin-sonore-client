@@ -8,13 +8,18 @@ use App\Domain\Model\ValueObject\PhoneNumber;
 use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactEntity;
+use App\Infrastructure\Doctrine\Repository\EmailContactEntityRepository;
+use App\Infrastructure\Doctrine\Repository\PhoneContactEntityRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use InvalidArgumentException;
 
 final readonly class SharedContactLinkResolver
 {
-    public function __construct(private EntityManagerInterface $entityManager)
-    {
+    public function __construct(
+        private EntityManagerInterface $entityManager,
+        private EmailContactEntityRepository $emailContactEntityRepository,
+        private PhoneContactEntityRepository $phoneContactEntityRepository,
+    ) {
     }
 
     public function resolveContactDetails(ContactDetailsEntity $contactDetailsEntity): void
@@ -43,9 +48,7 @@ final readonly class SharedContactLinkResolver
 
             $seenEmailAddresses[$emailAddress] = true;
 
-            $existingEmailContactEntity = $this->entityManager->getRepository(EmailContactEntity::class)->findOneBy([
-                'emailAddress' => $emailAddress,
-            ]);
+            $existingEmailContactEntity = $this->emailContactEntityRepository->findOneByEmailAddress($emailAddress);
 
             if (
                 $existingEmailContactEntity instanceof EmailContactEntity
@@ -76,9 +79,7 @@ final readonly class SharedContactLinkResolver
 
             $seenPhoneNumbers[$phoneNumber] = true;
 
-            $existingPhoneContactEntity = $this->entityManager->getRepository(PhoneContactEntity::class)->findOneBy([
-                'phoneNumber' => $phoneNumber,
-            ]);
+            $existingPhoneContactEntity = $this->phoneContactEntityRepository->findOneByPhoneNumber($phoneNumber);
 
             if (
                 $existingPhoneContactEntity instanceof PhoneContactEntity

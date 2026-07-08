@@ -8,32 +8,37 @@ use App\Domain\Model\AddressBook\Person;
 use App\Domain\Repository\PersonRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\PersonEntity;
 use App\Infrastructure\Doctrine\Mapper\PersonMapper;
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
 
-final readonly class PersonDoctrineRepository implements PersonRepositoryInterface
+/**
+ * @extends ServiceEntityRepository<PersonEntity>
+ */
+final class PersonDoctrineRepository extends ServiceEntityRepository implements PersonRepositoryInterface
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private PersonMapper $personMapper,
+        ManagerRegistry $managerRegistry,
+        private readonly PersonMapper $personMapper,
     ) {
+        parent::__construct($managerRegistry, PersonEntity::class);
     }
 
     public function findByUuid(Uuid $uuid): ?Person
     {
-        $personEntity = $this->entityManager->getRepository(PersonEntity::class)->findOneBy(['uuid' => $uuid]);
+        $personEntity = $this->findOneBy(['uuid' => $uuid]);
 
         return $personEntity instanceof PersonEntity ? $this->personMapper->toDomain($personEntity) : null;
     }
 
     public function save(Person $person): void
     {
-        $personEntity = $this->entityManager->getRepository(PersonEntity::class)->findOneBy(['uuid' => $person->getUuid()]);
+        $personEntity = $this->findOneBy(['uuid' => $person->getUuid()]);
 
-        $this->entityManager->persist($this->personMapper->toEntity(
+        $this->getEntityManager()->persist($this->personMapper->toEntity(
             person: $person,
             personEntity: $personEntity instanceof PersonEntity ? $personEntity : null,
         ));
-        $this->entityManager->flush();
+        $this->getEntityManager()->flush();
     }
 }

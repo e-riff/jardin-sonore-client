@@ -9,39 +9,44 @@ use App\Domain\Model\ValueObject\RegionCode;
 use App\Domain\Repository\RegionRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\RegionEntity;
 use App\Infrastructure\Doctrine\Mapper\RegionMapper;
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
 
-final readonly class RegionDoctrineRepository implements RegionRepositoryInterface
+/**
+ * @extends ServiceEntityRepository<RegionEntity>
+ */
+final class RegionDoctrineRepository extends ServiceEntityRepository implements RegionRepositoryInterface
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private RegionMapper $regionMapper,
+        ManagerRegistry $managerRegistry,
+        private readonly RegionMapper $regionMapper,
     ) {
+        parent::__construct($managerRegistry, RegionEntity::class);
     }
 
     public function findByUuid(Uuid $uuid): ?Region
     {
-        $regionEntity = $this->entityManager->getRepository(RegionEntity::class)->findOneBy(['uuid' => $uuid]);
+        $regionEntity = $this->findOneBy(['uuid' => $uuid]);
 
         return $regionEntity instanceof RegionEntity ? $this->regionMapper->toDomain($regionEntity) : null;
     }
 
     public function findByCode(RegionCode $code): ?Region
     {
-        $regionEntity = $this->entityManager->getRepository(RegionEntity::class)->findOneBy(['code' => $code->value()]);
+        $regionEntity = $this->findOneBy(['code' => $code->value()]);
 
         return $regionEntity instanceof RegionEntity ? $this->regionMapper->toDomain($regionEntity) : null;
     }
 
     public function save(Region $region): void
     {
-        $regionEntity = $this->entityManager->getRepository(RegionEntity::class)->findOneBy(['uuid' => $region->getUuid()]);
+        $regionEntity = $this->findOneBy(['uuid' => $region->getUuid()]);
 
-        $this->entityManager->persist($this->regionMapper->toEntity(
+        $this->getEntityManager()->persist($this->regionMapper->toEntity(
             region: $region,
             regionEntity: $regionEntity instanceof RegionEntity ? $regionEntity : null,
         ));
-        $this->entityManager->flush();
+        $this->getEntityManager()->flush();
     }
 }

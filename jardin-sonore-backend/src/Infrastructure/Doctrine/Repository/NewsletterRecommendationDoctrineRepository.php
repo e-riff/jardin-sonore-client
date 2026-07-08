@@ -8,20 +8,25 @@ use App\Domain\Model\Mailing\NewsletterRecommendation;
 use App\Domain\Repository\NewsletterRecommendationRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\NewsletterRecommendationEntity;
 use App\Infrastructure\Doctrine\Mapper\NewsletterRecommendationMapper;
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
 
-final readonly class NewsletterRecommendationDoctrineRepository implements NewsletterRecommendationRepositoryInterface
+/**
+ * @extends ServiceEntityRepository<NewsletterRecommendationEntity>
+ */
+final class NewsletterRecommendationDoctrineRepository extends ServiceEntityRepository implements NewsletterRecommendationRepositoryInterface
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private NewsletterRecommendationMapper $newsletterRecommendationMapper,
+        ManagerRegistry $managerRegistry,
+        private readonly NewsletterRecommendationMapper $newsletterRecommendationMapper,
     ) {
+        parent::__construct($managerRegistry, NewsletterRecommendationEntity::class);
     }
 
     public function findByUuid(Uuid $uuid): ?NewsletterRecommendation
     {
-        $entity = $this->entityManager->getRepository(NewsletterRecommendationEntity::class)->findOneBy(['uuid' => $uuid]);
+        $entity = $this->findOneBy(['uuid' => $uuid]);
 
         return $entity instanceof NewsletterRecommendationEntity
             ? $this->newsletterRecommendationMapper->toDomain($entity)
@@ -30,8 +35,7 @@ final readonly class NewsletterRecommendationDoctrineRepository implements Newsl
 
     public function search(?string $query = null, bool $activeOnly = false): array
     {
-        $queryBuilder = $this->entityManager->getRepository(NewsletterRecommendationEntity::class)
-            ->createQueryBuilder('recommendation')
+        $queryBuilder = $this->createQueryBuilder('recommendation')
             ->orderBy('recommendation.updatedAt', 'DESC')
             ->addOrderBy('recommendation.id', 'DESC')
             ->setMaxResults(50);
@@ -59,13 +63,12 @@ final readonly class NewsletterRecommendationDoctrineRepository implements Newsl
 
     public function save(NewsletterRecommendation $newsletterRecommendation): void
     {
-        $entity = $this->entityManager->getRepository(NewsletterRecommendationEntity::class)
-            ->findOneBy(['uuid' => $newsletterRecommendation->getUuid()]);
+        $entity = $this->findOneBy(['uuid' => $newsletterRecommendation->getUuid()]);
 
-        $this->entityManager->persist($this->newsletterRecommendationMapper->toEntity(
+        $this->getEntityManager()->persist($this->newsletterRecommendationMapper->toEntity(
             newsletterRecommendation: $newsletterRecommendation,
             newsletterRecommendationEntity: $entity instanceof NewsletterRecommendationEntity ? $entity : null,
         ));
-        $this->entityManager->flush();
+        $this->getEntityManager()->flush();
     }
 }

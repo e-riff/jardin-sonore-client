@@ -9,27 +9,32 @@ use App\Domain\Model\ValueObject\EmailAddress;
 use App\Domain\Repository\AdminUserRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
 use App\Infrastructure\Doctrine\Mapper\AdminUserMapper;
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
 
-final readonly class AdminUserDoctrineRepository implements AdminUserRepositoryInterface
+/**
+ * @extends ServiceEntityRepository<AdminUserEntity>
+ */
+final class AdminUserDoctrineRepository extends ServiceEntityRepository implements AdminUserRepositoryInterface
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private AdminUserMapper $adminUserMapper,
+        ManagerRegistry $managerRegistry,
+        private readonly AdminUserMapper $adminUserMapper,
     ) {
+        parent::__construct($managerRegistry, AdminUserEntity::class);
     }
 
     public function findByUuid(Uuid $uuid): ?AdminUser
     {
-        $adminUserEntity = $this->entityManager->getRepository(AdminUserEntity::class)->findOneBy(['uuid' => $uuid]);
+        $adminUserEntity = $this->findOneBy(['uuid' => $uuid]);
 
         return $adminUserEntity instanceof AdminUserEntity ? $this->adminUserMapper->toDomain($adminUserEntity) : null;
     }
 
     public function findByEmailAddress(EmailAddress $emailAddress): ?AdminUser
     {
-        $adminUserEntity = $this->entityManager->getRepository(AdminUserEntity::class)->findOneBy([
+        $adminUserEntity = $this->findOneBy([
             'email' => mb_strtolower($emailAddress->value()),
         ]);
 
@@ -38,12 +43,12 @@ final readonly class AdminUserDoctrineRepository implements AdminUserRepositoryI
 
     public function save(AdminUser $adminUser): void
     {
-        $adminUserEntity = $this->entityManager->getRepository(AdminUserEntity::class)->findOneBy(['uuid' => $adminUser->getUuid()]);
+        $adminUserEntity = $this->findOneBy(['uuid' => $adminUser->getUuid()]);
 
-        $this->entityManager->persist($this->adminUserMapper->toEntity(
+        $this->getEntityManager()->persist($this->adminUserMapper->toEntity(
             adminUser: $adminUser,
             adminUserEntity: $adminUserEntity instanceof AdminUserEntity ? $adminUserEntity : null,
         ));
-        $this->entityManager->flush();
+        $this->getEntityManager()->flush();
     }
 }

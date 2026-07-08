@@ -16,7 +16,6 @@ use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
 use App\Infrastructure\Doctrine\Entity\DirectoryImportLinkEntity;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 use App\Infrastructure\Doctrine\Entity\EmailContactLinkEntity;
-use App\Infrastructure\Doctrine\Entity\MunicipalityEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactLinkEntity;
@@ -27,6 +26,8 @@ final readonly class DirectoryEstablishmentUpserter
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
+        private DirectoryMunicipalityLookupInterface $directoryMunicipalityLookup,
+        private DirectorySharedContactLookupInterface $directorySharedContactLookup,
     ) {
     }
 
@@ -67,7 +68,7 @@ final readonly class DirectoryEstablishmentUpserter
             }
         }
 
-        $emailContact = $this->entityManager->getRepository(EmailContactEntity::class)->findOneBy(['emailAddress' => $emailAddress]);
+        $emailContact = $this->directorySharedContactLookup->findEmailContactByEmailAddress($emailAddress);
         $created = false;
 
         if (!$emailContact instanceof EmailContactEntity) {
@@ -109,7 +110,7 @@ final readonly class DirectoryEstablishmentUpserter
             }
         }
 
-        $phoneContact = $this->entityManager->getRepository(PhoneContactEntity::class)->findOneBy(['phoneNumber' => $phoneNumber]);
+        $phoneContact = $this->directorySharedContactLookup->findPhoneContactByPhoneNumber($phoneNumber);
         $created = false;
 
         if (!$phoneContact instanceof PhoneContactEntity) {
@@ -159,7 +160,10 @@ final readonly class DirectoryEstablishmentUpserter
             $addressContact->setPostalCode($postalCode);
         }
 
-        $addressContact->setMunicipality($this->findMunicipality($item));
+        $addressContact->setMunicipality($this->directoryMunicipalityLookup->findByNameAndPostalCode(
+            commune: $item->commune,
+            postalCode: $postalCode,
+        ));
     }
 
     public function persistImportLink(
@@ -177,26 +181,6 @@ final readonly class DirectoryEstablishmentUpserter
             ->setPayloadHash(hash('sha256', json_encode($item->rawPayload, JSON_THROW_ON_ERROR)));
 
         $this->entityManager->persist($importLink);
-    }
-
-    private function findMunicipality(DirectoryEstablishmentImportItem $item): ?MunicipalityEntity
-    {
-        $postalCode = $this->extractPostalCode($item->address);
-        $commune = $item->commune;
-
-        if (null === $commune) {
-            return null;
-        }
-
-        $criteria = ['name' => $commune];
-
-        if (null !== $postalCode) {
-            $criteria['postalCode'] = $postalCode;
-        }
-
-        $municipality = $this->entityManager->getRepository(MunicipalityEntity::class)->findOneBy($criteria);
-
-        return $municipality instanceof MunicipalityEntity ? $municipality : null;
     }
 
     private function normalizeEmail(?string $emailAddress): ?string

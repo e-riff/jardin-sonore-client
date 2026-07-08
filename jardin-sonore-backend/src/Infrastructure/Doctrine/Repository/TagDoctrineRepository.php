@@ -8,39 +8,44 @@ use App\Domain\Model\AddressBook\Tag;
 use App\Domain\Repository\TagRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\TagEntity;
 use App\Infrastructure\Doctrine\Mapper\TagMapper;
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
 
-final readonly class TagDoctrineRepository implements TagRepositoryInterface
+/**
+ * @extends ServiceEntityRepository<TagEntity>
+ */
+final class TagDoctrineRepository extends ServiceEntityRepository implements TagRepositoryInterface
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private TagMapper $tagMapper,
+        ManagerRegistry $managerRegistry,
+        private readonly TagMapper $tagMapper,
     ) {
+        parent::__construct($managerRegistry, TagEntity::class);
     }
 
     public function findByUuid(Uuid $uuid): ?Tag
     {
-        $tagEntity = $this->entityManager->getRepository(TagEntity::class)->findOneBy(['uuid' => $uuid]);
+        $tagEntity = $this->findOneBy(['uuid' => $uuid]);
 
         return $tagEntity instanceof TagEntity ? $this->tagMapper->toDomain($tagEntity) : null;
     }
 
     public function findByLabel(string $label): ?Tag
     {
-        $tagEntity = $this->entityManager->getRepository(TagEntity::class)->findOneBy(['label' => $label]);
+        $tagEntity = $this->findOneBy(['label' => $label]);
 
         return $tagEntity instanceof TagEntity ? $this->tagMapper->toDomain($tagEntity) : null;
     }
 
     public function save(Tag $tag): void
     {
-        $tagEntity = $this->entityManager->getRepository(TagEntity::class)->findOneBy(['uuid' => $tag->getUuid()]);
+        $tagEntity = $this->findOneBy(['uuid' => $tag->getUuid()]);
 
-        $this->entityManager->persist($this->tagMapper->toEntity(
+        $this->getEntityManager()->persist($this->tagMapper->toEntity(
             tag: $tag,
             tagEntity: $tagEntity instanceof TagEntity ? $tagEntity : null,
         ));
-        $this->entityManager->flush();
+        $this->getEntityManager()->flush();
     }
 }

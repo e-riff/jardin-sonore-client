@@ -7,6 +7,7 @@ namespace App\Application\Controller;
 use App\Application\Form\InvalidRecipientBatchType;
 use App\Application\Form\Model\InvalidRecipientBatchFormModel;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
+use App\Infrastructure\Doctrine\Repository\EmailContactEntityRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -23,6 +24,7 @@ final class MailingInvalidRecipientController extends AbstractController
 
     public function __construct(
         private EntityManagerInterface $entityManager,
+        private EmailContactEntityRepository $emailContactEntityRepository,
         private TranslatorInterface $translator,
     ) {
     }
@@ -99,9 +101,7 @@ final class MailingInvalidRecipientController extends AbstractController
      */
     private function processEmail(string $email, string $action): array
     {
-        $emailContact = $this->entityManager->getRepository(EmailContactEntity::class)->findOneBy([
-            'emailAddress' => $email,
-        ]);
+        $emailContact = $this->emailContactEntityRepository->findOneByEmailAddress($email);
 
         if (!$emailContact instanceof EmailContactEntity) {
             return [
