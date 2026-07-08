@@ -6,22 +6,21 @@ namespace App\Infrastructure\Geography;
 
 use App\Application\Geography\MunicipalityCenterComputationReaderInterface;
 use App\Application\Geography\MunicipalityCenterSnapshot;
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\DBAL\Connection;
 
 final readonly class DoctrineMunicipalityCenterComputationReader implements MunicipalityCenterComputationReaderInterface
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
+        private Connection $connection,
     ) {
     }
 
     public function iterateMunicipalityCenterSnapshots(bool $force, int $batchSize): iterable
     {
-        $connection = $this->entityManager->getConnection();
         $lastProcessedId = 0;
 
         do {
-            $queryBuilder = $connection->createQueryBuilder()
+            $queryBuilder = $this->connection->createQueryBuilder()
                 ->select('municipality.id', 'municipality.geo_shape')
                 ->from('municipality', 'municipality')
                 ->andWhere('municipality.id > :lastProcessedId')
