@@ -9,6 +9,8 @@ use App\Domain\Model\ValueObject\PhoneNumber;
 use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactEntity;
+use App\Infrastructure\Doctrine\Repository\EmailContactDoctrineRepository;
+use App\Infrastructure\Doctrine\Repository\PhoneContactDoctrineRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use InvalidArgumentException;
 
@@ -17,6 +19,8 @@ final readonly class SharedContactLinkResolver
     public function __construct(
         private EntityManagerInterface $entityManager,
         private DirectorySharedContactLookupInterface $directorySharedContactLookup,
+        private EmailContactDoctrineRepository $emailContactDoctrineRepository,
+        private PhoneContactDoctrineRepository $phoneContactDoctrineRepository,
     ) {
     }
 
@@ -47,7 +51,9 @@ final readonly class SharedContactLinkResolver
             $seenEmailAddresses[$emailAddress] = true;
 
             $existingEmailContactId = $this->directorySharedContactLookup->findEmailContactIdByEmailAddress($emailAddress);
-            $existingEmailContactEntity = null !== $existingEmailContactId ? $this->entityManager->getRepository(EmailContactEntity::class)->find($existingEmailContactId) : null;
+            $existingEmailContactEntity = null !== $existingEmailContactId
+                ? $this->emailContactDoctrineRepository->findEntityById($existingEmailContactId)
+                : null;
 
             if (
                 $existingEmailContactEntity instanceof EmailContactEntity
@@ -79,7 +85,9 @@ final readonly class SharedContactLinkResolver
             $seenPhoneNumbers[$phoneNumber] = true;
 
             $existingPhoneContactId = $this->directorySharedContactLookup->findPhoneContactIdByPhoneNumber($phoneNumber);
-            $existingPhoneContactEntity = null !== $existingPhoneContactId ? $this->entityManager->getRepository(PhoneContactEntity::class)->find($existingPhoneContactId) : null;
+            $existingPhoneContactEntity = null !== $existingPhoneContactId
+                ? $this->phoneContactDoctrineRepository->findEntityById($existingPhoneContactId)
+                : null;
 
             if (
                 $existingPhoneContactEntity instanceof PhoneContactEntity

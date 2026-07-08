@@ -35,6 +35,7 @@ use Symfony\UX\Map\Map;
 use Symfony\UX\Map\Marker;
 use Symfony\UX\Map\Point;
 use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[AsLiveComponent(
     name: 'MailingAudience',
@@ -77,6 +78,7 @@ final class MailingAudience
         #[Autowire('%app.mailing.home_longitude%')]
         private readonly string $homeLongitude,
         private readonly UrlGeneratorInterface $urlGenerator,
+        private readonly TranslatorInterface $translator,
     ) {
     }
 
@@ -148,24 +150,22 @@ final class MailingAudience
 
     public function isMunicipalityRadiusOrigin(): bool
     {
-        return NewsletterAudienceRadiusOrigin::MUNICIPALITY->value === $this->radiusOriginValue();
+        return $this->currentFormModel()->isMunicipalityRadiusOrigin();
     }
 
     public function isCustomRadiusOrigin(): bool
     {
-        return NewsletterAudienceRadiusOrigin::CUSTOM->value === $this->radiusOriginValue();
+        return $this->currentFormModel()->isCustomRadiusOrigin();
     }
 
     public function isAdministrativeLocationModeActive(): bool
     {
-        return [] !== $this->arrayValues('municipalityInseeCodes')
-            || [] !== $this->arrayValues('departmentCodes')
-            || [] !== $this->arrayValues('regionCodes');
+        return $this->currentFormModel()->hasAdministrativeLocationCriteria();
     }
 
     public function isRadiusModeActive(): bool
     {
-        return null !== $this->radiusOriginValue();
+        return $this->currentFormModel()->hasSelectedRadiusOrigin();
     }
 
     /**
@@ -279,9 +279,9 @@ final class MailingAudience
     private function radiusPreviewTitle(): string
     {
         return match ($this->radiusOriginValue()) {
-            NewsletterAudienceRadiusOrigin::CUSTOM->value => 'Point personnalisé',
-            NewsletterAudienceRadiusOrigin::MUNICIPALITY->value => 'Commune de départ',
-            default => 'Jardin Sonore',
+            NewsletterAudienceRadiusOrigin::CUSTOM->value => $this->translator->trans('mailing.audience.map.origin_custom', [], 'mailing'),
+            NewsletterAudienceRadiusOrigin::MUNICIPALITY->value => $this->translator->trans('mailing.audience.map.origin_municipality', [], 'mailing'),
+            default => $this->translator->trans('mailing.audience.map.origin_home', [], 'mailing'),
         };
     }
 
@@ -300,55 +300,30 @@ final class MailingAudience
 
     private function radiusOriginValue(): ?string
     {
-        $radiusOrigin = $this->currentFormModel()->radiusOrigin;
-
-        if ($radiusOrigin instanceof NewsletterAudienceRadiusOrigin) {
-            return $radiusOrigin->value;
-        }
-
-        return $this->stringValue($radiusOrigin);
+        return $this->currentFormModel()->getRadiusOriginValue();
     }
 
     private function radiusKilometersValue(): ?float
     {
-        return $this->floatValue($this->currentFormModel()->radiusKilometers);
+        return $this->currentFormModel()->radiusKilometers;
     }
 
     private function radiusOriginMunicipalityInseeCodeValue(): ?string
     {
-        return $this->stringValue($this->currentFormModel()->radiusOriginMunicipalityInseeCode);
+        $inseeCode = $this->currentFormModel()->radiusOriginMunicipalityInseeCode;
+        $inseeCode = null === $inseeCode ? null : trim($inseeCode);
+
+        return null === $inseeCode || '' === $inseeCode ? null : $inseeCode;
     }
 
     private function customLatitudeValue(): ?float
     {
-        return $this->floatValue($this->currentFormModel()->radiusOriginCustomLatitude);
+        return $this->currentFormModel()->radiusOriginCustomLatitude;
     }
 
     private function customLongitudeValue(): ?float
     {
-        return $this->floatValue($this->currentFormModel()->radiusOriginCustomLongitude);
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function arrayValues(string $key): array
-    {
-        $values = match ($key) {
-            'municipalityInseeCodes' => $this->currentFormModel()->municipalityInseeCodes,
-            'departmentCodes' => $this->currentFormModel()->departmentCodes,
-            'regionCodes' => $this->currentFormModel()->regionCodes,
-            default => null,
-        };
-
-        if (!is_array($values)) {
-            return [];
-        }
-
-        return array_values(array_filter(
-            array_map(fn (mixed $value): ?string => $this->stringValue($value), $values),
-            static fn (?string $value): bool => null !== $value,
-        ));
+        return $this->currentFormModel()->radiusOriginCustomLongitude;
     }
 
     private function currentFormModel(): MailingAudienceFormModel
@@ -371,25 +346,5 @@ final class MailingAudience
         }
 
         return new Point((float) $this->homeLatitude, (float) $this->homeLongitude);
-    }
-
-    private function floatValue(mixed $value): ?float
-    {
-        if (null === $value || '' === trim((string) $value) || !is_numeric($value)) {
-            return null;
-        }
-
-        return (float) $value;
-    }
-
-    private function stringValue(mixed $value): ?string
-    {
-        if (!is_string($value)) {
-            return null;
-        }
-
-        $value = trim($value);
-
-        return '' === $value ? null : $value;
     }
 }

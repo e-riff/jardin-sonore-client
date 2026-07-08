@@ -8,6 +8,7 @@ use App\Domain\Model\AddressBook\EmailContactType;
 use App\Infrastructure\Admin\Formatter\ContactDisplayFormatter;
 use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
 use App\Infrastructure\Doctrine\Entity\EmailContactLinkEntity;
+use App\Infrastructure\Doctrine\Repository\ContactDetailsEntityRepository;
 use BackedEnum;
 use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
@@ -32,7 +33,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 final class EmailContactLinkCrudController extends AbstractCrudController
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly ContactDetailsEntityRepository $contactDetailsEntityRepository,
         private readonly RequestStack $requestStack,
         private readonly SharedContactLinkResolver $sharedContactLinkResolver,
         private readonly TranslatorInterface $translator,
@@ -110,7 +111,7 @@ final class EmailContactLinkCrudController extends AbstractCrudController
             return null;
         }
 
-        $contactDetailsEntity = $this->entityManager->find(ContactDetailsEntity::class, (int) $contactDetailsId);
+        $contactDetailsEntity = $this->contactDetailsEntityRepository->findById((int) $contactDetailsId);
 
         return $contactDetailsEntity instanceof ContactDetailsEntity ? $contactDetailsEntity : null;
     }

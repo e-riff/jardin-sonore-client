@@ -112,11 +112,31 @@ final class MailingAudienceFormModel
             || [] !== $this->municipalityInseeCodes;
     }
 
+    public function hasSelectedRadiusOrigin(): bool
+    {
+        return null !== $this->radiusOrigin;
+    }
+
     public function hasRadiusCriteria(): bool
     {
         return null !== $this->radiusOrigin
             || null !== $this->radiusOriginMunicipalityInseeCode
             || null !== $this->radiusOriginCustomLatitude
             || null !== $this->radiusOriginCustomLongitude;
+    }
+
+    public function isMunicipalityRadiusOrigin(): bool
+    {
+        return NewsletterAudienceRadiusOrigin::MUNICIPALITY === $this->radiusOrigin;
+    }
+
+    public function isCustomRadiusOrigin(): bool
+    {
+        return NewsletterAudienceRadiusOrigin::CUSTOM === $this->radiusOrigin;
+    }
+
+    public function getRadiusOriginValue(): ?string
+    {
+        return $this->radiusOrigin?->value;
     }
 }

@@ -202,6 +202,9 @@ mailing:
       description: "Cliquez dans la carte pour choisir un point personnalisé. Le cercle s’ajuste ensuite avec la distance renseignée."
       help: "Un clic dans la carte bascule automatiquement sur « Point personnalisé »."
       coordinates: "Point sélectionné : latitude {latitude}, longitude {longitude}"
+      origin_home: "Jardin Sonore"
+      origin_custom: "Point personnalisé"
+      origin_municipality: "Commune de départ"
     form:
       organization_types: "Types d’établissement"
       organization_types_help: "Pour une personne rattachée à une organisation, le type de cette organisation est utilisé."

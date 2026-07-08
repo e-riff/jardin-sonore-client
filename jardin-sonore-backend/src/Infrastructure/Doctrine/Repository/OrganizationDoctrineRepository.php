@@ -31,6 +31,13 @@ final class OrganizationDoctrineRepository extends ServiceEntityRepository imple
         return $organizationEntity instanceof OrganizationEntity ? $this->organizationMapper->toDomain($organizationEntity) : null;
     }
 
+    public function findEntityById(int $id): ?OrganizationEntity
+    {
+        $organizationEntity = $this->find($id);
+
+        return $organizationEntity instanceof OrganizationEntity ? $organizationEntity : null;
+    }
+
     public function save(Organization $organization): void
     {
         $organizationEntity = $this->findOneBy(['uuid' => $organization->getUuid()]);

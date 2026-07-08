@@ -8,8 +8,9 @@ use App\Domain\Model\AddressBook\CustomerStatus;
 use App\Domain\Model\AddressBook\DirectoryEntryType;
 use App\Infrastructure\Admin\Formatter\ContactDisplayFormatter;
 use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
-use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\PersonEntity;
+use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
+use App\Infrastructure\Doctrine\Repository\OrganizationDoctrineRepository;
 use BackedEnum;
 use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
@@ -38,7 +39,7 @@ final class PersonCrudController extends AbstractCrudController
 {
     public function __construct(
         private readonly AdminUrlGenerator $adminUrlGenerator,
-        private readonly EntityManagerInterface $entityManager,
+        private readonly OrganizationDoctrineRepository $organizationDoctrineRepository,
         private readonly RequestStack $requestStack,
         private readonly SharedContactLinkResolver $sharedContactLinkResolver,
         private readonly TranslatorInterface $translator,
@@ -145,7 +146,7 @@ final class PersonCrudController extends AbstractCrudController
         $organizationId = $this->requestStack->getCurrentRequest()?->query->get('organizationId');
 
         if (is_scalar($organizationId) && ctype_digit((string) $organizationId)) {
-            $organizationEntity = $this->entityManager->find(OrganizationEntity::class, (int) $organizationId);
+            $organizationEntity = $this->organizationDoctrineRepository->findEntityById((int) $organizationId);
 
             if ($organizationEntity instanceof OrganizationEntity) {
                 $personEntity->setOrganization($organizationEntity);
