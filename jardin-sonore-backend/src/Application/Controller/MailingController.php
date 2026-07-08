@@ -24,13 +24,13 @@ use App\Application\Mailing\StopMailingCampaignDelivery;
 use App\Application\Mailing\UpdateMailingCampaign;
 use App\Application\Mailing\UpdateMailingCampaignInput;
 use App\Domain\Model\Mailing\MailingRecommendation;
-use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
 use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Uid\Uuid;
 use Throwable;
 
@@ -362,8 +362,8 @@ final class MailingController extends AbstractController
         $formModel = new MailingTestFormModel();
         $user = $this->getUser();
 
-        if ($user instanceof AdminUserEntity) {
-            $formModel->recipientEmail = $user->getEmail();
+        if ($user instanceof UserInterface) {
+            $formModel->recipientEmail = $user->getUserIdentifier();
         }
 
         $campaignLocked = !$mailingCampaign->isEditable();
