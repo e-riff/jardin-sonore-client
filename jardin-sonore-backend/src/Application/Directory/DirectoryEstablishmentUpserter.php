@@ -68,7 +68,8 @@ final readonly class DirectoryEstablishmentUpserter
             }
         }
 
-        $emailContact = $this->directorySharedContactLookup->findEmailContactByEmailAddress($emailAddress);
+        $emailContactId = $this->directorySharedContactLookup->findEmailContactIdByEmailAddress($emailAddress);
+        $emailContact = null !== $emailContactId ? $this->entityManager->getRepository(EmailContactEntity::class)->find($emailContactId) : null;
         $created = false;
 
         if (!$emailContact instanceof EmailContactEntity) {
@@ -110,7 +111,8 @@ final readonly class DirectoryEstablishmentUpserter
             }
         }
 
-        $phoneContact = $this->directorySharedContactLookup->findPhoneContactByPhoneNumber($phoneNumber);
+        $phoneContactId = $this->directorySharedContactLookup->findPhoneContactIdByPhoneNumber($phoneNumber);
+        $phoneContact = null !== $phoneContactId ? $this->entityManager->getRepository(PhoneContactEntity::class)->find($phoneContactId) : null;
         $created = false;
 
         if (!$phoneContact instanceof PhoneContactEntity) {
@@ -160,19 +162,22 @@ final readonly class DirectoryEstablishmentUpserter
             $addressContact->setPostalCode($postalCode);
         }
 
-        $addressContact->setMunicipality($this->directoryMunicipalityLookup->findByNameAndPostalCode(
+        $municipalityId = $this->directoryMunicipalityLookup->findIdByNameAndPostalCode(
             commune: $item->commune,
             postalCode: $postalCode,
-        ));
+        );
+        $municipality = null !== $municipalityId ? $this->entityManager->getRepository(\App\Infrastructure\Doctrine\Entity\MunicipalityEntity::class)->find($municipalityId) : null;
+        $addressContact->setMunicipality($municipality);
     }
 
     public function persistImportLink(
         OrganizationEntity $organization,
-        ?DirectoryImportLinkEntity $existingImportLink,
+        ?int $existingImportLinkId,
         DirectoryEstablishmentImportItem $item,
         string $source,
     ): void {
-        $importLink = $existingImportLink ?? new DirectoryImportLinkEntity();
+        $existingImportLink = null !== $existingImportLinkId ? $this->entityManager->getRepository(DirectoryImportLinkEntity::class)->find($existingImportLinkId) : null;
+        $importLink = $existingImportLink instanceof DirectoryImportLinkEntity ? $existingImportLink : new DirectoryImportLinkEntity();
         $importLink
             ->setDirectoryEntry($organization)
             ->setSource($source)

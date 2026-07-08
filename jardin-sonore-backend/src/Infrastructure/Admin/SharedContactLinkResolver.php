@@ -46,7 +46,8 @@ final readonly class SharedContactLinkResolver
 
             $seenEmailAddresses[$emailAddress] = true;
 
-            $existingEmailContactEntity = $this->directorySharedContactLookup->findEmailContactByEmailAddress($emailAddress);
+            $existingEmailContactId = $this->directorySharedContactLookup->findEmailContactIdByEmailAddress($emailAddress);
+            $existingEmailContactEntity = null !== $existingEmailContactId ? $this->entityManager->getRepository(EmailContactEntity::class)->find($existingEmailContactId) : null;
 
             if (
                 $existingEmailContactEntity instanceof EmailContactEntity
@@ -77,7 +78,8 @@ final readonly class SharedContactLinkResolver
 
             $seenPhoneNumbers[$phoneNumber] = true;
 
-            $existingPhoneContactEntity = $this->directorySharedContactLookup->findPhoneContactByPhoneNumber($phoneNumber);
+            $existingPhoneContactId = $this->directorySharedContactLookup->findPhoneContactIdByPhoneNumber($phoneNumber);
+            $existingPhoneContactEntity = null !== $existingPhoneContactId ? $this->entityManager->getRepository(PhoneContactEntity::class)->find($existingPhoneContactId) : null;
 
             if (
                 $existingPhoneContactEntity instanceof PhoneContactEntity

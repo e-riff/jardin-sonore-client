@@ -92,8 +92,13 @@ final class ImportDirectoryEstablishmentsCommand extends Command
                 continue;
             }
 
-            $importLink = $this->matcher->findImportLinkByExternalId($source, $item);
-            $organization = $this->matcher->findOrganizationLinkedByExternalIdentifiers($source, $item);
+            $importLinkId = $this->matcher->findImportLinkIdByExternalId($source, $item);
+            $organizationId = $this->matcher->findOrganizationIdLinkedByExternalIdentifiers($source, $item);
+            $organization = null;
+
+            if (null !== $organizationId) {
+                $organization = $this->entityManager->getRepository(OrganizationEntity::class)->find($organizationId);
+            }
 
             if ($organization instanceof OrganizationEntity) {
                 ++$stats['linkedByExternalId'];
@@ -131,7 +136,7 @@ final class ImportDirectoryEstablishmentsCommand extends Command
             $this->upserter->upsertAddressContact($organization->getContactDetails(), $item);
 
             if ($apply) {
-                $this->upserter->persistImportLink($organization, $importLink, $item, $source);
+                $this->upserter->persistImportLink($organization, $importLinkId, $item, $source);
                 $this->entityManager->flush();
             }
         }
@@ -180,7 +185,7 @@ final class ImportDirectoryEstablishmentsCommand extends Command
         $topCandidate = $candidates[0];
 
         if ($topCandidate->score > $this->matcher->getAutoMatchScoreThreshold()) {
-            return $this->entityManager->find(OrganizationEntity::class, $topCandidate->organizationId);
+            return $this->entityManager->getRepository(OrganizationEntity::class)->find($topCandidate->organizationId);
         }
 
         ++$stats['ambiguous'];
@@ -269,7 +274,7 @@ final class ImportDirectoryEstablishmentsCommand extends Command
 
         foreach ($candidates as $candidate) {
             if ((string) $candidate->organizationId === $selectedKey) {
-                $organization = $this->entityManager->find(OrganizationEntity::class, $candidate->organizationId);
+                $organization = $this->entityManager->getRepository(OrganizationEntity::class)->find($candidate->organizationId);
 
                 return $organization instanceof OrganizationEntity ? $organization : null;
             }

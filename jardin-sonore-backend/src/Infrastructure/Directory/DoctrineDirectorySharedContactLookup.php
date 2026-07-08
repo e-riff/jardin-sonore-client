@@ -16,21 +16,21 @@ final readonly class DoctrineDirectorySharedContactLookup implements DirectorySh
     ) {
     }
 
-    public function findEmailContactByEmailAddress(string $emailAddress): ?EmailContactEntity
+    public function findEmailContactIdByEmailAddress(string $emailAddress): ?int
     {
         $emailContact = $this->entityManager->getRepository(EmailContactEntity::class)->findOneBy([
             'emailAddress' => mb_strtolower(trim($emailAddress)),
         ]);
 
-        return $emailContact instanceof EmailContactEntity ? $emailContact : null;
+        return $emailContact instanceof EmailContactEntity ? $emailContact->getId() : null;
     }
 
-    public function findPhoneContactByPhoneNumber(string $phoneNumber): ?PhoneContactEntity
+    public function findPhoneContactIdByPhoneNumber(string $phoneNumber): ?int
     {
         $phoneContact = $this->entityManager->getRepository(PhoneContactEntity::class)->findOneBy([
             'phoneNumber' => trim($phoneNumber),
         ]);
 
-        return $phoneContact instanceof PhoneContactEntity ? $phoneContact : null;
+        return $phoneContact instanceof PhoneContactEntity ? $phoneContact->getId() : null;
     }
 }
