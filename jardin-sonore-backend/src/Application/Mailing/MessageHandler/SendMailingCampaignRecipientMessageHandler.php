@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Mailing\MessageHandler;
 
-use App\Application\Mailing\MailingDeliveryRecipientStoreInterface;
+use App\Application\Mailing\MailingDeliveryQueueInterface;
 use App\Application\Mailing\Message\SendMailingCampaignRecipientMessage;
 use App\Application\Mailing\NewsletterMailSenderInterface;
 use App\Application\Mailing\NewsletterRendererInterface;
@@ -26,7 +26,7 @@ final readonly class SendMailingCampaignRecipientMessageHandler
         private MailingCampaignRepositoryInterface $mailingCampaignRepository,
         private NewsletterRendererInterface $newsletterRenderer,
         private NewsletterMailSenderInterface $newsletterMailSender,
-        private MailingDeliveryRecipientStoreInterface $mailingDeliveryRecipientStore,
+        private MailingDeliveryQueueInterface $mailingDeliveryQueue,
         #[Autowire(service: 'monolog.logger.mailing_delivery')]
         private LoggerInterface $mailingDeliveryLogger,
     ) {
@@ -57,7 +57,7 @@ final readonly class SendMailingCampaignRecipientMessageHandler
         try {
             $renderedNewsletter = $this->newsletterRenderer->render($mailingCampaign);
             $this->newsletterMailSender->sendToRecipient($renderedNewsletter, $newsletterRecipient);
-            $this->mailingDeliveryRecipientStore->markSent($message->deliveryRecipientId);
+            $this->mailingDeliveryQueue->markSent($message->deliveryRecipientId);
             $this->mailingDeliveryLogger->info('Newsletter recipient sent.', [
                 'campaign_uuid' => $mailingCampaign->getUuid()->toRfc4122(),
                 'campaign_title' => $mailingCampaign->getInternalTitle(),
@@ -66,7 +66,7 @@ final readonly class SendMailingCampaignRecipientMessageHandler
                 'recipient_display_name' => $newsletterRecipient->getDisplayName(),
             ]);
         } catch (Throwable $throwable) {
-            $this->mailingDeliveryRecipientStore->markFailed($message->deliveryRecipientId, $throwable->getMessage());
+            $this->mailingDeliveryQueue->markFailed($message->deliveryRecipientId, $throwable->getMessage());
             $this->mailingDeliveryLogger->error('Newsletter recipient failed.', [
                 'campaign_uuid' => $mailingCampaign->getUuid()->toRfc4122(),
                 'campaign_title' => $mailingCampaign->getInternalTitle(),
@@ -83,7 +83,7 @@ final readonly class SendMailingCampaignRecipientMessageHandler
             throw $throwable;
         }
 
-        if ($this->mailingDeliveryRecipientStore->hasOutstandingRecipients($message->campaignUuid)) {
+        if ($this->mailingDeliveryQueue->hasOutstandingRecipients($message->campaignUuid)) {
             return;
         }
 
@@ -91,19 +91,19 @@ final readonly class SendMailingCampaignRecipientMessageHandler
             $this->mailingDeliveryLogger->warning('Newsletter delivery remains stopped after current wave completion.', [
                 'campaign_uuid' => $mailingCampaign->getUuid()->toRfc4122(),
                 'campaign_title' => $mailingCampaign->getInternalTitle(),
-                'delivery_counts' => $this->mailingDeliveryRecipientStore->getCampaignDeliveryCounts($message->campaignUuid),
+                'delivery_counts' => $this->mailingDeliveryQueue->getCampaignDeliveryCounts($message->campaignUuid),
             ]);
 
             return;
         }
 
-        if ($this->mailingDeliveryRecipientStore->hasFailedRecipients($message->campaignUuid)) {
+        if ($this->mailingDeliveryQueue->hasFailedRecipients($message->campaignUuid)) {
             $mailingCampaign->markDeliveryFailed();
             $this->mailingCampaignRepository->save($mailingCampaign);
             $this->mailingDeliveryLogger->warning('Newsletter delivery completed with failures.', [
                 'campaign_uuid' => $mailingCampaign->getUuid()->toRfc4122(),
                 'campaign_title' => $mailingCampaign->getInternalTitle(),
-                'delivery_counts' => $this->mailingDeliveryRecipientStore->getCampaignDeliveryCounts($message->campaignUuid),
+                'delivery_counts' => $this->mailingDeliveryQueue->getCampaignDeliveryCounts($message->campaignUuid),
             ]);
 
             return;
@@ -114,7 +114,7 @@ final readonly class SendMailingCampaignRecipientMessageHandler
         $this->mailingDeliveryLogger->info('Newsletter delivery fully sent.', [
             'campaign_uuid' => $mailingCampaign->getUuid()->toRfc4122(),
             'campaign_title' => $mailingCampaign->getInternalTitle(),
-            'delivery_counts' => $this->mailingDeliveryRecipientStore->getCampaignDeliveryCounts($message->campaignUuid),
+            'delivery_counts' => $this->mailingDeliveryQueue->getCampaignDeliveryCounts($message->campaignUuid),
         ]);
     }
 }

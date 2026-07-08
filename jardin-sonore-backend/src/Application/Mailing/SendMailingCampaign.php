@@ -15,7 +15,7 @@ final readonly class SendMailingCampaign
     public function __construct(
         private MailingCampaignRepositoryInterface $mailingCampaignRepository,
         private NewsletterAudienceResolverInterface $newsletterAudienceResolver,
-        private MailingDeliveryRecipientStoreInterface $mailingDeliveryRecipientStore,
+        private MailingDeliveryQueueInterface $mailingDeliveryQueue,
         #[Autowire(service: 'monolog.logger.mailing_delivery')]
         private LoggerInterface $mailingDeliveryLogger,
     ) {
@@ -35,7 +35,7 @@ final readonly class SendMailingCampaign
             throw new InvalidArgumentException('Mailing campaign audience is empty.');
         }
 
-        $this->mailingDeliveryRecipientStore->seedCampaignRecipients(
+        $this->mailingDeliveryQueue->seedCampaignRecipients(
             $mailingCampaign->getUuid()->toRfc4122(),
             $recipients,
         );

@@ -14,7 +14,7 @@ final readonly class StopMailingCampaignDelivery
 {
     public function __construct(
         private MailingCampaignRepositoryInterface $mailingCampaignRepository,
-        private MailingDeliveryRecipientStoreInterface $mailingDeliveryRecipientStore,
+        private MailingDeliveryQueueInterface $mailingDeliveryQueue,
         #[Autowire(service: 'monolog.logger.mailing_delivery')]
         private LoggerInterface $mailingDeliveryLogger,
     ) {
@@ -26,13 +26,13 @@ final readonly class StopMailingCampaignDelivery
             throw new InvalidArgumentException('Mailing campaign delivery cannot be stopped.');
         }
 
-        $cancelledPendingRecipients = $this->mailingDeliveryRecipientStore->cancelPendingRecipients(
+        $cancelledPendingRecipients = $this->mailingDeliveryQueue->cancelPendingRecipients(
             $mailingCampaign->getUuid()->toRfc4122(),
         );
         $mailingCampaign->markDeliveryStopped();
         $this->mailingCampaignRepository->save($mailingCampaign);
 
-        $deliveryCounts = $this->mailingDeliveryRecipientStore->getCampaignDeliveryCounts(
+        $deliveryCounts = $this->mailingDeliveryQueue->getCampaignDeliveryCounts(
             $mailingCampaign->getUuid()->toRfc4122(),
         );
 

@@ -7,7 +7,7 @@ namespace App\Application\Mailing;
 use App\Domain\Model\Mailing\NewsletterRecipient;
 use DateTimeImmutable;
 
-interface MailingDeliveryRecipientStoreInterface
+interface MailingDeliveryQueueInterface
 {
     /**
      * @param list<NewsletterRecipient> $newsletterRecipients
