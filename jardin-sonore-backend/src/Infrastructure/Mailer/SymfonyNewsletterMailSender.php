@@ -21,9 +21,9 @@ final readonly class SymfonyNewsletterMailSender implements NewsletterMailSender
     public function __construct(
         private MailerInterface $mailer,
         private EmailContactRepositoryInterface $emailContactRepository,
-        #[Autowire('%env(default:app.mailing.from_email:DEFAULT_CONTACT)%')]
+        #[Autowire('%app.mailing.from_email%')]
         private string $fromEmail,
-        #[Autowire('%env(default:app.mailing.from_name:MAILING_FROM_NAME)%')]
+        #[Autowire('%app.mailing.from_name%')]
         private string $fromName,
     ) {
     }
