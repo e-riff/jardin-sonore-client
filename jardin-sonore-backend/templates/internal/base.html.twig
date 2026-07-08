@@ -3,53 +3,201 @@
 {% block title %}{{ title|default('internal.base.title'|trans({}, 'internal')) }}{% endblock %}
 
 {% block body %}
-    <div class="internal-shell">
-        <header class="internal-header" {{ stimulus_controller('internal-nav') }}>
-            <div class="internal-header__top">
-                <a class="internal-brand" href="{{ path('internal_dashboard') }}" aria-label="{{ 'internal.base.brand_aria'|trans({}, 'internal') }}">
-                    <span class="internal-brand__mark">JS</span>
-                    <span>
-                        <strong>{{ 'internal.base.brand'|trans({}, 'internal') }}</strong>
-                        <small>{{ 'internal.base.subtitle'|trans({}, 'internal') }}</small>
-                    </span>
-                </a>
-            </div>
+    {% set currentRoute = app.request.attributes.get('_route') ?? '' %}
+    {% set navGroups = [
+        {
+            key: 'general',
+            route: 'internal_dashboard',
+            icon: '▦',
+            label: 'internal.base.nav.utility_group'|trans({}, 'internal'),
+            active: currentRoute starts with 'internal_',
+            links: [
+                {
+                    route: 'internal_dashboard',
+                    label: 'internal.base.nav.dashboard'|trans({}, 'internal'),
+                    active: currentRoute == 'internal_dashboard',
+                },
+            ],
+        },
+        {
+            key: 'newsletters',
+            route: 'mailing_index',
+            icon: '✉',
+            label: 'internal.base.nav.newsletters_group'|trans({}, 'internal'),
+            active: currentRoute starts with 'mailing_',
+            links: [
+                {
+                    route: 'mailing_index',
+                    label: 'internal.base.nav.mailing'|trans({}, 'internal'),
+                    active: currentRoute starts with 'mailing_'
+                        and not (currentRoute starts with 'mailing_invalid_recipients_')
+                        and not (currentRoute starts with 'mailing_recommendation_catalog_')
+                        and not (currentRoute starts with 'mailing_campaign_recommendation_'),
+                },
+                {
+                    route: 'mailing_invalid_recipients_index',
+                    label: 'internal.base.nav.invalid_recipients'|trans({}, 'internal'),
+                    active: currentRoute starts with 'mailing_invalid_recipients_',
+                },
+                {
+                    route: 'mailing_recommendation_catalog_index',
+                    label: 'internal.base.nav.recommendation_catalog'|trans({}, 'internal'),
+                    active: currentRoute starts with 'mailing_recommendation_catalog_' or currentRoute starts with 'mailing_campaign_recommendation_',
+                },
+            ],
+        },
+        {
+            key: 'sessions',
+            route: 'instrument_index',
+            icon: '♫',
+            label: 'internal.base.nav.sessions_group'|trans({}, 'internal'),
+            active: currentRoute starts with 'instrument_',
+            links: [
+                {
+                    route: 'instrument_index',
+                    label: 'internal.base.nav.instruments'|trans({}, 'internal'),
+                    active: currentRoute starts with 'instrument_',
+                },
+            ],
+        },
+        {
+            key: 'administration',
+            route: 'admin',
+            icon: '⚙',
+            label: 'internal.base.nav.admin_group'|trans({}, 'internal'),
+            active: currentRoute starts with 'admin',
+            links: [
+                {
+                    route: 'admin',
+                    label: 'internal.base.nav.backoffice'|trans({}, 'internal'),
+                    active: currentRoute starts with 'admin',
+                },
+            ],
+        },
+    ] %}
+    {% set activeNavGroup = navGroups|filter(group => group.active)|first ?: navGroups|first %}
 
-            <div class="internal-nav-shell" {{ stimulus_target('internal-nav', 'shell') }}>
+    <div class="internal-shell" {{ stimulus_controller('internal-nav') }}>
+        <header class="internal-header">
+            <div class="internal-header__bar">
+                <div class="internal-header__brand-block">
+                    <a class="internal-brand" href="{{ path('internal_dashboard') }}" aria-label="{{ 'internal.base.brand_aria'|trans({}, 'internal') }}">
+                        <span class="internal-brand__text">
+                            <strong>{{ 'internal.base.brand'|trans({}, 'internal') }}</strong>
+                            <small>{{ 'internal.base.subtitle'|trans({}, 'internal') }}</small>
+                        </span>
+                    </a>
+                </div>
+
+                <nav class="internal-primary-nav" aria-label="{{ 'internal.base.navigation_aria'|trans({}, 'internal') }}">
+                    {% for group in navGroups %}
+                        <button
+                            type="button"
+                            class="internal-primary-nav__link{{ group.active ? ' is-active' : '' }}"
+                            data-nav-group-key="{{ group.key }}"
+                            aria-pressed="{{ group.active ? 'true' : 'false' }}"
+                            {{ stimulus_action('internal-nav', 'selectGroup') }}
+                            {% if group.active %}aria-current="page"{% endif %}
+                        >
+                            <span class="internal-primary-nav__icon" aria-hidden="true">{{ group.icon }}</span>
+                            <span>{{ group.label }}</span>
+                        </button>
+                    {% endfor %}
+                </nav>
+
+                <div class="internal-header__meta">
+                    <strong>{{ app.user ? app.user.userIdentifier : 'Jardin Sonore' }}</strong>
+                    <span>{{ 'internal.base.subtitle'|trans({}, 'internal') }}</span>
+                </div>
+
                 <button
                     class="internal-nav-toggle"
                     type="button"
+                    aria-label="{{ 'internal.base.nav.toggle'|trans({}, 'internal') }}"
                     aria-expanded="false"
                     {{ stimulus_action('internal-nav', 'toggle') }}
                     {{ stimulus_target('internal-nav', 'button') }}
-                >
-                    <span>{{ 'internal.base.nav.toggle'|trans({}, 'internal') }}</span>
-                </button>
+                ></button>
+            </div>
 
-                <nav
-                    class="internal-nav"
-                    aria-label="{{ 'internal.base.navigation_aria'|trans({}, 'internal') }}"
-                    {{ stimulus_target('internal-nav', 'panel') }}
-                >
-                    <div class="internal-nav__group internal-nav__group--utility">
-                        <span class="internal-nav__label">{{ 'internal.base.nav.utility_group'|trans({}, 'internal') }}</span>
-                        <a href="{{ path('internal_dashboard') }}">{{ 'internal.base.nav.dashboard'|trans({}, 'internal') }}</a>
-                        <a href="{{ path('admin') }}">{{ 'internal.base.nav.backoffice'|trans({}, 'internal') }}</a>
-                    </div>
-
-                    <div class="internal-nav__group">
-                        <span class="internal-nav__label">{{ 'internal.base.nav.newsletters_group'|trans({}, 'internal') }}</span>
-                        <a href="{{ path('mailing_index') }}">{{ 'internal.base.nav.mailing'|trans({}, 'internal') }}</a>
-                        <a href="{{ path('mailing_invalid_recipients_index') }}">{{ 'internal.base.nav.invalid_recipients'|trans({}, 'internal') }}</a>
-                    </div>
-
-                    <div class="internal-nav__group">
-                        <span class="internal-nav__label">{{ 'internal.base.nav.sessions_group'|trans({}, 'internal') }}</span>
-                        <a href="{{ path('instrument_index') }}">{{ 'internal.base.nav.instruments'|trans({}, 'internal') }}</a>
+            {% if activeNavGroup %}
+                <nav class="internal-subnav" aria-label="{{ 'internal.base.navigation_aria'|trans({}, 'internal') }}">
+                    <div class="internal-subnav__inner">
+                        {% for group in navGroups %}
+                            <div class="internal-subnav__group{{ group.active ? ' is-active' : '' }}" data-nav-group-key="{{ group.key }}">
+                                {% for link in group.links %}
+                                    <a
+                                        href="{{ path(link.route) }}"
+                                        class="internal-subnav__link{{ link.active ? ' is-active' : '' }}"
+                                        {% if link.active %}aria-current="page"{% endif %}
+                                    >
+                                        {{ link.label }}
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
                     </div>
                 </nav>
-            </div>
+            {% endif %}
         </header>
+
+        <div
+            class="internal-mobile-nav-shell"
+            {{ stimulus_target('internal-nav', 'shell') }}
+            {{ stimulus_action('internal-nav', 'close', 'click') }}
+        >
+            <div class="internal-mobile-nav-panel" {{ stimulus_target('internal-nav', 'panel') }}>
+                <div class="internal-mobile-nav-panel__header">
+                    <strong>{{ 'internal.base.nav.toggle'|trans({}, 'internal') }}</strong>
+                    <button
+                        class="internal-mobile-nav-panel__close"
+                        type="button"
+                        aria-label="{{ 'internal.base.nav.close'|trans({}, 'internal') }}"
+                        {{ stimulus_action('internal-nav', 'close') }}
+                    >
+                        ×
+                    </button>
+                </div>
+
+                {% for group in navGroups %}
+                    {% set isGroupOpen = group.active %}
+                    {% set groupPanelId = 'internal-mobile-nav-group-' ~ group.key %}
+
+                    <section class="internal-mobile-nav__group{{ group.active ? ' is-active' : '' }}{{ isGroupOpen ? ' is-open' : '' }}">
+                        <button
+                            class="internal-mobile-nav__toggle"
+                            type="button"
+                            aria-expanded="{{ isGroupOpen ? 'true' : 'false' }}"
+                            aria-controls="{{ groupPanelId }}"
+                            {{ stimulus_action('internal-nav', 'toggleGroup') }}
+                        >
+                            <span class="internal-mobile-nav__group-label">
+                                <span class="internal-primary-nav__icon" aria-hidden="true">{{ group.icon }}</span>
+                                <span>{{ group.label }}</span>
+                            </span>
+                        </button>
+
+                        <div id="{{ groupPanelId }}" class="internal-mobile-nav__links">
+                            {% for link in group.links %}
+                                <a
+                                    href="{{ path(link.route) }}"
+                                    class="internal-mobile-nav__link{{ link.active ? ' is-active' : '' }}"
+                                    {% if link.active %}aria-current="page"{% endif %}
+                                    {{ stimulus_action('internal-nav', 'close') }}
+                                >
+                                    {{ link.label }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </section>
+                {% endfor %}
+
+                <div class="internal-mobile-nav-panel__footer">
+                    <strong>{{ app.user ? app.user.userIdentifier : 'Jardin Sonore' }}</strong>
+                    <span>{{ 'internal.base.subtitle'|trans({}, 'internal') }}</span>
+                </div>
+            </div>
+        </div>
 
         <main class="internal-main">
             {% for label, messages in app.flashes %}

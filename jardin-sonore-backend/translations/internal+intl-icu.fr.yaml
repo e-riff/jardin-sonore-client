@@ -7,13 +7,16 @@ internal:
     navigation_aria: "Navigation interne"
     nav:
       toggle: "Menu"
+      close: "Fermer le menu"
       newsletters_group: "Newsletters"
       sessions_group: "Séances"
       utility_group: "Général"
+      admin_group: "Administration"
       dashboard: "Accueil"
       instruments: "Instruments"
       mailing: "Campagnes"
       invalid_recipients: "Adresses invalides"
+      recommendation_catalog: "Recommandations"
       backoffice: "Backoffice"
   dashboard:
     title: "Accueil interne | Jardin Sonore"
