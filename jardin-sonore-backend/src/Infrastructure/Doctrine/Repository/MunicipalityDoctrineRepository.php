@@ -52,6 +52,13 @@ final class MunicipalityDoctrineRepository extends ServiceEntityRepository imple
         return $municipalityEntity instanceof MunicipalityEntity ? $municipalityEntity : null;
     }
 
+    public function findEntityById(int $id): ?MunicipalityEntity
+    {
+        $municipalityEntity = $this->find($id);
+
+        return $municipalityEntity instanceof MunicipalityEntity ? $municipalityEntity : null;
+    }
+
     public function save(Municipality $municipality): void
     {
         $municipalityEntity = $this->findOneBy(['uuid' => $municipality->getUuid()]);

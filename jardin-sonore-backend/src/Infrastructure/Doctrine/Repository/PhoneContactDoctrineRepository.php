@@ -38,6 +38,13 @@ final class PhoneContactDoctrineRepository extends ServiceEntityRepository imple
         return $phoneContactEntity instanceof PhoneContactEntity ? $phoneContactEntity : null;
     }
 
+    public function findEntityById(int $id): ?PhoneContactEntity
+    {
+        $phoneContactEntity = $this->find($id);
+
+        return $phoneContactEntity instanceof PhoneContactEntity ? $phoneContactEntity : null;
+    }
+
     public function save(PhoneContact $phoneContact): void
     {
         $phoneContactEntity = $this->findOneBy(['uuid' => $phoneContact->getUuid()]);

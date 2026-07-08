@@ -7,31 +7,25 @@ namespace App\Infrastructure\Directory;
 use App\Application\Directory\DirectoryOrganizationLookupInterface;
 use App\Infrastructure\Doctrine\Entity\DirectoryImportLinkEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Infrastructure\Doctrine\Repository\DirectoryImportLinkEntityRepository;
 
 final readonly class DoctrineDirectoryOrganizationLookup implements DirectoryOrganizationLookupInterface
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
+        private DirectoryImportLinkEntityRepository $directoryImportLinkEntityRepository,
     ) {
     }
 
     public function findImportLinkIdByExternalId(string $source, string $externalId): ?int
     {
-        $importLink = $this->entityManager->getRepository(DirectoryImportLinkEntity::class)->findOneBy([
-            'source' => $source,
-            'externalId' => $externalId,
-        ]);
+        $importLink = $this->directoryImportLinkEntityRepository->findOneBySourceAndExternalId($source, $externalId);
 
         return $importLink instanceof DirectoryImportLinkEntity ? $importLink->getId() : null;
     }
 
     public function findOrganizationIdByExternalId(string $source, string $externalId): ?int
     {
-        $importLink = $this->entityManager->getRepository(DirectoryImportLinkEntity::class)->findOneBy([
-            'source' => $source,
-            'externalId' => $externalId,
-        ]);
+        $importLink = $this->directoryImportLinkEntityRepository->findOneBySourceAndExternalId($source, $externalId);
 
         $directoryEntry = $importLink instanceof DirectoryImportLinkEntity ? $importLink->getDirectoryEntry() : null;
 
@@ -40,10 +34,7 @@ final readonly class DoctrineDirectoryOrganizationLookup implements DirectoryOrg
 
     public function findOrganizationIdByExternalOrganizationId(string $source, string $externalOrganizationId): ?int
     {
-        $importLink = $this->entityManager->getRepository(DirectoryImportLinkEntity::class)->findOneBy([
-            'source' => $source,
-            'externalOrganizationId' => $externalOrganizationId,
-        ]);
+        $importLink = $this->directoryImportLinkEntityRepository->findOneBySourceAndExternalOrganizationId($source, $externalOrganizationId);
 
         $directoryEntry = $importLink instanceof DirectoryImportLinkEntity ? $importLink->getDirectoryEntry() : null;
 

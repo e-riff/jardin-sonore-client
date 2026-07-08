@@ -8,8 +8,8 @@ use App\Application\Directory\DirectoryEstablishmentImportItem;
 use App\Application\Directory\DirectoryOrganizationCandidate;
 use App\Application\Directory\DirectoryOrganizationCandidateLookupInterface;
 use App\Domain\Model\ValueObject\PhoneNumber;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
-use Doctrine\ORM\EntityManagerInterface;
 use InvalidArgumentException;
 
 final readonly class DoctrineDirectoryOrganizationCandidateLookup implements DirectoryOrganizationCandidateLookupInterface
@@ -17,13 +17,13 @@ final readonly class DoctrineDirectoryOrganizationCandidateLookup implements Dir
     private const int CANDIDATE_QUERY_LIMIT = 200;
 
     public function __construct(
-        private EntityManagerInterface $entityManager,
+        private Connection $connection,
     ) {
     }
 
     public function findOrganizationCandidates(DirectoryEstablishmentImportItem $item): array
     {
-        $queryBuilder = $this->entityManager->getConnection()->createQueryBuilder()
+        $queryBuilder = $this->connection->createQueryBuilder()
             ->select(
                 'organization.id',
                 'organization.name',
