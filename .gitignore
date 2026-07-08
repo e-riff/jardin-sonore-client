@@ -38,6 +38,7 @@ yarn-error.log*
 !.env
 !.env.deploy.example
 !jardin-sonore-backend/.env
+jardin-sonore-backend/config/parameters.yaml
 
 # vercel
 .vercel/

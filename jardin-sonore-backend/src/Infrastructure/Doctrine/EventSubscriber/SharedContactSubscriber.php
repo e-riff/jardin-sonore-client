@@ -9,20 +9,16 @@ use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 use App\Infrastructure\Doctrine\Entity\EmailContactLinkEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactLinkEntity;
-use Doctrine\Common\EventSubscriber;
+use Doctrine\Bundle\DoctrineBundle\Attribute\AsDoctrineListener;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\UnitOfWork;
 use InvalidArgumentException;
 
-final class SharedContactSubscriber implements EventSubscriber
+#[AsDoctrineListener(event: Events::onFlush, connection: 'default')]
+final class SharedContactSubscriber
 {
-    public function getSubscribedEvents(): array
-    {
-        return [Events::onFlush];
-    }
-
     public function onFlush(OnFlushEventArgs $eventArgs): void
     {
         $entityManager = $eventArgs->getObjectManager();
