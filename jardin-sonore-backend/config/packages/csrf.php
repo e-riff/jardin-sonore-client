@@ -12,6 +12,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
             ],
         ],
         'csrf_protection' => [
+            'check_header' => true,
             'stateless_token_ids' => [
                 'submit',
                 'authenticate',
