@@ -8,32 +8,37 @@ use App\Domain\Model\AddressBook\Organization;
 use App\Domain\Repository\OrganizationRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Mapper\OrganizationMapper;
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
 
-final readonly class OrganizationDoctrineRepository implements OrganizationRepositoryInterface
+/**
+ * @extends ServiceEntityRepository<OrganizationEntity>
+ */
+final class OrganizationDoctrineRepository extends ServiceEntityRepository implements OrganizationRepositoryInterface
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private OrganizationMapper $organizationMapper,
+        ManagerRegistry $managerRegistry,
+        private readonly OrganizationMapper $organizationMapper,
     ) {
+        parent::__construct($managerRegistry, OrganizationEntity::class);
     }
 
     public function findByUuid(Uuid $uuid): ?Organization
     {
-        $organizationEntity = $this->entityManager->getRepository(OrganizationEntity::class)->findOneBy(['uuid' => $uuid]);
+        $organizationEntity = $this->findOneBy(['uuid' => $uuid]);
 
         return $organizationEntity instanceof OrganizationEntity ? $this->organizationMapper->toDomain($organizationEntity) : null;
     }
 
     public function save(Organization $organization): void
     {
-        $organizationEntity = $this->entityManager->getRepository(OrganizationEntity::class)->findOneBy(['uuid' => $organization->getUuid()]);
+        $organizationEntity = $this->findOneBy(['uuid' => $organization->getUuid()]);
 
-        $this->entityManager->persist($this->organizationMapper->toEntity(
+        $this->getEntityManager()->persist($this->organizationMapper->toEntity(
             organization: $organization,
             organizationEntity: $organizationEntity instanceof OrganizationEntity ? $organizationEntity : null,
         ));
-        $this->entityManager->flush();
+        $this->getEntityManager()->flush();
     }
 }

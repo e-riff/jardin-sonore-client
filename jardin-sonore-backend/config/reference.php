@@ -1500,7 +1500,6 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     twig_component?: TwigComponentConfig,
  *     security?: SecurityConfig,
  *     monolog?: MonologConfig,
- *     web_profiler?: WebProfilerConfig,
  *     stimulus?: StimulusConfig,
  *     live_component?: LiveComponentConfig,
  *     turbo?: TurboConfig,
@@ -1519,6 +1518,23 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         monolog?: MonologConfig,
  *         web_profiler?: WebProfilerConfig,
  *         maker?: MakerConfig,
+ *         stimulus?: StimulusConfig,
+ *         live_component?: LiveComponentConfig,
+ *         turbo?: TurboConfig,
+ *         ux_map?: UxMapConfig,
+ *     },
+ *     "when@prod"?: array{
+ *         imports?: ImportsConfig,
+ *         parameters?: ParametersConfig,
+ *         services?: ServicesConfig,
+ *         framework?: FrameworkConfig,
+ *         doctrine?: DoctrineConfig,
+ *         doctrine_migrations?: DoctrineMigrationsConfig,
+ *         twig?: TwigConfig,
+ *         twig_extra?: TwigExtraConfig,
+ *         twig_component?: TwigComponentConfig,
+ *         security?: SecurityConfig,
+ *         monolog?: MonologConfig,
  *         stimulus?: StimulusConfig,
  *         live_component?: LiveComponentConfig,
  *         turbo?: TurboConfig,
@@ -1625,6 +1641,7 @@ namespace Symfony\Component\Routing\Loader\Configurator;
  * }
  * @psalm-type RoutesConfig = array{
  *     "when@dev"?: array<string, RouteConfig|ImportConfig|AliasConfig>,
+ *     "when@prod"?: array<string, RouteConfig|ImportConfig|AliasConfig>,
  *     "when@test"?: array<string, RouteConfig|ImportConfig|AliasConfig>,
  *     ...<string, RouteConfig|ImportConfig|AliasConfig>
  * }

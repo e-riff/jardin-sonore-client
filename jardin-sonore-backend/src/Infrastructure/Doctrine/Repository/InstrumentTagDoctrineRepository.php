@@ -8,27 +8,32 @@ use App\Domain\Model\ContentCatalog\InstrumentTag;
 use App\Domain\Repository\InstrumentTagRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\InstrumentTagEntity;
 use App\Infrastructure\Doctrine\Mapper\InstrumentTagMapper;
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
 
-final readonly class InstrumentTagDoctrineRepository implements InstrumentTagRepositoryInterface
+/**
+ * @extends ServiceEntityRepository<InstrumentTagEntity>
+ */
+final class InstrumentTagDoctrineRepository extends ServiceEntityRepository implements InstrumentTagRepositoryInterface
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private InstrumentTagMapper $instrumentTagMapper,
+        ManagerRegistry $managerRegistry,
+        private readonly InstrumentTagMapper $instrumentTagMapper,
     ) {
+        parent::__construct($managerRegistry, InstrumentTagEntity::class);
     }
 
     public function findByUuid(Uuid $uuid): ?InstrumentTag
     {
-        $entity = $this->entityManager->getRepository(InstrumentTagEntity::class)->findOneBy(['uuid' => $uuid]);
+        $entity = $this->findOneBy(['uuid' => $uuid]);
 
         return $entity instanceof InstrumentTagEntity ? $this->instrumentTagMapper->toDomain($entity) : null;
     }
 
     public function findByLabel(string $label): ?InstrumentTag
     {
-        $entity = $this->entityManager->getRepository(InstrumentTagEntity::class)->findOneBy(['label' => trim($label)]);
+        $entity = $this->findOneBy(['label' => trim($label)]);
 
         return $entity instanceof InstrumentTagEntity ? $this->instrumentTagMapper->toDomain($entity) : null;
     }
@@ -44,8 +49,7 @@ final readonly class InstrumentTagDoctrineRepository implements InstrumentTagRep
             return [];
         }
 
-        $entities = $this->entityManager->getRepository(InstrumentTagEntity::class)
-            ->createQueryBuilder('instrumentTag')
+        $entities = $this->createQueryBuilder('instrumentTag')
             ->andWhere('instrumentTag.uuid IN (:uuids)')
             ->setParameter('uuids', array_map(static fn (string $uuid): Uuid => Uuid::fromString($uuid), $normalizedUuids))
             ->getQuery()
@@ -70,8 +74,7 @@ final readonly class InstrumentTagDoctrineRepository implements InstrumentTagRep
 
     public function findAllOrderedByLabel(): array
     {
-        $entities = $this->entityManager->getRepository(InstrumentTagEntity::class)
-            ->createQueryBuilder('instrumentTag')
+        $entities = $this->createQueryBuilder('instrumentTag')
             ->orderBy('instrumentTag.label', 'ASC')
             ->addOrderBy('instrumentTag.id', 'ASC')
             ->getQuery()
@@ -85,13 +88,12 @@ final readonly class InstrumentTagDoctrineRepository implements InstrumentTagRep
 
     public function save(InstrumentTag $instrumentTag): void
     {
-        $entity = $this->entityManager->getRepository(InstrumentTagEntity::class)
-            ->findOneBy(['uuid' => $instrumentTag->getUuid()]);
+        $entity = $this->findOneBy(['uuid' => $instrumentTag->getUuid()]);
 
-        $this->entityManager->persist($this->instrumentTagMapper->toEntity(
+        $this->getEntityManager()->persist($this->instrumentTagMapper->toEntity(
             instrumentTag: $instrumentTag,
             instrumentTagEntity: $entity instanceof InstrumentTagEntity ? $entity : null,
         ));
-        $this->entityManager->flush();
+        $this->getEntityManager()->flush();
     }
 }

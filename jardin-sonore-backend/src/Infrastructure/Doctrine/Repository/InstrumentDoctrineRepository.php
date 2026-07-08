@@ -10,29 +10,34 @@ use App\Domain\Repository\InstrumentRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\InstrumentEntity;
 use App\Infrastructure\Doctrine\Entity\InstrumentTagEntity;
 use App\Infrastructure\Doctrine\Mapper\InstrumentMapper;
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
 use InvalidArgumentException;
 use Symfony\Component\Uid\Uuid;
 
-final readonly class InstrumentDoctrineRepository implements InstrumentRepositoryInterface
+/**
+ * @extends ServiceEntityRepository<InstrumentEntity>
+ */
+final class InstrumentDoctrineRepository extends ServiceEntityRepository implements InstrumentRepositoryInterface
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private InstrumentMapper $instrumentMapper,
+        ManagerRegistry $managerRegistry,
+        private readonly InstrumentMapper $instrumentMapper,
+        private readonly InstrumentTagEntityRepository $instrumentTagEntityRepository,
     ) {
+        parent::__construct($managerRegistry, InstrumentEntity::class);
     }
 
     public function findByUuid(Uuid $uuid): ?Instrument
     {
-        $entity = $this->entityManager->getRepository(InstrumentEntity::class)->findOneBy(['uuid' => $uuid]);
+        $entity = $this->findOneBy(['uuid' => $uuid]);
 
         return $entity instanceof InstrumentEntity ? $this->instrumentMapper->toDomain($entity) : null;
     }
 
     public function save(Instrument $instrument): void
     {
-        $entity = $this->entityManager->getRepository(InstrumentEntity::class)
-            ->findOneBy(['uuid' => $instrument->getUuid()]);
+        $entity = $this->findOneBy(['uuid' => $instrument->getUuid()]);
 
         $instrumentEntity = $this->instrumentMapper->toEntity(
             instrument: $instrument,
@@ -41,8 +46,8 @@ final readonly class InstrumentDoctrineRepository implements InstrumentRepositor
 
         $this->synchronizeTags($instrumentEntity, $instrument->getTags());
 
-        $this->entityManager->persist($instrumentEntity);
-        $this->entityManager->flush();
+        $this->getEntityManager()->persist($instrumentEntity);
+        $this->getEntityManager()->flush();
     }
 
     /**
@@ -71,12 +76,7 @@ final readonly class InstrumentDoctrineRepository implements InstrumentRepositor
             return;
         }
 
-        $targetTagEntities = $this->entityManager->getRepository(InstrumentTagEntity::class)
-            ->createQueryBuilder('instrumentTag')
-            ->andWhere('instrumentTag.uuid IN (:uuids)')
-            ->setParameter('uuids', array_map(static fn (string $uuid): Uuid => Uuid::fromString($uuid), $targetTagUuids))
-            ->getQuery()
-            ->getResult();
+        $targetTagEntities = $this->instrumentTagEntityRepository->findByUuids($targetTagUuids);
 
         $targetTagEntitiesByUuid = [];
 

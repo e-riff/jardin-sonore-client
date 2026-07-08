@@ -6,17 +6,14 @@ namespace App\Application\Command;
 
 use App\Application\Geography\AddressContactSnapshot;
 use App\Application\Geography\AddressMunicipalityCandidate;
+use App\Application\Geography\AddressMunicipalityLinkingWriterInterface;
 use App\Application\Geography\AddressMunicipalityLinkingReaderInterface;
-use App\Infrastructure\Doctrine\Entity\AddressContactEntity;
-use App\Infrastructure\Doctrine\Entity\MunicipalityEntity;
 use DateTimeImmutable;
-use Doctrine\ORM\EntityManagerInterface;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Attribute\Option;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Throwable;
 
 #[AsCommand(
     name: 'app:address:link-municipalities',
@@ -27,8 +24,8 @@ final readonly class LinkAddressMunicipalitiesCommand
     private const int FLUSH_BATCH_SIZE = 100;
 
     public function __construct(
-        private EntityManagerInterface $entityManager,
         private AddressMunicipalityLinkingReaderInterface $addressMunicipalityLinkingReader,
+        private AddressMunicipalityLinkingWriterInterface $addressMunicipalityLinkingWriter,
     ) {
     }
 
@@ -103,21 +100,10 @@ final readonly class LinkAddressMunicipalitiesCommand
                         ++$stats['linked'];
                         ++$stats['departmentFallbackMatched'];
 
-                        if ($apply) {
-                            try {
-                                $addressContact = $this->entityManager->find(AddressContactEntity::class, $addressSnapshot->id);
-                                $municipality = $this->entityManager->find(MunicipalityEntity::class, $resolution['municipalityId']);
-
-                                if ($addressContact instanceof AddressContactEntity && $municipality instanceof MunicipalityEntity) {
-                                    $addressContact->setMunicipality($municipality);
-                                    $this->entityManager->persist($addressContact);
-                                    $pendingChangesSinceLastFlush = true;
-                                } else {
-                                    ++$stats['errors'];
-                                }
-                            } catch (Throwable) {
-                                ++$stats['errors'];
-                            }
+                        if ($apply && $this->addressMunicipalityLinkingWriter->linkAddressContactToMunicipality($addressSnapshot->id, $resolution['municipalityId'])) {
+                            $pendingChangesSinceLastFlush = true;
+                        } elseif ($apply) {
+                            ++$stats['errors'];
                         }
 
                         $this->flushCheckpointIfNeeded($io, $apply, $stats, $lastFlushedProcessed, $pendingChangesSinceLastFlush);
@@ -168,29 +154,18 @@ final readonly class LinkAddressMunicipalitiesCommand
                 ++$stats['bestCityMatched'];
             }
 
-            if ($apply) {
-                try {
-                    $addressContact = $this->entityManager->find(AddressContactEntity::class, $addressSnapshot->id);
-                    $municipality = $this->entityManager->find(MunicipalityEntity::class, $resolution['municipalityId']);
-
-                    if ($addressContact instanceof AddressContactEntity && $municipality instanceof MunicipalityEntity) {
-                        $addressContact->setMunicipality($municipality);
-                        $this->entityManager->persist($addressContact);
-                        $pendingChangesSinceLastFlush = true;
-                    } else {
-                        ++$stats['errors'];
-                    }
-                } catch (Throwable) {
-                    ++$stats['errors'];
-                }
+            if ($apply && $this->addressMunicipalityLinkingWriter->linkAddressContactToMunicipality($addressSnapshot->id, $resolution['municipalityId'])) {
+                $pendingChangesSinceLastFlush = true;
+            } elseif ($apply) {
+                ++$stats['errors'];
             }
 
             $this->flushCheckpointIfNeeded($io, $apply, $stats, $lastFlushedProcessed, $pendingChangesSinceLastFlush);
         }
 
         if ($apply && $pendingChangesSinceLastFlush) {
-            $this->entityManager->flush();
-            $this->entityManager->clear();
+            $this->addressMunicipalityLinkingWriter->flush();
+            $this->addressMunicipalityLinkingWriter->clear();
             $pendingChangesSinceLastFlush = false;
         }
 
@@ -322,8 +297,8 @@ final readonly class LinkAddressMunicipalitiesCommand
         }
 
         if ($apply && $pendingChangesSinceLastFlush) {
-            $this->entityManager->flush();
-            $this->entityManager->clear();
+            $this->addressMunicipalityLinkingWriter->flush();
+            $this->addressMunicipalityLinkingWriter->clear();
             $pendingChangesSinceLastFlush = false;
         }
 

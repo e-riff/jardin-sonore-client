@@ -8,32 +8,37 @@ use App\Domain\Model\AddressBook\PhoneContact;
 use App\Domain\Repository\PhoneContactRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\PhoneContactEntity;
 use App\Infrastructure\Doctrine\Mapper\PhoneContactMapper;
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
 
-final readonly class PhoneContactDoctrineRepository implements PhoneContactRepositoryInterface
+/**
+ * @extends ServiceEntityRepository<PhoneContactEntity>
+ */
+final class PhoneContactDoctrineRepository extends ServiceEntityRepository implements PhoneContactRepositoryInterface
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private PhoneContactMapper $phoneContactMapper,
+        ManagerRegistry $managerRegistry,
+        private readonly PhoneContactMapper $phoneContactMapper,
     ) {
+        parent::__construct($managerRegistry, PhoneContactEntity::class);
     }
 
     public function findByUuid(Uuid $uuid): ?PhoneContact
     {
-        $phoneContactEntity = $this->entityManager->getRepository(PhoneContactEntity::class)->findOneBy(['uuid' => $uuid]);
+        $phoneContactEntity = $this->findOneBy(['uuid' => $uuid]);
 
         return $phoneContactEntity instanceof PhoneContactEntity ? $this->phoneContactMapper->toDomain($phoneContactEntity) : null;
     }
 
     public function save(PhoneContact $phoneContact): void
     {
-        $phoneContactEntity = $this->entityManager->getRepository(PhoneContactEntity::class)->findOneBy(['uuid' => $phoneContact->getUuid()]);
+        $phoneContactEntity = $this->findOneBy(['uuid' => $phoneContact->getUuid()]);
 
-        $this->entityManager->persist($this->phoneContactMapper->toEntity(
+        $this->getEntityManager()->persist($this->phoneContactMapper->toEntity(
             phoneContact: $phoneContact,
             phoneContactEntity: $phoneContactEntity instanceof PhoneContactEntity ? $phoneContactEntity : null,
         ));
-        $this->entityManager->flush();
+        $this->getEntityManager()->flush();
     }
 }

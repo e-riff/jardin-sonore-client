@@ -9,39 +9,44 @@ use App\Domain\Model\ValueObject\DepartmentCode;
 use App\Domain\Repository\DepartmentRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\DepartmentEntity;
 use App\Infrastructure\Doctrine\Mapper\DepartmentMapper;
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
 
-final readonly class DepartmentDoctrineRepository implements DepartmentRepositoryInterface
+/**
+ * @extends ServiceEntityRepository<DepartmentEntity>
+ */
+final class DepartmentDoctrineRepository extends ServiceEntityRepository implements DepartmentRepositoryInterface
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private DepartmentMapper $departmentMapper,
+        ManagerRegistry $managerRegistry,
+        private readonly DepartmentMapper $departmentMapper,
     ) {
+        parent::__construct($managerRegistry, DepartmentEntity::class);
     }
 
     public function findByUuid(Uuid $uuid): ?Department
     {
-        $departmentEntity = $this->entityManager->getRepository(DepartmentEntity::class)->findOneBy(['uuid' => $uuid]);
+        $departmentEntity = $this->findOneBy(['uuid' => $uuid]);
 
         return $departmentEntity instanceof DepartmentEntity ? $this->departmentMapper->toDomain($departmentEntity) : null;
     }
 
     public function findByCode(DepartmentCode $code): ?Department
     {
-        $departmentEntity = $this->entityManager->getRepository(DepartmentEntity::class)->findOneBy(['code' => $code->value()]);
+        $departmentEntity = $this->findOneBy(['code' => $code->value()]);
 
         return $departmentEntity instanceof DepartmentEntity ? $this->departmentMapper->toDomain($departmentEntity) : null;
     }
 
     public function save(Department $department): void
     {
-        $departmentEntity = $this->entityManager->getRepository(DepartmentEntity::class)->findOneBy(['uuid' => $department->getUuid()]);
+        $departmentEntity = $this->findOneBy(['uuid' => $department->getUuid()]);
 
-        $this->entityManager->persist($this->departmentMapper->toEntity(
+        $this->getEntityManager()->persist($this->departmentMapper->toEntity(
             department: $department,
             departmentEntity: $departmentEntity instanceof DepartmentEntity ? $departmentEntity : null,
         ));
-        $this->entityManager->flush();
+        $this->getEntityManager()->flush();
     }
 }
