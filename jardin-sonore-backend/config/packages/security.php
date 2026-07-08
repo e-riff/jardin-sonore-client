@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-use App\Application\Security\AdminUserChecker;
+use App\Infrastructure\Security\AdminUserChecker;
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 

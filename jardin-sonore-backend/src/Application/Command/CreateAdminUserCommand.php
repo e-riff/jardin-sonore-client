@@ -7,13 +7,12 @@ namespace App\Application\Command;
 use App\Domain\Model\Administration\AdminUser;
 use App\Domain\Model\ValueObject\EmailAddress;
 use App\Domain\Repository\AdminUserRepositoryInterface;
-use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
+use App\Application\Security\AdminPasswordHasherInterface;
 use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Attribute\Option;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 #[AsCommand(
     name: 'app:user:create-admin',
@@ -23,7 +22,7 @@ final readonly class CreateAdminUserCommand
 {
     public function __construct(
         private AdminUserRepositoryInterface $adminUserRepository,
-        private UserPasswordHasherInterface $passwordHasher,
+        private AdminPasswordHasherInterface $adminPasswordHasher,
     ) {
     }
 
@@ -51,7 +50,7 @@ final readonly class CreateAdminUserCommand
         }
 
         $emailAddress = new EmailAddress($email);
-        $passwordHash = $this->hashPassword($email, $password);
+        $passwordHash = $this->adminPasswordHasher->hashPassword($email, $password);
         $adminUser = $this->adminUserRepository->findByEmailAddress($emailAddress);
         $created = false;
 
@@ -69,12 +68,5 @@ final readonly class CreateAdminUserCommand
         $io->success($created ? 'Admin user created.' : 'Admin user updated.');
 
         return Command::SUCCESS;
-    }
-
-    private function hashPassword(string $email, string $password): string
-    {
-        $adminUserEntity = (new AdminUserEntity())->setEmail($email);
-
-        return $this->passwordHasher->hashPassword($adminUserEntity, $password);
     }
 }
