@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Form\ChoiceLoader;
 
-use App\Application\Mailing\NewsletterAudienceOptionsProviderInterface;
+use App\Application\Mailing\NewsletterAudienceOptionsQueryInterface;
 use Symfony\Component\Form\ChoiceList\ArrayChoiceList;
 use Symfony\Component\Form\ChoiceList\ChoiceListInterface;
 use Symfony\Component\Form\ChoiceList\Loader\ChoiceLoaderInterface;
@@ -12,7 +12,7 @@ use Symfony\Component\Form\ChoiceList\Loader\ChoiceLoaderInterface;
 final readonly class MunicipalityInseeCodeChoiceLoader implements ChoiceLoaderInterface
 {
     public function __construct(
-        private NewsletterAudienceOptionsProviderInterface $newsletterAudienceOptionsProvider,
+        private NewsletterAudienceOptionsQueryInterface $newsletterAudienceOptionsQuery,
     ) {
     }
 
@@ -28,7 +28,7 @@ final readonly class MunicipalityInseeCodeChoiceLoader implements ChoiceLoaderIn
      */
     public function loadChoicesForValues(array $values, ?callable $value = null): array
     {
-        return $this->newsletterAudienceOptionsProvider->getExistingMunicipalityInseeCodes($values);
+        return $this->newsletterAudienceOptionsQuery->getExistingMunicipalityInseeCodes($values);
     }
 
     /**
@@ -38,6 +38,6 @@ final readonly class MunicipalityInseeCodeChoiceLoader implements ChoiceLoaderIn
      */
     public function loadValuesForChoices(array $choices, ?callable $value = null): array
     {
-        return $this->newsletterAudienceOptionsProvider->getExistingMunicipalityInseeCodes($choices);
+        return $this->newsletterAudienceOptionsQuery->getExistingMunicipalityInseeCodes($choices);
     }
 }

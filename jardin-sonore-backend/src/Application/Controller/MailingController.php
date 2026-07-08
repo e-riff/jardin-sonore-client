@@ -15,7 +15,7 @@ use App\Application\Mailing\CreateMailingCampaignInput;
 use App\Application\Mailing\DeleteMailingCampaign;
 use App\Application\Mailing\GetMailingCampaign;
 use App\Application\Mailing\ListMailingCampaigns;
-use App\Application\Mailing\NewsletterAudienceOptionsProviderInterface;
+use App\Application\Mailing\NewsletterAudienceOptionsQueryInterface;
 use App\Application\Mailing\NewsletterAudienceResolverInterface;
 use App\Application\Mailing\NewsletterRendererInterface;
 use App\Application\Mailing\SendMailingCampaign;
@@ -48,11 +48,11 @@ final class MailingController extends AbstractController
     #[Route('/audience/municipalities/autocomplete', name: 'audience_municipalities_autocomplete', methods: ['GET'])]
     public function autocompleteMunicipalities(
         Request $request,
-        NewsletterAudienceOptionsProviderInterface $newsletterAudienceOptionsProvider,
+        NewsletterAudienceOptionsQueryInterface $newsletterAudienceOptionsQuery,
     ): JsonResponse {
         $page = max(1, $request->query->getInt('page', 1));
         $limit = 50;
-        $autocompleteChoices = $newsletterAudienceOptionsProvider->searchMunicipalityAutocompleteChoices(
+        $autocompleteChoices = $newsletterAudienceOptionsQuery->searchMunicipalityAutocompleteChoices(
             query: $request->query->getString('query'),
             page: $page,
             limit: $limit,
