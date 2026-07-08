@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Application\Command;
 
-use App\Infrastructure\Doctrine\Entity\MunicipalityEntity;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Application\Geography\MunicipalityGeoGouvSyncReaderInterface;
+use App\Application\Geography\MunicipalityGeoGouvSyncWriterInterface;
+use App\Application\Geography\MunicipalitySyncSnapshot;
 use JsonException;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\Argument;
@@ -15,8 +16,6 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Traversable;
-
 #[AsCommand(
     name: 'app:municipality:sync-geo-gouv',
     description: 'Synchronize municipalities from geo.api.gouv.fr using the INSEE code.',
@@ -29,7 +28,8 @@ final class SyncMunicipalitiesFromGeoGouvCommand extends Command
     private const int READ_BATCH_SIZE = 100;
 
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly MunicipalityGeoGouvSyncReaderInterface $municipalityGeoGouvSyncReader,
+        private readonly MunicipalityGeoGouvSyncWriterInterface $municipalityGeoGouvSyncWriter,
     ) {
         parent::__construct();
     }
@@ -74,14 +74,14 @@ final class SyncMunicipalitiesFromGeoGouvCommand extends Command
 
         $hasAnyMunicipality = false;
 
-        foreach ($this->iterateMunicipalitySnapshots($inseeCode, $offset, $limit) as $municipalitySnapshot) {
+        foreach ($this->municipalityGeoGouvSyncReader->iterateMunicipalitySnapshots($inseeCode, $offset, $limit) as $municipalitySnapshot) {
             $hasAnyMunicipality = true;
             ++$stats['processed'];
 
-            $municipalityInseeCode = $municipalitySnapshot['inseeCode'];
+            $municipalityInseeCode = $municipalitySnapshot->inseeCode;
             if (null === $municipalityInseeCode || '' === trim($municipalityInseeCode)) {
                 ++$stats['missingInsee'];
-                $io->warning(sprintf('Municipality #%d skipped: missing INSEE code.', $municipalitySnapshot['id']));
+                $io->warning(sprintf('Municipality #%d skipped: missing INSEE code.', $municipalitySnapshot->id));
                 $this->flushCheckpointIfNeeded($io, $apply, $offset, $stats, $lastFlushedProcessed, $pendingChangesSinceLastFlush);
 
                 continue;
@@ -121,11 +121,7 @@ final class SyncMunicipalitiesFromGeoGouvCommand extends Command
             $stats['centerChanged'] += (int) isset($changes['center']);
 
             if ($apply) {
-                $municipality = $this->entityManager->find(MunicipalityEntity::class, $municipalitySnapshot['id']);
-
-                if ($municipality instanceof MunicipalityEntity) {
-                    $this->applyChangesToMunicipalityEntity($municipality, $changes);
-                    $this->entityManager->persist($municipality);
+                if ($this->municipalityGeoGouvSyncWriter->applyChanges($municipalitySnapshot->id, $changes)) {
                     $pendingChangesSinceLastFlush = true;
                 }
             }
@@ -141,8 +137,8 @@ final class SyncMunicipalitiesFromGeoGouvCommand extends Command
 
         if ($apply) {
             if ($pendingChangesSinceLastFlush) {
-                $this->entityManager->flush();
-                $this->entityManager->clear();
+                $this->municipalityGeoGouvSyncWriter->flush();
+                $this->municipalityGeoGouvSyncWriter->clear();
                 $pendingChangesSinceLastFlush = false;
             }
 
@@ -213,8 +209,8 @@ final class SyncMunicipalitiesFromGeoGouvCommand extends Command
         }
 
         if ($apply && $pendingChangesSinceLastFlush) {
-            $this->entityManager->flush();
-            $this->entityManager->clear();
+            $this->municipalityGeoGouvSyncWriter->flush();
+            $this->municipalityGeoGouvSyncWriter->clear();
             $pendingChangesSinceLastFlush = false;
         }
 
@@ -227,101 +223,6 @@ final class SyncMunicipalitiesFromGeoGouvCommand extends Command
             $stats['updated'],
             $offset + $lastFlushedProcessed,
         ));
-    }
-
-    /**
-     * @return Traversable<int, array{
-     *     id:int,
-     *     name:string,
-     *     postalCode:?string,
-     *     inseeCode:?string,
-     *     siren:?string,
-     *     centerLatitude:?float,
-     *     centerLongitude:?float
-     * }>
-     */
-    private function iterateMunicipalitySnapshots(string $inseeCode, int $offset, ?int $limit): Traversable
-    {
-        $connection = $this->entityManager->getConnection();
-
-        if ('' !== $inseeCode) {
-            $municipalityRow = $connection->createQueryBuilder()
-                ->select(
-                    'municipality.id',
-                    'municipality.name',
-                    'municipality.postal_code',
-                    'municipality.insee_code',
-                    'municipality.siren',
-                    'municipality.center_latitude',
-                    'municipality.center_longitude',
-                )
-                ->from('municipality', 'municipality')
-                ->andWhere('municipality.insee_code = :inseeCode')
-                ->setParameter('inseeCode', $inseeCode)
-                ->executeQuery()
-                ->fetchAssociative();
-
-            if (is_array($municipalityRow)) {
-                yield $this->normalizeMunicipalitySnapshotRow($municipalityRow);
-            }
-
-            return;
-        }
-
-        $remaining = $limit;
-        $skipped = 0;
-        $lastId = 0;
-
-        while (true) {
-            $batchSize = null !== $remaining
-                ? min(self::READ_BATCH_SIZE, $remaining + max(0, $offset - $skipped))
-                : self::READ_BATCH_SIZE;
-
-            $rows = $connection->createQueryBuilder()
-                ->select(
-                    'municipality.id',
-                    'municipality.name',
-                    'municipality.postal_code',
-                    'municipality.insee_code',
-                    'municipality.siren',
-                    'municipality.center_latitude',
-                    'municipality.center_longitude',
-                )
-                ->from('municipality', 'municipality')
-                ->andWhere('municipality.id > :lastId')
-                ->setParameter('lastId', $lastId)
-                ->orderBy('municipality.id', 'ASC')
-                ->setMaxResults($batchSize)
-                ->executeQuery()
-                ->fetchAllAssociative();
-
-            if ([] === $rows) {
-                return;
-            }
-
-            foreach ($rows as $municipalityRow) {
-                $lastId = (int) $municipalityRow['id'];
-
-                if ($skipped < $offset) {
-                    ++$skipped;
-                    continue;
-                }
-
-                if (null !== $remaining && 0 >= $remaining) {
-                    return;
-                }
-
-                if (null !== $remaining) {
-                    --$remaining;
-                }
-
-                yield $this->normalizeMunicipalitySnapshotRow($municipalityRow);
-            }
-
-            if (null !== $remaining && 0 >= $remaining) {
-                return;
-            }
-        }
     }
 
     /**
@@ -364,21 +265,12 @@ final class SyncMunicipalitiesFromGeoGouvCommand extends Command
     }
 
     /**
-     * @param array{
-     *     id:int,
-     *     name:string,
-     *     postalCode:?string,
-     *     inseeCode:?string,
-     *     siren:?string,
-     *     centerLatitude:?float,
-     *     centerLongitude:?float
-     * } $municipalitySnapshot
      * @param array<string, mixed> $payload
      *
      * @return array<string, mixed>
      */
     private function computeMunicipalityChanges(
-        array $municipalitySnapshot,
+        MunicipalitySyncSnapshot $municipalitySnapshot,
         array $payload,
         bool $withCenter,
         bool $withName,
@@ -387,32 +279,32 @@ final class SyncMunicipalitiesFromGeoGouvCommand extends Command
 
         if ($withName) {
             $apiName = $this->nullableString($payload['nom'] ?? null);
-            if (null !== $apiName && $apiName !== $municipalitySnapshot['name']) {
-                $changes['name'] = sprintf('name: "%s" -> "%s"', $municipalitySnapshot['name'], $apiName);
+            if (null !== $apiName && $apiName !== $municipalitySnapshot->name) {
+                $changes['name'] = sprintf('name: "%s" -> "%s"', $municipalitySnapshot->name, $apiName);
                 $changes['nameValue'] = $apiName;
             }
         }
 
-        $apiPostalCode = $this->resolvePostalCode($municipalitySnapshot['postalCode'], $payload['codesPostaux'] ?? null);
-        if ($apiPostalCode !== $municipalitySnapshot['postalCode']) {
-            $changes['postalCode'] = sprintf('postalCode: %s -> %s', $municipalitySnapshot['postalCode'] ?? 'null', $apiPostalCode ?? 'null');
+        $apiPostalCode = $this->resolvePostalCode($municipalitySnapshot->postalCode, $payload['codesPostaux'] ?? null);
+        if ($apiPostalCode !== $municipalitySnapshot->postalCode) {
+            $changes['postalCode'] = sprintf('postalCode: %s -> %s', $municipalitySnapshot->postalCode ?? 'null', $apiPostalCode ?? 'null');
             $changes['postalCodeValue'] = $apiPostalCode;
         }
 
         $apiSiren = $this->nullableString($payload['siren'] ?? null);
-        if ($apiSiren !== $municipalitySnapshot['siren']) {
-            $changes['siren'] = sprintf('siren: %s -> %s', $municipalitySnapshot['siren'] ?? 'null', $apiSiren ?? 'null');
+        if ($apiSiren !== $municipalitySnapshot->siren) {
+            $changes['siren'] = sprintf('siren: %s -> %s', $municipalitySnapshot->siren ?? 'null', $apiSiren ?? 'null');
             $changes['sirenValue'] = $apiSiren;
         }
 
         if ($withCenter) {
             [$centerLatitude, $centerLongitude] = $this->extractCenterCoordinates($payload['centre'] ?? null);
 
-            if ($centerLatitude !== $municipalitySnapshot['centerLatitude'] || $centerLongitude !== $municipalitySnapshot['centerLongitude']) {
+            if ($centerLatitude !== $municipalitySnapshot->centerLatitude || $centerLongitude !== $municipalitySnapshot->centerLongitude) {
                 $changes['center'] = sprintf(
                     'center: (%s, %s) -> (%s, %s)',
-                    $municipalitySnapshot['centerLatitude'] ?? 'null',
-                    $municipalitySnapshot['centerLongitude'] ?? 'null',
+                    $municipalitySnapshot->centerLatitude ?? 'null',
+                    $municipalitySnapshot->centerLongitude ?? 'null',
                     $centerLatitude ?? 'null',
                     $centerLongitude ?? 'null',
                 );
@@ -422,56 +314,6 @@ final class SyncMunicipalitiesFromGeoGouvCommand extends Command
         }
 
         return $changes;
-    }
-
-    /**
-     * @param array<string, mixed> $municipalityRow
-     *
-     * @return array{
-     *     id:int,
-     *     name:string,
-     *     postalCode:?string,
-     *     inseeCode:?string,
-     *     siren:?string,
-     *     centerLatitude:?float,
-     *     centerLongitude:?float
-     * }
-     */
-    private function normalizeMunicipalitySnapshotRow(array $municipalityRow): array
-    {
-        return [
-            'id' => (int) $municipalityRow['id'],
-            'name' => (string) $municipalityRow['name'],
-            'postalCode' => is_string($municipalityRow['postal_code']) ? $municipalityRow['postal_code'] : null,
-            'inseeCode' => is_string($municipalityRow['insee_code']) ? $municipalityRow['insee_code'] : null,
-            'siren' => is_string($municipalityRow['siren']) ? $municipalityRow['siren'] : null,
-            'centerLatitude' => is_numeric($municipalityRow['center_latitude']) ? (float) $municipalityRow['center_latitude'] : null,
-            'centerLongitude' => is_numeric($municipalityRow['center_longitude']) ? (float) $municipalityRow['center_longitude'] : null,
-        ];
-    }
-
-    /**
-     * @param array<string, mixed> $changes
-     */
-    private function applyChangesToMunicipalityEntity(MunicipalityEntity $municipality, array $changes): void
-    {
-        if (array_key_exists('nameValue', $changes)) {
-            $municipality->setName($changes['nameValue']);
-        }
-
-        if (array_key_exists('postalCodeValue', $changes)) {
-            $municipality->setPostalCode($changes['postalCodeValue']);
-        }
-
-        if (array_key_exists('sirenValue', $changes)) {
-            $municipality->setSiren($changes['sirenValue']);
-        }
-
-        if (array_key_exists('centerLatitudeValue', $changes) || array_key_exists('centerLongitudeValue', $changes)) {
-            $municipality
-                ->setCenterLatitude($changes['centerLatitudeValue'] ?? null)
-                ->setCenterLongitude($changes['centerLongitudeValue'] ?? null);
-        }
     }
 
     private function resolvePostalCode(?string $currentPostalCode, mixed $codesPostaux): ?string
