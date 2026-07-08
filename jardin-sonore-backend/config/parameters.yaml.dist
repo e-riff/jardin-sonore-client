@@ -1,0 +1,8 @@
+parameters:
+  app.mailing.home_latitude_default: ''
+  app.mailing.home_longitude_default: ''
+  app.mailing.window_limit_default: 45
+  app.mailing.window_minutes_default: 60
+  app.mailing.dispatch_batch_size_default: 15
+  app.mailing.from_email_default: 'contact@jardinsonore.fr'
+  app.mailing.from_name_default: 'Jardin Sonore'

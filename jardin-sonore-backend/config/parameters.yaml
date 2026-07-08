@@ -1,0 +1,8 @@
+parameters:
+  app.mailing.home_latitude: '%env(default:app.mailing.home_latitude_default:MAILING_HOME_LATITUDE)%'
+  app.mailing.home_longitude: '%env(default:app.mailing.home_longitude_default:MAILING_HOME_LONGITUDE)%'
+  app.mailing.window_limit: '%env(int:default:app.mailing.window_limit_default:MAILING_WINDOW_LIMIT)%'
+  app.mailing.window_minutes: '%env(int:default:app.mailing.window_minutes_default:MAILING_WINDOW_MINUTES)%'
+  app.mailing.dispatch_batch_size: '%env(int:default:app.mailing.dispatch_batch_size_default:MAILING_DISPATCH_BATCH_SIZE)%'
+  app.mailing.from_email: '%env(default:app.mailing.from_email_default:DEFAULT_CONTACT)%'
+  app.mailing.from_name: '%env(default:app.mailing.from_name_default:MAILING_FROM_NAME)%'
