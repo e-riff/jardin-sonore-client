@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Application\Command;
 
-use Doctrine\ORM\EntityManagerInterface;
+use App\Application\Geography\MunicipalityCenterComputationReaderInterface;
+use App\Application\Geography\MunicipalityCenterComputationWriterInterface;
 use JsonException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Attribute\Option;
@@ -18,8 +19,10 @@ use Throwable;
 )]
 final readonly class ComputeMunicipalityCentersCommand
 {
-    public function __construct(private EntityManagerInterface $entityManager)
-    {
+    public function __construct(
+        private MunicipalityCenterComputationReaderInterface $municipalityCenterComputationReader,
+        private MunicipalityCenterComputationWriterInterface $municipalityCenterComputationWriter,
+    ) {
     }
 
     public function __invoke(
@@ -35,49 +38,33 @@ final readonly class ComputeMunicipalityCentersCommand
             return Command::FAILURE;
         }
 
-        $connection = $this->entityManager->getConnection();
         $updated = 0;
         $ignored = 0;
         $errors = 0;
-        $lastProcessedId = 0;
 
-        do {
-            $sql = 'SELECT id, geo_shape FROM municipality WHERE id > :lastProcessedId AND geo_shape IS NOT NULL';
+        foreach ($this->municipalityCenterComputationReader->iterateMunicipalityCenterSnapshots($force, $batchSize) as $municipalitySnapshot) {
+            $center = $this->computeCenterFromJson($municipalitySnapshot->geoShape);
 
-            if (false === $force) {
-                $sql .= ' AND center_latitude IS NULL AND center_longitude IS NULL';
+            if (null === $center) {
+                ++$ignored;
+
+                continue;
             }
 
-            $sql .= sprintf(' ORDER BY id ASC LIMIT %d', $batchSize);
-
-            /** @var list<array{id: int|string, geo_shape: string|null}> $municipalityRows */
-            $municipalityRows = $connection->executeQuery($sql, [
-                'lastProcessedId' => $lastProcessedId,
-            ])->fetchAllAssociative();
-
-            foreach ($municipalityRows as $municipalityRow) {
-                $lastProcessedId = (int) $municipalityRow['id'];
-                $center = $this->computeCenterFromJson($municipalityRow['geo_shape']);
-
-                if (null === $center) {
-                    ++$ignored;
+            try {
+                if ($this->municipalityCenterComputationWriter->updateCenterCoordinates(
+                    $municipalitySnapshot->id,
+                    $center['latitude'],
+                    $center['longitude'],
+                )) {
+                    ++$updated;
                 } else {
-                    try {
-                        $connection->executeStatement(
-                            'UPDATE municipality SET center_latitude = :centerLatitude, center_longitude = :centerLongitude WHERE id = :id',
-                            [
-                                'centerLatitude' => $center['latitude'],
-                                'centerLongitude' => $center['longitude'],
-                                'id' => $lastProcessedId,
-                            ],
-                        );
-                        ++$updated;
-                    } catch (Throwable) {
-                        ++$errors;
-                    }
+                    ++$errors;
                 }
+            } catch (Throwable) {
+                ++$errors;
             }
-        } while ([] !== $municipalityRows);
+        }
 
         $io->success(sprintf(
             'Municipality centers computed. Updated: %d. Ignored: %d. Flush errors: %d.',
