@@ -31,6 +31,13 @@ final class MailingCampaignDoctrineRepository extends ServiceEntityRepository im
         return $mailingCampaignEntity instanceof MailingCampaignEntity ? $this->mailingCampaignMapper->toDomain($mailingCampaignEntity) : null;
     }
 
+    public function findEntityByUuid(Uuid $uuid): ?MailingCampaignEntity
+    {
+        $mailingCampaignEntity = $this->findOneBy(['uuid' => $uuid]);
+
+        return $mailingCampaignEntity instanceof MailingCampaignEntity ? $mailingCampaignEntity : null;
+    }
+
     public function findAllOrderedByCreatedAtDesc(): array
     {
         $mailingCampaignEntities = $this->findBy([], [
@@ -55,6 +62,18 @@ final class MailingCampaignDoctrineRepository extends ServiceEntityRepository im
             mailingCampaign: $mailingCampaign,
             mailingCampaignEntity: $mailingCampaignEntity instanceof MailingCampaignEntity ? $mailingCampaignEntity : null,
         ));
+        $this->getEntityManager()->flush();
+    }
+
+    public function delete(MailingCampaign $mailingCampaign): void
+    {
+        $mailingCampaignEntity = $this->findOneBy(['uuid' => $mailingCampaign->getUuid()]);
+
+        if (!$mailingCampaignEntity instanceof MailingCampaignEntity) {
+            return;
+        }
+
+        $this->getEntityManager()->remove($mailingCampaignEntity);
         $this->getEntityManager()->flush();
     }
 }

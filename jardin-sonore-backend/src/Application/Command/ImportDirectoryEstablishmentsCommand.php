@@ -180,7 +180,7 @@ final class ImportDirectoryEstablishmentsCommand extends Command
         $topCandidate = $candidates[0];
 
         if ($topCandidate->score > $this->matcher->getAutoMatchScoreThreshold()) {
-            return $topCandidate->organization;
+            return $this->entityManager->find(OrganizationEntity::class, $topCandidate->organizationId);
         }
 
         ++$stats['ambiguous'];
@@ -190,7 +190,7 @@ final class ImportDirectoryEstablishmentsCommand extends Command
             $io->note(sprintf(
                 'Ambiguous match ignored for "%s" (best candidate: %s, score: %d%%). Run interactively to resolve it.',
                 $item->name ?? $item->externalId,
-                $topCandidate->organization->getName(),
+                $topCandidate->organizationName,
                 $topCandidate->score,
             ));
 
@@ -225,17 +225,16 @@ final class ImportDirectoryEstablishmentsCommand extends Command
         );
 
         foreach ($candidates as $candidate) {
-            $organization = $candidate->organization;
-            $choiceKey = (string) $organization->getId();
+            $choiceKey = (string) $candidate->organizationId;
             $choices[$choiceKey] = sprintf(
                 'Lier à #%d %s (%d%%)',
-                $organization->getId(),
-                $organization->getName(),
+                $candidate->organizationId,
+                $candidate->organizationName,
                 $candidate->score,
             );
             $rows[] = [
-                $organization->getId(),
-                $organization->getName(),
+                $candidate->organizationId,
+                $candidate->organizationName,
                 $candidate->email,
                 $candidate->phone,
                 $candidate->commune,
@@ -247,10 +246,8 @@ final class ImportDirectoryEstablishmentsCommand extends Command
         $io->table(['ID', 'Organisation', 'Email', 'Téléphone', 'Commune', 'Score'], $rows);
 
         foreach ($candidates as $candidate) {
-            $organization = $candidate->organization;
-
             $io->definitionList(
-                [sprintf('Candidat #%d', $organization->getId()) => $organization->getName()],
+                [sprintf('Candidat #%d', $candidate->organizationId) => $candidate->organizationName],
                 ['Email base' => '' !== $candidate->email ? $candidate->email : '—'],
                 ['Téléphone base' => '' !== $candidate->phone ? $candidate->phone : '—'],
                 ['Commune base' => '' !== $candidate->commune ? $candidate->commune : '—'],
@@ -271,8 +268,10 @@ final class ImportDirectoryEstablishmentsCommand extends Command
         }
 
         foreach ($candidates as $candidate) {
-            if ((string) $candidate->organization->getId() === $selectedKey) {
-                return $candidate->organization;
+            if ((string) $candidate->organizationId === $selectedKey) {
+                $organization = $this->entityManager->find(OrganizationEntity::class, $candidate->organizationId);
+
+                return $organization instanceof OrganizationEntity ? $organization : null;
             }
         }
 

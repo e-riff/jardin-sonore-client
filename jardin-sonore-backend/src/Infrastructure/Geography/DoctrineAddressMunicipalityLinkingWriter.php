@@ -7,8 +7,6 @@ namespace App\Infrastructure\Geography;
 use App\Application\Geography\AddressMunicipalityLinkingWriterInterface;
 use App\Infrastructure\Doctrine\Entity\AddressContactEntity;
 use App\Infrastructure\Doctrine\Entity\MunicipalityEntity;
-use App\Infrastructure\Doctrine\Repository\AddressContactEntityRepository;
-use App\Infrastructure\Doctrine\Repository\MunicipalityEntityRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Throwable;
 
@@ -16,16 +14,14 @@ final readonly class DoctrineAddressMunicipalityLinkingWriter implements Address
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private AddressContactEntityRepository $addressContactEntityRepository,
-        private MunicipalityEntityRepository $municipalityEntityRepository,
     ) {
     }
 
     public function linkAddressContactToMunicipality(int $addressContactId, int $municipalityId): bool
     {
         try {
-            $addressContact = $this->addressContactEntityRepository->find($addressContactId);
-            $municipality = $this->municipalityEntityRepository->find($municipalityId);
+            $addressContact = $this->entityManager->find(AddressContactEntity::class, $addressContactId);
+            $municipality = $this->entityManager->find(MunicipalityEntity::class, $municipalityId);
 
             if (!$addressContact instanceof AddressContactEntity || !$municipality instanceof MunicipalityEntity) {
                 return false;

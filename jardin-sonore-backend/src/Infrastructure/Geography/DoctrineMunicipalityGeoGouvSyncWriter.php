@@ -6,20 +6,18 @@ namespace App\Infrastructure\Geography;
 
 use App\Application\Geography\MunicipalityGeoGouvSyncWriterInterface;
 use App\Infrastructure\Doctrine\Entity\MunicipalityEntity;
-use App\Infrastructure\Doctrine\Repository\MunicipalityEntityRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class DoctrineMunicipalityGeoGouvSyncWriter implements MunicipalityGeoGouvSyncWriterInterface
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private MunicipalityEntityRepository $municipalityEntityRepository,
     ) {
     }
 
     public function applyChanges(int $municipalityId, array $changes): bool
     {
-        $municipality = $this->municipalityEntityRepository->find($municipalityId);
+        $municipality = $this->entityManager->find(MunicipalityEntity::class, $municipalityId);
 
         if (!$municipality instanceof MunicipalityEntity) {
             return false;

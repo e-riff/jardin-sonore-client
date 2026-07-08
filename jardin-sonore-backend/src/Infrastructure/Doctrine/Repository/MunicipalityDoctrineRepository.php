@@ -39,6 +39,19 @@ final class MunicipalityDoctrineRepository extends ServiceEntityRepository imple
         return $municipalityEntity instanceof MunicipalityEntity ? $this->municipalityMapper->toDomain($municipalityEntity) : null;
     }
 
+    public function findEntityByNameAndPostalCode(string $name, ?string $postalCode): ?MunicipalityEntity
+    {
+        $criteria = ['name' => $name];
+
+        if (null !== $postalCode) {
+            $criteria['postalCode'] = $postalCode;
+        }
+
+        $municipalityEntity = $this->findOneBy($criteria);
+
+        return $municipalityEntity instanceof MunicipalityEntity ? $municipalityEntity : null;
+    }
+
     public function save(Municipality $municipality): void
     {
         $municipalityEntity = $this->findOneBy(['uuid' => $municipality->getUuid()]);

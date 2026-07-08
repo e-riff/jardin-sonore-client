@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Application\Command;
 
+use App\Domain\Model\Administration\AdminUser;
+use App\Domain\Model\ValueObject\EmailAddress;
+use App\Domain\Repository\AdminUserRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
-use App\Infrastructure\Doctrine\Repository\AdminUserEntityRepository;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Attribute\Option;
@@ -21,8 +22,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 final readonly class CreateAdminUserCommand
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private AdminUserEntityRepository $adminUserEntityRepository,
+        private AdminUserRepositoryInterface $adminUserRepository,
         private UserPasswordHasherInterface $passwordHasher,
     ) {
     }
@@ -50,24 +50,31 @@ final readonly class CreateAdminUserCommand
             return Command::FAILURE;
         }
 
-        $adminUserEntity = $this->adminUserEntityRepository->findOneByEmailAddress($email);
+        $emailAddress = new EmailAddress($email);
+        $passwordHash = $this->hashPassword($email, $password);
+        $adminUser = $this->adminUserRepository->findByEmailAddress($emailAddress);
         $created = false;
 
-        if (!$adminUserEntity instanceof AdminUserEntity) {
-            $adminUserEntity = new AdminUserEntity();
-            $adminUserEntity->setEmail($email);
+        if (!$adminUser instanceof AdminUser) {
+            $adminUser = new AdminUser($emailAddress, $passwordHash);
             $created = true;
+        } else {
+            $adminUser->changeEmailAddress($emailAddress);
+            $adminUser->changePasswordHash($passwordHash);
+            $adminUser->activate();
         }
 
-        $adminUserEntity
-            ->setActive(true)
-            ->setPassword($this->passwordHasher->hashPassword($adminUserEntity, $password));
-
-        $this->entityManager->persist($adminUserEntity);
-        $this->entityManager->flush();
+        $this->adminUserRepository->save($adminUser);
 
         $io->success($created ? 'Admin user created.' : 'Admin user updated.');
 
         return Command::SUCCESS;
+    }
+
+    private function hashPassword(string $email, string $password): string
+    {
+        $adminUserEntity = (new AdminUserEntity())->setEmail($email);
+
+        return $this->passwordHasher->hashPassword($adminUserEntity, $password);
     }
 }

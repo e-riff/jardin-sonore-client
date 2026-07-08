@@ -50,6 +50,15 @@ final class EmailContactDoctrineRepository extends ServiceEntityRepository imple
         return $emailContactEntity instanceof EmailContactEntity ? $this->emailContactMapper->toDomain($emailContactEntity) : null;
     }
 
+    public function findEntityByEmailAddress(string $emailAddress): ?EmailContactEntity
+    {
+        $emailContactEntity = $this->findOneBy([
+            'emailAddress' => mb_strtolower(trim($emailAddress)),
+        ]);
+
+        return $emailContactEntity instanceof EmailContactEntity ? $emailContactEntity : null;
+    }
+
     public function save(EmailContact $emailContact): void
     {
         $emailContactEntity = $this->findOneBy(['uuid' => $emailContact->getUuid()]);
