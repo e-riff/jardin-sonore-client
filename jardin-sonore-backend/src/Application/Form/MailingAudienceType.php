@@ -6,7 +6,7 @@ namespace App\Application\Form;
 
 use App\Application\Form\ChoiceLoader\MunicipalityInseeCodeChoiceLoader;
 use App\Application\Form\Model\MailingAudienceFormModel;
-use App\Application\Mailing\NewsletterAudienceOptionsProviderInterface;
+use App\Application\Mailing\NewsletterAudienceOptionsQueryInterface;
 use App\Domain\Model\AddressBook\CustomerStatus;
 use App\Domain\Model\AddressBook\OrganizationSector;
 use App\Domain\Model\AddressBook\OrganizationType;
@@ -28,7 +28,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 final class MailingAudienceType extends AbstractType
 {
     public function __construct(
-        private readonly NewsletterAudienceOptionsProviderInterface $newsletterAudienceOptionsProvider,
+        private readonly NewsletterAudienceOptionsQueryInterface $newsletterAudienceOptionsQuery,
         private readonly MunicipalityInseeCodeChoiceLoader $municipalityInseeCodeChoiceLoader,
         private readonly UrlGeneratorInterface $urlGenerator,
     ) {
@@ -95,21 +95,21 @@ final class MailingAudienceType extends AbstractType
                 ...$multipleOptions,
                 'label' => 'mailing.audience.form.tags',
                 'disabled' => $locked,
-                'choices' => $this->newsletterAudienceOptionsProvider->getTagChoices(),
+                'choices' => $this->newsletterAudienceOptionsQuery->getTagChoices(),
             ])
             ->add('regionCodes', ChoiceType::class, [
                 ...$multipleOptions,
                 'label' => 'mailing.audience.form.regions',
                 'help' => 'mailing.audience.form.regions_help',
                 'disabled' => $locked,
-                'choices' => $this->newsletterAudienceOptionsProvider->getRegionChoices(),
+                'choices' => $this->newsletterAudienceOptionsQuery->getRegionChoices(),
             ])
             ->add('departmentCodes', ChoiceType::class, [
                 ...$multipleOptions,
                 'label' => 'mailing.audience.form.departments',
                 'help' => 'mailing.audience.form.departments_help',
                 'disabled' => $locked,
-                'choices' => $this->newsletterAudienceOptionsProvider->getDepartmentChoices(),
+                'choices' => $this->newsletterAudienceOptionsQuery->getDepartmentChoices(),
             ])
             ->add('municipalityInseeCodes', ChoiceType::class, [
                 ...$municipalityAutocompleteOptions,
@@ -226,7 +226,7 @@ final class MailingAudienceType extends AbstractType
 
     private function municipalityChoiceLabel(string $inseeCode): string
     {
-        return $this->newsletterAudienceOptionsProvider->getMunicipalityLabelsByInseeCodes([$inseeCode])[$inseeCode] ?? $inseeCode;
+        return $this->newsletterAudienceOptionsQuery->getMunicipalityLabelsByInseeCodes([$inseeCode])[$inseeCode] ?? $inseeCode;
     }
 
     /**
@@ -234,16 +234,16 @@ final class MailingAudienceType extends AbstractType
      */
     private function createMunicipalityChoiceLoader(array $selectedInseeCodes): ChoiceLoaderInterface
     {
-        $newsletterAudienceOptionsProvider = $this->newsletterAudienceOptionsProvider;
+        $newsletterAudienceOptionsQuery = $this->newsletterAudienceOptionsQuery;
         $municipalityInseeCodeChoiceLoader = $this->municipalityInseeCodeChoiceLoader;
 
-        return new class($selectedInseeCodes, $newsletterAudienceOptionsProvider, $municipalityInseeCodeChoiceLoader) implements ChoiceLoaderInterface {
+        return new class($selectedInseeCodes, $newsletterAudienceOptionsQuery, $municipalityInseeCodeChoiceLoader) implements ChoiceLoaderInterface {
             /**
              * @param list<string> $selectedInseeCodes
              */
             public function __construct(
                 private readonly array $selectedInseeCodes,
-                private readonly NewsletterAudienceOptionsProviderInterface $newsletterAudienceOptionsProvider,
+                private readonly NewsletterAudienceOptionsQueryInterface $newsletterAudienceOptionsQuery,
                 private readonly MunicipalityInseeCodeChoiceLoader $municipalityInseeCodeChoiceLoader,
             ) {
             }
@@ -251,7 +251,7 @@ final class MailingAudienceType extends AbstractType
             public function loadChoiceList(?callable $value = null): ChoiceListInterface
             {
                 return new ArrayChoiceList(
-                    $this->newsletterAudienceOptionsProvider->getExistingMunicipalityInseeCodes($this->selectedInseeCodes),
+                    $this->newsletterAudienceOptionsQuery->getExistingMunicipalityInseeCodes($this->selectedInseeCodes),
                     $value,
                 );
             }
@@ -275,6 +275,6 @@ final class MailingAudienceType extends AbstractType
      */
     private function selectedMunicipalityChoices(array $inseeCodes): array
     {
-        return $this->newsletterAudienceOptionsProvider->getExistingMunicipalityInseeCodes($inseeCodes);
+        return $this->newsletterAudienceOptionsQuery->getExistingMunicipalityInseeCodes($inseeCodes);
     }
 }

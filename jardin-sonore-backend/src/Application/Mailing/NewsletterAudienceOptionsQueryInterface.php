@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Mailing;
 
-interface NewsletterAudienceOptionsProviderInterface
+interface NewsletterAudienceOptionsQueryInterface
 {
     /**
      * @return array<string, string>

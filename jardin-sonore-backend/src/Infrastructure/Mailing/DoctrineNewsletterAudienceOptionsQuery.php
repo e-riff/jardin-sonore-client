@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Mailing;
 
-use App\Application\Mailing\NewsletterAudienceOptionsProviderInterface;
+use App\Application\Mailing\NewsletterAudienceOptionsQueryInterface;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Symfony\Component\Uid\Uuid;
 
-final readonly class DoctrineNewsletterAudienceOptionsProvider implements NewsletterAudienceOptionsProviderInterface
+final readonly class DoctrineNewsletterAudienceOptionsQuery implements NewsletterAudienceOptionsQueryInterface
 {
     /**
      * @var list<string>
