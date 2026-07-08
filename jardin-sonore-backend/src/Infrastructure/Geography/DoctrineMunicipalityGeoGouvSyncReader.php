@@ -6,23 +6,21 @@ namespace App\Infrastructure\Geography;
 
 use App\Application\Geography\MunicipalityGeoGouvSyncReaderInterface;
 use App\Application\Geography\MunicipalitySyncSnapshot;
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\DBAL\Connection;
 
 final readonly class DoctrineMunicipalityGeoGouvSyncReader implements MunicipalityGeoGouvSyncReaderInterface
 {
     private const int READ_BATCH_SIZE = 100;
 
     public function __construct(
-        private EntityManagerInterface $entityManager,
+        private Connection $connection,
     ) {
     }
 
     public function iterateMunicipalitySnapshots(string $inseeCode, int $offset, ?int $limit): iterable
     {
-        $connection = $this->entityManager->getConnection();
-
         if ('' !== $inseeCode) {
-            $municipalityRow = $connection->createQueryBuilder()
+            $municipalityRow = $this->connection->createQueryBuilder()
                 ->select(
                     'municipality.id',
                     'municipality.name',
@@ -55,7 +53,7 @@ final readonly class DoctrineMunicipalityGeoGouvSyncReader implements Municipali
                 : self::READ_BATCH_SIZE;
 
             /** @var list<array<string, mixed>> $rows */
-            $rows = $connection->createQueryBuilder()
+            $rows = $this->connection->createQueryBuilder()
                 ->select(
                     'municipality.id',
                     'municipality.name',

@@ -7,25 +7,24 @@ namespace App\Infrastructure\Geography;
 use App\Application\Geography\AddressContactSnapshot;
 use App\Application\Geography\AddressMunicipalityCandidate;
 use App\Application\Geography\AddressMunicipalityLinkingReaderInterface;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
-use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class DoctrineAddressMunicipalityLinkingReader implements AddressMunicipalityLinkingReaderInterface
 {
     private const int READ_BATCH_SIZE = 200;
 
     public function __construct(
-        private EntityManagerInterface $entityManager,
+        private Connection $connection,
     ) {
     }
 
     public function iterateUnlinkedAddressSnapshots(): iterable
     {
-        $connection = $this->entityManager->getConnection();
         $lastId = 0;
 
         do {
-            $queryBuilder = $connection->createQueryBuilder()
+            $queryBuilder = $this->connection->createQueryBuilder()
                 ->select('address.id', 'address.postal_code', 'address.city', 'address.address')
                 ->from('address_contact', 'address')
                 ->andWhere('address.id > :lastId')
@@ -53,7 +52,7 @@ final readonly class DoctrineAddressMunicipalityLinkingReader implements Address
     public function findMunicipalityCandidatesByPostalCode(string $postalCode): array
     {
         return $this->mapMunicipalityCandidates(
-            $this->entityManager->getConnection()->fetchAllAssociative(
+            $this->connection->fetchAllAssociative(
                 'SELECT municipality.id, municipality.name
                 FROM municipality
                 WHERE municipality.postal_code = :postalCode',
@@ -70,7 +69,7 @@ final readonly class DoctrineAddressMunicipalityLinkingReader implements Address
     public function findMunicipalityCandidatesByDepartmentCode(string $departmentCode): array
     {
         return $this->mapMunicipalityCandidates(
-            $this->entityManager->getConnection()->fetchAllAssociative(
+            $this->connection->fetchAllAssociative(
                 'SELECT municipality.id, municipality.name
                 FROM municipality
                 INNER JOIN department ON department.id = municipality.department_id
