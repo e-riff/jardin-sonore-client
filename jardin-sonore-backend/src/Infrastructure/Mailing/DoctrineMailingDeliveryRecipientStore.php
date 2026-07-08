@@ -4,20 +4,17 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Mailing;
 
+use App\Application\Mailing\MailingDeliveryRecipientStoreInterface;
+use App\Domain\Model\Mailing\MailingDeliveryRecipientStatus;
 use App\Domain\Model\Mailing\NewsletterRecipient;
 use DateTimeImmutable;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 
-final readonly class MailingDeliveryRecipientStore
+final readonly class DoctrineMailingDeliveryRecipientStore implements MailingDeliveryRecipientStoreInterface
 {
     private const string TABLE = 'mailing_delivery_recipient';
     private const string TIMESTAMP_FORMAT = 'Y-m-d H:i:s';
-    private const string STATUS_PENDING = 'pending';
-    private const string STATUS_PROCESSING = 'processing';
-    private const string STATUS_SENT = 'sent';
-    private const string STATUS_FAILED = 'failed';
-    private const string STATUS_CANCELLED = 'cancelled';
 
     public function __construct(private Connection $connection)
     {
@@ -36,7 +33,7 @@ final readonly class MailingDeliveryRecipientStore
                 'email_address' => $newsletterRecipient->getEmailAddress()->value(),
                 'unsubscribe_token' => $newsletterRecipient->getUnsubscribeToken(),
                 'display_name' => $newsletterRecipient->getDisplayName(),
-                'status' => self::STATUS_PENDING,
+                'status' => MailingDeliveryRecipientStatus::PENDING->value,
                 'queued_at' => $queuedAt,
                 'updated_at' => $queuedAt,
             ], [
@@ -92,7 +89,7 @@ final readonly class MailingDeliveryRecipientStore
             ->groupBy('campaign_uuid')
             ->orderBy('MIN(queued_at)', 'ASC')
             ->addOrderBy('MIN(id)', 'ASC')
-            ->setParameter('status', self::STATUS_PENDING)
+            ->setParameter('status', MailingDeliveryRecipientStatus::PENDING->value)
             ->executeQuery()
             ->fetchFirstColumn();
 
@@ -118,7 +115,7 @@ final readonly class MailingDeliveryRecipientStore
             ->addOrderBy('id', 'ASC')
             ->setMaxResults($limit)
             ->setParameter('campaignUuid', $campaignUuid)
-            ->setParameter('status', self::STATUS_PENDING)
+            ->setParameter('status', MailingDeliveryRecipientStatus::PENDING->value)
             ->executeQuery()
             ->fetchAllAssociative();
 
@@ -134,7 +131,7 @@ final readonly class MailingDeliveryRecipientStore
             SET status = :status, dispatched_at = :dispatchedAt, updated_at = :updatedAt
             WHERE id IN (:ids)',
             [
-                'status' => self::STATUS_PROCESSING,
+                'status' => MailingDeliveryRecipientStatus::PROCESSING->value,
                 'dispatchedAt' => $now,
                 'updatedAt' => $now,
                 'ids' => $ids,
@@ -152,7 +149,7 @@ final readonly class MailingDeliveryRecipientStore
         $now = $this->currentTimestamp();
 
         $this->connection->update(self::TABLE, [
-            'status' => self::STATUS_SENT,
+            'status' => MailingDeliveryRecipientStatus::SENT->value,
             'sent_at' => $now,
             'updated_at' => $now,
             'last_error' => null,
@@ -166,7 +163,7 @@ final readonly class MailingDeliveryRecipientStore
         $now = $this->currentTimestamp();
 
         $this->connection->update(self::TABLE, [
-            'status' => self::STATUS_FAILED,
+            'status' => MailingDeliveryRecipientStatus::FAILED->value,
             'failed_at' => $now,
             'updated_at' => $now,
             'last_error' => mb_substr($lastError, 0, 65535),
@@ -185,10 +182,10 @@ final readonly class MailingDeliveryRecipientStore
             WHERE campaign_uuid = :campaignUuid
             AND status = :currentStatus',
             [
-                'status' => self::STATUS_CANCELLED,
+                'status' => MailingDeliveryRecipientStatus::CANCELLED->value,
                 'updatedAt' => $now,
                 'campaignUuid' => $campaignUuid,
-                'currentStatus' => self::STATUS_PENDING,
+                'currentStatus' => MailingDeliveryRecipientStatus::PENDING->value,
             ],
         );
     }
@@ -201,7 +198,10 @@ final readonly class MailingDeliveryRecipientStore
             ->where('campaign_uuid = :campaignUuid')
             ->andWhere('status IN (:statuses)')
             ->setParameter('campaignUuid', $campaignUuid)
-            ->setParameter('statuses', [self::STATUS_PENDING, self::STATUS_PROCESSING], ArrayParameterType::STRING)
+            ->setParameter('statuses', [
+                MailingDeliveryRecipientStatus::PENDING->value,
+                MailingDeliveryRecipientStatus::PROCESSING->value,
+            ], ArrayParameterType::STRING)
             ->executeQuery()
             ->fetchOne();
     }
@@ -214,7 +214,7 @@ final readonly class MailingDeliveryRecipientStore
             ->where('campaign_uuid = :campaignUuid')
             ->andWhere('status = :status')
             ->setParameter('campaignUuid', $campaignUuid)
-            ->setParameter('status', self::STATUS_FAILED)
+            ->setParameter('status', MailingDeliveryRecipientStatus::FAILED->value)
             ->executeQuery()
             ->fetchOne();
     }

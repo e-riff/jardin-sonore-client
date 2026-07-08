@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Application\Command;
 
+use App\Application\Mailing\MailingDeliveryRecipientStoreInterface;
 use App\Application\Mailing\Message\SendMailingCampaignRecipientMessage;
 use App\Domain\Model\Mailing\MailingCampaignStatus;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
-use App\Infrastructure\Mailing\MailingDeliveryRecipientStore;
 use DateInterval;
 use DateTimeImmutable;
 use Psr\Log\LoggerInterface;
@@ -25,7 +25,7 @@ use Symfony\Component\Uid\Uuid;
 final readonly class DispatchPendingMailingCampaignsCommand
 {
     public function __construct(
-        private MailingDeliveryRecipientStore $mailingDeliveryRecipientStore,
+        private MailingDeliveryRecipientStoreInterface $mailingDeliveryRecipientStore,
         private MailingCampaignRepositoryInterface $mailingCampaignRepository,
         private MessageBusInterface $messageBus,
         #[Autowire('%env(default:app.mailing.window_limit:MAILING_WINDOW_LIMIT)%')]

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Mailing\MessageHandler;
 
+use App\Application\Mailing\MailingDeliveryRecipientStoreInterface;
 use App\Application\Mailing\Message\SendMailingCampaignRecipientMessage;
 use App\Application\Mailing\NewsletterMailSenderInterface;
 use App\Application\Mailing\NewsletterRendererInterface;
@@ -11,7 +12,6 @@ use App\Domain\Model\Mailing\MailingCampaignStatus;
 use App\Domain\Model\Mailing\NewsletterRecipient;
 use App\Domain\Model\ValueObject\EmailAddress;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
-use App\Infrastructure\Mailing\MailingDeliveryRecipientStore;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -26,7 +26,7 @@ final readonly class SendMailingCampaignRecipientMessageHandler
         private MailingCampaignRepositoryInterface $mailingCampaignRepository,
         private NewsletterRendererInterface $newsletterRenderer,
         private NewsletterMailSenderInterface $newsletterMailSender,
-        private MailingDeliveryRecipientStore $mailingDeliveryRecipientStore,
+        private MailingDeliveryRecipientStoreInterface $mailingDeliveryRecipientStore,
         #[Autowire(service: 'monolog.logger.mailing_delivery')]
         private LoggerInterface $mailingDeliveryLogger,
     ) {

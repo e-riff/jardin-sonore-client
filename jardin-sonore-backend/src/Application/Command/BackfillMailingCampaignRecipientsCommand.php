@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Application\Command;
 
+use App\Application\Mailing\MailingDeliveryRecipientStoreInterface;
 use App\Application\Mailing\NewsletterAudienceResolverInterface;
 use App\Domain\Model\Mailing\MailingCampaignStatus;
 use App\Domain\Model\Mailing\NewsletterRecipient;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
-use App\Infrastructure\Mailing\MailingDeliveryRecipientStore;
 use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Attribute\Option;
@@ -25,7 +25,7 @@ final readonly class BackfillMailingCampaignRecipientsCommand
     public function __construct(
         private MailingCampaignRepositoryInterface $mailingCampaignRepository,
         private NewsletterAudienceResolverInterface $newsletterAudienceResolver,
-        private MailingDeliveryRecipientStore $mailingDeliveryRecipientStore,
+        private MailingDeliveryRecipientStoreInterface $mailingDeliveryRecipientStore,
     ) {
     }
 

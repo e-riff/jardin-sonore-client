@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Application\Mailing\MailingDeliveryRecipientStoreInterface;
 use App\Application\Mailing\NewsletterAudienceOptionsProviderInterface;
 use App\Application\Mailing\NewsletterAudienceResolverInterface;
 use App\Application\Mailing\NewsletterMailSenderInterface;
@@ -34,6 +35,7 @@ use App\Infrastructure\Doctrine\Repository\PersonDoctrineRepository;
 use App\Infrastructure\Doctrine\Repository\PhoneContactDoctrineRepository;
 use App\Infrastructure\Doctrine\Repository\RegionDoctrineRepository;
 use App\Infrastructure\Mailer\SymfonyNewsletterMailSender;
+use App\Infrastructure\Mailing\DoctrineMailingDeliveryRecipientStore;
 use App\Infrastructure\Mailing\DoctrineNewsletterAudienceOptionsProvider;
 use App\Infrastructure\Mailing\DoctrineNewsletterAudienceResolver;
 use App\Infrastructure\Mailing\TwigNewsletterRenderer;
@@ -80,6 +82,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
     $services->alias(PhoneContactRepositoryInterface::class, PhoneContactDoctrineRepository::class);
     $services->alias(MailingBannerImageStorageInterface::class, LocalMailingBannerImageStorage::class);
     $services->alias(RecommendationImageStorageInterface::class, LocalRecommendationImageStorage::class);
+    $services->alias(MailingDeliveryRecipientStoreInterface::class, DoctrineMailingDeliveryRecipientStore::class);
     $services->alias(NewsletterAudienceResolverInterface::class, DoctrineNewsletterAudienceResolver::class);
     $services->alias(NewsletterAudienceOptionsProviderInterface::class, DoctrineNewsletterAudienceOptionsProvider::class);
     $services->alias(NewsletterMailSenderInterface::class, SymfonyNewsletterMailSender::class);
