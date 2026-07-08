@@ -62,6 +62,7 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 
 - Stabiliser les noms `Repository / Query / Provider / Mapper` selon le role reel de chaque service.
 - Continuer a sortir les lectures techniques de `Application` uniquement la ou cela clarifie vraiment.
+- Revoir les doublons entre repositories de domaine et repositories d'entite Doctrine pour viser un seul point d'acces quand le double niveau n'apporte pas assez. L'ideal et de n'avoir qu'une classe par élément (à préciser)
 
 ### Lot 7. Conventions Symfony Et Configuration
 
@@ -105,3 +106,4 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 - 2026-07-08 : le lot 4 mailing est considere termine ; le lot 5 annuaire/geographie demarre et les conventions Symfony/config sont consolidees pendant le refacto.
 - 2026-07-08 : les repositories Doctrine sont normalises vers `ServiceEntityRepository` + `ManagerRegistry`, avec mappers explicites conserves pour les adapters de domaine.
 - 2026-07-08 : le lot 5 avance encore avec `FindInstrumentCatalogItems` sans `EntityManager` direct et la commande de sync communes branchee sur des readers/writers d'infrastructure.
+- 2026-07-08 : point ouvert pour le lot 6 : reduire les doublons entre `*DoctrineRepository` et `*EntityRepository` quand un seul repository suffit.

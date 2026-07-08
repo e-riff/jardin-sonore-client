@@ -276,6 +276,8 @@ Lecture de l'audit :
 - Checklist :
   - [ ] renommer les services ambigus si necessaire ;
   - [ ] regrouper les lectures par responsabilite ;
+  - [ ] auditer les doublons `RepositoryInterface adapte au domaine` / `EntityRepository` et supprimer les doubles niveaux qui n'apportent pas assez, l'ideal serait de n'avoir qu'un repo d'infra pour chaque élément (a retravailler);
+  - [ ] definir quand un repository unique suffit, et quand un acces domaine + un acces ORM technique restent justifies ;
   - [ ] supprimer ou eviter les abstractions inutiles ;
   - [ ] verifier si un mapper explicite local aide sur certains flux applicatifs.
 - Commit attendu : `refactor(architecture): align naming and structural patterns`
@@ -337,3 +339,4 @@ Lecture de l'audit :
 - 2026-07-08 - Lot 7 avance en parallele : config backend migree vers `App::config([...])`, convention `parameters.yaml.dist` / `parameters.yaml` posee et injections scalaires ciblees migrees en `#[Autowire('%...%')]`.
 - 2026-07-08 - Les repositories Doctrine sont normalises : les adapters de domaine passent en `ServiceEntityRepository` + `ManagerRegistry` avec mapper, et les acces ORM techniques simples passent par des repositories d'entite injectables.
 - 2026-07-08 - `FindInstrumentCatalogItems` n'injecte plus `EntityManagerInterface` et `SyncMunicipalitiesFromGeoGouvCommand` delegue ses lectures/ecritures techniques a des ports de geographie dedies.
+- 2026-07-08 - Point reporte au lot 6 : reevaluer les doublons entre repositories de domaine et repositories d'entite Doctrine pour eviter de tout avoir en double.
