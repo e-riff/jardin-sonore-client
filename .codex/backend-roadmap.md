@@ -44,9 +44,10 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 ## Priorites Produit
 
 1. Stabiliser et clarifier le backend existant.
-2. Concevoir puis lancer le module `resumes de seances`.
-3. Traiter la `facturation` apres les resumes de seances.
-4. Garder `espace client`, donnees publiques front et extensions comme lots ulterieurs.
+2. Refaire le systeme de ciblage d'audience mailing et introduire les masques reutilisables.
+3. Concevoir puis lancer le module `resumes de seances`.
+4. Traiter la `facturation` apres les resumes de seances.
+5. Garder `espace client`, donnees publiques front et extensions comme lots ulterieurs.
 
 ## Prochains Lots
 
@@ -76,7 +77,36 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 - Parametres scalarises via `parameters.yaml.dist` + `parameters.yaml` local et `#[Autowire('%...%')]`.
 - A poursuivre seulement la ou un attribut ou une convention retire une configuration diffuse reelle.
 
-### Lot 8. Preparation Du Prochain Module Metier
+### Lot 8. Refonte Du Systeme De Ciblage D'Audience
+
+- Statut : A cadrer puis implementer
+- Priorite : Avant `resumes de seances`
+- Objectif : remplacer le ciblage geographique trop limite par un systeme de `masques d'audience` reutilisables, visuels et plus precis.
+- Intentions produit :
+  - permettre de selectionner plusieurs zones geographiques pertinentes ;
+  - visualiser clairement les communes reellement retenues ;
+  - memoriser des `masques d'audience` reutilisables sur plusieurs campagnes ;
+  - appliquer un masque a une campagne sous forme de copie figee.
+- V1 retenue :
+  - bibliotheque globale de `masques d'audience` ;
+  - geographie composee de `polygones`, `multi-cercles` et selection manuelle de `communes` ;
+  - stockage de la `definition geographique source` et de la `liste materialisee des communes retenues` ;
+  - affichage sur carte des formes source et des `polygones de communes` deja stockes en base ;
+  - dedoublonnage des communes par `insee_code` et dedoublonnage final des destinataires par email.
+- Decisions produit :
+  - un masque est `global et reutilisable` ;
+  - une campagne prend un `snapshot fige` du masque applique ;
+  - le polygone libre est accepte des la v1 ;
+  - la resolution finale d'envoi repose sur les `communes retenues`, pas sur un recalcul geospatial a chaque envoi ;
+  - les regions/departements/communes manuels peuvent rester, mais doivent converger vers une liste dedoublonnee de communes retenues.
+- Criteres de fin :
+  - un utilisateur peut creer, nommer, previsualiser et reutiliser un masque d'audience ;
+  - un masque peut combiner plusieurs formes geographiques ;
+  - la carte montre les communes retenues via leurs polygones ;
+  - une campagne peut appliquer un masque sans dependre ensuite de ses evolutions futures ;
+  - le calcul d'audience et l'aperçu des destinataires restent coherents avec la liste de communes retenues.
+
+### Lot 9. Preparation Du Prochain Module Metier
 
 - Statut : Prochain vrai sujet recommande
 - Preparer le cadrage des resumes de seances.
@@ -114,3 +144,4 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 - 2026-07-08 : le lot 5 avance encore avec `FindInstrumentCatalogItems` sans `EntityManager` direct et la commande de sync communes branchee sur des readers/writers d'infrastructure.
 - 2026-07-08 : point ouvert pour le lot 6 : reduire les doublons entre `*DoctrineRepository` et `*EntityRepository` quand un seul repository suffit.
 - 2026-07-08 : la phase de refacto fine est consideree comme suffisamment mure pour s'arreter ; les derniers gains ont porte sur les readers geographiques DBAL, la resolution admin des contacts partages et la simplification de l'etat `MailingAudience`.
+- 2026-07-08 : une priorite produit supplementaire est ajoutee avant `resumes de seances` : refondre le ciblage d'audience mailing avec masques reutilisables, polygones, multi-cercles et communes materialisees.
