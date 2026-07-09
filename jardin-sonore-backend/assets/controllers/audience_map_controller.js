@@ -4,6 +4,8 @@ export default class extends Controller {
     static targets = ['mapContainer', 'status'];
     static values = {
         originSelectId: String,
+        radiusKilometersId: String,
+        radiusOriginMunicipalityId: String,
         latitudeFieldId: String,
         longitudeFieldId: String,
         municipalitySelectId: String,
@@ -71,6 +73,7 @@ export default class extends Controller {
             return;
         }
 
+        this.clearDrawnPolygonVisuals();
         latitudeFieldElement.value = '';
         longitudeFieldElement.value = '';
     }
@@ -90,15 +93,17 @@ export default class extends Controller {
             return;
         }
 
+        const switchedFromRadius = this.radiusModeIsActive();
+
+        this.clearRadiusMode();
         this.isDrawingPolygon = true;
         this.drawnPolygonPoints = [];
-        this.drawnPolygonLayer?.remove();
-        this.drawnPolygonGuideLayer?.remove();
-        this.drawnPolygonMarkerLayer?.remove();
-        this.drawnPolygonLayer = null;
-        this.drawnPolygonGuideLayer = null;
-        this.drawnPolygonMarkerLayer = null;
-        this.updateStatus(this.message('polygon_drawing_started'));
+        this.clearDrawnPolygonVisuals();
+        this.updateStatus(
+            switchedFromRadius
+                ? this.message('polygon_switches_from_radius')
+                : this.message('polygon_drawing_started'),
+        );
     }
 
     async finishPolygonDrawing() {
@@ -151,12 +156,7 @@ export default class extends Controller {
     clearPolygonDrawing() {
         this.isDrawingPolygon = false;
         this.drawnPolygonPoints = [];
-        this.drawnPolygonLayer?.remove();
-        this.drawnPolygonGuideLayer?.remove();
-        this.drawnPolygonMarkerLayer?.remove();
-        this.drawnPolygonLayer = null;
-        this.drawnPolygonGuideLayer = null;
-        this.drawnPolygonMarkerLayer = null;
+        this.clearDrawnPolygonVisuals();
         this.updateStatus(this.message('polygon_cleared'));
     }
 
@@ -227,6 +227,8 @@ export default class extends Controller {
             return;
         }
 
+        this.isDrawingPolygon = false;
+        this.clearDrawnPolygonVisuals();
         originSelectElement.value = 'custom';
         latitudeFieldElement.value = latlng.lat.toFixed(6);
         longitudeFieldElement.value = latlng.lng.toFixed(6);
@@ -419,6 +421,14 @@ export default class extends Controller {
         return document.getElementById(this.municipalitySelectIdValue);
     }
 
+    radiusKilometersElement() {
+        return document.getElementById(this.radiusKilometersIdValue);
+    }
+
+    radiusOriginMunicipalityElement() {
+        return document.getElementById(this.radiusOriginMunicipalityIdValue);
+    }
+
     updateStatus(message) {
         if (!this.hasStatusTarget) {
             return;
@@ -430,6 +440,70 @@ export default class extends Controller {
     dispatchFormInput(fieldElement) {
         fieldElement.dispatchEvent(new Event('input', { bubbles: true }));
         fieldElement.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    radiusModeIsActive() {
+        const originSelectElement = this.originSelectElement();
+
+        return originSelectElement instanceof HTMLSelectElement && originSelectElement.value.trim() !== '';
+    }
+
+    clearRadiusMode() {
+        const originSelectElement = this.originSelectElement();
+        const radiusKilometersElement = this.radiusKilometersElement();
+        const radiusOriginMunicipalityElement = this.radiusOriginMunicipalityElement();
+        const latitudeFieldElement = this.latitudeFieldElement();
+        const longitudeFieldElement = this.longitudeFieldElement();
+
+        if (originSelectElement instanceof HTMLSelectElement && originSelectElement.value.trim() !== '') {
+            originSelectElement.value = '';
+            this.dispatchFormInput(originSelectElement);
+        }
+
+        if (radiusKilometersElement instanceof HTMLInputElement) {
+            radiusKilometersElement.value = '';
+            this.dispatchFormInput(radiusKilometersElement);
+        }
+
+        this.clearSelectValue(radiusOriginMunicipalityElement);
+
+        if (latitudeFieldElement instanceof HTMLInputElement) {
+            latitudeFieldElement.value = '';
+            this.dispatchFormInput(latitudeFieldElement);
+        }
+
+        if (longitudeFieldElement instanceof HTMLInputElement) {
+            longitudeFieldElement.value = '';
+            this.dispatchFormInput(longitudeFieldElement);
+        }
+
+        this.circleInstance?.remove?.();
+        this.circleInstance = null;
+    }
+
+    clearSelectValue(selectElement) {
+        if (!(selectElement instanceof HTMLSelectElement)) {
+            return;
+        }
+
+        if ('tomselect' in selectElement && selectElement.tomselect) {
+            selectElement.tomselect.clear(true);
+            this.dispatchFormInput(selectElement);
+
+            return;
+        }
+
+        selectElement.value = '';
+        this.dispatchFormInput(selectElement);
+    }
+
+    clearDrawnPolygonVisuals() {
+        this.drawnPolygonLayer?.remove();
+        this.drawnPolygonGuideLayer?.remove();
+        this.drawnPolygonMarkerLayer?.remove();
+        this.drawnPolygonLayer = null;
+        this.drawnPolygonGuideLayer = null;
+        this.drawnPolygonMarkerLayer = null;
     }
 
     message(key) {

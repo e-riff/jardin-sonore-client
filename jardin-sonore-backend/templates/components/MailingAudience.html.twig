@@ -58,6 +58,8 @@
 
             <div class="mailing-audience__map-card" {{ stimulus_controller('audience-map', {
                 origin_select_id: form.radiusOrigin.vars.id,
+                radius_kilometers_id: form.radiusKilometers.vars.id,
+                radius_origin_municipality_id: form.radiusOriginMunicipalityInseeCode.vars.id,
                 latitude_field_id: form.radiusOriginCustomLatitude.vars.id,
                 longitude_field_id: form.radiusOriginCustomLongitude.vars.id,
                 municipality_select_id: form.municipalityInseeCodes.vars.id,
@@ -70,6 +72,7 @@
                     polygon_empty: 'mailing.audience.map.status.polygon_empty'|trans({}, 'mailing'),
                     polygon_resolve_failed: 'mailing.audience.map.status.polygon_resolve_failed'|trans({}, 'mailing'),
                     polygon_cleared: 'mailing.audience.map.status.polygon_cleared'|trans({}, 'mailing'),
+                    polygon_switches_from_radius: 'mailing.audience.map.status.polygon_switches_from_radius'|trans({}, 'mailing'),
                     polygon_points_count: 'mailing.audience.map.status.polygon_points_count'|trans({}, 'mailing'),
                     polygon_applied: 'mailing.audience.map.status.polygon_applied'|trans({}, 'mailing')
                 }|json_encode,
