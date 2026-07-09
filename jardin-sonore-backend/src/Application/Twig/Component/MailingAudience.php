@@ -6,6 +6,8 @@ namespace App\Application\Twig\Component;
 
 use App\Application\Form\MailingAudienceType;
 use App\Application\Form\Model\MailingAudienceFormModel;
+use App\Application\Mailing\NewsletterAudienceMapQueryInterface;
+use App\Application\Mailing\NewsletterAudienceMunicipalityMaterializerInterface;
 use App\Application\Mailing\GetMailingCampaign;
 use App\Application\Mailing\NewsletterAudienceResolution;
 use App\Application\Mailing\NewsletterAudienceResolverInterface;
@@ -47,6 +49,8 @@ final class MailingAudience
     use ComponentWithFormTrait;
     use DefaultActionTrait;
 
+    private const int MAP_MUNICIPALITY_SHAPE_LIMIT = 60;
+
     #[LiveProp]
     public string $campaignUuid = '';
 
@@ -72,6 +76,8 @@ final class MailingAudience
         private readonly GetMailingCampaign $getMailingCampaignQuery,
         private readonly NewsletterAudienceResolverInterface $newsletterAudienceResolver,
         private readonly UpdateMailingCampaignAudience $updateMailingCampaignAudience,
+        private readonly NewsletterAudienceMunicipalityMaterializerInterface $newsletterAudienceMunicipalityMaterializer,
+        private readonly NewsletterAudienceMapQueryInterface $newsletterAudienceMapQuery,
         private readonly MunicipalityRepositoryInterface $municipalityRepository,
         #[Autowire('%app.mailing.home_latitude%')]
         private readonly string $homeLatitude,
@@ -166,6 +172,53 @@ final class MailingAudience
     public function isRadiusModeActive(): bool
     {
         return $this->currentFormModel()->hasSelectedRadiusOrigin();
+    }
+
+    /**
+     * @return list<array{inseeCode: string, label: string, geoShape: array<string, mixed>|list<mixed>}>
+     */
+    #[ExposeInTemplate(name: 'audienceMapMunicipalityShapes')]
+    public function getAudienceMapMunicipalityShapes(): array
+    {
+        try {
+            $inseeCodes = $this->newsletterAudienceMunicipalityMaterializer->materialize(
+                $this->currentFormModel()->toAudienceFilter(),
+            );
+        } catch (InvalidArgumentException) {
+            return [];
+        }
+
+        $shapes = $this->newsletterAudienceMapQuery->findMunicipalityShapesByInseeCodes(
+            $inseeCodes,
+            self::MAP_MUNICIPALITY_SHAPE_LIMIT,
+        );
+        $serializedShapes = [];
+
+        foreach ($shapes as $shape) {
+            $serializedShapes[] = [
+                'inseeCode' => $shape->inseeCode,
+                'label' => $shape->label,
+                'geoShape' => $shape->geoShape,
+            ];
+        }
+
+        return $serializedShapes;
+    }
+
+    public function getAudienceMapMaterializedMunicipalityCount(): int
+    {
+        try {
+            return count($this->newsletterAudienceMunicipalityMaterializer->materialize(
+                $this->currentFormModel()->toAudienceFilter(),
+            ));
+        } catch (InvalidArgumentException) {
+            return 0;
+        }
+    }
+
+    public function isAudienceMapMunicipalityShapesTruncated(): bool
+    {
+        return $this->getAudienceMapMaterializedMunicipalityCount() > self::MAP_MUNICIPALITY_SHAPE_LIMIT;
     }
 
     /**
