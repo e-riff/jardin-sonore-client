@@ -65,18 +65,32 @@
                 {{ ux_map(audienceMap, {
                     class: locked ? 'mailing-audience__map mailing-audience__map--locked' : 'mailing-audience__map',
                 }|merge(
-                    locked
-                        ? {}
-                        : stimulus_controller('audience-map', {
-                            origin_select_id: form.radiusOrigin.vars.id,
-                            latitude_field_id: form.radiusOriginCustomLatitude.vars.id,
-                            longitude_field_id: form.radiusOriginCustomLongitude.vars.id
-                        })
+                    stimulus_controller('audience-map', {
+                        origin_select_id: form.radiusOrigin.vars.id,
+                        latitude_field_id: form.radiusOriginCustomLatitude.vars.id,
+                        longitude_field_id: form.radiusOriginCustomLongitude.vars.id,
+                        municipality_shapes_json: audienceMapMunicipalityShapes|json_encode,
+                        interactive: not locked
+                    })
                 )) }}
 
                 <p class="mailing-audience__map-help">
                     {{ 'mailing.audience.map.help'|trans({}, 'mailing') }}
                 </p>
+
+                {% if this.audienceMapMaterializedMunicipalityCount > 0 %}
+                    <p class="mailing-audience__map-polygons">
+                        {{ 'mailing.audience.map.materialized_municipalities'|trans({
+                            count: this.audienceMapMaterializedMunicipalityCount
+                        }, 'mailing') }}
+                    </p>
+                {% endif %}
+
+                {% if this.audienceMapMunicipalityShapesTruncated %}
+                    <p class="mailing-audience__map-polygons">
+                        {{ 'mailing.audience.map.materialized_municipalities_truncated'|trans({}, 'mailing') }}
+                    </p>
+                {% endif %}
 
                 {% if this.customRadiusOrigin and form.radiusOriginCustomLatitude.vars.value and form.radiusOriginCustomLongitude.vars.value %}
                     <p class="mailing-audience__map-coordinates">

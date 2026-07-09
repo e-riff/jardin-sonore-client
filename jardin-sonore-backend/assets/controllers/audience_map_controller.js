@@ -5,6 +5,8 @@ export default class extends Controller {
         originSelectId: String,
         latitudeFieldId: String,
         longitudeFieldId: String,
+        municipalityShapesJson: String,
+        interactive: Boolean,
     };
 
     connect() {
@@ -22,6 +24,8 @@ export default class extends Controller {
         if (this.mapClickHandler && this.mapInstance) {
             this.mapInstance.off('click', this.mapClickHandler);
         }
+
+        this.municipalityShapeLayer?.remove();
     }
 
     handleMapConnect(event) {
@@ -32,6 +36,12 @@ export default class extends Controller {
         this.mapInstance = event.detail.map;
         this.markerInstance = event.detail.markers[0] ?? null;
         this.circleInstance = event.detail.circles[0] ?? null;
+        this.renderMunicipalityShapes();
+
+        if (!this.interactiveValue) {
+            return;
+        }
+
         this.mapClickHandler = (leafletEvent) => this.selectCustomPoint(leafletEvent.latlng);
         this.mapInstance.on('click', this.mapClickHandler);
     }
@@ -90,5 +100,89 @@ export default class extends Controller {
     dispatchFormInput(fieldElement) {
         fieldElement.dispatchEvent(new Event('input', { bubbles: true }));
         fieldElement.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    municipalityShapesJsonValueChanged() {
+        this.renderMunicipalityShapes();
+    }
+
+    renderMunicipalityShapes() {
+        if (!this.mapInstance) {
+            return;
+        }
+
+        this.municipalityShapeLayer?.remove();
+        this.municipalityShapeLayer = null;
+
+        const leaflet = globalThis.L;
+        const municipalityShapes = this.parseMunicipalityShapes();
+
+        if (!leaflet || municipalityShapes.length === 0) {
+            return;
+        }
+
+        const features = municipalityShapes
+            .map((municipalityShape) => this.toFeature(municipalityShape))
+            .filter((feature) => feature !== null);
+
+        if (features.length === 0) {
+            return;
+        }
+
+        this.municipalityShapeLayer = leaflet.geoJSON(features, {
+            style: {
+                color: '#47664B',
+                weight: 1.5,
+                fillColor: '#7FB089',
+                fillOpacity: 0.18,
+            },
+            onEachFeature: (feature, layer) => {
+                const label = feature?.properties?.label;
+
+                if (typeof label === 'string' && label !== '') {
+                    layer.bindTooltip(label, {
+                        sticky: true,
+                        direction: 'top',
+                    });
+                }
+            },
+        }).addTo(this.mapInstance);
+    }
+
+    parseMunicipalityShapes() {
+        if (typeof this.municipalityShapesJsonValue !== 'string' || this.municipalityShapesJsonValue === '') {
+            return [];
+        }
+
+        try {
+            const parsedShapes = JSON.parse(this.municipalityShapesJsonValue);
+
+            return Array.isArray(parsedShapes) ? parsedShapes : [];
+        } catch (error) {
+            console.warn('Unable to parse audience municipality shapes.', error);
+
+            return [];
+        }
+    }
+
+    toFeature(municipalityShape) {
+        if (typeof municipalityShape !== 'object' || municipalityShape === null) {
+            return null;
+        }
+
+        const geoShape = municipalityShape.geoShape;
+
+        if (typeof geoShape !== 'object' || geoShape === null) {
+            return null;
+        }
+
+        return {
+            type: 'Feature',
+            geometry: geoShape,
+            properties: {
+                inseeCode: municipalityShape.inseeCode ?? null,
+                label: municipalityShape.label ?? null,
+            },
+        };
     }
 }

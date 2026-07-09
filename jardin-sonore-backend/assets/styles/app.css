@@ -1243,6 +1243,7 @@ a {
 
 .mailing-audience__map-heading p,
 .mailing-audience__map-help,
+.mailing-audience__map-polygons,
 .mailing-audience__map-coordinates {
     margin: 0;
     color: var(--color-on-surface-variant);
@@ -1265,6 +1266,10 @@ a {
 .mailing-audience__map-coordinates {
     color: var(--color-secondary);
     font-weight: 700;
+}
+
+.mailing-audience__map-polygons {
+    color: var(--color-secondary);
 }
 
 .internal-form .ts-wrapper {
