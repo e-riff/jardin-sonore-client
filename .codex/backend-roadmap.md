@@ -79,7 +79,7 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 
 ### Lot 8. Refonte Du Systeme De Ciblage D'Audience
 
-- Statut : A cadrer puis implementer
+- Statut : Demarre, V1 socle des masques en cours
 - Priorite : Avant `resumes de seances`
 - Objectif : remplacer le ciblage geographique trop limite par un systeme de `masques d'audience` reutilisables, visuels et plus precis.
 - Intentions produit :
@@ -99,6 +99,12 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
   - le polygone libre est accepte des la v1 ;
   - la resolution finale d'envoi repose sur les `communes retenues`, pas sur un recalcul geospatial a chaque envoi ;
   - les regions/departements/communes manuels peuvent rester, mais doivent converger vers une liste dedoublonnee de communes retenues.
+- Avancement V1 deja pose :
+  - bibliotheque backend initiale de `masques d'audience` creee ;
+  - application d'un masque a une campagne sous forme de copie figee branchee ;
+  - materialisation initiale des communes retenues branchee a partir des criteres geographiques actuels ;
+  - stockage des metadonnees du masque applique sur la campagne ;
+  - le dessin libre, les polygones et les multi-cercles restent a brancher sur ce socle.
 - Criteres de fin :
   - un utilisateur peut creer, nommer, previsualiser et reutiliser un masque d'audience ;
   - un masque peut combiner plusieurs formes geographiques ;
@@ -106,7 +112,21 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
   - une campagne peut appliquer un masque sans dependre ensuite de ses evolutions futures ;
   - le calcul d'audience et l'aperçu des destinataires restent coherents avec la liste de communes retenues.
 
-### Lot 9. Preparation Du Prochain Module Metier
+### Lot 9. Extension D'Audience D'Une Campagne Deja Partie
+
+- Statut : A reflechir apres le lot 8
+- Intentions produit :
+  - permettre d'ajouter de nouvelles zones a une campagne deja envoyee ou deja en cours d'envoi ;
+  - definir si l'extension se fait par `modification` de la campagne existante ou par `duplication` vers une nouvelle campagne ;
+  - garantir le dedoublonnage des destinataires deja servis, meme si de nouveaux masques recouvrent partiellement les anciennes zones ;
+  - clarifier si l'extension doit reutiliser le contenu exact envoye initialement ou autoriser une variante.
+- Questions ouvertes :
+  - faut-il etendre la meme campagne ou creer automatiquement une campagne derivee ;
+  - sur quelle source de verite dedoublonner : `mailing_delivery_recipient`, historique des envois, ou les deux ;
+  - comment presenter a l'utilisateur le volume `deja touche` vs `nouveaux destinataires` ;
+  - comment gerer une campagne deja `sent` par rapport a une campagne encore `sending`.
+
+### Lot 10. Preparation Du Prochain Module Metier
 
 - Statut : Prochain vrai sujet recommande
 - Preparer le cadrage des resumes de seances.

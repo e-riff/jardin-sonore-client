@@ -1,0 +1,68 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'mailing.audience.mask.catalog_title'|trans({}, 'mailing') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ 'mailing.audience.mask.catalog_eyebrow'|trans({}, 'mailing') }}</p>
+            <h1>{{ 'mailing.audience.mask.catalog_heading'|trans({}, 'mailing') }}</h1>
+            <p>{{ 'mailing.audience.mask.catalog_description'|trans({}, 'mailing') }}</p>
+        </div>
+
+        <div class="internal-heading-actions">
+            {% if campaign %}
+                <a class="internal-button" href="{{ path('mailing_audience', { uuid: campaign.uuid }) }}">
+                    {{ 'mailing.audience.mask.back_to_campaign'|trans({}, 'mailing') }}
+                </a>
+            {% else %}
+                <a class="internal-button internal-button--secondary" href="{{ path('mailing_index') }}">
+                    {{ 'mailing.audience.mask.back_to_mailing'|trans({}, 'mailing') }}
+                </a>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="internal-card">
+        {% if audienceMasks is empty %}
+            <p>{{ 'mailing.audience.mask.empty'|trans({}, 'mailing') }}</p>
+        {% else %}
+            <div class="internal-table-wrapper">
+                <table class="internal-table">
+                    <thead>
+                        <tr>
+                            <th>{{ 'mailing.audience.mask.table.name'|trans({}, 'mailing') }}</th>
+                            <th>{{ 'mailing.audience.mask.table.municipalities'|trans({}, 'mailing') }}</th>
+                            <th>{{ 'mailing.audience.mask.table.updated_at'|trans({}, 'mailing') }}</th>
+                            <th>{{ 'mailing.audience.mask.table.actions'|trans({}, 'mailing') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for audienceMask in audienceMasks %}
+                            <tr>
+                                <td>{{ audienceMask.name }}</td>
+                                <td>{{ audienceMask.materializedMunicipalityInseeCodes|length }}</td>
+                                <td>{{ audienceMask.updatedAt|date('d/m/Y H:i') }}</td>
+                                <td>
+                                    {% if campaign %}
+                                        <form method="post" action="{{ path('mailing_audience_mask_apply_to_campaign', {
+                                            maskUuid: audienceMask.uuid,
+                                            campaignUuid: campaign.uuid
+                                        }) }}">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('mailing_apply_audience_mask_' ~ audienceMask.uuid.toRfc4122 ~ '_' ~ campaign.uuid.toRfc4122) }}">
+                                            <button class="internal-button internal-button--secondary internal-button--compact" type="submit" {% if not campaign.editable %}disabled{% endif %}>
+                                                {{ 'mailing.audience.mask.apply'|trans({}, 'mailing') }}
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <span class="help-text">{{ 'mailing.audience.mask.apply_help'|trans({}, 'mailing') }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}

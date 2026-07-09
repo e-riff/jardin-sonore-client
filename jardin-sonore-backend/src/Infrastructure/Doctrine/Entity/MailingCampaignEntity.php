@@ -10,6 +10,7 @@ use App\Infrastructure\Doctrine\Entity\Behavior\UuidIdentifiableTrait;
 use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Symfony\Component\Uid\Uuid;
 
 class MailingCampaignEntity
 {
@@ -40,6 +41,10 @@ class MailingCampaignEntity
      * @var array<string, mixed>
      */
     private array $audienceFilter = [];
+
+    private ?Uuid $appliedAudienceMaskUuid = null;
+
+    private ?string $appliedAudienceMaskName = null;
 
     private DateTimeImmutable $createdAt;
 
@@ -199,6 +204,30 @@ class MailingCampaignEntity
     public function setAudienceFilter(array $audienceFilter): static
     {
         $this->audienceFilter = $audienceFilter;
+
+        return $this;
+    }
+
+    public function getAppliedAudienceMaskUuid(): ?Uuid
+    {
+        return $this->appliedAudienceMaskUuid;
+    }
+
+    public function setAppliedAudienceMaskUuid(?Uuid $appliedAudienceMaskUuid): static
+    {
+        $this->appliedAudienceMaskUuid = $appliedAudienceMaskUuid;
+
+        return $this;
+    }
+
+    public function getAppliedAudienceMaskName(): ?string
+    {
+        return $this->appliedAudienceMaskName;
+    }
+
+    public function setAppliedAudienceMaskName(?string $appliedAudienceMaskName): static
+    {
+        $this->appliedAudienceMaskName = $appliedAudienceMaskName;
 
         return $this;
     }

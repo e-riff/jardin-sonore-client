@@ -24,26 +24,32 @@
             route: 'mailing_index',
             icon: '✉',
             label: 'internal.base.nav.newsletters_group'|trans({}, 'internal'),
-            active: currentRoute starts with 'mailing_',
-            links: [
-                {
-                    route: 'mailing_index',
-                    label: 'internal.base.nav.mailing'|trans({}, 'internal'),
-                    active: currentRoute starts with 'mailing_'
-                        and not (currentRoute starts with 'mailing_invalid_recipients_')
-                        and not (currentRoute starts with 'mailing_recommendation_catalog_')
-                        and not (currentRoute starts with 'mailing_campaign_recommendation_'),
-                },
-                {
-                    route: 'mailing_invalid_recipients_index',
+                    active: currentRoute starts with 'mailing_',
+                    links: [
+                        {
+                            route: 'mailing_index',
+                            label: 'internal.base.nav.mailing'|trans({}, 'internal'),
+                            active: currentRoute starts with 'mailing_'
+                                and not (currentRoute starts with 'mailing_invalid_recipients_')
+                                and not (currentRoute starts with 'mailing_audience_mask_')
+                                and not (currentRoute starts with 'mailing_recommendation_catalog_')
+                                and not (currentRoute starts with 'mailing_campaign_recommendation_'),
+                        },
+                        {
+                            route: 'mailing_invalid_recipients_index',
                     label: 'internal.base.nav.invalid_recipients'|trans({}, 'internal'),
                     active: currentRoute starts with 'mailing_invalid_recipients_',
                 },
-                {
-                    route: 'mailing_recommendation_catalog_index',
-                    label: 'internal.base.nav.recommendation_catalog'|trans({}, 'internal'),
-                    active: currentRoute starts with 'mailing_recommendation_catalog_' or currentRoute starts with 'mailing_campaign_recommendation_',
-                },
+                        {
+                            route: 'mailing_audience_mask_index',
+                            label: 'internal.base.nav.audience_mask_catalog'|trans({}, 'internal'),
+                            active: currentRoute starts with 'mailing_audience_mask_',
+                        },
+                        {
+                            route: 'mailing_recommendation_catalog_index',
+                            label: 'internal.base.nav.recommendation_catalog'|trans({}, 'internal'),
+                            active: currentRoute starts with 'mailing_recommendation_catalog_' or currentRoute starts with 'mailing_campaign_recommendation_',
+                        },
             ],
         },
         {
