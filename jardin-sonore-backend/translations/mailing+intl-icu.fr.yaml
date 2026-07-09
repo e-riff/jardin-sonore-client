@@ -240,6 +240,7 @@ mailing:
         polygon_empty: "Aucune commune n’a été trouvée dans ce polygone."
         polygon_resolve_failed: "Le polygone n’a pas pu être converti en communes."
         polygon_cleared: ""
+        polygon_switches_from_radius: "Le mode polygone remplace le rayon courant. Tracez maintenant les sommets sur la carte."
         polygon_points_count: "%count% point(s) posés. Terminez quand le contour vous convient."
         polygon_applied: "%count% commune(s) ajoutée(s) au ciblage."
       materialized_municipalities: "{count, plural, one {# commune matérialisée affichée sur la carte quand son polygone est disponible.} other {# communes matérialisées affichées sur la carte quand leurs polygones sont disponibles.}}"
