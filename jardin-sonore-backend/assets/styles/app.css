@@ -1230,6 +1230,12 @@ a {
     gap: 12px;
 }
 
+.mailing-audience__map-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
 .mailing-audience__map-heading {
     display: grid;
     gap: 6px;

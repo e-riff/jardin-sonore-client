@@ -73,6 +73,70 @@ final readonly class DoctrineNewsletterAudienceMapQuery implements NewsletterAud
         return $shapes;
     }
 
+    public function findMunicipalityChoicesWithinPolygon(array $polygonPoints): array
+    {
+        $polygonPoints = $this->normalizePolygonPoints($polygonPoints);
+
+        if (count($polygonPoints) < 3) {
+            return [];
+        }
+
+        $latitudes = array_column($polygonPoints, 'lat');
+        $longitudes = array_column($polygonPoints, 'lng');
+        $minLatitude = min($latitudes);
+        $maxLatitude = max($latitudes);
+        $minLongitude = min($longitudes);
+        $maxLongitude = max($longitudes);
+
+        /** @var list<array{
+         *     insee_code: string,
+         *     name: string,
+         *     postal_code: ?string,
+         *     center_latitude: float|int|string,
+         *     center_longitude: float|int|string
+         * }> $rows
+         */
+        $rows = $this->connection->createQueryBuilder()
+            ->select(
+                'municipality.insee_code',
+                'municipality.name',
+                'municipality.postal_code',
+                'municipality.center_latitude',
+                'municipality.center_longitude',
+            )
+            ->from('municipality', 'municipality')
+            ->where('municipality.center_latitude IS NOT NULL')
+            ->andWhere('municipality.center_longitude IS NOT NULL')
+            ->andWhere('municipality.insee_code IS NOT NULL')
+            ->andWhere('municipality.center_latitude BETWEEN :minLatitude AND :maxLatitude')
+            ->andWhere('municipality.center_longitude BETWEEN :minLongitude AND :maxLongitude')
+            ->setParameter('minLatitude', $minLatitude)
+            ->setParameter('maxLatitude', $maxLatitude)
+            ->setParameter('minLongitude', $minLongitude)
+            ->setParameter('maxLongitude', $maxLongitude)
+            ->orderBy('municipality.name', 'ASC')
+            ->addOrderBy('municipality.postal_code', 'ASC')
+            ->executeQuery()
+            ->fetchAllAssociative();
+        $choices = [];
+
+        foreach ($rows as $row) {
+            $latitude = (float) $row['center_latitude'];
+            $longitude = (float) $row['center_longitude'];
+
+            if (!$this->polygonContainsPoint($polygonPoints, $latitude, $longitude)) {
+                continue;
+            }
+
+            $choices[] = [
+                'value' => $row['insee_code'],
+                'label' => $this->municipalityLabel($row['name'], $row['postal_code']),
+            ];
+        }
+
+        return $choices;
+    }
+
     /**
      * @param list<mixed> $inseeCodes
      *
@@ -94,5 +158,59 @@ final readonly class DoctrineNewsletterAudienceMapQuery implements NewsletterAud
         return null !== $postalCode && '' !== trim($postalCode)
             ? "{$postalCode} — {$name}"
             : $name;
+    }
+
+    /**
+     * @param list<array{lat: mixed, lng: mixed}> $polygonPoints
+     *
+     * @return list<array{lat: float, lng: float}>
+     */
+    private function normalizePolygonPoints(array $polygonPoints): array
+    {
+        $normalizedPoints = [];
+
+        foreach ($polygonPoints as $polygonPoint) {
+            if (!is_array($polygonPoint)
+                || !array_key_exists('lat', $polygonPoint)
+                || !array_key_exists('lng', $polygonPoint)
+                || !is_numeric($polygonPoint['lat'])
+                || !is_numeric($polygonPoint['lng'])) {
+                continue;
+            }
+
+            $normalizedPoints[] = [
+                'lat' => (float) $polygonPoint['lat'],
+                'lng' => (float) $polygonPoint['lng'],
+            ];
+        }
+
+        return $normalizedPoints;
+    }
+
+    /**
+     * @param list<array{lat: float, lng: float}> $polygonPoints
+     */
+    private function polygonContainsPoint(array $polygonPoints, float $latitude, float $longitude): bool
+    {
+        $containsPoint = false;
+        $pointCount = count($polygonPoints);
+
+        for ($pointIndex = 0, $previousPointIndex = $pointCount - 1; $pointIndex < $pointCount; $previousPointIndex = $pointIndex++) {
+            $currentPoint = $polygonPoints[$pointIndex];
+            $previousPoint = $polygonPoints[$previousPointIndex];
+            $currentLatitude = $currentPoint['lat'];
+            $currentLongitude = $currentPoint['lng'];
+            $previousLatitude = $previousPoint['lat'];
+            $previousLongitude = $previousPoint['lng'];
+
+            $intersects = (($currentLatitude > $latitude) !== ($previousLatitude > $latitude))
+                && ($longitude < ($previousLongitude - $currentLongitude) * ($latitude - $currentLatitude) / (($previousLatitude - $currentLatitude) ?: 0.0000001) + $currentLongitude);
+
+            if ($intersects) {
+                $containsPoint = !$containsPoint;
+            }
+        }
+
+        return $containsPoint;
     }
 }
