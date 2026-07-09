@@ -15,8 +15,6 @@ use App\Application\Mailing\UpdateMailingCampaignAudience;
 use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Domain\Model\Mailing\NewsletterAudienceRadiusOrigin;
-use App\Domain\Model\ValueObject\InseeCode;
-use App\Domain\Repository\MunicipalityRepositoryInterface;
 use InvalidArgumentException;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Form\FormError;
@@ -78,7 +76,6 @@ final class MailingAudience
         private readonly UpdateMailingCampaignAudience $updateMailingCampaignAudience,
         private readonly NewsletterAudienceMunicipalityMaterializerInterface $newsletterAudienceMunicipalityMaterializer,
         private readonly NewsletterAudienceMapQueryInterface $newsletterAudienceMapQuery,
-        private readonly MunicipalityRepositoryInterface $municipalityRepository,
         #[Autowire('%app.mailing.home_latitude%')]
         private readonly string $homeLatitude,
         #[Autowire('%app.mailing.home_longitude%')]
@@ -154,14 +151,14 @@ final class MailingAudience
         return $this->audienceResolutionError;
     }
 
-    public function isMunicipalityRadiusOrigin(): bool
-    {
-        return $this->currentFormModel()->isMunicipalityRadiusOrigin();
-    }
-
     public function isCustomRadiusOrigin(): bool
     {
         return $this->currentFormModel()->isCustomRadiusOrigin();
+    }
+
+    public function isMunicipalitiesMode(): bool
+    {
+        return $this->currentFormModel()->isMunicipalitiesMode();
     }
 
     public function isAdministrativeLocationModeActive(): bool
@@ -180,6 +177,10 @@ final class MailingAudience
     #[ExposeInTemplate(name: 'audienceMapMunicipalityShapes')]
     public function getAudienceMapMunicipalityShapes(): array
     {
+        if ($this->isAudienceMapMunicipalityShapesTruncated()) {
+            return [];
+        }
+
         try {
             $inseeCodes = $this->newsletterAudienceMunicipalityMaterializer->materialize(
                 $this->currentFormModel()->toAudienceFilter(),
@@ -203,6 +204,42 @@ final class MailingAudience
         }
 
         return $serializedShapes;
+    }
+
+    /**
+     * @return list<array{inseeCode: string, label: string, latitude: float, longitude: float}>
+     */
+    #[ExposeInTemplate(name: 'audienceMapMunicipalityPoints')]
+    public function getAudienceMapMunicipalityPoints(): array
+    {
+        if (!$this->isAudienceMapMunicipalityShapesTruncated()) {
+            return [];
+        }
+
+        try {
+            $inseeCodes = $this->newsletterAudienceMunicipalityMaterializer->materialize(
+                $this->currentFormModel()->toAudienceFilter(),
+            );
+        } catch (InvalidArgumentException) {
+            return [];
+        }
+
+        $points = $this->newsletterAudienceMapQuery->findMunicipalityPointsByInseeCodes(
+            $inseeCodes,
+            self::MAP_MUNICIPALITY_SHAPE_LIMIT,
+        );
+        $serializedPoints = [];
+
+        foreach ($points as $point) {
+            $serializedPoints[] = [
+                'inseeCode' => $point->inseeCode,
+                'label' => $point->label,
+                'latitude' => $point->latitude,
+                'longitude' => $point->longitude,
+            ];
+        }
+
+        return $serializedPoints;
     }
 
     public function getAudienceMapMaterializedMunicipalityCount(): int
@@ -308,22 +345,6 @@ final class MailingAudience
             return null !== $latitude && null !== $longitude ? new Point($latitude, $longitude) : null;
         }
 
-        if (NewsletterAudienceRadiusOrigin::MUNICIPALITY->value === $radiusOrigin) {
-            $municipalityInseeCode = $this->radiusOriginMunicipalityInseeCodeValue();
-
-            if (null === $municipalityInseeCode) {
-                return null;
-            }
-
-            $municipality = $this->municipalityRepository->findByInseeCode(new InseeCode($municipalityInseeCode));
-
-            if (null === $municipality || null === $municipality->getCenterLatitude() || null === $municipality->getCenterLongitude()) {
-                return null;
-            }
-
-            return new Point($municipality->getCenterLatitude(), $municipality->getCenterLongitude());
-        }
-
         return NewsletterAudienceRadiusOrigin::HOME->value === $radiusOrigin || null === $radiusOrigin
             ? $this->homePoint()
             : null;
@@ -333,7 +354,6 @@ final class MailingAudience
     {
         return match ($this->radiusOriginValue()) {
             NewsletterAudienceRadiusOrigin::CUSTOM->value => $this->translator->trans('mailing.audience.map.origin_custom', [], 'mailing'),
-            NewsletterAudienceRadiusOrigin::MUNICIPALITY->value => $this->translator->trans('mailing.audience.map.origin_municipality', [], 'mailing'),
             default => $this->translator->trans('mailing.audience.map.origin_home', [], 'mailing'),
         };
     }
@@ -359,14 +379,6 @@ final class MailingAudience
     private function radiusKilometersValue(): ?float
     {
         return $this->currentFormModel()->radiusKilometers;
-    }
-
-    private function radiusOriginMunicipalityInseeCodeValue(): ?string
-    {
-        $inseeCode = $this->currentFormModel()->radiusOriginMunicipalityInseeCode;
-        $inseeCode = null === $inseeCode ? null : trim($inseeCode);
-
-        return null === $inseeCode || '' === $inseeCode ? null : $inseeCode;
     }
 
     private function customLatitudeValue(): ?float

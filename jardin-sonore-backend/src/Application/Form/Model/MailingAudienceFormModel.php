@@ -51,7 +51,7 @@ final class MailingAudienceFormModel
     #[Assert\Positive]
     public ?float $radiusKilometers = 1.0;
 
-    public ?NewsletterAudienceRadiusOrigin $radiusOrigin = null;
+    public MailingAudienceGeographicMode $geographicMode = MailingAudienceGeographicMode::MUNICIPALITIES;
 
     #[Assert\Regex(pattern: '/^\d{5}$/', message: 'mailing.audience.validation.insee_code')]
     public ?string $radiusOriginMunicipalityInseeCode = null;
@@ -73,7 +73,11 @@ final class MailingAudienceFormModel
         $formModel->departmentCodes = $newsletterAudienceFilter->getDepartmentCodes();
         $formModel->municipalityInseeCodes = $newsletterAudienceFilter->getMunicipalityInseeCodes();
         $formModel->radiusKilometers = $newsletterAudienceFilter->getRadiusKilometers() ?? 1.0;
-        $formModel->radiusOrigin = $newsletterAudienceFilter->getRadiusOrigin();
+        $formModel->geographicMode = match ($newsletterAudienceFilter->getRadiusOrigin()) {
+            NewsletterAudienceRadiusOrigin::HOME => MailingAudienceGeographicMode::HOME_RADIUS,
+            NewsletterAudienceRadiusOrigin::CUSTOM => MailingAudienceGeographicMode::CUSTOM_RADIUS,
+            default => MailingAudienceGeographicMode::MUNICIPALITIES,
+        };
         $formModel->radiusOriginMunicipalityInseeCode = $newsletterAudienceFilter->getRadiusOriginMunicipalityInseeCode();
         $formModel->radiusOriginCustomLatitude = $newsletterAudienceFilter->getRadiusOriginCustomLatitude();
         $formModel->radiusOriginCustomLongitude = $newsletterAudienceFilter->getRadiusOriginCustomLongitude();
@@ -88,18 +92,20 @@ final class MailingAudienceFormModel
             organizationSectors: $this->organizationSectors,
             customerStatuses: $this->customerStatuses,
             tagUuids: $this->tagUuids,
-            regionCodes: $this->regionCodes,
-            departmentCodes: $this->departmentCodes,
-            municipalityInseeCodes: $this->municipalityInseeCodes,
-            radiusKilometers: null !== $this->radiusOrigin ? ($this->radiusKilometers ?? 1.0) : null,
-            radiusOrigin: $this->radiusOrigin,
-            radiusOriginMunicipalityInseeCode: NewsletterAudienceRadiusOrigin::MUNICIPALITY === $this->radiusOrigin
-                ? $this->radiusOriginMunicipalityInseeCode
-                : null,
-            radiusOriginCustomLatitude: NewsletterAudienceRadiusOrigin::CUSTOM === $this->radiusOrigin
+            regionCodes: MailingAudienceGeographicMode::MUNICIPALITIES === $this->geographicMode ? $this->regionCodes : [],
+            departmentCodes: MailingAudienceGeographicMode::MUNICIPALITIES === $this->geographicMode ? $this->departmentCodes : [],
+            municipalityInseeCodes: MailingAudienceGeographicMode::MUNICIPALITIES === $this->geographicMode ? $this->municipalityInseeCodes : [],
+            radiusKilometers: $this->hasRadiusMode() ? ($this->radiusKilometers ?? 1.0) : null,
+            radiusOrigin: match ($this->geographicMode) {
+                MailingAudienceGeographicMode::HOME_RADIUS => NewsletterAudienceRadiusOrigin::HOME,
+                MailingAudienceGeographicMode::CUSTOM_RADIUS => NewsletterAudienceRadiusOrigin::CUSTOM,
+                default => null,
+            },
+            radiusOriginMunicipalityInseeCode: null,
+            radiusOriginCustomLatitude: MailingAudienceGeographicMode::CUSTOM_RADIUS === $this->geographicMode
                 ? $this->radiusOriginCustomLatitude
                 : null,
-            radiusOriginCustomLongitude: NewsletterAudienceRadiusOrigin::CUSTOM === $this->radiusOrigin
+            radiusOriginCustomLongitude: MailingAudienceGeographicMode::CUSTOM_RADIUS === $this->geographicMode
                 ? $this->radiusOriginCustomLongitude
                 : null,
         );
@@ -107,36 +113,47 @@ final class MailingAudienceFormModel
 
     public function hasAdministrativeLocationCriteria(): bool
     {
-        return [] !== $this->regionCodes
+        return MailingAudienceGeographicMode::MUNICIPALITIES === $this->geographicMode && (
+            [] !== $this->regionCodes
             || [] !== $this->departmentCodes
-            || [] !== $this->municipalityInseeCodes;
+            || [] !== $this->municipalityInseeCodes
+        );
     }
 
     public function hasSelectedRadiusOrigin(): bool
     {
-        return null !== $this->radiusOrigin;
+        return $this->hasRadiusMode();
     }
 
     public function hasRadiusCriteria(): bool
     {
-        return null !== $this->radiusOrigin
-            || null !== $this->radiusOriginMunicipalityInseeCode
+        return $this->hasRadiusMode()
             || null !== $this->radiusOriginCustomLatitude
             || null !== $this->radiusOriginCustomLongitude;
     }
 
-    public function isMunicipalityRadiusOrigin(): bool
+    public function isMunicipalitiesMode(): bool
     {
-        return NewsletterAudienceRadiusOrigin::MUNICIPALITY === $this->radiusOrigin;
+        return MailingAudienceGeographicMode::MUNICIPALITIES === $this->geographicMode;
     }
 
     public function isCustomRadiusOrigin(): bool
     {
-        return NewsletterAudienceRadiusOrigin::CUSTOM === $this->radiusOrigin;
+        return MailingAudienceGeographicMode::CUSTOM_RADIUS === $this->geographicMode;
     }
 
     public function getRadiusOriginValue(): ?string
     {
-        return $this->radiusOrigin?->value;
+        return match ($this->geographicMode) {
+            MailingAudienceGeographicMode::HOME_RADIUS => NewsletterAudienceRadiusOrigin::HOME->value,
+            MailingAudienceGeographicMode::CUSTOM_RADIUS => NewsletterAudienceRadiusOrigin::CUSTOM->value,
+            default => null,
+        };
+    }
+
+    public function hasRadiusMode(): bool
+    {
+        return MailingAudienceGeographicMode::HOME_RADIUS === $this->geographicMode
+            || MailingAudienceGeographicMode::CUSTOM_RADIUS === $this->geographicMode;
     }
 }

@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Application\Form;
 
 use App\Application\Form\ChoiceLoader\MunicipalityInseeCodeChoiceLoader;
+use App\Application\Form\Model\MailingAudienceGeographicMode;
 use App\Application\Form\Model\MailingAudienceFormModel;
 use App\Application\Mailing\NewsletterAudienceOptionsQueryInterface;
 use App\Domain\Model\AddressBook\CustomerStatus;
 use App\Domain\Model\AddressBook\OrganizationSector;
 use App\Domain\Model\AddressBook\OrganizationType;
-use App\Domain\Model\Mailing\NewsletterAudienceRadiusOrigin;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\ChoiceList\ArrayChoiceList;
 use Symfony\Component\Form\ChoiceList\ChoiceListInterface;
@@ -45,11 +45,6 @@ final class MailingAudienceType extends AbstractType
         $selectedMunicipalityChoices = $this->selectedMunicipalityChoices(
             $formModel instanceof MailingAudienceFormModel ? $formModel->municipalityInseeCodes : [],
         );
-        $selectedRadiusOriginMunicipalityChoices = $this->selectedMunicipalityChoices(
-            $formModel instanceof MailingAudienceFormModel && null !== $formModel->radiusOriginMunicipalityInseeCode
-                ? [$formModel->radiusOriginMunicipalityInseeCode]
-                : [],
-        );
         $expandedMultipleOptions = [
             'expanded' => true,
             'multiple' => true,
@@ -72,6 +67,17 @@ final class MailingAudienceType extends AbstractType
         ];
 
         $builder
+            ->add('geographicMode', ChoiceType::class, [
+                'label' => 'mailing.audience.form.geographic_mode',
+                'help' => 'mailing.audience.form.geographic_mode_help',
+                'disabled' => $locked,
+                'expanded' => true,
+                'choices' => [
+                    'mailing.audience.form.geographic_mode_municipalities' => MailingAudienceGeographicMode::MUNICIPALITIES,
+                    'mailing.audience.form.geographic_mode_home_radius' => MailingAudienceGeographicMode::HOME_RADIUS,
+                    'mailing.audience.form.geographic_mode_custom_radius' => MailingAudienceGeographicMode::CUSTOM_RADIUS,
+                ],
+            ])
             ->add('organizationTypes', ChoiceType::class, [
                 ...$expandedMultipleOptions,
                 'label' => 'mailing.audience.form.organization_types',
@@ -133,26 +139,14 @@ final class MailingAudienceType extends AbstractType
                     'step' => 1,
                 ],
             ])
-            ->add('radiusOrigin', ChoiceType::class, [
-                'label' => 'mailing.audience.form.radius_origin',
-                'required' => false,
-                'disabled' => $locked,
-                'placeholder' => 'mailing.audience.form.radius_origin_placeholder',
-                'choice_value' => static fn (?NewsletterAudienceRadiusOrigin $newsletterAudienceRadiusOrigin): string => null === $newsletterAudienceRadiusOrigin ? '' : $newsletterAudienceRadiusOrigin->value,
-                'choices' => [
-                    'mailing.audience.form.radius_origin_home' => NewsletterAudienceRadiusOrigin::HOME,
-                    'mailing.audience.form.radius_origin_municipality_choice' => NewsletterAudienceRadiusOrigin::MUNICIPALITY,
-                    'mailing.audience.form.radius_origin_custom_choice' => NewsletterAudienceRadiusOrigin::CUSTOM,
-                ],
-            ])
             ->add('radiusOriginMunicipalityInseeCode', ChoiceType::class, [
                 ...$municipalityAutocompleteOptions,
                 'label' => 'mailing.audience.form.radius_origin_municipality',
                 'help' => 'mailing.audience.form.radius_origin_municipality_help',
                 'choice_value' => static fn (?string $inseeCode): string => $inseeCode ?? '',
-                'choice_loader' => $this->createMunicipalityChoiceLoader($selectedRadiusOriginMunicipalityChoices),
+                'choice_loader' => $this->createMunicipalityChoiceLoader([]),
                 'required' => false,
-                'disabled' => $locked,
+                'disabled' => true,
                 'placeholder' => 'mailing.audience.form.radius_origin_municipality_placeholder',
             ])
             ->add('radiusOriginCustomLatitude', NumberType::class, [
