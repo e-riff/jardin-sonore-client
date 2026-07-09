@@ -16,6 +16,7 @@ internal:
       instruments: "Instruments"
       mailing: "Campagnes"
       invalid_recipients: "Adresses invalides"
+      audience_mask_catalog: "Masques d’audience"
       recommendation_catalog: "Recommandations"
       backoffice: "Backoffice"
   dashboard:

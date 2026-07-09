@@ -6,14 +6,17 @@ namespace App\Application\Controller;
 
 use App\Application\Form\CreateMailingCampaignType;
 use App\Application\Form\EditMailingCampaignType;
+use App\Application\Form\MailingAudienceMaskType;
 use App\Application\Form\MailingTestType;
 use App\Application\Form\Model\CreateMailingCampaignFormModel;
 use App\Application\Form\Model\EditMailingCampaignFormModel;
+use App\Application\Form\Model\MailingAudienceMaskFormModel;
 use App\Application\Form\Model\MailingTestFormModel;
 use App\Application\Mailing\CreateMailingCampaign;
 use App\Application\Mailing\CreateMailingCampaignInput;
 use App\Application\Mailing\DeleteMailingCampaign;
 use App\Application\Mailing\GetMailingCampaign;
+use App\Application\Mailing\ListMailingAudienceMasks;
 use App\Application\Mailing\ListMailingCampaigns;
 use App\Application\Mailing\NewsletterAudienceOptionsQueryInterface;
 use App\Application\Mailing\NewsletterAudienceResolverInterface;
@@ -184,6 +187,7 @@ final class MailingController extends AbstractController
         Uuid $uuid,
         Request $request,
         GetMailingCampaign $getMailingCampaign,
+        ListMailingAudienceMasks $listMailingAudienceMasks,
     ): Response {
         $mailingCampaign = $getMailingCampaign($uuid);
 
@@ -191,10 +195,22 @@ final class MailingController extends AbstractController
             throw $this->createNotFoundException();
         }
 
+        $audienceMaskForm = $this->createForm(
+            MailingAudienceMaskType::class,
+            new MailingAudienceMaskFormModel(),
+            [
+                'action' => $this->generateUrl('mailing_audience_mask_save_from_campaign', [
+                    'campaignUuid' => $mailingCampaign->getUuid(),
+                ]),
+            ],
+        );
+
         return $this->render('mailing/audience.html.twig', [
             'campaign' => $mailingCampaign,
             'campaignLocked' => !$mailingCampaign->isEditable(),
             'returnTo' => $request->query->getString('returnTo'),
+            'audienceMasks' => $listMailingAudienceMasks(),
+            'audienceMaskForm' => $audienceMaskForm->createView(),
         ]);
     }
 

@@ -33,6 +33,8 @@ final class MailingCampaign implements UuidIdentifiableInterface
         private DateTimeImmutable $createdAt = new DateTimeImmutable(),
         private DateTimeImmutable $updatedAt = new DateTimeImmutable(),
         private ?DateTimeImmutable $lastTestSentAt = null,
+        private ?Uuid $appliedAudienceMaskUuid = null,
+        private ?string $appliedAudienceMaskName = null,
         ?Uuid $uuid = null,
     ) {
         $this->initializeUuid($uuid);
@@ -43,6 +45,8 @@ final class MailingCampaign implements UuidIdentifiableInterface
         $this->bannerImagePath = $this->normalizeNullableString($bannerImagePath);
         $this->assertCallToActionIsConsistent($this->callToActionLabel, $this->callToActionUrl);
         $this->assertRecommendationList($recommendations);
+        $this->appliedAudienceMaskName = $this->normalizeNullableString($appliedAudienceMaskName);
+        $this->assertAppliedAudienceMaskIsConsistent();
         $this->assertStatusIsConsistent($status, $lastTestSentAt);
     }
 
@@ -124,6 +128,16 @@ final class MailingCampaign implements UuidIdentifiableInterface
         return $this->lastTestSentAt;
     }
 
+    public function getAppliedAudienceMaskUuid(): ?Uuid
+    {
+        return $this->appliedAudienceMaskUuid;
+    }
+
+    public function getAppliedAudienceMaskName(): ?string
+    {
+        return $this->appliedAudienceMaskName;
+    }
+
     public function updateContent(
         string $internalTitle,
         string $emailSubject,
@@ -170,6 +184,17 @@ final class MailingCampaign implements UuidIdentifiableInterface
     {
         $this->assertEditable();
         $this->audienceFilter = $audienceFilter;
+        $this->appliedAudienceMaskUuid = null;
+        $this->appliedAudienceMaskName = null;
+        $this->markAsUpdated();
+    }
+
+    public function applyAudienceMask(MailingAudienceMask $mailingAudienceMask): void
+    {
+        $this->assertEditable();
+        $this->audienceFilter = $mailingAudienceMask->getAudienceFilter();
+        $this->appliedAudienceMaskUuid = $mailingAudienceMask->getUuid();
+        $this->appliedAudienceMaskName = $mailingAudienceMask->getName();
         $this->markAsUpdated();
     }
 
@@ -310,6 +335,13 @@ final class MailingCampaign implements UuidIdentifiableInterface
     {
         if ((null === $callToActionLabel) !== (null === $callToActionUrl)) {
             throw new InvalidArgumentException('Mailing campaign call to action label and URL must either both be filled or both be empty.');
+        }
+    }
+
+    private function assertAppliedAudienceMaskIsConsistent(): void
+    {
+        if ((null === $this->appliedAudienceMaskUuid) !== (null === $this->appliedAudienceMaskName)) {
+            throw new InvalidArgumentException('Mailing campaign applied audience mask metadata must be fully defined or fully empty.');
         }
     }
 

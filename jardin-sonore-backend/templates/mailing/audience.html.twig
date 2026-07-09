@@ -11,9 +11,78 @@
         </div>
 
         <div class="internal-heading-actions">
+            <a class="internal-button" href="{{ path('mailing_audience_mask_index', { campaign: campaign.uuid }) }}">
+                {{ 'mailing.audience.mask.open_catalog'|trans({}, 'mailing') }}
+            </a>
             <a class="internal-button internal-button--secondary" href="{{ returnTo ?: path('mailing_content', { uuid: campaign.uuid }) }}">
                 {{ 'mailing.audience.back'|trans({}, 'mailing') }}
             </a>
+        </div>
+    </section>
+
+    <section class="internal-card">
+        <div>
+            <p class="internal-eyebrow">{{ 'mailing.audience.mask.eyebrow'|trans({}, 'mailing') }}</p>
+            <h2>{{ 'mailing.audience.mask.title'|trans({}, 'mailing') }}</h2>
+            <p>{{ 'mailing.audience.mask.description'|trans({}, 'mailing') }}</p>
+        </div>
+
+        {% if campaign.appliedAudienceMaskName %}
+            <div class="internal-alert internal-alert--success">
+                {{ 'mailing.audience.mask.current'|trans({ name: campaign.appliedAudienceMaskName }, 'mailing') }}
+            </div>
+        {% endif %}
+
+        <div class="internal-grid">
+            <div>
+                {{ form_start(audienceMaskForm, { attr: { class: 'internal-form' } }) }}
+                    {{ form_row(audienceMaskForm.name) }}
+                    <div class="internal-form__actions">
+                        {{ form_widget(audienceMaskForm.submit) }}
+                    </div>
+                {{ form_end(audienceMaskForm) }}
+            </div>
+
+            <div>
+                <h3>{{ 'mailing.audience.mask.available_title'|trans({}, 'mailing') }}</h3>
+
+                {% if audienceMasks is empty %}
+                    <p>{{ 'mailing.audience.mask.empty'|trans({}, 'mailing') }}</p>
+                {% else %}
+                    <div class="internal-table-wrapper">
+                        <table class="internal-table">
+                            <thead>
+                                <tr>
+                                    <th>{{ 'mailing.audience.mask.table.name'|trans({}, 'mailing') }}</th>
+                                    <th>{{ 'mailing.audience.mask.table.municipalities'|trans({}, 'mailing') }}</th>
+                                    <th>{{ 'mailing.audience.mask.table.updated_at'|trans({}, 'mailing') }}</th>
+                                    <th>{{ 'mailing.audience.mask.table.actions'|trans({}, 'mailing') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for audienceMask in audienceMasks %}
+                                    <tr>
+                                        <td>{{ audienceMask.name }}</td>
+                                        <td>{{ audienceMask.materializedMunicipalityInseeCodes|length }}</td>
+                                        <td>{{ audienceMask.updatedAt|date('d/m/Y H:i') }}</td>
+                                        <td>
+                                            <form method="post" action="{{ path('mailing_audience_mask_apply_to_campaign', {
+                                                maskUuid: audienceMask.uuid,
+                                                campaignUuid: campaign.uuid
+                                            }) }}">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('mailing_apply_audience_mask_' ~ audienceMask.uuid.toRfc4122 ~ '_' ~ campaign.uuid.toRfc4122) }}">
+                                                <button class="internal-button internal-button--secondary internal-button--compact" type="submit" {% if campaignLocked %}disabled{% endif %}>
+                                                    {{ 'mailing.audience.mask.apply'|trans({}, 'mailing') }}
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </section>
 

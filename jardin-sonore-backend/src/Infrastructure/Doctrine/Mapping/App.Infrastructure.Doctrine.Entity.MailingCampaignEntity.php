@@ -113,6 +113,21 @@ return static function (ClassMetadata $metadata): void {
     ]);
 
     $metadata->mapField([
+        'fieldName' => 'appliedAudienceMaskUuid',
+        'columnName' => 'applied_audience_mask_uuid',
+        'type' => UuidType::NAME,
+        'nullable' => true,
+    ]);
+
+    $metadata->mapField([
+        'fieldName' => 'appliedAudienceMaskName',
+        'columnName' => 'applied_audience_mask_name',
+        'type' => Types::STRING,
+        'length' => 255,
+        'nullable' => true,
+    ]);
+
+    $metadata->mapField([
         'fieldName' => 'createdAt',
         'columnName' => 'created_at',
         'type' => Types::DATETIME_IMMUTABLE,
