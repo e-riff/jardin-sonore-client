@@ -3,13 +3,13 @@ import { Controller } from '@hotwired/stimulus';
 export default class extends Controller {
     static targets = ['mapContainer', 'status'];
     static values = {
-        originSelectId: String,
+        geographicModeId: String,
         radiusKilometersId: String,
-        radiusOriginMunicipalityId: String,
         latitudeFieldId: String,
         longitudeFieldId: String,
         municipalitySelectId: String,
         municipalityShapesJson: String,
+        municipalityPointsJson: String,
         polygonResolveUrl: String,
         messagesJson: String,
         interactive: Boolean,
@@ -19,24 +19,23 @@ export default class extends Controller {
         this.drawnPolygonPoints = [];
         this.isDrawingPolygon = false;
         this.handleMapConnect = this.handleMapConnect.bind(this);
-        this.handleOriginChange = this.handleOriginChange.bind(this);
+        this.handleGeographicModeChange = this.handleGeographicModeChange.bind(this);
 
         this.element.addEventListener('ux:map:connect', this.handleMapConnect);
-        this.originSelectElement()?.addEventListener('change', this.handleOriginChange);
+        this.geographicModeFields().forEach((fieldElement) => fieldElement.addEventListener('change', this.handleGeographicModeChange));
     }
 
     disconnect() {
         this.element.removeEventListener('ux:map:connect', this.handleMapConnect);
-        this.originSelectElement()?.removeEventListener('change', this.handleOriginChange);
+        this.geographicModeFields().forEach((fieldElement) => fieldElement.removeEventListener('change', this.handleGeographicModeChange));
 
         if (this.mapClickHandler && this.mapInstance) {
             this.mapInstance.off('click', this.mapClickHandler);
         }
 
         this.municipalityShapeLayer?.remove();
-        this.drawnPolygonLayer?.remove();
-        this.drawnPolygonGuideLayer?.remove();
-        this.drawnPolygonMarkerLayer?.remove();
+        this.municipalityPointLayer?.remove();
+        this.clearDrawnPolygonVisuals();
     }
 
     handleMapConnect(event) {
@@ -52,6 +51,7 @@ export default class extends Controller {
         this.markerInstance = event.detail.markers[0] ?? null;
         this.circleInstance = event.detail.circles[0] ?? null;
         this.renderMunicipalityShapes();
+        this.renderMunicipalityPoints();
 
         if (!this.interactiveValue) {
             return;
@@ -61,27 +61,35 @@ export default class extends Controller {
         this.mapInstance.on('click', this.mapClickHandler);
     }
 
-    handleOriginChange() {
-        const originSelectElement = this.originSelectElement();
+    handleGeographicModeChange() {
+        const geographicMode = this.currentGeographicMode();
         const latitudeFieldElement = this.latitudeFieldElement();
         const longitudeFieldElement = this.longitudeFieldElement();
 
-        if (!(originSelectElement instanceof HTMLSelectElement)
-            || !(latitudeFieldElement instanceof HTMLInputElement)
-            || !(longitudeFieldElement instanceof HTMLInputElement)
-            || originSelectElement.value === 'custom') {
-            return;
+        if (geographicMode !== 'custom_radius') {
+            if (latitudeFieldElement instanceof HTMLInputElement) {
+                latitudeFieldElement.value = '';
+            }
+
+            if (longitudeFieldElement instanceof HTMLInputElement) {
+                longitudeFieldElement.value = '';
+            }
         }
 
-        this.clearDrawnPolygonVisuals();
-        latitudeFieldElement.value = '';
-        longitudeFieldElement.value = '';
+        if (geographicMode !== 'municipalities') {
+            this.isDrawingPolygon = false;
+            this.clearDrawnPolygonVisuals();
+        }
     }
 
     handleMapClick(latlng) {
         if (this.isDrawingPolygon) {
             this.addPolygonPoint(latlng);
 
+            return;
+        }
+
+        if (this.currentGeographicMode() === 'municipalities') {
             return;
         }
 
@@ -95,7 +103,7 @@ export default class extends Controller {
 
         const switchedFromRadius = this.radiusModeIsActive();
 
-        this.clearRadiusMode();
+        this.switchToMunicipalitiesMode();
         this.isDrawingPolygon = true;
         this.drawnPolygonPoints = [];
         this.clearDrawnPolygonVisuals();
@@ -177,12 +185,7 @@ export default class extends Controller {
             return;
         }
 
-        this.drawnPolygonLayer?.remove();
-        this.drawnPolygonGuideLayer?.remove();
-        this.drawnPolygonMarkerLayer?.remove();
-        this.drawnPolygonLayer = null;
-        this.drawnPolygonGuideLayer = null;
-        this.drawnPolygonMarkerLayer = null;
+        this.clearDrawnPolygonVisuals();
 
         if (this.drawnPolygonPoints.length === 0) {
             return;
@@ -217,32 +220,33 @@ export default class extends Controller {
     }
 
     selectCustomPoint(latlng) {
-        const originSelectElement = this.originSelectElement();
         const latitudeFieldElement = this.latitudeFieldElement();
         const longitudeFieldElement = this.longitudeFieldElement();
 
-        if (!(originSelectElement instanceof HTMLSelectElement)
-            || !(latitudeFieldElement instanceof HTMLInputElement)
+        if (!(latitudeFieldElement instanceof HTMLInputElement)
             || !(longitudeFieldElement instanceof HTMLInputElement)) {
             return;
         }
 
         this.isDrawingPolygon = false;
         this.clearDrawnPolygonVisuals();
-        originSelectElement.value = 'custom';
+        this.setGeographicMode('custom_radius');
         latitudeFieldElement.value = latlng.lat.toFixed(6);
         longitudeFieldElement.value = latlng.lng.toFixed(6);
 
         this.markerInstance?.setLatLng(latlng);
         this.circleInstance?.setLatLng(latlng);
 
-        this.dispatchFormInput(originSelectElement);
         this.dispatchFormInput(latitudeFieldElement);
         this.dispatchFormInput(longitudeFieldElement);
     }
 
     municipalityShapesJsonValueChanged() {
         this.renderMunicipalityShapes();
+    }
+
+    municipalityPointsJsonValueChanged() {
+        this.renderMunicipalityPoints();
     }
 
     renderMunicipalityShapes() {
@@ -286,6 +290,49 @@ export default class extends Controller {
                 }
             },
         }).addTo(this.mapInstance);
+
+        this.renderMunicipalityPoints();
+    }
+
+    renderMunicipalityPoints() {
+        if (!this.mapInstance) {
+            return;
+        }
+
+        this.municipalityPointLayer?.remove();
+        this.municipalityPointLayer = null;
+
+        if (this.municipalityShapeLayer) {
+            return;
+        }
+
+        const leaflet = globalThis.L;
+        const municipalityPoints = this.parseMunicipalityPoints();
+
+        if (!leaflet || municipalityPoints.length === 0) {
+            return;
+        }
+
+        this.municipalityPointLayer = leaflet.layerGroup(
+            municipalityPoints.map((municipalityPoint) => {
+                const marker = leaflet.circleMarker([municipalityPoint.latitude, municipalityPoint.longitude], {
+                    radius: 4,
+                    color: '#47664B',
+                    weight: 1.5,
+                    fillColor: '#7FB089',
+                    fillOpacity: 0.8,
+                });
+
+                if (typeof municipalityPoint.label === 'string' && municipalityPoint.label !== '') {
+                    marker.bindTooltip(municipalityPoint.label, {
+                        sticky: true,
+                        direction: 'top',
+                    });
+                }
+
+                return marker;
+            }),
+        ).addTo(this.mapInstance);
     }
 
     parseMunicipalityShapes() {
@@ -299,6 +346,22 @@ export default class extends Controller {
             return Array.isArray(parsedShapes) ? parsedShapes : [];
         } catch (error) {
             console.warn('Unable to parse audience municipality shapes.', error);
+
+            return [];
+        }
+    }
+
+    parseMunicipalityPoints() {
+        if (typeof this.municipalityPointsJsonValue !== 'string' || this.municipalityPointsJsonValue === '') {
+            return [];
+        }
+
+        try {
+            const parsedPoints = JSON.parse(this.municipalityPointsJsonValue);
+
+            return Array.isArray(parsedPoints) ? parsedPoints : [];
+        } catch (error) {
+            console.warn('Unable to parse audience municipality points.', error);
 
             return [];
         }
@@ -327,29 +390,12 @@ export default class extends Controller {
 
     applyMunicipalityChoices(municipalities) {
         const municipalitySelectElement = this.municipalitySelectElement();
-        const originSelectElement = this.originSelectElement();
-        const latitudeFieldElement = this.latitudeFieldElement();
-        const longitudeFieldElement = this.longitudeFieldElement();
 
         if (!(municipalitySelectElement instanceof HTMLSelectElement)) {
             return;
         }
 
-        if (originSelectElement instanceof HTMLSelectElement) {
-            originSelectElement.value = '';
-            this.dispatchFormInput(originSelectElement);
-        }
-
-        if (latitudeFieldElement instanceof HTMLInputElement) {
-            latitudeFieldElement.value = '';
-            this.dispatchFormInput(latitudeFieldElement);
-        }
-
-        if (longitudeFieldElement instanceof HTMLInputElement) {
-            longitudeFieldElement.value = '';
-            this.dispatchFormInput(longitudeFieldElement);
-        }
-
+        this.switchToMunicipalitiesMode();
         const nextValues = new Set();
 
         Array.from(municipalitySelectElement.options).forEach((optionElement) => {
@@ -405,8 +451,36 @@ export default class extends Controller {
         this.dispatchFormInput(municipalitySelectElement);
     }
 
-    originSelectElement() {
-        return document.getElementById(this.originSelectIdValue);
+    geographicModeFields() {
+        const geographicModeElement = document.getElementById(this.geographicModeIdValue);
+
+        if (!(geographicModeElement instanceof HTMLElement)) {
+            return [];
+        }
+
+        const formElement = geographicModeElement.closest('form') ?? this.element.closest('form');
+
+        return Array.from(formElement?.querySelectorAll('input[name$="[geographicMode]"]') ?? [])
+            .filter((fieldElement) => fieldElement instanceof HTMLInputElement);
+    }
+
+    currentGeographicMode() {
+        const checkedModeElement = this.geographicModeFields().find((fieldElement) => fieldElement.checked);
+
+        return checkedModeElement instanceof HTMLInputElement ? checkedModeElement.value : null;
+    }
+
+    setGeographicMode(mode) {
+        const geographicModeField = this.geographicModeFields().find((fieldElement) => fieldElement.value === mode);
+
+        if (!(geographicModeField instanceof HTMLInputElement)) {
+            return;
+        }
+
+        if (!geographicModeField.checked) {
+            geographicModeField.checked = true;
+            this.dispatchFormInput(geographicModeField);
+        }
     }
 
     latitudeFieldElement() {
@@ -425,10 +499,6 @@ export default class extends Controller {
         return document.getElementById(this.radiusKilometersIdValue);
     }
 
-    radiusOriginMunicipalityElement() {
-        return document.getElementById(this.radiusOriginMunicipalityIdValue);
-    }
-
     updateStatus(message) {
         if (!this.hasStatusTarget) {
             return;
@@ -443,29 +513,20 @@ export default class extends Controller {
     }
 
     radiusModeIsActive() {
-        const originSelectElement = this.originSelectElement();
+        const geographicMode = this.currentGeographicMode();
 
-        return originSelectElement instanceof HTMLSelectElement && originSelectElement.value.trim() !== '';
+        return geographicMode === 'home_radius' || geographicMode === 'custom_radius';
     }
 
     clearRadiusMode() {
-        const originSelectElement = this.originSelectElement();
         const radiusKilometersElement = this.radiusKilometersElement();
-        const radiusOriginMunicipalityElement = this.radiusOriginMunicipalityElement();
         const latitudeFieldElement = this.latitudeFieldElement();
         const longitudeFieldElement = this.longitudeFieldElement();
-
-        if (originSelectElement instanceof HTMLSelectElement && originSelectElement.value.trim() !== '') {
-            originSelectElement.value = '';
-            this.dispatchFormInput(originSelectElement);
-        }
 
         if (radiusKilometersElement instanceof HTMLInputElement) {
             radiusKilometersElement.value = '';
             this.dispatchFormInput(radiusKilometersElement);
         }
-
-        this.clearSelectValue(radiusOriginMunicipalityElement);
 
         if (latitudeFieldElement instanceof HTMLInputElement) {
             latitudeFieldElement.value = '';
@@ -481,20 +542,9 @@ export default class extends Controller {
         this.circleInstance = null;
     }
 
-    clearSelectValue(selectElement) {
-        if (!(selectElement instanceof HTMLSelectElement)) {
-            return;
-        }
-
-        if ('tomselect' in selectElement && selectElement.tomselect) {
-            selectElement.tomselect.clear(true);
-            this.dispatchFormInput(selectElement);
-
-            return;
-        }
-
-        selectElement.value = '';
-        this.dispatchFormInput(selectElement);
+    switchToMunicipalitiesMode() {
+        this.clearRadiusMode();
+        this.setGeographicMode('municipalities');
     }
 
     clearDrawnPolygonVisuals() {

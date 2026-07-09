@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Mailing;
 
+use App\Application\Mailing\AudienceMapMunicipalityPoint;
 use App\Application\Mailing\AudienceMapMunicipalityShape;
 use App\Application\Mailing\NewsletterAudienceMapQueryInterface;
 use Doctrine\DBAL\ArrayParameterType;
@@ -71,6 +72,61 @@ final readonly class DoctrineNewsletterAudienceMapQuery implements NewsletterAud
         }
 
         return $shapes;
+    }
+
+    public function findMunicipalityPointsByInseeCodes(array $inseeCodes, ?int $limit = null): array
+    {
+        $inseeCodes = $this->normalizeInseeCodes($inseeCodes);
+
+        if ([] === $inseeCodes) {
+            return [];
+        }
+
+        if (null !== $limit && $limit < 1) {
+            throw new InvalidArgumentException('Municipality point query limit must be greater than zero.');
+        }
+
+        $queryBuilder = $this->connection->createQueryBuilder()
+            ->select(
+                'municipality.insee_code',
+                'municipality.name',
+                'municipality.postal_code',
+                'municipality.center_latitude',
+                'municipality.center_longitude',
+            )
+            ->from('municipality', 'municipality')
+            ->where('municipality.insee_code IN (:inseeCodes)')
+            ->andWhere('municipality.center_latitude IS NOT NULL')
+            ->andWhere('municipality.center_longitude IS NOT NULL')
+            ->setParameter('inseeCodes', $inseeCodes, ArrayParameterType::STRING)
+            ->orderBy('municipality.name', 'ASC')
+            ->addOrderBy('municipality.postal_code', 'ASC');
+
+        if (null !== $limit) {
+            $queryBuilder->setMaxResults($limit);
+        }
+
+        /** @var list<array{
+         *     insee_code: string,
+         *     name: string,
+         *     postal_code: ?string,
+         *     center_latitude: float|int|string,
+         *     center_longitude: float|int|string
+         * }> $rows
+         */
+        $rows = $queryBuilder->executeQuery()->fetchAllAssociative();
+        $points = [];
+
+        foreach ($rows as $row) {
+            $points[] = new AudienceMapMunicipalityPoint(
+                inseeCode: $row['insee_code'],
+                label: $this->municipalityLabel($row['name'], $row['postal_code']),
+                latitude: (float) $row['center_latitude'],
+                longitude: (float) $row['center_longitude'],
+            );
+        }
+
+        return $points;
     }
 
     public function findMunicipalityChoicesWithinPolygon(array $polygonPoints): array

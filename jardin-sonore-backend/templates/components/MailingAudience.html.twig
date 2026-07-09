@@ -23,47 +23,44 @@
 
     {{ form_start(form, {
         attr: audience_attributes|merge({
-            class: 'internal-form internal-form--wide',
-            'data-audience-mode-radius-origin-municipality-insee-code-value': form.radiusOriginMunicipalityInseeCode.vars.value ?? ''
+            class: 'internal-form internal-form--wide'
         })
     }) }}
-        <fieldset
-            class="internal-card mailing-audience__fieldset mailing-audience__radius"
-            {{ stimulus_target('audience-mode', 'radiusFieldset') }}
-            {% if locked %}disabled{% endif %}
-        >
+        <section class="internal-card">
+            <div>
+                <p class="internal-eyebrow">{{ 'mailing.audience.criteria.mode_eyebrow'|trans({}, 'mailing') }}</p>
+                <h2>{{ 'mailing.audience.criteria.mode_title'|trans({}, 'mailing') }}</h2>
+                <p>{{ 'mailing.audience.criteria.mode_description'|trans({}, 'mailing') }}</p>
+            </div>
+
+            {{ form_row(form.geographicMode) }}
+        </section>
+
+        <section class="internal-card mailing-audience__fieldset mailing-audience__radius">
             <div>
                 <p class="internal-eyebrow">{{ 'mailing.audience.criteria.radius_eyebrow'|trans({}, 'mailing') }}</p>
                 <h2>{{ 'mailing.audience.criteria.radius'|trans({}, 'mailing') }}</h2>
                 <p>{{ 'mailing.audience.criteria.radius_description'|trans({}, 'mailing') }}</p>
             </div>
 
-            <div class="internal-form__grid">
+            <div class="internal-form__grid" {{ stimulus_target('audience-mode', 'radiusFieldset') }}>
                 {{ form_row(form.radiusKilometers) }}
-                {{ form_row(form.radiusOrigin) }}
             </div>
 
-            {% if this.municipalityRadiusOrigin %}
-                {{ form_row(form.radiusOriginMunicipalityInseeCode) }}
-            {% else %}
-                <div hidden>
-                    {{ form_row(form.radiusOriginMunicipalityInseeCode) }}
-                </div>
-            {% endif %}
-
             <div hidden>
+                {{ form_row(form.radiusOriginMunicipalityInseeCode) }}
                 {{ form_widget(form.radiusOriginCustomLatitude) }}
                 {{ form_widget(form.radiusOriginCustomLongitude) }}
             </div>
 
             <div class="mailing-audience__map-card" {{ stimulus_controller('audience-map', {
-                origin_select_id: form.radiusOrigin.vars.id,
+                geographic_mode_id: form.geographicMode.vars.id,
                 radius_kilometers_id: form.radiusKilometers.vars.id,
-                radius_origin_municipality_id: form.radiusOriginMunicipalityInseeCode.vars.id,
                 latitude_field_id: form.radiusOriginCustomLatitude.vars.id,
                 longitude_field_id: form.radiusOriginCustomLongitude.vars.id,
                 municipality_select_id: form.municipalityInseeCodes.vars.id,
                 municipality_shapes_json: audienceMapMunicipalityShapes|json_encode,
+                municipality_points_json: audienceMapMunicipalityPoints|json_encode,
                 polygon_resolve_url: path('mailing_audience_municipalities_in_polygon'),
                 messages_json: {
                     polygon_drawing_started: 'mailing.audience.map.status.polygon_drawing_started'|trans({}, 'mailing'),
@@ -84,7 +81,7 @@
                 </div>
 
                 {% if not locked %}
-                    <div class="mailing-audience__map-actions">
+                    <div class="mailing-audience__map-actions" {{ stimulus_target('audience-mode', 'polygonTools') }} {% if not this.municipalitiesMode %}hidden{% endif %}>
                         <button
                             class="internal-button internal-button--secondary internal-button--compact"
                             type="button"
@@ -144,7 +141,7 @@
                     </p>
                 {% endif %}
             </div>
-        </fieldset>
+        </section>
 
         <section class="internal-card">
             <div>
@@ -166,7 +163,7 @@
                 <fieldset
                     class="mailing-audience__fieldset"
                     {{ stimulus_target('audience-mode', 'locationFieldset') }}
-                    {% if locked or this.radiusModeActive %}disabled{% endif %}
+                    {% if locked or not this.municipalitiesMode %}disabled{% endif %}
                 >
                     <legend>{{ 'mailing.audience.criteria.geography'|trans({}, 'mailing') }}</legend>
                     <p class="mailing-audience__fieldset-description">{{ 'mailing.audience.criteria.geography_description'|trans({}, 'mailing') }}</p>
