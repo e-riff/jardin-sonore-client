@@ -16,6 +16,7 @@ use App\Application\Mailing\CreateMailingCampaign;
 use App\Application\Mailing\CreateMailingCampaignInput;
 use App\Application\Mailing\DeleteMailingCampaign;
 use App\Application\Mailing\GetMailingCampaign;
+use App\Application\Mailing\NewsletterAudienceMapQueryInterface;
 use App\Application\Mailing\ListMailingAudienceMasks;
 use App\Application\Mailing\ListMailingCampaigns;
 use App\Application\Mailing\NewsletterAudienceOptionsQueryInterface;
@@ -72,6 +73,19 @@ final class MailingController extends AbstractController
                     'page' => $page + 1,
                 ])
                 : null,
+        ]);
+    }
+
+    #[Route('/audience/municipalities/in-polygon', name: 'audience_municipalities_in_polygon', methods: ['POST'])]
+    public function municipalitiesInPolygon(
+        Request $request,
+        NewsletterAudienceMapQueryInterface $newsletterAudienceMapQuery,
+    ): JsonResponse {
+        $payload = json_decode($request->getContent(), true);
+        $polygonPoints = is_array($payload['points'] ?? null) ? $payload['points'] : [];
+
+        return $this->json([
+            'results' => $newsletterAudienceMapQuery->findMunicipalityChoicesWithinPolygon($polygonPoints),
         ]);
     }
 

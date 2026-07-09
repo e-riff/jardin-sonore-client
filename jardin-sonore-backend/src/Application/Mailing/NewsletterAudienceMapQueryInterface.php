@@ -12,4 +12,11 @@ interface NewsletterAudienceMapQueryInterface
      * @return list<AudienceMapMunicipalityShape>
      */
     public function findMunicipalityShapesByInseeCodes(array $inseeCodes, ?int $limit = null): array;
+
+    /**
+     * @param list<array{lat: float, lng: float}> $polygonPoints
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    public function findMunicipalityChoicesWithinPolygon(array $polygonPoints): array;
 }

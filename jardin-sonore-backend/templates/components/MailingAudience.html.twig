@@ -56,27 +56,67 @@
                 {{ form_widget(form.radiusOriginCustomLongitude) }}
             </div>
 
-            <div class="mailing-audience__map-card">
+            <div class="mailing-audience__map-card" {{ stimulus_controller('audience-map', {
+                origin_select_id: form.radiusOrigin.vars.id,
+                latitude_field_id: form.radiusOriginCustomLatitude.vars.id,
+                longitude_field_id: form.radiusOriginCustomLongitude.vars.id,
+                municipality_select_id: form.municipalityInseeCodes.vars.id,
+                municipality_shapes_json: audienceMapMunicipalityShapes|json_encode,
+                polygon_resolve_url: path('mailing_audience_municipalities_in_polygon'),
+                messages_json: {
+                    polygon_drawing_started: 'mailing.audience.map.status.polygon_drawing_started'|trans({}, 'mailing'),
+                    polygon_needs_three_points: 'mailing.audience.map.status.polygon_needs_three_points'|trans({}, 'mailing'),
+                    polygon_resolving: 'mailing.audience.map.status.polygon_resolving'|trans({}, 'mailing'),
+                    polygon_empty: 'mailing.audience.map.status.polygon_empty'|trans({}, 'mailing'),
+                    polygon_resolve_failed: 'mailing.audience.map.status.polygon_resolve_failed'|trans({}, 'mailing'),
+                    polygon_cleared: 'mailing.audience.map.status.polygon_cleared'|trans({}, 'mailing'),
+                    polygon_points_count: 'mailing.audience.map.status.polygon_points_count'|trans({}, 'mailing'),
+                    polygon_applied: 'mailing.audience.map.status.polygon_applied'|trans({}, 'mailing')
+                }|json_encode,
+                interactive: not locked
+            }) }}>
                 <div class="mailing-audience__map-heading">
                     <strong>{{ 'mailing.audience.map.title'|trans({}, 'mailing') }}</strong>
                     <p>{{ 'mailing.audience.map.description'|trans({}, 'mailing') }}</p>
                 </div>
 
-                {{ ux_map(audienceMap, {
-                    class: locked ? 'mailing-audience__map mailing-audience__map--locked' : 'mailing-audience__map',
-                }|merge(
-                    stimulus_controller('audience-map', {
-                        origin_select_id: form.radiusOrigin.vars.id,
-                        latitude_field_id: form.radiusOriginCustomLatitude.vars.id,
-                        longitude_field_id: form.radiusOriginCustomLongitude.vars.id,
-                        municipality_shapes_json: audienceMapMunicipalityShapes|json_encode,
-                        interactive: not locked
-                    })
-                )) }}
+                {% if not locked %}
+                    <div class="mailing-audience__map-actions">
+                        <button
+                            class="internal-button internal-button--secondary internal-button--compact"
+                            type="button"
+                            {{ stimulus_action('audience-map', 'startPolygonDrawing') }}
+                        >
+                            {{ 'mailing.audience.map.start_polygon'|trans({}, 'mailing') }}
+                        </button>
+                        <button
+                            class="internal-button internal-button--secondary internal-button--compact"
+                            type="button"
+                            {{ stimulus_action('audience-map', 'finishPolygonDrawing') }}
+                        >
+                            {{ 'mailing.audience.map.finish_polygon'|trans({}, 'mailing') }}
+                        </button>
+                        <button
+                            class="internal-button internal-button--secondary internal-button--compact"
+                            type="button"
+                            {{ stimulus_action('audience-map', 'clearPolygonDrawing') }}
+                        >
+                            {{ 'mailing.audience.map.clear_polygon'|trans({}, 'mailing') }}
+                        </button>
+                    </div>
+                {% endif %}
+
+                <div {{ stimulus_target('audience-map', 'mapContainer') }}>
+                    {{ ux_map(audienceMap, {
+                        class: locked ? 'mailing-audience__map mailing-audience__map--locked' : 'mailing-audience__map',
+                    }) }}
+                </div>
 
                 <p class="mailing-audience__map-help">
                     {{ 'mailing.audience.map.help'|trans({}, 'mailing') }}
                 </p>
+
+                <p class="mailing-audience__map-help" {{ stimulus_target('audience-map', 'status') }}></p>
 
                 {% if this.audienceMapMaterializedMunicipalityCount > 0 %}
                     <p class="mailing-audience__map-polygons">

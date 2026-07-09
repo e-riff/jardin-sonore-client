@@ -1,15 +1,21 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
+    static targets = ['mapContainer', 'status'];
     static values = {
         originSelectId: String,
         latitudeFieldId: String,
         longitudeFieldId: String,
+        municipalitySelectId: String,
         municipalityShapesJson: String,
+        polygonResolveUrl: String,
+        messagesJson: String,
         interactive: Boolean,
     };
 
     connect() {
+        this.drawnPolygonPoints = [];
+        this.isDrawingPolygon = false;
         this.handleMapConnect = this.handleMapConnect.bind(this);
         this.handleOriginChange = this.handleOriginChange.bind(this);
 
@@ -26,9 +32,16 @@ export default class extends Controller {
         }
 
         this.municipalityShapeLayer?.remove();
+        this.drawnPolygonLayer?.remove();
+        this.drawnPolygonGuideLayer?.remove();
+        this.drawnPolygonMarkerLayer?.remove();
     }
 
     handleMapConnect(event) {
+        if (this.hasMapContainerTarget && event.target !== this.mapContainerTarget.firstElementChild) {
+            return;
+        }
+
         if (this.mapClickHandler && this.mapInstance) {
             this.mapInstance.off('click', this.mapClickHandler);
         }
@@ -42,7 +55,7 @@ export default class extends Controller {
             return;
         }
 
-        this.mapClickHandler = (leafletEvent) => this.selectCustomPoint(leafletEvent.latlng);
+        this.mapClickHandler = (leafletEvent) => this.handleMapClick(leafletEvent.latlng);
         this.mapInstance.on('click', this.mapClickHandler);
     }
 
@@ -60,6 +73,147 @@ export default class extends Controller {
 
         latitudeFieldElement.value = '';
         longitudeFieldElement.value = '';
+    }
+
+    handleMapClick(latlng) {
+        if (this.isDrawingPolygon) {
+            this.addPolygonPoint(latlng);
+
+            return;
+        }
+
+        this.selectCustomPoint(latlng);
+    }
+
+    startPolygonDrawing() {
+        if (!this.mapInstance) {
+            return;
+        }
+
+        this.isDrawingPolygon = true;
+        this.drawnPolygonPoints = [];
+        this.drawnPolygonLayer?.remove();
+        this.drawnPolygonGuideLayer?.remove();
+        this.drawnPolygonMarkerLayer?.remove();
+        this.drawnPolygonLayer = null;
+        this.drawnPolygonGuideLayer = null;
+        this.drawnPolygonMarkerLayer = null;
+        this.updateStatus(this.message('polygon_drawing_started'));
+    }
+
+    async finishPolygonDrawing() {
+        if (!this.isDrawingPolygon || this.drawnPolygonPoints.length < 3) {
+            this.updateStatus(this.message('polygon_needs_three_points'));
+
+            return;
+        }
+
+        this.isDrawingPolygon = false;
+        this.renderDrawnPolygon();
+        this.updateStatus(this.message('polygon_resolving'));
+
+        try {
+            const response = await fetch(this.polygonResolveUrlValue, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({
+                    points: this.drawnPolygonPoints.map((polygonPoint) => ({
+                        lat: polygonPoint.lat,
+                        lng: polygonPoint.lng,
+                    })),
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Unexpected response status: ${response.status}`);
+            }
+
+            const payload = await response.json();
+            const municipalities = Array.isArray(payload.results) ? payload.results : [];
+
+            if (municipalities.length === 0) {
+                this.updateStatus(this.message('polygon_empty'));
+
+                return;
+            }
+
+            this.applyMunicipalityChoices(municipalities);
+            this.updateStatus(this.message('polygon_applied').replace('%count%', `${municipalities.length}`));
+        } catch (error) {
+            console.error('Unable to resolve municipalities from polygon.', error);
+            this.updateStatus(this.message('polygon_resolve_failed'));
+        }
+    }
+
+    clearPolygonDrawing() {
+        this.isDrawingPolygon = false;
+        this.drawnPolygonPoints = [];
+        this.drawnPolygonLayer?.remove();
+        this.drawnPolygonGuideLayer?.remove();
+        this.drawnPolygonMarkerLayer?.remove();
+        this.drawnPolygonLayer = null;
+        this.drawnPolygonGuideLayer = null;
+        this.drawnPolygonMarkerLayer = null;
+        this.updateStatus(this.message('polygon_cleared'));
+    }
+
+    addPolygonPoint(latlng) {
+        this.drawnPolygonPoints = [...this.drawnPolygonPoints, latlng];
+        this.renderDrawnPolygon();
+        this.updateStatus(this.message('polygon_points_count').replace('%count%', `${this.drawnPolygonPoints.length}`));
+    }
+
+    renderDrawnPolygon() {
+        if (!this.mapInstance) {
+            return;
+        }
+
+        const leaflet = globalThis.L;
+
+        if (!leaflet) {
+            return;
+        }
+
+        this.drawnPolygonLayer?.remove();
+        this.drawnPolygonGuideLayer?.remove();
+        this.drawnPolygonMarkerLayer?.remove();
+        this.drawnPolygonLayer = null;
+        this.drawnPolygonGuideLayer = null;
+        this.drawnPolygonMarkerLayer = null;
+
+        if (this.drawnPolygonPoints.length === 0) {
+            return;
+        }
+
+        this.drawnPolygonMarkerLayer = leaflet.layerGroup(
+            this.drawnPolygonPoints.map((polygonPoint) => leaflet.circleMarker(polygonPoint, {
+                radius: 4,
+                color: '#A64D43',
+                weight: 2,
+                fillColor: '#F7D7C4',
+                fillOpacity: 1,
+            })),
+        ).addTo(this.mapInstance);
+
+        if (this.drawnPolygonPoints.length >= 2) {
+            this.drawnPolygonGuideLayer = leaflet.polyline(this.drawnPolygonPoints, {
+                color: '#A64D43',
+                weight: 2,
+                dashArray: '6 6',
+            }).addTo(this.mapInstance);
+        }
+
+        if (this.drawnPolygonPoints.length >= 3) {
+            this.drawnPolygonLayer = leaflet.polygon(this.drawnPolygonPoints, {
+                color: '#A64D43',
+                weight: 2,
+                fillColor: '#F3C9B2',
+                fillOpacity: 0.18,
+            }).addTo(this.mapInstance);
+        }
     }
 
     selectCustomPoint(latlng) {
@@ -83,23 +237,6 @@ export default class extends Controller {
         this.dispatchFormInput(originSelectElement);
         this.dispatchFormInput(latitudeFieldElement);
         this.dispatchFormInput(longitudeFieldElement);
-    }
-
-    originSelectElement() {
-        return document.getElementById(this.originSelectIdValue);
-    }
-
-    latitudeFieldElement() {
-        return document.getElementById(this.latitudeFieldIdValue);
-    }
-
-    longitudeFieldElement() {
-        return document.getElementById(this.longitudeFieldIdValue);
-    }
-
-    dispatchFormInput(fieldElement) {
-        fieldElement.dispatchEvent(new Event('input', { bubbles: true }));
-        fieldElement.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
     municipalityShapesJsonValueChanged() {
@@ -184,5 +321,142 @@ export default class extends Controller {
                 label: municipalityShape.label ?? null,
             },
         };
+    }
+
+    applyMunicipalityChoices(municipalities) {
+        const municipalitySelectElement = this.municipalitySelectElement();
+        const originSelectElement = this.originSelectElement();
+        const latitudeFieldElement = this.latitudeFieldElement();
+        const longitudeFieldElement = this.longitudeFieldElement();
+
+        if (!(municipalitySelectElement instanceof HTMLSelectElement)) {
+            return;
+        }
+
+        if (originSelectElement instanceof HTMLSelectElement) {
+            originSelectElement.value = '';
+            this.dispatchFormInput(originSelectElement);
+        }
+
+        if (latitudeFieldElement instanceof HTMLInputElement) {
+            latitudeFieldElement.value = '';
+            this.dispatchFormInput(latitudeFieldElement);
+        }
+
+        if (longitudeFieldElement instanceof HTMLInputElement) {
+            longitudeFieldElement.value = '';
+            this.dispatchFormInput(longitudeFieldElement);
+        }
+
+        const nextValues = new Set();
+
+        Array.from(municipalitySelectElement.options).forEach((optionElement) => {
+            if (optionElement.selected) {
+                nextValues.add(optionElement.value);
+            }
+        });
+
+        municipalities.forEach((municipality) => {
+            if (typeof municipality?.value === 'string' && municipality.value !== '') {
+                nextValues.add(municipality.value);
+            }
+        });
+
+        if ('tomselect' in municipalitySelectElement && municipalitySelectElement.tomselect) {
+            municipalities.forEach((municipality) => {
+                if (typeof municipality?.value !== 'string' || municipality.value === '') {
+                    return;
+                }
+
+                municipalitySelectElement.tomselect.addOption({
+                    value: municipality.value,
+                    text: municipality.label ?? municipality.value,
+                });
+            });
+            municipalitySelectElement.tomselect.setValue(Array.from(nextValues), true);
+            this.dispatchFormInput(municipalitySelectElement);
+
+            return;
+        }
+
+        municipalities.forEach((municipality) => {
+            if (typeof municipality?.value !== 'string' || municipality.value === '') {
+                return;
+            }
+
+            let optionElement = Array.from(municipalitySelectElement.options)
+                .find((candidateOptionElement) => candidateOptionElement.value === municipality.value);
+
+            if (!(optionElement instanceof HTMLOptionElement)) {
+                optionElement = new Option(
+                    municipality.label ?? municipality.value,
+                    municipality.value,
+                    true,
+                    true,
+                );
+                municipalitySelectElement.add(optionElement);
+            }
+
+            optionElement.selected = true;
+        });
+
+        this.dispatchFormInput(municipalitySelectElement);
+    }
+
+    originSelectElement() {
+        return document.getElementById(this.originSelectIdValue);
+    }
+
+    latitudeFieldElement() {
+        return document.getElementById(this.latitudeFieldIdValue);
+    }
+
+    longitudeFieldElement() {
+        return document.getElementById(this.longitudeFieldIdValue);
+    }
+
+    municipalitySelectElement() {
+        return document.getElementById(this.municipalitySelectIdValue);
+    }
+
+    updateStatus(message) {
+        if (!this.hasStatusTarget) {
+            return;
+        }
+
+        this.statusTarget.textContent = message;
+    }
+
+    dispatchFormInput(fieldElement) {
+        fieldElement.dispatchEvent(new Event('input', { bubbles: true }));
+        fieldElement.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    message(key) {
+        const messages = this.messages();
+
+        return typeof messages[key] === 'string' ? messages[key] : '';
+    }
+
+    messages() {
+        if (this.parsedMessages) {
+            return this.parsedMessages;
+        }
+
+        if (typeof this.messagesJsonValue !== 'string' || this.messagesJsonValue === '') {
+            this.parsedMessages = {};
+
+            return this.parsedMessages;
+        }
+
+        try {
+            const parsedMessages = JSON.parse(this.messagesJsonValue);
+            this.parsedMessages = typeof parsedMessages === 'object' && parsedMessages !== null ? parsedMessages : {};
+        } catch (error) {
+            console.warn('Unable to parse audience map messages.', error);
+            this.parsedMessages = {};
+        }
+
+        return this.parsedMessages;
     }
 }
