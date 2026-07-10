@@ -215,6 +215,8 @@
 
         {% set resolution = this.audienceResolution %}
         {% set audience_delta = this.audienceDelta %}
+        {% set displayed_recipients = is_extension_mode and audience_delta ? audience_delta.previewRecipients : resolution ? resolution.recipients : [] %}
+        {% set displayed_recipients_truncated = is_extension_mode ? false : resolution and resolution.truncated %}
 
         {% if this.audienceResolutionError %}
             <div class="internal-alert internal-alert--error">
@@ -243,7 +245,7 @@
                 </p>
             {% endif %}
 
-            {% if resolution.recipients is empty %}
+            {% if displayed_recipients is empty %}
                 <p>{{ (is_extension_mode ? 'mailing.audience.extend.result.empty' : 'mailing.audience.result.empty')|trans({}, 'mailing') }}</p>
             {% else %}
                 <div class="internal-table-wrapper">
@@ -255,7 +257,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for recipient in resolution.recipients %}
+                            {% for recipient in displayed_recipients %}
                                 <tr>
                                     <td data-label="{{ 'mailing.audience.result.name'|trans({}, 'mailing') }}">{{ recipient.displayName ?? '—' }}</td>
                                     <td data-label="{{ 'mailing.audience.result.email'|trans({}, 'mailing') }}">{{ recipient.emailAddress.value }}</td>
@@ -265,7 +267,7 @@
                     </table>
                 </div>
 
-                {% if resolution.truncated %}
+                {% if displayed_recipients_truncated %}
                     <p class="help-text">{{ (is_extension_mode ? 'mailing.audience.extend.result.truncated' : 'mailing.audience.result.truncated')|trans({}, 'mailing') }}</p>
                 {% endif %}
             {% endif %}
