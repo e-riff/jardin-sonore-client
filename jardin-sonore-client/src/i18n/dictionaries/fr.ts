@@ -277,6 +277,21 @@ const fr = {
         quoteMark: "“",
         items: [
             {
+                quote: "Une animation parfaite pour notre fête de fin d'année !\n" +
+                    "Nous avons fait appel à Emerick pour animer notre fête de fin d'année en crèche, et ce fut un vrai succès ! La séance a commencé par une première partie tout en douceur avec des comptines, parfaite pour capter l'attention des tout-petits et les mettre en confiance.\n" +
+                    "Puis place au jardin sonore, magnifiquement adapté à l'âge des enfants : des instruments et sons accessibles, une découverte sensorielle ludique et bienveillante. Les petits (et les parents !) étaient conquis, entre curiosité et émerveillement.\n" +
+                    "Emeric a su créer un moment à la fois apaisant et joyeux, avec beaucoup de douceur dans son approche. Une animation que l'on recommande vivement pour les crèches et structures petite enfance!",
+                date: "9 juillet 2026",
+                firstName: "Anaïs",
+                lastNameInitial: "T",
+                role: "Directrice",
+                organization: "Les p'tits Matrus",
+                organizationHref: "https://www.saint-etienne.fr/annuaire-general/creche-les-ptits-matrus",
+                photoFileName: "anais.webp",
+                photoAlt: "Portrait d'Anaïs",
+                tone: "secondary",
+            },
+            {
                 quote: "J'ai le plaisir de travailler avec Emeric depuis de très nombreuses années. Toujours dans la bienveillance, il nous permet d'apprivoiser les sons et la musique à travers différentes expériences ludiques. Bébés, moyens et grands y trouvent leur place tout en douceur, selon leur propre rythme. Chaque séance d'éveil musical est un moment magique ! Emeric sort de ses sacs et valises de multiples trésors prêts à nous enchanter. Les sons et la musique prennent alors possession du lieu, pour le plus grand plaisir des enfants et des adultes qui les accompagnent. C'est un véritable moment suspendu !",
                 date: "4 juin 2026",
                 firstName: "Isabelle",
