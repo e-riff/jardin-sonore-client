@@ -15,6 +15,7 @@ use App\Application\Form\Model\MailingTestFormModel;
 use App\Application\Mailing\CreateMailingCampaign;
 use App\Application\Mailing\CreateMailingCampaignInput;
 use App\Application\Mailing\DeleteMailingCampaign;
+use App\Application\Mailing\GetMailingAudienceMask;
 use App\Application\Mailing\GetMailingCampaign;
 use App\Application\Mailing\ListMailingAudienceMasks;
 use App\Application\Mailing\ListMailingCampaigns;
@@ -384,6 +385,8 @@ final class MailingController extends AbstractController
         Uuid $uuid,
         Request $request,
         GetMailingCampaign $getMailingCampaign,
+        GetMailingAudienceMask $getMailingAudienceMask,
+        ListMailingAudienceMasks $listMailingAudienceMasks,
     ): Response {
         $mailingCampaign = $getMailingCampaign($uuid);
 
@@ -399,11 +402,23 @@ final class MailingController extends AbstractController
 
         $audienceExtensionResult = $request->getSession()->get('mailing.audience_extension_result');
         $request->getSession()->remove('mailing.audience_extension_result');
+        $selectedAudienceMask = null;
+        $selectedAudienceMaskUuid = $request->query->getString('mask');
+
+        if ('' !== $selectedAudienceMaskUuid && Uuid::isValid($selectedAudienceMaskUuid)) {
+            $selectedAudienceMask = $getMailingAudienceMask(Uuid::fromString($selectedAudienceMaskUuid));
+            $selectedAudienceMaskUuid = $selectedAudienceMask?->getUuid()->toRfc4122() ?? '';
+        } else {
+            $selectedAudienceMaskUuid = '';
+        }
 
         return $this->render('mailing/audience_extend.html.twig', [
             'campaign' => $mailingCampaign,
             'returnTo' => $request->query->getString('returnTo'),
             'audienceExtensionResult' => is_array($audienceExtensionResult) ? $audienceExtensionResult : null,
+            'audienceMasks' => $listMailingAudienceMasks(),
+            'selectedAudienceMask' => $selectedAudienceMask,
+            'selectedAudienceMaskUuid' => $selectedAudienceMaskUuid,
         ]);
     }
 

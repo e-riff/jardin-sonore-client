@@ -47,9 +47,73 @@
         </section>
     {% endif %}
 
+    <details class="internal-card mailing-audience__mask-card">
+        <summary class="mailing-audience__mask-summary">
+            <div>
+                <p class="internal-eyebrow">{{ 'mailing.audience.extend.mask.eyebrow'|trans({}, 'mailing') }}</p>
+                <h2>{{ 'mailing.audience.extend.mask.title'|trans({}, 'mailing') }}</h2>
+            </div>
+
+            <div class="mailing-audience__mask-summary-meta">
+                <span class="help-text">
+                    {{ 'mailing.audience.mask.count'|trans({ count: audienceMasks|length }, 'mailing') }}
+                </span>
+            </div>
+        </summary>
+
+        <div class="mailing-audience__mask-content">
+            <p>{{ 'mailing.audience.extend.mask.description'|trans({}, 'mailing') }}</p>
+
+            {% if selectedAudienceMask %}
+                <p class="help-text">{{ 'mailing.audience.extend.mask.current'|trans({ name: selectedAudienceMask.name }, 'mailing') }}</p>
+            {% endif %}
+
+            {% if audienceMasks is empty %}
+                <p>{{ 'mailing.audience.mask.empty'|trans({}, 'mailing') }}</p>
+            {% else %}
+                <div class="internal-table-wrapper">
+                    <table class="internal-table internal-table--responsive">
+                        <thead>
+                            <tr>
+                                <th>{{ 'mailing.audience.mask.table.name'|trans({}, 'mailing') }}</th>
+                                <th>{{ 'mailing.audience.mask.table.municipalities'|trans({}, 'mailing') }}</th>
+                                <th>{{ 'mailing.audience.mask.table.actions'|trans({}, 'mailing') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for audienceMask in audienceMasks %}
+                                <tr>
+                                    <td data-label="{{ 'mailing.audience.mask.table.name'|trans({}, 'mailing') }}">
+                                        <strong>{{ audienceMask.name }}</strong>
+                                    </td>
+                                    <td data-label="{{ 'mailing.audience.mask.table.municipalities'|trans({}, 'mailing') }}">
+                                        {{ audienceMask.materializedMunicipalityInseeCodes|length }}
+                                    </td>
+                                    <td data-label="{{ 'mailing.audience.mask.table.actions'|trans({}, 'mailing') }}">
+                                        <a
+                                            class="internal-button internal-button--secondary internal-button--compact"
+                                            href="{{ path('mailing_audience_extend', {
+                                                uuid: campaign.uuid,
+                                                mask: audienceMask.uuid.toRfc4122,
+                                                returnTo: returnTo ?: path('mailing_index')
+                                            }) }}"
+                                        >
+                                            {{ audienceMask.uuid.toRfc4122 == selectedAudienceMaskUuid ? 'mailing.audience.extend.mask.selected'|trans({}, 'mailing') : 'mailing.audience.extend.mask.use'|trans({}, 'mailing') }}
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </details>
+
     {{ component('MailingAudience', {
         campaignUuid: campaign.uuid.toRfc4122,
         extensionMode: true,
+        initialAudienceMaskUuid: selectedAudienceMaskUuid,
         returnTo: returnTo ?: path('mailing_audience_extend', { uuid: campaign.uuid })
     }) }}
 {% endblock %}
