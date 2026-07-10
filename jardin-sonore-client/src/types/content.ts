@@ -61,9 +61,13 @@ export interface TestimonialItem {
     firstName: string;
     lastNameInitial: string;
     role: string;
+    organization?: string;
+    organizationHref?: string;
     structure?: string;
     structureHref?: string;
     personHref?: string;
+    photoFileName?: string;
+    photoAlt?: string;
     tone: "primary" | "secondary";
 }
 
