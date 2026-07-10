@@ -183,7 +183,7 @@ final class MailingAudience
         try {
             $this->audienceResolution = $this->newsletterAudienceResolver->resolve(
                 $this->buildAudienceFilter($formModel),
-                10,
+                $this->extensionMode ? null : 10,
             );
             $this->audienceDelta = $this->extensionMode ? $this->buildAudienceDelta($this->audienceResolution) : null;
         } catch (InvalidArgumentException) {
@@ -485,7 +485,12 @@ final class MailingAudience
     }
 
     /**
-     * @return array{matchedRecipientCount:int, alreadyLinkedRecipientCount:int, newRecipientCount:int}
+     * @return array{
+     *     matchedRecipientCount:int,
+     *     alreadyLinkedRecipientCount:int,
+     *     newRecipientCount:int,
+     *     previewRecipients:list<NewsletterRecipient>
+     * }
      */
     private function buildAudienceDelta(NewsletterAudienceResolution $audienceResolution): array
     {
@@ -496,6 +501,7 @@ final class MailingAudience
             true,
         );
         $newRecipientCount = 0;
+        $previewRecipients = [];
 
         foreach ($audienceResolution->getRecipients() as $newsletterRecipient) {
             $normalizedEmailAddress = mb_strtolower(trim($newsletterRecipient->getEmailAddress()->value()));
@@ -506,12 +512,15 @@ final class MailingAudience
 
             $existingEmailAddressLookup[$normalizedEmailAddress] = true;
             ++$newRecipientCount;
+
+            $previewRecipients[] = $newsletterRecipient;
         }
 
         return [
             'matchedRecipientCount' => $audienceResolution->getTotal(),
             'alreadyLinkedRecipientCount' => $audienceResolution->getTotal() - $newRecipientCount,
             'newRecipientCount' => $newRecipientCount,
+            'previewRecipients' => $previewRecipients,
         ];
     }
 }
