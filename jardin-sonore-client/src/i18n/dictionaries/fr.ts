@@ -278,7 +278,7 @@ const fr = {
         items: [
             {
                 quote: "Une animation parfaite pour notre fête de fin d'année !\n" +
-                    "Nous avons fait appel à Emerick pour animer notre fête de fin d'année en crèche, et ce fut un vrai succès ! La séance a commencé par une première partie tout en douceur avec des comptines, parfaite pour capter l'attention des tout-petits et les mettre en confiance.\n" +
+                    "Nous avons fait appel à Emeric pour animer notre fête de fin d'année en crèche, et ce fut un vrai succès ! La séance a commencé par une première partie tout en douceur avec des comptines, parfaite pour capter l'attention des tout-petits et les mettre en confiance.\n" +
                     "Puis place au jardin sonore, magnifiquement adapté à l'âge des enfants : des instruments et sons accessibles, une découverte sensorielle ludique et bienveillante. Les petits (et les parents !) étaient conquis, entre curiosité et émerveillement.\n" +
                     "Emeric a su créer un moment à la fois apaisant et joyeux, avec beaucoup de douceur dans son approche. Une animation que l'on recommande vivement pour les crèches et structures petite enfance!",
                 date: "9 juillet 2026",
