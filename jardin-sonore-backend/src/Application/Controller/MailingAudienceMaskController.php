@@ -327,9 +327,24 @@ final class MailingAudienceMaskController extends AbstractController
     private function normalizeEnumList(mixed $value, string $enumClass, string $fieldName): array
     {
         $normalizedValues = [];
+        $enumCases = $enumClass::cases();
 
         foreach ($this->normalizeStringList($value, $fieldName) as $item) {
-            $normalizedValues[] = $enumClass::from($item);
+            $normalizedEnum = $enumClass::tryFrom($item);
+
+            if (null === $normalizedEnum && ctype_digit($item)) {
+                $normalizedEnum = $enumCases[(int) $item] ?? null;
+            }
+
+            if (null === $normalizedEnum) {
+                throw new InvalidArgumentException("Mailing audience snapshot field {$fieldName} contains an invalid enum value.");
+            }
+
+            if (in_array($normalizedEnum, $normalizedValues, true)) {
+                continue;
+            }
+
+            $normalizedValues[] = $normalizedEnum;
         }
 
         return $normalizedValues;
