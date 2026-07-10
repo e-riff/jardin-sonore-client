@@ -38,7 +38,7 @@
             </div>
         {% else %}
             <div class="internal-table-wrapper">
-                <table class="internal-table">
+                <table class="internal-table internal-table--responsive">
                     <thead>
                     <tr>
                         <th>{{ 'mailing.index.table.internal_title'|trans({}, 'mailing') }}</th>
@@ -52,14 +52,16 @@
                     <tbody>
                     {% for campaign in campaigns %}
                         <tr>
-                            <td>{{ campaign.internalTitle }}</td>
-                            <td>{{ campaign.emailSubject }}</td>
-                            <td>
+                            <td data-label="{{ 'mailing.index.table.internal_title'|trans({}, 'mailing') }}">
+                                <strong>{{ campaign.internalTitle }}</strong>
+                            </td>
+                            <td data-label="{{ 'mailing.index.table.email_subject'|trans({}, 'mailing') }}">{{ campaign.emailSubject }}</td>
+                            <td data-label="{{ 'mailing.index.table.status'|trans({}, 'mailing') }}">
                                 <span class="internal-badge internal-badge--{{ statusBadgeVariants[campaign.status.value]|default('muted') }}">
                                     {{ ('mailing.status.' ~ campaign.status.value)|trans({}, 'mailing') }}
                                 </span>
                             </td>
-                            <td>
+                            <td data-label="{{ 'mailing.index.table.audience'|trans({}, 'mailing') }}">
                                 {% if campaign.hasAudienceCriteria %}
                                     <span class="internal-badge internal-badge--{{ campaign.audienceRecipientCount is not null ? 'success' : 'warning' }}">
                                         {% if campaign.audienceRecipientCount is not null %}
@@ -74,8 +76,8 @@
                                     </span>
                                 {% endif %}
                             </td>
-                            <td>{{ campaign.updatedAt|date('d/m/Y H:i') }}</td>
-                            <td>
+                            <td data-label="{{ 'mailing.index.table.updated_at'|trans({}, 'mailing') }}">{{ campaign.updatedAt|date('d/m/Y H:i') }}</td>
+                            <td data-label="{{ 'mailing.index.table.actions'|trans({}, 'mailing') }}">
                                 <div class="mailing-index__actions">
                                     {% if campaign.isEditable %}
                                         <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_content', { uuid: campaign.uuid }) }}">
@@ -105,6 +107,14 @@
                                     {% if campaign.isEditable %}
                                         <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_send', { uuid: campaign.uuid }) }}">
                                             {{ 'mailing.index.send'|trans({}, 'mailing') }}
+                                        </a>
+                                    {% endif %}
+                                    {% if campaign.canExtendAudience %}
+                                        <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_audience_extend', {
+                                            uuid: campaign.uuid,
+                                            returnTo: path('mailing_index')
+                                        }) }}">
+                                            {{ 'mailing.index.extend_audience'|trans({}, 'mailing') }}
                                         </a>
                                     {% endif %}
                                     {% if campaign.canStopDelivery %}

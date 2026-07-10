@@ -36,7 +36,7 @@
             </div>
 
             <div class="internal-table-wrapper">
-                <table class="internal-table">
+                <table class="internal-table internal-table--responsive">
                     <thead>
                     <tr>
                         <th>{{ 'mailing.invalid_recipient.results.table.email'|trans({}, 'mailing') }}</th>
@@ -49,15 +49,15 @@
                     <tbody>
                     {% for result in results %}
                         <tr>
-                            <td>{{ result.email }}</td>
-                            <td>
+                            <td data-label="{{ 'mailing.invalid_recipient.results.table.email'|trans({}, 'mailing') }}"><strong>{{ result.email }}</strong></td>
+                            <td data-label="{{ 'mailing.invalid_recipient.results.table.status'|trans({}, 'mailing') }}">
                                 <span class="internal-badge internal-badge--{{ result.status == 'updated' ? 'secondary' : 'muted' }}">
                                     {{ ('mailing.invalid_recipient.results.status.' ~ result.status)|trans({}, 'mailing') }}
                                 </span>
                             </td>
-                            <td>{{ result.links_disabled }}</td>
-                            <td>{{ result.labels_updated }}</td>
-                            <td>
+                            <td data-label="{{ 'mailing.invalid_recipient.results.table.links'|trans({}, 'mailing') }}">{{ result.links_disabled }}</td>
+                            <td data-label="{{ 'mailing.invalid_recipient.results.table.labels'|trans({}, 'mailing') }}">{{ result.labels_updated }}</td>
+                            <td data-label="{{ 'mailing.invalid_recipient.results.table.note'|trans({}, 'mailing') }}">
                                 {% for note in result.notes %}
                                     <span class="internal-table-note">{{ note|trans({}, 'mailing') }}</span>
                                 {% endfor %}

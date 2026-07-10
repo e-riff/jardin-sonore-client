@@ -79,7 +79,7 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 
 ### Lot 8. Refonte Du Systeme De Ciblage D'Audience
 
-- Statut : Demarre, V1 socle des masques en cours
+- Statut : Demarre, V1 socle des masques en cours puis finition UX mailing
 - Priorite : Avant `resumes de seances`
 - Objectif : remplacer le ciblage geographique trop limite par un systeme de `masques d'audience` reutilisables, visuels et plus precis.
 - Intentions produit :
@@ -105,6 +105,11 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
   - materialisation initiale des communes retenues branchee a partir des criteres geographiques actuels ;
   - stockage des metadonnees du masque applique sur la campagne ;
   - le dessin libre, les polygones et les multi-cercles restent a brancher sur ce socle.
+- Finition UX validee avant passage au prochain module :
+  - refacto visuel du module mailing en reprenant le design `.codex/design audience/` comme direction ;
+  - extraction d'un petit socle de blocs reutilisables pour le back metier ;
+  - tableaux et listes rendus compacts et responsives, y compris sur mobile pour le backoffice metier ;
+  - refonte de l'index des recommandations vers une presentation plus dense et plus scannable.
 - Criteres de fin :
   - un utilisateur peut creer, nommer, previsualiser et reutiliser un masque d'audience ;
   - un masque peut combiner plusieurs formes geographiques ;
@@ -114,17 +119,19 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 
 ### Lot 9. Extension D'Audience D'Une Campagne Deja Partie
 
-- Statut : A reflechir apres le lot 8
+- Statut : Valide apres le lot 8 UX
 - Intentions produit :
-  - permettre d'ajouter de nouvelles zones a une campagne deja envoyee ou deja en cours d'envoi ;
-  - definir si l'extension se fait par `modification` de la campagne existante ou par `duplication` vers une nouvelle campagne ;
-  - garantir le dedoublonnage des destinataires deja servis, meme si de nouveaux masques recouvrent partiellement les anciennes zones ;
-  - clarifier si l'extension doit reutiliser le contenu exact envoye initialement ou autoriser une variante.
-- Questions ouvertes :
-  - faut-il etendre la meme campagne ou creer automatiquement une campagne derivee ;
-  - sur quelle source de verite dedoublonner : `mailing_delivery_recipient`, historique des envois, ou les deux ;
-  - comment presenter a l'utilisateur le volume `deja touche` vs `nouveaux destinataires` ;
-  - comment gerer une campagne deja `sent` par rapport a une campagne encore `sending`.
+  - permettre d'ajouter de nouveaux destinataires a une campagne deja `sent`, `stopped` ou `failed` ;
+  - conserver la meme campagne et le meme contenu, sans duplication automatique ;
+  - garantir le dedoublonnage des destinataires deja lies a cette campagne ;
+  - presenter clairement le delta entre `deja lies` et `nouveaux destinataires`.
+- Decisions produit :
+  - l'extension passe par un ecran separe du ciblage normal ;
+  - cet ecran part d'une selection vide et sert uniquement a ajouter ;
+  - aucune suppression ni modification retroactive du ciblage historique ;
+  - la source de verite du dedoublonnage est `mailing_delivery_recipient` ;
+  - l'extension n'est pas disponible pendant `delivery_queued` ou `delivery_sending` ;
+  - ce flux ne sert pas a relancer les `failed`, qui restent un sujet distinct.
 
 ### Lot 10. Preparation Du Prochain Module Metier
 
@@ -148,7 +155,7 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 ## References Actives
 
 - Plan d'execution : `.codex/backend-refacto-plan.md`
-- Roadmap mailing : `.codex/newsletter-roadmap.md`
+- Roadmap mailing : integree a cette roadmap maitre tant qu'aucun fichier dedie n'est recree
 - Documentation backend :
   - `jardin-sonore-backend/README.md`
   - `jardin-sonore-backend/docs/directory-import.md`

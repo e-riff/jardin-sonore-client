@@ -26,39 +26,65 @@
             </div>
         </form>
 
-        <div class="mailing-catalog-grid">
-            {% for recommendation in recommendations %}
-                <article class="mailing-catalog-card">
-                    {% if recommendation.imagePath %}
-                        {% if recommendation.url %}
-                            <a class="mailing-catalog-card__media" href="{{ recommendation.url }}" target="_blank" rel="noopener noreferrer">
-                                <img src="{{ asset(recommendation.imagePath) }}" alt="">
-                            </a>
-                        {% else %}
-                            <div class="mailing-catalog-card__media">
-                                <img src="{{ asset(recommendation.imagePath) }}" alt="">
-                            </div>
-                        {% endif %}
-                    {% endif %}
-                    <div>
-                        <span class="internal-badge internal-badge--{{ recommendation.active ? 'secondary' : 'primary' }}">
-                            {{ (recommendation.active ? 'mailing.catalog.status.active' : 'mailing.catalog.status.inactive')|trans({}, 'mailing') }}
-                        </span>
-                        {% if recommendation.tag %}
-                            <p class="mailing-catalog-card__tag">{{ recommendation.tag }}</p>
-                        {% endif %}
-                        <h2>{{ recommendation.title }}</h2>
-                        <p>{{ recommendation.text }}</p>
-                    </div>
-                    <a class="internal-button internal-button--secondary" href="{{ path('mailing_recommendation_catalog_edit', {
-                        uuid: recommendation.uuid
-                    }) }}">
-                        {{ 'mailing.catalog.index.edit'|trans({}, 'mailing') }}
-                    </a>
-                </article>
-            {% else %}
-                <p class="internal-empty-state">{{ 'mailing.catalog.index.empty'|trans({}, 'mailing') }}</p>
-            {% endfor %}
-        </div>
+        {% if recommendations is empty %}
+            <p class="internal-empty-state">{{ 'mailing.catalog.index.empty'|trans({}, 'mailing') }}</p>
+        {% else %}
+            <div class="internal-table-wrapper">
+                <table class="internal-table internal-table--responsive">
+                    <thead>
+                    <tr>
+                        <th>{{ 'mailing.catalog.index.table.visual'|trans({}, 'mailing') }}</th>
+                        <th>{{ 'mailing.catalog.index.table.title'|trans({}, 'mailing') }}</th>
+                        <th>{{ 'mailing.catalog.index.table.status'|trans({}, 'mailing') }}</th>
+                        <th>{{ 'mailing.catalog.index.table.updated_at'|trans({}, 'mailing') }}</th>
+                        <th>{{ 'mailing.catalog.index.table.actions'|trans({}, 'mailing') }}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for recommendation in recommendations %}
+                        <tr>
+                            <td data-label="{{ 'mailing.catalog.index.table.visual'|trans({}, 'mailing') }}">
+                                {% if recommendation.imagePath %}
+                                    {% if recommendation.url %}
+                                        <a class="mailing-catalog-table__media" href="{{ recommendation.url }}" target="_blank" rel="noopener noreferrer">
+                                            <img src="{{ asset(recommendation.imagePath) }}" alt="">
+                                        </a>
+                                    {% else %}
+                                        <div class="mailing-catalog-table__media">
+                                            <img src="{{ asset(recommendation.imagePath) }}" alt="">
+                                        </div>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="internal-table-note">—</span>
+                                {% endif %}
+                            </td>
+                            <td data-label="{{ 'mailing.catalog.index.table.title'|trans({}, 'mailing') }}">
+                                {% if recommendation.tag %}
+                                    <p class="mailing-catalog-card__tag">{{ recommendation.tag }}</p>
+                                {% endif %}
+                                <strong>{{ recommendation.title }}</strong>
+                                <span class="internal-table-note">{{ recommendation.text }}</span>
+                            </td>
+                            <td data-label="{{ 'mailing.catalog.index.table.status'|trans({}, 'mailing') }}">
+                                <span class="internal-badge internal-badge--{{ recommendation.active ? 'secondary' : 'primary' }}">
+                                    {{ (recommendation.active ? 'mailing.catalog.status.active' : 'mailing.catalog.status.inactive')|trans({}, 'mailing') }}
+                                </span>
+                            </td>
+                            <td data-label="{{ 'mailing.catalog.index.table.updated_at'|trans({}, 'mailing') }}">
+                                {{ recommendation.updatedAt|date('d/m/Y H:i') }}
+                            </td>
+                            <td data-label="{{ 'mailing.catalog.index.table.actions'|trans({}, 'mailing') }}">
+                                <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_recommendation_catalog_edit', {
+                                    uuid: recommendation.uuid
+                                }) }}">
+                                    {{ 'mailing.catalog.index.edit'|trans({}, 'mailing') }}
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
     </section>
 {% endblock %}

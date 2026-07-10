@@ -1,5 +1,6 @@
 <div {{ attributes }} class="mailing-audience">
     {% form_theme form 'form/mailing_audience_theme.html.twig' %}
+    {% set is_extension_mode = this.extensionMode %}
     {% set audience_attributes = stimulus_controller('audience-mode', {
         geographic_mode_id: form.geographicMode.vars.id,
         geographic_mode_name: form.geographicMode.vars.full_name,
@@ -24,14 +25,14 @@
     {% if locked %}
         <section class="internal-card">
             <div class="internal-alert">
-                {{ 'mailing.audience.locked_notice'|trans({}, 'mailing') }}
+                {{ (is_extension_mode ? 'mailing.audience.extend.locked_notice' : 'mailing.audience.locked_notice')|trans({}, 'mailing') }}
             </div>
         </section>
     {% endif %}
 
     {% if saved %}
         <div class="internal-alert internal-alert--success">
-            {{ 'mailing.audience.saved'|trans({}, 'mailing') }}
+            {{ (is_extension_mode ? 'mailing.audience.extend.saved' : 'mailing.audience.saved')|trans({}, 'mailing') }}
         </div>
     {% endif %}
 
@@ -40,6 +41,14 @@
             class: 'internal-form internal-form--wide'
         })
     }) }}
+        {% if form.vars.errors|length > 0 %}
+            <section class="internal-card">
+                <div class="internal-alert internal-alert--error">
+                    {{ form_errors(form) }}
+                </div>
+            </section>
+        {% endif %}
+
         <section class="internal-card mailing-audience__map-section" {{ stimulus_controller('audience-map', {
             geographic_mode_id: form.geographicMode.vars.id,
             geographic_mode_name: form.geographicMode.vars.full_name,
@@ -69,9 +78,9 @@
             interactive: not locked
         }) }}>
             <div>
-                <p class="internal-eyebrow">{{ 'mailing.audience.criteria.geography_eyebrow'|trans({}, 'mailing') }}</p>
-                <h2>{{ 'mailing.audience.criteria.geography_title'|trans({}, 'mailing') }}</h2>
-                <p>{{ 'mailing.audience.criteria.geography_description'|trans({}, 'mailing') }}</p>
+                <p class="internal-eyebrow">{{ (is_extension_mode ? 'mailing.audience.extend.criteria.geography_eyebrow' : 'mailing.audience.criteria.geography_eyebrow')|trans({}, 'mailing') }}</p>
+                <h2>{{ (is_extension_mode ? 'mailing.audience.extend.criteria.geography_title' : 'mailing.audience.criteria.geography_title')|trans({}, 'mailing') }}</h2>
+                <p>{{ (is_extension_mode ? 'mailing.audience.extend.criteria.geography_description' : 'mailing.audience.criteria.geography_description')|trans({}, 'mailing') }}</p>
             </div>
 
             <p class="mailing-audience__selection-summary">
@@ -109,7 +118,7 @@
 
             <div>
                 <p class="internal-eyebrow">{{ 'mailing.audience.criteria.mode_eyebrow'|trans({}, 'mailing') }}</p>
-                <h2>{{ 'mailing.audience.map.tools_title'|trans({}, 'mailing') }}</h2>
+                <h2>{{ (is_extension_mode ? 'mailing.audience.extend.map.tools_title' : 'mailing.audience.map.tools_title')|trans({}, 'mailing') }}</h2>
             </div>
 
             <div class="mailing-audience__map-toolbar">
@@ -156,9 +165,9 @@
 
         <section class="internal-card">
             <div>
-                <p class="internal-eyebrow">{{ 'mailing.audience.criteria.filters_eyebrow'|trans({}, 'mailing') }}</p>
-                <h2>{{ 'mailing.audience.criteria.filters_title'|trans({}, 'mailing') }}</h2>
-                <p>{{ 'mailing.audience.criteria.filters_description'|trans({}, 'mailing') }}</p>
+                <p class="internal-eyebrow">{{ (is_extension_mode ? 'mailing.audience.extend.criteria.filters_eyebrow' : 'mailing.audience.criteria.filters_eyebrow')|trans({}, 'mailing') }}</p>
+                <h2>{{ (is_extension_mode ? 'mailing.audience.extend.criteria.filters_title' : 'mailing.audience.criteria.filters_title')|trans({}, 'mailing') }}</h2>
+                <p>{{ (is_extension_mode ? 'mailing.audience.extend.criteria.filters_description' : 'mailing.audience.criteria.filters_description')|trans({}, 'mailing') }}</p>
             </div>
 
             <div class="mailing-audience__groups mailing-audience__groups--compact">
@@ -171,15 +180,15 @@
 
         <section class="internal-card">
             <div>
-                <p class="internal-eyebrow">{{ 'mailing.audience.criteria.forced_organizations_eyebrow'|trans({}, 'mailing') }}</p>
-                <h2>{{ 'mailing.audience.criteria.forced_organizations_title'|trans({}, 'mailing') }}</h2>
-                <p>{{ 'mailing.audience.criteria.forced_organizations_description'|trans({}, 'mailing') }}</p>
+                <p class="internal-eyebrow">{{ (is_extension_mode ? 'mailing.audience.extend.criteria.forced_organizations_eyebrow' : 'mailing.audience.criteria.forced_organizations_eyebrow')|trans({}, 'mailing') }}</p>
+                <h2>{{ (is_extension_mode ? 'mailing.audience.extend.criteria.forced_organizations_title' : 'mailing.audience.criteria.forced_organizations_title')|trans({}, 'mailing') }}</h2>
+                <p>{{ (is_extension_mode ? 'mailing.audience.extend.criteria.forced_organizations_description' : 'mailing.audience.criteria.forced_organizations_description')|trans({}, 'mailing') }}</p>
             </div>
 
             {{ form_row(form.organizationUuids) }}
 
             <div hidden>
-                {{ form_row(form.radiusOriginMunicipalityInseeCode) }}
+                {{ form_widget(form.radiusOriginMunicipalityInseeCode) }}
                 {{ form_widget(form.radiusOriginCustomLatitude) }}
                 {{ form_widget(form.radiusOriginCustomLongitude) }}
             </div>
@@ -191,7 +200,7 @@
                         class="internal-button"
                         {{ stimulus_action('live', 'action', 'click', { action: 'save' }) }}
                     >
-                        {{ 'mailing.audience.form.save'|trans({}, 'mailing') }}
+                        {{ (is_extension_mode ? 'mailing.audience.extend.form.save' : 'mailing.audience.form.save')|trans({}, 'mailing') }}
                     </button>
                 </div>
             {% endif %}
@@ -200,26 +209,45 @@
 
     <section class="internal-card mailing-audience__result">
         <div>
-            <p class="internal-eyebrow">{{ 'mailing.audience.result.eyebrow'|trans({}, 'mailing') }}</p>
-            <h2>{{ 'mailing.audience.result.title'|trans({}, 'mailing') }}</h2>
+            <p class="internal-eyebrow">{{ (is_extension_mode ? 'mailing.audience.extend.result.eyebrow' : 'mailing.audience.result.eyebrow')|trans({}, 'mailing') }}</p>
+            <h2>{{ (is_extension_mode ? 'mailing.audience.extend.result.title' : 'mailing.audience.result.title')|trans({}, 'mailing') }}</h2>
         </div>
 
         {% set resolution = this.audienceResolution %}
+        {% set audience_delta = this.audienceDelta %}
 
         {% if this.audienceResolutionError %}
             <div class="internal-alert internal-alert--error">
                 {{ this.audienceResolutionError|trans({}, 'mailing') }}
             </div>
         {% elseif resolution %}
-            <p class="mailing-audience__total">
-                {{ 'mailing.audience.result.total'|trans({ count: resolution.total }, 'mailing') }}
-            </p>
+            {% if is_extension_mode and audience_delta %}
+                <div class="internal-stats-grid">
+                    <article class="internal-stat-card">
+                        <strong>{{ audience_delta.matchedRecipientCount }}</strong>
+                        <span>{{ 'mailing.audience.extend.result.matched'|trans({}, 'mailing') }}</span>
+                    </article>
+                    <article class="internal-stat-card">
+                        <strong>{{ audience_delta.alreadyLinkedRecipientCount }}</strong>
+                        <span>{{ 'mailing.audience.extend.result.already_linked'|trans({}, 'mailing') }}</span>
+                    </article>
+                    <article class="internal-stat-card">
+                        <strong>{{ audience_delta.newRecipientCount }}</strong>
+                        <span>{{ 'mailing.audience.extend.result.new'|trans({}, 'mailing') }}</span>
+                    </article>
+                </div>
+                <p class="help-text">{{ 'mailing.audience.extend.result.description'|trans({}, 'mailing') }}</p>
+            {% else %}
+                <p class="mailing-audience__total">
+                    {{ 'mailing.audience.result.total'|trans({ count: resolution.total }, 'mailing') }}
+                </p>
+            {% endif %}
 
             {% if resolution.recipients is empty %}
-                <p>{{ 'mailing.audience.result.empty'|trans({}, 'mailing') }}</p>
+                <p>{{ (is_extension_mode ? 'mailing.audience.extend.result.empty' : 'mailing.audience.result.empty')|trans({}, 'mailing') }}</p>
             {% else %}
                 <div class="internal-table-wrapper">
-                    <table class="internal-table">
+                    <table class="internal-table internal-table--responsive">
                         <thead>
                             <tr>
                                 <th>{{ 'mailing.audience.result.name'|trans({}, 'mailing') }}</th>
@@ -229,8 +257,8 @@
                         <tbody>
                             {% for recipient in resolution.recipients %}
                                 <tr>
-                                    <td>{{ recipient.displayName ?? '—' }}</td>
-                                    <td>{{ recipient.emailAddress.value }}</td>
+                                    <td data-label="{{ 'mailing.audience.result.name'|trans({}, 'mailing') }}">{{ recipient.displayName ?? '—' }}</td>
+                                    <td data-label="{{ 'mailing.audience.result.email'|trans({}, 'mailing') }}">{{ recipient.emailAddress.value }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -238,7 +266,7 @@
                 </div>
 
                 {% if resolution.truncated %}
-                    <p class="help-text">{{ 'mailing.audience.result.truncated'|trans({}, 'mailing') }}</p>
+                    <p class="help-text">{{ (is_extension_mode ? 'mailing.audience.extend.result.truncated' : 'mailing.audience.result.truncated')|trans({}, 'mailing') }}</p>
                 {% endif %}
             {% endif %}
         {% endif %}
