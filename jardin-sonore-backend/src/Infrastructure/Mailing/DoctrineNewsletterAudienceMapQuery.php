@@ -25,7 +25,7 @@ final readonly class DoctrineNewsletterAudienceMapQuery implements NewsletterAud
             return [];
         }
 
-        if (null !== $limit && $limit < 1) {
+        if (null !== $limit && 1 > $limit) {
             throw new InvalidArgumentException('Municipality shape query limit must be greater than zero.');
         }
 
@@ -77,7 +77,7 @@ final readonly class DoctrineNewsletterAudienceMapQuery implements NewsletterAud
             return [];
         }
 
-        if (null !== $limit && $limit < 1) {
+        if (null !== $limit && 1 > $limit) {
             throw new InvalidArgumentException('Municipality point query limit must be greater than zero.');
         }
 
@@ -128,7 +128,7 @@ final readonly class DoctrineNewsletterAudienceMapQuery implements NewsletterAud
     {
         $polygonPoints = $this->normalizePolygonPoints($polygonPoints);
 
-        if (count($polygonPoints) < 3) {
+        if (3 > count($polygonPoints)) {
             return [];
         }
 
@@ -216,7 +216,7 @@ final readonly class DoctrineNewsletterAudienceMapQuery implements NewsletterAud
      *
      * @return array<string, mixed>|list<mixed>|null
      */
-    private function normalizeGeoShape(string|array $geoShape): ?array
+    private function normalizeGeoShape(array|string $geoShape): ?array
     {
         if (is_string($geoShape)) {
             $decodedGeoShape = json_decode($geoShape, true);

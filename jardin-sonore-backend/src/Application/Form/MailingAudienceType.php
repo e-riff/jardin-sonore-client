@@ -90,7 +90,7 @@ final class MailingAudienceType extends AbstractType
                     'mailing.audience.form.geographic_mode_home_radius' => MailingAudienceGeographicMode::HOME_RADIUS,
                     'mailing.audience.form.geographic_mode_custom_radius' => MailingAudienceGeographicMode::CUSTOM_RADIUS,
                 ],
-                'choice_value' => static fn (?MailingAudienceGeographicMode $geographicMode): string => $geographicMode?->value ?? '',
+                'choice_value' => static fn (MailingAudienceGeographicMode $geographicMode): string => $geographicMode->value,
                 'placeholder' => false,
             ])
             ->add('organizationTypes', ChoiceType::class, [

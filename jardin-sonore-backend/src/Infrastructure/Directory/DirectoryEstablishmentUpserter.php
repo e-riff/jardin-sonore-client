@@ -19,7 +19,6 @@ use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
 use App\Infrastructure\Doctrine\Entity\DirectoryImportLinkEntity;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 use App\Infrastructure\Doctrine\Entity\EmailContactLinkEntity;
-use App\Infrastructure\Doctrine\Entity\MunicipalityEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactLinkEntity;

@@ -12,6 +12,9 @@ final readonly class ListMailingAudienceMasks
     {
     }
 
+    /**
+     * @return list<\App\Domain\Model\Mailing\MailingAudienceMask>
+     */
     public function __invoke(): array
     {
         return $this->mailingAudienceMaskRepository->findAllOrderedByUpdatedAtDesc();

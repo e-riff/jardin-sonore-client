@@ -16,6 +16,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+
 #[AsCommand(
     name: 'app:municipality:sync-geo-gouv',
     description: 'Synchronize municipalities from geo.api.gouv.fr using the INSEE code.',
@@ -25,7 +26,6 @@ final class SyncMunicipalitiesFromGeoGouvCommand extends Command
     private const string GEO_GOUV_COMMUNE_ENDPOINT = 'https://geo.api.gouv.fr/communes/%s?fields=nom,code,siren,codesPostaux,centre';
     private const int HTTP_TIMEOUT_SECONDS = 15;
     private const int FLUSH_BATCH_SIZE = 50;
-    private const int READ_BATCH_SIZE = 100;
 
     public function __construct(
         private readonly MunicipalityGeoGouvSyncReaderInterface $municipalityGeoGouvSyncReader,

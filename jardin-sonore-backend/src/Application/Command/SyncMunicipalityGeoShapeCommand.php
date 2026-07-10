@@ -143,7 +143,7 @@ final class SyncMunicipalityGeoShapeCommand extends Command
             throw new RuntimeException(sprintf('Unable to reach geo.api.gouv.fr for INSEE %s.', $inseeCode));
         }
 
-        $statusCode = $this->extractHttpStatusCode($http_response_header ?? []);
+        $statusCode = $this->extractHttpStatusCode($http_response_header);
 
         if (404 === $statusCode) {
             return null;

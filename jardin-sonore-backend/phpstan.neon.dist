@@ -6,12 +6,10 @@ includes:
 
 parameters:
     level: 6
+    treatPhpDocTypesAsCertain: false
     paths:
-        - config
         - src
-    excludePaths:
-        - config/reference.php
-    tmpDir: var/phpstan
+    tmpDir: /tmp/phpstan
     symfony:
         containerXmlPath: var/cache/dev/App_KernelDevDebugContainer.xml
     scanFiles:
