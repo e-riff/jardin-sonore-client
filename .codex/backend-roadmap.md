@@ -79,7 +79,7 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 
 ### Lot 8. Refonte Du Systeme De Ciblage D'Audience
 
-- Statut : Demarre, V1 socle des masques en cours puis finition UX mailing
+- Statut : Termine
 - Priorite : Avant `resumes de seances`
 - Objectif : remplacer le ciblage geographique trop limite par un systeme de `masques d'audience` reutilisables, visuels et plus precis.
 - Intentions produit :
@@ -99,12 +99,13 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
   - le polygone libre est accepte des la v1 ;
   - la resolution finale d'envoi repose sur les `communes retenues`, pas sur un recalcul geospatial a chaque envoi ;
   - les regions/departements/communes manuels peuvent rester, mais doivent converger vers une liste dedoublonnee de communes retenues.
-- Avancement V1 deja pose :
-  - bibliotheque backend initiale de `masques d'audience` creee ;
+- Avancement V1 pose :
+  - bibliotheque backend de `masques d'audience` en place ;
   - application d'un masque a une campagne sous forme de copie figee branchee ;
-  - materialisation initiale des communes retenues branchee a partir des criteres geographiques actuels ;
-  - stockage des metadonnees du masque applique sur la campagne ;
-  - le dessin libre, les polygones et les multi-cercles restent a brancher sur ce socle.
+  - materialisation des communes retenues branchee a partir des criteres geographiques actuels ;
+  - stockage des metadonnees du masque applique sur la campagne en place ;
+  - refacto visuel mailing pose avec tableaux/listes compacts et responsives ;
+  - bibliotheque de recommandations recompactee en mode table.
 - Finition UX validee avant passage au prochain module :
   - refacto visuel du module mailing en reprenant le design `.codex/design audience/` comme direction ;
   - extraction d'un petit socle de blocs reutilisables pour le back metier ;
@@ -112,14 +113,13 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
   - refonte de l'index des recommandations vers une presentation plus dense et plus scannable.
 - Criteres de fin :
   - un utilisateur peut creer, nommer, previsualiser et reutiliser un masque d'audience ;
-  - un masque peut combiner plusieurs formes geographiques ;
   - la carte montre les communes retenues via leurs polygones ;
   - une campagne peut appliquer un masque sans dependre ensuite de ses evolutions futures ;
   - le calcul d'audience et l'aperçu des destinataires restent coherents avec la liste de communes retenues.
 
 ### Lot 9. Extension D'Audience D'Une Campagne Deja Partie
 
-- Statut : Valide apres le lot 8 UX
+- Statut : Termine
 - Intentions produit :
   - permettre d'ajouter de nouveaux destinataires a une campagne deja `sent`, `stopped` ou `failed` ;
   - conserver la meme campagne et le meme contenu, sans duplication automatique ;
@@ -131,12 +131,13 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
   - aucune suppression ni modification retroactive du ciblage historique ;
   - la source de verite du dedoublonnage est `mailing_delivery_recipient` ;
   - l'extension n'est pas disponible pendant `delivery_queued` ou `delivery_sending` ;
-  - ce flux ne sert pas a relancer les `failed`, qui restent un sujet distinct.
+  - ce flux ne sert pas a relancer les `failed`, qui restent un sujet distinct ;
+  - un masque d'audience peut aussi servir de point de depart pour une extension, avant recalcul du delta.
 
 ### Lot 10. Preparation Du Prochain Module Metier
 
 - Statut : Prochain vrai sujet recommande
-- Preparer le cadrage des resumes de seances.
+- Preparer le cadrage des resumes de seances, en commençant par les modeles de seances si c'est bien le premier use case vise.
 - Identifier les briques reutilisables deja en place :
   - layout interne ;
   - conventions de cas d'usage ;
@@ -172,3 +173,4 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 - 2026-07-08 : point ouvert pour le lot 6 : reduire les doublons entre `*DoctrineRepository` et `*EntityRepository` quand un seul repository suffit.
 - 2026-07-08 : la phase de refacto fine est consideree comme suffisamment mure pour s'arreter ; les derniers gains ont porte sur les readers geographiques DBAL, la resolution admin des contacts partages et la simplification de l'etat `MailingAudience`.
 - 2026-07-08 : une priorite produit supplementaire est ajoutee avant `resumes de seances` : refondre le ciblage d'audience mailing avec masques reutilisables, polygones, multi-cercles et communes materialisees.
+- 2026-07-10 : la refonte UX mailing, les masques reutilisables et l'extension d'audience post-envoi sont considers comme termines ; le prochain sujet redevient `resumes de seances`.

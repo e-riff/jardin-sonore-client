@@ -213,6 +213,13 @@ mailing:
         save: "Ajouter les nouveaux destinataires"
       last_run_eyebrow: "Dernière extension"
       last_run_title: "Résumé de l’ajout effectué"
+      mask:
+        eyebrow: "Masques réutilisables"
+        title: "Précharger un masque d’audience"
+        description: "Chargez un masque comme point de départ pour cette extension, puis ajustez librement les critères avant de calculer le delta."
+        current: "Masque chargé pour cette extension : {name}"
+        use: "Utiliser"
+        selected: "En cours"
       criteria:
         geography_eyebrow: "Communes à ajouter"
         geography_title: "Nouvelle sélection géographique"

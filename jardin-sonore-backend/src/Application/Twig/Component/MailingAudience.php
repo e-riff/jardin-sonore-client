@@ -7,6 +7,7 @@ namespace App\Application\Twig\Component;
 use App\Application\Form\MailingAudienceType;
 use App\Application\Form\Model\MailingAudienceFormModel;
 use App\Application\Mailing\ExtendMailingCampaignAudience;
+use App\Application\Mailing\GetMailingAudienceMask;
 use App\Application\Mailing\GetMailingCampaign;
 use App\Application\Mailing\MailingDeliveryQueueInterface;
 use App\Application\Mailing\NewsletterAudienceMapQueryInterface;
@@ -63,6 +64,9 @@ final class MailingAudience
     #[LiveProp]
     public bool $extensionMode = false;
 
+    #[LiveProp]
+    public string $initialAudienceMaskUuid = '';
+
     private ?MailingCampaign $mailingCampaign = null;
 
     private ?NewsletterAudienceResolution $audienceResolution = null;
@@ -76,6 +80,7 @@ final class MailingAudience
     public function __construct(
         private readonly FormFactoryInterface $formFactory,
         private readonly GetMailingCampaign $getMailingCampaignQuery,
+        private readonly GetMailingAudienceMask $getMailingAudienceMask,
         private readonly NewsletterAudienceResolverInterface $newsletterAudienceResolver,
         private readonly UpdateMailingCampaignAudience $updateMailingCampaignAudience,
         private readonly ExtendMailingCampaignAudience $extendMailingCampaignAudience,
@@ -338,7 +343,7 @@ final class MailingAudience
         return $this->formFactory->create(
             MailingAudienceType::class,
             $this->extensionMode
-                ? new MailingAudienceFormModel()
+                ? $this->initialExtensionFormModel()
                 : MailingAudienceFormModel::fromAudienceFilter(
                     $this->resolveMailingCampaign()->getAudienceFilter(),
                 ),
@@ -422,10 +427,25 @@ final class MailingAudience
         }
 
         return $this->extensionMode
-            ? new MailingAudienceFormModel()
+            ? $this->initialExtensionFormModel()
             : MailingAudienceFormModel::fromAudienceFilter(
                 $this->resolveMailingCampaign()->getAudienceFilter(),
             );
+    }
+
+    private function initialExtensionFormModel(): MailingAudienceFormModel
+    {
+        if (!$this->extensionMode || !Uuid::isValid($this->initialAudienceMaskUuid)) {
+            return new MailingAudienceFormModel();
+        }
+
+        $mailingAudienceMask = ($this->getMailingAudienceMask)(Uuid::fromString($this->initialAudienceMaskUuid));
+
+        if (null === $mailingAudienceMask) {
+            return new MailingAudienceFormModel();
+        }
+
+        return MailingAudienceFormModel::fromAudienceFilter($mailingAudienceMask->getAudienceFilter());
     }
 
     /**

@@ -287,7 +287,7 @@ Lecture de l'audit :
 - Reprendre un sujet plus fonctionnel de la roadmap produit.
 - Proposition prioritaire pour la prochaine session :
   - cadrage et demarrage du module `resumes de seances` ;
-  - ou, si vous voulez rester encore un peu sur l'existant, consolidation fonctionnelle du workflow mailing plutot qu'un nouveau nettoyage d'architecture.
+  - en commençant probablement par les `modeles de seances` si c'est bien le premier flux attendu.
 
 ### Lot 6. Nommage Et Patterns Structurels
 
@@ -336,7 +336,7 @@ Lecture de l'audit :
 
 ### Lot 8. Preparation Du Module Resumes De Seances
 
-- Statut : A faire
+- Statut : Prochain sujet
 - Objectif : preparer le terrain fonctionnel et architectural du prochain module.
 - Criteres de fin :
   - la roadmap maitre decrit clairement le prochain module ;
@@ -349,7 +349,7 @@ Lecture de l'audit :
 
 ### Lot 9. Finition UX Mailing Et Blocs Reutilisables
 
-- Statut : A lancer
+- Statut : Termine
 - Objectif : moderniser et compacter le back metier mailing en le rendant responsive, sans refaire tout le design system.
 - Perimetre :
   - shell visuel mailing existant ;
@@ -362,16 +362,16 @@ Lecture de l'audit :
   - la bibliotheque de recommandations est plus dense et plus scannable ;
   - le back metier reste coherent avec le dashboard interne deja en place.
 - Checklist :
-  - [ ] stabiliser `page heading`, `section card`, `summary stats`, `empty state`, `collection responsive` ;
-  - [ ] appliquer ce socle a `mailing/index` et `mailing/audience_mask/index` ;
-  - [ ] rendre `mailing/recommendation_catalog/index` plus compact ;
-  - [ ] harmoniser `mailing/audience` et les resultats d'audience ;
-  - [ ] verifier le responsive mobile sur les ecrans mailing principaux.
+  - [x] stabiliser `page heading`, `section card`, `summary stats`, `empty state`, `collection responsive` ;
+  - [x] appliquer ce socle a `mailing/index` et `mailing/audience_mask/index` ;
+  - [x] rendre `mailing/recommendation_catalog/index` plus compact ;
+  - [x] harmoniser `mailing/audience` et les resultats d'audience ;
+  - [x] verifier le responsive mobile sur les ecrans mailing principaux.
 - Commit attendu : `feat(mailing): refresh internal mailing ui`
 
 ### Lot 10. Extension D'Audience D'Une Campagne Deja Partie
 
-- Statut : A lancer apres le lot 9
+- Statut : Termine
 - Objectif : ajouter un workflow dedie d'ajout de nouveaux destinataires sur une campagne deja partie.
 - Perimetre :
   - bouton d'entree sur campagne `sent`, `stopped`, `failed` ;
@@ -384,11 +384,12 @@ Lecture de l'audit :
   - seuls les nouveaux e-mails sont ajoutes ;
   - le delta `trouves / deja lies / nouveaux` est visible avant confirmation.
 - Checklist :
-  - [ ] ajouter la regle metier `canExtendAudience` sur la campagne ;
-  - [ ] brancher un cas d'usage applicatif dedie ;
-  - [ ] reutiliser le moteur de ciblage sur un ecran vide separe ;
-  - [ ] afficher le delta dedoublonne avant validation ;
-  - [ ] relancer la file uniquement pour les nouveaux recipients.
+  - [x] ajouter la regle metier `canExtendAudience` sur la campagne ;
+  - [x] brancher un cas d'usage applicatif dedie ;
+  - [x] reutiliser le moteur de ciblage sur un ecran vide separe ;
+  - [x] afficher le delta dedoublonne avant validation ;
+  - [x] relancer la file uniquement pour les nouveaux recipients ;
+  - [x] permettre de precharger un masque d'audience dans l'ecran d'extension.
 - Commit attendu : `feat(mailing): allow post-send audience extension`
 
 ## Questions Ouvertes
@@ -414,3 +415,4 @@ Lecture de l'audit :
 - 2026-07-08 - Les repositories Doctrine sont normalises : les adapters de domaine passent en `ServiceEntityRepository` + `ManagerRegistry` avec mapper, et les acces ORM techniques simples passent par des repositories d'entite injectables.
 - 2026-07-08 - `FindInstrumentCatalogItems` n'injecte plus `EntityManagerInterface` et `SyncMunicipalitiesFromGeoGouvCommand` delegue ses lectures/ecritures techniques a des ports de geographie dedies.
 - 2026-07-08 - Point reporte au lot 6 : reevaluer les doublons entre repositories de domaine et repositories d'entite Doctrine pour eviter de tout avoir en double.
+- 2026-07-10 - Les lots 9 et 10 sont termines : UI mailing compacte/responsive, recommandations en table, extension d'audience post-envoi dedoublonnee et prechargement possible via masque.
