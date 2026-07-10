@@ -12,6 +12,7 @@ use App\Application\Mailing\NewsletterAudienceOptionsQueryInterface;
 use App\Domain\Model\AddressBook\CustomerStatus;
 use App\Domain\Model\AddressBook\OrganizationSector;
 use App\Domain\Model\AddressBook\OrganizationType;
+use BackedEnum;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\ChoiceList\ArrayChoiceList;
 use Symfony\Component\Form\ChoiceList\ChoiceListInterface;
@@ -57,6 +58,7 @@ final class MailingAudienceType extends AbstractType
             'multiple' => true,
             'required' => false,
             'choice_translation_domain' => 'backoffice',
+            'choice_value' => static fn (?BackedEnum $choice): string => null === $choice ? '' : (string) $choice->value,
         ];
         $multipleOptions = [
             'multiple' => true,
