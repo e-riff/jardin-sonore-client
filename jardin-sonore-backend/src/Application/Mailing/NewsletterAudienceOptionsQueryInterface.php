@@ -12,6 +12,20 @@ interface NewsletterAudienceOptionsQueryInterface
     public function getTagChoices(): array;
 
     /**
+     * @param list<string> $organizationUuids
+     *
+     * @return list<string>
+     */
+    public function getExistingOrganizationUuids(array $organizationUuids): array;
+
+    /**
+     * @param list<string> $organizationUuids
+     *
+     * @return array<string, string>
+     */
+    public function getOrganizationLabelsByUuids(array $organizationUuids): array;
+
+    /**
      * @return array<string, string>
      */
     public function getRegionChoices(): array;
@@ -48,4 +62,13 @@ interface NewsletterAudienceOptionsQueryInterface
      * }
      */
     public function searchMunicipalityAutocompleteChoices(string $query, int $page, int $limit): array;
+
+    /**
+     * @return array{
+     *     results: list<array{text: string, value: string, group_by: string}>,
+     *     optgroups: list<array{value: string, label: string}>,
+     *     has_next_page: bool
+     * }
+     */
+    public function searchOrganizationAutocompleteChoices(string $query, int $page, int $limit): array;
 }

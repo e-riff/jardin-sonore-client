@@ -53,14 +53,9 @@ final readonly class DoctrineNewsletterAudienceMapQuery implements NewsletterAud
         $shapes = [];
 
         foreach ($rows as $row) {
-            $geoShape = $row['geo_shape'];
+            $geoShape = $this->normalizeGeoShape($row['geo_shape']);
 
-            if (is_string($geoShape)) {
-                $decodedGeoShape = json_decode($geoShape, true);
-                $geoShape = is_array($decodedGeoShape) ? $decodedGeoShape : null;
-            }
-
-            if (!is_array($geoShape)) {
+            if (null === $geoShape) {
                 continue;
             }
 
@@ -217,6 +212,32 @@ final readonly class DoctrineNewsletterAudienceMapQuery implements NewsletterAud
     }
 
     /**
+     * @param string|array<string, mixed>|list<mixed> $geoShape
+     *
+     * @return array<string, mixed>|list<mixed>|null
+     */
+    private function normalizeGeoShape(string|array $geoShape): ?array
+    {
+        if (is_string($geoShape)) {
+            $decodedGeoShape = json_decode($geoShape, true);
+            $geoShape = is_array($decodedGeoShape) ? $decodedGeoShape : null;
+        }
+
+        if (!is_array($geoShape)) {
+            return null;
+        }
+
+        $type = $geoShape['type'] ?? null;
+        $coordinates = $geoShape['coordinates'] ?? null;
+
+        if (!is_string($type) || !is_array($coordinates) || !$this->hasValidGeoJsonCoordinates($coordinates)) {
+            return null;
+        }
+
+        return $geoShape;
+    }
+
+    /**
      * @param list<array{lat: mixed, lng: mixed}> $polygonPoints
      *
      * @return list<array{lat: float, lng: float}>
@@ -241,6 +262,29 @@ final readonly class DoctrineNewsletterAudienceMapQuery implements NewsletterAud
         }
 
         return $normalizedPoints;
+    }
+
+    /**
+     * @param array<string, mixed>|list<mixed> $coordinates
+     */
+    private function hasValidGeoJsonCoordinates(array $coordinates): bool
+    {
+        if ([] === $coordinates) {
+            return false;
+        }
+
+        if (array_key_exists(0, $coordinates) && array_key_exists(1, $coordinates)
+            && is_numeric($coordinates[0]) && is_numeric($coordinates[1])) {
+            return true;
+        }
+
+        foreach ($coordinates as $childCoordinates) {
+            if (!is_array($childCoordinates) || !$this->hasValidGeoJsonCoordinates($childCoordinates)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

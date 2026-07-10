@@ -16,9 +16,10 @@ use App\Application\Mailing\CreateMailingCampaign;
 use App\Application\Mailing\CreateMailingCampaignInput;
 use App\Application\Mailing\DeleteMailingCampaign;
 use App\Application\Mailing\GetMailingCampaign;
-use App\Application\Mailing\NewsletterAudienceMapQueryInterface;
 use App\Application\Mailing\ListMailingAudienceMasks;
 use App\Application\Mailing\ListMailingCampaigns;
+use App\Application\Mailing\NewsletterAudienceMapQueryInterface;
+use App\Application\Mailing\NewsletterAudienceMunicipalityMaterializerInterface;
 use App\Application\Mailing\NewsletterAudienceOptionsQueryInterface;
 use App\Application\Mailing\NewsletterAudienceResolverInterface;
 use App\Application\Mailing\NewsletterRendererInterface;
@@ -28,6 +29,8 @@ use App\Application\Mailing\StopMailingCampaignDelivery;
 use App\Application\Mailing\UpdateMailingCampaign;
 use App\Application\Mailing\UpdateMailingCampaignInput;
 use App\Domain\Model\Mailing\MailingRecommendation;
+use App\Domain\Model\Mailing\NewsletterAudienceFilter;
+use App\Domain\Model\Mailing\NewsletterAudienceRadiusOrigin;
 use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -76,6 +79,33 @@ final class MailingController extends AbstractController
         ]);
     }
 
+    #[Route('/audience/organizations/autocomplete', name: 'audience_organizations_autocomplete', methods: ['GET'])]
+    public function autocompleteOrganizations(
+        Request $request,
+        NewsletterAudienceOptionsQueryInterface $newsletterAudienceOptionsQuery,
+    ): JsonResponse {
+        $page = max(1, $request->query->getInt('page', 1));
+        $limit = 50;
+        $autocompleteChoices = $newsletterAudienceOptionsQuery->searchOrganizationAutocompleteChoices(
+            query: $request->query->getString('query'),
+            page: $page,
+            limit: $limit,
+        );
+
+        return $this->json([
+            'results' => [
+                'options' => $autocompleteChoices['results'],
+                'optgroups' => $autocompleteChoices['optgroups'],
+            ],
+            'next_page' => $autocompleteChoices['has_next_page']
+                ? $this->generateUrl('mailing_audience_organizations_autocomplete', [
+                    'query' => $request->query->getString('query'),
+                    'page' => $page + 1,
+                ])
+                : null,
+        ]);
+    }
+
     #[Route('/audience/municipalities/in-polygon', name: 'audience_municipalities_in_polygon', methods: ['POST'])]
     public function municipalitiesInPolygon(
         Request $request,
@@ -86,6 +116,124 @@ final class MailingController extends AbstractController
 
         return $this->json([
             'results' => $newsletterAudienceMapQuery->findMunicipalityChoicesWithinPolygon($polygonPoints),
+        ]);
+    }
+
+    #[Route('/audience/municipalities/visualization', name: 'audience_municipalities_visualization', methods: ['POST'])]
+    public function municipalitiesVisualization(
+        Request $request,
+        NewsletterAudienceMapQueryInterface $newsletterAudienceMapQuery,
+    ): JsonResponse {
+        $payload = json_decode($request->getContent(), true);
+        $inseeCodes = $this->normalizeStringList($payload['municipalityInseeCodes'] ?? []);
+        $shapeLimit = 60;
+        $count = count($inseeCodes);
+        $shapes = [];
+        $points = [];
+
+        if ($count <= $shapeLimit) {
+            $shapeInseeCodes = [];
+
+            foreach ($newsletterAudienceMapQuery->findMunicipalityShapesByInseeCodes($inseeCodes, $shapeLimit) as $shape) {
+                $shapes[] = [
+                    'inseeCode' => $shape->inseeCode,
+                    'label' => $shape->label,
+                    'geoShape' => $shape->geoShape,
+                ];
+                $shapeInseeCodes[$shape->inseeCode] = true;
+            }
+
+            $missingShapeInseeCodes = array_values(array_filter(
+                $inseeCodes,
+                static fn (string $inseeCode): bool => !isset($shapeInseeCodes[$inseeCode]),
+            ));
+
+            foreach ($newsletterAudienceMapQuery->findMunicipalityPointsByInseeCodes($missingShapeInseeCodes, $shapeLimit) as $point) {
+                $points[] = [
+                    'inseeCode' => $point->inseeCode,
+                    'label' => $point->label,
+                    'latitude' => $point->latitude,
+                    'longitude' => $point->longitude,
+                ];
+            }
+        } else {
+            foreach ($newsletterAudienceMapQuery->findMunicipalityPointsByInseeCodes($inseeCodes, $shapeLimit) as $point) {
+                $points[] = [
+                    'inseeCode' => $point->inseeCode,
+                    'label' => $point->label,
+                    'latitude' => $point->latitude,
+                    'longitude' => $point->longitude,
+                ];
+            }
+        }
+
+        return $this->json([
+            'count' => $count,
+            'truncated' => $count > $shapeLimit,
+            'shapes' => $shapes,
+            'points' => $points,
+        ]);
+    }
+
+    #[Route('/audience/municipalities/in-departments', name: 'audience_municipalities_in_departments', methods: ['POST'])]
+    public function municipalitiesInDepartments(
+        Request $request,
+        NewsletterAudienceMunicipalityMaterializerInterface $newsletterAudienceMunicipalityMaterializer,
+        NewsletterAudienceOptionsQueryInterface $newsletterAudienceOptionsQuery,
+    ): JsonResponse {
+        $payload = json_decode($request->getContent(), true);
+
+        return $this->json([
+            'results' => $this->buildMunicipalityResults(
+                $newsletterAudienceMunicipalityMaterializer->materialize(new NewsletterAudienceFilter(
+                    departmentCodes: $this->normalizeStringList($payload['departmentCodes'] ?? []),
+                )),
+                $newsletterAudienceOptionsQuery,
+            ),
+        ]);
+    }
+
+    #[Route('/audience/municipalities/in-regions', name: 'audience_municipalities_in_regions', methods: ['POST'])]
+    public function municipalitiesInRegions(
+        Request $request,
+        NewsletterAudienceMunicipalityMaterializerInterface $newsletterAudienceMunicipalityMaterializer,
+        NewsletterAudienceOptionsQueryInterface $newsletterAudienceOptionsQuery,
+    ): JsonResponse {
+        $payload = json_decode($request->getContent(), true);
+
+        return $this->json([
+            'results' => $this->buildMunicipalityResults(
+                $newsletterAudienceMunicipalityMaterializer->materialize(new NewsletterAudienceFilter(
+                    regionCodes: $this->normalizeStringList($payload['regionCodes'] ?? []),
+                )),
+                $newsletterAudienceOptionsQuery,
+            ),
+        ]);
+    }
+
+    #[Route('/audience/municipalities/in-radius', name: 'audience_municipalities_in_radius', methods: ['POST'])]
+    public function municipalitiesInRadius(
+        Request $request,
+        NewsletterAudienceMunicipalityMaterializerInterface $newsletterAudienceMunicipalityMaterializer,
+        NewsletterAudienceOptionsQueryInterface $newsletterAudienceOptionsQuery,
+    ): JsonResponse {
+        $payload = json_decode($request->getContent(), true);
+        $radiusOrigin = NewsletterAudienceRadiusOrigin::from((string) ($payload['radiusOrigin'] ?? NewsletterAudienceRadiusOrigin::HOME->value));
+
+        return $this->json([
+            'results' => $this->buildMunicipalityResults(
+                $newsletterAudienceMunicipalityMaterializer->materialize(new NewsletterAudienceFilter(
+                    radiusKilometers: isset($payload['radiusKilometers']) ? (float) $payload['radiusKilometers'] : null,
+                    radiusOrigin: $radiusOrigin,
+                    radiusOriginCustomLatitude: NewsletterAudienceRadiusOrigin::CUSTOM === $radiusOrigin
+                        ? $this->nullableFloat($payload['latitude'] ?? null)
+                        : null,
+                    radiusOriginCustomLongitude: NewsletterAudienceRadiusOrigin::CUSTOM === $radiusOrigin
+                        ? $this->nullableFloat($payload['longitude'] ?? null)
+                        : null,
+                )),
+                $newsletterAudienceOptionsQuery,
+            ),
         ]);
     }
 
@@ -430,5 +578,49 @@ final class MailingController extends AbstractController
             ],
             $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null,
         );
+    }
+
+    /**
+     * @param list<string> $inseeCodes
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    private function buildMunicipalityResults(
+        array $inseeCodes,
+        NewsletterAudienceOptionsQueryInterface $newsletterAudienceOptionsQuery,
+    ): array {
+        $labelsByInseeCode = $newsletterAudienceOptionsQuery->getMunicipalityLabelsByInseeCodes($inseeCodes);
+        $results = [];
+
+        foreach ($inseeCodes as $inseeCode) {
+            $results[] = [
+                'value' => $inseeCode,
+                'label' => $labelsByInseeCode[$inseeCode] ?? $inseeCode,
+            ];
+        }
+
+        usort($results, static fn (array $left, array $right): int => $left['label'] <=> $right['label']);
+
+        return $results;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function normalizeStringList(mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+
+        return array_values(array_unique(array_filter(array_map(
+            static fn (mixed $item): string => is_string($item) ? trim($item) : '',
+            $value,
+        ))));
+    }
+
+    private function nullableFloat(mixed $value): ?float
+    {
+        return is_numeric($value) ? (float) $value : null;
     }
 }

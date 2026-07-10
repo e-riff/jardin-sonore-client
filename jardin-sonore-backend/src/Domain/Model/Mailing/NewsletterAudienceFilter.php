@@ -15,6 +15,7 @@ final readonly class NewsletterAudienceFilter
      * @param list<OrganizationType>   $organizationTypes
      * @param list<OrganizationSector> $organizationSectors
      * @param list<CustomerStatus>     $customerStatuses
+     * @param list<string>             $organizationUuids
      * @param list<string>             $tagUuids
      * @param list<string>             $regionCodes
      * @param list<string>             $departmentCodes
@@ -24,6 +25,7 @@ final readonly class NewsletterAudienceFilter
         private array $organizationTypes = [],
         private array $organizationSectors = [],
         private array $customerStatuses = [],
+        private array $organizationUuids = [],
         private array $tagUuids = [],
         private array $regionCodes = [],
         private array $departmentCodes = [],
@@ -37,6 +39,7 @@ final readonly class NewsletterAudienceFilter
         $this->assertEnumList($organizationTypes, OrganizationType::class, 'organization types');
         $this->assertEnumList($organizationSectors, OrganizationSector::class, 'organization sectors');
         $this->assertEnumList($customerStatuses, CustomerStatus::class, 'customer statuses');
+        $this->assertStringList($organizationUuids, 'organization UUIDs');
         $this->assertStringList($tagUuids, 'tag UUIDs');
         $this->assertStringList($regionCodes, 'region codes');
         $this->assertStringList($departmentCodes, 'department codes');
@@ -79,6 +82,14 @@ final readonly class NewsletterAudienceFilter
     public function getTagUuids(): array
     {
         return $this->tagUuids;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getOrganizationUuids(): array
+    {
+        return $this->organizationUuids;
     }
 
     /**
@@ -135,6 +146,7 @@ final readonly class NewsletterAudienceFilter
         return [] !== $this->organizationTypes
             || [] !== $this->organizationSectors
             || [] !== $this->customerStatuses
+            || [] !== $this->organizationUuids
             || [] !== $this->tagUuids
             || [] !== $this->regionCodes
             || [] !== $this->departmentCodes

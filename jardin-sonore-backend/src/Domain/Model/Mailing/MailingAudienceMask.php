@@ -79,16 +79,23 @@ final class MailingAudienceMask implements UuidIdentifiableInterface
         $normalizedInseeCodes = [];
 
         foreach ($materializedMunicipalityInseeCodes as $inseeCode) {
+            if (!is_string($inseeCode)) {
+                throw new InvalidArgumentException('Mailing audience mask materialized municipality INSEE codes must contain strings only.');
+            }
+
             $inseeCode = trim($inseeCode);
 
             if ('' === $inseeCode) {
                 throw new InvalidArgumentException('Mailing audience mask materialized municipality INSEE codes cannot contain blank values.');
             }
 
-            $normalizedInseeCodes[$inseeCode] = true;
+            if (in_array($inseeCode, $normalizedInseeCodes, true)) {
+                continue;
+            }
+
+            $normalizedInseeCodes[] = $inseeCode;
         }
 
-        $normalizedInseeCodes = array_keys($normalizedInseeCodes);
         sort($normalizedInseeCodes);
 
         return $normalizedInseeCodes;

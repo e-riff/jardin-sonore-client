@@ -1,8 +1,22 @@
 <div {{ attributes }} class="mailing-audience">
     {% form_theme form 'form/mailing_audience_theme.html.twig' %}
-    {% set audience_attributes = stimulus_controller('audience-mode')
-        |stimulus_controller('mailing-audience')
-    %}
+    {% set audience_attributes = stimulus_controller('audience-mode', {
+        geographic_mode_id: form.geographicMode.vars.id,
+        geographic_mode_name: form.geographicMode.vars.full_name,
+        municipality_select_id: form.municipalityInseeCodes.vars.id,
+        radius_kilometers_id: form.radiusKilometers.vars.id,
+        latitude_field_id: form.radiusOriginCustomLatitude.vars.id,
+        longitude_field_id: form.radiusOriginCustomLongitude.vars.id,
+        apply_radius_url: path('mailing_audience_municipalities_in_radius'),
+        messages_json: {
+            tool_missing_selection: 'mailing.audience.tool.status.missing_selection'|trans({}, 'mailing'),
+            tool_loading: 'mailing.audience.tool.status.loading'|trans({}, 'mailing'),
+            tool_applied: 'mailing.audience.tool.status.applied'|trans({}, 'mailing')
+        }|json_encode
+    })|stimulus_controller('mailing-audience')
+        |stimulus_action('audience-mode', 'handleGeographicModeChange', 'change')
+        |stimulus_action('audience-mode', 'handleCustomPointSelected', 'mailing:audience-custom-point-selected')
+        |stimulus_action('mailing-audience', 'handleAudienceSaved', 'mailing:audience-saved@window') %}
     {% if not locked %}
         {% set audience_attributes = audience_attributes|stimulus_action('live', 'action:prevent', 'submit', { action: 'save' }) %}
     {% endif %}
@@ -26,69 +40,101 @@
             class: 'internal-form internal-form--wide'
         })
     }) }}
-        <section class="internal-card">
+        <section class="internal-card mailing-audience__map-section" {{ stimulus_controller('audience-map', {
+            geographic_mode_id: form.geographicMode.vars.id,
+            geographic_mode_name: form.geographicMode.vars.full_name,
+            home_latitude: audienceMapHomeLatitude,
+            home_longitude: audienceMapHomeLongitude,
+            radius_kilometers_id: form.radiusKilometers.vars.id,
+            latitude_field_id: form.radiusOriginCustomLatitude.vars.id,
+            longitude_field_id: form.radiusOriginCustomLongitude.vars.id,
+            municipality_select_id: form.municipalityInseeCodes.vars.id,
+            municipality_shapes_json: audienceMapMunicipalityShapes|json_encode,
+            municipality_points_json: audienceMapMunicipalityPoints|json_encode,
+            polygon_resolve_url: path('mailing_audience_municipalities_in_polygon'),
+            municipalities_visualization_url: path('mailing_audience_municipalities_visualization'),
+            messages_json: {
+                custom_radius_ready: 'mailing.audience.map.status.custom_radius_ready'|trans({}, 'mailing'),
+                home_radius_ready: 'mailing.audience.map.status.home_radius_ready'|trans({}, 'mailing'),
+                polygon_drawing_started: 'mailing.audience.map.status.polygon_drawing_started'|trans({}, 'mailing'),
+                polygon_needs_three_points: 'mailing.audience.map.status.polygon_needs_three_points'|trans({}, 'mailing'),
+                polygon_resolving: 'mailing.audience.map.status.polygon_resolving'|trans({}, 'mailing'),
+                polygon_empty: 'mailing.audience.map.status.polygon_empty'|trans({}, 'mailing'),
+                polygon_resolve_failed: 'mailing.audience.map.status.polygon_resolve_failed'|trans({}, 'mailing'),
+                polygon_cleared: 'mailing.audience.map.status.polygon_cleared'|trans({}, 'mailing'),
+                polygon_switches_from_radius: 'mailing.audience.map.status.polygon_switches_from_radius'|trans({}, 'mailing'),
+                polygon_points_count: 'mailing.audience.map.status.polygon_points_count'|trans({}, 'mailing'),
+                polygon_applied: 'mailing.audience.map.status.polygon_applied'|trans({}, 'mailing')
+            }|json_encode,
+            interactive: not locked
+        }) }}>
+            <div>
+                <p class="internal-eyebrow">{{ 'mailing.audience.criteria.geography_eyebrow'|trans({}, 'mailing') }}</p>
+                <h2>{{ 'mailing.audience.criteria.geography_title'|trans({}, 'mailing') }}</h2>
+                <p>{{ 'mailing.audience.criteria.geography_description'|trans({}, 'mailing') }}</p>
+            </div>
+
+            <p class="mailing-audience__selection-summary">
+                {{ 'mailing.audience.criteria.selected_municipalities'|trans({ count: this.audienceMapMaterializedMunicipalityCount }, 'mailing') }}
+            </p>
+
+            <div class="mailing-audience__map-card">
+                <div {{ stimulus_target('audience-map', 'mapContainer') }}>
+                    {{ ux_map(audienceMap, {
+                        class: locked ? 'mailing-audience__map mailing-audience__map--locked' : 'mailing-audience__map',
+                    }) }}
+                </div>
+
+                <p class="mailing-audience__map-help" {{ stimulus_target('audience-mode', 'status') }}></p>
+                <p class="mailing-audience__map-help" {{ stimulus_target('audience-map', 'status') }}></p>
+
+                {% if this.audienceMapMaterializedMunicipalityCount > 0 %}
+                    <p class="mailing-audience__map-polygons">
+                        {{ 'mailing.audience.map.materialized_municipalities'|trans({
+                            count: this.audienceMapMaterializedMunicipalityCount
+                        }, 'mailing') }}
+                    </p>
+                {% endif %}
+
+                {% if this.audienceMapMunicipalityShapesTruncated %}
+                    <p class="mailing-audience__map-polygons">
+                        {{ 'mailing.audience.map.materialized_municipalities_truncated'|trans({}, 'mailing') }}
+                    </p>
+                {% endif %}
+            </div>
+
+            <div>
+                {{ form_row(form.municipalityInseeCodes) }}
+            </div>
+
             <div>
                 <p class="internal-eyebrow">{{ 'mailing.audience.criteria.mode_eyebrow'|trans({}, 'mailing') }}</p>
-                <h2>{{ 'mailing.audience.criteria.mode_title'|trans({}, 'mailing') }}</h2>
-                <p>{{ 'mailing.audience.criteria.mode_description'|trans({}, 'mailing') }}</p>
+                <h2>{{ 'mailing.audience.map.tools_title'|trans({}, 'mailing') }}</h2>
             </div>
 
-            {{ form_row(form.geographicMode) }}
-        </section>
+            <div class="mailing-audience__map-toolbar">
+                {{ form_row(form.geographicMode) }}
 
-        <section class="internal-card mailing-audience__fieldset mailing-audience__radius">
-            <div>
-                <p class="internal-eyebrow">{{ 'mailing.audience.criteria.radius_eyebrow'|trans({}, 'mailing') }}</p>
-                <h2>{{ 'mailing.audience.criteria.radius'|trans({}, 'mailing') }}</h2>
-                <p>{{ 'mailing.audience.criteria.radius_description'|trans({}, 'mailing') }}</p>
-            </div>
-
-            <div class="internal-form__grid" {{ stimulus_target('audience-mode', 'radiusFieldset') }}>
-                {{ form_row(form.radiusKilometers) }}
-            </div>
-
-            <div hidden>
-                {{ form_row(form.radiusOriginMunicipalityInseeCode) }}
-                {{ form_widget(form.radiusOriginCustomLatitude) }}
-                {{ form_widget(form.radiusOriginCustomLongitude) }}
-            </div>
-
-            <div class="mailing-audience__map-card" {{ stimulus_controller('audience-map', {
-                geographic_mode_id: form.geographicMode.vars.id,
-                radius_kilometers_id: form.radiusKilometers.vars.id,
-                latitude_field_id: form.radiusOriginCustomLatitude.vars.id,
-                longitude_field_id: form.radiusOriginCustomLongitude.vars.id,
-                municipality_select_id: form.municipalityInseeCodes.vars.id,
-                municipality_shapes_json: audienceMapMunicipalityShapes|json_encode,
-                municipality_points_json: audienceMapMunicipalityPoints|json_encode,
-                polygon_resolve_url: path('mailing_audience_municipalities_in_polygon'),
-                messages_json: {
-                    polygon_drawing_started: 'mailing.audience.map.status.polygon_drawing_started'|trans({}, 'mailing'),
-                    polygon_needs_three_points: 'mailing.audience.map.status.polygon_needs_three_points'|trans({}, 'mailing'),
-                    polygon_resolving: 'mailing.audience.map.status.polygon_resolving'|trans({}, 'mailing'),
-                    polygon_empty: 'mailing.audience.map.status.polygon_empty'|trans({}, 'mailing'),
-                    polygon_resolve_failed: 'mailing.audience.map.status.polygon_resolve_failed'|trans({}, 'mailing'),
-                    polygon_cleared: 'mailing.audience.map.status.polygon_cleared'|trans({}, 'mailing'),
-                    polygon_switches_from_radius: 'mailing.audience.map.status.polygon_switches_from_radius'|trans({}, 'mailing'),
-                    polygon_points_count: 'mailing.audience.map.status.polygon_points_count'|trans({}, 'mailing'),
-                    polygon_applied: 'mailing.audience.map.status.polygon_applied'|trans({}, 'mailing')
-                }|json_encode,
-                interactive: not locked
-            }) }}>
-                <div class="mailing-audience__map-heading">
-                    <strong>{{ 'mailing.audience.map.title'|trans({}, 'mailing') }}</strong>
-                    <p>{{ 'mailing.audience.map.description'|trans({}, 'mailing') }}</p>
+                <div
+                    class="mailing-audience__tool-panel"
+                    {{ stimulus_target('audience-mode', 'radiusPanel') }}
+                    {% if not this.radiusModeActive %}hidden{% endif %}
+                >
+                    {{ form_row(form.radiusKilometers) }}
+                    <p class="mailing-audience__map-help">{{ 'mailing.audience.map.radius_description'|trans({}, 'mailing') }}</p>
+                    {% if not locked %}
+                        <button
+                            class="internal-button internal-button--secondary internal-button--compact"
+                            type="button"
+                            data-action="audience-mode#applyRadius"
+                        >
+                            {{ 'mailing.audience.tool.apply_radius'|trans({}, 'mailing') }}
+                        </button>
+                    {% endif %}
                 </div>
 
                 {% if not locked %}
                     <div class="mailing-audience__map-actions" {{ stimulus_target('audience-mode', 'polygonTools') }} {% if not this.municipalitiesMode %}hidden{% endif %}>
-                        <button
-                            class="internal-button internal-button--secondary internal-button--compact"
-                            type="button"
-                            {{ stimulus_action('audience-map', 'startPolygonDrawing') }}
-                        >
-                            {{ 'mailing.audience.map.start_polygon'|trans({}, 'mailing') }}
-                        </button>
                         <button
                             class="internal-button internal-button--secondary internal-button--compact"
                             type="button"
@@ -105,77 +151,48 @@
                         </button>
                     </div>
                 {% endif %}
-
-                <div {{ stimulus_target('audience-map', 'mapContainer') }}>
-                    {{ ux_map(audienceMap, {
-                        class: locked ? 'mailing-audience__map mailing-audience__map--locked' : 'mailing-audience__map',
-                    }) }}
-                </div>
-
-                <p class="mailing-audience__map-help">
-                    {{ 'mailing.audience.map.help'|trans({}, 'mailing') }}
-                </p>
-
-                <p class="mailing-audience__map-help" {{ stimulus_target('audience-map', 'status') }}></p>
-
-                {% if this.audienceMapMaterializedMunicipalityCount > 0 %}
-                    <p class="mailing-audience__map-polygons">
-                        {{ 'mailing.audience.map.materialized_municipalities'|trans({
-                            count: this.audienceMapMaterializedMunicipalityCount
-                        }, 'mailing') }}
-                    </p>
-                {% endif %}
-
-                {% if this.audienceMapMunicipalityShapesTruncated %}
-                    <p class="mailing-audience__map-polygons">
-                        {{ 'mailing.audience.map.materialized_municipalities_truncated'|trans({}, 'mailing') }}
-                    </p>
-                {% endif %}
-
-                {% if this.customRadiusOrigin and form.radiusOriginCustomLatitude.vars.value and form.radiusOriginCustomLongitude.vars.value %}
-                    <p class="mailing-audience__map-coordinates">
-                        {{ 'mailing.audience.map.coordinates'|trans({
-                            latitude: form.radiusOriginCustomLatitude.vars.value,
-                            longitude: form.radiusOriginCustomLongitude.vars.value
-                        }, 'mailing') }}
-                    </p>
-                {% endif %}
             </div>
         </section>
 
         <section class="internal-card">
             <div>
-                <p class="internal-eyebrow">{{ 'mailing.audience.criteria.eyebrow'|trans({}, 'mailing') }}</p>
-                <h2>{{ 'mailing.audience.criteria.title'|trans({}, 'mailing') }}</h2>
-                <p>{{ 'mailing.audience.criteria.description'|trans({}, 'mailing') }}</p>
+                <p class="internal-eyebrow">{{ 'mailing.audience.criteria.filters_eyebrow'|trans({}, 'mailing') }}</p>
+                <h2>{{ 'mailing.audience.criteria.filters_title'|trans({}, 'mailing') }}</h2>
+                <p>{{ 'mailing.audience.criteria.filters_description'|trans({}, 'mailing') }}</p>
             </div>
 
-            <div class="mailing-audience__groups">
-                <fieldset class="mailing-audience__fieldset" {% if locked %}disabled{% endif %}>
-                    <legend>{{ 'mailing.audience.criteria.organization'|trans({}, 'mailing') }}</legend>
-                    <p class="mailing-audience__fieldset-description">{{ 'mailing.audience.criteria.organization_description'|trans({}, 'mailing') }}</p>
-                    {{ form_row(form.organizationTypes) }}
-                    {{ form_row(form.organizationSectors) }}
-                    {{ form_row(form.customerStatuses) }}
-                    {{ form_row(form.tagUuids) }}
-                </fieldset>
+            <div class="mailing-audience__groups mailing-audience__groups--compact">
+                {{ form_row(form.organizationTypes) }}
+                {{ form_row(form.organizationSectors) }}
+                {{ form_row(form.customerStatuses) }}
+                {{ form_row(form.tagUuids) }}
+            </div>
+        </section>
 
-                <fieldset
-                    class="mailing-audience__fieldset"
-                    {{ stimulus_target('audience-mode', 'locationFieldset') }}
-                    {% if locked or not this.municipalitiesMode %}disabled{% endif %}
-                >
-                    <legend>{{ 'mailing.audience.criteria.geography'|trans({}, 'mailing') }}</legend>
-                    <p class="mailing-audience__fieldset-description">{{ 'mailing.audience.criteria.geography_description'|trans({}, 'mailing') }}</p>
-                    {{ form_row(form.municipalityInseeCodes) }}
-                    {{ form_row(form.departmentCodes) }}
-                    {{ form_row(form.regionCodes) }}
-                </fieldset>
+        <section class="internal-card">
+            <div>
+                <p class="internal-eyebrow">{{ 'mailing.audience.criteria.forced_organizations_eyebrow'|trans({}, 'mailing') }}</p>
+                <h2>{{ 'mailing.audience.criteria.forced_organizations_title'|trans({}, 'mailing') }}</h2>
+                <p>{{ 'mailing.audience.criteria.forced_organizations_description'|trans({}, 'mailing') }}</p>
+            </div>
+
+            {{ form_row(form.organizationUuids) }}
+
+            <div hidden>
+                {{ form_row(form.radiusOriginMunicipalityInseeCode) }}
+                {{ form_widget(form.radiusOriginCustomLatitude) }}
+                {{ form_widget(form.radiusOriginCustomLongitude) }}
             </div>
 
             {% if not locked %}
                 <div class="internal-form__actions">
-                    {{ form_widget(form.submit) }}
+                    <button
+                        type="button"
+                        class="internal-button"
+                        {{ stimulus_action('live', 'action', 'click', { action: 'save' }) }}
+                    >
+                        {{ 'mailing.audience.form.save'|trans({}, 'mailing') }}
+                    </button>
                 </div>
             {% endif %}
         </section>

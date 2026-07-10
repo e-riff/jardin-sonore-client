@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Admin;
 
+use App\Application\Mailing\NewsletterAudienceOptionsQueryInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[AdminDashboard(routePath: '/backoffice', routeName: 'admin')]
@@ -28,6 +32,37 @@ final class DashboardController extends AbstractDashboardController
             ->setController(OrganizationCrudController::class)
             ->setAction(Action::INDEX)
             ->generateUrl());
+    }
+
+    #[Route('/backoffice/mailing-audience-masks/municipalities/autocomplete', name: 'admin_mailing_audience_mask_municipalities_autocomplete', methods: ['GET'])]
+    public function autocompleteMailingAudienceMaskMunicipalities(
+        Request $request,
+        NewsletterAudienceOptionsQueryInterface $newsletterAudienceOptionsQuery,
+    ): JsonResponse {
+        $page = max(1, $request->query->getInt('page', 1));
+        $query = $request->query->getString('query');
+        $limit = 50;
+        $autocompleteChoices = $newsletterAudienceOptionsQuery->searchMunicipalityAutocompleteChoices(
+            query: $query,
+            page: $page,
+            limit: $limit,
+        );
+
+        return $this->json([
+            'results' => array_map(
+                static fn (array $result): array => [
+                    'entityId' => $result['value'],
+                    'entityAsString' => $result['text'],
+                ],
+                $autocompleteChoices['results'],
+            ),
+            'next_page' => $autocompleteChoices['has_next_page']
+                ? $this->generateUrl('admin_mailing_audience_mask_municipalities_autocomplete', [
+                    'query' => $query,
+                    'page' => $page + 1,
+                ])
+                : null,
+        ]);
     }
 
     public function configureDashboard(): Dashboard
@@ -58,6 +93,7 @@ final class DashboardController extends AbstractDashboardController
         yield MenuItem::linkTo(MunicipalityCrudController::class, 'admin.menu.municipalities', 'fa fa-city');
         yield MenuItem::section('admin.menu.newsletters');
         yield MenuItem::linkTo(MailingCampaignCrudController::class, 'admin.menu.mailing_campaigns', 'fa fa-paper-plane');
+        yield MenuItem::linkTo(MailingAudienceMaskCrudController::class, 'admin.menu.mailing_audience_masks', 'fa fa-layer-group');
         yield MenuItem::linkTo(NewsletterRecommendationCrudController::class, 'admin.menu.mailing_recommendations', 'fa fa-newspaper');
         yield MenuItem::linkTo(MailingDeliveryRecipientCrudController::class, 'admin.menu.mailing_delivery_recipients', 'fa fa-envelope-circle-check');
     }

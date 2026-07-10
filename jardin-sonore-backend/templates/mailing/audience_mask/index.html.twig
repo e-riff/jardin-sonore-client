@@ -33,7 +33,6 @@
                         <tr>
                             <th>{{ 'mailing.audience.mask.table.name'|trans({}, 'mailing') }}</th>
                             <th>{{ 'mailing.audience.mask.table.municipalities'|trans({}, 'mailing') }}</th>
-                            <th>{{ 'mailing.audience.mask.table.updated_at'|trans({}, 'mailing') }}</th>
                             <th>{{ 'mailing.audience.mask.table.actions'|trans({}, 'mailing') }}</th>
                         </tr>
                     </thead>
@@ -42,7 +41,6 @@
                             <tr>
                                 <td>{{ audienceMask.name }}</td>
                                 <td>{{ audienceMask.materializedMunicipalityInseeCodes|length }}</td>
-                                <td>{{ audienceMask.updatedAt|date('d/m/Y H:i') }}</td>
                                 <td>
                                     {% if campaign %}
                                         <form method="post" action="{{ path('mailing_audience_mask_apply_to_campaign', {

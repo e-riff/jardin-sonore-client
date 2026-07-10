@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\Application\Form;
 
 use App\Application\Form\ChoiceLoader\MunicipalityInseeCodeChoiceLoader;
-use App\Application\Form\Model\MailingAudienceGeographicMode;
+use App\Application\Form\ChoiceLoader\OrganizationUuidChoiceLoader;
 use App\Application\Form\Model\MailingAudienceFormModel;
+use App\Application\Form\Model\MailingAudienceGeographicMode;
 use App\Application\Mailing\NewsletterAudienceOptionsQueryInterface;
 use App\Domain\Model\AddressBook\CustomerStatus;
 use App\Domain\Model\AddressBook\OrganizationSector;
@@ -17,8 +18,9 @@ use Symfony\Component\Form\ChoiceList\ChoiceListInterface;
 use Symfony\Component\Form\ChoiceList\Loader\ChoiceLoaderInterface;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
@@ -30,6 +32,7 @@ final class MailingAudienceType extends AbstractType
     public function __construct(
         private readonly NewsletterAudienceOptionsQueryInterface $newsletterAudienceOptionsQuery,
         private readonly MunicipalityInseeCodeChoiceLoader $municipalityInseeCodeChoiceLoader,
+        private readonly OrganizationUuidChoiceLoader $organizationUuidChoiceLoader,
         private readonly UrlGeneratorInterface $urlGenerator,
     ) {
     }
@@ -44,6 +47,9 @@ final class MailingAudienceType extends AbstractType
         $formModel = $builder->getData();
         $selectedMunicipalityChoices = $this->selectedMunicipalityChoices(
             $formModel instanceof MailingAudienceFormModel ? $formModel->municipalityInseeCodes : [],
+        );
+        $selectedOrganizationChoices = $this->selectedOrganizationChoices(
+            $formModel instanceof MailingAudienceFormModel ? $formModel->organizationUuids : [],
         );
         $expandedMultipleOptions = [
             'expanded' => true,
@@ -65,18 +71,27 @@ final class MailingAudienceType extends AbstractType
             'max_results' => 50,
             'preload' => false,
         ];
+        $organizationAutocompleteOptions = [
+            'autocomplete' => true,
+            'autocomplete_url' => $this->urlGenerator->generate('mailing_audience_organizations_autocomplete'),
+            'choice_label' => $this->organizationChoiceLabel(...),
+            'min_characters' => 2,
+            'max_results' => 50,
+            'preload' => false,
+        ];
 
         $builder
             ->add('geographicMode', ChoiceType::class, [
                 'label' => 'mailing.audience.form.geographic_mode',
                 'help' => 'mailing.audience.form.geographic_mode_help',
                 'disabled' => $locked,
-                'expanded' => true,
                 'choices' => [
                     'mailing.audience.form.geographic_mode_municipalities' => MailingAudienceGeographicMode::MUNICIPALITIES,
                     'mailing.audience.form.geographic_mode_home_radius' => MailingAudienceGeographicMode::HOME_RADIUS,
                     'mailing.audience.form.geographic_mode_custom_radius' => MailingAudienceGeographicMode::CUSTOM_RADIUS,
                 ],
+                'choice_value' => static fn (?MailingAudienceGeographicMode $geographicMode): string => $geographicMode?->value ?? '',
+                'placeholder' => false,
             ])
             ->add('organizationTypes', ChoiceType::class, [
                 ...$expandedMultipleOptions,
@@ -103,25 +118,20 @@ final class MailingAudienceType extends AbstractType
                 'disabled' => $locked,
                 'choices' => $this->newsletterAudienceOptionsQuery->getTagChoices(),
             ])
-            ->add('regionCodes', ChoiceType::class, [
-                ...$multipleOptions,
-                'label' => 'mailing.audience.form.regions',
-                'help' => 'mailing.audience.form.regions_help',
-                'disabled' => $locked,
-                'choices' => $this->newsletterAudienceOptionsQuery->getRegionChoices(),
-            ])
-            ->add('departmentCodes', ChoiceType::class, [
-                ...$multipleOptions,
-                'label' => 'mailing.audience.form.departments',
-                'help' => 'mailing.audience.form.departments_help',
-                'disabled' => $locked,
-                'choices' => $this->newsletterAudienceOptionsQuery->getDepartmentChoices(),
-            ])
             ->add('municipalityInseeCodes', ChoiceType::class, [
                 ...$municipalityAutocompleteOptions,
                 'label' => 'mailing.audience.form.municipalities',
                 'help' => 'mailing.audience.form.municipalities_help',
                 'choice_loader' => $this->createMunicipalityChoiceLoader($selectedMunicipalityChoices),
+                'multiple' => true,
+                'required' => false,
+                'disabled' => $locked,
+            ])
+            ->add('organizationUuids', ChoiceType::class, [
+                ...$organizationAutocompleteOptions,
+                'label' => 'mailing.audience.form.organizations',
+                'help' => 'mailing.audience.form.organizations_help',
+                'choice_loader' => $this->createOrganizationChoiceLoader($selectedOrganizationChoices),
                 'multiple' => true,
                 'required' => false,
                 'disabled' => $locked,
@@ -151,21 +161,26 @@ final class MailingAudienceType extends AbstractType
             ])
             ->add('radiusOriginCustomLatitude', NumberType::class, [
                 'required' => false,
-                'disabled' => $locked,
                 'html5' => false,
             ])
             ->add('radiusOriginCustomLongitude', NumberType::class, [
                 'required' => false,
-                'disabled' => $locked,
                 'html5' => false,
-            ])
-            ->add('submit', SubmitType::class, [
-                'label' => 'mailing.audience.form.save',
-                'disabled' => $locked,
-                'attr' => [
-                    'class' => 'internal-button',
-                ],
             ]);
+
+        $builder->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $formEvent): void {
+            $submittedData = $formEvent->getData();
+
+            if (!is_array($submittedData)) {
+                return;
+            }
+
+            if (!isset($submittedData['geographicMode']) || '' === trim((string) $submittedData['geographicMode'])) {
+                $submittedData['geographicMode'] = MailingAudienceGeographicMode::MUNICIPALITIES->value;
+            }
+
+            $formEvent->setData($submittedData);
+        });
     }
 
     public function configureOptions(OptionsResolver $resolver): void
@@ -173,6 +188,7 @@ final class MailingAudienceType extends AbstractType
         $resolver->setDefaults([
             'data_class' => MailingAudienceFormModel::class,
             'locked' => false,
+            'csrf_protection' => false,
             'translation_domain' => 'mailing',
         ]);
     }
@@ -223,6 +239,11 @@ final class MailingAudienceType extends AbstractType
         return $this->newsletterAudienceOptionsQuery->getMunicipalityLabelsByInseeCodes([$inseeCode])[$inseeCode] ?? $inseeCode;
     }
 
+    private function organizationChoiceLabel(string $organizationUuid): string
+    {
+        return $this->newsletterAudienceOptionsQuery->getOrganizationLabelsByUuids([$organizationUuid])[$organizationUuid] ?? $organizationUuid;
+    }
+
     /**
      * @param list<string> $selectedInseeCodes
      */
@@ -270,5 +291,54 @@ final class MailingAudienceType extends AbstractType
     private function selectedMunicipalityChoices(array $inseeCodes): array
     {
         return $this->newsletterAudienceOptionsQuery->getExistingMunicipalityInseeCodes($inseeCodes);
+    }
+
+    /**
+     * @param list<string> $organizationUuids
+     *
+     * @return list<string>
+     */
+    private function selectedOrganizationChoices(array $organizationUuids): array
+    {
+        return $this->newsletterAudienceOptionsQuery->getExistingOrganizationUuids($organizationUuids);
+    }
+
+    /**
+     * @param list<string> $selectedOrganizationUuids
+     */
+    private function createOrganizationChoiceLoader(array $selectedOrganizationUuids): ChoiceLoaderInterface
+    {
+        $newsletterAudienceOptionsQuery = $this->newsletterAudienceOptionsQuery;
+        $organizationUuidChoiceLoader = $this->organizationUuidChoiceLoader;
+
+        return new class($selectedOrganizationUuids, $newsletterAudienceOptionsQuery, $organizationUuidChoiceLoader) implements ChoiceLoaderInterface {
+            /**
+             * @param list<string> $selectedOrganizationUuids
+             */
+            public function __construct(
+                private readonly array $selectedOrganizationUuids,
+                private readonly NewsletterAudienceOptionsQueryInterface $newsletterAudienceOptionsQuery,
+                private readonly OrganizationUuidChoiceLoader $organizationUuidChoiceLoader,
+            ) {
+            }
+
+            public function loadChoiceList(?callable $value = null): ChoiceListInterface
+            {
+                return new ArrayChoiceList(
+                    $this->newsletterAudienceOptionsQuery->getExistingOrganizationUuids($this->selectedOrganizationUuids),
+                    $value,
+                );
+            }
+
+            public function loadChoicesForValues(array $values, ?callable $value = null): array
+            {
+                return $this->organizationUuidChoiceLoader->loadChoicesForValues($values, $value);
+            }
+
+            public function loadValuesForChoices(array $choices, ?callable $value = null): array
+            {
+                return $this->organizationUuidChoiceLoader->loadValuesForChoices($choices, $value);
+            }
+        };
     }
 }
