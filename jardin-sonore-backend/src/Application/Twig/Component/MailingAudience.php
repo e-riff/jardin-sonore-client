@@ -6,9 +6,9 @@ namespace App\Application\Twig\Component;
 
 use App\Application\Form\MailingAudienceType;
 use App\Application\Form\Model\MailingAudienceFormModel;
+use App\Application\Mailing\GetMailingCampaign;
 use App\Application\Mailing\NewsletterAudienceMapQueryInterface;
 use App\Application\Mailing\NewsletterAudienceMunicipalityMaterializerInterface;
-use App\Application\Mailing\GetMailingCampaign;
 use App\Application\Mailing\NewsletterAudienceResolution;
 use App\Application\Mailing\NewsletterAudienceResolverInterface;
 use App\Application\Mailing\UpdateMailingCampaignAudience;
@@ -267,7 +267,7 @@ final class MailingAudience
 
     public function isAudienceMapMunicipalityShapesTruncated(): bool
     {
-        return $this->getAudienceMapMaterializedMunicipalityCount() > self::MAP_MUNICIPALITY_SHAPE_LIMIT;
+        return self::MAP_MUNICIPALITY_SHAPE_LIMIT < $this->getAudienceMapMaterializedMunicipalityCount();
     }
 
     /**

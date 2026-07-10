@@ -6,8 +6,8 @@ namespace App\Application\Command;
 
 use App\Application\Geography\AddressContactSnapshot;
 use App\Application\Geography\AddressMunicipalityCandidate;
-use App\Application\Geography\AddressMunicipalityLinkingWriterInterface;
 use App\Application\Geography\AddressMunicipalityLinkingReaderInterface;
+use App\Application\Geography\AddressMunicipalityLinkingWriterInterface;
 use DateTimeImmutable;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Doctrine\Repository;
 
-use App\Domain\Model\ContentCatalog\Instrument;
-use App\Domain\Model\ContentCatalog\InstrumentTag;
-use App\Domain\Repository\InstrumentRepositoryInterface;
 use App\Application\ContentCatalog\InstrumentCatalogCriteria;
 use App\Application\ContentCatalog\InstrumentCatalogItem;
 use App\Application\ContentCatalog\InstrumentCatalogQueryInterface;
 use App\Application\ContentCatalog\InstrumentCatalogResult;
+use App\Domain\Model\ContentCatalog\Instrument;
+use App\Domain\Model\ContentCatalog\InstrumentTag;
+use App\Domain\Repository\InstrumentRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\InstrumentEntity;
 use App\Infrastructure\Doctrine\Entity\InstrumentTagEntity;
 use App\Infrastructure\Doctrine\Mapper\InstrumentMapper;

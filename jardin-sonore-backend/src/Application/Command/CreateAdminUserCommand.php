@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Application\Command;
 
+use App\Application\Security\AdminPasswordHasherInterface;
 use App\Domain\Model\Administration\AdminUser;
 use App\Domain\Model\ValueObject\EmailAddress;
 use App\Domain\Repository\AdminUserRepositoryInterface;
-use App\Application\Security\AdminPasswordHasherInterface;
 use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Attribute\Option;
