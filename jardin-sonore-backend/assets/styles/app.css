@@ -476,6 +476,11 @@ a {
     box-shadow: 0 18px 48px -26px rgb(135 54 45 / 0.18);
 }
 
+.internal-card--compact {
+    gap: 16px;
+    padding: 24px 26px;
+}
+
 .internal-badge {
     display: inline-flex;
     width: fit-content;
@@ -627,6 +632,35 @@ a {
     display: grid;
     gap: 18px;
     justify-items: start;
+}
+
+.internal-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.internal-stat-card {
+    display: grid;
+    gap: 6px;
+    padding: 18px 20px;
+    border: 1px solid color-mix(in oklab, var(--color-outline-variant) 50%, white);
+    border-radius: 22px;
+    background: color-mix(in oklab, var(--color-surface-container) 42%, white);
+}
+
+.internal-stat-card strong {
+    color: var(--color-primary);
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+.internal-stat-card span {
+    color: var(--color-on-surface-variant);
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.45;
 }
 
 .internal-form {
@@ -848,7 +882,6 @@ a {
 
 .mailing-catalog-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 18px;
 }
 
@@ -857,9 +890,10 @@ a {
     align-content: start;
     gap: 16px;
     border: 1px solid var(--color-outline-variant);
-    border-radius: 14px;
+    border-radius: 24px;
     padding: 18px;
-    background: var(--color-surface-container);
+    background: color-mix(in oklab, var(--color-surface-container-lowest) 92%, white);
+    box-shadow: 0 14px 36px -28px rgb(135 54 45 / 0.22);
 }
 
 .mailing-catalog-grid--picker {
@@ -928,19 +962,36 @@ a {
 
 .mailing-catalog-card img {
     width: 100%;
-    aspect-ratio: 1;
-    border-radius: 10px;
+    aspect-ratio: 4 / 3;
+    border-radius: 16px;
     object-fit: cover;
 }
 
 .mailing-catalog-card h2,
 .mailing-catalog-card h3 {
-    margin: 10px 0 0;
+    margin: 0;
     color: var(--color-secondary);
+    font-size: 1.2rem;
 }
 
 .mailing-catalog-card > .internal-button {
     width: 100%;
+}
+
+.mailing-catalog-table__media {
+    display: inline-flex;
+    width: 88px;
+    height: 66px;
+    overflow: hidden;
+    border-radius: 14px;
+    border: 1px solid color-mix(in oklab, var(--color-outline-variant) 44%, white);
+    background: color-mix(in oklab, var(--color-surface-container) 60%, white);
+}
+
+.mailing-catalog-table__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .internal-search {
@@ -1023,6 +1074,12 @@ a {
     color: var(--color-on-surface-variant);
     font-size: 0.82rem;
     line-height: 1.35;
+}
+
+.mailing-index__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 .instrument-catalog {
@@ -1649,6 +1706,7 @@ a {
 
     .mailing-audience__groups,
     .mailing-preview-meta__grid,
+    .internal-stats-grid,
     .instrument-catalog__filters,
     .internal-form__grid {
         grid-template-columns: 1fr;
@@ -1679,8 +1737,7 @@ a {
         text-align: left;
     }
 
-    .mailing-recommendation--summary,
-    .mailing-catalog-grid {
+    .mailing-recommendation--summary {
         grid-template-columns: 1fr;
     }
 
@@ -1726,15 +1783,68 @@ a {
         width: 100%;
     }
 
-    .internal-table {
+    .internal-table:not(.internal-table--responsive) {
         min-width: 680px;
     }
 
     .mailing-index__actions {
-        min-width: 220px;
+        min-width: 0;
     }
 
     .mailing-recommendation {
         padding: 16px;
+    }
+
+    .internal-table--responsive {
+        min-width: 0;
+    }
+
+    .internal-table--responsive thead {
+        display: none;
+    }
+
+    .internal-table--responsive,
+    .internal-table--responsive tbody,
+    .internal-table--responsive tr,
+    .internal-table--responsive td {
+        display: block;
+        width: 100%;
+    }
+
+    .internal-table--responsive tbody {
+        padding: 10px;
+    }
+
+    .internal-table--responsive tr {
+        margin-bottom: 10px;
+        border: 1px solid color-mix(in oklab, var(--color-outline-variant) 42%, white);
+        border-radius: 20px;
+        background: color-mix(in oklab, var(--color-surface-container-lowest) 94%, white);
+        overflow: hidden;
+    }
+
+    .internal-table--responsive tbody tr:last-child {
+        margin-bottom: 0;
+    }
+
+    .internal-table--responsive td {
+        border-bottom: 1px solid color-mix(in oklab, var(--color-outline-variant) 30%, white);
+        padding: 12px 14px;
+    }
+
+    .internal-table--responsive td:last-child {
+        border-bottom: 0;
+    }
+
+    .internal-table--responsive td::before {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--color-on-surface-variant);
+        font-family: var(--font-sans);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        content: attr(data-label);
     }
 }

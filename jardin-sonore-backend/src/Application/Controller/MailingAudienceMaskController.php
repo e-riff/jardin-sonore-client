@@ -264,14 +264,22 @@ final class MailingAudienceMaskController extends AbstractController
             organizationUuids: $organizationUuids,
             tagUuids: $tagUuids,
             municipalityInseeCodes: MailingAudienceGeographicMode::MUNICIPALITIES === $geographicMode ? $municipalityInseeCodes : [],
-            radiusKilometers: MailingAudienceGeographicMode::HOME_RADIUS === $geographicMode || MailingAudienceGeographicMode::CUSTOM_RADIUS === $geographicMode
+            radiusKilometers: MailingAudienceGeographicMode::HOME_RADIUS === $geographicMode
+                || MailingAudienceGeographicMode::MUNICIPALITY_RADIUS === $geographicMode
+                || MailingAudienceGeographicMode::CUSTOM_RADIUS === $geographicMode
                 ? ($radiusKilometers ?? 1.0)
                 : null,
             radiusOrigin: match ($geographicMode) {
                 MailingAudienceGeographicMode::HOME_RADIUS => NewsletterAudienceRadiusOrigin::HOME,
+                MailingAudienceGeographicMode::MUNICIPALITY_RADIUS => NewsletterAudienceRadiusOrigin::MUNICIPALITY,
                 MailingAudienceGeographicMode::CUSTOM_RADIUS => NewsletterAudienceRadiusOrigin::CUSTOM,
                 default => null,
             },
+            radiusOriginMunicipalityInseeCode: MailingAudienceGeographicMode::MUNICIPALITY_RADIUS === $geographicMode
+                ? (is_string($submittedAudienceData['radiusOriginMunicipalityInseeCode'] ?? null)
+                    ? trim((string) $submittedAudienceData['radiusOriginMunicipalityInseeCode']) ?: null
+                    : null)
+                : null,
             radiusOriginCustomLatitude: MailingAudienceGeographicMode::CUSTOM_RADIUS === $geographicMode ? $customLatitude : null,
             radiusOriginCustomLongitude: MailingAudienceGeographicMode::CUSTOM_RADIUS === $geographicMode ? $customLongitude : null,
         );

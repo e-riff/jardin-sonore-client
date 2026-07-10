@@ -21,6 +21,7 @@ final readonly class MailingCampaignSummary
         public bool $isEditable,
         public bool $canStopDelivery,
         public bool $canBeDeleted,
+        public bool $canExtendAudience,
     ) {
     }
 }

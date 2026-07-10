@@ -107,10 +107,13 @@ final class MailingAudienceFormModel
             radiusKilometers: $this->hasRadiusMode() ? ($this->radiusKilometers ?? 1.0) : null,
             radiusOrigin: match ($this->geographicMode) {
                 MailingAudienceGeographicMode::HOME_RADIUS => NewsletterAudienceRadiusOrigin::HOME,
+                MailingAudienceGeographicMode::MUNICIPALITY_RADIUS => NewsletterAudienceRadiusOrigin::MUNICIPALITY,
                 MailingAudienceGeographicMode::CUSTOM_RADIUS => NewsletterAudienceRadiusOrigin::CUSTOM,
                 default => null,
             },
-            radiusOriginMunicipalityInseeCode: null,
+            radiusOriginMunicipalityInseeCode: MailingAudienceGeographicMode::MUNICIPALITY_RADIUS === $this->geographicMode
+                ? self::normalizeNullableString($this->radiusOriginMunicipalityInseeCode)
+                : null,
             radiusOriginCustomLatitude: MailingAudienceGeographicMode::CUSTOM_RADIUS === $this->geographicMode
                 ? self::normalizeNullableFloat($this->radiusOriginCustomLatitude)
                 : null,
@@ -151,6 +154,7 @@ final class MailingAudienceFormModel
     {
         return match ($this->geographicMode) {
             MailingAudienceGeographicMode::HOME_RADIUS => NewsletterAudienceRadiusOrigin::HOME->value,
+            MailingAudienceGeographicMode::MUNICIPALITY_RADIUS => NewsletterAudienceRadiusOrigin::MUNICIPALITY->value,
             MailingAudienceGeographicMode::CUSTOM_RADIUS => NewsletterAudienceRadiusOrigin::CUSTOM->value,
             default => null,
         };
@@ -159,6 +163,7 @@ final class MailingAudienceFormModel
     public function hasRadiusMode(): bool
     {
         return MailingAudienceGeographicMode::HOME_RADIUS === $this->geographicMode
+            || MailingAudienceGeographicMode::MUNICIPALITY_RADIUS === $this->geographicMode
             || MailingAudienceGeographicMode::CUSTOM_RADIUS === $this->geographicMode;
     }
 
@@ -191,5 +196,16 @@ final class MailingAudienceFormModel
     private static function normalizeNullableFloat(?float $value): ?float
     {
         return null === $value ? null : (float) $value;
+    }
+
+    private static function normalizeNullableString(?string $value): ?string
+    {
+        if (null === $value) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        return '' === $value ? null : $value;
     }
 }

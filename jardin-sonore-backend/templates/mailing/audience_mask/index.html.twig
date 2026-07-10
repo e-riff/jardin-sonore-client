@@ -28,7 +28,7 @@
             <p>{{ 'mailing.audience.mask.empty'|trans({}, 'mailing') }}</p>
         {% else %}
             <div class="internal-table-wrapper">
-                <table class="internal-table">
+                <table class="internal-table internal-table--responsive">
                     <thead>
                         <tr>
                             <th>{{ 'mailing.audience.mask.table.name'|trans({}, 'mailing') }}</th>
@@ -39,9 +39,9 @@
                     <tbody>
                         {% for audienceMask in audienceMasks %}
                             <tr>
-                                <td>{{ audienceMask.name }}</td>
-                                <td>{{ audienceMask.materializedMunicipalityInseeCodes|length }}</td>
-                                <td>
+                                <td data-label="{{ 'mailing.audience.mask.table.name'|trans({}, 'mailing') }}"><strong>{{ audienceMask.name }}</strong></td>
+                                <td data-label="{{ 'mailing.audience.mask.table.municipalities'|trans({}, 'mailing') }}">{{ audienceMask.materializedMunicipalityInseeCodes|length }}</td>
+                                <td data-label="{{ 'mailing.audience.mask.table.actions'|trans({}, 'mailing') }}">
                                     {% if campaign %}
                                         <form method="post" action="{{ path('mailing_audience_mask_apply_to_campaign', {
                                             maskUuid: audienceMask.uuid,

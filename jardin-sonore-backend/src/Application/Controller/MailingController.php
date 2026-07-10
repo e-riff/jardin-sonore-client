@@ -126,7 +126,7 @@ final class MailingController extends AbstractController
     ): JsonResponse {
         $payload = json_decode($request->getContent(), true);
         $inseeCodes = $this->normalizeStringList($payload['municipalityInseeCodes'] ?? []);
-        $shapeLimit = 60;
+        $shapeLimit = 100;
         $count = count($inseeCodes);
         $shapes = [];
         $points = [];
@@ -225,6 +225,9 @@ final class MailingController extends AbstractController
                 $newsletterAudienceMunicipalityMaterializer->materialize(new NewsletterAudienceFilter(
                     radiusKilometers: isset($payload['radiusKilometers']) ? (float) $payload['radiusKilometers'] : null,
                     radiusOrigin: $radiusOrigin,
+                    radiusOriginMunicipalityInseeCode: NewsletterAudienceRadiusOrigin::MUNICIPALITY === $radiusOrigin
+                        ? ($payload['radiusOriginMunicipalityInseeCode'] ?? null)
+                        : null,
                     radiusOriginCustomLatitude: NewsletterAudienceRadiusOrigin::CUSTOM === $radiusOrigin
                         ? $this->nullableFloat($payload['latitude'] ?? null)
                         : null,
@@ -373,6 +376,34 @@ final class MailingController extends AbstractController
             'returnTo' => $request->query->getString('returnTo'),
             'audienceMasks' => $listMailingAudienceMasks(),
             'audienceMaskForm' => $audienceMaskForm->createView(),
+        ]);
+    }
+
+    #[Route('/{uuid}/audience/extend', name: 'audience_extend', methods: ['GET'])]
+    public function extendAudience(
+        Uuid $uuid,
+        Request $request,
+        GetMailingCampaign $getMailingCampaign,
+    ): Response {
+        $mailingCampaign = $getMailingCampaign($uuid);
+
+        if (null === $mailingCampaign) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$mailingCampaign->canExtendAudience()) {
+            $this->addFlash('error', 'mailing.flash.audience_extension_not_allowed');
+
+            return $this->redirectToRoute('mailing_index');
+        }
+
+        $audienceExtensionResult = $request->getSession()->get('mailing.audience_extension_result');
+        $request->getSession()->remove('mailing.audience_extension_result');
+
+        return $this->render('mailing/audience_extend.html.twig', [
+            'campaign' => $mailingCampaign,
+            'returnTo' => $request->query->getString('returnTo'),
+            'audienceExtensionResult' => is_array($audienceExtensionResult) ? $audienceExtensionResult : null,
         ]);
     }
 

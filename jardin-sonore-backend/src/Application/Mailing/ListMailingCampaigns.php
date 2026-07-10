@@ -45,6 +45,7 @@ final readonly class ListMailingCampaigns
                 isEditable: $mailingCampaign->isEditable(),
                 canStopDelivery: $mailingCampaign->canStopDelivery(),
                 canBeDeleted: $mailingCampaign->canBeDeleted(),
+                canExtendAudience: $mailingCampaign->canExtendAudience(),
             );
         }
 

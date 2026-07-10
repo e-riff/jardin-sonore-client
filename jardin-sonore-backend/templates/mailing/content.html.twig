@@ -17,6 +17,14 @@
             }) }}">
                 {{ 'mailing.content.configure_audience'|trans({}, 'mailing') }}
             </a>
+            {% if campaign.canExtendAudience %}
+                <a class="internal-button internal-button--secondary" href="{{ path('mailing_audience_extend', {
+                    uuid: campaign.uuid,
+                    returnTo: path('mailing_content', { uuid: campaign.uuid })
+                }) }}">
+                    {{ 'mailing.content.extend_audience'|trans({}, 'mailing') }}
+                </a>
+            {% endif %}
             <a class="internal-button internal-button--secondary" href="{{ path('mailing_preview', { uuid: campaign.uuid }) }}">
                 {{ 'mailing.content.preview'|trans({}, 'mailing') }}
             </a>

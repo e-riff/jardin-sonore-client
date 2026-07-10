@@ -272,6 +272,15 @@ final class MailingCampaign implements UuidIdentifiableInterface
         ], true);
     }
 
+    public function canExtendAudience(): bool
+    {
+        return in_array($this->status, [
+            MailingCampaignStatus::DELIVERY_SENT,
+            MailingCampaignStatus::DELIVERY_STOPPED,
+            MailingCampaignStatus::DELIVERY_FAILED,
+        ], true);
+    }
+
     private function assertContentIsValid(
         string $internalTitle,
         string $emailSubject,

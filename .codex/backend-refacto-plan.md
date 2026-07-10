@@ -30,9 +30,10 @@
 ## Ordre Produit Valide
 
 1. Stabilisation et clarification du backend actuel.
-2. Resumes de seances.
-3. Facturation.
-4. Espace client et extensions ensuite.
+2. Finalisation UX du mailing metier.
+3. Resumes de seances.
+4. Facturation.
+5. Espace client et extensions ensuite.
 
 ## Lots De Travail
 
@@ -258,8 +259,6 @@ Lecture de l'audit :
   - [x] garder les commandes orientees cas d'usage, pas SQL ;
   - [x] limiter les usages restants de `EntityManagerInterface` aux writers ORM, au CRUD admin et aux subscribers legitimes ;
   - [x] recabler les readers geographiques techniques sur `Connection` quand ils n'avaient pas besoin de l'ORM ;
-  - [ ] mutualiser les helpers geographiques seulement si la repetition devient reelle.
-- Commit attendu : `refactor(directory): move low-level reads behind infrastructure services`
 
 ### Lot 6. Stabilisation Admin Et Audience Mailing
 
@@ -347,6 +346,50 @@ Lecture de l'audit :
   - [ ] lister les briques reutilisables deja pretes ;
   - [ ] identifier ce qu'il faut construire avant le premier use case.
 - Commit attendu : `docs(product): prepare session summaries roadmap`
+
+### Lot 9. Finition UX Mailing Et Blocs Reutilisables
+
+- Statut : A lancer
+- Objectif : moderniser et compacter le back metier mailing en le rendant responsive, sans refaire tout le design system.
+- Perimetre :
+  - shell visuel mailing existant ;
+  - tableaux/listes du module mailing ;
+  - index des recommandations ;
+  - ecrans de ciblage et ecrans verrouilles associes.
+- Criteres de fin :
+  - un petit socle de blocs CSS/Twig est stabilise ;
+  - les tableaux mailing critiques ont une version mobile exploitable ;
+  - la bibliotheque de recommandations est plus dense et plus scannable ;
+  - le back metier reste coherent avec le dashboard interne deja en place.
+- Checklist :
+  - [ ] stabiliser `page heading`, `section card`, `summary stats`, `empty state`, `collection responsive` ;
+  - [ ] appliquer ce socle a `mailing/index` et `mailing/audience_mask/index` ;
+  - [ ] rendre `mailing/recommendation_catalog/index` plus compact ;
+  - [ ] harmoniser `mailing/audience` et les resultats d'audience ;
+  - [ ] verifier le responsive mobile sur les ecrans mailing principaux.
+- Commit attendu : `feat(mailing): refresh internal mailing ui`
+
+### Lot 10. Extension D'Audience D'Une Campagne Deja Partie
+
+- Statut : A lancer apres le lot 9
+- Objectif : ajouter un workflow dedie d'ajout de nouveaux destinataires sur une campagne deja partie.
+- Perimetre :
+  - bouton d'entree sur campagne `sent`, `stopped`, `failed` ;
+  - ecran separe d'extension ;
+  - calcul de delta dedoublonne contre `mailing_delivery_recipient` ;
+  - ajout des seuls nouveaux recipients a la file existante.
+- Criteres de fin :
+  - aucune reouverture du ciblage historique ;
+  - aucune duplication de campagne ;
+  - seuls les nouveaux e-mails sont ajoutes ;
+  - le delta `trouves / deja lies / nouveaux` est visible avant confirmation.
+- Checklist :
+  - [ ] ajouter la regle metier `canExtendAudience` sur la campagne ;
+  - [ ] brancher un cas d'usage applicatif dedie ;
+  - [ ] reutiliser le moteur de ciblage sur un ecran vide separe ;
+  - [ ] afficher le delta dedoublonne avant validation ;
+  - [ ] relancer la file uniquement pour les nouveaux recipients.
+- Commit attendu : `feat(mailing): allow post-send audience extension`
 
 ## Questions Ouvertes
 

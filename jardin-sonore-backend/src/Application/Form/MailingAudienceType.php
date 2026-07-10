@@ -17,6 +17,7 @@ use Symfony\Component\Form\ChoiceList\ArrayChoiceList;
 use Symfony\Component\Form\ChoiceList\ChoiceListInterface;
 use Symfony\Component\Form\ChoiceList\Loader\ChoiceLoaderInterface;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
@@ -149,15 +150,9 @@ final class MailingAudienceType extends AbstractType
                     'step' => 1,
                 ],
             ])
-            ->add('radiusOriginMunicipalityInseeCode', ChoiceType::class, [
-                ...$municipalityAutocompleteOptions,
-                'label' => 'mailing.audience.form.radius_origin_municipality',
-                'help' => 'mailing.audience.form.radius_origin_municipality_help',
-                'choice_value' => static fn (?string $inseeCode): string => $inseeCode ?? '',
-                'choice_loader' => $this->createMunicipalityChoiceLoader([]),
+            ->add('radiusOriginMunicipalityInseeCode', HiddenType::class, [
                 'required' => false,
-                'disabled' => true,
-                'placeholder' => 'mailing.audience.form.radius_origin_municipality_placeholder',
+                'disabled' => $locked,
             ])
             ->add('radiusOriginCustomLatitude', NumberType::class, [
                 'required' => false,

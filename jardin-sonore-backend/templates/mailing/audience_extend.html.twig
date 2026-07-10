@@ -1,0 +1,55 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'mailing.audience.extend.title'|trans({ campaign: campaign.internalTitle }, 'mailing') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ 'mailing.audience.extend.eyebrow'|trans({}, 'mailing') }}</p>
+            <h1>{{ campaign.internalTitle }}</h1>
+            <p>{{ 'mailing.audience.extend.description'|trans({}, 'mailing') }}</p>
+        </div>
+
+        <div class="internal-heading-actions">
+            <a class="internal-button internal-button--secondary" href="{{ path('mailing_audience', {
+                uuid: campaign.uuid,
+                returnTo: returnTo ?: path('mailing_index')
+            }) }}">
+                {{ 'mailing.audience.extend.back_to_audience'|trans({}, 'mailing') }}
+            </a>
+            <a class="internal-button internal-button--secondary" href="{{ returnTo ?: path('mailing_index') }}">
+                {{ 'mailing.audience.extend.back'|trans({}, 'mailing') }}
+            </a>
+        </div>
+    </section>
+
+    {% if audienceExtensionResult %}
+        <section class="internal-card internal-card--compact">
+            <div>
+                <p class="internal-eyebrow">{{ 'mailing.audience.extend.last_run_eyebrow'|trans({}, 'mailing') }}</p>
+                <h2>{{ 'mailing.audience.extend.last_run_title'|trans({}, 'mailing') }}</h2>
+            </div>
+
+            <div class="internal-stats-grid">
+                <article class="internal-stat-card">
+                    <strong>{{ audienceExtensionResult.matchedRecipientCount }}</strong>
+                    <span>{{ 'mailing.audience.extend.result.matched'|trans({}, 'mailing') }}</span>
+                </article>
+                <article class="internal-stat-card">
+                    <strong>{{ audienceExtensionResult.alreadyLinkedRecipientCount }}</strong>
+                    <span>{{ 'mailing.audience.extend.result.already_linked'|trans({}, 'mailing') }}</span>
+                </article>
+                <article class="internal-stat-card">
+                    <strong>{{ audienceExtensionResult.newRecipientCount }}</strong>
+                    <span>{{ 'mailing.audience.extend.result.new'|trans({}, 'mailing') }}</span>
+                </article>
+            </div>
+        </section>
+    {% endif %}
+
+    {{ component('MailingAudience', {
+        campaignUuid: campaign.uuid.toRfc4122,
+        extensionMode: true,
+        returnTo: returnTo ?: path('mailing_audience_extend', { uuid: campaign.uuid })
+    }) }}
+{% endblock %}

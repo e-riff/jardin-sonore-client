@@ -163,7 +163,7 @@ export default class extends Controller {
     clearRadiusFields() {
         const radiusKilometersElement = this.radiusKilometersElement();
 
-        if (radiusKilometersElement instanceof HTMLInputElement && this.currentGeographicMode() !== 'home_radius' && radiusKilometersElement.value !== '') {
+        if (radiusKilometersElement instanceof HTMLInputElement && radiusKilometersElement.value !== '') {
             radiusKilometersElement.value = '';
             this.dispatchFormInput(radiusKilometersElement);
         }

@@ -6,7 +6,9 @@ namespace App\Application\Twig\Component;
 
 use App\Application\Form\MailingAudienceType;
 use App\Application\Form\Model\MailingAudienceFormModel;
+use App\Application\Mailing\ExtendMailingCampaignAudience;
 use App\Application\Mailing\GetMailingCampaign;
+use App\Application\Mailing\MailingDeliveryQueueInterface;
 use App\Application\Mailing\NewsletterAudienceMapQueryInterface;
 use App\Application\Mailing\NewsletterAudienceMunicipalityMaterializerInterface;
 use App\Application\Mailing\NewsletterAudienceResolution;
@@ -20,6 +22,7 @@ use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Uid\Uuid;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
@@ -43,7 +46,7 @@ final class MailingAudience
     use ComponentWithFormTrait;
     use DefaultActionTrait;
 
-    private const int MAP_MUNICIPALITY_SHAPE_LIMIT = 120;
+    private const int MAP_MUNICIPALITY_SHAPE_LIMIT = 100;
 
     #[LiveProp]
     public string $campaignUuid = '';
@@ -57,6 +60,9 @@ final class MailingAudience
     #[LiveProp]
     public bool $locked = false;
 
+    #[LiveProp]
+    public bool $extensionMode = false;
+
     private ?MailingCampaign $mailingCampaign = null;
 
     private ?NewsletterAudienceResolution $audienceResolution = null;
@@ -65,17 +71,22 @@ final class MailingAudience
 
     private ?string $audienceResolutionError = null;
 
+    private ?array $audienceDelta = null;
+
     public function __construct(
         private readonly FormFactoryInterface $formFactory,
         private readonly GetMailingCampaign $getMailingCampaignQuery,
         private readonly NewsletterAudienceResolverInterface $newsletterAudienceResolver,
         private readonly UpdateMailingCampaignAudience $updateMailingCampaignAudience,
+        private readonly ExtendMailingCampaignAudience $extendMailingCampaignAudience,
+        private readonly MailingDeliveryQueueInterface $mailingDeliveryQueue,
         private readonly NewsletterAudienceMunicipalityMaterializerInterface $newsletterAudienceMunicipalityMaterializer,
         private readonly NewsletterAudienceMapQueryInterface $newsletterAudienceMapQuery,
         #[Autowire('%app.mailing.home_latitude%')]
         private readonly string $homeLatitude,
         #[Autowire('%app.mailing.home_longitude%')]
         private readonly string $homeLongitude,
+        private readonly RequestStack $requestStack,
         private readonly UrlGeneratorInterface $urlGenerator,
     ) {
     }
@@ -83,7 +94,7 @@ final class MailingAudience
     #[LiveAction]
     public function save(): void
     {
-        if ($this->locked || !$this->resolveMailingCampaign()->isEditable()) {
+        if ($this->locked) {
             return;
         }
 
@@ -102,11 +113,48 @@ final class MailingAudience
             return;
         }
 
-        ($this->updateMailingCampaignAudience)($this->resolveMailingCampaign(), $audienceFilter);
+        $mailingCampaign = $this->resolveMailingCampaign();
+
+        try {
+            if ($this->extensionMode) {
+                $result = ($this->extendMailingCampaignAudience)($mailingCampaign, $audienceFilter);
+                $this->requestStack->getSession()?->getFlashBag()->add(
+                    'success',
+                    'mailing.flash.audience_extension_success',
+                );
+                $this->requestStack->getSession()?->getFlashBag()->add(
+                    'info',
+                    'mailing.flash.audience_extension_success_details',
+                );
+                $this->requestStack->getSession()?->set('mailing.audience_extension_result', [
+                    'matchedRecipientCount' => $result->matchedRecipientCount,
+                    'alreadyLinkedRecipientCount' => $result->alreadyLinkedRecipientCount,
+                    'newRecipientCount' => $result->newRecipientCount,
+                ]);
+            } else {
+                if (!$mailingCampaign->isEditable()) {
+                    return;
+                }
+
+                ($this->updateMailingCampaignAudience)($mailingCampaign, $audienceFilter);
+                $this->requestStack->getSession()?->getFlashBag()->add('success', 'mailing.flash.audience_saved');
+            }
+        } catch (InvalidArgumentException $invalidArgumentException) {
+            $translationKey = match ($invalidArgumentException->getMessage()) {
+                'Mailing campaign audience cannot be extended.' => 'mailing.flash.audience_extension_not_allowed',
+                'Mailing campaign extension audience is empty.' => 'mailing.flash.audience_extension_empty',
+                'Mailing campaign extension audience only contains already linked recipients.' => 'mailing.flash.audience_extension_no_delta',
+                default => 'mailing.flash.audience_extension_failed',
+            };
+            $this->getForm()->addError(new FormError($translationKey));
+
+            return;
+        }
 
         $this->saved = true;
         $this->audienceResolution = null;
         $this->audienceResolutionLoaded = false;
+        $this->audienceDelta = null;
         $this->dispatchBrowserEvent('mailing:audience-saved', [
             'url' => $this->resolveReturnTo(),
         ]);
@@ -132,8 +180,10 @@ final class MailingAudience
                 $this->buildAudienceFilter($formModel),
                 10,
             );
+            $this->audienceDelta = $this->extensionMode ? $this->buildAudienceDelta($this->audienceResolution) : null;
         } catch (InvalidArgumentException) {
             $this->audienceResolutionError = 'mailing.audience.result.invalid_filter';
+            $this->audienceDelta = null;
         }
 
         return $this->audienceResolution;
@@ -144,6 +194,16 @@ final class MailingAudience
         $this->getAudienceResolution();
 
         return $this->audienceResolutionError;
+    }
+
+    /**
+     * @return array{matchedRecipientCount:int, alreadyLinkedRecipientCount:int, newRecipientCount:int}|null
+     */
+    public function getAudienceDelta(): ?array
+    {
+        $this->getAudienceResolution();
+
+        return $this->audienceDelta;
     }
 
     public function isMunicipalitiesMode(): bool
@@ -277,11 +337,13 @@ final class MailingAudience
     {
         return $this->formFactory->create(
             MailingAudienceType::class,
-            MailingAudienceFormModel::fromAudienceFilter(
-                $this->resolveMailingCampaign()->getAudienceFilter(),
-            ),
+            $this->extensionMode
+                ? new MailingAudienceFormModel()
+                : MailingAudienceFormModel::fromAudienceFilter(
+                    $this->resolveMailingCampaign()->getAudienceFilter(),
+                ),
             [
-                'locked' => $this->locked || !$this->resolveMailingCampaign()->isEditable(),
+                'locked' => $this->locked || (!$this->extensionMode && !$this->resolveMailingCampaign()->isEditable()),
             ],
         );
     }
@@ -359,9 +421,11 @@ final class MailingAudience
             return $formModel;
         }
 
-        return MailingAudienceFormModel::fromAudienceFilter(
-            $this->resolveMailingCampaign()->getAudienceFilter(),
-        );
+        return $this->extensionMode
+            ? new MailingAudienceFormModel()
+            : MailingAudienceFormModel::fromAudienceFilter(
+                $this->resolveMailingCampaign()->getAudienceFilter(),
+            );
     }
 
     /**
@@ -398,5 +462,36 @@ final class MailingAudience
         }
 
         return new Point((float) $this->homeLatitude, (float) $this->homeLongitude);
+    }
+
+    /**
+     * @return array{matchedRecipientCount:int, alreadyLinkedRecipientCount:int, newRecipientCount:int}
+     */
+    private function buildAudienceDelta(NewsletterAudienceResolution $audienceResolution): array
+    {
+        $existingEmailAddressLookup = array_fill_keys(
+            $this->mailingDeliveryQueue->findCampaignRecipientEmailAddresses(
+                $this->resolveMailingCampaign()->getUuid()->toRfc4122(),
+            ),
+            true,
+        );
+        $newRecipientCount = 0;
+
+        foreach ($audienceResolution->getRecipients() as $newsletterRecipient) {
+            $normalizedEmailAddress = mb_strtolower(trim($newsletterRecipient->getEmailAddress()->value()));
+
+            if ('' === $normalizedEmailAddress || isset($existingEmailAddressLookup[$normalizedEmailAddress])) {
+                continue;
+            }
+
+            $existingEmailAddressLookup[$normalizedEmailAddress] = true;
+            ++$newRecipientCount;
+        }
+
+        return [
+            'matchedRecipientCount' => $audienceResolution->getTotal(),
+            'alreadyLinkedRecipientCount' => $audienceResolution->getTotal() - $newRecipientCount,
+            'newRecipientCount' => $newRecipientCount,
+        ];
     }
 }

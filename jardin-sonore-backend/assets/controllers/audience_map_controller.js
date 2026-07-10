@@ -747,7 +747,11 @@ export default class extends Controller {
             } else {
                 this.clearRadiusPreview();
             }
+
+            return;
         }
+
+        this.clearRadiusPreview();
     }
 
     renderRadiusPreview(latitude, longitude) {
