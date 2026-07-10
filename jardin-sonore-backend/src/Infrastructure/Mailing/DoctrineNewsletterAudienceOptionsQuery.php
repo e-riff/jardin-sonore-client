@@ -42,6 +42,79 @@ final readonly class DoctrineNewsletterAudienceOptionsQuery implements Newslette
         return $choices;
     }
 
+    public function getExistingOrganizationUuids(array $organizationUuids): array
+    {
+        $organizationUuids = $this->normalizeUuids($organizationUuids);
+
+        if ([] === $organizationUuids) {
+            return [];
+        }
+
+        $organizationUuidBinaries = array_map(
+            static fn (string $organizationUuid): string => Uuid::fromString($organizationUuid)->toBinary(),
+            $organizationUuids,
+        );
+        /** @var list<string> $existingOrganizationUuidBinaries */
+        $existingOrganizationUuidBinaries = $this->connection->createQueryBuilder()
+            ->select('LOWER(HEX(directory_entry.uuid))')
+            ->from('organization', 'organization')
+            ->innerJoin('organization', 'directory_entry', 'directory_entry', 'directory_entry.id = organization.id')
+            ->where('directory_entry.uuid IN (:organizationUuids)')
+            ->setParameter('organizationUuids', $organizationUuidBinaries, ArrayParameterType::BINARY)
+            ->executeQuery()
+            ->fetchFirstColumn();
+        $existingOrganizationUuids = array_flip(array_map(
+            fn (string $uuidHex): string => $this->uuidFromHex($uuidHex),
+            $existingOrganizationUuidBinaries,
+        ));
+
+        return array_values(array_filter(
+            $organizationUuids,
+            static fn (string $organizationUuid): bool => isset($existingOrganizationUuids[$organizationUuid]),
+        ));
+    }
+
+    public function getOrganizationLabelsByUuids(array $organizationUuids): array
+    {
+        $organizationUuids = $this->normalizeUuids($organizationUuids);
+
+        if ([] === $organizationUuids) {
+            return [];
+        }
+
+        $organizationUuidBinaries = array_map(
+            static fn (string $organizationUuid): string => Uuid::fromString($organizationUuid)->toBinary(),
+            $organizationUuids,
+        );
+        /** @var list<array{uuid: string, name: string, municipality_name: ?string, postal_code: ?string}> $organizations */
+        $organizations = $this->connection->createQueryBuilder()
+            ->distinct()
+            ->select('LOWER(HEX(directory_entry.uuid)) AS uuid', 'organization.name', 'municipality.name AS municipality_name', 'municipality.postal_code')
+            ->from('organization', 'organization')
+            ->innerJoin('organization', 'directory_entry', 'directory_entry', 'directory_entry.id = organization.id')
+            ->leftJoin('directory_entry', 'contact_details', 'contact_details', 'contact_details.directory_entry_id = directory_entry.id')
+            ->leftJoin('contact_details', 'address_contact', 'address_contact', 'address_contact.contact_details_id = contact_details.id AND address_contact.active = 1')
+            ->leftJoin('address_contact', 'municipality', 'municipality', 'municipality.id = address_contact.municipality_id')
+            ->where('directory_entry.uuid IN (:organizationUuids)')
+            ->setParameter('organizationUuids', $organizationUuidBinaries, ArrayParameterType::BINARY)
+            ->orderBy('organization.name', 'ASC')
+            ->executeQuery()
+            ->fetchAllAssociative();
+        $labelsByOrganizationUuid = [];
+
+        foreach ($organizations as $organization) {
+            $organizationUuid = $this->uuidFromHex($organization['uuid']);
+
+            if (isset($labelsByOrganizationUuid[$organizationUuid])) {
+                continue;
+            }
+
+            $labelsByOrganizationUuid[$organizationUuid] = $this->organizationLabel($organization);
+        }
+
+        return $labelsByOrganizationUuid;
+    }
+
     public function getRegionChoices(): array
     {
         return $this->connection->createQueryBuilder()
@@ -182,6 +255,64 @@ final readonly class DoctrineNewsletterAudienceOptionsQuery implements Newslette
         ];
     }
 
+    public function searchOrganizationAutocompleteChoices(string $query, int $page, int $limit): array
+    {
+        $page = max(1, $page);
+        $limit = max(1, min(100, $limit));
+        $offset = ($page - 1) * $limit;
+        $query = trim($query);
+        $likeQuery = '%' . addcslashes($query, '%_\\') . '%';
+
+        /** @var list<array{
+         *     uuid: string,
+         *     name: string,
+         *     type: ?string,
+         *     municipality_name: ?string,
+         *     postal_code: ?string
+         * }> $organizations
+         */
+        $organizations = $this->connection->createQueryBuilder()
+            ->distinct()
+            ->select('LOWER(HEX(directory_entry.uuid)) AS uuid', 'organization.name', 'organization.type', 'municipality.name AS municipality_name', 'municipality.postal_code')
+            ->from('organization', 'organization')
+            ->innerJoin('organization', 'directory_entry', 'directory_entry', 'directory_entry.id = organization.id')
+            ->leftJoin('directory_entry', 'contact_details', 'contact_details', 'contact_details.directory_entry_id = directory_entry.id')
+            ->leftJoin('contact_details', 'address_contact', 'address_contact', 'address_contact.contact_details_id = contact_details.id AND address_contact.active = 1')
+            ->leftJoin('address_contact', 'municipality', 'municipality', 'municipality.id = address_contact.municipality_id')
+            ->where('organization.name LIKE :likeQuery')
+            ->orWhere('municipality.name LIKE :likeQuery')
+            ->setParameter('likeQuery', $likeQuery)
+            ->orderBy('organization.name', 'ASC')
+            ->setFirstResult($offset)
+            ->setMaxResults($limit + 1)
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        $hasNextPage = count($organizations) > $limit;
+        $organizations = array_slice($organizations, 0, $limit);
+        $optgroups = [];
+        $results = [];
+
+        foreach ($organizations as $organization) {
+            $group = $organization['municipality_name'] ?? 'Autres établissements';
+            $optgroups[$group] = [
+                'value' => $group,
+                'label' => $group,
+            ];
+            $results[] = [
+                'text' => $this->organizationLabel($organization),
+                'value' => $this->uuidFromHex($organization['uuid']),
+                'group_by' => $group,
+            ];
+        }
+
+        return [
+            'results' => $results,
+            'optgroups' => array_values($optgroups),
+            'has_next_page' => $hasNextPage,
+        ];
+    }
+
     /**
      * @param list<mixed> $inseeCodes
      *
@@ -206,6 +337,60 @@ final readonly class DoctrineNewsletterAudienceOptionsQuery implements Newslette
         return null !== $municipality['postal_code'] && '' !== $municipality['postal_code']
             ? "{$municipality['postal_code']} — {$municipality['name']}"
             : $municipality['name'];
+    }
+
+    /**
+     * @param array{name: string, municipality_name: ?string, postal_code: ?string} $organization
+     */
+    private function organizationLabel(array $organization): string
+    {
+        $municipalityLabel = null;
+
+        if (null !== $organization['municipality_name'] && '' !== $organization['municipality_name']) {
+            $municipalityLabel = null !== $organization['postal_code'] && '' !== $organization['postal_code']
+                ? "{$organization['postal_code']} — {$organization['municipality_name']}"
+                : $organization['municipality_name'];
+        }
+
+        return null === $municipalityLabel
+            ? $organization['name']
+            : "{$organization['name']} — {$municipalityLabel}";
+    }
+
+    /**
+     * @param list<mixed> $organizationUuids
+     *
+     * @return list<string>
+     */
+    private function normalizeUuids(array $organizationUuids): array
+    {
+        return array_values(array_unique(array_filter(
+            array_map(
+                static fn (mixed $organizationUuid): string => is_string($organizationUuid) && Uuid::isValid($organizationUuid)
+                    ? Uuid::fromString($organizationUuid)->toRfc4122()
+                    : '',
+                $organizationUuids,
+            ),
+            static fn (string $organizationUuid): bool => '' !== $organizationUuid,
+        )));
+    }
+
+    private function uuidFromHex(string $uuidHex): string
+    {
+        $uuidHex = strtolower(trim($uuidHex));
+
+        if (32 !== strlen($uuidHex)) {
+            return Uuid::fromString($uuidHex)->toRfc4122();
+        }
+
+        return sprintf(
+            '%s-%s-%s-%s-%s',
+            substr($uuidHex, 0, 8),
+            substr($uuidHex, 8, 4),
+            substr($uuidHex, 12, 4),
+            substr($uuidHex, 16, 4),
+            substr($uuidHex, 20, 12),
+        );
     }
 
     private function preferredDepartmentOrderQueryBuilder(string $departmentAlias): QueryBuilder

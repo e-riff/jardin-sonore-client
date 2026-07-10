@@ -21,6 +21,7 @@ admin:
     municipalities: "Communes"
     newsletters: "Newsletters"
     mailing_campaigns: "Campagnes newsletter"
+    mailing_audience_masks: "Masques d’audience"
     mailing_recommendations: "Recommandations newsletter"
     mailing_delivery_recipients: "Destinataires diffusés"
   action:
@@ -80,6 +81,9 @@ admin:
     tuning: "Tonalité"
     template_key: "Template"
     audience_filter: "Filtre d’audience"
+    municipalities: "Communes"
+    materialized_municipality_count: "Communes"
+    municipality_labels: "Liste des communes"
     has_audience_criteria: "Ciblage défini"
     recommendation_count: "Recos"
     active_recommendation_count: "Recos actives"
@@ -107,6 +111,7 @@ admin:
     last_error: "Dernière erreur"
   help:
     phone_number: "Saisissez un numéro français ou international. Il sera stocké sans séparateurs, par exemple 06 12 34 56 78 deviendra +33612345678."
+    mailing_audience_mask_municipalities: "Recherchez et ajoutez les communes couvertes par ce masque."
   region:
     page:
       index: "Régions"
@@ -169,6 +174,12 @@ admin:
     page:
       index: "Campagnes newsletter"
       detail: "Détail de la campagne newsletter"
+  mailing_audience_mask:
+    page:
+      index: "Masques d’audience"
+      new: "Créer un masque d’audience"
+      edit: "Modifier un masque d’audience"
+      detail: "Détail du masque d’audience"
   instrument:
     page:
       index: "Instruments"
@@ -231,6 +242,9 @@ address_book:
   mailing_campaign:
     singular: "Campagne newsletter"
     plural: "Campagnes newsletter"
+  mailing_audience_mask:
+    singular: "Masque d’audience"
+    plural: "Masques d’audience"
   recommendation:
     singular: "Recommandation newsletter"
     plural: "Recommandations newsletter"

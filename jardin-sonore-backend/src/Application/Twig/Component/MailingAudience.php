@@ -14,7 +14,6 @@ use App\Application\Mailing\NewsletterAudienceResolverInterface;
 use App\Application\Mailing\UpdateMailingCampaignAudience;
 use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
-use App\Domain\Model\Mailing\NewsletterAudienceRadiusOrigin;
 use InvalidArgumentException;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Form\FormError;
@@ -30,12 +29,9 @@ use Symfony\UX\LiveComponent\ComponentToolsTrait;
 use Symfony\UX\LiveComponent\ComponentWithFormTrait;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 use Symfony\UX\Map\Bridge\Leaflet\LeafletOptions;
-use Symfony\UX\Map\Circle;
 use Symfony\UX\Map\Map;
-use Symfony\UX\Map\Marker;
 use Symfony\UX\Map\Point;
 use Symfony\UX\TwigComponent\Attribute\ExposeInTemplate;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[AsLiveComponent(
     name: 'MailingAudience',
@@ -47,7 +43,7 @@ final class MailingAudience
     use ComponentWithFormTrait;
     use DefaultActionTrait;
 
-    private const int MAP_MUNICIPALITY_SHAPE_LIMIT = 60;
+    private const int MAP_MUNICIPALITY_SHAPE_LIMIT = 120;
 
     #[LiveProp]
     public string $campaignUuid = '';
@@ -81,7 +77,6 @@ final class MailingAudience
         #[Autowire('%app.mailing.home_longitude%')]
         private readonly string $homeLongitude,
         private readonly UrlGeneratorInterface $urlGenerator,
-        private readonly TranslatorInterface $translator,
     ) {
     }
 
@@ -151,11 +146,6 @@ final class MailingAudience
         return $this->audienceResolutionError;
     }
 
-    public function isCustomRadiusOrigin(): bool
-    {
-        return $this->currentFormModel()->isCustomRadiusOrigin();
-    }
-
     public function isMunicipalitiesMode(): bool
     {
         return $this->currentFormModel()->isMunicipalitiesMode();
@@ -171,6 +161,23 @@ final class MailingAudience
         return $this->currentFormModel()->hasSelectedRadiusOrigin();
     }
 
+    public function shouldDisplayMap(): bool
+    {
+        return true;
+    }
+
+    #[ExposeInTemplate(name: 'audienceMapHomeLatitude')]
+    public function getAudienceMapHomeLatitude(): float
+    {
+        return (float) $this->homeLatitude;
+    }
+
+    #[ExposeInTemplate(name: 'audienceMapHomeLongitude')]
+    public function getAudienceMapHomeLongitude(): float
+    {
+        return (float) $this->homeLongitude;
+    }
+
     /**
      * @return list<array{inseeCode: string, label: string, geoShape: array<string, mixed>|list<mixed>}>
      */
@@ -182,9 +189,7 @@ final class MailingAudience
         }
 
         try {
-            $inseeCodes = $this->newsletterAudienceMunicipalityMaterializer->materialize(
-                $this->currentFormModel()->toAudienceFilter(),
-            );
+            $inseeCodes = $this->materializeCurrentMunicipalityInseeCodes($this->currentFormModel());
         } catch (InvalidArgumentException) {
             return [];
         }
@@ -212,15 +217,24 @@ final class MailingAudience
     #[ExposeInTemplate(name: 'audienceMapMunicipalityPoints')]
     public function getAudienceMapMunicipalityPoints(): array
     {
-        if (!$this->isAudienceMapMunicipalityShapesTruncated()) {
+        try {
+            $inseeCodes = $this->materializeCurrentMunicipalityInseeCodes($this->currentFormModel());
+        } catch (InvalidArgumentException) {
             return [];
         }
 
-        try {
-            $inseeCodes = $this->newsletterAudienceMunicipalityMaterializer->materialize(
-                $this->currentFormModel()->toAudienceFilter(),
-            );
-        } catch (InvalidArgumentException) {
+        if (!$this->isAudienceMapMunicipalityShapesTruncated()) {
+            $shapeInseeCodes = array_flip(array_map(
+                static fn (array $shape): string => $shape['inseeCode'],
+                $this->getAudienceMapMunicipalityShapes(),
+            ));
+            $inseeCodes = array_values(array_filter(
+                $inseeCodes,
+                static fn (string $inseeCode): bool => !isset($shapeInseeCodes[$inseeCode]),
+            ));
+        }
+
+        if ([] === $inseeCodes) {
             return [];
         }
 
@@ -245,9 +259,7 @@ final class MailingAudience
     public function getAudienceMapMaterializedMunicipalityCount(): int
     {
         try {
-            return count($this->newsletterAudienceMunicipalityMaterializer->materialize(
-                $this->currentFormModel()->toAudienceFilter(),
-            ));
+            return count($this->materializeCurrentMunicipalityInseeCodes($this->currentFormModel()));
         } catch (InvalidArgumentException) {
             return 0;
         }
@@ -278,34 +290,17 @@ final class MailingAudience
     public function getAudienceMap(): Map
     {
         $defaultPoint = $this->homePoint();
-        $previewPoint = $this->radiusPreviewPoint() ?? $defaultPoint;
 
-        if (!$previewPoint instanceof Point) {
+        if (!$defaultPoint instanceof Point) {
             throw new InvalidArgumentException('Newsletter audience map requires a default point.');
         }
 
         $map = (new Map())
-            ->center($previewPoint)
-            ->zoom($this->isRadiusModeActive() ? 10.0 : 11.5)
+            ->center($defaultPoint)
+            ->zoom(11.5)
             ->minZoom(5.0)
             ->maxZoom(17.0)
-            ->options(new LeafletOptions())
-            ->addMarker(new Marker(
-                position: $previewPoint,
-                title: $this->radiusPreviewTitle(),
-                extra: [
-                    'origin' => $this->radiusOriginValue() ?? NewsletterAudienceRadiusOrigin::HOME->value,
-                ],
-            ));
-
-        $radiusKilometers = $this->radiusKilometersValue();
-
-        if ($this->isRadiusModeActive() && null !== $radiusKilometers && 0 < $radiusKilometers) {
-            $map->addCircle(new Circle(
-                center: $previewPoint,
-                radius: $radiusKilometers * 1000,
-            ));
-        }
+            ->options(new LeafletOptions());
 
         return $map;
     }
@@ -331,31 +326,16 @@ final class MailingAudience
 
     private function buildAudienceFilter(MailingAudienceFormModel $formModel): NewsletterAudienceFilter
     {
-        return $formModel->toAudienceFilter();
-    }
+        $rawAudienceFilter = $formModel->toAudienceFilter();
 
-    private function radiusPreviewPoint(): ?Point
-    {
-        $radiusOrigin = $this->radiusOriginValue();
-
-        if (NewsletterAudienceRadiusOrigin::CUSTOM->value === $radiusOrigin) {
-            $latitude = $this->customLatitudeValue();
-            $longitude = $this->customLongitudeValue();
-
-            return null !== $latitude && null !== $longitude ? new Point($latitude, $longitude) : null;
-        }
-
-        return NewsletterAudienceRadiusOrigin::HOME->value === $radiusOrigin || null === $radiusOrigin
-            ? $this->homePoint()
-            : null;
-    }
-
-    private function radiusPreviewTitle(): string
-    {
-        return match ($this->radiusOriginValue()) {
-            NewsletterAudienceRadiusOrigin::CUSTOM->value => $this->translator->trans('mailing.audience.map.origin_custom', [], 'mailing'),
-            default => $this->translator->trans('mailing.audience.map.origin_home', [], 'mailing'),
-        };
+        return new NewsletterAudienceFilter(
+            organizationTypes: $rawAudienceFilter->getOrganizationTypes(),
+            organizationSectors: $rawAudienceFilter->getOrganizationSectors(),
+            customerStatuses: $rawAudienceFilter->getCustomerStatuses(),
+            organizationUuids: $rawAudienceFilter->getOrganizationUuids(),
+            tagUuids: $rawAudienceFilter->getTagUuids(),
+            municipalityInseeCodes: $this->materializeCurrentMunicipalityInseeCodes($formModel),
+        );
     }
 
     private function resolveReturnTo(): string
@@ -371,26 +351,6 @@ final class MailingAudience
         ]);
     }
 
-    private function radiusOriginValue(): ?string
-    {
-        return $this->currentFormModel()->getRadiusOriginValue();
-    }
-
-    private function radiusKilometersValue(): ?float
-    {
-        return $this->currentFormModel()->radiusKilometers;
-    }
-
-    private function customLatitudeValue(): ?float
-    {
-        return $this->currentFormModel()->radiusOriginCustomLatitude;
-    }
-
-    private function customLongitudeValue(): ?float
-    {
-        return $this->currentFormModel()->radiusOriginCustomLongitude;
-    }
-
     private function currentFormModel(): MailingAudienceFormModel
     {
         $formModel = $this->getForm()->getData();
@@ -402,6 +362,33 @@ final class MailingAudience
         return MailingAudienceFormModel::fromAudienceFilter(
             $this->resolveMailingCampaign()->getAudienceFilter(),
         );
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function materializeCurrentMunicipalityInseeCodes(MailingAudienceFormModel $formModel): array
+    {
+        $materializedInseeCodes = $this->newsletterAudienceMunicipalityMaterializer->materialize($formModel->toAudienceFilter());
+        $retainedInseeCodes = [];
+
+        foreach (array_merge($formModel->municipalityInseeCodes, $materializedInseeCodes) as $inseeCode) {
+            $normalizedInseeCode = trim($inseeCode);
+
+            if ('' === $normalizedInseeCode) {
+                continue;
+            }
+
+            if (in_array($normalizedInseeCode, $retainedInseeCodes, true)) {
+                continue;
+            }
+
+            $retainedInseeCodes[] = $normalizedInseeCode;
+        }
+
+        sort($retainedInseeCodes);
+
+        return $retainedInseeCodes;
     }
 
     private function homePoint(): ?Point

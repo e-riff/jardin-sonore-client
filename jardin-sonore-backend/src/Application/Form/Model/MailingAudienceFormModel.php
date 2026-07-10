@@ -36,6 +36,11 @@ final class MailingAudienceFormModel
     /**
      * @var list<string>
      */
+    public array $organizationUuids = [];
+
+    /**
+     * @var list<string>
+     */
     public array $regionCodes = [];
 
     /**
@@ -68,6 +73,7 @@ final class MailingAudienceFormModel
         $formModel->organizationTypes = $newsletterAudienceFilter->getOrganizationTypes();
         $formModel->organizationSectors = $newsletterAudienceFilter->getOrganizationSectors();
         $formModel->customerStatuses = $newsletterAudienceFilter->getCustomerStatuses();
+        $formModel->organizationUuids = $newsletterAudienceFilter->getOrganizationUuids();
         $formModel->tagUuids = $newsletterAudienceFilter->getTagUuids();
         $formModel->regionCodes = $newsletterAudienceFilter->getRegionCodes();
         $formModel->departmentCodes = $newsletterAudienceFilter->getDepartmentCodes();
@@ -87,14 +93,17 @@ final class MailingAudienceFormModel
 
     public function toAudienceFilter(): NewsletterAudienceFilter
     {
+        $organizationUuids = self::normalizeStringList($this->organizationUuids);
+        $tagUuids = self::normalizeStringList($this->tagUuids);
+        $municipalityInseeCodes = self::normalizeStringList($this->municipalityInseeCodes);
+
         return new NewsletterAudienceFilter(
             organizationTypes: $this->organizationTypes,
             organizationSectors: $this->organizationSectors,
             customerStatuses: $this->customerStatuses,
-            tagUuids: $this->tagUuids,
-            regionCodes: MailingAudienceGeographicMode::MUNICIPALITIES === $this->geographicMode ? $this->regionCodes : [],
-            departmentCodes: MailingAudienceGeographicMode::MUNICIPALITIES === $this->geographicMode ? $this->departmentCodes : [],
-            municipalityInseeCodes: MailingAudienceGeographicMode::MUNICIPALITIES === $this->geographicMode ? $this->municipalityInseeCodes : [],
+            organizationUuids: $organizationUuids,
+            tagUuids: $tagUuids,
+            municipalityInseeCodes: MailingAudienceGeographicMode::MUNICIPALITIES === $this->geographicMode ? $municipalityInseeCodes : [],
             radiusKilometers: $this->hasRadiusMode() ? ($this->radiusKilometers ?? 1.0) : null,
             radiusOrigin: match ($this->geographicMode) {
                 MailingAudienceGeographicMode::HOME_RADIUS => NewsletterAudienceRadiusOrigin::HOME,
@@ -103,21 +112,17 @@ final class MailingAudienceFormModel
             },
             radiusOriginMunicipalityInseeCode: null,
             radiusOriginCustomLatitude: MailingAudienceGeographicMode::CUSTOM_RADIUS === $this->geographicMode
-                ? $this->radiusOriginCustomLatitude
+                ? self::normalizeNullableFloat($this->radiusOriginCustomLatitude)
                 : null,
             radiusOriginCustomLongitude: MailingAudienceGeographicMode::CUSTOM_RADIUS === $this->geographicMode
-                ? $this->radiusOriginCustomLongitude
+                ? self::normalizeNullableFloat($this->radiusOriginCustomLongitude)
                 : null,
         );
     }
 
     public function hasAdministrativeLocationCriteria(): bool
     {
-        return MailingAudienceGeographicMode::MUNICIPALITIES === $this->geographicMode && (
-            [] !== $this->regionCodes
-            || [] !== $this->departmentCodes
-            || [] !== $this->municipalityInseeCodes
-        );
+        return MailingAudienceGeographicMode::MUNICIPALITIES === $this->geographicMode && [] !== $this->municipalityInseeCodes;
     }
 
     public function hasSelectedRadiusOrigin(): bool
@@ -155,5 +160,36 @@ final class MailingAudienceFormModel
     {
         return MailingAudienceGeographicMode::HOME_RADIUS === $this->geographicMode
             || MailingAudienceGeographicMode::CUSTOM_RADIUS === $this->geographicMode;
+    }
+
+    /**
+     * @param list<string> $values
+     *
+     * @return list<string>
+     */
+    private static function normalizeStringList(array $values): array
+    {
+        $normalizedValues = [];
+
+        foreach ($values as $value) {
+            $normalizedValue = trim($value);
+
+            if ('' === $normalizedValue) {
+                continue;
+            }
+
+            if (in_array($normalizedValue, $normalizedValues, true)) {
+                continue;
+            }
+
+            $normalizedValues[] = $normalizedValue;
+        }
+
+        return $normalizedValues;
+    }
+
+    private static function normalizeNullableFloat(?float $value): ?float
+    {
+        return null === $value ? null : (float) $value;
     }
 }

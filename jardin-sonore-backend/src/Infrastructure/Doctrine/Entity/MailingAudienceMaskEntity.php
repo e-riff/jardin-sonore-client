@@ -89,6 +89,34 @@ class MailingAudienceMaskEntity
         return $this;
     }
 
+    /**
+     * @return list<string>
+     */
+    public function getMunicipalityInseeCodesForAdmin(): array
+    {
+        return $this->materializedMunicipalityInseeCodes;
+    }
+
+    /**
+     * @param list<string> $municipalityInseeCodesForAdmin
+     */
+    public function setMunicipalityInseeCodesForAdmin(array $municipalityInseeCodesForAdmin): static
+    {
+        $this->materializedMunicipalityInseeCodes = $municipalityInseeCodesForAdmin;
+
+        return $this;
+    }
+
+    public function getMaterializedMunicipalityCountForAdmin(): int
+    {
+        return count($this->materializedMunicipalityInseeCodes);
+    }
+
+    public function getMunicipalityLabelsForAdmin(): string
+    {
+        return '';
+    }
+
     public function getCreatedAt(): DateTimeImmutable
     {
         return $this->createdAt;

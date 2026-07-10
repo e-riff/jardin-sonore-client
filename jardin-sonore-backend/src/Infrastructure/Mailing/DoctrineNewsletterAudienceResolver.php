@@ -55,6 +55,12 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
         $this->applyGeographicFilters($queryBuilder, $newsletterAudienceFilter);
 
         $recipientsByEmailAddress = $this->mapRecipientsByEmailAddress($queryBuilder);
+        $explicitOrganizationRecipients = $this->findExplicitOrganizationRecipients($newsletterAudienceFilter);
+
+        foreach ($explicitOrganizationRecipients as $emailAddress => $newsletterRecipient) {
+            $recipientsByEmailAddress[$emailAddress] = $newsletterRecipient;
+        }
+
         $recipients = array_values($recipientsByEmailAddress);
         $total = count($recipients);
 
@@ -334,6 +340,33 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
         }
 
         return $recipientsByEmailAddress;
+    }
+
+    /**
+     * @return array<string, NewsletterRecipient>
+     */
+    private function findExplicitOrganizationRecipients(NewsletterAudienceFilter $newsletterAudienceFilter): array
+    {
+        $organizationUuids = $newsletterAudienceFilter->getOrganizationUuids();
+
+        if ([] === $organizationUuids) {
+            return [];
+        }
+
+        $queryBuilder = $this->createQueryBuilder();
+        $organizationUuidBinaries = array_map(
+            static fn (string $organizationUuid): string => Uuid::fromString($organizationUuid)->toBinary(),
+            $organizationUuids,
+        );
+        $queryBuilder
+            ->andWhere(sprintf(
+                '(%s.uuid IN (:organizationUuids) OR %s.uuid IN (:organizationUuids))',
+                self::ENTRY_ALIAS,
+                self::ORGANIZATION_ENTRY_ALIAS,
+            ))
+            ->setParameter('organizationUuids', $organizationUuidBinaries, ArrayParameterType::BINARY);
+
+        return $this->mapRecipientsByEmailAddress($queryBuilder);
     }
 
     private function organizationFieldMatchesExpression(

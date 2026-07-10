@@ -6,6 +6,7 @@ namespace App\Application\Form;
 
 use App\Application\Form\Model\MailingAudienceMaskFormModel;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -26,6 +27,16 @@ final class MailingAudienceMaskType extends AbstractType
             ->add('name', TextType::class, [
                 'label' => 'mailing.audience.mask.form.name',
                 'help' => 'mailing.audience.mask.form.name_help',
+                'required' => true,
+                'attr' => [
+                    'autocomplete' => 'off',
+                ],
+            ])
+            ->add('currentAudienceSnapshot', HiddenType::class, [
+                'required' => false,
+                'attr' => [
+                    'data-mailing-audience-target' => 'maskSnapshot',
+                ],
             ])
             ->add('submit', SubmitType::class, [
                 'label' => 'mailing.audience.mask.form.submit',

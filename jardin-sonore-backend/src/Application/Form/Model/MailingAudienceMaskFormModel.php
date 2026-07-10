@@ -11,4 +11,6 @@ final class MailingAudienceMaskFormModel
     #[Assert\NotBlank]
     #[Assert\Length(max: 255)]
     public string $name = '';
+
+    public string $currentAudienceSnapshot = '';
 }
