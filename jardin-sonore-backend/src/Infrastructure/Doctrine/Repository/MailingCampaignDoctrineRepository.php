@@ -31,13 +31,6 @@ final class MailingCampaignDoctrineRepository extends ServiceEntityRepository im
         return $mailingCampaignEntity instanceof MailingCampaignEntity ? $this->mailingCampaignMapper->toDomain($mailingCampaignEntity) : null;
     }
 
-    public function findEntityByUuid(Uuid $uuid): ?MailingCampaignEntity
-    {
-        $mailingCampaignEntity = $this->findOneBy(['uuid' => $uuid]);
-
-        return $mailingCampaignEntity instanceof MailingCampaignEntity ? $mailingCampaignEntity : null;
-    }
-
     public function findAllOrderedByCreatedAtDesc(): array
     {
         $mailingCampaignEntities = $this->findBy([], [
