@@ -7,16 +7,16 @@ namespace App\Application\Mailing;
 use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
 use InvalidArgumentException;
+use Monolog\Attribute\WithMonologChannel;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
+#[WithMonologChannel('mailing_delivery')]
 final readonly class SendMailingCampaign
 {
     public function __construct(
         private MailingCampaignRepositoryInterface $mailingCampaignRepository,
         private NewsletterAudienceResolverInterface $newsletterAudienceResolver,
         private MailingDeliveryQueueInterface $mailingDeliveryQueue,
-        #[Autowire(service: 'monolog.logger.mailing_delivery')]
         private LoggerInterface $mailingDeliveryLogger,
     ) {
     }

@@ -308,7 +308,8 @@ Lecture de l'audit :
   - [x] poser la regle `pas d'entite Doctrine dans les controllers metier hors EasyAdmin` ;
   - [x] renommer les services ambigus si necessaire ;
   - [x] regrouper les lectures par responsabilite ;
-  - [ ] auditer les doublons `RepositoryInterface adapte au domaine` / `EntityRepository` et supprimer les doubles niveaux qui n'apportent pas assez, l'ideal serait de n'avoir qu'un repo d'infra pour chaque élément (a retravailler);
+  - [~] auditer les doublons `RepositoryInterface adapte au domaine` / `EntityRepository` et supprimer les doubles niveaux qui n'apportent pas assez, l'ideal serait de n'avoir qu'un repo d'infra pour chaque élément (a retravailler) ;
+  - [x] supprimer les doublons morts ou sans usage distinct immediat (`AddressContactEntityRepository`, `GetInstrument`, `findEntityByUuid` non utilises) ;
   - [x] definir quand un repository unique suffit, et quand un acces domaine + un acces ORM technique restent justifies ;
   - [x] supprimer ou eviter les abstractions inutiles ;
   - [x] verifier si un mapper explicite local aide sur certains flux applicatifs.
@@ -330,6 +331,7 @@ Lecture de l'audit :
   - [x] ne migrer que ce qui simplifie reellement ;
   - [x] convertir les parametres scalaires pertinents en `#[Autowire('%...%')]` ;
   - [x] migrer `SharedContactSubscriber` vers un attribut Doctrine adapte ;
+  - [x] remplacer les injections repetees du logger `mailing_delivery` par `#[WithMonologChannel('mailing_delivery')]` sur les services concernes ;
   - [x] basculer les configs package backend en `App::config([...])` ;
   - [x] poser la convention `parameters.yaml.dist` versionne + `parameters.yaml` local non versionne ;
   - [x] eviter les conversions massives pour faire moderne ;

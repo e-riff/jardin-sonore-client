@@ -10,6 +10,7 @@ use App\Domain\Model\Mailing\MailingCampaignStatus;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
 use DateInterval;
 use DateTimeImmutable;
+use Monolog\Attribute\WithMonologChannel;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -22,6 +23,7 @@ use Symfony\Component\Uid\Uuid;
     name: 'app:mailing:dispatch-pending-campaigns',
     description: 'Dispatch the next newsletter delivery waves to Messenger respecting the configured time window limit.',
 )]
+#[WithMonologChannel('mailing_delivery')]
 final readonly class DispatchPendingMailingCampaignsCommand
 {
     public function __construct(
@@ -34,7 +36,6 @@ final readonly class DispatchPendingMailingCampaignsCommand
         private int $mailingWindowMinutes,
         #[Autowire('%app.mailing.dispatch_batch_size%')]
         private int $mailingDispatchBatchSize,
-        #[Autowire(service: 'monolog.logger.mailing_delivery')]
         private LoggerInterface $mailingDeliveryLogger,
     ) {
     }
