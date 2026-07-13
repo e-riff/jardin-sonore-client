@@ -291,7 +291,7 @@ Lecture de l'audit :
 
 ### Lot 6. Nommage Et Patterns Structurels
 
-- Statut : En cours
+- Statut : Termine sur le perimetre utile
 - Objectif : poser une nomenclature et des usages coherents pour les abstractions.
 - Regles a appliquer :
   - `RepositoryInterface` : chargement et sauvegarde d'objets metier ;
@@ -308,7 +308,7 @@ Lecture de l'audit :
   - [x] poser la regle `pas d'entite Doctrine dans les controllers metier hors EasyAdmin` ;
   - [x] renommer les services ambigus si necessaire ;
   - [x] regrouper les lectures par responsabilite ;
-  - [~] auditer les doublons `RepositoryInterface adapte au domaine` / `EntityRepository` et supprimer les doubles niveaux qui n'apportent pas assez, l'ideal serait de n'avoir qu'un repo d'infra pour chaque élément (a retravailler) ;
+  - [x] auditer les doublons `RepositoryInterface adapte au domaine` / `EntityRepository` et supprimer les doubles niveaux qui n'apportent pas assez ; les acces encore dupliques restants sont assumes quand ils servent un role ORM technique distinct (`EasyAdmin`, link CRUD, import annuaire, lookups techniques) ;
   - [x] supprimer les doublons morts ou sans usage distinct immediat (`AddressContactEntityRepository`, `GetInstrument`, `findEntityByUuid` non utilises) ;
   - [x] definir quand un repository unique suffit, et quand un acces domaine + un acces ORM technique restent justifies ;
   - [x] supprimer ou eviter les abstractions inutiles ;
@@ -317,7 +317,7 @@ Lecture de l'audit :
 
 ### Lot 7. Attributs Symfony Utiles
 
-- Statut : En cours
+- Statut : Termine
 - Objectif : ameliorer la lisibilite du branchement sans coupler le domaine au framework.
 - Perimetre :
   - controleurs ;
@@ -346,11 +346,6 @@ Lecture de l'audit :
   - la roadmap maitre decrit clairement le prochain module ;
   - les conventions backend sont assez stables pour demarrer sans reposer les fondations.
 - Mini checklist avant demarrage :
-  - Prioritaire :
-    - [ ] auditer les doublons encore vivants entre `RepositoryInterface` de domaine et acces ORM techniques, puis supprimer ceux qui n'ont pas un role reellement distinct ;
-    - [ ] verifier les derniers points de branchement Symfony ou un attribut retirerait une configuration diffuse reelle, sans migration cosmetique ;
-  - Qualite utile mais non bloquante :
-    - [ ] nettoyer les erreurs `phpstan` globales restantes hors nouveau module, en commencant par `Application/Twig/Component/MailingAudience.php` ;
   - A ne pas rouvrir avant besoin concret :
     - [ ] ne pas relancer de refacto transversal sur `EasyAdmin` ;
     - [ ] ne pas rearchitecturer les batchs d'infrastructure qui restent franchement techniques.
