@@ -40,6 +40,9 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
   - `config/parameters.yaml` local et non versionne ;
   - resolution depuis `.env` / `.env.local` / environnement serveur ;
   - injection ciblee via `#[Autowire('%...%')]` quand cela rend l'origine de la valeur explicite.
+- Hors `EasyAdmin`, les controllers metier ne recoivent ni n'exposent d'entites Doctrine.
+- Un `Repository` charge ou sauvegarde un vrai objet metier ; les listes, autocompletes, options, resumes d'ecran et autres projections UI passent par des `Query` / `Lookup` / read models dedies.
+- Un cas d'usage d'ecriture charge lui-meme ses modeles de domaine a partir d'identifiants explicites, plutot que de demander au controller de manipuler directement ces modeles.
 
 ## Priorites Produit
 
@@ -145,6 +148,7 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
   - approches de mapping ;
   - patterns valides apres refacto.
 - Positionner la facturation en dependance aval plutot qu'en prochain module.
+- S'appuyer sur `jardin-sonore-backend/docs/architecture-boundaries.md` pour les nouvelles lectures UI et les nouveaux cas d'usage d'ecriture.
 
 ## Plus Tard
 

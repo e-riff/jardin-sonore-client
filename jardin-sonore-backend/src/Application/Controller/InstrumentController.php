@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace App\Application\Controller;
 
 use App\Application\ContentCatalog\CreateInstrument;
-use App\Application\ContentCatalog\GetInstrument;
+use App\Application\ContentCatalog\GetInstrumentForEdit;
 use App\Application\ContentCatalog\SaveInstrumentInput;
 use App\Application\ContentCatalog\UpdateInstrument;
 use App\Application\Form\InstrumentType;
 use App\Application\Form\Model\InstrumentFormModel;
-use App\Domain\Model\ContentCatalog\Instrument;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -60,32 +59,32 @@ final class InstrumentController extends AbstractController
     public function edit(
         string $uuid,
         Request $request,
-        GetInstrument $getInstrument,
+        GetInstrumentForEdit $getInstrumentForEdit,
         UpdateInstrument $updateInstrument,
     ): Response {
         if (!Uuid::isValid($uuid)) {
             throw $this->createNotFoundException();
         }
 
-        $instrument = $getInstrument(Uuid::fromString($uuid));
+        $instrumentEditView = $getInstrumentForEdit(Uuid::fromString($uuid));
 
-        if (!$instrument instanceof Instrument) {
+        if (null === $instrumentEditView) {
             throw $this->createNotFoundException();
         }
 
-        $formModel = InstrumentFormModel::fromInstrument($instrument);
+        $formModel = InstrumentFormModel::fromEditView($instrumentEditView);
         $form = $this->createForm(InstrumentType::class, $formModel);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $updateInstrument($instrument, $this->createInput($formModel));
+            $updateInstrument($instrumentEditView->uuid, $this->createInput($formModel));
             $this->addFlash('success', [
                 'message' => 'catalog.instrument.flash.updated',
                 'domain' => 'catalog',
             ]);
 
             return $this->redirectToRoute('instrument_edit', [
-                'uuid' => $instrument->getUuid()->toRfc4122(),
+                'uuid' => $instrumentEditView->uuid->toRfc4122(),
             ], Response::HTTP_SEE_OTHER);
         }
 
@@ -93,7 +92,7 @@ final class InstrumentController extends AbstractController
             'instrument/edit.html.twig',
             [
                 'form' => $form->createView(),
-                'instrument' => $instrument,
+                'instrument' => $instrumentEditView,
             ],
             $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null,
         );

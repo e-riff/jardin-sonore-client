@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Form\Model;
 
-use App\Domain\Model\Mailing\NewsletterRecommendation;
+use App\Application\Mailing\NewsletterRecommendationView;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -35,15 +35,15 @@ final class NewsletterRecommendationFormModel
 
     public bool $active = true;
 
-    public static function fromNewsletterRecommendation(NewsletterRecommendation $recommendation): self
+    public static function fromView(NewsletterRecommendationView $newsletterRecommendationView): self
     {
         $formModel = new self();
-        $formModel->title = $recommendation->getTitle();
-        $formModel->tag = $recommendation->getTag();
-        $formModel->text = $recommendation->getText();
-        $formModel->url = $recommendation->getUrl();
-        $formModel->linkLabel = $recommendation->getLinkLabel();
-        $formModel->active = $recommendation->isActive();
+        $formModel->title = $newsletterRecommendationView->title;
+        $formModel->tag = $newsletterRecommendationView->tag;
+        $formModel->text = $newsletterRecommendationView->text;
+        $formModel->url = $newsletterRecommendationView->url;
+        $formModel->linkLabel = $newsletterRecommendationView->linkLabel;
+        $formModel->active = $newsletterRecommendationView->active;
 
         return $formModel;
     }

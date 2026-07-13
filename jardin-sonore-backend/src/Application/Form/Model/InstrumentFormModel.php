@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Form\Model;
 
-use App\Domain\Model\ContentCatalog\Instrument;
+use App\Application\ContentCatalog\InstrumentEditView;
 use Symfony\Component\Validator\Constraints as Assert;
 
 final class InstrumentFormModel
@@ -29,18 +29,15 @@ final class InstrumentFormModel
 
     public bool $active = true;
 
-    public static function fromInstrument(Instrument $instrument): self
+    public static function fromEditView(InstrumentEditView $instrumentEditView): self
     {
         $formModel = new self();
-        $formModel->name = $instrument->getName();
-        $formModel->tuning = $instrument->getTuning();
-        $formModel->quantity = $instrument->getQuantity();
-        $formModel->notes = $instrument->getNotes();
-        $formModel->tagUuids = array_map(
-            static fn ($instrumentTag): string => $instrumentTag->getUuid()->toRfc4122(),
-            $instrument->getTags(),
-        );
-        $formModel->active = $instrument->isActive();
+        $formModel->name = $instrumentEditView->name;
+        $formModel->tuning = $instrumentEditView->tuning;
+        $formModel->quantity = $instrumentEditView->quantity;
+        $formModel->notes = $instrumentEditView->notes;
+        $formModel->tagUuids = $instrumentEditView->tagUuids;
+        $formModel->active = $instrumentEditView->active;
 
         return $formModel;
     }

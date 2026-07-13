@@ -291,7 +291,7 @@ Lecture de l'audit :
 
 ### Lot 6. Nommage Et Patterns Structurels
 
-- Statut : A faire
+- Statut : En cours
 - Objectif : poser une nomenclature et des usages coherents pour les abstractions.
 - Regles a appliquer :
   - `RepositoryInterface` : chargement et sauvegarde d'objets metier ;
@@ -304,12 +304,14 @@ Lecture de l'audit :
   - moins de services fourre-tout ;
   - aucune abstraction ajoutee sans benefice concret.
 - Checklist :
-  - [ ] renommer les services ambigus si necessaire ;
-  - [ ] regrouper les lectures par responsabilite ;
+  - [x] formaliser la frontiere `Repository metier` vs `Query/Lookup` dans une doc versionnee ;
+  - [x] poser la regle `pas d'entite Doctrine dans les controllers metier hors EasyAdmin` ;
+  - [x] renommer les services ambigus si necessaire ;
+  - [x] regrouper les lectures par responsabilite ;
   - [ ] auditer les doublons `RepositoryInterface adapte au domaine` / `EntityRepository` et supprimer les doubles niveaux qui n'apportent pas assez, l'ideal serait de n'avoir qu'un repo d'infra pour chaque élément (a retravailler);
-  - [ ] definir quand un repository unique suffit, et quand un acces domaine + un acces ORM technique restent justifies ;
-  - [ ] supprimer ou eviter les abstractions inutiles ;
-  - [ ] verifier si un mapper explicite local aide sur certains flux applicatifs.
+  - [x] definir quand un repository unique suffit, et quand un acces domaine + un acces ORM technique restent justifies ;
+  - [x] supprimer ou eviter les abstractions inutiles ;
+  - [x] verifier si un mapper explicite local aide sur certains flux applicatifs.
 - Commit attendu : `refactor(architecture): align naming and structural patterns`
 
 ### Lot 7. Attributs Symfony Utiles

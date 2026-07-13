@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Application\ContentCatalog;
 
-use App\Domain\Model\ContentCatalog\Instrument;
 use App\Domain\Repository\InstrumentRepositoryInterface;
 use App\Domain\Repository\InstrumentTagRepositoryInterface;
 use InvalidArgumentException;
+use Symfony\Component\Uid\Uuid;
 
 final readonly class UpdateInstrument
 {
@@ -17,8 +17,14 @@ final readonly class UpdateInstrument
     ) {
     }
 
-    public function __invoke(Instrument $instrument, SaveInstrumentInput $input): void
+    public function __invoke(Uuid $instrumentUuid, SaveInstrumentInput $input): void
     {
+        $instrument = $this->instrumentRepository->findByUuid($instrumentUuid);
+
+        if (null === $instrument) {
+            throw new InvalidArgumentException('Instrument not found.');
+        }
+
         $instrument->updateDetails(
             name: $input->name,
             tuning: $input->tuning,

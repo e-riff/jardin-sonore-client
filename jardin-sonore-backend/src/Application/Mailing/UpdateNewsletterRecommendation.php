@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\Application\Mailing;
 
 use App\Application\Storage\RecommendationImageStorageInterface;
-use App\Domain\Model\Mailing\NewsletterRecommendation;
 use App\Domain\Repository\NewsletterRecommendationRepositoryInterface;
+use InvalidArgumentException;
+use Symfony\Component\Uid\Uuid;
 
 final readonly class UpdateNewsletterRecommendation
 {
@@ -17,9 +18,15 @@ final readonly class UpdateNewsletterRecommendation
     }
 
     public function __invoke(
-        NewsletterRecommendation $recommendation,
+        Uuid $recommendationUuid,
         CreateNewsletterRecommendationInput $input,
     ): void {
+        $recommendation = $this->newsletterRecommendationRepository->findByUuid($recommendationUuid);
+
+        if (null === $recommendation) {
+            throw new InvalidArgumentException('Newsletter recommendation not found.');
+        }
+
         $imagePath = null === $input->imageFile
             ? $recommendation->getImagePath()
             : $this->recommendationImageStorage->store($input->imageFile);

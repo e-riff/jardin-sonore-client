@@ -10,11 +10,10 @@ use App\Application\Mailing\AddNewsletterRecommendationToCampaign;
 use App\Application\Mailing\CreateNewsletterRecommendation;
 use App\Application\Mailing\CreateNewsletterRecommendationInput;
 use App\Application\Mailing\GetMailingCampaign;
+use App\Application\Mailing\GetNewsletterRecommendationForEdit;
 use App\Application\Mailing\SearchNewsletterRecommendations;
 use App\Application\Mailing\UpdateNewsletterRecommendation;
 use App\Domain\Model\Mailing\MailingCampaign;
-use App\Domain\Model\Mailing\NewsletterRecommendation;
-use App\Domain\Repository\NewsletterRecommendationRepositoryInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -85,23 +84,23 @@ final class NewsletterRecommendationCatalogController extends AbstractController
     public function edit(
         string $uuid,
         Request $request,
-        NewsletterRecommendationRepositoryInterface $newsletterRecommendationRepository,
+        GetNewsletterRecommendationForEdit $getNewsletterRecommendationForEdit,
         UpdateNewsletterRecommendation $updateNewsletterRecommendation,
     ): Response {
-        $recommendation = Uuid::isValid($uuid)
-            ? $newsletterRecommendationRepository->findByUuid(Uuid::fromString($uuid))
+        $newsletterRecommendationView = Uuid::isValid($uuid)
+            ? $getNewsletterRecommendationForEdit(Uuid::fromString($uuid))
             : null;
 
-        if (!$recommendation instanceof NewsletterRecommendation) {
+        if (null === $newsletterRecommendationView) {
             throw $this->createNotFoundException();
         }
 
-        $formModel = NewsletterRecommendationFormModel::fromNewsletterRecommendation($recommendation);
+        $formModel = NewsletterRecommendationFormModel::fromView($newsletterRecommendationView);
         $form = $this->createForm(NewsletterRecommendationType::class, $formModel);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $updateNewsletterRecommendation($recommendation, $this->createInput($formModel));
+            $updateNewsletterRecommendation($newsletterRecommendationView->uuid, $this->createInput($formModel));
             $this->addFlash('success', 'mailing.flash.recommendation_updated');
 
             return $this->redirectToRoute('mailing_recommendation_catalog_index', status: Response::HTTP_SEE_OTHER);
@@ -112,7 +111,7 @@ final class NewsletterRecommendationCatalogController extends AbstractController
             [
                 'form' => $form->createView(),
                 'hasErrors' => $form->isSubmitted() && !$form->isValid(),
-                'recommendation' => $recommendation,
+                'recommendation' => $newsletterRecommendationView,
             ],
             $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null,
         );
