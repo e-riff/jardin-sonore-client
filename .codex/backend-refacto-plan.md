@@ -343,6 +343,15 @@ Lecture de l'audit :
 - Criteres de fin :
   - la roadmap maitre decrit clairement le prochain module ;
   - les conventions backend sont assez stables pour demarrer sans reposer les fondations.
+- Mini checklist avant demarrage :
+  - Prioritaire :
+    - [ ] auditer les doublons encore vivants entre `RepositoryInterface` de domaine et acces ORM techniques, puis supprimer ceux qui n'ont pas un role reellement distinct ;
+    - [ ] verifier les derniers points de branchement Symfony ou un attribut retirerait une configuration diffuse reelle, sans migration cosmetique ;
+  - Qualite utile mais non bloquante :
+    - [ ] nettoyer les erreurs `phpstan` globales restantes hors nouveau module, en commencant par `Application/Twig/Component/MailingAudience.php` ;
+  - A ne pas rouvrir avant besoin concret :
+    - [ ] ne pas relancer de refacto transversal sur `EasyAdmin` ;
+    - [ ] ne pas rearchitecturer les batchs d'infrastructure qui restent franchement techniques.
 - Checklist :
   - [ ] preciser les dependances eventuelles avec la facturation ;
   - [ ] lister les briques reutilisables deja pretes ;
