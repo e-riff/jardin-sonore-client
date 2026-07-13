@@ -9,16 +9,16 @@ use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Domain\Model\Mailing\NewsletterRecipient;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
 use InvalidArgumentException;
+use Monolog\Attribute\WithMonologChannel;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
+#[WithMonologChannel('mailing_delivery')]
 final readonly class ExtendMailingCampaignAudience
 {
     public function __construct(
         private MailingCampaignRepositoryInterface $mailingCampaignRepository,
         private NewsletterAudienceResolverInterface $newsletterAudienceResolver,
         private MailingDeliveryQueueInterface $mailingDeliveryQueue,
-        #[Autowire(service: 'monolog.logger.mailing_delivery')]
         private LoggerInterface $mailingDeliveryLogger,
     ) {
     }

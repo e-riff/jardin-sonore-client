@@ -13,13 +13,14 @@ use App\Domain\Model\Mailing\NewsletterRecipient;
 use App\Domain\Model\ValueObject\EmailAddress;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
 use InvalidArgumentException;
+use Monolog\Attribute\WithMonologChannel;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Uid\Uuid;
 use Throwable;
 
 #[AsMessageHandler]
+#[WithMonologChannel('mailing_delivery')]
 final readonly class SendMailingCampaignRecipientMessageHandler
 {
     public function __construct(
@@ -27,7 +28,6 @@ final readonly class SendMailingCampaignRecipientMessageHandler
         private NewsletterRendererInterface $newsletterRenderer,
         private NewsletterMailSenderInterface $newsletterMailSender,
         private MailingDeliveryQueueInterface $mailingDeliveryQueue,
-        #[Autowire(service: 'monolog.logger.mailing_delivery')]
         private LoggerInterface $mailingDeliveryLogger,
     ) {
     }
