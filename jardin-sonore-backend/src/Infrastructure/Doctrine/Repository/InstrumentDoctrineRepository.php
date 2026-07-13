@@ -32,13 +32,6 @@ final class InstrumentDoctrineRepository extends ServiceEntityRepository impleme
         parent::__construct($managerRegistry, InstrumentEntity::class);
     }
 
-    public function findEntityByUuid(Uuid $uuid): ?InstrumentEntity
-    {
-        $entity = $this->findOneBy(['uuid' => $uuid]);
-
-        return $entity instanceof InstrumentEntity ? $entity : null;
-    }
-
     public function findByUuid(Uuid $uuid): ?Instrument
     {
         $entity = $this->findOneBy(['uuid' => $uuid]);

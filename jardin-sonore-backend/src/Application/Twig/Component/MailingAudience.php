@@ -17,12 +17,15 @@ use App\Application\Mailing\NewsletterAudienceResolverInterface;
 use App\Application\Mailing\UpdateMailingCampaignAudience;
 use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
+use App\Domain\Model\Mailing\NewsletterRecipient;
 use InvalidArgumentException;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Uid\Uuid;
@@ -75,6 +78,14 @@ final class MailingAudience
 
     private ?string $audienceResolutionError = null;
 
+    /**
+     * @var array{
+     *     matchedRecipientCount:int,
+     *     alreadyLinkedRecipientCount:int,
+     *     newRecipientCount:int,
+     *     previewRecipients:list<NewsletterRecipient>
+     * }|null
+     */
     private ?array $audienceDelta = null;
 
     public function __construct(
@@ -123,15 +134,9 @@ final class MailingAudience
         try {
             if ($this->extensionMode) {
                 $result = ($this->extendMailingCampaignAudience)($mailingCampaign, $audienceFilter);
-                $this->requestStack->getSession()?->getFlashBag()->add(
-                    'success',
-                    'mailing.flash.audience_extension_success',
-                );
-                $this->requestStack->getSession()?->getFlashBag()->add(
-                    'info',
-                    'mailing.flash.audience_extension_success_details',
-                );
-                $this->requestStack->getSession()?->set('mailing.audience_extension_result', [
+                $this->addFlashMessage('success', 'mailing.flash.audience_extension_success');
+                $this->addFlashMessage('info', 'mailing.flash.audience_extension_success_details');
+                $this->currentSession()?->set('mailing.audience_extension_result', [
                     'matchedRecipientCount' => $result->matchedRecipientCount,
                     'alreadyLinkedRecipientCount' => $result->alreadyLinkedRecipientCount,
                     'newRecipientCount' => $result->newRecipientCount,
@@ -142,7 +147,7 @@ final class MailingAudience
                 }
 
                 ($this->updateMailingCampaignAudience)($mailingCampaign, $audienceFilter);
-                $this->requestStack->getSession()?->getFlashBag()->add('success', 'mailing.flash.audience_saved');
+                $this->addFlashMessage('success', 'mailing.flash.audience_saved');
             }
         } catch (InvalidArgumentException $invalidArgumentException) {
             $translationKey = match ($invalidArgumentException->getMessage()) {
@@ -202,7 +207,12 @@ final class MailingAudience
     }
 
     /**
-     * @return array{matchedRecipientCount:int, alreadyLinkedRecipientCount:int, newRecipientCount:int}|null
+     * @return array{
+     *     matchedRecipientCount:int,
+     *     alreadyLinkedRecipientCount:int,
+     *     newRecipientCount:int,
+     *     previewRecipients:list<NewsletterRecipient>
+     * }|null
      */
     public function getAudienceDelta(): ?array
     {
@@ -473,6 +483,29 @@ final class MailingAudience
         sort($retainedInseeCodes);
 
         return $retainedInseeCodes;
+    }
+
+    private function addFlashMessage(string $type, string $message): void
+    {
+        $this->flashBag()?->add($type, $message);
+    }
+
+    private function currentSession(): ?SessionInterface
+    {
+        $request = $this->requestStack->getCurrentRequest();
+
+        if (null === $request || !$request->hasSession()) {
+            return null;
+        }
+
+        return $request->getSession();
+    }
+
+    private function flashBag(): ?FlashBagInterface
+    {
+        $flashBag = $this->currentSession()?->getBag('flashes');
+
+        return $flashBag instanceof FlashBagInterface ? $flashBag : null;
     }
 
     private function homePoint(): ?Point
