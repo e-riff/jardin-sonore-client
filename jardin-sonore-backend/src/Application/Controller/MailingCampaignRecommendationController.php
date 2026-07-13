@@ -8,6 +8,7 @@ use App\Application\Form\MailingRecommendationType;
 use App\Application\Form\Model\MailingRecommendationFormModel;
 use App\Application\Mailing\AddNewsletterRecommendationToCampaign;
 use App\Application\Mailing\GetMailingCampaign;
+use App\Application\Mailing\GetNewsletterRecommendation;
 use App\Application\Mailing\MoveMailingRecommendation;
 use App\Application\Mailing\RemoveMailingRecommendation;
 use App\Application\Mailing\SearchNewsletterRecommendations;
@@ -15,7 +16,6 @@ use App\Application\Mailing\UpdateMailingRecommendation;
 use App\Application\Mailing\UpdateMailingRecommendationInput;
 use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Model\Mailing\MailingRecommendation;
-use App\Domain\Repository\NewsletterRecommendationRepositoryInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -45,7 +45,7 @@ final class MailingCampaignRecommendationController extends AbstractController
 
         $availableRecommendations = array_values(array_filter(
             $searchNewsletterRecommendations($request->query->getString('query'), true),
-            static fn ($recommendation): bool => !isset($selectedSourceUuids[$recommendation->getUuid()->toRfc4122()]),
+            static fn ($recommendation): bool => !isset($selectedSourceUuids[$recommendation->uuid->toRfc4122()]),
         ));
 
         return $this->render('mailing/recommendations/frame.html.twig', [
@@ -61,14 +61,14 @@ final class MailingCampaignRecommendationController extends AbstractController
         string $catalogUuid,
         Request $request,
         GetMailingCampaign $getMailingCampaign,
-        NewsletterRecommendationRepositoryInterface $newsletterRecommendationRepository,
+        GetNewsletterRecommendation $getNewsletterRecommendation,
         AddNewsletterRecommendationToCampaign $addNewsletterRecommendationToCampaign,
     ): Response {
         $this->assertCsrfToken($request, "select-recommendation-{$catalogUuid}");
         $mailingCampaign = $this->getMailingCampaign($campaignUuid, $getMailingCampaign);
         $this->assertCampaignEditable($mailingCampaign);
         $newsletterRecommendation = Uuid::isValid($catalogUuid)
-            ? $newsletterRecommendationRepository->findByUuid(Uuid::fromString($catalogUuid))
+            ? $getNewsletterRecommendation(Uuid::fromString($catalogUuid))
             : null;
 
         if (null === $newsletterRecommendation) {

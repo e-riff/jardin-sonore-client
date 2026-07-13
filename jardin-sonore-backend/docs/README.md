@@ -10,6 +10,7 @@ Cette documentation couvre le fonctionnement metier et technique du backend Symf
 
 ## Guides disponibles
 
+- [Frontieres applicatives et acces donnees](architecture-boundaries.md)
 - [Import annuaire](directory-import.md)
 - [Mailing](mailing.md)
 
