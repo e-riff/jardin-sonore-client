@@ -84,15 +84,39 @@ final class SessionRecommendationCatalogController extends AbstractController
 
     private function createInput(SessionRecommendationFormModel $formModel): SaveSessionRecommendationInput
     {
+        $imageUrl = $this->preserveExistingValue($formModel->imageUrl, $formModel->existingImageUrl, null === $formModel->imageFile);
+
         return new SaveSessionRecommendationInput(
             title: $formModel->title,
             text: $formModel->text,
             notes: $formModel->notes,
             primaryUrl: $formModel->primaryUrl,
             secondaryUrl: $formModel->secondaryUrl,
-            imageUrl: $formModel->imageUrl,
+            imageUrl: $imageUrl,
             imageFile: $formModel->imageFile,
             active: $formModel->active,
         );
+    }
+
+    private function preserveExistingValue(?string $submittedValue, ?string $existingValue, bool $keepExistingValue): ?string
+    {
+        $normalizedSubmittedValue = $this->normalizeNullableString($submittedValue);
+
+        if (null !== $normalizedSubmittedValue || !$keepExistingValue) {
+            return $normalizedSubmittedValue;
+        }
+
+        return $this->normalizeNullableString($existingValue);
+    }
+
+    private function normalizeNullableString(?string $value): ?string
+    {
+        if (null === $value) {
+            return null;
+        }
+
+        $normalizedValue = trim($value);
+
+        return '' === $normalizedValue ? null : $normalizedValue;
     }
 }

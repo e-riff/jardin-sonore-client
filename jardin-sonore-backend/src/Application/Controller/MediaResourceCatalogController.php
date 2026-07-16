@@ -129,15 +129,18 @@ final class MediaResourceCatalogController extends AbstractController
 
     private function createInput(MediaResourceFormModel $formModel): SaveMediaResourceInput
     {
+        $primaryUrl = $this->preserveExistingValue($formModel->primaryUrl, $formModel->existingPrimaryUrl, null === $formModel->primaryFile);
+        $imageUrl = $this->preserveExistingValue($formModel->imageUrl, $formModel->existingImageUrl, null === $formModel->imageFile);
+
         return new SaveMediaResourceInput(
             type: $formModel->type,
             title: $formModel->title,
-            primaryUrl: $formModel->primaryUrl,
+            primaryUrl: $primaryUrl,
             primaryFile: $formModel->primaryFile,
             source: $formModel->source,
             description: $formModel->description,
             secondaryUrl: $formModel->secondaryUrl,
-            imageUrl: $formModel->imageUrl,
+            imageUrl: $imageUrl,
             imageFile: $formModel->imageFile,
             active: $formModel->active,
         );
@@ -164,5 +167,27 @@ final class MediaResourceCatalogController extends AbstractController
         }
 
         return $repertoireItem;
+    }
+
+    private function preserveExistingValue(?string $submittedValue, ?string $existingValue, bool $keepExistingValue): ?string
+    {
+        $normalizedSubmittedValue = $this->normalizeNullableString($submittedValue);
+
+        if (null !== $normalizedSubmittedValue || !$keepExistingValue) {
+            return $normalizedSubmittedValue;
+        }
+
+        return $this->normalizeNullableString($existingValue);
+    }
+
+    private function normalizeNullableString(?string $value): ?string
+    {
+        if (null === $value) {
+            return null;
+        }
+
+        $normalizedValue = trim($value);
+
+        return '' === $normalizedValue ? null : $normalizedValue;
     }
 }

@@ -25,7 +25,6 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\UrlField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\BooleanFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\TextFilter;
-use ReflectionClass;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Validator\Constraints\Image;
@@ -98,11 +97,21 @@ final class MediaResourceCrudController extends AbstractCrudController
             ->hideOnForm();
         yield UrlField::new('primaryUrl', 'admin.field.primary_url')
             ->setFormTypeOption('required', false)
+            ->setHelp('admin.help.media_primary_url')
+            ->setFormTypeOption('attr', [
+                'data-controller' => 'exclusive-resource-fields',
+                'data-exclusive-resource-fields-peer-selector-value' => '[name$="[primaryFileUpload]"]',
+            ])
             ->onlyOnForms();
         yield Field::new('primaryFileUpload', 'admin.field.primary_file')
             ->setFormType(DropzoneType::class)
             ->setFormTypeOption('mapped', false)
             ->setFormTypeOption('required', false)
+            ->setHelp('admin.help.media_primary_file')
+            ->setFormTypeOption('attr', [
+                'data-controller' => 'exclusive-resource-fields',
+                'data-exclusive-resource-fields-peer-selector-value' => '[name$="[primaryUrl]"]',
+            ])
             ->onlyOnForms();
         yield TextField::new('secondaryUrl', 'admin.field.secondary_url')
             ->formatValue(fn (mixed $value): string => $this->formatLink($value))
@@ -119,16 +128,24 @@ final class MediaResourceCrudController extends AbstractCrudController
             ->hideOnIndex();
         yield UrlField::new('imageUrl', 'admin.field.image_url')
             ->setFormTypeOption('required', false)
+            ->setHelp('admin.help.media_image_url')
+            ->setFormTypeOption('attr', [
+                'data-controller' => 'exclusive-resource-fields',
+                'data-exclusive-resource-fields-peer-selector-value' => '[name$="[imageFileUpload]"]',
+            ])
             ->onlyOnForms();
         yield Field::new('imageFileUpload', 'admin.field.image_file')
             ->setFormType(DropzoneType::class)
             ->setFormTypeOption('mapped', false)
             ->setFormTypeOption('required', false)
+            ->setHelp('admin.help.media_image_file')
             ->setFormTypeOption('constraints', [
                 new Image(maxSize: '5M', mimeTypes: ['image/jpeg', 'image/png', 'image/webp']),
             ])
             ->setFormTypeOption('attr', [
                 'accept' => 'image/jpeg,image/png,image/webp',
+                'data-controller' => 'exclusive-resource-fields',
+                'data-exclusive-resource-fields-peer-selector-value' => '[name$="[imageUrl]"]',
             ])
             ->onlyOnForms();
         yield BooleanField::new('active', 'admin.field.active');
@@ -212,10 +229,37 @@ final class MediaResourceCrudController extends AbstractCrudController
             return null;
         }
 
-        $formName = (new ReflectionClass(self::getEntityFqcn()))->getShortName();
-        $uploadedFile = $request->files->all()[$formName][$fieldName] ?? null;
+        return $this->findUploadedFile($request->files->all(), $fieldName);
+    }
 
-        return $uploadedFile instanceof UploadedFile ? $uploadedFile : null;
+    /**
+     * @param array<mixed> $payload
+     */
+    private function findUploadedFile(array $payload, string $fieldName): ?UploadedFile
+    {
+        $directMatch = $payload[$fieldName] ?? null;
+
+        if ($directMatch instanceof UploadedFile) {
+            return $directMatch;
+        }
+
+        foreach ($payload as $value) {
+            if ($value instanceof UploadedFile) {
+                continue;
+            }
+
+            if (!is_array($value)) {
+                continue;
+            }
+
+            $uploadedFile = $this->findUploadedFile($value, $fieldName);
+
+            if ($uploadedFile instanceof UploadedFile) {
+                return $uploadedFile;
+            }
+        }
+
+        return null;
     }
 
     private function normalizeNullableString(?string $value): ?string
