@@ -14,7 +14,33 @@
     <section class="internal-card">
         {% if hasErrors %}<div class="internal-alert internal-alert--error">{{ 'sessions.media.form.error_notice'|trans({}, 'sessions') }}</div>{% endif %}
         {{ form_start(form, { attr: { class: 'internal-form' } }) }}
-            {{ form_widget(form) }}
+            {{ form_row(form.type) }}
+            {{ form_row(form.title) }}
+            {{ form_row(form.primaryUrl) }}
+            {% if item and item.primaryUrl %}
+                <p style="margin: -0.75rem 0 1rem; color: rgba(52, 37, 32, 0.78); font-size: 0.95rem;">
+                    <strong>{{ 'sessions.media.form.current_primary'|trans({}, 'sessions') }}:</strong>
+                    <a href="{{ item.primaryUrl starts with 'http' ? item.primaryUrl : asset(item.primaryUrl) }}" target="_blank" rel="noopener noreferrer">
+                        {{ item.primaryUrl starts with 'uploads/' ? 'Ouvrir le fichier actuel' : item.primaryUrl }}
+                    </a>
+                </p>
+            {% endif %}
+            {{ form_row(form.primaryFile) }}
+            {{ form_row(form.source) }}
+            {{ form_row(form.description) }}
+            {{ form_row(form.secondaryUrl) }}
+            {{ form_row(form.imageUrl) }}
+            {% if item and item.imageUrl %}
+                <div style="margin: -0.5rem 0 1rem;">
+                    <p style="margin-bottom: 0.5rem; color: rgba(52, 37, 32, 0.78); font-size: 0.95rem;"><strong>{{ 'sessions.media.form.current_visual'|trans({}, 'sessions') }}:</strong></p>
+                    <a href="{{ item.imageUrl starts with 'http' ? item.imageUrl : asset(item.imageUrl) }}" target="_blank" rel="noopener noreferrer">
+                        <img src="{{ item.imageUrl starts with 'http' ? item.imageUrl : asset(item.imageUrl) }}" alt="" style="display: block; max-width: 12rem; border-radius: 1rem; border: 1px solid rgba(30, 41, 59, 0.12);">
+                    </a>
+                </div>
+            {% endif %}
+            {{ form_row(form.imageFile) }}
+            {{ form_row(form.active) }}
+            {{ form_row(form.submit) }}
         {{ form_end(form) }}
     </section>
 {% endblock %}

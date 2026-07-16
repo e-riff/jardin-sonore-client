@@ -39,12 +39,23 @@ final class MediaResourceType extends AbstractType
                 'choice_translation_domain' => 'sessions',
             ])
             ->add('title', TextType::class, ['label' => 'sessions.media.form.title'])
-            ->add('primaryUrl', UrlType::class, ['label' => 'sessions.media.form.primary_url', 'required' => false])
+            ->add('primaryUrl', UrlType::class, [
+                'label' => 'sessions.media.form.primary_url',
+                'required' => false,
+                'help' => 'sessions.media.form.primary_url_help',
+                'attr' => [
+                    'data-controller' => 'exclusive-resource-fields',
+                    'data-exclusive-resource-fields-peer-selector-value' => '[name$="[primaryFile]"]',
+                ],
+            ])
             ->add('primaryFile', DropzoneType::class, [
                 'label' => 'sessions.media.form.primary_file',
                 'required' => false,
+                'help' => 'sessions.media.form.primary_file_help',
                 'attr' => [
                     'placeholder' => 'sessions.media.form.primary_file_placeholder',
+                    'data-controller' => 'exclusive-resource-fields',
+                    'data-exclusive-resource-fields-peer-selector-value' => '[name$="[primaryUrl]"]',
                 ],
             ])
             ->add('source', TextType::class, ['label' => 'sessions.media.form.source', 'required' => false])
@@ -54,6 +65,10 @@ final class MediaResourceType extends AbstractType
                 'label' => 'sessions.media.form.image_url',
                 'required' => false,
                 'help' => 'sessions.media.form.image_url_help',
+                'attr' => [
+                    'data-controller' => 'exclusive-resource-fields',
+                    'data-exclusive-resource-fields-peer-selector-value' => '[name$="[imageFile]"]',
+                ],
             ])
             ->add('imageFile', DropzoneType::class, [
                 'label' => 'sessions.media.form.image_file',
@@ -62,6 +77,8 @@ final class MediaResourceType extends AbstractType
                 'attr' => [
                     'accept' => 'image/jpeg,image/png,image/webp',
                     'placeholder' => 'sessions.media.form.image_file_placeholder',
+                    'data-controller' => 'exclusive-resource-fields',
+                    'data-exclusive-resource-fields-peer-selector-value' => '[name$="[imageUrl]"]',
                 ],
             ])
             ->add('active', CheckboxType::class, ['label' => 'sessions.media.form.active', 'required' => false])

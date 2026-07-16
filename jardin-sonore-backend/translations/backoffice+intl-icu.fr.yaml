@@ -127,6 +127,12 @@ admin:
   help:
     phone_number: "Saisissez un numéro français ou international. Il sera stocké sans séparateurs, par exemple 06 12 34 56 78 deviendra +33612345678."
     mailing_audience_mask_municipalities: "Recherchez et ajoutez les communes couvertes par ce masque."
+    media_primary_url: "Renseignez soit un lien externe, soit un fichier importé. Si un fichier est ajouté, il devient le lien principal."
+    media_primary_file: "Déposez un fichier à la place du lien principal. N’utilisez pas les deux champs en même temps."
+    media_image_url: "Ajoutez soit une image distante, soit une image importée pour le visuel."
+    media_image_file: "Importez une image pour le visuel du média. Ce champ est exclusif avec l’URL du visuel."
+    recommendation_image_url: "Ajoutez soit une image distante, soit une image importée pour le visuel du prolongement."
+    recommendation_image_file: "Importez une image pour le visuel du prolongement. Ce champ est exclusif avec l’URL du visuel."
   region:
     page:
       index: "Régions"

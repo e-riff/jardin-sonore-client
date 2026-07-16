@@ -36,6 +36,10 @@ final class SessionRecommendationType extends AbstractType
                 'label' => 'sessions.recommendation.form.image_url',
                 'required' => false,
                 'help' => 'sessions.recommendation.form.image_url_help',
+                'attr' => [
+                    'data-controller' => 'exclusive-resource-fields',
+                    'data-exclusive-resource-fields-peer-selector-value' => '[name$="[imageFile]"]',
+                ],
             ])
             ->add('imageFile', DropzoneType::class, [
                 'label' => 'sessions.recommendation.form.image_file',
@@ -44,6 +48,8 @@ final class SessionRecommendationType extends AbstractType
                 'attr' => [
                     'accept' => 'image/jpeg,image/png,image/webp',
                     'placeholder' => 'sessions.recommendation.form.image_file_placeholder',
+                    'data-controller' => 'exclusive-resource-fields',
+                    'data-exclusive-resource-fields-peer-selector-value' => '[name$="[imageUrl]"]',
                 ],
             ])
             ->add('active', CheckboxType::class, ['label' => 'sessions.recommendation.form.active', 'required' => false])
