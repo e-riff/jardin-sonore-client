@@ -39,6 +39,14 @@ final class InstrumentDoctrineRepository extends ServiceEntityRepository impleme
         return $entity instanceof InstrumentEntity ? $this->instrumentMapper->toDomain($entity) : null;
     }
 
+    public function findAllOrderedByName(): array
+    {
+        return array_map(
+            fn (InstrumentEntity $instrumentEntity): Instrument => $this->instrumentMapper->toDomain($instrumentEntity),
+            $this->findBy([], ['name' => 'ASC', 'id' => 'ASC']),
+        );
+    }
+
     public function save(Instrument $instrument): void
     {
         $entity = $this->findOneBy(['uuid' => $instrument->getUuid()]);

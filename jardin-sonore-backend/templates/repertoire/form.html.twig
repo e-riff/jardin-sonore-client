@@ -1,0 +1,134 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = item ? 'sessions.repertoire.edit.title'|trans({ title: item.title }, 'sessions') : 'sessions.repertoire.new.title'|trans({}, 'sessions') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ (item ? 'sessions.repertoire.edit.eyebrow' : 'sessions.repertoire.new.eyebrow')|trans({}, 'sessions') }}</p>
+            <h1>{{ item ? item.title : 'sessions.repertoire.new.heading'|trans({}, 'sessions') }}</h1>
+            <p>{{ (item ? 'sessions.repertoire.edit.description' : 'sessions.repertoire.new.description')|trans({}, 'sessions') }}</p>
+        </div>
+        <a class="internal-button internal-button--secondary" href="{{ path('repertoire_index') }}">{{ 'sessions.repertoire.form.back'|trans({}, 'sessions') }}</a>
+    </section>
+    <section class="internal-card">
+        {% if hasErrors %}<div class="internal-alert internal-alert--error">{{ 'sessions.repertoire.form.error_notice'|trans({}, 'sessions') }}</div>{% endif %}
+        {% set repertoireBlockPrototype %}
+            {% include 'repertoire/_block_row.html.twig' with { blockForm: form.contentBlocks.vars.prototype } only %}
+        {% endset %}
+
+        {{ form_start(form, {
+            attr: {
+                class: 'internal-form internal-form--wide',
+                'data-controller': 'repertoire-blocks',
+            }
+        }) }}
+            <div class="internal-form__grid">
+                {{ form_row(form.type) }}
+                {{ form_row(form.title) }}
+                {{ form_row(form.source) }}
+            </div>
+
+            <section class="repertoire-block-editor">
+                <div class="repertoire-block-editor__heading">
+                    <div>
+                        <h2>{{ 'sessions.repertoire.form.import_heading'|trans({}, 'sessions') }}</h2>
+                        <p>{{ 'sessions.repertoire.form.import_help'|trans({}, 'sessions') }}</p>
+                    </div>
+                    <button class="internal-button internal-button--secondary internal-button--compact" type="button" data-action="repertoire-blocks#import">
+                        {{ 'sessions.repertoire.form.import_action'|trans({}, 'sessions') }}
+                    </button>
+                </div>
+
+                <div>
+                    {{ form_label(form.importText) }}
+                    {{ form_widget(form.importText, { attr: { 'data-repertoire-blocks-target': 'importSource' } }) }}
+                    {{ form_errors(form.importText) }}
+                </div>
+
+                <div class="repertoire-block-editor__heading">
+                    <div>
+                        <h2>{{ 'sessions.repertoire.form.content_blocks'|trans({}, 'sessions') }}</h2>
+                        <p>{{ 'sessions.repertoire.form.content_blocks_help'|trans({}, 'sessions') }}</p>
+                    </div>
+                </div>
+
+                <div
+                    class="repertoire-block-editor__rows"
+                    data-repertoire-blocks-target="collection"
+                    data-prototype="{{ repertoireBlockPrototype|e('html_attr') }}"
+                >
+                    {% for blockForm in form.contentBlocks %}
+                        {% include 'repertoire/_block_row.html.twig' with { blockForm: blockForm } only %}
+                    {% endfor %}
+                </div>
+
+                <div class="repertoire-block-editor__footer">
+                    <button class="internal-button internal-button--secondary" type="button" data-action="repertoire-blocks#addLine">
+                        {{ 'sessions.repertoire.form.block.add_line'|trans({}, 'sessions') }}
+                    </button>
+                </div>
+
+                <div class="repertoire-block-preview">
+                    <div class="repertoire-block-editor__heading">
+                        <div>
+                            <h2>{{ 'sessions.repertoire.form.preview_heading'|trans({}, 'sessions') }}</h2>
+                            <p>{{ 'sessions.repertoire.form.preview_help'|trans({}, 'sessions') }}</p>
+                        </div>
+                    </div>
+
+                    <div class="repertoire-block-preview__content" data-repertoire-blocks-target="preview"></div>
+                </div>
+            </section>
+
+            {{ form_row(form.notes) }}
+            <div class="repertoire-media-linker" data-controller="repertoire-media-linker">
+                <div class="repertoire-media-linker__heading">
+                    <div>
+                        <h2>{{ 'sessions.repertoire.form.linked_media'|trans({}, 'sessions') }}</h2>
+                        <p>{{ 'sessions.repertoire.form.linked_media_help'|trans({}, 'sessions') }}</p>
+                    </div>
+                    {% if item %}
+                        <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('media_resource_new', { repertoire: item.uuid }) }}" data-turbo-frame="repertoire-media-create">
+                            {{ 'sessions.repertoire.form.create_and_link_media'|trans({}, 'sessions') }}
+                        </a>
+                    {% endif %}
+                </div>
+
+                {{ form_row(form.linkedMediaUuids, {
+                    attr: {
+                        'data-repertoire-media-linker-target': 'select',
+                        'data-action': 'change->repertoire-media-linker#sync'
+                    }
+                }) }}
+
+                <div class="repertoire-media-linker__list" data-repertoire-media-linker-target="list">
+                    {% if linkedMediaItems is defined and linkedMediaItems is not empty %}
+                        {% for linkedMediaItem in linkedMediaItems %}
+                            <article class="repertoire-media-linker__item">
+                                <div>
+                                    <strong>{{ linkedMediaItem.title }}</strong>
+                                    <div class="internal-table-note">{{ linkedMediaItem.type.translationKey()|trans({}, 'sessions') }}</div>
+                                </div>
+                                <a class="internal-link" href="{{ linkedMediaItem.primaryUrl }}" target="_blank" rel="noopener noreferrer">{{ linkedMediaItem.primaryUrl }}</a>
+                            </article>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <p class="internal-form-help" data-repertoire-media-linker-target="empty" {% if linkedMediaItems is defined and linkedMediaItems is not empty %}hidden{% endif %}>{{ 'sessions.repertoire.form.linked_media_empty'|trans({}, 'sessions') }}</p>
+
+                {% if not item %}
+                    <p class="internal-form-help">{{ 'sessions.repertoire.form.linked_media_save_first'|trans({}, 'sessions') }}</p>
+                {% endif %}
+
+                <turbo-frame id="repertoire-media-create"></turbo-frame>
+            </div>
+            {{ form_row(form.active) }}
+
+            <div class="internal-form__actions">
+                {{ form_widget(form.submit) }}
+                <a class="internal-button internal-button--secondary" href="{{ path('repertoire_index') }}">{{ 'sessions.repertoire.form.back'|trans({}, 'sessions') }}</a>
+            </div>
+        {{ form_end(form) }}
+    </section>
+{% endblock %}

@@ -54,15 +54,40 @@
         },
         {
             key: 'sessions',
-            route: 'instrument_index',
+            route: 'session_index',
             icon: '♫',
             label: 'internal.base.nav.sessions_group'|trans({}, 'internal'),
-            active: currentRoute starts with 'instrument_',
+            active: currentRoute starts with 'session_'
+                or currentRoute starts with 'repertoire_'
+                or currentRoute starts with 'media_resource_'
+                or currentRoute starts with 'session_recommendation_'
+                or currentRoute starts with 'instrument_',
             links: [
+                {
+                    route: 'session_index',
+                    label: 'internal.base.nav.session_summaries'|trans({}, 'internal'),
+                    active: currentRoute starts with 'session_'
+                        and not (currentRoute starts with 'session_recommendation_'),
+                },
                 {
                     route: 'instrument_index',
                     label: 'internal.base.nav.instruments'|trans({}, 'internal'),
                     active: currentRoute starts with 'instrument_',
+                },
+                {
+                    route: 'repertoire_index',
+                    label: 'internal.base.nav.repertoire_catalog'|trans({}, 'internal'),
+                    active: currentRoute starts with 'repertoire_',
+                },
+                {
+                    route: 'media_resource_index',
+                    label: 'internal.base.nav.media_resources'|trans({}, 'internal'),
+                    active: currentRoute starts with 'media_resource_',
+                },
+                {
+                    route: 'session_recommendation_index',
+                    label: 'internal.base.nav.session_recommendations'|trans({}, 'internal'),
+                    active: currentRoute starts with 'session_recommendation_',
                 },
             ],
         },
@@ -133,7 +158,7 @@
                             <div class="internal-subnav__group{{ group.active ? ' is-active' : '' }}" data-nav-group-key="{{ group.key }}">
                                 {% for link in group.links %}
                                     <a
-                                        href="{{ path(link.route) }}"
+                                        href="{{ path(link.route, link.routeParameters|default({})) }}"
                                         class="internal-subnav__link{{ link.active ? ' is-active' : '' }}"
                                         {% if link.active %}aria-current="page"{% endif %}
                                     >
@@ -186,7 +211,7 @@
                         <div id="{{ groupPanelId }}" class="internal-mobile-nav__links">
                             {% for link in group.links %}
                                 <a
-                                    href="{{ path(link.route) }}"
+                                    href="{{ path(link.route, link.routeParameters|default({})) }}"
                                     class="internal-mobile-nav__link{{ link.active ? ' is-active' : '' }}"
                                     {% if link.active %}aria-current="page"{% endif %}
                                     {{ stimulus_action('internal-nav', 'close') }}
