@@ -23,6 +23,17 @@ trait ActivableTrait
         $this->active = false;
     }
 
+    public function setActive(bool $active): void
+    {
+        if ($active) {
+            $this->activate();
+
+            return;
+        }
+
+        $this->deactivate();
+    }
+
     private function initializeActive(bool $active): void
     {
         $this->active = $active;

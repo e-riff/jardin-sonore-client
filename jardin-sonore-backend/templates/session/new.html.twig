@@ -1,0 +1,26 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'sessions.summary.new.title'|trans({}, 'sessions') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ 'sessions.summary.new.eyebrow'|trans({}, 'sessions') }}</p>
+            <h1>{{ 'sessions.summary.new.heading'|trans({}, 'sessions') }}</h1>
+            <p>{{ 'sessions.summary.new.description'|trans({}, 'sessions') }}</p>
+        </div>
+        <a class="internal-button internal-button--secondary" href="{{ path('session_index') }}">{{ 'sessions.summary.new.back'|trans({}, 'sessions') }}</a>
+    </section>
+
+    <section class="internal-card">
+        {% if hasErrors %}
+            <div class="internal-alert internal-alert--error">{{ 'sessions.summary.form.error_notice'|trans({}, 'sessions') }}</div>
+        {% endif %}
+
+        {% include 'session/_summary_form.html.twig' with {
+            form: form,
+            backPath: path('session_index'),
+            backLabel: 'sessions.summary.new.back'|trans({}, 'sessions'),
+        } only %}
+    </section>
+{% endblock %}

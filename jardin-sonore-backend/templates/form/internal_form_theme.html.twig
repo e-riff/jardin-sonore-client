@@ -1,0 +1,11 @@
+{% block checkbox_row %}
+    {% set rowClass = (row_attr.class|default('') ~ ' internal-form__checkbox-row')|trim %}
+    <div{% with { attr: row_attr|merge({ class: rowClass }) } %}{{ block('attributes') }}{% endwith %}>
+        {{ form_errors(form) }}
+        <div class="internal-form__checkbox">
+            {{ form_widget(form) }}
+            {{ form_label(form) }}
+        </div>
+        {{ form_help(form) }}
+    </div>
+{% endblock %}

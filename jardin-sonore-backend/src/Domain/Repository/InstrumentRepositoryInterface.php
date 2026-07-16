@@ -11,5 +11,10 @@ interface InstrumentRepositoryInterface
 {
     public function findByUuid(Uuid $uuid): ?Instrument;
 
+    /**
+     * @return list<Instrument>
+     */
+    public function findAllOrderedByName(): array;
+
     public function save(Instrument $instrument): void;
 }

@@ -1,0 +1,168 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Application\Controller;
+
+use App\Application\Form\MediaResourceType as MediaResourceFormType;
+use App\Application\Form\Model\MediaResourceFormModel;
+use App\Application\Session\CreateMediaResource;
+use App\Application\Session\GetMediaResourceForEdit;
+use App\Application\Session\GetRepertoireItemForEdit;
+use App\Application\Session\SaveMediaResourceInput;
+use App\Application\Session\SearchMediaResources;
+use App\Application\Session\UpdateMediaResource;
+use App\Domain\Model\Session\MediaResourceType;
+use App\Domain\Repository\RepertoireItemRepositoryInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Uid\Uuid;
+
+#[Route('/sessions/media', name: 'media_resource_')]
+final class MediaResourceCatalogController extends AbstractController
+{
+    #[Route('', name: 'index', methods: ['GET'])]
+    public function index(Request $request, SearchMediaResources $searchMediaResources): Response
+    {
+        $type = $request->query->getString('type');
+        $mediaResourceType = '' !== $type ? MediaResourceType::from($type) : null;
+
+        return $this->render('media_resource/index.html.twig', [
+            'sessionQuery' => $request->query->getString('session'),
+            'query' => $request->query->getString('query'),
+            'selectedType' => $mediaResourceType,
+            'typeOptions' => MediaResourceType::cases(),
+            'items' => $searchMediaResources($request->query->getString('query'), $mediaResourceType),
+        ]);
+    }
+
+    #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
+    public function new(
+        Request $request,
+        CreateMediaResource $createMediaResource,
+        GetRepertoireItemForEdit $getRepertoireItemForEdit,
+        RepertoireItemRepositoryInterface $repertoireItemRepository,
+    ): Response {
+        $repertoireItem = $this->resolveRepertoireItem($request, $getRepertoireItemForEdit);
+        $formModel = new MediaResourceFormModel();
+        $form = $this->createForm(MediaResourceFormType::class, $formModel);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $mediaResource = $createMediaResource($this->createInput($formModel));
+            $this->addFlash('success', ['message' => 'sessions.media.flash.created', 'domain' => 'sessions']);
+
+            if (null !== $repertoireItem) {
+                $repertoireItemDomain = $repertoireItemRepository->findByUuid($repertoireItem->uuid);
+
+                if (null === $repertoireItemDomain) {
+                    throw $this->createNotFoundException();
+                }
+
+                $linkedMediaUuids = $repertoireItemDomain->getLinkedMediaUuids();
+                $mediaUuid = $mediaResource->getUuid()->toRfc4122();
+
+                if (!in_array($mediaUuid, $linkedMediaUuids, true)) {
+                    $linkedMediaUuids[] = $mediaUuid;
+                    $repertoireItemDomain->updateContent(
+                        title: $repertoireItemDomain->getTitle(),
+                        source: $repertoireItemDomain->getSource(),
+                        body: $repertoireItemDomain->getBody(),
+                        contentBlocks: $repertoireItemDomain->getContentBlocks(),
+                        notes: $repertoireItemDomain->getNotes(),
+                        linkedMediaUuids: $linkedMediaUuids,
+                    );
+                    $repertoireItemRepository->save($repertoireItemDomain);
+                }
+
+                $redirectUrl = $this->generateUrl('repertoire_edit', ['uuid' => $repertoireItem->uuid->toRfc4122()]);
+
+                $response = $this->redirect($redirectUrl, Response::HTTP_SEE_OTHER);
+                $response->headers->set('Turbo-Location', $redirectUrl);
+
+                return $response;
+            }
+
+            return $this->redirectToRoute('media_resource_index', status: Response::HTTP_SEE_OTHER);
+        }
+
+        return $this->render(null !== $repertoireItem ? 'media_resource/new_frame.html.twig' : 'media_resource/form.html.twig', [
+            'form' => $form->createView(),
+            'hasErrors' => $form->isSubmitted() && !$form->isValid(),
+            'item' => null,
+            'repertoireItem' => $repertoireItem,
+        ], $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null);
+    }
+
+    #[Route('/{uuid}/edit', name: 'edit', methods: ['GET', 'POST'])]
+    public function edit(
+        string $uuid,
+        Request $request,
+        GetMediaResourceForEdit $getMediaResourceForEdit,
+        UpdateMediaResource $updateMediaResource,
+    ): Response {
+        $itemView = Uuid::isValid($uuid) ? $getMediaResourceForEdit(Uuid::fromString($uuid)) : null;
+
+        if (null === $itemView) {
+            throw $this->createNotFoundException();
+        }
+
+        $formModel = MediaResourceFormModel::fromView($itemView);
+        $form = $this->createForm(MediaResourceFormType::class, $formModel);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $updateMediaResource($itemView->uuid, $this->createInput($formModel));
+            $this->addFlash('success', ['message' => 'sessions.media.flash.updated', 'domain' => 'sessions']);
+
+            return $this->redirectToRoute('media_resource_index', status: Response::HTTP_SEE_OTHER);
+        }
+
+        return $this->render('media_resource/form.html.twig', [
+            'form' => $form->createView(),
+            'hasErrors' => $form->isSubmitted() && !$form->isValid(),
+            'item' => $itemView,
+        ], $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null);
+    }
+
+    private function createInput(MediaResourceFormModel $formModel): SaveMediaResourceInput
+    {
+        return new SaveMediaResourceInput(
+            type: $formModel->type,
+            title: $formModel->title,
+            primaryUrl: $formModel->primaryUrl,
+            primaryFile: $formModel->primaryFile,
+            source: $formModel->source,
+            description: $formModel->description,
+            secondaryUrl: $formModel->secondaryUrl,
+            imageUrl: $formModel->imageUrl,
+            imageFile: $formModel->imageFile,
+            active: $formModel->active,
+        );
+    }
+
+    private function resolveRepertoireItem(
+        Request $request,
+        GetRepertoireItemForEdit $getRepertoireItemForEdit,
+    ): ?\App\Application\Session\RepertoireItemView {
+        $repertoireUuid = $request->query->getString('repertoire');
+
+        if ('' === $repertoireUuid) {
+            return null;
+        }
+
+        if (!Uuid::isValid($repertoireUuid)) {
+            throw $this->createNotFoundException();
+        }
+
+        $repertoireItem = $getRepertoireItemForEdit(Uuid::fromString($repertoireUuid));
+
+        if (null === $repertoireItem) {
+            throw $this->createNotFoundException();
+        }
+
+        return $repertoireItem;
+    }
+}

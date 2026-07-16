@@ -1,0 +1,52 @@
+<div class="repertoire-block-row" data-repertoire-block-row>
+    <div class="repertoire-block-row__main">
+        <div class="repertoire-block-row__kind" data-repertoire-block-field="kind">
+            <div class="internal-form-row">
+                {{ form_label(blockForm.kind) }}
+                {{ form_widget(blockForm.kind, {
+                    attr: {
+                        'data-action': 'change->repertoire-blocks#kindChanged',
+                        'data-repertoire-block-role': 'kind'
+                    }
+                }) }}
+                {{ form_errors(blockForm.kind) }}
+            </div>
+        </div>
+        <div class="repertoire-block-row__text" data-repertoire-block-field="text">
+            <div class="internal-form-row">
+                <label
+                    for="{{ blockForm.text.vars.id }}"
+                    data-repertoire-block-label="text"
+                    data-line-label="{{ 'sessions.repertoire.form.block.text_line'|trans({}, 'sessions') }}"
+                    data-break-label="{{ 'sessions.repertoire.form.block.text_break'|trans({}, 'sessions') }}"
+                >
+                    {{ 'sessions.repertoire.form.block.text_line'|trans({}, 'sessions') }}
+                </label>
+                {{ form_widget(blockForm.text, {
+                    attr: {
+                        rows: 1,
+                        'data-action': 'input->repertoire-blocks#refreshPreview'
+                    }
+                }) }}
+                {{ form_errors(blockForm.text) }}
+            </div>
+        </div>
+        <div class="repertoire-block-row__gesture" data-repertoire-block-field="gesture">
+            <div class="internal-form-row">
+                {{ form_label(blockForm.gesture) }}
+                {{ form_widget(blockForm.gesture, {
+                    attr: {
+                        rows: 1,
+                        'data-action': 'input->repertoire-blocks#refreshPreview'
+                    }
+                }) }}
+                {{ form_errors(blockForm.gesture) }}
+            </div>
+        </div>
+    </div>
+    <div class="repertoire-block-row__actions">
+        <button class="internal-button internal-button--secondary internal-button--compact" type="button" data-action="repertoire-blocks#moveUp">↑</button>
+        <button class="internal-button internal-button--secondary internal-button--compact" type="button" data-action="repertoire-blocks#moveDown">↓</button>
+        <button class="internal-button internal-button--secondary internal-button--compact" type="button" data-action="repertoire-blocks#removeBlock">{{ 'sessions.repertoire.form.block.remove'|trans({}, 'sessions') }}</button>
+    </div>
+</div>

@@ -1,0 +1,57 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = sequence ? 'sessions.sequence.edit.title'|trans({ title: sequence.title }, 'sessions') : 'sessions.sequence.new.title'|trans({}, 'sessions') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ (sequence ? 'sessions.sequence.edit.eyebrow' : 'sessions.sequence.new.eyebrow')|trans({}, 'sessions') }}</p>
+            <h1>{{ sequence ? sequence.title : 'sessions.sequence.new.heading'|trans({}, 'sessions') }}</h1>
+            <p>{{ (sequence ? 'sessions.sequence.edit.description' : 'sessions.sequence.new.description')|trans({}, 'sessions') }}</p>
+        </div>
+        <a class="internal-button internal-button--secondary" href="{{ path('session_edit', { uuid: session.uuid }) }}">{{ 'sessions.sequence.form.back'|trans({}, 'sessions') }}</a>
+    </section>
+
+    <section class="internal-card">
+        {% if hasErrors %}
+            <div class="internal-alert internal-alert--error">{{ 'sessions.sequence.form.error_notice'|trans({}, 'sessions') }}</div>
+        {% endif %}
+
+        {% if form.vars.value.sourceTitle %}
+            <div class="internal-alert internal-alert--success">
+                {{ 'sessions.sequence.form.imported_from'|trans({ title: form.vars.value.sourceTitle }, 'sessions') }}
+            </div>
+        {% endif %}
+
+        {{ form_start(form, { attr: { class: 'internal-form' } }) }}
+            <div class="internal-form__grid">
+                {{ form_row(form.type) }}
+                {{ form_row(form.title) }}
+            </div>
+
+            {{ form_row(form.subtitle) }}
+            {{ form_row(form.body) }}
+            {{ form_row(form.lyrics) }}
+            {{ form_row(form.gestures) }}
+            {{ form_row(form.notes) }}
+
+            <div class="internal-form__grid">
+                {{ form_row(form.primaryUrl) }}
+                {{ form_row(form.secondaryUrl) }}
+            </div>
+
+            <div class="internal-form__grid">
+                {{ form_row(form.imageUrl) }}
+                {{ form_row(form.showLyricsByDefault) }}
+            </div>
+
+            {{ form_widget(form.sourceUuid) }}
+            {{ form_widget(form.sourceTitle) }}
+
+            <div class="internal-form__actions">
+                {{ form_widget(form.submit) }}
+                <a class="internal-button internal-button--secondary" href="{{ path('session_edit', { uuid: session.uuid }) }}">{{ 'sessions.sequence.form.back'|trans({}, 'sessions') }}</a>
+            </div>
+        {{ form_end(form) }}
+    </section>
+{% endblock %}

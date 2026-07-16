@@ -1,0 +1,42 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'sessions.recommendation.index.title'|trans({}, 'sessions') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ 'sessions.recommendation.index.eyebrow'|trans({}, 'sessions') }}</p>
+            <h1>{{ 'sessions.recommendation.index.heading'|trans({}, 'sessions') }}</h1>
+            <p>{{ 'sessions.recommendation.index.description'|trans({}, 'sessions') }}</p>
+        </div>
+        <a class="internal-button" href="{{ path('session_recommendation_new') }}">{{ 'sessions.recommendation.index.create'|trans({}, 'sessions') }}</a>
+    </section>
+    <section class="internal-card">
+        <form class="internal-search" method="get">
+            {% if sessionQuery %}<input type="hidden" name="session" value="{{ sessionQuery }}">{% endif %}
+            <label for="session-recommendation-query">{{ 'sessions.recommendation.index.search'|trans({}, 'sessions') }}</label>
+            <div>
+                <input id="session-recommendation-query" name="query" value="{{ query }}">
+                <button class="internal-button internal-button--secondary" type="submit">{{ 'sessions.recommendation.index.search_submit'|trans({}, 'sessions') }}</button>
+            </div>
+        </form>
+        {% if items is empty %}
+            <p class="internal-empty-state">{{ 'sessions.recommendation.index.empty'|trans({}, 'sessions') }}</p>
+        {% else %}
+            <div class="internal-table-wrapper">
+                <table class="internal-table internal-table--responsive">
+                    <thead><tr><th>{{ 'sessions.recommendation.table.title'|trans({}, 'sessions') }}</th><th>{{ 'sessions.recommendation.table.link'|trans({}, 'sessions') }}</th><th>{{ 'sessions.recommendation.table.actions'|trans({}, 'sessions') }}</th></tr></thead>
+                    <tbody>
+                    {% for item in items %}
+                        <tr>
+                            <td data-label="{{ 'sessions.recommendation.table.title'|trans({}, 'sessions') }}"><strong>{{ item.title }}</strong><span class="internal-table-note">{{ item.text|length > 120 ? item.text|slice(0, 120) ~ '…' : item.text }}</span></td>
+                            <td data-label="{{ 'sessions.recommendation.table.link'|trans({}, 'sessions') }}">{{ item.primaryUrl ?? '—' }}</td>
+                            <td data-label="{{ 'sessions.recommendation.table.actions'|trans({}, 'sessions') }}"><div class="instrument-catalog__actions">{% if sessionQuery %}<a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('session_sequence_new', { uuid: sessionQuery, recommendation: item.uuid }) }}">{{ 'sessions.recommendation.table.insert'|trans({}, 'sessions') }}</a>{% endif %}<a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('session_recommendation_edit', { uuid: item.uuid }) }}">{{ 'sessions.recommendation.table.edit'|trans({}, 'sessions') }}</a></div></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}

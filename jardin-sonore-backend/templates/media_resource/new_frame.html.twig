@@ -1,0 +1,28 @@
+{% extends '@Turbo/layouts/frame.html.twig' %}
+
+{% block body %}
+    <turbo-frame id="repertoire-media-create">
+        <section class="internal-card">
+            <div>
+                <p class="internal-eyebrow">{{ 'sessions.media.new.eyebrow'|trans({}, 'sessions') }}</p>
+                <h2>{{ 'sessions.media.new.heading'|trans({}, 'sessions') }}</h2>
+                <p>{{ 'sessions.media.new.inline_description'|trans({ title: repertoireItem.title }, 'sessions') }}</p>
+            </div>
+
+            {% if hasErrors %}
+                <div class="internal-alert internal-alert--error">{{ 'sessions.media.form.error_notice'|trans({}, 'sessions') }}</div>
+            {% endif %}
+
+            {{ form_start(form, {
+                action: path('media_resource_new', { repertoire: repertoireItem.uuid }),
+                attr: { class: 'internal-form' }
+            }) }}
+                {{ form_widget(form) }}
+            {{ form_end(form) }}
+
+            <a class="internal-button internal-button--secondary" href="{{ path('repertoire_edit', { uuid: repertoireItem.uuid }) }}" data-turbo-frame="_top">
+                {{ 'sessions.media.form.cancel_inline'|trans({}, 'sessions') }}
+            </a>
+        </section>
+    </turbo-frame>
+{% endblock %}

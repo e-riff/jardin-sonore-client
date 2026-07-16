@@ -1,0 +1,20 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = item ? 'sessions.media.edit.title'|trans({ title: item.title }, 'sessions') : 'sessions.media.new.title'|trans({}, 'sessions') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ (item ? 'sessions.media.edit.eyebrow' : 'sessions.media.new.eyebrow')|trans({}, 'sessions') }}</p>
+            <h1>{{ item ? item.title : 'sessions.media.new.heading'|trans({}, 'sessions') }}</h1>
+            <p>{{ (item ? 'sessions.media.edit.description' : 'sessions.media.new.description')|trans({}, 'sessions') }}</p>
+        </div>
+        <a class="internal-button internal-button--secondary" href="{{ path('media_resource_index') }}">{{ 'sessions.media.form.back'|trans({}, 'sessions') }}</a>
+    </section>
+    <section class="internal-card">
+        {% if hasErrors %}<div class="internal-alert internal-alert--error">{{ 'sessions.media.form.error_notice'|trans({}, 'sessions') }}</div>{% endif %}
+        {{ form_start(form, { attr: { class: 'internal-form' } }) }}
+            {{ form_widget(form) }}
+        {{ form_end(form) }}
+    </section>
+{% endblock %}

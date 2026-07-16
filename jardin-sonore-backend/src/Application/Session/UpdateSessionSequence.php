@@ -1,0 +1,46 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Application\Session;
+
+use App\Domain\Model\Session\SessionSequence;
+use App\Domain\Repository\SessionSummaryRepositoryInterface;
+use InvalidArgumentException;
+use Symfony\Component\Uid\Uuid;
+
+final readonly class UpdateSessionSequence
+{
+    public function __construct(private SessionSummaryRepositoryInterface $sessionSummaryRepository)
+    {
+    }
+
+    public function __invoke(Uuid $sessionUuid, Uuid $sequenceUuid, SaveSessionSequenceInput $saveSessionSequenceInput): void
+    {
+        $sessionSummary = $this->sessionSummaryRepository->findByUuid($sessionUuid);
+
+        if (null === $sessionSummary) {
+            throw new InvalidArgumentException('Session summary not found.');
+        }
+
+        $sessionSummary->replaceSequence(new SessionSequence(
+            uuid: $sequenceUuid,
+            type: $saveSessionSequenceInput->type,
+            title: trim($saveSessionSequenceInput->title),
+            subtitle: $saveSessionSequenceInput->subtitle,
+            body: trim($saveSessionSequenceInput->body),
+            lyrics: $saveSessionSequenceInput->lyrics,
+            gestures: $saveSessionSequenceInput->gestures,
+            notes: $saveSessionSequenceInput->notes,
+            primaryUrl: $saveSessionSequenceInput->primaryUrl,
+            secondaryUrl: $saveSessionSequenceInput->secondaryUrl,
+            imageUrl: $saveSessionSequenceInput->imageUrl,
+            showLyricsByDefault: $saveSessionSequenceInput->showLyricsByDefault,
+            sourceUuid: $saveSessionSequenceInput->sourceUuid,
+            sourceKind: $saveSessionSequenceInput->sourceKind,
+            sourceTitle: $saveSessionSequenceInput->sourceTitle,
+        ));
+
+        $this->sessionSummaryRepository->save($sessionSummary);
+    }
+}
