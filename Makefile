@@ -18,7 +18,7 @@ COMPOSER_ARGS ?=
 
 .PHONY: help docker docker-build docker-up docker-down docker-restart clean \
 	print-urls lint app-build deploy-client deploy-backend setup-backend-local-host npm exec-npm \
-	composer composer-install composer-update backend-migrate \
+	composer composer-install composer-update backend-migrate sync-backend-uploads \
 	backend-lint backend-cs-check backend-cs-fix backend-stan symfony-assets
 
 help:
@@ -41,6 +41,7 @@ help:
 	@printf "  make lint                  Lance npm run lint dans un conteneur client jetable\n"
 	@printf "  make app-build             Lance npm run build dans un conteneur client jetable\n"
 	@printf "  make deploy-backend        Deploie le backend Symfony sur cPanel via SSH/rsync\n"
+	@printf "  make sync-backend-uploads  Rapatrie les uploads de prod vers jardin-sonore-backend/public/uploads\n"
 	@printf "  make setup-backend-local-host Ajoute admin.jardin-sonore.local et genere un certificat mkcert si disponible\n"
 	@printf "  make npm NPM_ARGS=\"...\"   Lance npm dans un conteneur client jetable\n"
 	@printf "  make print-urls            Affiche les URLs locales utiles\n"
@@ -82,6 +83,9 @@ deploy-client:
 
 deploy-backend:
 	./scripts/deploy-backend.sh
+
+sync-backend-uploads:
+	./scripts/sync-backend-uploads.sh
 
 setup-backend-local-host:
 	./scripts/setup-backend-local-host.sh

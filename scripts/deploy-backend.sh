@@ -51,6 +51,8 @@ rsync -az --delete \
 REMOTE_COMMANDS=(
   "set -euo pipefail"
   "cd '$CPANEL_BACKEND_PATH'"
+  "mkdir -p '$CPANEL_BACKEND_PATH/public/uploads/media/resources' '$CPANEL_BACKEND_PATH/public/uploads/media/images' '$CPANEL_BACKEND_PATH/public/uploads/session/recommendations' '$CPANEL_BACKEND_PATH/public/uploads/mailing/banners' '$CPANEL_BACKEND_PATH/public/uploads/mailing/recommendations'"
+  "chmod -R ug+rwX '$CPANEL_BACKEND_PATH/public/uploads'"
   'if [[ -d var/cache/prod ]]; then mv var/cache/prod "var/cache/prod.previous.$(date +%s)"; fi'
   "$CPANEL_COMPOSER_BIN install --no-dev --prefer-dist --no-interaction --optimize-autoloader"
   "$CPANEL_PHP_BIN bin/console asset-map:compile --env=prod --no-debug"
