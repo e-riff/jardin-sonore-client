@@ -115,6 +115,11 @@ class RepertoireItemEntity
         return $this->linkedMediaUuids;
     }
 
+    public function getLinkedMediaCount(): int
+    {
+        return count($this->linkedMediaUuids);
+    }
+
     /** @param list<string> $linkedMediaUuids */
     public function setLinkedMediaUuids(array $linkedMediaUuids): static
     {

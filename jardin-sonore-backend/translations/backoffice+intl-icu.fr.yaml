@@ -15,6 +15,10 @@ admin:
     sessions: "Séances"
     instruments: "Instruments"
     instrument_tags: "Tags instruments"
+    session_resources: "Ressources de séances"
+    repertoire_items: "Comptines et jeux de doigts"
+    media_resources: "Médias"
+    session_recommendations: "Prolongements"
     geography: "Territoires"
     regions: "Régions"
     departments: "Départements"
@@ -60,6 +64,8 @@ admin:
     tags: "Tags"
     type: "Type"
     source: "Source"
+    description: "Description"
+    body: "Texte reconstruit"
     opt_in_newsletter: "Newsletter"
     unsubscribed_at: "Désinscrit le"
     unsubscribe_token: "Token de désinscription"
@@ -88,11 +94,20 @@ admin:
     recommendation_count: "Recos"
     active_recommendation_count: "Recos actives"
     recommendations: "Recommandations"
+    content_blocks: "Lignes et séparations"
+    linked_media: "Médias liés"
+    linked_media_count: "Médias liés"
     last_test_sent_at: "Dernier test envoyé le"
     link_label: "Libellé du lien"
     image_path: "Image"
+    image_url: "Visuel"
+    image_file: "Uploader un visuel"
+    primary_url: "Lien principal"
+    primary_file: "Uploader un fichier principal"
+    secondary_url: "Lien secondaire"
     instruments: "Instruments"
     notes: "Notes"
+    gesture: "Gestes / indications"
     address: "Adresse"
     siren: "SIREN"
     siret: "SIRET"
@@ -192,6 +207,24 @@ admin:
       new: "Créer un tag instrument"
       edit: "Modifier un tag instrument"
       detail: "Détail du tag instrument"
+  repertoire_item:
+    page:
+      index: "Comptines et jeux de doigts"
+      new: "Créer un élément de répertoire"
+      edit: "Modifier l’élément de répertoire"
+      detail: "Détail de l’élément de répertoire"
+  media_resource:
+    page:
+      index: "Médias"
+      new: "Créer un média"
+      edit: "Modifier le média"
+      detail: "Détail du média"
+  session_recommendation:
+    page:
+      index: "Prolongements"
+      new: "Créer un prolongement"
+      edit: "Modifier le prolongement"
+      detail: "Détail du prolongement"
   newsletter_recommendation:
     page:
       index: "Recommandations newsletter"
@@ -299,3 +332,13 @@ content_catalog:
   instrument_tag:
     singular: "Tag instrument"
     plural: "Tags instruments"
+session_catalog:
+  repertoire_item:
+    singular: "Élément de répertoire"
+    plural: "Éléments de répertoire"
+  media_resource:
+    singular: "Média"
+    plural: "Médias"
+  session_recommendation:
+    singular: "Prolongement"
+    plural: "Prolongements"
