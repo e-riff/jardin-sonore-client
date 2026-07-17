@@ -1,5 +1,5 @@
 COMPOSE_FILE ?= docker-compose.yml
-COMPOSE ?= docker compose -f $(COMPOSE_FILE)
+COMPOSE ?= HOST_UID=$(HOST_UID) HOST_GID=$(HOST_GID) docker compose -f $(COMPOSE_FILE)
 
 CLIENT_SERVICE ?= client-front
 BACKEND_SERVICE ?= nginx
