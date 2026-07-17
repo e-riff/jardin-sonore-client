@@ -39,7 +39,15 @@ final class MediaResourceDoctrineRepository extends ServiceEntityRepository impl
             $qb->andWhere('media.type = :type')->setParameter('type', $mediaResourceType);
         }
         if (null !== $query && '' !== trim($query)) {
-            $qb->andWhere('LOWER(media.title) LIKE LOWER(:query)')->setParameter('query', '%' . trim($query) . '%');
+            $qb
+                ->andWhere('
+                    LOWER(media.title) LIKE LOWER(:query)
+                    OR LOWER(COALESCE(media.source, \'\')) LIKE LOWER(:query)
+                    OR LOWER(COALESCE(media.description, \'\')) LIKE LOWER(:query)
+                    OR LOWER(media.primaryUrl) LIKE LOWER(:query)
+                    OR LOWER(COALESCE(media.secondaryUrl, \'\')) LIKE LOWER(:query)
+                ')
+                ->setParameter('query', '%' . trim($query) . '%');
         }
         if ($activeOnly) {
             $qb->andWhere('media.active = :active')->setParameter('active', true);

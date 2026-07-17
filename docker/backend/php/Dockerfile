@@ -1,5 +1,10 @@
 FROM php:8.4-fpm
 
+ARG HOST_UID=1000
+ARG HOST_GID=1000
+ARG HOST_USER_NAME=hostuser
+ARG HOST_GROUP_NAME=hostgroup
+
 WORKDIR /app
 
 RUN apt-get update \
@@ -32,6 +37,8 @@ RUN apt-get update \
         zip \
     && curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | bash \
     && apt-get install -y --no-install-recommends symfony-cli \
+    && if ! getent group "${HOST_GID}" >/dev/null; then groupadd --gid "${HOST_GID}" "${HOST_GROUP_NAME}"; fi \
+    && if ! getent passwd "${HOST_UID}" >/dev/null; then useradd --uid "${HOST_UID}" --gid "${HOST_GID}" --create-home --shell /bin/sh "${HOST_USER_NAME}"; fi \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer

@@ -10,9 +10,7 @@ use App\Application\Session\CreateMediaResource;
 use App\Application\Session\GetMediaResourceForEdit;
 use App\Application\Session\GetRepertoireItemForEdit;
 use App\Application\Session\SaveMediaResourceInput;
-use App\Application\Session\SearchMediaResources;
 use App\Application\Session\UpdateMediaResource;
-use App\Domain\Model\Session\MediaResourceType;
 use App\Domain\Repository\RepertoireItemRepositoryInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,17 +22,10 @@ use Symfony\Component\Uid\Uuid;
 final class MediaResourceCatalogController extends AbstractController
 {
     #[Route('', name: 'index', methods: ['GET'])]
-    public function index(Request $request, SearchMediaResources $searchMediaResources): Response
+    public function index(Request $request): Response
     {
-        $type = $request->query->getString('type');
-        $mediaResourceType = '' !== $type ? MediaResourceType::from($type) : null;
-
         return $this->render('media_resource/index.html.twig', [
             'sessionQuery' => $request->query->getString('session'),
-            'query' => $request->query->getString('query'),
-            'selectedType' => $mediaResourceType,
-            'typeOptions' => MediaResourceType::cases(),
-            'items' => $searchMediaResources($request->query->getString('query'), $mediaResourceType),
         ]);
     }
 
