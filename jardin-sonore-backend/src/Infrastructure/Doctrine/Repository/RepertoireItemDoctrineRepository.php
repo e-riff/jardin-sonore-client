@@ -39,7 +39,14 @@ final class RepertoireItemDoctrineRepository extends ServiceEntityRepository imp
             $qb->andWhere('item.type = :type')->setParameter('type', $repertoireItemType);
         }
         if (null !== $query && '' !== trim($query)) {
-            $qb->andWhere('LOWER(item.title) LIKE LOWER(:query)')->setParameter('query', '%' . trim($query) . '%');
+            $qb
+                ->andWhere('
+                    LOWER(item.title) LIKE LOWER(:query)
+                    OR LOWER(COALESCE(item.source, \'\')) LIKE LOWER(:query)
+                    OR LOWER(item.body) LIKE LOWER(:query)
+                    OR LOWER(COALESCE(item.notes, \'\')) LIKE LOWER(:query)
+                ')
+                ->setParameter('query', '%' . trim($query) . '%');
         }
         if ($activeOnly) {
             $qb->andWhere('item.active = :active')->setParameter('active', true);

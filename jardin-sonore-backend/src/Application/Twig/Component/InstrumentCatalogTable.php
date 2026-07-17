@@ -26,22 +26,22 @@ final class InstrumentCatalogTable
 
     private const int PER_PAGE = 15;
 
-    #[LiveProp(writable: true, url: true)]
+    #[LiveProp(writable: true, url: true, onUpdated: 'onFiltersUpdated')]
     public string $query = '';
 
     /**
      * @var list<string>
      */
-    #[LiveProp(writable: true, url: true)]
+    #[LiveProp(writable: true, url: true, onUpdated: 'onFiltersUpdated')]
     public array $tagUuids = [];
 
-    #[LiveProp(writable: true, url: true)]
+    #[LiveProp(writable: true, url: true, onUpdated: 'onFiltersUpdated')]
     public string $activeFilter = '';
 
-    #[LiveProp(writable: true, url: true)]
+    #[LiveProp(writable: true, url: true, onUpdated: 'onFiltersUpdated')]
     public string $quantityFilter = '';
 
-    #[LiveProp(writable: true, url: true)]
+    #[LiveProp(writable: true, url: true, onUpdated: 'onFiltersUpdated')]
     public string $tuningFilter = '';
 
     #[LiveProp(writable: true, url: true)]
@@ -107,6 +107,26 @@ final class InstrumentCatalogTable
         $this->catalogResult = null;
     }
 
+    #[LiveAction]
+    public function toggleTag(#[LiveArg] string $uuid): void
+    {
+        if (!Uuid::isValid($uuid)) {
+            return;
+        }
+
+        if (in_array($uuid, $this->tagUuids, true)) {
+            $this->tagUuids = array_values(array_filter(
+                $this->tagUuids,
+                static fn (string $tagUuid): bool => $tagUuid !== $uuid,
+            ));
+        } else {
+            $this->tagUuids[] = $uuid;
+            $this->tagUuids = array_values(array_unique($this->tagUuids));
+        }
+
+        $this->onFiltersUpdated();
+    }
+
     public function getCatalogResult(): InstrumentCatalogResult
     {
         if ($this->catalogResult instanceof InstrumentCatalogResult) {
@@ -157,6 +177,11 @@ final class InstrumentCatalogTable
         return $this->sortBy === $column;
     }
 
+    public function isTagSelected(string $uuid): bool
+    {
+        return in_array($uuid, $this->tagUuids, true);
+    }
+
     public function sortIconFor(string $column): string
     {
         if (!$this->isSortedBy($column)) {
@@ -187,5 +212,11 @@ final class InstrumentCatalogTable
     private function getPageCountFromTotal(int $total): int
     {
         return max(1, (int) ceil($total / self::PER_PAGE));
+    }
+
+    public function onFiltersUpdated(): void
+    {
+        $this->page = 1;
+        $this->catalogResult = null;
     }
 }

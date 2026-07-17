@@ -16,16 +16,21 @@
                 </div>
             </div>
 
-            <div class="instrument-catalog__filters">
+            <div class="instrument-catalog__filters instrument-catalog__filters--compact">
                 <div>
                     <label for="instrument-tags">{{ 'catalog.instrument.filters.tags'|trans({}, 'catalog') }}</label>
-                    <select id="instrument-tags" data-model="on(change)|tagUuids" multiple size="{{ max(3, min(this.tagOptions|length, 6)) }}">
+                    <div id="instrument-tags" class="instrument-catalog__tags">
                         {% for tagOption in this.tagOptions %}
-                            <option value="{{ tagOption.uuid }}" {% if tagOption.uuid in tagUuids %}selected{% endif %}>
+                            <button
+                                type="button"
+                                class="internal-badge instrument-catalog__tag-filter {{ this.isTagSelected(tagOption.uuid) ? 'internal-badge--primary is-selected' : 'internal-badge--muted' }}"
+                                {{ live_action('toggleTag', { uuid: tagOption.uuid }) }}
+                                aria-pressed="{{ this.isTagSelected(tagOption.uuid) ? 'true' : 'false' }}"
+                            >
                                 {{ tagOption.label }}
-                            </option>
+                            </button>
                         {% endfor %}
-                    </select>
+                    </div>
                 </div>
 
                 <div>
@@ -64,8 +69,7 @@
                 <button
                     type="button"
                     class="internal-button internal-button--secondary internal-button--compact"
-                    data-action="live#action"
-                    data-live-action-param="resetFilters"
+                    {{ live_action('resetFilters') }}
                 >
                     {{ 'catalog.instrument.filters.reset'|trans({}, 'catalog') }}
                 </button>
@@ -92,9 +96,7 @@
                                     <button
                                         type="button"
                                         class="instrument-catalog__sort-button{% if this.isSortedBy(column) %} is-active{% endif %}"
-                                        data-action="live#action"
-                                        data-live-action-param="sort"
-                                        data-live-column-param="{{ column }}"
+                                        {{ live_action('sort', { column: column }) }}
                                     >
                                         <span>{{ label|trans({}, 'catalog') }}</span>
                                         <span aria-hidden="true">{{ this.sortIconFor(column) }}</span>
@@ -153,8 +155,7 @@
                     <button
                         type="button"
                         class="internal-button internal-button--secondary internal-button--compact"
-                        data-action="live#action"
-                        data-live-action-param="previousPage"
+                        {{ live_action('previousPage') }}
                         {% if page <= 1 %}disabled{% endif %}
                     >
                         {{ 'catalog.instrument.pagination.previous'|trans({}, 'catalog') }}
@@ -165,8 +166,7 @@
                     <button
                         type="button"
                         class="internal-button internal-button--secondary internal-button--compact"
-                        data-action="live#action"
-                        data-live-action-param="nextPage"
+                        {{ live_action('nextPage') }}
                         {% if page >= this.pageCount %}disabled{% endif %}
                     >
                         {{ 'catalog.instrument.pagination.next'|trans({}, 'catalog') }}

@@ -70,7 +70,7 @@ print-urls:
 
 clean: docker-down
 	docker image rm -f jardin-sonore-client:dev jardin-sonore-backend-php:dev >/dev/null 2>&1 || true
-	docker volume rm -f jardin-sonore-client_node_modules jardin-sonore-client_next jardin-sonore-mysql_data >/dev/null 2>&1 || true
+	docker volume rm -f jardin-sonore-client_node_modules jardin-sonore-client_next jardin-sonore-mariadb_data >/dev/null 2>&1 || true
 
 lint:
 	$(COMPOSE) run --rm $(CLIENT_SERVICE) sh -c "npm install && npm run lint"

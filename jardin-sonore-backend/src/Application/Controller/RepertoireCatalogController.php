@@ -12,7 +12,6 @@ use App\Application\Session\GetRepertoireItemForEdit;
 use App\Application\Session\RepertoireBlockTextParser;
 use App\Application\Session\SaveRepertoireBlockInput;
 use App\Application\Session\SaveRepertoireItemInput;
-use App\Application\Session\SearchRepertoireItems;
 use App\Application\Session\UpdateRepertoireItem;
 use App\Domain\Model\Session\RepertoireBlockKind;
 use App\Domain\Model\Session\RepertoireItemType;
@@ -21,22 +20,15 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Uid\Uuid;
-use ValueError;
 
 #[Route('/sessions/repertoire', name: 'repertoire_')]
 final class RepertoireCatalogController extends AbstractController
 {
     #[Route('', name: 'index', methods: ['GET'])]
-    public function index(Request $request, SearchRepertoireItems $searchRepertoireItems): Response
+    public function index(Request $request): Response
     {
-        $repertoireItemType = $this->resolveType($request->query->getString('type'));
-
         return $this->render('repertoire/index.html.twig', [
             'sessionQuery' => $request->query->getString('session'),
-            'query' => $request->query->getString('query'),
-            'selectedType' => $repertoireItemType,
-            'repertoireTypes' => RepertoireItemType::cases(),
-            'items' => $searchRepertoireItems($repertoireItemType, $request->query->getString('query')),
         ]);
     }
 
@@ -98,19 +90,6 @@ final class RepertoireCatalogController extends AbstractController
             'item' => $itemView,
             'linkedMediaItems' => $this->resolveLinkedMediaItems($formModel->linkedMediaUuids, $getMediaResourceForEdit),
         ], $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null);
-    }
-
-    private function resolveType(string $type): ?RepertoireItemType
-    {
-        if ('' === $type) {
-            return null;
-        }
-
-        try {
-            return RepertoireItemType::from($type);
-        } catch (ValueError) {
-            throw $this->createNotFoundException();
-        }
     }
 
     private function createInput(

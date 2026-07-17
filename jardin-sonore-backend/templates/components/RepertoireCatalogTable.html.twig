@@ -1,0 +1,89 @@
+<div {{ attributes }} class="instrument-catalog">
+    {% set items = this.items %}
+
+    <section class="internal-card">
+        <div class="instrument-catalog__controls instrument-catalog__controls--inline">
+            <div class="internal-search">
+                <div class="internal-search__row">
+                    <div class="internal-search__field">
+                        <label for="repertoire-query">{{ 'sessions.repertoire.index.search'|trans({}, 'sessions') }}</label>
+                        <input
+                            id="repertoire-query"
+                            type="search"
+                            value="{{ query }}"
+                            data-model="debounce(300)|query"
+                            placeholder="{{ 'sessions.repertoire.index.search_placeholder'|trans({}, 'sessions') }}"
+                        >
+                    </div>
+
+                    <div class="internal-search__field internal-search__field--compact">
+                        <label for="repertoire-type">{{ 'sessions.repertoire.index.type'|trans({}, 'sessions') }}</label>
+                        <select id="repertoire-type" data-model="on(change)|type">
+                            <option value="">{{ 'sessions.repertoire.index.all_types'|trans({}, 'sessions') }}</option>
+                            {% for typeOption in this.typeOptions %}
+                                <option value="{{ typeOption.value }}" {% if type == typeOption.value %}selected{% endif %}>{{ typeOption.translationKey()|trans({}, 'sessions') }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="instrument-catalog__meta">
+            <p>{{ 'sessions.repertoire.index.total'|trans({ count: items|length }, 'sessions') }}</p>
+
+            {% if this.hasActiveFilters %}
+                <button
+                    type="button"
+                    class="internal-button internal-button--secondary internal-button--compact"
+                    {{ live_action('resetFilters') }}
+                >
+                    {{ 'sessions.repertoire.index.reset'|trans({}, 'sessions') }}
+                </button>
+            {% endif %}
+        </div>
+
+        {% if items is empty %}
+            <p class="internal-empty-state">{{ 'sessions.repertoire.index.empty'|trans({}, 'sessions') }}</p>
+        {% else %}
+            <div class="internal-table-wrapper">
+                <table class="internal-table internal-table--responsive">
+                    <thead>
+                        <tr>
+                            <th>{{ 'sessions.repertoire.table.type'|trans({}, 'sessions') }}</th>
+                            <th>{{ 'sessions.repertoire.table.title'|trans({}, 'sessions') }}</th>
+                            <th>{{ 'sessions.repertoire.table.actions'|trans({}, 'sessions') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                            <tr>
+                                <td data-label="{{ 'sessions.repertoire.table.type'|trans({}, 'sessions') }}">
+                                    <span class="internal-badge internal-badge--primary">{{ item.type.translationKey()|trans({}, 'sessions') }}</span>
+                                </td>
+                                <td data-label="{{ 'sessions.repertoire.table.title'|trans({}, 'sessions') }}">
+                                    <strong>{{ item.title }}</strong>
+                                    {% if item.source %}
+                                        <span class="internal-table-note">{{ item.source }}</span>
+                                    {% endif %}
+                                </td>
+                                <td data-label="{{ 'sessions.repertoire.table.actions'|trans({}, 'sessions') }}">
+                                    <div class="instrument-catalog__actions">
+                                        {% if sessionQuery %}
+                                            <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('session_sequence_new', { uuid: sessionQuery, repertoire: item.uuid.toRfc4122 }) }}">
+                                                {{ 'sessions.repertoire.table.insert'|trans({}, 'sessions') }}
+                                            </a>
+                                        {% endif %}
+                                        <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('repertoire_edit', { uuid: item.uuid.toRfc4122 }) }}">
+                                            {{ 'sessions.repertoire.table.edit'|trans({}, 'sessions') }}
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </section>
+</div>

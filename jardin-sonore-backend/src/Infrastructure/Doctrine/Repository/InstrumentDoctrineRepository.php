@@ -14,6 +14,7 @@ use App\Domain\Repository\InstrumentRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\InstrumentEntity;
 use App\Infrastructure\Doctrine\Entity\InstrumentTagEntity;
 use App\Infrastructure\Doctrine\Mapper\InstrumentMapper;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
@@ -230,11 +231,17 @@ final class InstrumentDoctrineRepository extends ServiceEntityRepository impleme
         )));
 
         if ([] !== $normalizedTagUuids) {
+            $tagIds = $this->resolveInstrumentTagIds($normalizedTagUuids);
+
+            if ([] === $tagIds) {
+                $queryBuilder->andWhere('1 = 0');
+
+                return;
+            }
+
             $queryBuilder
-                ->innerJoin('instrument.tags', 'filterTag', 'WITH', 'filterTag.uuid IN (:tagUuids)')
-                ->setParameter('tagUuids', array_map(static fn (string $uuid): Uuid => Uuid::fromString($uuid), $normalizedTagUuids))
-                ->having('COUNT(DISTINCT filterTag.id) = :tagCount')
-                ->setParameter('tagCount', count($normalizedTagUuids));
+                ->innerJoin('instrument.tags', 'filterTag', 'WITH', 'filterTag.id IN (:tagIds)')
+                ->setParameter('tagIds', $tagIds);
         }
     }
 
@@ -253,5 +260,37 @@ final class InstrumentDoctrineRepository extends ServiceEntityRepository impleme
             ->orderBy($field, $direction)
             ->addOrderBy('sort_name', 'ASC')
             ->addOrderBy('id', 'ASC');
+    }
+
+    /**
+     * @param list<string> $tagUuids
+     *
+     * @return list<int>
+     */
+    private function resolveInstrumentTagIds(array $tagUuids): array
+    {
+        if ([] === $tagUuids) {
+            return [];
+        }
+
+        $normalizedHexUuids = array_values(array_unique(array_map(
+            static fn (string $uuid): string => strtolower(str_replace('-', '', $uuid)),
+            $tagUuids,
+        )));
+
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('id')
+            ->from('instrument_tag')
+            ->where('LOWER(HEX(uuid)) IN (:uuids)')
+            ->setParameter('uuids', $normalizedHexUuids, ArrayParameterType::STRING)
+            ->executeQuery()
+            ->fetchFirstColumn();
+
+        return array_values(array_map(
+            static fn (mixed $id): int => (int) $id,
+            $rows,
+        ));
     }
 }

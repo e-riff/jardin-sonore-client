@@ -29,6 +29,11 @@ services:
     build:
       context: .
       dockerfile: docker/backend/php/Dockerfile
+      args:
+        HOST_UID: "${HOST_UID:-1000}"
+        HOST_GID: "${HOST_GID:-1000}"
+        HOST_USER_NAME: "${HOST_USER_NAME:-hostuser}"
+        HOST_GROUP_NAME: "${HOST_GROUP_NAME:-hostgroup}"
     user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     env_file:
       - ./jardin-sonore-backend/.env.local
@@ -52,6 +57,11 @@ services:
     build:
       context: .
       dockerfile: docker/backend/php/Dockerfile
+      args:
+        HOST_UID: "${HOST_UID:-1000}"
+        HOST_GID: "${HOST_GID:-1000}"
+        HOST_USER_NAME: "${HOST_USER_NAME:-hostuser}"
+        HOST_GROUP_NAME: "${HOST_GROUP_NAME:-hostgroup}"
     user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     env_file:
       - ./jardin-sonore-backend/.env.local
@@ -91,16 +101,19 @@ services:
       start_period: 20s
 
   mysql:
-    image: mysql:8.4
+    image: mariadb:11.4.12
     container_name: jardin-sonore-mysql
+    command:
+      - --character-set-server=latin1
+      - --collation-server=latin1_swedish_ci
     env_file:
       - ./jardin-sonore-backend/.env.local
     ports:
       - "${MYSQL_PORT:-3307}:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mariadb_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u$${MYSQL_USER} -p$${MYSQL_PASSWORD} --silent"]
+      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -u$${MYSQL_USER} -p$${MYSQL_PASSWORD} --silent"]
       interval: 30s
       timeout: 5s
       retries: 5
@@ -124,5 +137,5 @@ volumes:
     name: jardin-sonore-client_node_modules
   next:
     name: jardin-sonore-client_next
-  mysql_data:
-    name: jardin-sonore-mysql_data
+  mariadb_data:
+    name: jardin-sonore-mariadb_data
