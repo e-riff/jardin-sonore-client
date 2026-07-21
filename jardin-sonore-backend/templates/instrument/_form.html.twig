@@ -13,7 +13,18 @@
         {{ form_row(form.active) }}
     </div>
 
-    {{ form_row(form.tagUuids) }}
+    <div class="instrument-form__tags">
+        {{ form_label(form.tagUuids) }}
+        {{ form_errors(form.tagUuids) }}
+        <div class="instrument-form__tags-list">
+            {% for tagField in form.tagUuids %}
+                <div class="instrument-form__tag-option">
+                    {{ form_widget(tagField) }}
+                    {{ form_label(tagField) }}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
     {{ form_row(form.notes) }}
 
     <div class="internal-form__actions">

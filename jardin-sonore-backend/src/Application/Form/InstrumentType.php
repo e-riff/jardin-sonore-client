@@ -57,12 +57,9 @@ final class InstrumentType extends AbstractType
             ->add('tagUuids', ChoiceType::class, [
                 'label' => 'catalog.instrument.form.tags',
                 'required' => false,
+                'expanded' => true,
                 'multiple' => true,
                 'choices' => $tagChoices,
-                'help' => 'catalog.instrument.form.tags_help',
-                'attr' => [
-                    'size' => min(8, max(3, count($tagChoices))),
-                ],
             ])
             ->add('active', CheckboxType::class, [
                 'label' => 'catalog.instrument.form.active',

@@ -8,6 +8,7 @@ use App\Domain\Model\ContentCatalog\InstrumentTag;
 use App\Domain\Repository\InstrumentTagRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\InstrumentTagEntity;
 use App\Infrastructure\Doctrine\Mapper\InstrumentTagMapper;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
@@ -79,9 +80,26 @@ final class InstrumentTagDoctrineRepository extends ServiceEntityRepository impl
             return [];
         }
 
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('id')
+            ->from('instrument_tag')
+            ->where('LOWER(HEX(uuid)) IN (:uuids)')
+            ->setParameter('uuids', array_map(
+                static fn (string $uuid): string => strtolower(str_replace('-', '', $uuid)),
+                $uuids,
+            ), ArrayParameterType::STRING)
+            ->executeQuery()
+            ->fetchFirstColumn();
+
+        if ([] === $rows) {
+            return [];
+        }
+
         $entities = $this->createQueryBuilder('instrumentTag')
-            ->andWhere('instrumentTag.uuid IN (:uuids)')
-            ->setParameter('uuids', array_map(static fn (string $uuid): Uuid => Uuid::fromString($uuid), $uuids))
+            ->andWhere('instrumentTag.id IN (:ids)')
+            ->setParameter('ids', array_map(static fn (mixed $id): int => (int) $id, $rows))
             ->getQuery()
             ->getResult();
 
