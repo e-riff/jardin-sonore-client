@@ -779,6 +779,44 @@ a {
     gap: 8px;
 }
 
+.instrument-form__tags {
+    gap: 10px;
+}
+
+.instrument-form__tags-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px 12px;
+    max-height: 220px;
+    overflow: auto;
+    padding: 14px 16px;
+    border: 1px solid color-mix(in oklab, var(--color-outline-variant) 60%, white);
+    border-radius: 14px;
+    background: color-mix(in oklab, var(--color-surface-container) 85%, white);
+}
+
+.instrument-form__tag-option {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    align-items: start;
+    column-gap: 8px;
+    min-width: 0;
+}
+
+.instrument-form__tag-option label {
+    display: block;
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+.instrument-form__tag-option input[type="checkbox"] {
+    margin-top: 1px;
+}
+
 .mailing-recommendations {
     display: grid;
     gap: 18px;

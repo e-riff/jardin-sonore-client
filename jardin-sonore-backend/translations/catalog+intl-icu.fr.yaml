@@ -48,6 +48,7 @@ catalog:
       notes: "Notes"
       tags: "Tags"
       tags_help: "Maintenez Ctrl ou Cmd pour sélectionner plusieurs tags. Les tags se gèrent dans le backoffice EasyAdmin."
+      tags_unavailable: "Un ou plusieurs tags sélectionnés ne sont plus disponibles. Rechargez la page puis réessayez."
       active: "Instrument actif"
       submit: "Enregistrer"
       back: "Retour au catalogue"

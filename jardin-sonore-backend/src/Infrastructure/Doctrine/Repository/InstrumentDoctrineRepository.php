@@ -156,17 +156,24 @@ final class InstrumentDoctrineRepository extends ServiceEntityRepository impleme
             return;
         }
 
-        $targetTagEntities = $this->getEntityManager()
-            ->getRepository(InstrumentTagEntity::class)
-            ->createQueryBuilder('instrumentTag')
-            ->andWhere('instrumentTag.uuid IN (:uuids)')
-            ->setParameter('uuids', array_map(static fn (string $uuid): Uuid => Uuid::fromString($uuid), $targetTagUuids))
-            ->getQuery()
-            ->getResult();
-
         $targetTagEntitiesByUuid = [];
+        $targetTagIds = array_values(array_unique(array_filter(array_map(
+            static fn (InstrumentTag $instrumentTag): ?int => $instrumentTag->getId(),
+            $instrumentTags,
+        ), static fn (?int $id): bool => null !== $id)));
 
-        foreach ($targetTagEntities as $instrumentTagEntity) {
+        foreach ($this->findInstrumentTagEntitiesByIds($targetTagIds) as $instrumentTagEntity) {
+            if ($instrumentTagEntity instanceof InstrumentTagEntity) {
+                $targetTagEntitiesByUuid[$instrumentTagEntity->getUuid()->toRfc4122()] = $instrumentTagEntity;
+            }
+        }
+
+        $missingTargetTagUuids = array_values(array_filter(
+            $targetTagUuids,
+            static fn (string $uuid): bool => !isset($targetTagEntitiesByUuid[$uuid]),
+        ));
+
+        foreach ($this->findInstrumentTagEntitiesByUuids($missingTargetTagUuids) as $instrumentTagEntity) {
             if ($instrumentTagEntity instanceof InstrumentTagEntity) {
                 $targetTagEntitiesByUuid[$instrumentTagEntity->getUuid()->toRfc4122()] = $instrumentTagEntity;
             }
@@ -181,6 +188,49 @@ final class InstrumentDoctrineRepository extends ServiceEntityRepository impleme
 
             $instrumentEntity->addTag($instrumentTagEntity);
         }
+    }
+
+    /**
+     * @param list<int> $tagIds
+     *
+     * @return list<InstrumentTagEntity>
+     */
+    private function findInstrumentTagEntitiesByIds(array $tagIds): array
+    {
+        if ([] === $tagIds) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            $this->getEntityManager()
+                ->getRepository(InstrumentTagEntity::class)
+                ->createQueryBuilder('instrumentTag')
+                ->andWhere('instrumentTag.id IN (:ids)')
+                ->setParameter('ids', $tagIds)
+                ->getQuery()
+                ->getResult(),
+            static fn (mixed $instrumentTagEntity): bool => $instrumentTagEntity instanceof InstrumentTagEntity,
+        ));
+    }
+
+    /**
+     * @param list<string> $tagUuids
+     *
+     * @return list<InstrumentTagEntity>
+     */
+    private function findInstrumentTagEntitiesByUuids(array $tagUuids): array
+    {
+        if ([] === $tagUuids) {
+            return [];
+        }
+
+        $targetTagIds = $this->resolveInstrumentTagIds($tagUuids);
+
+        if ([] === $targetTagIds) {
+            return [];
+        }
+
+        return $this->findInstrumentTagEntitiesByIds($targetTagIds);
     }
 
     private function applyCatalogCriteria(QueryBuilder $queryBuilder, InstrumentCatalogCriteria $criteria): void
