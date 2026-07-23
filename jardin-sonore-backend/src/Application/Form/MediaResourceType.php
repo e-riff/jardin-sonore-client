@@ -6,6 +6,7 @@ namespace App\Application\Form;
 
 use App\Application\Form\Model\MediaResourceFormModel;
 use App\Domain\Model\Session\MediaResourceType as ResourceType;
+use App\Domain\Repository\ThemeRepositoryInterface;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -22,12 +23,20 @@ use Symfony\UX\Dropzone\Form\DropzoneType;
  */
 final class MediaResourceType extends AbstractType
 {
+    public function __construct(private readonly ThemeRepositoryInterface $themeRepository)
+    {
+    }
+
     /**
      * @param FormBuilderInterface<MediaResourceFormModel|null> $builder
      * @param array<string, mixed>                              $options
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $themeChoices = [];
+        foreach ($this->themeRepository->findAllOrderedByLabel() as $theme) {
+            $themeChoices[$theme->getLabel()] = $theme->getUuid()->toRfc4122();
+        }
         $builder
             ->add('type', ChoiceType::class, [
                 'label' => 'sessions.media.form.type',
@@ -81,6 +90,7 @@ final class MediaResourceType extends AbstractType
                     'data-exclusive-resource-fields-peer-selector-value' => '[name$="[imageUrl]"]',
                 ],
             ])
+            ->add('themeUuids', ChoiceType::class, ['label' => 'sessions.media.form.themes', 'required' => false, 'multiple' => true, 'choices' => $themeChoices, 'autocomplete' => true])
             ->add('active', CheckboxType::class, ['label' => 'sessions.media.form.active', 'required' => false])
             ->add('submit', SubmitType::class, ['label' => 'sessions.media.form.submit', 'attr' => ['class' => 'internal-button']]);
     }

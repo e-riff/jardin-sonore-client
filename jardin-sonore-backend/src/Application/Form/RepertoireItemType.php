@@ -8,6 +8,7 @@ use App\Application\Form\Model\RepertoireBlockFormModel;
 use App\Application\Form\Model\RepertoireItemFormModel;
 use App\Domain\Model\Session\RepertoireItemType as RepertoireItemKind;
 use App\Domain\Repository\MediaResourceRepositoryInterface;
+use App\Domain\Repository\ThemeRepositoryInterface;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -25,7 +26,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 final class RepertoireItemType extends AbstractType
 {
-    public function __construct(private readonly MediaResourceRepositoryInterface $mediaResourceRepository)
+    public function __construct(private readonly MediaResourceRepositoryInterface $mediaResourceRepository, private readonly ThemeRepositoryInterface $themeRepository)
     {
     }
 
@@ -36,6 +37,7 @@ final class RepertoireItemType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $mediaChoices = [];
+        $themeChoices = [];
         $mediaChoiceAttributes = [];
 
         foreach ($this->mediaResourceRepository->search(activeOnly: true) as $mediaResource) {
@@ -46,6 +48,9 @@ final class RepertoireItemType extends AbstractType
                 'data-media-type' => $mediaResource->getType()->translationKey(),
                 'data-media-url' => $mediaResource->getPrimaryUrl(),
             ];
+        }
+        foreach ($this->themeRepository->findAllOrderedByLabel() as $theme) {
+            $themeChoices[$theme->getLabel()] = $theme->getUuid()->toRfc4122();
         }
 
         $builder
@@ -74,6 +79,7 @@ final class RepertoireItemType extends AbstractType
                 'prototype' => true,
             ])
             ->add('notes', TextareaType::class, ['label' => 'sessions.repertoire.form.notes', 'required' => false, 'attr' => ['rows' => 5]])
+            ->add('themeUuids', ChoiceType::class, ['label' => 'sessions.repertoire.form.themes', 'required' => false, 'multiple' => true, 'choices' => $themeChoices, 'autocomplete' => true])
             ->add('linkedMediaUuids', ChoiceType::class, [
                 'label' => 'sessions.repertoire.form.linked_media',
                 'required' => false,

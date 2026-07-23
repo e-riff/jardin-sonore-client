@@ -11,6 +11,7 @@ use Symfony\Component\Uid\Uuid;
 
 final readonly class MediaResourceView
 {
+    /** @param list<array{uuid:string,label:string,color:string}> $themes */
     public function __construct(
         public Uuid $uuid,
         public MediaResourceType $type,
@@ -20,6 +21,7 @@ final readonly class MediaResourceView
         public string $primaryUrl,
         public ?string $secondaryUrl,
         public ?string $imageUrl,
+        public array $themes,
         public bool $active,
         public DateTimeImmutable $updatedAt,
     ) {
@@ -36,6 +38,7 @@ final readonly class MediaResourceView
             primaryUrl: $mediaResource->getPrimaryUrl(),
             secondaryUrl: $mediaResource->getSecondaryUrl(),
             imageUrl: $mediaResource->getImageUrl(),
+            themes: array_map(static fn ($theme): array => ['uuid' => $theme->getUuid()->toRfc4122(), 'label' => $theme->getLabel(), 'color' => $theme->getColor()], $mediaResource->getThemes()),
             active: $mediaResource->isActive(),
             updatedAt: $mediaResource->getUpdatedAt(),
         );

@@ -108,7 +108,7 @@
     ] %}
     {% set activeNavGroup = navGroups|filter(group => group.active)|first ?: navGroups|first %}
 
-    <div class="internal-shell" {{ stimulus_controller('internal-nav') }}>
+    <div class="internal-shell" {{ stimulus_controller('internal-nav')|stimulus_controller('confirmation-dialog') }}>
         <header class="internal-header">
             <div class="internal-header__bar">
                 <div class="internal-header__brand-block">
@@ -245,5 +245,25 @@
 
             {% block internal_body %}{% endblock %}
         </main>
+
+        <dialog
+            class="internal-confirmation-dialog"
+            {{ stimulus_target('confirmation-dialog', 'dialog') }}
+            {{ stimulus_action('confirmation-dialog', 'close', 'cancel') }}
+            {{ stimulus_action('confirmation-dialog', 'closeOnBackdrop', 'click') }}
+        >
+            <div class="internal-confirmation-dialog__panel">
+                <button type="button" class="internal-confirmation-dialog__close" aria-label="{{ 'internal.confirmation.delete.close'|trans({}, 'internal') }}" title="{{ 'internal.confirmation.delete.close'|trans({}, 'internal') }}" {{ stimulus_action('confirmation-dialog', 'close') }}>×</button>
+                <h2>{{ 'internal.confirmation.delete.title'|trans({}, 'internal') }}</h2>
+                <p>{{ 'internal.confirmation.delete.description_before'|trans({}, 'internal') }} <strong {{ stimulus_target('confirmation-dialog', 'item') }}></strong>. {{ 'internal.confirmation.delete.description_after'|trans({}, 'internal') }}</p>
+                <div class="internal-confirmation-dialog__actions">
+                    <button type="button" class="internal-button internal-button--secondary" {{ stimulus_action('confirmation-dialog', 'close') }}>{{ 'internal.confirmation.delete.cancel'|trans({}, 'internal') }}</button>
+                    <form method="post" {{ stimulus_target('confirmation-dialog', 'form') }}>
+                        <input type="hidden" name="_token" {{ stimulus_target('confirmation-dialog', 'token') }}>
+                        <button type="submit" class="internal-button internal-button--danger">{{ 'internal.confirmation.delete.confirm'|trans({}, 'internal') }}</button>
+                    </form>
+                </div>
+            </div>
+        </dialog>
     </div>
 {% endblock %}

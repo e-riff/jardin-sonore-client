@@ -7,11 +7,13 @@ namespace App\Application\Controller;
 use App\Application\Form\MediaResourceType as MediaResourceFormType;
 use App\Application\Form\Model\MediaResourceFormModel;
 use App\Application\Session\CreateMediaResource;
+use App\Application\Session\DeleteMediaResource;
 use App\Application\Session\GetMediaResourceForEdit;
 use App\Application\Session\GetRepertoireItemForEdit;
 use App\Application\Session\SaveMediaResourceInput;
 use App\Application\Session\UpdateMediaResource;
 use App\Domain\Repository\RepertoireItemRepositoryInterface;
+use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -118,6 +120,27 @@ final class MediaResourceCatalogController extends AbstractController
         ], $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null);
     }
 
+    #[Route('/{uuid}/delete', name: 'delete', methods: ['POST'])]
+    public function delete(string $uuid, Request $request, DeleteMediaResource $deleteMediaResource): Response
+    {
+        if (!Uuid::isValid($uuid)) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$this->isCsrfTokenValid('media_resource_delete_' . $uuid, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        try {
+            $deleteMediaResource(Uuid::fromString($uuid));
+            $this->addFlash('success', ['message' => 'sessions.media.flash.deleted', 'domain' => 'sessions']);
+        } catch (InvalidArgumentException) {
+            throw $this->createNotFoundException();
+        }
+
+        return $this->redirectToRoute('media_resource_index', status: Response::HTTP_SEE_OTHER);
+    }
+
     private function createInput(MediaResourceFormModel $formModel): SaveMediaResourceInput
     {
         $primaryUrl = $this->preserveExistingValue($formModel->primaryUrl, $formModel->existingPrimaryUrl, null === $formModel->primaryFile);
@@ -133,6 +156,7 @@ final class MediaResourceCatalogController extends AbstractController
             secondaryUrl: $formModel->secondaryUrl,
             imageUrl: $imageUrl,
             imageFile: $formModel->imageFile,
+            themeUuids: $formModel->themeUuids,
             active: $formModel->active,
         );
     }

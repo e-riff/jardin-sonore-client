@@ -1,0 +1,4 @@
+<div class="instrument-catalog__actions">
+    <a class="internal-icon-button" href="{{ editUrl }}" title="{{ editLabel }}" aria-label="{{ editLabel }}">✎</a>
+    <button type="button" class="internal-icon-button internal-icon-button--danger" title="{{ deleteLabel }}" aria-label="{{ deleteLabel }}" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ deleteUrl }}" data-confirmation-dialog-item-value="{{ itemLabel }}" data-confirmation-dialog-token-value="{{ token }}">🗑</button>
+</div>

@@ -7,6 +7,7 @@ namespace App\Application\Controller;
 use App\Application\Form\Model\RepertoireItemFormModel;
 use App\Application\Form\RepertoireItemType as RepertoireItemFormType;
 use App\Application\Session\CreateRepertoireItem;
+use App\Application\Session\DeleteRepertoireItem;
 use App\Application\Session\GetMediaResourceForEdit;
 use App\Application\Session\GetRepertoireItemForEdit;
 use App\Application\Session\RepertoireBlockTextParser;
@@ -14,7 +15,7 @@ use App\Application\Session\SaveRepertoireBlockInput;
 use App\Application\Session\SaveRepertoireItemInput;
 use App\Application\Session\UpdateRepertoireItem;
 use App\Domain\Model\Session\RepertoireBlockKind;
-use App\Domain\Model\Session\RepertoireItemType;
+use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -92,6 +93,27 @@ final class RepertoireCatalogController extends AbstractController
         ], $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null);
     }
 
+    #[Route('/{uuid}/delete', name: 'delete', methods: ['POST'])]
+    public function delete(string $uuid, Request $request, DeleteRepertoireItem $deleteRepertoireItem): Response
+    {
+        if (!Uuid::isValid($uuid)) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$this->isCsrfTokenValid('repertoire_delete_' . $uuid, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        try {
+            $deleteRepertoireItem(Uuid::fromString($uuid));
+            $this->addFlash('success', ['message' => 'sessions.repertoire.flash.deleted', 'domain' => 'sessions']);
+        } catch (InvalidArgumentException) {
+            throw $this->createNotFoundException();
+        }
+
+        return $this->redirectToRoute('repertoire_index', status: Response::HTTP_SEE_OTHER);
+    }
+
     private function createInput(
         RepertoireItemFormModel $formModel,
         RepertoireBlockTextParser $repertoireBlockTextParser = new RepertoireBlockTextParser(),
@@ -122,6 +144,7 @@ final class RepertoireCatalogController extends AbstractController
             contentBlocks: $contentBlocks,
             notes: $formModel->notes,
             linkedMediaUuids: $formModel->linkedMediaUuids,
+            themeUuids: $formModel->themeUuids,
             active: $formModel->active,
         );
     }

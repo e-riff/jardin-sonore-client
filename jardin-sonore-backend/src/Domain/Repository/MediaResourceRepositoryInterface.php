@@ -16,4 +16,6 @@ interface MediaResourceRepositoryInterface
     public function search(?string $query = null, ?MediaResourceType $mediaResourceType = null, bool $activeOnly = false): array;
 
     public function save(MediaResource $mediaResource): void;
+
+    public function delete(MediaResource $mediaResource): void;
 }

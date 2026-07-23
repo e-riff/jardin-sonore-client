@@ -53,6 +53,17 @@
                     </div>
                 </div>
 
+                <div class="repertoire-block-editor__add-controls">
+                    <button
+                        class="internal-button internal-button--secondary repertoire-block-editor__add-button"
+                        type="button"
+                        title="{{ 'sessions.repertoire.form.block.add_line'|trans({}, 'sessions') }}"
+                        aria-label="{{ 'sessions.repertoire.form.block.add_line'|trans({}, 'sessions') }}"
+                        data-action="repertoire-blocks#addLine"
+                        data-position="start"
+                    >+</button>
+                </div>
+
                 <div
                     class="repertoire-block-editor__rows"
                     data-repertoire-blocks-target="collection"
@@ -63,10 +74,14 @@
                     {% endfor %}
                 </div>
 
-                <div class="repertoire-block-editor__footer">
-                    <button class="internal-button internal-button--secondary" type="button" data-action="repertoire-blocks#addLine">
-                        {{ 'sessions.repertoire.form.block.add_line'|trans({}, 'sessions') }}
-                    </button>
+                <div class="repertoire-block-editor__add-controls">
+                    <button
+                        class="internal-button internal-button--secondary repertoire-block-editor__add-button"
+                        type="button"
+                        title="{{ 'sessions.repertoire.form.block.add_line'|trans({}, 'sessions') }}"
+                        aria-label="{{ 'sessions.repertoire.form.block.add_line'|trans({}, 'sessions') }}"
+                        data-action="repertoire-blocks#addLine"
+                    >+</button>
                 </div>
 
                 <div class="repertoire-block-preview">
@@ -82,6 +97,7 @@
             </section>
 
             {{ form_row(form.notes) }}
+            {{ form_row(form.themeUuids) }}
             <div class="repertoire-media-linker" data-controller="repertoire-media-linker">
                 <div class="repertoire-media-linker__heading">
                     <div>
@@ -128,6 +144,9 @@
             <div class="internal-form__actions">
                 {{ form_widget(form.submit) }}
                 <a class="internal-button internal-button--secondary" href="{{ path('repertoire_index') }}">{{ 'sessions.repertoire.form.back'|trans({}, 'sessions') }}</a>
+                {% if item %}
+                    <button type="button" class="internal-button internal-button--danger" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('repertoire_delete', { uuid: item.uuid.toRfc4122 }) }}" data-confirmation-dialog-item-value="{{ item.title }}" data-confirmation-dialog-token-value="{{ csrf_token('repertoire_delete_' ~ item.uuid.toRfc4122) }}">{{ 'sessions.repertoire.table.delete'|trans({}, 'sessions') }}</button>
+                {% endif %}
             </div>
         {{ form_end(form) }}
     </section>

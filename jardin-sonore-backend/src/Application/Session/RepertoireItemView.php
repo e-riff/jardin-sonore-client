@@ -12,8 +12,9 @@ use Symfony\Component\Uid\Uuid;
 final readonly class RepertoireItemView
 {
     /**
-     * @param list<RepertoireBlockView> $contentBlocks
-     * @param list<string>              $linkedMediaUuids
+     * @param list<RepertoireBlockView>                          $contentBlocks
+     * @param list<string>                                       $linkedMediaUuids
+     * @param list<array{uuid:string,label:string,color:string}> $themes
      */
     public function __construct(
         public Uuid $uuid,
@@ -26,6 +27,7 @@ final readonly class RepertoireItemView
         public ?string $gestures,
         public ?string $notes,
         public array $linkedMediaUuids,
+        public array $themes,
         public bool $active,
         public DateTimeImmutable $updatedAt,
     ) {
@@ -47,6 +49,7 @@ final readonly class RepertoireItemView
             gestures: $repertoireItem->getGestures(),
             notes: $repertoireItem->getNotes(),
             linkedMediaUuids: $repertoireItem->getLinkedMediaUuids(),
+            themes: array_map(static fn ($theme): array => ['uuid' => $theme->getUuid()->toRfc4122(), 'label' => $theme->getLabel(), 'color' => $theme->getColor()], $repertoireItem->getThemes()),
             active: $repertoireItem->isActive(),
             updatedAt: $repertoireItem->getUpdatedAt(),
         );

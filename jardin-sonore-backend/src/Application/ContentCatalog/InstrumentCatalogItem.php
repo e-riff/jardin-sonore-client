@@ -10,7 +10,7 @@ use Symfony\Component\Uid\Uuid;
 final readonly class InstrumentCatalogItem
 {
     /**
-     * @param list<string> $tags
+     * @param list<array{label:string,color:string}> $tags
      */
     public function __construct(
         public Uuid $uuid,

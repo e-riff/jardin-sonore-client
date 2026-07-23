@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 final readonly class SaveMediaResourceInput
 {
+    /** @param list<string> $themeUuids */
     public function __construct(
         public MediaResourceType $type,
         public string $title,
@@ -19,6 +20,7 @@ final readonly class SaveMediaResourceInput
         public ?string $secondaryUrl,
         public ?string $imageUrl,
         public ?UploadedFile $imageFile,
+        public array $themeUuids,
         public bool $active,
     ) {
     }

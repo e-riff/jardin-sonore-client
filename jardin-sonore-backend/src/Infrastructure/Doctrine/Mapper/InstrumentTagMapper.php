@@ -13,6 +13,7 @@ final readonly class InstrumentTagMapper
     {
         return new InstrumentTag(
             label: $instrumentTagEntity->getLabel(),
+            color: $instrumentTagEntity->getColor(),
             uuid: $instrumentTagEntity->getUuid(),
             id: $instrumentTagEntity->getId(),
         );
@@ -26,7 +27,8 @@ final readonly class InstrumentTagMapper
 
         $instrumentTagEntity
             ->setUuid($instrumentTag->getUuid())
-            ->setLabel($instrumentTag->getLabel());
+            ->setLabel($instrumentTag->getLabel())
+            ->setColor($instrumentTag->getColor());
 
         return $instrumentTagEntity;
     }

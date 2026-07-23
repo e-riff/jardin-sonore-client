@@ -28,6 +28,8 @@ final class RepertoireItemFormModel
     public ?string $notes = null;
     /** @var list<string> */
     public array $linkedMediaUuids = [];
+    /** @var list<string> */
+    public array $themeUuids = [];
     public bool $active = true;
 
     public static function fromView(RepertoireItemView $repertoireItemView): self
@@ -42,6 +44,7 @@ final class RepertoireItemFormModel
         );
         $formModel->notes = $repertoireItemView->notes;
         $formModel->linkedMediaUuids = $repertoireItemView->linkedMediaUuids;
+        $formModel->themeUuids = array_column($repertoireItemView->themes, 'uuid');
         $formModel->active = $repertoireItemView->active;
 
         return $formModel;

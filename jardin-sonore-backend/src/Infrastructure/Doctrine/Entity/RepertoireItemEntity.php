@@ -9,6 +9,8 @@ use App\Infrastructure\Doctrine\Entity\Behavior\ActivableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\UuidIdentifiableTrait;
 use DateTimeImmutable;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
 class RepertoireItemEntity
 {
@@ -27,12 +29,15 @@ class RepertoireItemEntity
     private array $linkedMediaUuids = [];
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
+    /** @var Collection<int, ThemeEntity> */
+    private Collection $themes;
 
     public function __construct()
     {
         $this->initializeUuid();
         $this->createdAt = new DateTimeImmutable();
         $this->updatedAt = new DateTimeImmutable();
+        $this->themes = new ArrayCollection();
     }
 
     public function getType(): RepertoireItemType
@@ -148,6 +153,28 @@ class RepertoireItemEntity
     public function setUpdatedAt(DateTimeImmutable $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
+
+        return $this;
+    }
+
+    /** @return Collection<int, ThemeEntity> */
+    public function getThemes(): Collection
+    {
+        return $this->themes;
+    }
+
+    public function addTheme(ThemeEntity $theme): static
+    {
+        if (!$this->themes->contains($theme)) {
+            $this->themes->add($theme);
+        }
+
+return $this;
+    }
+
+    public function removeTheme(ThemeEntity $theme): static
+    {
+        $this->themes->removeElement($theme);
 
         return $this;
     }

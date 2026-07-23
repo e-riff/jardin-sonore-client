@@ -8,6 +8,7 @@ use App\Infrastructure\Doctrine\Entity\InstrumentTagEntity;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ColorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 
@@ -40,6 +41,7 @@ final class InstrumentTagCrudController extends AbstractCrudController
         yield IdField::new('id', 'admin.field.id')->hideOnForm();
         yield TextField::new('uuid', 'admin.field.uuid')->hideOnForm();
         yield TextField::new('label', 'admin.field.label');
+        yield ColorField::new('color', 'admin.field.color');
         yield AssociationField::new('instruments', 'admin.field.instruments')->onlyOnDetail();
     }
 }

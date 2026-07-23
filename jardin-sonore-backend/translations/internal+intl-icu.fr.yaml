@@ -1,4 +1,12 @@
 internal:
+  confirmation:
+    delete:
+      title: "Supprimer définitivement ?"
+      description_before: "Vous êtes sur le point de supprimer"
+      description_after: "Cette action est irréversible."
+      close: "Fermer la fenêtre de confirmation"
+      cancel: "Annuler"
+      confirm: "Supprimer définitivement"
   base:
     title: "Jardin Sonore Interne"
     brand: "Jardin Sonore"

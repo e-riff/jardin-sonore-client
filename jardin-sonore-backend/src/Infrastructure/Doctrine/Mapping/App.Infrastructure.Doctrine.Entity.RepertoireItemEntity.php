@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Domain\Model\Session\RepertoireItemType;
+use App\Infrastructure\Doctrine\Entity\ThemeEntity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Symfony\Bridge\Doctrine\Types\UuidType;
@@ -31,4 +32,5 @@ return static function (ClassMetadata $metadata): void {
     $metadata->mapField(['fieldName' => 'active', 'type' => Types::BOOLEAN, 'options' => ['default' => true]]);
     $metadata->mapField(['fieldName' => 'createdAt', 'columnName' => 'created_at', 'type' => Types::DATETIME_IMMUTABLE]);
     $metadata->mapField(['fieldName' => 'updatedAt', 'columnName' => 'updated_at', 'type' => Types::DATETIME_IMMUTABLE]);
+    $metadata->mapManyToMany(['fieldName' => 'themes', 'targetEntity' => ThemeEntity::class, 'joinTable' => ['name' => 'repertoire_item_theme', 'joinColumns' => [['name' => 'repertoire_item_id', 'referencedColumnName' => 'id', 'onDelete' => 'CASCADE']], 'inverseJoinColumns' => [['name' => 'theme_id', 'referencedColumnName' => 'id', 'onDelete' => 'CASCADE']]]]);
 };

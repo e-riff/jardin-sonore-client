@@ -60,6 +60,7 @@ return static function (ClassMetadata $metadata): void {
         'length' => 255,
         'unique' => true,
     ]);
+    $metadata->mapField(['fieldName' => 'color', 'type' => Types::STRING, 'length' => 7]);
 
     $metadata->mapManyToMany([
         'fieldName' => 'instruments',

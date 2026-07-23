@@ -18,12 +18,29 @@ final class InstrumentTag implements IdentifiableInterface, UuidIdentifiableInte
 
     public function __construct(
         private string $label,
+        private string $color = '#64748b',
         ?Uuid $uuid = null,
         ?int $id = null,
     ) {
         $this->initializeId($id);
         $this->initializeUuid($uuid);
         $this->rename($label);
+        $this->changeColor($color);
+    }
+
+    public function getColor(): string
+    {
+        return $this->color;
+    }
+
+    public function changeColor(string $color): void
+    {
+        $color = trim($color);
+        if (!preg_match('/^#[0-9a-fA-F]{6}$/', $color)) {
+            throw new InvalidArgumentException('Instrument tag color must be a hexadecimal color.');
+        }
+
+        $this->color = strtolower($color);
     }
 
     public function getLabel(): string

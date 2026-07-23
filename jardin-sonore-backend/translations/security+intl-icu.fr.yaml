@@ -5,6 +5,7 @@ security:
     email: "Adresse e-mail"
     password: "Mot de passe"
     submit: "Se connecter"
+    remember_me: "Rester connecté pendant 30 jours"
     disabled_account: "Ce compte administrateur est désactivé."
 
 Invalid credentials.: "Identifiants invalides."

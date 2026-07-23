@@ -6,9 +6,14 @@ namespace App\Infrastructure\Doctrine\Mapper;
 
 use App\Domain\Model\Session\MediaResource;
 use App\Infrastructure\Doctrine\Entity\MediaResourceEntity;
+use App\Infrastructure\Doctrine\Entity\ThemeEntity;
 
 final readonly class MediaResourceMapper
 {
+    public function __construct(private ThemeMapper $themeMapper)
+    {
+    }
+
     public function toDomain(MediaResourceEntity $mediaResourceEntity): MediaResource
     {
         return new MediaResource(
@@ -23,6 +28,7 @@ final readonly class MediaResourceMapper
             createdAt: $mediaResourceEntity->getCreatedAt(),
             updatedAt: $mediaResourceEntity->getUpdatedAt(),
             uuid: $mediaResourceEntity->getUuid(),
+            themes: array_map(fn (ThemeEntity $theme): \App\Domain\Model\ContentCatalog\Theme => $this->themeMapper->toDomain($theme), $mediaResourceEntity->getThemes()->toArray()),
         );
     }
 

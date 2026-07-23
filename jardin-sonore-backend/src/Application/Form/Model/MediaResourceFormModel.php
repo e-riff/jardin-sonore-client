@@ -45,6 +45,8 @@ final class MediaResourceFormModel
     public ?UploadedFile $imageFile = null;
 
     public bool $active = true;
+    /** @var list<string> */
+    public array $themeUuids = [];
 
     public static function fromView(MediaResourceView $mediaResourceView): self
     {
@@ -59,6 +61,7 @@ final class MediaResourceFormModel
         $formModel->secondaryUrl = $mediaResourceView->secondaryUrl;
         $formModel->imageUrl = self::normalizeEditableUrl($mediaResourceView->imageUrl);
         $formModel->active = $mediaResourceView->active;
+        $formModel->themeUuids = array_column($mediaResourceView->themes, 'uuid');
 
         return $formModel;
     }

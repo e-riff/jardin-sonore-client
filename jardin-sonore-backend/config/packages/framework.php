@@ -7,7 +7,10 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 return App::config([
     'framework' => [
         'secret' => '%env(APP_SECRET)%',
-        'session' => true,
+        'session' => [
+            'cookie_lifetime' => 604800,
+            'gc_maxlifetime' => 604800,
+        ],
     ],
     'when@test' => [
         'framework' => [

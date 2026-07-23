@@ -17,6 +17,7 @@ class InstrumentTagEntity
     use UuidIdentifiableTrait;
 
     private string $label = '';
+    private string $color = '#64748b';
 
     /**
      * @var Collection<int, InstrumentEntity>
@@ -43,6 +44,18 @@ class InstrumentTagEntity
     public function setLabel(string $label): static
     {
         $this->label = $label;
+
+        return $this;
+    }
+
+    public function getColor(): string
+    {
+        return $this->color;
+    }
+
+    public function setColor(string $color): static
+    {
+        $this->color = $color;
 
         return $this;
     }

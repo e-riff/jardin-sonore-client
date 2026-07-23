@@ -7,9 +7,14 @@ namespace App\Infrastructure\Doctrine\Mapper;
 use App\Domain\Model\Session\RepertoireBlock;
 use App\Domain\Model\Session\RepertoireItem;
 use App\Infrastructure\Doctrine\Entity\RepertoireItemEntity;
+use App\Infrastructure\Doctrine\Entity\ThemeEntity;
 
 final readonly class RepertoireItemMapper
 {
+    public function __construct(private ThemeMapper $themeMapper)
+    {
+    }
+
     public function toDomain(RepertoireItemEntity $repertoireItemEntity): RepertoireItem
     {
         return new RepertoireItem(
@@ -27,6 +32,7 @@ final readonly class RepertoireItemMapper
             createdAt: $repertoireItemEntity->getCreatedAt(),
             updatedAt: $repertoireItemEntity->getUpdatedAt(),
             uuid: $repertoireItemEntity->getUuid(),
+            themes: array_map(fn (ThemeEntity $theme): \App\Domain\Model\ContentCatalog\Theme => $this->themeMapper->toDomain($theme), $repertoireItemEntity->getThemes()->toArray()),
         );
     }
 

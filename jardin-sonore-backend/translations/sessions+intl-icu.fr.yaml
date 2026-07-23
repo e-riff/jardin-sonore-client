@@ -6,6 +6,7 @@ sessions:
     flash:
       created: "L’élément de répertoire a été créé."
       updated: "L’élément de répertoire a été mis à jour."
+      deleted: "L’élément de répertoire a été supprimé."
     index:
       title: "Répertoire | Jardin Sonore"
       eyebrow: "Répertoire"
@@ -26,6 +27,8 @@ sessions:
       actions: "Actions"
       insert: "Insérer dans la séance"
       edit: "Modifier"
+      delete: "Supprimer"
+      themes: "Thèmes"
     new:
       title: "Nouveau répertoire | Jardin Sonore"
       eyebrow: "Répertoire"
@@ -48,6 +51,7 @@ sessions:
       content_blocks: "Structure détaillée"
       content_blocks_help: "Ajoutez les lignes dans l’ordre. Un bloc séparation peut aussi porter un intitulé comme Refrain ou Couplet."
       notes: "Notes d’animation"
+      themes: "Thèmes"
       linked_media: "Médias liés"
       linked_media_help: "Sélectionnez les médias déjà créés ou ajoutez-en un nouveau depuis ce formulaire."
       linked_media_empty: "Aucun média n’est encore lié à cet élément."
@@ -75,6 +79,7 @@ sessions:
     flash:
       created: "Le média a été créé."
       updated: "Le média a été mis à jour."
+      deleted: "Le média a été supprimé."
     index:
       title: "Médias | Jardin Sonore"
       eyebrow: "Médias"
@@ -97,6 +102,8 @@ sessions:
       actions: "Actions"
       insert: "Insérer dans la séance"
       edit: "Modifier"
+      delete: "Supprimer"
+      themes: "Thèmes"
     new:
       title: "Nouveau média | Jardin Sonore"
       eyebrow: "Médias"
@@ -117,6 +124,7 @@ sessions:
       primary_file_placeholder: "Déposez un audio, une vidéo, un PDF ou un document"
       source: "Source / auteur"
       description: "Description"
+      themes: "Thèmes"
       secondary_url: "Lien secondaire"
       image_url: "Visuel"
       image_url_help: "Ajoutez soit l’URL d’une image distante, soit une image importée pour l’aperçu du média."
