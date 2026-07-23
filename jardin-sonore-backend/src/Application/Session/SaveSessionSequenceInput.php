@@ -10,6 +10,7 @@ use Symfony\Component\Uid\Uuid;
 
 final readonly class SaveSessionSequenceInput
 {
+    /** @param list<string> $instrumentUuids */
     public function __construct(
         public SessionSequenceType $type,
         public string $title,
@@ -22,9 +23,11 @@ final readonly class SaveSessionSequenceInput
         public ?string $secondaryUrl,
         public ?string $imageUrl,
         public bool $showLyricsByDefault,
+        public ?string $role,
         public ?Uuid $sourceUuid,
         public ?SessionSequenceSourceKind $sourceKind,
         public ?string $sourceTitle,
+        public array $instrumentUuids,
     ) {
     }
 }

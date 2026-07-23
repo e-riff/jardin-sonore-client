@@ -61,3 +61,4 @@ jardin-sonore-backend/data/*.json
 AGENTS.md
 .agents/
 .codex/
+.superpowers/

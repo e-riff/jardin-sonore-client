@@ -1,0 +1,43 @@
+<turbo-frame id="session-composer-overlay">
+    <section class="session-composer-overlay" role="dialog" aria-modal="true" aria-labelledby="session-activity-title">
+        <div class="session-composer-overlay__panel session-composer-overlay__panel--activity">
+            <div class="internal-page-heading">
+                <div>
+                    <p class="internal-eyebrow">{{ 'sessions.sequence.composer.activity_eyebrow'|trans({}, 'sessions') }}</p>
+                    <h2 id="session-activity-title">{{ 'sessions.sequence.composer.activity_heading'|trans({}, 'sessions') }}</h2>
+                    <p>{{ 'sessions.sequence.composer.activity_description'|trans({}, 'sessions') }}</p>
+                </div>
+                <a class="session-composer-overlay__close" href="{{ path('session_edit', { uuid: session.uuid }) }}" data-turbo-frame="_top" aria-label="{{ 'sessions.sequence.composer.close'|trans({}, 'sessions') }}">×</a>
+            </div>
+
+            {{ form_start(form, { attr: { class: 'internal-form internal-form--wide session-activity-form' } }) }}
+                <div class="internal-form__grid">
+                    {{ form_row(form.type) }}
+                    {{ form_row(form.title) }}
+                </div>
+                <div class="internal-form__grid">
+                    {{ form_row(form.role) }}
+                    {{ form_row(form.instrumentUuids) }}
+                </div>
+                {{ form_row(form.body) }}
+                {{ form_row(form.gestures) }}
+                {{ form_row(form.lyrics) }}
+                <div class="internal-form__grid">
+                    {{ form_row(form.primaryUrl) }}
+                    {{ form_row(form.secondaryUrl) }}
+                </div>
+                <div class="internal-form__grid">
+                    {{ form_row(form.imageUrl) }}
+                    {{ form_row(form.showLyricsByDefault) }}
+                </div>
+                {{ form_row(form.notes) }}
+                {{ form_widget(form.sourceUuid) }}
+                {{ form_widget(form.sourceTitle) }}
+                <div class="internal-form__actions">
+                    <a class="internal-button internal-button--secondary internal-form__back-action" href="{{ path('session_edit', { uuid: session.uuid }) }}" data-turbo-frame="_top">{{ 'sessions.sequence.form.back'|trans({}, 'sessions') }}</a>
+                    {{ form_widget(form.submit, { label: 'sessions.sequence.composer.create_activity'|trans({}, 'sessions') }) }}
+                </div>
+            {{ form_end(form) }}
+        </div>
+    </section>
+</turbo-frame>

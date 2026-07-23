@@ -34,6 +34,7 @@
             {{ form_row(form.lyrics) }}
             {{ form_row(form.gestures) }}
             {{ form_row(form.notes) }}
+            {{ form_row(form.instrumentUuids) }}
 
             <div class="internal-form__grid">
                 {{ form_row(form.primaryUrl) }}
@@ -49,8 +50,8 @@
             {{ form_widget(form.sourceTitle) }}
 
             <div class="internal-form__actions">
+                <a class="internal-button internal-button--secondary internal-form__back-action" href="{{ path('session_edit', { uuid: session.uuid }) }}">{{ 'sessions.sequence.form.back'|trans({}, 'sessions') }}</a>
                 {{ form_widget(form.submit) }}
-                <a class="internal-button internal-button--secondary" href="{{ path('session_edit', { uuid: session.uuid }) }}">{{ 'sessions.sequence.form.back'|trans({}, 'sessions') }}</a>
             </div>
         {{ form_end(form) }}
     </section>

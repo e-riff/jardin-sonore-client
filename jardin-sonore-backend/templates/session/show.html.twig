@@ -18,7 +18,7 @@
     <article class="internal-card">
         <section class="internal-page-heading" style="margin-bottom: 2rem;">
             <div>
-                <p class="internal-eyebrow">{{ session.sessionDate|date('d/m/Y') }} · {{ session.organizationName }}</p>
+                <p class="internal-eyebrow">{{ session.sessionDate|date('d/m/Y') }}</p>
                 <h1>{{ session.title }}</h1>
                 {% if session.theme %}
                     <p>{{ session.theme }}</p>
@@ -26,24 +26,10 @@
             </div>
         </section>
 
-        {% if session.materialSummary %}
-            <section class="internal-card" style="margin-bottom: 1.5rem;">
-                <h2>{{ 'sessions.preview.material_summary'|trans({}, 'sessions') }}</h2>
-                <p>{{ session.materialSummary|nl2br }}</p>
-            </section>
-        {% endif %}
-
-        {% if session.generalNotes %}
-            <section class="internal-card" style="margin-bottom: 1.5rem;">
-                <h2>{{ 'sessions.preview.general_notes'|trans({}, 'sessions') }}</h2>
-                <p>{{ session.generalNotes|nl2br }}</p>
-            </section>
-        {% endif %}
-
         <section>
             {% for sequence in session.sequences %}
                 <article class="internal-card" style="margin-bottom: 1rem;">
-                    <p class="internal-eyebrow">{{ loop.index }} · {{ sequence.type.translationKey()|trans({}, 'sessions') }}</p>
+                    <p class="internal-eyebrow">{{ loop.index }} · {% if sequence.role %}{{ sequence.role }} · {% endif %}{{ sequence.type.translationKey()|trans({}, 'sessions') }}</p>
                     <h2>{{ sequence.title }}</h2>
                     {% if sequence.subtitle %}
                         <p>{{ sequence.subtitle }}</p>
@@ -94,11 +80,5 @@
             {% endfor %}
         </section>
 
-        {% if session.furtherExploration %}
-            <section class="internal-card">
-                <h2>{{ 'sessions.preview.further_exploration'|trans({}, 'sessions') }}</h2>
-                <p>{{ session.furtherExploration|nl2br }}</p>
-            </section>
-        {% endif %}
     </article>
 {% endblock %}

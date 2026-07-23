@@ -8,6 +8,12 @@ use Symfony\Component\Uid\Uuid;
 
 final readonly class SessionSequence
 {
+    public ?string $role;
+
+    /** @var list<string> */
+    public array $instrumentUuids;
+
+    /** @param list<string> $instrumentUuids */
     public function __construct(
         public Uuid $uuid,
         public SessionSequenceType $type,
@@ -24,7 +30,14 @@ final readonly class SessionSequence
         public ?Uuid $sourceUuid = null,
         public ?SessionSequenceSourceKind $sourceKind = null,
         public ?string $sourceTitle = null,
+        ?string $role = null,
+        array $instrumentUuids = [],
     ) {
+        $this->role = self::nullableString($role);
+        $this->instrumentUuids = array_values(array_unique(array_filter(array_map(
+            static fn (mixed $instrumentUuid): string => is_string($instrumentUuid) ? trim($instrumentUuid) : '',
+            $instrumentUuids,
+        ), static fn (string $instrumentUuid): bool => '' !== $instrumentUuid)));
     }
 
     /**
@@ -45,6 +58,8 @@ final readonly class SessionSequence
             'secondaryUrl' => $this->secondaryUrl,
             'imageUrl' => $this->imageUrl,
             'showLyricsByDefault' => $this->showLyricsByDefault,
+            'role' => $this->role,
+            'instrumentUuids' => $this->instrumentUuids,
             'sourceUuid' => $this->sourceUuid?->toRfc4122(),
             'sourceKind' => $this->sourceKind?->value,
             'sourceTitle' => $this->sourceTitle,
@@ -69,6 +84,8 @@ final readonly class SessionSequence
             secondaryUrl: self::nullableString($payload['secondaryUrl'] ?? null),
             imageUrl: self::nullableString($payload['imageUrl'] ?? null),
             showLyricsByDefault: (bool) ($payload['showLyricsByDefault'] ?? false),
+            role: self::nullableString($payload['role'] ?? null),
+            instrumentUuids: is_array($payload['instrumentUuids'] ?? null) ? $payload['instrumentUuids'] : [],
             sourceUuid: isset($payload['sourceUuid']) && is_string($payload['sourceUuid']) && Uuid::isValid($payload['sourceUuid'])
                 ? Uuid::fromString($payload['sourceUuid'])
                 : null,

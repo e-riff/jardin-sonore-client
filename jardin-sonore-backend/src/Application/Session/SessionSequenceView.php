@@ -11,6 +11,7 @@ use Symfony\Component\Uid\Uuid;
 
 final readonly class SessionSequenceView
 {
+    /** @param list<string> $instrumentUuids */
     public function __construct(
         public Uuid $uuid,
         public SessionSequenceType $type,
@@ -24,9 +25,11 @@ final readonly class SessionSequenceView
         public ?string $secondaryUrl,
         public ?string $imageUrl,
         public bool $showLyricsByDefault,
+        public ?string $role,
         public ?Uuid $sourceUuid,
         public ?SessionSequenceSourceKind $sourceKind,
         public ?string $sourceTitle,
+        public array $instrumentUuids,
     ) {
     }
 
@@ -45,9 +48,11 @@ final readonly class SessionSequenceView
             secondaryUrl: $sessionSequence->secondaryUrl,
             imageUrl: $sessionSequence->imageUrl,
             showLyricsByDefault: $sessionSequence->showLyricsByDefault,
+            role: $sessionSequence->role,
             sourceUuid: $sessionSequence->sourceUuid,
             sourceKind: $sessionSequence->sourceKind,
             sourceTitle: $sessionSequence->sourceTitle,
+            instrumentUuids: $sessionSequence->instrumentUuids,
         );
     }
 }

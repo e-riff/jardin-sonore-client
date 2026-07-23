@@ -17,18 +17,10 @@ final class SessionSummaryFormModel
     #[Assert\NotNull]
     public ?DateTimeImmutable $sessionDate = null;
 
-    #[Assert\NotBlank]
     #[Assert\Length(max: 255)]
-    public string $organizationName = '';
-
-    #[Assert\Length(max: 255)]
-    public ?string $theme = null;
+    public ?string $subtitle = null;
 
     public ?string $generalNotes = null;
-
-    public ?string $materialSummary = null;
-
-    public ?string $furtherExploration = null;
 
     /**
      * @var list<string>
@@ -40,11 +32,8 @@ final class SessionSummaryFormModel
         $formModel = new self();
         $formModel->title = $sessionSummaryView->title;
         $formModel->sessionDate = $sessionSummaryView->sessionDate;
-        $formModel->organizationName = $sessionSummaryView->organizationName;
-        $formModel->theme = $sessionSummaryView->theme;
+        $formModel->subtitle = $sessionSummaryView->theme;
         $formModel->generalNotes = $sessionSummaryView->generalNotes;
-        $formModel->materialSummary = $sessionSummaryView->materialSummary;
-        $formModel->furtherExploration = $sessionSummaryView->furtherExploration;
         $formModel->instrumentUuids = $sessionSummaryView->instrumentUuids;
 
         return $formModel;
