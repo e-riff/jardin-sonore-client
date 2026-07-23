@@ -8,7 +8,7 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 - Architecture `Domain / Application / Infrastructure` deja en place, mais encore inegalement appliquee.
 - Backoffice metier interne disponible a la racine backend.
 - EasyAdmin est conserve comme backoffice technique sous `/backoffice`.
-- Annuaire, geographie, import ODS et mailing interne sont fonctionnels.
+- Annuaire, geographie, import ODS, mailing interne et le socle des seances sont fonctionnels.
 - La documentation de fonctionnement durable vit surtout dans :
   - `jardin-sonore-backend/README.md`
   - `jardin-sonore-backend/docs/directory-import.md`
@@ -48,7 +48,7 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 
 1. Stabiliser et clarifier le backend existant.
 2. Refaire le systeme de ciblage d'audience mailing et introduire les masques reutilisables.
-3. Concevoir puis lancer le module `resumes de seances`.
+3. Developper le `compositeur de seances` a partir du socle deja livre.
 4. Traiter la `facturation` apres les resumes de seances.
 5. Garder `espace client`, donnees publiques front et extensions comme lots ulterieurs.
 
@@ -140,14 +140,21 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 ### Lot 10. Preparation Du Prochain Module Metier
 
 - Statut : Prochain vrai sujet recommande
-- Preparer le cadrage des resumes de seances, en commençant par les modeles de seances si c'est bien le premier use case vise.
-- Identifier les briques reutilisables deja en place :
-  - layout interne ;
-  - conventions de cas d'usage ;
-  - conventions de lecture/ecriture ;
-  - approches de mapping ;
-  - patterns valides apres refacto.
-- Positionner la facturation en dependance aval plutot qu'en prochain module.
+- Le socle `resumes de seances` est deja en place : une seance contient des sequences ordonnees, ajoutees librement ou importees depuis les catalogues repertoire, medias et recommandations.
+- Objectif : transformer cette liste technique en `compositeur de seances` fluide et lisible.
+- Perimetre de cadrage :
+  - composer une seance a partir des catalogues et de blocs libres ;
+  - rendre l'ordre, le type et la source de chaque sequence immediatement lisibles ;
+  - simplifier le reordonnancement, en conservant une alternative accessible aux interactions avancees ;
+  - permettre d'editer ou de detacher une sequence sans modifier sa source catalogue ;
+  - renforcer la previsualisation dans l'ordre final.
+- Briques reutilisables deja disponibles :
+  - layout interne et composants UX Symfony deja en place ;
+  - conventions de cas d'usage, de lecture/ecriture et de mapping ;
+  - catalogues repertoire, medias et recommandations ;
+  - page de previsualisation de seance et cas d'usage de reordonnancement existant.
+- Orientation UX : `LiveComponent` pour la composition et les recherches, Stimulus pour les interactions locales telles que le glisser-deposer, Turbo pour les sous-ecrans ou formulaires isoles.
+- La facturation reste une dependance aval, apres ce module.
 - S'appuyer sur `jardin-sonore-backend/docs/architecture-boundaries.md` pour les nouvelles lectures UI et les nouveaux cas d'usage d'ecriture.
 
 ## Plus Tard
@@ -178,3 +185,4 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 - 2026-07-08 : la phase de refacto fine est consideree comme suffisamment mure pour s'arreter ; les derniers gains ont porte sur les readers geographiques DBAL, la resolution admin des contacts partages et la simplification de l'etat `MailingAudience`.
 - 2026-07-08 : une priorite produit supplementaire est ajoutee avant `resumes de seances` : refondre le ciblage d'audience mailing avec masques reutilisables, polygones, multi-cercles et communes materialisees.
 - 2026-07-10 : la refonte UX mailing, les masques reutilisables et l'extension d'audience post-envoi sont considers comme termines ; le prochain sujet redevient `resumes de seances`.
+- 2026-07-23 : le socle des seances et de leurs sequences est constate comme livre ; le prochain lot est precise comme le `compositeur de seances`.
