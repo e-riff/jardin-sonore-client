@@ -338,22 +338,27 @@ Lecture de l'audit :
   - [x] verifier que l'intention est plus claire apres changement.
 - Commit attendu : `refactor(symfony): use attributes where wiring becomes clearer`
 
-### Lot 8. Preparation Du Module Resumes De Seances
+### Lot 8. Compositeur De Seances
 
 - Statut : Prochain sujet
-- Objectif : preparer le terrain fonctionnel et architectural du prochain module.
+- Constat : le socle du module est deja livre. Une seance peut contenir des sequences ordonnees, creees librement ou importees depuis les catalogues repertoire, medias et recommandations.
+- Objectif : faire evoluer cette liste de sequences vers un compositeur de seances fluide et lisible.
 - Criteres de fin :
-  - la roadmap maitre decrit clairement le prochain module ;
-  - les conventions backend sont assez stables pour demarrer sans reposer les fondations.
-- Mini checklist avant demarrage :
-  - A ne pas rouvrir avant besoin concret :
-    - [ ] ne pas relancer de refacto transversal sur `EasyAdmin` ;
-    - [ ] ne pas rearchitecturer les batchs d'infrastructure qui restent franchement techniques.
+  - les sequences peuvent etre composees depuis les catalogues et des blocs libres ;
+  - leur ordre, leur type et leur source sont lisibles en un coup d'oeil ;
+  - le reordonnancement reste utilisable au clavier et sans interaction avancee ;
+  - une sequence importee peut etre adaptee sans modifier son element source ;
+  - la previsualisation restitue fidelement l'ordre final.
 - Checklist :
-  - [ ] preciser les dependances eventuelles avec la facturation ;
-  - [ ] lister les briques reutilisables deja pretes ;
-  - [ ] identifier ce qu'il faut construire avant le premier use case.
-- Commit attendu : `docs(product): prepare session summaries roadmap`
+  - [x] confirmer que la facturation reste une dependance aval ;
+  - [x] identifier les briques reutilisables deja pretes ;
+  - [x] constater le socle existant et son premier use case ;
+  - [ ] cadrer le parcours de composition et les informations visibles par sequence ;
+  - [ ] choisir le mecanisme de reordonnancement et son alternative accessible ;
+  - [ ] definir les regles d'edition et de detachement d'une sequence importee ;
+  - [ ] decouper la premiere tranche de livraison.
+- Orientation technique : LiveComponent pour la composition et les recherches, Stimulus pour les interactions locales et Turbo pour les sous-ecrans isoles.
+- Commit attendu : `docs(product): define session composer roadmap`
 
 ### Lot 9. Finition UX Mailing Et Blocs Reutilisables
 
@@ -402,7 +407,7 @@ Lecture de l'audit :
 
 ## Questions Ouvertes
 
-- Quelle sera la granularite fonctionnelle exacte des resumes de seances ?
+- Quel parcours de composition doit etre livre en premier dans le compositeur de seances ?
 - La facturation dependra-t-elle directement des resumes ou seulement d'une partie de leurs donnees ?
 - Faut-il creer un dossier `docs/architecture/` cote backend quand la matrice d'audit commencera a grossir ?
 
@@ -424,3 +429,4 @@ Lecture de l'audit :
 - 2026-07-08 - `FindInstrumentCatalogItems` n'injecte plus `EntityManagerInterface` et `SyncMunicipalitiesFromGeoGouvCommand` delegue ses lectures/ecritures techniques a des ports de geographie dedies.
 - 2026-07-08 - Point reporte au lot 6 : reevaluer les doublons entre repositories de domaine et repositories d'entite Doctrine pour eviter de tout avoir en double.
 - 2026-07-10 - Les lots 9 et 10 sont termines : UI mailing compacte/responsive, recommandations en table, extension d'audience post-envoi dedoublonnee et prechargement possible via masque.
+- 2026-07-23 - Le socle des seances est constate comme livre ; le prochain sujet est recadre en compositeur de seances.
