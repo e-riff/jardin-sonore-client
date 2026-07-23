@@ -33,6 +33,31 @@ final readonly class LocalMediaResourceFileStorage implements MediaResourceFileS
         return $this->store($uploadedFile, $this->imageUploadDirectory, self::IMAGE_PUBLIC_DIRECTORY, 'media image');
     }
 
+    public function delete(string $storedPath): void
+    {
+        foreach ([self::PRIMARY_PUBLIC_DIRECTORY => $this->primaryUploadDirectory, self::IMAGE_PUBLIC_DIRECTORY => $this->imageUploadDirectory] as $publicDirectory => $uploadDirectory) {
+            $prefix = $publicDirectory . '/';
+
+            if (!str_starts_with($storedPath, $prefix)) {
+                continue;
+            }
+
+            $filename = substr($storedPath, strlen($prefix));
+
+            if ('' === $filename || basename($filename) !== $filename) {
+                return;
+            }
+
+            $path = $uploadDirectory . '/' . $filename;
+
+            if (is_file($path)) {
+                unlink($path);
+            }
+
+            return;
+        }
+    }
+
     private function store(UploadedFile $uploadedFile, string $uploadDirectory, string $publicDirectory, string $label): string
     {
         if (!is_dir($uploadDirectory) && !mkdir($uploadDirectory, 0775, true) && !is_dir($uploadDirectory)) {

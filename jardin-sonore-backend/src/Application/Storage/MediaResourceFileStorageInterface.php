@@ -11,4 +11,6 @@ interface MediaResourceFileStorageInterface
     public function storePrimaryFile(UploadedFile $uploadedFile): string;
 
     public function storeImageFile(UploadedFile $uploadedFile): string;
+
+    public function delete(string $storedPath): void;
 }

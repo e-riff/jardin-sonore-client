@@ -40,7 +40,13 @@
             {% endif %}
             {{ form_row(form.imageFile) }}
             {{ form_row(form.active) }}
-            {{ form_row(form.submit) }}
+            <div class="internal-form__actions">
+                {{ form_widget(form.submit) }}
+                <a class="internal-button internal-button--secondary" href="{{ path('media_resource_index') }}">{{ 'sessions.media.form.back'|trans({}, 'sessions') }}</a>
+                {% if item %}
+                    <button type="button" class="internal-button internal-button--danger" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('media_resource_delete', { uuid: item.uuid.toRfc4122 }) }}" data-confirmation-dialog-item-value="{{ item.title }}" data-confirmation-dialog-token-value="{{ csrf_token('media_resource_delete_' ~ item.uuid.toRfc4122) }}">{{ 'sessions.media.table.delete'|trans({}, 'sessions') }}</button>
+                {% endif %}
+            </div>
         {{ form_end(form) }}
     </section>
 {% endblock %}

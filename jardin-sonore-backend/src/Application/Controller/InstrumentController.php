@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Controller;
 
 use App\Application\ContentCatalog\CreateInstrument;
+use App\Application\ContentCatalog\DeleteInstrument;
 use App\Application\ContentCatalog\GetInstrumentForEdit;
 use App\Application\ContentCatalog\SaveInstrumentInput;
 use App\Application\ContentCatalog\UpdateInstrument;
@@ -16,8 +17,8 @@ use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[Route('/instruments', name: 'instrument_')]
 final class InstrumentController extends AbstractController
@@ -142,6 +143,27 @@ final class InstrumentController extends AbstractController
             ],
             $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null,
         );
+    }
+
+    #[Route('/{uuid}/delete', name: 'delete', methods: ['POST'])]
+    public function delete(string $uuid, Request $request, DeleteInstrument $deleteInstrument): Response
+    {
+        if (!Uuid::isValid($uuid)) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$this->isCsrfTokenValid('instrument_delete_' . $uuid, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        try {
+            $deleteInstrument(Uuid::fromString($uuid));
+            $this->addFlash('success', ['message' => 'catalog.instrument.flash.deleted', 'domain' => 'catalog']);
+        } catch (InvalidArgumentException) {
+            throw $this->createNotFoundException();
+        }
+
+        return $this->redirectToRoute('instrument_index', status: Response::HTTP_SEE_OTHER);
     }
 
     private function createInput(InstrumentFormModel $formModel): SaveInstrumentInput

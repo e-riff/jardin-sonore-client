@@ -14,8 +14,8 @@ use App\Domain\Repository\InstrumentRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\InstrumentEntity;
 use App\Infrastructure\Doctrine\Entity\InstrumentTagEntity;
 use App\Infrastructure\Doctrine\Mapper\InstrumentMapper;
-use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use InvalidArgumentException;
@@ -60,6 +60,18 @@ final class InstrumentDoctrineRepository extends ServiceEntityRepository impleme
         $this->synchronizeTags($instrumentEntity, $instrument->getTags());
 
         $this->getEntityManager()->persist($instrumentEntity);
+        $this->getEntityManager()->flush();
+    }
+
+    public function delete(Instrument $instrument): void
+    {
+        $entity = $this->findOneBy(['uuid' => $instrument->getUuid()]);
+
+        if (!$entity instanceof InstrumentEntity) {
+            return;
+        }
+
+        $this->getEntityManager()->remove($entity);
         $this->getEntityManager()->flush();
     }
 
@@ -121,7 +133,10 @@ final class InstrumentDoctrineRepository extends ServiceEntityRepository impleme
                 active: $entity->isActive(),
                 updatedAt: $entity->getUpdatedAt(),
                 tags: array_values(array_map(
-                    static fn (InstrumentTagEntity $instrumentTagEntity): string => $instrumentTagEntity->getLabel(),
+                    static fn (InstrumentTagEntity $instrumentTagEntity): array => [
+                        'label' => $instrumentTagEntity->getLabel(),
+                        'color' => $instrumentTagEntity->getColor(),
+                    ],
                     $entity->getTags()->toArray(),
                 )),
             );

@@ -17,4 +17,6 @@ interface InstrumentRepositoryInterface
     public function findAllOrderedByName(): array;
 
     public function save(Instrument $instrument): void;
+
+    public function delete(Instrument $instrument): void;
 }

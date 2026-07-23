@@ -87,6 +87,7 @@ final class DashboardController extends AbstractDashboardController
         yield MenuItem::section('admin.menu.sessions');
         yield MenuItem::linkTo(InstrumentCrudController::class, 'admin.menu.instruments', 'fa fa-guitar');
         yield MenuItem::linkTo(InstrumentTagCrudController::class, 'admin.menu.instrument_tags', 'fa fa-tags');
+        yield MenuItem::linkTo(ThemeCrudController::class, 'admin.menu.themes', 'fa fa-palette');
         yield MenuItem::section('admin.menu.session_resources');
         yield MenuItem::linkTo(RepertoireItemCrudController::class, 'admin.menu.repertoire_items', 'fa fa-music');
         yield MenuItem::linkTo(MediaResourceCrudController::class, 'admin.menu.media_resources', 'fa fa-photo-film');

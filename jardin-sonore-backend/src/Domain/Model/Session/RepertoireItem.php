@@ -7,6 +7,7 @@ namespace App\Domain\Model\Session;
 use App\Domain\Model\Behavior\ActivableTrait;
 use App\Domain\Model\Behavior\UuidIdentifiableInterface;
 use App\Domain\Model\Behavior\UuidIdentifiableTrait;
+use App\Domain\Model\ContentCatalog\Theme;
 use DateTimeImmutable;
 use InvalidArgumentException;
 use Symfony\Component\Uid\Uuid;
@@ -26,10 +27,13 @@ final class RepertoireItem implements UuidIdentifiableInterface
     private array $linkedMediaUuids;
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
+    /** @var list<Theme> */
+    private array $themes;
 
     /**
      * @param list<RepertoireBlock> $contentBlocks
      * @param list<string>          $linkedMediaUuids
+     * @param list<Theme>           $themes
      */
     public function __construct(
         private RepertoireItemType $type,
@@ -43,12 +47,14 @@ final class RepertoireItem implements UuidIdentifiableInterface
         ?DateTimeImmutable $createdAt = null,
         ?DateTimeImmutable $updatedAt = null,
         ?Uuid $uuid = null,
+        array $themes = [],
     ) {
         $this->initializeUuid($uuid);
         $this->initializeActive($active);
         $this->createdAt = $createdAt ?? new DateTimeImmutable();
         $this->updatedAt = $updatedAt ?? new DateTimeImmutable();
         $this->updateContent($title, $source, $body, $contentBlocks, $notes, $linkedMediaUuids);
+        $this->setThemes($themes);
     }
 
     public function getType(): RepertoireItemType
@@ -102,6 +108,34 @@ final class RepertoireItem implements UuidIdentifiableInterface
     public function getUpdatedAt(): DateTimeImmutable
     {
         return $this->updatedAt;
+    }
+
+    /** @return list<Theme> */
+    public function getThemes(): array
+    {
+        return $this->themes;
+    }
+
+    /** @param list<Theme> $themes */
+    public function setThemes(array $themes): void
+    {
+        $this->themes = array_values($themes);
+    }
+
+    public function removeLinkedMedia(Uuid $mediaUuid): void
+    {
+        $mediaUuidString = $mediaUuid->toRfc4122();
+        $updatedLinkedMediaUuids = array_values(array_filter(
+            $this->linkedMediaUuids,
+            static fn (string $uuid): bool => $uuid !== $mediaUuidString,
+        ));
+
+        if ($updatedLinkedMediaUuids === $this->linkedMediaUuids) {
+            return;
+        }
+
+        $this->linkedMediaUuids = $updatedLinkedMediaUuids;
+        $this->updatedAt = new DateTimeImmutable();
     }
 
     public function getLyrics(): ?string

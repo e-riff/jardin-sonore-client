@@ -40,7 +40,7 @@ export default class extends Controller {
 
     addLine(event) {
         event.preventDefault();
-        this.appendBlock({ kind: "line" });
+        this.appendBlock({ kind: "line" }, event.currentTarget.dataset.position ?? "end");
     }
 
     kindChanged() {
@@ -79,7 +79,7 @@ export default class extends Controller {
         this.syncRows();
     }
 
-    appendBlock(payload) {
+    appendBlock(payload, position = "end") {
         const prototype = this.collectionTarget.dataset.prototype;
         if (!prototype) {
             return;
@@ -96,7 +96,11 @@ export default class extends Controller {
             return;
         }
 
-        this.collectionTarget.appendChild(row);
+        if (position === "start") {
+            this.collectionTarget.prepend(row);
+        } else {
+            this.collectionTarget.appendChild(row);
+        }
         this.applyPayload(row, payload);
         this.syncRows();
     }
@@ -119,12 +123,38 @@ export default class extends Controller {
     }
 
     syncRows() {
-        this.collectionTarget.querySelectorAll("[data-repertoire-block-row]").forEach((row) => {
+        this.collectionTarget.querySelectorAll("[data-repertoire-block-row]").forEach((row, index) => {
+            this.syncRowIndex(row, index);
             this.updateRowVisibility(row);
         });
 
         this.markSectionGroups();
         this.renderPreview();
+    }
+
+    syncRowIndex(row, index) {
+        row.querySelectorAll("[name], [id], label[for]").forEach((field) => {
+            if (field.name) {
+                field.name = field.name.replace(
+                    /(\[contentBlocks\]\[)\d+(\])/,
+                    `$1${index}$2`,
+                );
+            }
+
+            if (field.id) {
+                field.id = field.id.replace(
+                    /(_contentBlocks_)\d+(_)/,
+                    `$1${index}$2`,
+                );
+            }
+
+            if (field.htmlFor) {
+                field.htmlFor = field.htmlFor.replace(
+                    /(_contentBlocks_)\d+(_)/,
+                    `$1${index}$2`,
+                );
+            }
+        });
     }
 
     updateRowVisibility(row) {

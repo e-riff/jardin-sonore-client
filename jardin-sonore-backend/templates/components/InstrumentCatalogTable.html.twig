@@ -23,7 +23,8 @@
                         {% for tagOption in this.tagOptions %}
                             <button
                                 type="button"
-                                class="internal-badge instrument-catalog__tag-filter {{ this.isTagSelected(tagOption.uuid) ? 'internal-badge--primary is-selected' : 'internal-badge--muted' }}"
+                                class="internal-badge internal-badge--color instrument-catalog__tag-filter {{ this.isTagSelected(tagOption.uuid) ? 'is-selected' : '' }}"
+                                style="--badge-color: {{ tagOption.color }}"
                                 {{ live_action('toggleTag', { uuid: tagOption.uuid }) }}
                                 aria-pressed="{{ this.isTagSelected(tagOption.uuid) ? 'true' : 'false' }}"
                             >
@@ -88,9 +89,7 @@
                             {% for column, label in {
                                 name: 'catalog.instrument.table.name',
                                 tuning: 'catalog.instrument.table.tuning',
-                                quantity: 'catalog.instrument.table.quantity',
-                                active: 'catalog.instrument.table.active',
-                                updatedAt: 'catalog.instrument.table.updated_at'
+                                quantity: 'catalog.instrument.table.quantity'
                             } %}
                                 <th>
                                     <button
@@ -109,7 +108,7 @@
                     </thead>
                     <tbody>
                         {% for instrument in result.items %}
-                            <tr>
+                            <tr class="internal-table__row--clickable" tabindex="0" data-controller="catalog-row" data-catalog-row-url-value="{{ path('instrument_edit', { uuid: instrument.uuid.toRfc4122 }) }}" data-action="click->catalog-row#navigate keydown->catalog-row#navigateFromKeyboard">
                                 <td>
                                     <strong>{{ instrument.name }}</strong>
                                     {% if instrument.notes %}
@@ -121,28 +120,18 @@
                                 <td>{{ instrument.tuning ?? '—' }}</td>
                                 <td>{{ instrument.quantity ?? '—' }}</td>
                                 <td>
-                                    <span class="internal-badge internal-badge--{{ instrument.active ? 'secondary' : 'muted' }}">
-                                        {{ (instrument.active ? 'catalog.instrument.status.active' : 'catalog.instrument.status.inactive')|trans({}, 'catalog') }}
-                                    </span>
-                                </td>
-                                <td>{{ instrument.updatedAt|date('d/m/Y H:i') }}</td>
-                                <td>
                                     {% if instrument.tags is empty %}
                                         <span class="internal-table-note">—</span>
                                     {% else %}
                                         <div class="instrument-catalog__tags">
-                                            {% for tagLabel in instrument.tags %}
-                                                <span class="internal-badge internal-badge--primary">{{ tagLabel }}</span>
+                                            {% for tag in instrument.tags %}
+                                                <span class="internal-badge internal-badge--color" style="--badge-color: {{ tag.color }}">{{ tag.label }}</span>
                                             {% endfor %}
                                         </div>
                                     {% endif %}
                                 </td>
-                                <td>
-                                    <div class="instrument-catalog__actions">
-                                        <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('instrument_edit', { uuid: instrument.uuid.toRfc4122 }) }}">
-                                            {{ 'catalog.instrument.table.edit'|trans({}, 'catalog') }}
-                                        </a>
-                                    </div>
+                                <td data-catalog-row-ignore>
+                                    {% include 'components/_catalog_actions.html.twig' with { editUrl: path('instrument_edit', { uuid: instrument.uuid.toRfc4122 }), deleteUrl: path('instrument_delete', { uuid: instrument.uuid.toRfc4122 }), itemLabel: instrument.name, token: csrf_token('instrument_delete_' ~ instrument.uuid.toRfc4122), editLabel: 'catalog.instrument.table.edit'|trans({}, 'catalog'), deleteLabel: 'catalog.instrument.table.delete'|trans({}, 'catalog') } only %}
                                 </td>
                             </tr>
                         {% endfor %}

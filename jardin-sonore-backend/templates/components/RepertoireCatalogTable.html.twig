@@ -25,6 +25,7 @@
                             {% endfor %}
                         </select>
                     </div>
+                    <div class="internal-search__field internal-search__field--themes"><span>{{ 'sessions.repertoire.form.themes'|trans({}, 'sessions') }}</span><div class="instrument-catalog__tags">{% for themeOption in this.themeOptions %}<button type="button" class="internal-badge internal-badge--color instrument-catalog__tag-filter {{ themeOption.uuid in themeUuids ? 'is-selected' : '' }}" style="--badge-color: {{ themeOption.color }}" {{ live_action('toggleTheme', { uuid: themeOption.uuid }) }} aria-pressed="{{ themeOption.uuid in themeUuids ? 'true' : 'false' }}">{{ themeOption.label }}</button>{% endfor %}</div></div>
                 </div>
             </div>
         </div>
@@ -50,16 +51,29 @@
                 <table class="internal-table internal-table--responsive">
                     <thead>
                         <tr>
-                            <th>{{ 'sessions.repertoire.table.type'|trans({}, 'sessions') }}</th>
-                            <th>{{ 'sessions.repertoire.table.title'|trans({}, 'sessions') }}</th>
+                            {% for column, label in {
+                                type: 'sessions.repertoire.table.type',
+                                title: 'sessions.repertoire.table.title', theme: 'sessions.repertoire.table.themes'
+                            } %}
+                                <th>
+                                    <button
+                                        type="button"
+                                        class="instrument-catalog__sort-button{% if this.isSortedBy(column) %} is-active{% endif %}"
+                                        {{ live_action('sort', { column: column }) }}
+                                    >
+                                        <span>{{ label|trans({}, 'sessions') }}</span>
+                                        <span aria-hidden="true">{{ this.sortIconFor(column) }}</span>
+                                    </button>
+                                </th>
+                            {% endfor %}
                             <th>{{ 'sessions.repertoire.table.actions'|trans({}, 'sessions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in items %}
-                            <tr>
+                            <tr class="internal-table__row--clickable" tabindex="0" data-controller="catalog-row" data-catalog-row-url-value="{{ path('repertoire_edit', { uuid: item.uuid.toRfc4122 }) }}" data-action="click->catalog-row#navigate keydown->catalog-row#navigateFromKeyboard">
                                 <td data-label="{{ 'sessions.repertoire.table.type'|trans({}, 'sessions') }}">
-                                    <span class="internal-badge internal-badge--primary">{{ item.type.translationKey()|trans({}, 'sessions') }}</span>
+                                    <span class="internal-badge {{ item.type.value == 'fingerplay' ? 'internal-badge--secondary' : 'internal-badge--primary' }}">{{ item.type.translationKey()|trans({}, 'sessions') }}</span>
                                 </td>
                                 <td data-label="{{ 'sessions.repertoire.table.title'|trans({}, 'sessions') }}">
                                     <strong>{{ item.title }}</strong>
@@ -67,16 +81,15 @@
                                         <span class="internal-table-note">{{ item.source }}</span>
                                     {% endif %}
                                 </td>
-                                <td data-label="{{ 'sessions.repertoire.table.actions'|trans({}, 'sessions') }}">
+                                <td data-label="{{ 'sessions.repertoire.table.themes'|trans({}, 'sessions') }}"><div class="instrument-catalog__tags">{% for theme in item.themes %}<span class="internal-badge internal-badge--color" style="--badge-color: {{ theme.color }}">{{ theme.label }}</span>{% endfor %}</div></td>
+                                <td data-catalog-row-ignore data-label="{{ 'sessions.repertoire.table.actions'|trans({}, 'sessions') }}">
                                     <div class="instrument-catalog__actions">
                                         {% if sessionQuery %}
                                             <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('session_sequence_new', { uuid: sessionQuery, repertoire: item.uuid.toRfc4122 }) }}">
                                                 {{ 'sessions.repertoire.table.insert'|trans({}, 'sessions') }}
                                             </a>
                                         {% endif %}
-                                        <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('repertoire_edit', { uuid: item.uuid.toRfc4122 }) }}">
-                                            {{ 'sessions.repertoire.table.edit'|trans({}, 'sessions') }}
-                                        </a>
+                                        {% include 'components/_catalog_actions.html.twig' with { editUrl: path('repertoire_edit', { uuid: item.uuid.toRfc4122 }), deleteUrl: path('repertoire_delete', { uuid: item.uuid.toRfc4122 }), itemLabel: item.title, token: csrf_token('repertoire_delete_' ~ item.uuid.toRfc4122), editLabel: 'sessions.repertoire.table.edit'|trans({}, 'sessions'), deleteLabel: 'sessions.repertoire.table.delete'|trans({}, 'sessions') } only %}
                                     </div>
                                 </td>
                             </tr>

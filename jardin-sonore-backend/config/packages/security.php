@@ -36,6 +36,12 @@ return App::config([
                     'enable_csrf' => true,
                     'default_target_path' => '/',
                 ],
+                'remember_me' => [
+                    'secret' => '%kernel.secret%',
+                    'lifetime' => 2592000,
+                    'path' => '/',
+                    'secure' => 'auto',
+                ],
                 'logout' => [
                     'path' => 'app_logout',
                     'target' => 'app_login',

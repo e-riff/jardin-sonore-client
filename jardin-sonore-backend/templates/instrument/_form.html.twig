@@ -32,5 +32,8 @@
         <a class="internal-button internal-button--secondary" href="{{ path('instrument_index') }}">
             {{ 'catalog.instrument.form.back'|trans({}, 'catalog') }}
         </a>
+        {% if instrument is defined %}
+            <button type="button" class="internal-button internal-button--danger" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('instrument_delete', { uuid: instrument.uuid.toRfc4122 }) }}" data-confirmation-dialog-item-value="{{ instrument.name }}" data-confirmation-dialog-token-value="{{ csrf_token('instrument_delete_' ~ instrument.uuid.toRfc4122) }}">{{ 'catalog.instrument.table.delete'|trans({}, 'catalog') }}</button>
+        {% endif %}
     </div>
 {{ form_end(form) }}

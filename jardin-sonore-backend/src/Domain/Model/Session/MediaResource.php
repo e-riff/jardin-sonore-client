@@ -7,6 +7,7 @@ namespace App\Domain\Model\Session;
 use App\Domain\Model\Behavior\ActivableTrait;
 use App\Domain\Model\Behavior\UuidIdentifiableInterface;
 use App\Domain\Model\Behavior\UuidIdentifiableTrait;
+use App\Domain\Model\ContentCatalog\Theme;
 use DateTimeImmutable;
 use InvalidArgumentException;
 use Symfony\Component\Uid\Uuid;
@@ -24,7 +25,10 @@ final class MediaResource implements UuidIdentifiableInterface
     private ?string $imageUrl;
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
+    /** @var list<Theme> */
+    private array $themes;
 
+    /** @param list<Theme> $themes */
     public function __construct(
         private MediaResourceType $type,
         string $title,
@@ -37,12 +41,14 @@ final class MediaResource implements UuidIdentifiableInterface
         ?DateTimeImmutable $createdAt = null,
         ?DateTimeImmutable $updatedAt = null,
         ?Uuid $uuid = null,
+        array $themes = [],
     ) {
         $this->initializeUuid($uuid);
         $this->initializeActive($active);
         $this->createdAt = $createdAt ?? new DateTimeImmutable();
         $this->updatedAt = $updatedAt ?? new DateTimeImmutable();
         $this->updateContent($title, $primaryUrl, $source, $description, $secondaryUrl, $imageUrl);
+        $this->setThemes($themes);
     }
 
     public function getType(): MediaResourceType
@@ -88,6 +94,18 @@ final class MediaResource implements UuidIdentifiableInterface
     public function getUpdatedAt(): DateTimeImmutable
     {
         return $this->updatedAt;
+    }
+
+    /** @return list<Theme> */
+    public function getThemes(): array
+    {
+        return $this->themes;
+    }
+
+    /** @param list<Theme> $themes */
+    public function setThemes(array $themes): void
+    {
+        $this->themes = array_values($themes);
     }
 
     public function updateContent(

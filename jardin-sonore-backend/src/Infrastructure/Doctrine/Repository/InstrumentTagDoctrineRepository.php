@@ -8,8 +8,8 @@ use App\Domain\Model\ContentCatalog\InstrumentTag;
 use App\Domain\Repository\InstrumentTagRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\InstrumentTagEntity;
 use App\Infrastructure\Doctrine\Mapper\InstrumentTagMapper;
-use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
 

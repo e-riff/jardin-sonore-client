@@ -40,6 +40,14 @@ a {
     color: inherit;
 }
 
+button {
+    cursor: pointer;
+}
+
+button:disabled {
+    cursor: not-allowed;
+}
+
 ::selection {
     background: var(--color-primary-fixed);
     color: var(--color-primary);
@@ -532,6 +540,13 @@ a {
     color: #9e2f24;
 }
 
+.internal-badge--color {
+    background: color-mix(in oklab, var(--badge-color) 18%, white);
+    color: color-mix(in oklab, var(--badge-color) 84%, #1f2937);
+}
+
+.internal-badge--color::before { background: var(--badge-color); }
+
 .internal-button {
     display: inline-flex;
     width: fit-content;
@@ -594,6 +609,69 @@ a {
     cursor: not-allowed;
     opacity: 0.65;
     transform: none;
+}
+
+.internal-confirmation-dialog {
+    width: min(100% - 32px, 480px);
+    border: 0;
+    border-radius: 24px;
+    padding: 0;
+    background: var(--color-surface-container-lowest);
+    color: var(--color-on-surface);
+    box-shadow: 0 24px 80px rgb(48 32 26 / 0.28);
+}
+
+.internal-confirmation-dialog::backdrop {
+    background: rgb(38 27 22 / 0.48);
+    backdrop-filter: blur(3px);
+}
+
+.internal-confirmation-dialog__panel {
+    display: grid;
+    gap: 16px;
+    position: relative;
+    padding: 28px;
+}
+
+.internal-confirmation-dialog__panel h2,
+.internal-confirmation-dialog__panel p {
+    margin: 0;
+}
+
+.internal-confirmation-dialog__panel p {
+    color: var(--color-on-surface-variant);
+}
+
+.internal-confirmation-dialog__close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    display: inline-grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-primary);
+    font: inherit;
+    font-size: 1.7rem;
+    line-height: 1;
+}
+
+.internal-confirmation-dialog__close:hover,
+.internal-confirmation-dialog__close:focus-visible {
+    background: color-mix(in oklab, var(--color-primary-fixed) 55%, white);
+}
+
+.internal-confirmation-dialog__actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.internal-confirmation-dialog__actions form {
+    margin: 0;
 }
 
 .internal-link {
@@ -760,11 +838,18 @@ a {
     line-height: 1.5;
 }
 
-.internal-form__actions {
+form.internal-form > .internal-form__actions {
     display: flex;
+    align-items: center;
+    flex-direction: row;
     flex-wrap: wrap;
     gap: 10px;
+    justify-content: flex-end;
     margin-top: 8px;
+}
+
+form.internal-form > .internal-form__actions > .internal-button {
+    width: auto;
 }
 
 .internal-form__grid {
@@ -1144,6 +1229,19 @@ a {
     color: var(--color-on-surface-variant);
 }
 
+.internal-table tbody tr {
+    transition: background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.internal-table tbody tr:hover td,
+.internal-table tbody tr:focus-visible td {
+    background: color-mix(in oklab, var(--color-primary-fixed) 28%, white);
+}
+
+.internal-table__row--clickable {
+    cursor: pointer;
+}
+
 .internal-table tbody tr:last-child td {
     border-bottom: 0;
 }
@@ -1275,7 +1373,7 @@ a {
 }
 
 .instrument-catalog__tag-filter.is-selected {
-    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-primary) 50%, white);
+    box-shadow: inset 0 0 0 2px var(--badge-color, var(--color-primary));
 }
 
 .instrument-catalog__tag-filter:hover {
@@ -1284,8 +1382,15 @@ a {
 
 .instrument-catalog__actions {
     display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
     justify-content: flex-end;
 }
+
+.internal-search__field--themes { min-width: min(100%, 27rem); }
+
+.internal-icon-button { align-items: center; background: #fff; border: 1px solid rgba(30, 41, 59, .18); border-radius: .75rem; color: #334155; display: inline-flex; font-size: 1rem; height: 2.25rem; justify-content: center; text-decoration: none; width: 2.25rem; }
+.internal-icon-button--danger { color: #b91c1c; }
 
 .instrument-catalog__pagination {
     display: flex;
@@ -1651,8 +1756,8 @@ a {
 
 .repertoire-block-editor {
     display: grid;
-    gap: 18px;
-    padding: 20px;
+    gap: 12px;
+    padding: 16px;
     border: 1px solid color-mix(in oklab, var(--color-outline-variant) 45%, white);
     border-radius: 24px;
     background: color-mix(in oklab, var(--color-surface-container) 65%, white);
@@ -1682,7 +1787,7 @@ a {
 
 .repertoire-block-editor__rows {
     display: grid;
-    gap: 8px;
+    gap: 6px;
 }
 
 .repertoire-block-row {
@@ -1690,7 +1795,7 @@ a {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: start;
     gap: 10px;
-    padding: 10px 12px;
+    padding: 8px 10px;
     border-radius: 16px;
     border: 1px solid color-mix(in oklab, var(--color-outline-variant) 28%, white);
     background: color-mix(in oklab, var(--color-surface) 88%, white);
@@ -1718,7 +1823,7 @@ a {
 
 .repertoire-block-row textarea,
 .repertoire-block-row select {
-    min-height: 44px;
+    min-height: 38px;
     width: 100%;
 }
 
@@ -1734,10 +1839,17 @@ a {
     justify-content: flex-end;
 }
 
-.repertoire-block-editor__footer {
+.repertoire-block-editor__add-controls {
     display: flex;
     justify-content: flex-start;
-    padding-top: 4px;
+}
+
+.repertoire-block-editor__add-button {
+    min-width: 32px;
+    min-height: 32px;
+    padding: 2px 9px;
+    font-size: 1.1rem;
+    line-height: 1;
 }
 
 .repertoire-block-row[data-section-lead="true"] {
@@ -2076,12 +2188,23 @@ a {
         border-radius: 26px;
     }
 
-    .internal-form__actions {
+    form.internal-form > .internal-form__actions {
         align-items: stretch;
         flex-direction: column;
     }
 
-    .internal-form__actions .internal-button {
+    form.internal-form > .internal-form__actions .internal-button {
+        width: 100%;
+    }
+
+    .internal-confirmation-dialog__actions {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .internal-confirmation-dialog__actions .internal-button,
+    .internal-confirmation-dialog__actions form {
         width: 100%;
     }
 

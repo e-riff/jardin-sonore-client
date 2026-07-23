@@ -16,4 +16,6 @@ interface RepertoireItemRepositoryInterface
     public function search(?RepertoireItemType $repertoireItemType = null, ?string $query = null, bool $activeOnly = false): array;
 
     public function save(RepertoireItem $repertoireItem): void;
+
+    public function delete(RepertoireItem $repertoireItem): void;
 }

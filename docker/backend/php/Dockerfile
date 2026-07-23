@@ -1,4 +1,4 @@
-FROM php:8.4-fpm
+FROM php:8.5-fpm
 
 ARG HOST_UID=1000
 ARG HOST_GID=1000
@@ -29,11 +29,8 @@ RUN apt-get update \
         exif \
         gd \
         intl \
-        mbstring \
-        opcache \
         pcntl \
         pdo_mysql \
-        sockets \
         zip \
     && curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | bash \
     && apt-get install -y --no-install-recommends symfony-cli \

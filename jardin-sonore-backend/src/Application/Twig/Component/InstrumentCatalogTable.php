@@ -145,7 +145,7 @@ final class InstrumentCatalogTable
     }
 
     /**
-     * @return list<array{uuid:string,label:string}>
+     * @return list<array{uuid:string,label:string,color:string}>
      */
     public function getTagOptions(): array
     {
@@ -153,6 +153,7 @@ final class InstrumentCatalogTable
             static fn ($instrumentTag): array => [
                 'uuid' => $instrumentTag->getUuid()->toRfc4122(),
                 'label' => $instrumentTag->getLabel(),
+                'color' => $instrumentTag->getColor(),
             ],
             $this->instrumentTagRepository->findAllOrderedByLabel(),
         );

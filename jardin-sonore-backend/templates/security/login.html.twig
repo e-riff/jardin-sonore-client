@@ -22,6 +22,10 @@
             </label>
 
             <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+            <label style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" name="_remember_me" value="1">
+                <span>{{ 'security.login.remember_me'|trans({}, 'security') }}</span>
+            </label>
 
             <button type="submit" style="padding: 11px 14px; border: 0; border-radius: 6px; background: #23423d; color: #fff; font-weight: 700;">
                 {{ 'security.login.submit'|trans({}, 'security') }}

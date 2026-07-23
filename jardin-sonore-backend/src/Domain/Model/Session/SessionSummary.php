@@ -186,6 +186,22 @@ final class SessionSummary implements UuidIdentifiableInterface
         $this->updatedAt = new DateTimeImmutable();
     }
 
+    public function removeInstrument(Uuid $instrumentUuid): void
+    {
+        $instrumentUuidString = $instrumentUuid->toRfc4122();
+        $updatedInstrumentUuids = array_values(array_filter(
+            $this->instrumentUuids,
+            static fn (string $uuid): bool => $uuid !== $instrumentUuidString,
+        ));
+
+        if ($updatedInstrumentUuids === $this->instrumentUuids) {
+            return;
+        }
+
+        $this->instrumentUuids = $updatedInstrumentUuids;
+        $this->updatedAt = new DateTimeImmutable();
+    }
+
     public function replaceSequence(SessionSequence $sessionSequence): void
     {
         foreach ($this->sequences as $index => $existingSequence) {
