@@ -158,10 +158,6 @@ final class SessionSummary implements UuidIdentifiableInterface
             throw new InvalidArgumentException('Session summary title cannot be blank.');
         }
 
-        if ('' === trim($organizationName)) {
-            throw new InvalidArgumentException('Session summary organization name cannot be blank.');
-        }
-
         $this->title = trim($title);
         $this->sessionDate = $sessionDate;
         $this->organizationName = trim($organizationName);
@@ -183,6 +179,7 @@ final class SessionSummary implements UuidIdentifiableInterface
     public function addSequence(SessionSequence $sessionSequence): void
     {
         $this->sequences[] = $sessionSequence;
+        $this->addSequenceInstruments($sessionSequence);
         $this->updatedAt = new DateTimeImmutable();
     }
 
@@ -207,6 +204,7 @@ final class SessionSummary implements UuidIdentifiableInterface
         foreach ($this->sequences as $index => $existingSequence) {
             if ($existingSequence->uuid->equals($sessionSequence->uuid)) {
                 $this->sequences[$index] = $sessionSequence;
+                $this->addSequenceInstruments($sessionSequence);
                 $this->updatedAt = new DateTimeImmutable();
 
                 return;
@@ -233,6 +231,39 @@ final class SessionSummary implements UuidIdentifiableInterface
     public function moveSequenceDown(Uuid $sequenceUuid): void
     {
         $this->moveSequence($sequenceUuid, 1);
+    }
+
+    /**
+     * @param list<Uuid> $sequenceUuids
+     */
+    public function reorderSequences(array $sequenceUuids): void
+    {
+        $expectedSequenceUuids = array_map(
+            static fn (SessionSequence $sessionSequence): string => $sessionSequence->uuid->toRfc4122(),
+            $this->sequences,
+        );
+        $requestedSequenceUuids = array_map(
+            static fn (Uuid $sequenceUuid): string => $sequenceUuid->toRfc4122(),
+            $sequenceUuids,
+        );
+
+        if (count($expectedSequenceUuids) !== count($requestedSequenceUuids)
+            || count($requestedSequenceUuids) !== count(array_unique($requestedSequenceUuids))
+            || array_diff($expectedSequenceUuids, $requestedSequenceUuids)
+            || array_diff($requestedSequenceUuids, $expectedSequenceUuids)) {
+            throw new InvalidArgumentException('Session sequence order must be an exact permutation.');
+        }
+
+        $sequencesByUuid = [];
+        foreach ($this->sequences as $sessionSequence) {
+            $sequencesByUuid[$sessionSequence->uuid->toRfc4122()] = $sessionSequence;
+        }
+
+        $this->sequences = array_map(
+            static fn (string $sequenceUuid): SessionSequence => $sequencesByUuid[$sequenceUuid],
+            $requestedSequenceUuids,
+        );
+        $this->updatedAt = new DateTimeImmutable();
     }
 
     private function moveSequence(Uuid $sequenceUuid, int $direction): void
@@ -264,5 +295,13 @@ final class SessionSummary implements UuidIdentifiableInterface
         $trimmedValue = trim($value);
 
         return '' === $trimmedValue ? null : $trimmedValue;
+    }
+
+    private function addSequenceInstruments(SessionSequence $sessionSequence): void
+    {
+        $this->instrumentUuids = array_values(array_unique([
+            ...$this->instrumentUuids,
+            ...$sessionSequence->instrumentUuids,
+        ]));
     }
 }

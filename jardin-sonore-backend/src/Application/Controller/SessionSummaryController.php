@@ -16,13 +16,20 @@ use App\Application\Session\GetSessionRecommendationForEdit;
 use App\Application\Session\GetSessionSummary;
 use App\Application\Session\MoveSessionSequence;
 use App\Application\Session\RemoveSessionSequence;
+use App\Application\Session\ReorderSessionSequences;
 use App\Application\Session\SaveSessionSequenceInput;
 use App\Application\Session\SaveSessionSummaryInput;
+use App\Application\Session\SearchMediaResources;
+use App\Application\Session\SearchRepertoireItems;
+use App\Application\Session\SearchSessionRecommendations;
 use App\Application\Session\SearchSessionSummaries;
+use App\Application\Session\SessionSummaryView;
 use App\Application\Session\UpdateSessionSequence;
+use App\Application\Session\UpdateSessionSequenceRole;
 use App\Application\Session\UpdateSessionSummary;
 use App\Domain\Model\Session\MediaResourceType;
 use DateTimeImmutable;
+use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -80,7 +87,7 @@ final class SessionSummaryController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $updateSessionSummary($sessionSummaryView->uuid, $this->createSummaryInput($formModel));
+            $updateSessionSummary($sessionSummaryView->uuid, $this->createSummaryInput($formModel, $sessionSummaryView));
             $this->addFlash('success', [
                 'message' => 'sessions.summary.flash.updated',
                 'domain' => 'sessions',
@@ -118,6 +125,7 @@ final class SessionSummaryController extends AbstractController
         AddSessionSequence $addSessionSequence,
     ): Response {
         $sessionSummaryView = $this->getSessionSummaryView($uuid, $getSessionSummary);
+        $openedFromComposer = $request->query->getBoolean('composer');
         $formModel = new SessionSequenceFormModel();
 
         $repertoireUuid = $request->query->getString('repertoire');
@@ -146,6 +154,13 @@ final class SessionSummaryController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $addSessionSequence($sessionSummaryView->uuid, $this->createSequenceInput($formModel));
+
+            if ($openedFromComposer) {
+                return $this->render('session/composer_activity.stream.html.twig', [
+                    'session' => $this->getSessionSummaryView($uuid, $getSessionSummary),
+                ], new Response(headers: ['Content-Type' => 'text/vnd.turbo-stream.html']));
+            }
+
             $this->addFlash('success', [
                 'message' => 'sessions.sequence.flash.created',
                 'domain' => 'sessions',
@@ -156,7 +171,7 @@ final class SessionSummaryController extends AbstractController
             ], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->render('session/sequence_form.html.twig', [
+        return $this->render($openedFromComposer ? 'session/composer_activity_form.html.twig' : 'session/sequence_form.html.twig', [
             'form' => $form->createView(),
             'hasErrors' => $form->isSubmitted() && !$form->isValid(),
             'session' => $sessionSummaryView,
@@ -268,16 +283,141 @@ final class SessionSummaryController extends AbstractController
         return $this->redirectToRoute('session_edit', ['uuid' => $uuid], Response::HTTP_SEE_OTHER);
     }
 
-    private function createSummaryInput(SessionSummaryFormModel $sessionSummaryFormModel): SaveSessionSummaryInput
-    {
+    #[Route('/{uuid}/sequences/{sequenceUuid}/role', name: 'sequence_role', methods: ['POST'])]
+    public function updateSequenceRole(
+        string $uuid,
+        string $sequenceUuid,
+        Request $request,
+        UpdateSessionSequenceRole $updateSessionSequenceRole,
+    ): Response {
+        if (!Uuid::isValid($uuid) || !Uuid::isValid($sequenceUuid)) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$this->isCsrfTokenValid('session_sequence_role_' . $sequenceUuid, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $updateSessionSequenceRole(
+            Uuid::fromString($uuid),
+            Uuid::fromString($sequenceUuid),
+            $request->request->getString('role'),
+        );
+
+        return $this->redirectToRoute('session_edit', ['uuid' => $uuid], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/{uuid}/sequences/reorder', name: 'sequence_reorder', methods: ['POST'], priority: 10)]
+    public function reorderSequences(
+        string $uuid,
+        Request $request,
+        ReorderSessionSequences $reorderSessionSequences,
+    ): Response {
+        if (!Uuid::isValid($uuid)) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$this->isCsrfTokenValid('session_sequence_reorder_' . $uuid, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $sequenceUuidStrings = $request->request->all('sequenceUuids');
+        if (!array_all($sequenceUuidStrings, static fn (mixed $sequenceUuid): bool => is_string($sequenceUuid) && Uuid::isValid($sequenceUuid))) {
+            return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        try {
+            $reorderSessionSequences(
+                Uuid::fromString($uuid),
+                array_map(static fn (string $sequenceUuid): Uuid => Uuid::fromString($sequenceUuid), $sequenceUuidStrings),
+            );
+        } catch (InvalidArgumentException) {
+            return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        return new Response(status: Response::HTTP_NO_CONTENT);
+    }
+
+    #[Route('/{uuid}/composer/add', name: 'composer_add', methods: ['GET', 'POST'])]
+    public function composerAdd(
+        string $uuid,
+        Request $request,
+        GetSessionSummary $getSessionSummary,
+        SearchRepertoireItems $searchRepertoireItems,
+        SearchMediaResources $searchMediaResources,
+        SearchSessionRecommendations $searchSessionRecommendations,
+        GetRepertoireItemForEdit $getRepertoireItemForEdit,
+        GetMediaResourceForEdit $getMediaResourceForEdit,
+        GetSessionRecommendationForEdit $getSessionRecommendationForEdit,
+        AddSessionSequence $addSessionSequence,
+    ): Response {
+        $sessionSummaryView = $this->getSessionSummaryView($uuid, $getSessionSummary);
+        $catalog = $request->query->getString('catalog', 'repertoire');
+        if (!in_array($catalog, ['repertoire', 'media', 'recommendation'], true)) {
+            throw $this->createNotFoundException();
+        }
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('session_sequence_add_' . $uuid, (string) $request->request->get('_token'))) {
+                throw $this->createAccessDeniedException();
+            }
+
+            $sourceUuid = $request->request->getString('sourceUuid');
+            if (!Uuid::isValid($sourceUuid)) {
+                throw $this->createNotFoundException();
+            }
+
+            $sourceUuidObject = Uuid::fromString($sourceUuid);
+            $formModel = match ($catalog) {
+                'repertoire' => ($repertoireItemView = $getRepertoireItemForEdit($sourceUuidObject))
+                    ? SessionSequenceFormModel::fromRepertoireItemView($repertoireItemView)
+                    : null,
+                'media' => ($mediaResourceView = $getMediaResourceForEdit($sourceUuidObject))
+                    ? SessionSequenceFormModel::fromMediaResourceView($mediaResourceView)
+                    : null,
+                'recommendation' => ($sessionRecommendationView = $getSessionRecommendationForEdit($sourceUuidObject))
+                    ? SessionSequenceFormModel::fromSessionRecommendationView($sessionRecommendationView)
+                    : null,
+            };
+
+            if (null === $formModel) {
+                throw $this->createNotFoundException();
+            }
+
+            $addSessionSequence($sessionSummaryView->uuid, $this->createSequenceInput($formModel));
+            $updatedSessionSummaryView = $this->getSessionSummaryView($uuid, $getSessionSummary);
+
+            return $this->render('session/composer_add.stream.html.twig', [
+                'session' => $updatedSessionSummaryView,
+            ], new Response(headers: ['Content-Type' => 'text/vnd.turbo-stream.html']));
+        }
+
+        $catalogItems = match ($catalog) {
+            'repertoire' => $searchRepertoireItems(query: $request->query->getString('query'), activeOnly: true),
+            'media' => $searchMediaResources(query: $request->query->getString('query'), activeOnly: true),
+            'recommendation' => $searchSessionRecommendations(query: $request->query->getString('query'), activeOnly: true),
+        };
+
+        return $this->render('session/composer_add.html.twig', [
+            'catalog' => $catalog,
+            'catalogItems' => $catalogItems,
+            'query' => $request->query->getString('query'),
+            'session' => $sessionSummaryView,
+        ]);
+    }
+
+    private function createSummaryInput(
+        SessionSummaryFormModel $sessionSummaryFormModel,
+        ?SessionSummaryView $existingSessionSummaryView = null,
+    ): SaveSessionSummaryInput {
         return new SaveSessionSummaryInput(
             title: $sessionSummaryFormModel->title,
             sessionDate: $sessionSummaryFormModel->sessionDate ?? new DateTimeImmutable(),
-            organizationName: $sessionSummaryFormModel->organizationName,
-            theme: $sessionSummaryFormModel->theme,
+            organizationName: null === $existingSessionSummaryView ? '' : $existingSessionSummaryView->organizationName,
+            theme: $sessionSummaryFormModel->subtitle,
             generalNotes: $sessionSummaryFormModel->generalNotes,
-            materialSummary: $sessionSummaryFormModel->materialSummary,
-            furtherExploration: $sessionSummaryFormModel->furtherExploration,
+            materialSummary: $existingSessionSummaryView?->materialSummary,
+            furtherExploration: $existingSessionSummaryView?->furtherExploration,
             instrumentUuids: $sessionSummaryFormModel->instrumentUuids,
         );
     }
@@ -296,15 +436,17 @@ final class SessionSummaryController extends AbstractController
             secondaryUrl: $sessionSequenceFormModel->secondaryUrl,
             imageUrl: $sessionSequenceFormModel->imageUrl,
             showLyricsByDefault: $sessionSequenceFormModel->showLyricsByDefault,
+            role: $sessionSequenceFormModel->role,
             sourceUuid: null !== $sessionSequenceFormModel->sourceUuid && Uuid::isValid($sessionSequenceFormModel->sourceUuid)
                 ? Uuid::fromString($sessionSequenceFormModel->sourceUuid)
                 : null,
             sourceKind: $sessionSequenceFormModel->sourceKind,
             sourceTitle: $sessionSequenceFormModel->sourceTitle,
+            instrumentUuids: $sessionSequenceFormModel->instrumentUuids,
         );
     }
 
-    private function getSessionSummaryView(string $uuid, GetSessionSummary $getSessionSummary): \App\Application\Session\SessionSummaryView
+    private function getSessionSummaryView(string $uuid, GetSessionSummary $getSessionSummary): SessionSummaryView
     {
         if (!Uuid::isValid($uuid)) {
             throw $this->createNotFoundException();

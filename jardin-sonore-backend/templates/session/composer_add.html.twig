@@ -1,0 +1,46 @@
+<turbo-frame id="session-composer-overlay">
+    <section class="session-composer-overlay" role="dialog" aria-modal="true" aria-labelledby="session-composer-add-title">
+        <div class="session-composer-overlay__panel">
+            <div class="internal-page-heading">
+                <div>
+                    <p class="internal-eyebrow">{{ 'sessions.sequence.composer.add_eyebrow'|trans({}, 'sessions') }}</p>
+                    <h2 id="session-composer-add-title">{{ 'sessions.sequence.composer.add_heading'|trans({}, 'sessions') }}</h2>
+                </div>
+                <a class="session-composer-overlay__close" href="{{ path('session_edit', { uuid: session.uuid }) }}" data-turbo-frame="_top" aria-label="{{ 'sessions.sequence.composer.close'|trans({}, 'sessions') }}">×</a>
+            </div>
+            <a class="session-composer-overlay__activity" href="{{ path('session_sequence_new', { uuid: session.uuid, composer: 1 }) }}">
+                <strong>{{ 'sessions.sequence.composer.add_activity'|trans({}, 'sessions') }}</strong>
+                <span>{{ 'sessions.sequence.composer.add_activity_help'|trans({}, 'sessions') }}</span>
+            </a>
+            <nav class="session-composer-overlay__tabs" aria-label="{{ 'sessions.sequence.composer.catalogs'|trans({}, 'sessions') }}">
+                {% for catalogName, label in { repertoire: 'sessions.sequence.composer.repertoire', media: 'sessions.sequence.composer.media', recommendation: 'sessions.sequence.composer.recommendation' } %}
+                    <a href="{{ path('session_composer_add', { uuid: session.uuid, catalog: catalogName }) }}" class="{% if catalog == catalogName %}is-active{% endif %}">{{ label|trans({}, 'sessions') }}</a>
+                {% endfor %}
+            </nav>
+            <form method="get" action="{{ path('session_composer_add', { uuid: session.uuid }) }}" class="session-composer-overlay__search">
+                <input type="hidden" name="catalog" value="{{ catalog }}">
+                <label for="composer-query">{{ 'sessions.sequence.composer.search'|trans({}, 'sessions') }}</label>
+                <input id="composer-query" type="search" name="query" value="{{ query }}" placeholder="{{ 'sessions.sequence.composer.search_placeholder'|trans({}, 'sessions') }}">
+                <button class="internal-button internal-button--secondary" type="submit">{{ 'sessions.sequence.composer.search_submit'|trans({}, 'sessions') }}</button>
+            </form>
+            <div class="session-composer-overlay__results">
+                {% for item in catalogItems %}
+                    <form method="post" action="{{ path('session_composer_add', { uuid: session.uuid, catalog: catalog }) }}" class="session-composer-overlay__item">
+                        <input type="hidden" name="_token" value="{{ csrf_token('session_sequence_add_' ~ session.uuid) }}">
+                        <input type="hidden" name="sourceUuid" value="{{ item.uuid }}">
+                        <div>
+                            <h3>{{ item.title }}</h3>
+                            {% if item.source is defined and item.source %}<p>{{ item.source }}</p>{% endif %}
+                        </div>
+                        <button class="session-composer-overlay__item-button" type="submit">
+                            <span>{{ 'sessions.sequence.composer.choose'|trans({}, 'sessions') }}</span>
+                            <span aria-hidden="true">→</span>
+                        </button>
+                    </form>
+                {% else %}
+                    <div class="internal-empty-state">{{ 'sessions.sequence.composer.catalog_empty'|trans({}, 'sessions') }}</div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+</turbo-frame>

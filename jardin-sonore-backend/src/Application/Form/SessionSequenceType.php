@@ -6,6 +6,7 @@ namespace App\Application\Form;
 
 use App\Application\Form\Model\SessionSequenceFormModel;
 use App\Domain\Model\Session\SessionSequenceType as SequenceType;
+use App\Domain\Repository\InstrumentRepositoryInterface;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -22,12 +23,22 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 final class SessionSequenceType extends AbstractType
 {
+    public function __construct(private readonly InstrumentRepositoryInterface $instrumentRepository)
+    {
+    }
+
     /**
      * @param FormBuilderInterface<SessionSequenceFormModel|null> $builder
      * @param array<string, mixed>                                $options
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $instrumentChoices = [];
+
+        foreach ($this->instrumentRepository->findAllOrderedByName() as $instrument) {
+            $instrumentChoices[$instrument->getName()] = $instrument->getUuid()->toRfc4122();
+        }
+
         $builder
             ->add('type', ChoiceType::class, [
                 'label' => 'sessions.sequence.form.type',
@@ -85,6 +96,17 @@ final class SessionSequenceType extends AbstractType
             ->add('showLyricsByDefault', CheckboxType::class, [
                 'label' => 'sessions.sequence.form.show_lyrics_by_default',
                 'required' => false,
+            ])
+            ->add('role', TextType::class, [
+                'label' => 'sessions.sequence.form.role',
+                'required' => false,
+            ])
+            ->add('instrumentUuids', ChoiceType::class, [
+                'label' => 'sessions.sequence.form.instruments',
+                'required' => false,
+                'multiple' => true,
+                'choices' => $instrumentChoices,
+                'autocomplete' => true,
             ])
             ->add('sourceUuid', HiddenType::class, [
                 'required' => false,

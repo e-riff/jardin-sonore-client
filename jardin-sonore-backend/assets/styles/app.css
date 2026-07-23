@@ -852,6 +852,33 @@ form.internal-form > .internal-form__actions > .internal-button {
     width: auto;
 }
 
+form.internal-form > .internal-form__actions > .internal-form__back-action {
+    margin-right: auto;
+}
+
+.session-summary-form__private-notes {
+    display: grid;
+    gap: 8px;
+    margin-top: 8px;
+    border-top: 1px solid color-mix(in oklab, var(--color-outline-variant) 50%, white);
+    padding-top: 24px;
+}
+
+.session-summary-form__private-notes h2,
+.session-summary-form__private-notes p {
+    margin: 0;
+}
+
+.session-summary-form__private-notes h2 {
+    font-size: 1.1rem;
+}
+
+.session-summary-form__private-notes > p {
+    color: var(--color-on-surface-variant);
+    font-family: var(--font-sans);
+    font-size: 0.84rem;
+}
+
 .internal-form__grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -862,6 +889,329 @@ form.internal-form > .internal-form__actions > .internal-button {
     display: grid;
     align-content: start;
     gap: 8px;
+}
+
+.session-composer {
+    display: grid;
+    gap: 18px;
+}
+
+.session-composer__add-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.session-composer__status {
+    min-height: 1.25rem;
+    margin: 0;
+    color: var(--color-primary);
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.session-composer__list {
+    display: grid;
+    gap: 12px;
+}
+
+.session-composer__card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+    border: 1px solid color-mix(in oklab, var(--color-outline-variant) 58%, white);
+    border-radius: 24px;
+    padding: 18px;
+    background: linear-gradient(135deg, var(--color-surface-container-lowest), color-mix(in oklab, var(--color-primary-fixed) 16%, white));
+    box-shadow: 0 12px 24px -24px rgb(48 32 26 / 0.55);
+    transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.session-composer__card:hover {
+    border-color: color-mix(in oklab, var(--color-primary) 34%, var(--color-outline-variant));
+    box-shadow: 0 18px 32px -26px rgb(48 32 26 / 0.6);
+    transform: translateY(-1px);
+}
+
+.session-composer__card.is-dragging {
+    opacity: 0.5;
+}
+
+.session-composer__drag-handle {
+    padding-top: 4px;
+    color: var(--color-on-surface-variant);
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: grab;
+}
+
+.session-composer__content h3,
+.session-composer-overlay__item h3 {
+    margin: 0;
+    font-size: 1.08rem;
+}
+
+.session-composer__content h3 {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.session-composer__index {
+    display: inline-grid;
+    width: 1.75rem;
+    height: 1.75rem;
+    place-items: center;
+    border-radius: 999px;
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.session-composer__content .internal-eyebrow {
+    margin-bottom: 6px;
+}
+
+.session-composer__meta,
+.session-composer__subtitle,
+.session-composer-overlay__item p {
+    margin: 6px 0 0;
+    color: var(--color-on-surface-variant);
+    font-family: var(--font-sans);
+    font-size: 0.84rem;
+}
+
+.session-composer__actions {
+    display: grid;
+    gap: 12px;
+    grid-column: 1 / -1;
+}
+
+.session-composer__utility-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-start;
+}
+
+.session-composer__utility-actions form {
+    margin: 0;
+}
+
+.session-composer__role-details {
+    color: var(--color-on-surface-variant);
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+}
+
+.session-composer__role-details summary {
+    width: fit-content;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.session-composer__role-form {
+    margin-top: 10px;
+}
+
+.session-composer__bottom-action {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    padding-top: 6px;
+}
+
+.session-composer__role-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: end;
+}
+
+.session-composer__role-form label {
+    grid-column: 1 / -1;
+    color: var(--color-on-surface-variant);
+    font-family: var(--font-sans);
+    font-size: 0.76rem;
+    font-weight: 700;
+}
+
+.session-composer__role-form input {
+    min-width: 0;
+    border: 1px solid color-mix(in oklab, var(--color-outline-variant) 60%, white);
+    border-radius: 12px;
+    padding: 9px 10px;
+    background: var(--color-surface-container);
+    font: inherit;
+}
+
+.session-composer-overlay {
+    position: fixed;
+    z-index: 50;
+    inset: 0;
+    overflow: auto;
+    padding: 20px;
+    background: rgb(28 27 26 / 0.52);
+    backdrop-filter: blur(4px);
+}
+
+.session-composer-overlay__panel {
+    width: min(100%, 860px);
+    min-height: calc(100vh - 40px);
+    margin: 0 auto;
+    border-radius: 24px;
+    padding: clamp(20px, 4vw, 36px);
+    background: var(--color-surface-container-lowest);
+}
+
+.session-composer-overlay__panel--activity {
+    background:
+        radial-gradient(circle at top right, rgb(198 233 199 / 0.58), transparent 32%),
+        var(--color-surface-container-lowest);
+}
+
+.session-activity-form {
+    margin-top: 28px;
+    padding: clamp(18px, 3vw, 28px);
+    border: 1px solid color-mix(in oklab, var(--color-secondary) 28%, white);
+    border-radius: 22px;
+    background: rgb(255 255 255 / 0.72);
+}
+
+.session-composer-overlay__close {
+    display: inline-grid;
+    width: 40px;
+    height: 40px;
+    place-items: center;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background: var(--color-surface-container);
+    color: var(--color-primary);
+    font-family: var(--font-sans);
+    font-size: 1.65rem;
+    line-height: 1;
+    text-decoration: none;
+}
+
+.session-composer-overlay__activity {
+    display: grid;
+    gap: 4px;
+    margin-top: 18px;
+    border: 1px solid color-mix(in oklab, var(--color-secondary) 38%, white);
+    border-radius: 16px;
+    padding: 14px 16px;
+    background: color-mix(in oklab, var(--color-secondary-container) 48%, white);
+    color: var(--color-secondary);
+    font-family: var(--font-sans);
+    text-decoration: none;
+}
+
+.session-composer-overlay__activity span {
+    color: var(--color-on-surface-variant);
+    font-size: 0.8rem;
+}
+
+.session-composer-overlay__tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    margin: 24px 0 16px;
+    padding-bottom: 4px;
+}
+
+.session-composer-overlay__tabs a {
+    border-radius: 999px;
+    padding: 10px 14px;
+    background: var(--color-surface-container);
+    color: var(--color-on-surface-variant);
+    font-family: var(--font-sans);
+    font-size: 0.84rem;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.session-composer-overlay__tabs a.is-active {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+}
+
+.session-composer-overlay__search {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: end;
+}
+
+.session-composer-overlay__search label {
+    grid-column: 1 / -1;
+    color: var(--color-on-surface-variant);
+    font-family: var(--font-sans);
+    font-size: 0.84rem;
+    font-weight: 700;
+}
+
+.session-composer-overlay__search input {
+    min-width: 0;
+    border: 1px solid color-mix(in oklab, var(--color-outline-variant) 60%, white);
+    border-radius: 14px;
+    padding: 14px 16px;
+    background: var(--color-surface-container);
+    font: inherit;
+}
+
+.session-composer-overlay__results {
+    display: grid;
+    gap: 6px;
+    margin-top: 20px;
+}
+
+.session-composer-overlay__item {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid color-mix(in oklab, var(--color-outline-variant) 55%, white);
+    border-radius: 14px;
+    padding: 12px 14px;
+    background: var(--color-surface-container-lowest);
+    cursor: pointer;
+    transition: background 150ms ease, border-color 150ms ease;
+}
+
+.session-composer-overlay__item:hover,
+.session-composer-overlay__item:focus-within {
+    border-color: color-mix(in oklab, var(--color-primary) 46%, var(--color-outline-variant));
+    background: color-mix(in oklab, var(--color-primary-fixed) 34%, white);
+}
+
+.session-composer-overlay__item-button {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    border: 0;
+    padding: 6px 0;
+    background: transparent;
+    color: var(--color-primary);
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+@media (min-width: 761px) {
+    .session-composer__card {
+        grid-template-columns: auto minmax(0, 1fr) minmax(220px, auto);
+    }
+
+    .session-composer__actions {
+        grid-column: auto;
+    }
 }
 
 .instrument-form__tags {
@@ -2131,6 +2481,43 @@ form.internal-form > .internal-form__actions > .internal-button {
     .instrument-catalog__filters,
     .internal-form__grid {
         grid-template-columns: 1fr;
+    }
+
+    .session-composer__card {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .session-composer__actions {
+        grid-column: 1 / -1;
+    }
+
+    .session-composer-overlay {
+        padding: 0;
+    }
+
+    .session-composer-overlay__panel {
+        min-height: 100vh;
+        border-radius: 0;
+    }
+
+    .session-composer-overlay .internal-page-heading {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+
+    .session-composer-overlay__close {
+        position: sticky;
+        top: 0;
+        margin-left: auto;
+    }
+
+    .session-composer-overlay__search {
+        grid-template-columns: 1fr;
+    }
+
+    .session-composer-overlay__item {
+        align-items: stretch;
+        flex-direction: column;
     }
 
     .internal-search > div,

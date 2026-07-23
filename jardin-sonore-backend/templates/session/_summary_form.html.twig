@@ -1,23 +1,24 @@
 {{ form_start(form, { attr: { class: 'internal-form' } }) }}
     <div class="internal-form__grid">
         {{ form_row(form.title) }}
-        {{ form_row(form.sessionDate) }}
+        {{ form_row(form.subtitle) }}
     </div>
 
     <div class="internal-form__grid">
-        {{ form_row(form.organizationName) }}
-        {{ form_row(form.theme) }}
+        {{ form_row(form.sessionDate) }}
+        {{ form_row(form.instrumentUuids) }}
     </div>
 
-    {{ form_row(form.instrumentUuids) }}
-    {{ form_row(form.materialSummary) }}
-    {{ form_row(form.generalNotes) }}
-    {{ form_row(form.furtherExploration) }}
+    <section class="session-summary-form__private-notes">
+        <h2>{{ 'sessions.summary.form.private_notes_heading'|trans({}, 'sessions') }}</h2>
+        <p>{{ 'sessions.summary.form.private_notes_help'|trans({}, 'sessions') }}</p>
+        {{ form_row(form.generalNotes) }}
+    </section>
 
     <div class="internal-form__actions">
-        {{ form_widget(form.submit) }}
         {% if backPath is defined %}
-            <a class="internal-button internal-button--secondary" href="{{ backPath }}">{{ backLabel }}</a>
+            <a class="internal-button internal-button--secondary internal-form__back-action" href="{{ backPath }}">{{ backLabel }}</a>
         {% endif %}
+        {{ form_widget(form.submit) }}
     </div>
 {{ form_end(form) }}

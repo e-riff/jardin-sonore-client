@@ -1,0 +1,80 @@
+<section
+    id="session-composer"
+    class="internal-card session-composer"
+    data-controller="session-sequence-sorter"
+    data-session-sequence-sorter-url-value="{{ path('session_sequence_reorder', { uuid: session.uuid }) }}"
+    data-session-sequence-sorter-csrf-token-value="{{ csrf_token('session_sequence_reorder_' ~ session.uuid) }}"
+    data-session-sequence-sorter-error-message-value="{{ 'sessions.sequence.composer.reorder_error'|trans({}, 'sessions') }}"
+>
+    <div class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ 'sessions.sequence.index.eyebrow'|trans({}, 'sessions') }}</p>
+            <h2>{{ 'sessions.sequence.composer.heading'|trans({}, 'sessions') }}</h2>
+            <p>{{ 'sessions.sequence.composer.description'|trans({}, 'sessions') }}</p>
+        </div>
+        <div class="session-composer__add-actions">
+            <a class="internal-button internal-button--secondary" href="{{ path('session_sequence_new', { uuid: session.uuid, composer: 1 }) }}" data-turbo-frame="session-composer-overlay">
+                {{ 'sessions.sequence.composer.add_activity'|trans({}, 'sessions') }}
+            </a>
+            <a class="internal-button" href="{{ path('session_composer_add', { uuid: session.uuid }) }}" data-turbo-frame="session-composer-overlay">
+                {{ 'sessions.sequence.composer.add'|trans({}, 'sessions') }}
+            </a>
+        </div>
+    </div>
+
+    <p class="session-composer__status" aria-live="polite" data-session-sequence-sorter-target="status"></p>
+
+    {% if session.sequences is empty %}
+        <div class="internal-empty-state">{{ 'sessions.sequence.index.empty'|trans({}, 'sessions') }}</div>
+    {% else %}
+        <div class="session-composer__list" data-session-sequence-sorter-target="list">
+            {% for sequence in session.sequences %}
+                <article class="session-composer__card" draggable="true" data-session-sequence-sorter-target="item" data-sequence-uuid="{{ sequence.uuid }}">
+                    <div class="session-composer__drag-handle" aria-hidden="true">⠿</div>
+                    <div class="session-composer__content">
+                        {% if sequence.role %}
+                            <p class="internal-eyebrow">{{ sequence.role }}</p>
+                        {% endif %}
+                        <h3><span class="session-composer__index">{{ loop.index }}</span>{{ sequence.title }}</h3>
+                        <p class="session-composer__meta">
+                            {{ sequence.type.translationKey()|trans({}, 'sessions') }}
+                            {% if sequence.sourceTitle %} · {{ sequence.sourceTitle }}{% endif %}
+                        </p>
+                        {% if sequence.subtitle %}<p class="session-composer__subtitle">{{ sequence.subtitle }}</p>{% endif %}
+                    </div>
+                    <div class="session-composer__actions">
+                        <div class="session-composer__utility-actions">
+                            <form method="post" action="{{ path('session_sequence_move_up', { uuid: session.uuid, sequenceUuid: sequence.uuid }) }}">
+                                <button class="internal-button internal-button--secondary internal-button--compact" type="submit" data-action="click->session-sequence-sorter#moveUp" aria-label="{{ 'sessions.sequence.composer.move_up'|trans({}, 'sessions') }}">↑</button>
+                            </form>
+                            <form method="post" action="{{ path('session_sequence_move_down', { uuid: session.uuid, sequenceUuid: sequence.uuid }) }}">
+                                <button class="internal-button internal-button--secondary internal-button--compact" type="submit" data-action="click->session-sequence-sorter#moveDown" aria-label="{{ 'sessions.sequence.composer.move_down'|trans({}, 'sessions') }}">↓</button>
+                            </form>
+                            <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('session_sequence_edit', { uuid: session.uuid, sequenceUuid: sequence.uuid }) }}">{{ 'sessions.sequence.composer.edit'|trans({}, 'sessions') }}</a>
+                            <form method="post" action="{{ path('session_sequence_remove', { uuid: session.uuid, sequenceUuid: sequence.uuid }) }}" onsubmit="return confirm('{{ 'sessions.sequence.table.remove_confirm'|trans({}, 'sessions') }}');">
+                                <button class="internal-button internal-button--secondary internal-button--compact" type="submit">{{ 'sessions.sequence.composer.remove'|trans({}, 'sessions') }}</button>
+                            </form>
+                        </div>
+                        <details class="session-composer__role-details">
+                            <summary>{{ 'sessions.sequence.composer.role'|trans({}, 'sessions') }}</summary>
+                            <form method="post" action="{{ path('session_sequence_role', { uuid: session.uuid, sequenceUuid: sequence.uuid }) }}" class="session-composer__role-form">
+                                <input type="hidden" name="_token" value="{{ csrf_token('session_sequence_role_' ~ sequence.uuid) }}">
+                                <label for="sequence-role-{{ sequence.uuid }}">{{ 'sessions.sequence.composer.role'|trans({}, 'sessions') }}</label>
+                                <input id="sequence-role-{{ sequence.uuid }}" name="role" value="{{ sequence.role }}" maxlength="255">
+                                <button class="internal-button internal-button--secondary internal-button--compact" type="submit">{{ 'sessions.sequence.composer.save_role'|trans({}, 'sessions') }}</button>
+                            </form>
+                        </details>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+        <div class="session-composer__bottom-action">
+            <a class="internal-button internal-button--secondary" href="{{ path('session_sequence_new', { uuid: session.uuid, composer: 1 }) }}" data-turbo-frame="session-composer-overlay">
+                {{ 'sessions.sequence.composer.add_activity'|trans({}, 'sessions') }}
+            </a>
+            <a class="internal-button" href="{{ path('session_composer_add', { uuid: session.uuid }) }}" data-turbo-frame="session-composer-overlay">
+                {{ 'sessions.sequence.composer.add'|trans({}, 'sessions') }}
+            </a>
+        </div>
+    {% endif %}
+</section>

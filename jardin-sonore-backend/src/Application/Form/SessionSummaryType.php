@@ -45,11 +45,8 @@ final class SessionSummaryType extends AbstractType
                 'widget' => 'single_text',
                 'input' => 'datetime_immutable',
             ])
-            ->add('organizationName', TextType::class, [
-                'label' => 'sessions.summary.form.organization_name',
-            ])
-            ->add('theme', TextType::class, [
-                'label' => 'sessions.summary.form.theme',
+            ->add('subtitle', TextType::class, [
+                'label' => 'sessions.summary.form.subtitle',
                 'required' => false,
             ])
             ->add('instrumentUuids', ChoiceType::class, [
@@ -57,19 +54,10 @@ final class SessionSummaryType extends AbstractType
                 'required' => false,
                 'multiple' => true,
                 'choices' => $instrumentChoices,
-            ])
-            ->add('materialSummary', TextareaType::class, [
-                'label' => 'sessions.summary.form.material_summary',
-                'required' => false,
-                'attr' => ['rows' => 4],
+                'autocomplete' => true,
             ])
             ->add('generalNotes', TextareaType::class, [
-                'label' => 'sessions.summary.form.general_notes',
-                'required' => false,
-                'attr' => ['rows' => 5],
-            ])
-            ->add('furtherExploration', TextareaType::class, [
-                'label' => 'sessions.summary.form.further_exploration',
+                'label' => 'sessions.summary.form.private_notes',
                 'required' => false,
                 'attr' => ['rows' => 5],
             ])

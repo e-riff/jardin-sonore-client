@@ -42,11 +42,17 @@ final class SessionSequenceFormModel
 
     public bool $showLyricsByDefault = false;
 
+    #[Assert\Length(max: 255)]
+    public ?string $role = null;
+
     public ?string $sourceUuid = null;
 
     public ?SessionSequenceSourceKind $sourceKind = null;
 
     public ?string $sourceTitle = null;
+
+    /** @var list<string> */
+    public array $instrumentUuids = [];
 
     public static function fromView(SessionSequenceView $sessionSequenceView): self
     {
@@ -62,9 +68,11 @@ final class SessionSequenceFormModel
         $formModel->secondaryUrl = $sessionSequenceView->secondaryUrl;
         $formModel->imageUrl = $sessionSequenceView->imageUrl;
         $formModel->showLyricsByDefault = $sessionSequenceView->showLyricsByDefault;
+        $formModel->role = $sessionSequenceView->role;
         $formModel->sourceUuid = $sessionSequenceView->sourceUuid?->toRfc4122();
         $formModel->sourceKind = $sessionSequenceView->sourceKind;
         $formModel->sourceTitle = $sessionSequenceView->sourceTitle;
+        $formModel->instrumentUuids = $sessionSequenceView->instrumentUuids;
 
         return $formModel;
     }

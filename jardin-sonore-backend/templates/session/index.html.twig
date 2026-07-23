@@ -29,7 +29,6 @@
                     <thead>
                         <tr>
                             <th>{{ 'sessions.summary.table.title'|trans({}, 'sessions') }}</th>
-                            <th>{{ 'sessions.summary.table.organization'|trans({}, 'sessions') }}</th>
                             <th>{{ 'sessions.summary.table.date'|trans({}, 'sessions') }}</th>
                             <th>{{ 'sessions.summary.table.sequence_count'|trans({}, 'sessions') }}</th>
                             <th>{{ 'sessions.summary.table.actions'|trans({}, 'sessions') }}</th>
@@ -44,7 +43,6 @@
                                         <span class="internal-table-note">{{ session.theme }}</span>
                                     {% endif %}
                                 </td>
-                                <td data-label="{{ 'sessions.summary.table.organization'|trans({}, 'sessions') }}">{{ session.organizationName }}</td>
                                 <td data-label="{{ 'sessions.summary.table.date'|trans({}, 'sessions') }}">{{ session.sessionDate|date('d/m/Y') }}</td>
                                 <td data-label="{{ 'sessions.summary.table.sequence_count'|trans({}, 'sessions') }}">{{ session.sequences|length }}</td>
                                 <td data-label="{{ 'sessions.summary.table.actions'|trans({}, 'sessions') }}">

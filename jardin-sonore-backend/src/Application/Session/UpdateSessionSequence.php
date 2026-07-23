@@ -36,9 +36,11 @@ final readonly class UpdateSessionSequence
             secondaryUrl: $saveSessionSequenceInput->secondaryUrl,
             imageUrl: $saveSessionSequenceInput->imageUrl,
             showLyricsByDefault: $saveSessionSequenceInput->showLyricsByDefault,
+            role: $saveSessionSequenceInput->role,
             sourceUuid: $saveSessionSequenceInput->sourceUuid,
             sourceKind: $saveSessionSequenceInput->sourceKind,
             sourceTitle: $saveSessionSequenceInput->sourceTitle,
+            instrumentUuids: $saveSessionSequenceInput->instrumentUuids,
         ));
 
         $this->sessionSummaryRepository->save($sessionSummary);
