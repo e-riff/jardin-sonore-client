@@ -54,7 +54,7 @@ final class MunicipalityCrudController extends AbstractCrudController
     public function configureFields(string $pageName): iterable
     {
         yield IdField::new('id', 'admin.field.id')->hideOnForm();
-        yield TextField::new('uuid', 'admin.field.uuid')->hideOnForm();
+        yield TextField::new('uuid', 'admin.field.uuid')->onlyOnDetail();
         yield TextField::new('name', 'admin.field.name');
         yield TextField::new('inseeCode', 'admin.field.insee_code');
         yield TextField::new('postalCode', 'admin.field.postal_code');

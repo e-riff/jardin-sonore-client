@@ -20,6 +20,11 @@
             <label for="catalog-query">{{ 'mailing.catalog.index.search'|trans({}, 'mailing') }}</label>
             <div>
                 <input id="catalog-query" name="query" value="{{ query }}">
+                <select name="availability" aria-label="{{ 'mailing.catalog.index.filter_availability'|trans({}, 'mailing') }}">
+                    <option value="active" {% if availability == 'active' %}selected{% endif %}>{{ 'mailing.catalog.index.available_only'|trans({}, 'mailing') }}</option>
+                    <option value="inactive" {% if availability == 'inactive' %}selected{% endif %}>{{ 'mailing.catalog.index.unavailable_only'|trans({}, 'mailing') }}</option>
+                    <option value="all" {% if availability == 'all' %}selected{% endif %}>{{ 'mailing.catalog.index.all'|trans({}, 'mailing') }}</option>
+                </select>
                 <button class="internal-button internal-button--secondary" type="submit">
                     {{ 'mailing.catalog.index.search_submit'|trans({}, 'mailing') }}
                 </button>
@@ -36,7 +41,7 @@
                         <th>{{ 'mailing.catalog.index.table.visual'|trans({}, 'mailing') }}</th>
                         <th>{{ 'mailing.catalog.index.table.title'|trans({}, 'mailing') }}</th>
                         <th>{{ 'mailing.catalog.index.table.status'|trans({}, 'mailing') }}</th>
-                        <th>{{ 'mailing.catalog.index.table.updated_at'|trans({}, 'mailing') }}</th>
+                        <th>{{ 'mailing.catalog.index.table.usages'|trans({}, 'mailing') }}</th>
                         <th>{{ 'mailing.catalog.index.table.actions'|trans({}, 'mailing') }}</th>
                     </tr>
                     </thead>
@@ -70,15 +75,29 @@
                                     {{ (recommendation.active ? 'mailing.catalog.status.active' : 'mailing.catalog.status.inactive')|trans({}, 'mailing') }}
                                 </span>
                             </td>
-                            <td data-label="{{ 'mailing.catalog.index.table.updated_at'|trans({}, 'mailing') }}">
-                                {{ recommendation.updatedAt|date('d/m/Y H:i') }}
+                            <td data-label="{{ 'mailing.catalog.index.table.usages'|trans({}, 'mailing') }}">
+                                {% if recommendation.usages is empty %}
+                                    <span class="internal-table-note">{{ 'mailing.catalog.index.never_used'|trans({}, 'mailing') }}</span>
+                                {% else %}
+                                    <details>
+                                        <summary>{{ recommendation.usages|first.sentAt|date('d/m/Y H:i') }}</summary>
+                                        <ul>
+                                            {% for usage in recommendation.usages %}
+                                                <li><a href="{{ path('mailing_content', { uuid: usage.campaignUuid }) }}">{{ usage.sentAt|date('d/m/Y H:i') }} · {{ usage.campaignTitle }}</a></li>
+                                            {% endfor %}
+                                        </ul>
+                                    </details>
+                                {% endif %}
                             </td>
                             <td data-label="{{ 'mailing.catalog.index.table.actions'|trans({}, 'mailing') }}">
-                                <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_recommendation_catalog_edit', {
-                                    uuid: recommendation.uuid
-                                }) }}">
-                                    {{ 'mailing.catalog.index.edit'|trans({}, 'mailing') }}
-                                </a>
+                                {% include 'components/_catalog_actions.html.twig' with {
+                                    editUrl: path('mailing_recommendation_catalog_edit', { uuid: recommendation.uuid }),
+                                    deleteUrl: path('mailing_recommendation_catalog_delete', { uuid: recommendation.uuid }),
+                                    itemLabel: recommendation.title,
+                                    token: csrf_token('mailing_recommendation_delete_' ~ recommendation.uuid),
+                                    editLabel: 'mailing.catalog.index.edit'|trans({}, 'mailing'),
+                                    deleteLabel: 'mailing.catalog.index.delete'|trans({}, 'mailing')
+                                } only %}
                             </td>
                         </tr>
                     {% endfor %}

@@ -71,4 +71,28 @@ final class NewsletterRecommendationDoctrineRepository extends ServiceEntityRepo
         ));
         $this->getEntityManager()->flush();
     }
+
+    public function delete(NewsletterRecommendation $newsletterRecommendation): void
+    {
+        $entity = $this->findOneBy(['uuid' => $newsletterRecommendation->getUuid()]);
+
+        if ($entity instanceof NewsletterRecommendationEntity) {
+            $this->getEntityManager()->remove($entity);
+            $this->getEntityManager()->flush();
+        }
+    }
+
+    public function findTagSuggestions(): array
+    {
+        $rows = $this->createQueryBuilder('recommendation')
+            ->select('DISTINCT recommendation.tag AS tag')
+            ->andWhere('recommendation.tag IS NOT NULL')
+            ->andWhere('recommendation.tag != :emptyTag')
+            ->setParameter('emptyTag', '')
+            ->orderBy('recommendation.tag', 'ASC')
+            ->getQuery()
+            ->getScalarResult();
+
+        return array_values(array_map(static fn (array $row): string => $row['tag'], $rows));
+    }
 }

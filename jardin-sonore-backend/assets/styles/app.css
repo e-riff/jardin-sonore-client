@@ -1604,6 +1604,17 @@ form.internal-form > .internal-form__actions > .internal-form__back-action {
     line-height: 1.35;
 }
 
+.character-counter {
+    margin: 0.5rem 0 0;
+    color: rgba(52, 37, 32, 0.78);
+    font-size: 0.875rem;
+}
+
+.character-counter--exceeded {
+    color: #a82323;
+    font-weight: 700;
+}
+
 .mailing-index__actions {
     display: flex;
     flex-wrap: wrap;

@@ -103,6 +103,7 @@
                                 </th>
                             {% endfor %}
                             <th>{{ 'catalog.instrument.table.tags'|trans({}, 'catalog') }}</th>
+                            <th>{{ 'catalog.instrument.filters.active'|trans({}, 'catalog') }}</th>
                             <th>{{ 'catalog.instrument.table.actions'|trans({}, 'catalog') }}</th>
                         </tr>
                     </thead>
@@ -130,6 +131,7 @@
                                         </div>
                                     {% endif %}
                                 </td>
+                                <td><span class="internal-badge internal-badge--{{ instrument.active ? 'secondary' : 'primary' }}">{{ (instrument.active ? 'catalog.instrument.filters.active_only' : 'catalog.instrument.filters.inactive_only')|trans({}, 'catalog') }}</span></td>
                                 <td data-catalog-row-ignore>
                                     {% include 'components/_catalog_actions.html.twig' with { editUrl: path('instrument_edit', { uuid: instrument.uuid.toRfc4122 }), deleteUrl: path('instrument_delete', { uuid: instrument.uuid.toRfc4122 }), itemLabel: instrument.name, token: csrf_token('instrument_delete_' ~ instrument.uuid.toRfc4122), editLabel: 'catalog.instrument.table.edit'|trans({}, 'catalog'), deleteLabel: 'catalog.instrument.table.delete'|trans({}, 'catalog') } only %}
                                 </td>

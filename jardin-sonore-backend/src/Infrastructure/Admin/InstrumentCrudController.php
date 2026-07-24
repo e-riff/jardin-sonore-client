@@ -57,7 +57,7 @@ final class InstrumentCrudController extends AbstractCrudController
     public function configureFields(string $pageName): iterable
     {
         yield IdField::new('id', 'admin.field.id')->hideOnForm();
-        yield TextField::new('uuid', 'admin.field.uuid')->hideOnForm();
+        yield TextField::new('uuid', 'admin.field.uuid')->onlyOnDetail();
         yield TextField::new('name', 'admin.field.name');
         yield TextField::new('tuning', 'admin.field.tuning');
         yield IntegerField::new('quantity', 'admin.field.quantity');

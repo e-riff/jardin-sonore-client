@@ -17,4 +17,9 @@ interface NewsletterRecommendationRepositoryInterface
     public function search(?string $query = null, bool $activeOnly = false): array;
 
     public function save(NewsletterRecommendation $newsletterRecommendation): void;
+
+    public function delete(NewsletterRecommendation $newsletterRecommendation): void;
+
+    /** @return list<string> */
+    public function findTagSuggestions(): array;
 }

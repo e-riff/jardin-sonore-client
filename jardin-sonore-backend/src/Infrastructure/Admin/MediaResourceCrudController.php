@@ -80,7 +80,7 @@ final class MediaResourceCrudController extends AbstractCrudController
     public function configureFields(string $pageName): iterable
     {
         yield IdField::new('id', 'admin.field.id')->hideOnForm();
-        yield TextField::new('uuid', 'admin.field.uuid')->hideOnForm();
+        yield TextField::new('uuid', 'admin.field.uuid')->onlyOnDetail();
         yield ChoiceField::new('type', 'admin.field.type')
             ->setChoices($this->mediaTypeChoices())
             ->setFormTypeOption('choice_translation_domain', 'sessions')

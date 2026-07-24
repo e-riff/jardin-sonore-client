@@ -72,7 +72,7 @@ final class SessionRecommendationCrudController extends AbstractCrudController
     public function configureFields(string $pageName): iterable
     {
         yield IdField::new('id', 'admin.field.id')->hideOnForm();
-        yield TextField::new('uuid', 'admin.field.uuid')->hideOnForm();
+        yield TextField::new('uuid', 'admin.field.uuid')->onlyOnDetail();
         yield TextField::new('title', 'admin.field.title');
         yield TextareaField::new('text', 'admin.field.text');
         yield TextareaField::new('notes', 'admin.field.notes')

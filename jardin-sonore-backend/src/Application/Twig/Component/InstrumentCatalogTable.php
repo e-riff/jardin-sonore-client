@@ -36,7 +36,7 @@ final class InstrumentCatalogTable
     public array $tagUuids = [];
 
     #[LiveProp(writable: true, url: true, onUpdated: 'onFiltersUpdated')]
-    public string $activeFilter = '';
+    public string $activeFilter = 'active';
 
     #[LiveProp(writable: true, url: true, onUpdated: 'onFiltersUpdated')]
     public string $quantityFilter = '';
@@ -98,7 +98,7 @@ final class InstrumentCatalogTable
     {
         $this->query = '';
         $this->tagUuids = [];
-        $this->activeFilter = '';
+        $this->activeFilter = 'active';
         $this->quantityFilter = '';
         $this->tuningFilter = '';
         $this->sortBy = 'name';
