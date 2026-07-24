@@ -1536,6 +1536,11 @@ form.internal-form > .internal-form__actions > .internal-form__back-action {
     font: inherit;
 }
 
+.mailing-catalog__availability {
+    width: min(100%, 220px) !important;
+    flex: 0 1 220px;
+}
+
 .internal-empty-state {
     border: 1px dashed color-mix(in oklab, var(--color-outline-variant) 72%, white);
     border-radius: 24px;
