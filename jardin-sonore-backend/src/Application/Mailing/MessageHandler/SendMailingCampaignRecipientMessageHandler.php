@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Mailing\MessageHandler;
 
 use App\Application\Mailing\MailingDeliveryQueueInterface;
+use App\Application\Mailing\RecordNewsletterRecommendationUsages;
 use App\Application\Mailing\Message\SendMailingCampaignRecipientMessage;
 use App\Application\Mailing\NewsletterMailSenderInterface;
 use App\Application\Mailing\NewsletterRendererInterface;
@@ -28,6 +29,7 @@ final readonly class SendMailingCampaignRecipientMessageHandler
         private NewsletterRendererInterface $newsletterRenderer,
         private NewsletterMailSenderInterface $newsletterMailSender,
         private MailingDeliveryQueueInterface $mailingDeliveryQueue,
+        private RecordNewsletterRecommendationUsages $recordNewsletterRecommendationUsages,
         private LoggerInterface $mailingDeliveryLogger,
     ) {
     }
@@ -111,6 +113,7 @@ final readonly class SendMailingCampaignRecipientMessageHandler
 
         $mailingCampaign->markDeliverySent();
         $this->mailingCampaignRepository->save($mailingCampaign);
+        ($this->recordNewsletterRecommendationUsages)($mailingCampaign);
         $this->mailingDeliveryLogger->info('Newsletter delivery fully sent.', [
             'campaign_uuid' => $mailingCampaign->getUuid()->toRfc4122(),
             'campaign_title' => $mailingCampaign->getInternalTitle(),

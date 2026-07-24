@@ -35,11 +35,17 @@ final class NewsletterRecommendationType extends AbstractType
                 'label' => 'mailing.catalog.form.tag',
                 'help' => 'mailing.catalog.form.tag_help',
                 'required' => false,
+                'attr' => ['list' => 'newsletter-recommendation-tag-suggestions'],
             ])
             ->add('text', TextareaType::class, [
                 'label' => 'mailing.catalog.form.text',
                 'help' => 'mailing.catalog.form.text_help',
-                'attr' => ['rows' => 5],
+                'attr' => [
+                    'rows' => 5,
+                    'maxlength' => 320,
+                    'data-character-counter-target' => 'input',
+                    'data-action' => 'input->character-counter#update',
+                ],
             ])
             ->add('url', UrlType::class, [
                 'label' => 'mailing.catalog.form.url',

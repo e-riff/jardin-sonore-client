@@ -9,11 +9,13 @@ use App\Application\Form\NewsletterRecommendationType;
 use App\Application\Mailing\AddNewsletterRecommendationToCampaign;
 use App\Application\Mailing\CreateNewsletterRecommendation;
 use App\Application\Mailing\CreateNewsletterRecommendationInput;
+use App\Application\Mailing\DeleteNewsletterRecommendation;
 use App\Application\Mailing\GetMailingCampaign;
 use App\Application\Mailing\GetNewsletterRecommendationForEdit;
 use App\Application\Mailing\SearchNewsletterRecommendations;
 use App\Application\Mailing\UpdateNewsletterRecommendation;
 use App\Domain\Model\Mailing\MailingCampaign;
+use App\Domain\Repository\NewsletterRecommendationRepositoryInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -29,10 +31,21 @@ final class NewsletterRecommendationCatalogController extends AbstractController
         SearchNewsletterRecommendations $searchNewsletterRecommendations,
     ): Response {
         $query = $request->query->getString('query');
+        $availability = $request->query->getString('availability', 'active');
+        $availability = in_array($availability, ['active', 'inactive', 'all'], true) ? $availability : 'active';
+        $recommendations = $searchNewsletterRecommendations($query, 'active' === $availability);
+
+        if ('inactive' === $availability) {
+            $recommendations = array_values(array_filter(
+                $recommendations,
+                static fn ($recommendation): bool => !$recommendation->active,
+            ));
+        }
 
         return $this->render('mailing/recommendation_catalog/index.html.twig', [
             'query' => $query,
-            'recommendations' => $searchNewsletterRecommendations($query),
+            'availability' => $availability,
+            'recommendations' => $recommendations,
         ]);
     }
 
@@ -42,6 +55,7 @@ final class NewsletterRecommendationCatalogController extends AbstractController
         CreateNewsletterRecommendation $createNewsletterRecommendation,
         GetMailingCampaign $getMailingCampaign,
         AddNewsletterRecommendationToCampaign $addNewsletterRecommendationToCampaign,
+        NewsletterRecommendationRepositoryInterface $newsletterRecommendationRepository,
     ): Response {
         $mailingCampaign = $this->resolveMailingCampaign($request, $getMailingCampaign);
         $formModel = new NewsletterRecommendationFormModel();
@@ -75,6 +89,7 @@ final class NewsletterRecommendationCatalogController extends AbstractController
                 'campaign' => $mailingCampaign,
                 'form' => $form->createView(),
                 'hasErrors' => $form->isSubmitted() && !$form->isValid(),
+                'tagSuggestions' => $newsletterRecommendationRepository->findTagSuggestions(),
             ],
             $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null,
         );
@@ -86,6 +101,7 @@ final class NewsletterRecommendationCatalogController extends AbstractController
         Request $request,
         GetNewsletterRecommendationForEdit $getNewsletterRecommendationForEdit,
         UpdateNewsletterRecommendation $updateNewsletterRecommendation,
+        NewsletterRecommendationRepositoryInterface $newsletterRecommendationRepository,
     ): Response {
         $newsletterRecommendationView = Uuid::isValid($uuid)
             ? $getNewsletterRecommendationForEdit(Uuid::fromString($uuid))
@@ -112,9 +128,23 @@ final class NewsletterRecommendationCatalogController extends AbstractController
                 'form' => $form->createView(),
                 'hasErrors' => $form->isSubmitted() && !$form->isValid(),
                 'recommendation' => $newsletterRecommendationView,
+                'tagSuggestions' => $newsletterRecommendationRepository->findTagSuggestions(),
             ],
             $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null,
         );
+    }
+
+    #[Route('/{uuid}', name: 'delete', methods: ['POST'])]
+    public function delete(string $uuid, Request $request, DeleteNewsletterRecommendation $deleteNewsletterRecommendation): Response
+    {
+        if (!Uuid::isValid($uuid) || !$this->isCsrfTokenValid('mailing_recommendation_delete_' . $uuid, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $deleteNewsletterRecommendation(Uuid::fromString($uuid));
+        $this->addFlash('success', 'mailing.flash.recommendation_deleted');
+
+        return $this->redirectToRoute('mailing_recommendation_catalog_index', status: Response::HTTP_SEE_OTHER);
     }
 
     private function createInput(NewsletterRecommendationFormModel $formModel): CreateNewsletterRecommendationInput

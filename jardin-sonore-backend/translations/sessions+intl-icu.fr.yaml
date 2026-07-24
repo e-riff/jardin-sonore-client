@@ -1,4 +1,11 @@
 sessions:
+  catalog:
+    active: "Disponibilité"
+    active_only: "Disponibles"
+    inactive_only: "Indisponibles"
+    all: "Toutes"
+    available: "Disponible"
+    unavailable: "Indisponible"
   repertoire:
     type:
       nursery_rhyme: "Comptines"

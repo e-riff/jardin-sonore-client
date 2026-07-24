@@ -23,9 +23,11 @@
 
         {{ form_start(form, {
             action: path('mailing_recommendation_catalog_new'),
-            attr: { class: 'internal-form' }
+            attr: { class: 'internal-form', 'data-controller': 'character-counter', 'data-character-counter-limit-value': 320 }
         }) }}
             {{ form_widget(form) }}
+            <datalist id="newsletter-recommendation-tag-suggestions">{% for tagSuggestion in tagSuggestions %}<option value="{{ tagSuggestion }}">{% endfor %}</datalist>
+            <p class="character-counter" data-character-counter-target="output"></p>
         {{ form_end(form) }}
     </section>
 {% endblock %}

@@ -36,7 +36,7 @@ final class TagCrudController extends AbstractCrudController
     public function configureFields(string $pageName): iterable
     {
         yield IdField::new('id', 'admin.field.id')->hideOnForm();
-        yield TextField::new('uuid', 'admin.field.uuid')->hideOnForm();
+        yield TextField::new('uuid', 'admin.field.uuid')->onlyOnDetail();
         yield TextField::new('label', 'admin.field.label');
         yield AssociationField::new('directoryEntries', 'admin.field.directory_entries')->onlyOnDetail();
     }

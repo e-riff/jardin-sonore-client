@@ -72,7 +72,7 @@ final class MailingAudienceMaskCrudController extends AbstractCrudController
         );
 
         yield IdField::new('id', 'admin.field.id')->hideOnForm();
-        yield TextField::new('uuid', 'admin.field.uuid')->hideOnForm();
+        yield TextField::new('uuid', 'admin.field.uuid')->onlyOnDetail();
         yield TextField::new('name', 'admin.field.name');
         yield IntegerField::new('materializedMunicipalityCountForAdmin', 'admin.field.materialized_municipality_count')
             ->hideOnForm();

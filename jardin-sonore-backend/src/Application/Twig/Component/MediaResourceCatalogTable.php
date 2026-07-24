@@ -28,6 +28,9 @@ final class MediaResourceCatalogTable
 
     #[LiveProp(writable: true, url: true, onUpdated: 'refreshResults')]
     public string $type = '';
+
+    #[LiveProp(writable: true, url: true, onUpdated: 'refreshResults')]
+    public string $activeFilter = 'active';
     /** @var list<string> */
     #[LiveProp(writable: true, url: true, onUpdated: 'refreshResults')]
     public array $themeUuids = [];
@@ -65,6 +68,9 @@ final class MediaResourceCatalogTable
         );
         if ([] !== $this->themeUuids) {
             $items = array_values(array_filter($items, fn (MediaResourceView $item): bool => [] !== array_intersect($this->themeUuids, array_column($item->themes, 'uuid'))));
+        }
+        if ('all' !== $this->activeFilter) {
+            $items = array_values(array_filter($items, fn (MediaResourceView $item): bool => 'active' === $this->activeFilter ? $item->active : !$item->active));
         }
 
         usort($items, function (MediaResourceView $left, MediaResourceView $right): int {
@@ -126,6 +132,7 @@ final class MediaResourceCatalogTable
     {
         $this->query = '';
         $this->type = '';
+        $this->activeFilter = 'active';
         $this->themeUuids = [];
         $this->items = null;
     }
@@ -149,7 +156,7 @@ final class MediaResourceCatalogTable
 
     public function hasActiveFilters(): bool
     {
-        return '' !== trim($this->query) || '' !== $this->type || [] !== $this->themeUuids;
+        return '' !== trim($this->query) || '' !== $this->type || 'active' !== $this->activeFilter || [] !== $this->themeUuids;
     }
 
     public function refreshResults(): void

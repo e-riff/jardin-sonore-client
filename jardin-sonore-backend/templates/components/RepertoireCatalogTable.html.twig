@@ -25,6 +25,14 @@
                             {% endfor %}
                         </select>
                     </div>
+                    <div class="internal-search__field internal-search__field--compact">
+                        <label for="repertoire-active">{{ 'sessions.catalog.active'|trans({}, 'sessions') }}</label>
+                        <select id="repertoire-active" data-model="on(change)|activeFilter">
+                            <option value="active">{{ 'sessions.catalog.active_only'|trans({}, 'sessions') }}</option>
+                            <option value="inactive">{{ 'sessions.catalog.inactive_only'|trans({}, 'sessions') }}</option>
+                            <option value="all">{{ 'sessions.catalog.all'|trans({}, 'sessions') }}</option>
+                        </select>
+                    </div>
                     <div class="internal-search__field internal-search__field--themes"><span>{{ 'sessions.repertoire.form.themes'|trans({}, 'sessions') }}</span><div class="instrument-catalog__tags">{% for themeOption in this.themeOptions %}<button type="button" class="internal-badge internal-badge--color instrument-catalog__tag-filter {{ themeOption.uuid in themeUuids ? 'is-selected' : '' }}" style="--badge-color: {{ themeOption.color }}" {{ live_action('toggleTheme', { uuid: themeOption.uuid }) }} aria-pressed="{{ themeOption.uuid in themeUuids ? 'true' : 'false' }}">{{ themeOption.label }}</button>{% endfor %}</div></div>
                 </div>
             </div>
@@ -67,6 +75,7 @@
                                 </th>
                             {% endfor %}
                             <th>{{ 'sessions.repertoire.table.actions'|trans({}, 'sessions') }}</th>
+                            <th>{{ 'sessions.catalog.active'|trans({}, 'sessions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -92,6 +101,7 @@
                                         {% include 'components/_catalog_actions.html.twig' with { editUrl: path('repertoire_edit', { uuid: item.uuid.toRfc4122 }), deleteUrl: path('repertoire_delete', { uuid: item.uuid.toRfc4122 }), itemLabel: item.title, token: csrf_token('repertoire_delete_' ~ item.uuid.toRfc4122), editLabel: 'sessions.repertoire.table.edit'|trans({}, 'sessions'), deleteLabel: 'sessions.repertoire.table.delete'|trans({}, 'sessions') } only %}
                                     </div>
                                 </td>
+                                <td><span class="internal-badge internal-badge--{{ item.active ? 'secondary' : 'primary' }}">{{ (item.active ? 'sessions.catalog.available' : 'sessions.catalog.unavailable')|trans({}, 'sessions') }}</span></td>
                             </tr>
                         {% endfor %}
                     </tbody>
