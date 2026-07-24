@@ -12,7 +12,7 @@
         <a class="internal-button internal-button--secondary" href="{{ path('session_index') }}">{{ 'sessions.summary.new.back'|trans({}, 'sessions') }}</a>
     </section>
 
-    <section class="internal-card">
+    <section class="internal-card internal-card--form">
         {% if hasErrors %}
             <div class="internal-alert internal-alert--error">{{ 'sessions.summary.form.error_notice'|trans({}, 'sessions') }}</div>
         {% endif %}

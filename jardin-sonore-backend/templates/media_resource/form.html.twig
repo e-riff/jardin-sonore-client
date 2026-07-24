@@ -11,11 +11,13 @@
         </div>
         <a class="internal-button internal-button--secondary" href="{{ path('media_resource_index') }}">{{ 'sessions.media.form.back'|trans({}, 'sessions') }}</a>
     </section>
-    <section class="internal-card">
+    <section class="internal-card internal-card--form">
         {% if hasErrors %}<div class="internal-alert internal-alert--error">{{ 'sessions.media.form.error_notice'|trans({}, 'sessions') }}</div>{% endif %}
         {{ form_start(form, { attr: { class: 'internal-form' } }) }}
             {{ form_row(form.type) }}
             {{ form_row(form.title) }}
+            {{ form_row(form.themeUuids) }}
+            {{ form_row(form.active) }}
             {{ form_row(form.primaryUrl) }}
             {% if item and item.primaryUrl %}
                 <p style="margin: -0.75rem 0 1rem; color: rgba(52, 37, 32, 0.78); font-size: 0.95rem;">
@@ -39,7 +41,6 @@
                 </div>
             {% endif %}
             {{ form_row(form.imageFile) }}
-            {{ form_row(form.active) }}
             <div class="internal-form__actions">
                 {{ form_widget(form.submit) }}
                 <a class="internal-button internal-button--secondary" href="{{ path('media_resource_index') }}">{{ 'sessions.media.form.back'|trans({}, 'sessions') }}</a>

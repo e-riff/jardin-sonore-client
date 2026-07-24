@@ -53,7 +53,7 @@
                                 <td data-table-mobile="actions" data-label="{{ 'sessions.summary.table.actions'|trans({}, 'sessions') }}">
                                     <div class="instrument-catalog__actions">
                                         <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('session_show', { uuid: session.uuid }) }}">{{ 'sessions.summary.table.preview'|trans({}, 'sessions') }}</a>
-                                        <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('session_edit', { uuid: session.uuid }) }}">{{ 'sessions.summary.table.edit'|trans({}, 'sessions') }}</a>
+                                        <a class="internal-icon-button" href="{{ path('session_edit', { uuid: session.uuid }) }}" title="{{ 'sessions.summary.table.edit'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.summary.table.edit'|trans({}, 'sessions') }}">✎</a>
                                     </div>
                                 </td>
                             </tr>

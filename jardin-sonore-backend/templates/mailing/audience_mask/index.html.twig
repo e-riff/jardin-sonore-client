@@ -37,7 +37,8 @@
                         <tr>
                             <th><twig:TableSortHeader label="{{ 'mailing.audience.mask.table.name'|trans({}, 'mailing') }}" :href="path('mailing_audience_mask_index', { campaign: campaign ? campaign.uuid : null, sort: 'name', direction: tableSort.nextDirectionFor('name') })" :active="tableSort.column == 'name'" :direction="tableSort.direction" /></th>
                             <th data-table-mobile="secondary"><twig:TableSortHeader label="{{ 'mailing.audience.mask.table.municipalities'|trans({}, 'mailing') }}" :href="path('mailing_audience_mask_index', { campaign: campaign ? campaign.uuid : null, sort: 'municipalityCount', direction: tableSort.nextDirectionFor('municipalityCount') })" :active="tableSort.column == 'municipalityCount'" :direction="tableSort.direction" /></th>
-                            <th>{{ 'mailing.audience.mask.table.actions'|trans({}, 'mailing') }}</th>
+                            <th>Critères</th>
+                            {% if campaign %}<th>{{ 'mailing.audience.mask.table.actions'|trans({}, 'mailing') }}</th>{% endif %}
                         </tr>
                     </thead>
                     <tbody>
@@ -45,8 +46,15 @@
                             <tr>
                                 <td data-table-mobile="primary" data-label="{{ 'mailing.audience.mask.table.name'|trans({}, 'mailing') }}"><strong>{{ audienceMask.name }}</strong></td>
                                 <td data-table-mobile="secondary" data-label="{{ 'mailing.audience.mask.table.municipalities'|trans({}, 'mailing') }}">{{ audienceMask.materializedMunicipalityInseeCodes|length }}</td>
-                                <td data-table-mobile="actions" data-label="{{ 'mailing.audience.mask.table.actions'|trans({}, 'mailing') }}">
-                                    {% if campaign %}
+                                <td data-table-mobile="secondary" data-label="Critères">
+                                    {% set details = audienceMaskDetails[audienceMask.uuid.toRfc4122] %}
+                                    <details>
+                                        <summary>{{ details.municipalities|length }} commune{{ details.municipalities|length > 1 ? 's' : '' }} · {{ details.criteria|length }} filtre{{ details.criteria|length > 1 ? 's' : '' }}</summary>
+                                        {% if details.municipalities is not empty %}<p><strong>Communes</strong><br>{{ details.municipalities|join(', ') }}</p>{% endif %}
+                                        {% if details.criteria is not empty %}<ul>{% for criterion in details.criteria %}<li>{{ criterion }}</li>{% endfor %}</ul>{% endif %}
+                                    </details>
+                                </td>
+                                {% if campaign %}<td data-table-mobile="actions" data-label="{{ 'mailing.audience.mask.table.actions'|trans({}, 'mailing') }}">
                                         <form method="post" action="{{ path('mailing_audience_mask_apply_to_campaign', {
                                             maskUuid: audienceMask.uuid,
                                             campaignUuid: campaign.uuid
@@ -56,10 +64,7 @@
                                                 {{ 'mailing.audience.mask.apply'|trans({}, 'mailing') }}
                                             </button>
                                         </form>
-                                    {% else %}
-                                        <span class="help-text">{{ 'mailing.audience.mask.apply_help'|trans({}, 'mailing') }}</span>
-                                    {% endif %}
-                                </td>
+                                </td>{% endif %}
                             </tr>
                         {% endfor %}
                     </tbody>
