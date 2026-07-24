@@ -2735,7 +2735,7 @@ form.internal-form > .internal-form__actions > .internal-form__back-action {
         width: 100%;
     }
 
-    .internal-table:not(.internal-table--responsive) {
+    .internal-table:not(.internal-table--responsive):not(.internal-table--compact-mobile) {
         min-width: 680px;
     }
 
@@ -2837,6 +2837,16 @@ form.internal-form > .internal-form__actions > .internal-form__back-action {
 
     .internal-table--compact-mobile tbody tr + tr {
         border-top: 1px solid color-mix(in oklab, var(--color-outline-variant) 42%, white);
+    }
+
+    .internal-table--compact-mobile tbody tr:hover,
+    .internal-table--compact-mobile tbody tr:focus-visible {
+        background: color-mix(in oklab, var(--color-primary-fixed) 28%, white);
+    }
+
+    .internal-table--compact-mobile tbody tr:hover td,
+    .internal-table--compact-mobile tbody tr:focus-visible td {
+        background: transparent;
     }
 
     .internal-table--compact-mobile td {
