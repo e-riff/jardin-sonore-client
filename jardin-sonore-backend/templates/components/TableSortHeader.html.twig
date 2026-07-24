@@ -1,0 +1,6 @@
+{% props label, href, active = false, direction = 'asc' %}
+
+<a class="internal-table__sort{{ active ? ' is-active' : '' }}" href="{{ href }}">
+    <span>{{ label }}</span>
+    <span aria-hidden="true">{{ active ? (direction == 'asc' ? '↑' : '↓') : '↕' }}</span>
+</a>

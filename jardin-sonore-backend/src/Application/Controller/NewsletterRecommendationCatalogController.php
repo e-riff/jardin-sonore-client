@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Controller;
 
+use App\Application\Backoffice\TableSort;
 use App\Application\Form\Model\NewsletterRecommendationFormModel;
 use App\Application\Form\NewsletterRecommendationType;
 use App\Application\Mailing\AddNewsletterRecommendationToCampaign;
@@ -33,6 +34,13 @@ final class NewsletterRecommendationCatalogController extends AbstractController
         $query = $request->query->getString('query');
         $availability = $request->query->getString('availability', 'active');
         $availability = in_array($availability, ['active', 'inactive', 'all'], true) ? $availability : 'active';
+        $tableSort = TableSort::fromQuery(
+            $request->query->getString('sort'),
+            $request->query->getString('direction'),
+            ['title', 'tag', 'lastUsedAt'],
+            'title',
+            'asc',
+        );
         $recommendations = $searchNewsletterRecommendations($query, 'active' === $availability);
 
         if ('inactive' === $availability) {
@@ -42,10 +50,26 @@ final class NewsletterRecommendationCatalogController extends AbstractController
             ));
         }
 
+        usort($recommendations, static function ($left, $right) use ($tableSort): int {
+            $leftValue = match ($tableSort->column) {
+                'tag' => $left->tag ?? '',
+                'lastUsedAt' => ($left->usages[0] ?? null)?->sentAt->getTimestamp() ?? 0,
+                default => $left->title,
+            };
+            $rightValue = match ($tableSort->column) {
+                'tag' => $right->tag ?? '',
+                'lastUsedAt' => ($right->usages[0] ?? null)?->sentAt->getTimestamp() ?? 0,
+                default => $right->title,
+            };
+
+            return $tableSort->compare($leftValue, $rightValue);
+        });
+
         return $this->render('mailing/recommendation_catalog/index.html.twig', [
             'query' => $query,
             'availability' => $availability,
             'recommendations' => $recommendations,
+            'tableSort' => $tableSort,
         ]);
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Controller;
 
+use App\Application\Backoffice\TableSort;
 use App\Application\Form\MailingAudienceMaskType;
 use App\Application\Form\Model\MailingAudienceGeographicMode;
 use App\Application\Form\Model\MailingAudienceMaskFormModel;
@@ -38,9 +39,29 @@ final class MailingAudienceMaskController extends AbstractController
         ListMailingAudienceMasks $listMailingAudienceMasks,
         GetMailingCampaign $getMailingCampaign,
     ): Response {
+        $tableSort = TableSort::fromQuery(
+            $request->query->getString('sort'),
+            $request->query->getString('direction'),
+            ['name', 'municipalityCount'],
+            'name',
+            'asc',
+        );
+        $audienceMasks = $listMailingAudienceMasks();
+        usort($audienceMasks, static function ($left, $right) use ($tableSort): int {
+            $leftValue = 'municipalityCount' === $tableSort->column
+                ? count($left->getMaterializedMunicipalityInseeCodes())
+                : $left->getName();
+            $rightValue = 'municipalityCount' === $tableSort->column
+                ? count($right->getMaterializedMunicipalityInseeCodes())
+                : $right->getName();
+
+            return $tableSort->compare($leftValue, $rightValue);
+        });
+
         return $this->render('mailing/audience_mask/index.html.twig', [
             'campaign' => $this->resolveMailingCampaignFromQuery($request, $getMailingCampaign),
-            'audienceMasks' => $listMailingAudienceMasks(),
+            'audienceMasks' => $audienceMasks,
+            'tableSort' => $tableSort,
         ]);
     }
 
