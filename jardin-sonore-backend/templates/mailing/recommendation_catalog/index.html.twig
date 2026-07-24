@@ -20,7 +20,7 @@
             <label for="catalog-query">{{ 'mailing.catalog.index.search'|trans({}, 'mailing') }}</label>
             <div>
                 <input id="catalog-query" name="query" value="{{ query }}">
-                <select name="availability" aria-label="{{ 'mailing.catalog.index.filter_availability'|trans({}, 'mailing') }}">
+                <select class="mailing-catalog__availability" name="availability" aria-label="{{ 'mailing.catalog.index.filter_availability'|trans({}, 'mailing') }}">
                     <option value="active" {% if availability == 'active' %}selected{% endif %}>{{ 'mailing.catalog.index.available_only'|trans({}, 'mailing') }}</option>
                     <option value="inactive" {% if availability == 'inactive' %}selected{% endif %}>{{ 'mailing.catalog.index.unavailable_only'|trans({}, 'mailing') }}</option>
                     <option value="all" {% if availability == 'all' %}selected{% endif %}>{{ 'mailing.catalog.index.all'|trans({}, 'mailing') }}</option>
