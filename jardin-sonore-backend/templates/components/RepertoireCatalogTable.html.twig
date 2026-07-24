@@ -56,7 +56,16 @@
             <p class="internal-empty-state">{{ 'sessions.repertoire.index.empty'|trans({}, 'sessions') }}</p>
         {% else %}
             <div class="internal-table-wrapper">
-                <table class="internal-table internal-table--responsive">
+                <label class="internal-table__mobile-sort">
+                    <span>Trier le répertoire</span>
+                    <select data-model="on(change)|sortBy">
+                        <option value="updatedAt" {% if sortBy == 'updatedAt' %}selected{% endif %}>Dernière mise à jour</option>
+                        <option value="title" {% if sortBy == 'title' %}selected{% endif %}>Titre</option>
+                        <option value="type" {% if sortBy == 'type' %}selected{% endif %}>Type</option>
+                        <option value="theme" {% if sortBy == 'theme' %}selected{% endif %}>Thème</option>
+                    </select>
+                </label>
+                <table class="internal-table internal-table--compact-mobile">
                     <thead>
                         <tr>
                             {% for column, label in {
@@ -75,23 +84,22 @@
                                 </th>
                             {% endfor %}
                             <th>{{ 'sessions.repertoire.table.actions'|trans({}, 'sessions') }}</th>
-                            <th>{{ 'sessions.catalog.active'|trans({}, 'sessions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in items %}
-                            <tr class="internal-table__row--clickable" tabindex="0" data-controller="catalog-row" data-catalog-row-url-value="{{ path('repertoire_edit', { uuid: item.uuid.toRfc4122 }) }}" data-action="click->catalog-row#navigate keydown->catalog-row#navigateFromKeyboard">
-                                <td data-label="{{ 'sessions.repertoire.table.type'|trans({}, 'sessions') }}">
+                            <tr class="internal-table__row--clickable" data-table-availability="{{ item.active ? 'active' : 'inactive' }}" tabindex="0" data-controller="catalog-row" data-catalog-row-url-value="{{ path('repertoire_edit', { uuid: item.uuid.toRfc4122 }) }}" data-action="click->catalog-row#navigate keydown->catalog-row#navigateFromKeyboard">
+                                <td data-table-mobile="secondary" data-label="{{ 'sessions.repertoire.table.type'|trans({}, 'sessions') }}">
                                     <span class="internal-badge {{ item.type.value == 'fingerplay' ? 'internal-badge--secondary' : 'internal-badge--primary' }}">{{ item.type.translationKey()|trans({}, 'sessions') }}</span>
                                 </td>
-                                <td data-label="{{ 'sessions.repertoire.table.title'|trans({}, 'sessions') }}">
-                                    <strong>{{ item.title }}</strong>
+                                <td data-table-mobile="primary" data-label="{{ 'sessions.repertoire.table.title'|trans({}, 'sessions') }}">
+                                    <span class="internal-table__availability-dot{{ item.active ? '' : ' internal-table__availability-dot--inactive' }}"></span><strong>{{ item.title }}</strong>
                                     {% if item.source %}
                                         <span class="internal-table-note">{{ item.source }}</span>
                                     {% endif %}
                                 </td>
-                                <td data-label="{{ 'sessions.repertoire.table.themes'|trans({}, 'sessions') }}"><div class="instrument-catalog__tags">{% for theme in item.themes %}<span class="internal-badge internal-badge--color" style="--badge-color: {{ theme.color }}">{{ theme.label }}</span>{% endfor %}</div></td>
-                                <td data-catalog-row-ignore data-label="{{ 'sessions.repertoire.table.actions'|trans({}, 'sessions') }}">
+                                <td data-table-mobile="secondary" data-label="{{ 'sessions.repertoire.table.themes'|trans({}, 'sessions') }}"><div class="instrument-catalog__tags">{% for theme in item.themes %}<span class="internal-badge internal-badge--color" style="--badge-color: {{ theme.color }}">{{ theme.label }}</span>{% endfor %}</div></td>
+                                <td data-table-mobile="actions" data-catalog-row-ignore data-label="{{ 'sessions.repertoire.table.actions'|trans({}, 'sessions') }}">
                                     <div class="instrument-catalog__actions">
                                         {% if sessionQuery %}
                                             <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('session_sequence_new', { uuid: sessionQuery, repertoire: item.uuid.toRfc4122 }) }}">
@@ -101,7 +109,6 @@
                                         {% include 'components/_catalog_actions.html.twig' with { editUrl: path('repertoire_edit', { uuid: item.uuid.toRfc4122 }), deleteUrl: path('repertoire_delete', { uuid: item.uuid.toRfc4122 }), itemLabel: item.title, token: csrf_token('repertoire_delete_' ~ item.uuid.toRfc4122), editLabel: 'sessions.repertoire.table.edit'|trans({}, 'sessions'), deleteLabel: 'sessions.repertoire.table.delete'|trans({}, 'sessions') } only %}
                                     </div>
                                 </td>
-                                <td><span class="internal-badge internal-badge--{{ item.active ? 'secondary' : 'primary' }}">{{ (item.active ? 'sessions.catalog.available' : 'sessions.catalog.unavailable')|trans({}, 'sessions') }}</span></td>
                             </tr>
                         {% endfor %}
                     </tbody>

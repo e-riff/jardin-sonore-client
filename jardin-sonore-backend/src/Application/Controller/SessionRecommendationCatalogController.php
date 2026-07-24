@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Controller;
 
+use App\Application\Backoffice\TableSort;
 use App\Application\Form\Model\SessionRecommendationFormModel;
 use App\Application\Form\SessionRecommendationType as SessionRecommendationFormType;
 use App\Application\Session\CreateSessionRecommendation;
@@ -23,10 +24,35 @@ final class SessionRecommendationCatalogController extends AbstractController
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(Request $request, SearchSessionRecommendations $searchSessionRecommendations): Response
     {
+        $tableSort = TableSort::fromQuery(
+            $request->query->getString('sort'),
+            $request->query->getString('direction'),
+            ['title', 'primaryUrl', 'active'],
+            'title',
+            'asc',
+        );
+        $items = $searchSessionRecommendations($request->query->getString('query'));
+
+        usort($items, static function ($left, $right) use ($tableSort): int {
+            $leftValue = match ($tableSort->column) {
+                'primaryUrl' => $left->primaryUrl ?? '',
+                'active' => $left->active ? 1 : 0,
+                default => $left->title,
+            };
+            $rightValue = match ($tableSort->column) {
+                'primaryUrl' => $right->primaryUrl ?? '',
+                'active' => $right->active ? 1 : 0,
+                default => $right->title,
+            };
+
+            return $tableSort->compare($leftValue, $rightValue);
+        });
+
         return $this->render('session_recommendation/index.html.twig', [
             'sessionQuery' => $request->query->getString('session'),
             'query' => $request->query->getString('query'),
-            'items' => $searchSessionRecommendations($request->query->getString('query')),
+            'items' => $items,
+            'tableSort' => $tableSort,
         ]);
     }
 

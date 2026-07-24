@@ -24,14 +24,18 @@
             <p class="internal-empty-state">{{ 'sessions.recommendation.index.empty'|trans({}, 'sessions') }}</p>
         {% else %}
             <div class="internal-table-wrapper">
-                <table class="internal-table internal-table--responsive">
-                    <thead><tr><th>{{ 'sessions.recommendation.table.title'|trans({}, 'sessions') }}</th><th>{{ 'sessions.recommendation.table.link'|trans({}, 'sessions') }}</th><th>{{ 'sessions.recommendation.table.actions'|trans({}, 'sessions') }}</th></tr></thead>
+                <twig:TableMobileSort label="Trier les prolongements" :selected="tableSort.column" :options="[
+                    { value: 'title', label: 'Titre', href: path('session_recommendation_index', { session: sessionQuery, query: query, sort: 'title', direction: tableSort.nextDirectionFor('title') }) },
+                    { value: 'primaryUrl', label: 'Lien', href: path('session_recommendation_index', { session: sessionQuery, query: query, sort: 'primaryUrl', direction: tableSort.nextDirectionFor('primaryUrl') }) }
+                ]" />
+                <table class="internal-table internal-table--compact-mobile">
+                    <thead><tr><th><twig:TableSortHeader label="{{ 'sessions.recommendation.table.title'|trans({}, 'sessions') }}" :href="path('session_recommendation_index', { session: sessionQuery, query: query, sort: 'title', direction: tableSort.nextDirectionFor('title') })" :active="tableSort.column == 'title'" :direction="tableSort.direction" /></th><th><twig:TableSortHeader label="{{ 'sessions.recommendation.table.link'|trans({}, 'sessions') }}" :href="path('session_recommendation_index', { session: sessionQuery, query: query, sort: 'primaryUrl', direction: tableSort.nextDirectionFor('primaryUrl') })" :active="tableSort.column == 'primaryUrl'" :direction="tableSort.direction" /></th><th>{{ 'sessions.recommendation.table.actions'|trans({}, 'sessions') }}</th></tr></thead>
                     <tbody>
                     {% for item in items %}
-                        <tr>
-                            <td data-label="{{ 'sessions.recommendation.table.title'|trans({}, 'sessions') }}"><strong>{{ item.title }}</strong><span class="internal-table-note">{{ item.text|length > 120 ? item.text|slice(0, 120) ~ '…' : item.text }}</span></td>
-                            <td data-label="{{ 'sessions.recommendation.table.link'|trans({}, 'sessions') }}">{{ item.primaryUrl ?? '—' }}</td>
-                            <td data-label="{{ 'sessions.recommendation.table.actions'|trans({}, 'sessions') }}"><div class="instrument-catalog__actions">{% if sessionQuery %}<a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('session_sequence_new', { uuid: sessionQuery, recommendation: item.uuid }) }}">{{ 'sessions.recommendation.table.insert'|trans({}, 'sessions') }}</a>{% endif %}<a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('session_recommendation_edit', { uuid: item.uuid }) }}">{{ 'sessions.recommendation.table.edit'|trans({}, 'sessions') }}</a></div></td>
+                        <tr data-table-availability="{{ item.active ? 'active' : 'inactive' }}">
+                            <td data-table-mobile="primary" data-label="{{ 'sessions.recommendation.table.title'|trans({}, 'sessions') }}"><span class="internal-table__availability-dot{{ item.active ? '' : ' internal-table__availability-dot--inactive' }}"></span><strong>{{ item.title }}</strong><span class="internal-table-note">{{ item.text|length > 120 ? item.text|slice(0, 120) ~ '…' : item.text }}</span></td>
+                            <td data-table-mobile="secondary" data-label="{{ 'sessions.recommendation.table.link'|trans({}, 'sessions') }}">{{ item.primaryUrl ?? '—' }}</td>
+                            <td data-table-mobile="actions" data-label="{{ 'sessions.recommendation.table.actions'|trans({}, 'sessions') }}"><div class="instrument-catalog__actions">{% if sessionQuery %}<a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('session_sequence_new', { uuid: sessionQuery, recommendation: item.uuid }) }}">{{ 'sessions.recommendation.table.insert'|trans({}, 'sessions') }}</a>{% endif %}<a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('session_recommendation_edit', { uuid: item.uuid }) }}">{{ 'sessions.recommendation.table.edit'|trans({}, 'sessions') }}</a></div></td></tr>
                         </tr>
                     {% endfor %}
                     </tbody>

@@ -35,20 +35,25 @@
             <p class="internal-empty-state">{{ 'mailing.catalog.index.empty'|trans({}, 'mailing') }}</p>
         {% else %}
             <div class="internal-table-wrapper">
-                <table class="internal-table internal-table--responsive">
+                <twig:TableMobileSort label="Trier les recommandations" :selected="tableSort.column" :options="[
+                    { value: 'title', label: 'Titre', href: path('mailing_recommendation_catalog_index', { query: query, availability: availability, sort: 'title', direction: tableSort.nextDirectionFor('title') }) },
+                    { value: 'tag', label: 'Tag', href: path('mailing_recommendation_catalog_index', { query: query, availability: availability, sort: 'tag', direction: tableSort.nextDirectionFor('tag') }) },
+                    { value: 'lastUsedAt', label: 'Dernière utilisation', href: path('mailing_recommendation_catalog_index', { query: query, availability: availability, sort: 'lastUsedAt', direction: tableSort.nextDirectionFor('lastUsedAt') }) }
+                ]" />
+                <table class="internal-table internal-table--compact-mobile">
                     <thead>
                     <tr>
-                        <th>{{ 'mailing.catalog.index.table.visual'|trans({}, 'mailing') }}</th>
-                        <th>{{ 'mailing.catalog.index.table.title'|trans({}, 'mailing') }}</th>
-                        <th>{{ 'mailing.catalog.index.table.status'|trans({}, 'mailing') }}</th>
-                        <th>{{ 'mailing.catalog.index.table.usages'|trans({}, 'mailing') }}</th>
+                        <th data-table-mobile="hidden">{{ 'mailing.catalog.index.table.visual'|trans({}, 'mailing') }}</th>
+                        <th><twig:TableSortHeader label="{{ 'mailing.catalog.index.table.title'|trans({}, 'mailing') }}" :href="path('mailing_recommendation_catalog_index', { query: query, availability: availability, sort: 'title', direction: tableSort.nextDirectionFor('title') })" :active="tableSort.column == 'title'" :direction="tableSort.direction" /></th>
+                        <th data-table-mobile="secondary"><twig:TableSortHeader label="Tag" :href="path('mailing_recommendation_catalog_index', { query: query, availability: availability, sort: 'tag', direction: tableSort.nextDirectionFor('tag') })" :active="tableSort.column == 'tag'" :direction="tableSort.direction" /></th>
+                        <th data-table-mobile="secondary"><twig:TableSortHeader label="{{ 'mailing.catalog.index.table.usages'|trans({}, 'mailing') }}" :href="path('mailing_recommendation_catalog_index', { query: query, availability: availability, sort: 'lastUsedAt', direction: tableSort.nextDirectionFor('lastUsedAt') })" :active="tableSort.column == 'lastUsedAt'" :direction="tableSort.direction" /></th>
                         <th>{{ 'mailing.catalog.index.table.actions'|trans({}, 'mailing') }}</th>
                     </tr>
                     </thead>
                     <tbody>
                     {% for recommendation in recommendations %}
-                        <tr>
-                            <td data-label="{{ 'mailing.catalog.index.table.visual'|trans({}, 'mailing') }}">
+                        <tr data-table-availability="{{ recommendation.active ? 'active' : 'inactive' }}">
+                            <td data-table-mobile="hidden" data-label="{{ 'mailing.catalog.index.table.visual'|trans({}, 'mailing') }}">
                                 {% if recommendation.imagePath %}
                                     {% if recommendation.url %}
                                         <a class="mailing-catalog-table__media" href="{{ recommendation.url }}" target="_blank" rel="noopener noreferrer">
@@ -63,19 +68,15 @@
                                     <span class="internal-table-note">—</span>
                                 {% endif %}
                             </td>
-                            <td data-label="{{ 'mailing.catalog.index.table.title'|trans({}, 'mailing') }}">
+                            <td data-table-mobile="primary" data-label="{{ 'mailing.catalog.index.table.title'|trans({}, 'mailing') }}">
                                 {% if recommendation.tag %}
                                     <p class="mailing-catalog-card__tag">{{ recommendation.tag }}</p>
                                 {% endif %}
-                                <strong>{{ recommendation.title }}</strong>
+                                <span class="internal-table__availability-dot{{ recommendation.active ? '' : ' internal-table__availability-dot--inactive' }}"></span><strong>{{ recommendation.title }}</strong>
                                 <span class="internal-table-note">{{ recommendation.text }}</span>
                             </td>
-                            <td data-label="{{ 'mailing.catalog.index.table.status'|trans({}, 'mailing') }}">
-                                <span class="internal-badge internal-badge--{{ recommendation.active ? 'secondary' : 'primary' }}">
-                                    {{ (recommendation.active ? 'mailing.catalog.status.active' : 'mailing.catalog.status.inactive')|trans({}, 'mailing') }}
-                                </span>
-                            </td>
-                            <td data-label="{{ 'mailing.catalog.index.table.usages'|trans({}, 'mailing') }}">
+                            <td data-table-mobile="secondary" data-label="Tag">{{ recommendation.tag ?? '—' }}</td>
+                            <td data-table-mobile="secondary" data-label="{{ 'mailing.catalog.index.table.usages'|trans({}, 'mailing') }}">
                                 {% if recommendation.usages is empty %}
                                     <span class="internal-table-note">{{ 'mailing.catalog.index.never_used'|trans({}, 'mailing') }}</span>
                                 {% else %}
@@ -89,7 +90,7 @@
                                     </details>
                                 {% endif %}
                             </td>
-                            <td data-label="{{ 'mailing.catalog.index.table.actions'|trans({}, 'mailing') }}">
+                            <td data-table-mobile="actions" data-label="{{ 'mailing.catalog.index.table.actions'|trans({}, 'mailing') }}">
                                 {% include 'components/_catalog_actions.html.twig' with {
                                     editUrl: path('mailing_recommendation_catalog_edit', { uuid: recommendation.uuid }),
                                     deleteUrl: path('mailing_recommendation_catalog_delete', { uuid: recommendation.uuid }),

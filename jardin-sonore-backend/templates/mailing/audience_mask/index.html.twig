@@ -28,20 +28,24 @@
             <p>{{ 'mailing.audience.mask.empty'|trans({}, 'mailing') }}</p>
         {% else %}
             <div class="internal-table-wrapper">
-                <table class="internal-table internal-table--responsive">
+                <twig:TableMobileSort label="Trier les masques" :selected="tableSort.column" :options="[
+                    { value: 'name', label: 'Nom', href: path('mailing_audience_mask_index', { campaign: campaign ? campaign.uuid : null, sort: 'name', direction: tableSort.nextDirectionFor('name') }) },
+                    { value: 'municipalityCount', label: 'Communes', href: path('mailing_audience_mask_index', { campaign: campaign ? campaign.uuid : null, sort: 'municipalityCount', direction: tableSort.nextDirectionFor('municipalityCount') }) }
+                ]" />
+                <table class="internal-table internal-table--compact-mobile">
                     <thead>
                         <tr>
-                            <th>{{ 'mailing.audience.mask.table.name'|trans({}, 'mailing') }}</th>
-                            <th>{{ 'mailing.audience.mask.table.municipalities'|trans({}, 'mailing') }}</th>
+                            <th><twig:TableSortHeader label="{{ 'mailing.audience.mask.table.name'|trans({}, 'mailing') }}" :href="path('mailing_audience_mask_index', { campaign: campaign ? campaign.uuid : null, sort: 'name', direction: tableSort.nextDirectionFor('name') })" :active="tableSort.column == 'name'" :direction="tableSort.direction" /></th>
+                            <th data-table-mobile="secondary"><twig:TableSortHeader label="{{ 'mailing.audience.mask.table.municipalities'|trans({}, 'mailing') }}" :href="path('mailing_audience_mask_index', { campaign: campaign ? campaign.uuid : null, sort: 'municipalityCount', direction: tableSort.nextDirectionFor('municipalityCount') })" :active="tableSort.column == 'municipalityCount'" :direction="tableSort.direction" /></th>
                             <th>{{ 'mailing.audience.mask.table.actions'|trans({}, 'mailing') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for audienceMask in audienceMasks %}
                             <tr>
-                                <td data-label="{{ 'mailing.audience.mask.table.name'|trans({}, 'mailing') }}"><strong>{{ audienceMask.name }}</strong></td>
-                                <td data-label="{{ 'mailing.audience.mask.table.municipalities'|trans({}, 'mailing') }}">{{ audienceMask.materializedMunicipalityInseeCodes|length }}</td>
-                                <td data-label="{{ 'mailing.audience.mask.table.actions'|trans({}, 'mailing') }}">
+                                <td data-table-mobile="primary" data-label="{{ 'mailing.audience.mask.table.name'|trans({}, 'mailing') }}"><strong>{{ audienceMask.name }}</strong></td>
+                                <td data-table-mobile="secondary" data-label="{{ 'mailing.audience.mask.table.municipalities'|trans({}, 'mailing') }}">{{ audienceMask.materializedMunicipalityInseeCodes|length }}</td>
+                                <td data-table-mobile="actions" data-label="{{ 'mailing.audience.mask.table.actions'|trans({}, 'mailing') }}">
                                     {% if campaign %}
                                         <form method="post" action="{{ path('mailing_audience_mask_apply_to_campaign', {
                                             maskUuid: audienceMask.uuid,

@@ -38,30 +38,35 @@
             </div>
         {% else %}
             <div class="internal-table-wrapper">
-                <table class="internal-table internal-table--responsive">
+                <twig:TableMobileSort label="Trier les campagnes" :selected="tableSort.column" :options="[
+                    { value: 'updatedAt', label: 'Dernière mise à jour', href: path('mailing_index', { sort: 'updatedAt', direction: tableSort.nextDirectionFor('updatedAt') }) },
+                    { value: 'internalTitle', label: 'Titre interne', href: path('mailing_index', { sort: 'internalTitle', direction: tableSort.nextDirectionFor('internalTitle') }) },
+                    { value: 'emailSubject', label: 'Objet', href: path('mailing_index', { sort: 'emailSubject', direction: tableSort.nextDirectionFor('emailSubject') }) }
+                ]" />
+                <table class="internal-table internal-table--compact-mobile">
                     <thead>
                     <tr>
-                        <th>{{ 'mailing.index.table.internal_title'|trans({}, 'mailing') }}</th>
-                        <th>{{ 'mailing.index.table.email_subject'|trans({}, 'mailing') }}</th>
-                        <th>{{ 'mailing.index.table.status'|trans({}, 'mailing') }}</th>
-                        <th>{{ 'mailing.index.table.audience'|trans({}, 'mailing') }}</th>
-                        <th>{{ 'mailing.index.table.updated_at'|trans({}, 'mailing') }}</th>
+                        <th><twig:TableSortHeader label="{{ 'mailing.index.table.internal_title'|trans({}, 'mailing') }}" :href="path('mailing_index', { sort: 'internalTitle', direction: tableSort.nextDirectionFor('internalTitle') })" :active="tableSort.column == 'internalTitle'" :direction="tableSort.direction" /></th>
+                        <th data-table-mobile="secondary"><twig:TableSortHeader label="{{ 'mailing.index.table.email_subject'|trans({}, 'mailing') }}" :href="path('mailing_index', { sort: 'emailSubject', direction: tableSort.nextDirectionFor('emailSubject') })" :active="tableSort.column == 'emailSubject'" :direction="tableSort.direction" /></th>
+                        <th data-table-mobile="primary">{{ 'mailing.index.table.status'|trans({}, 'mailing') }}</th>
+                        <th data-table-mobile="secondary">{{ 'mailing.index.table.audience'|trans({}, 'mailing') }}</th>
+                        <th data-table-mobile="secondary"><twig:TableSortHeader label="{{ 'mailing.index.table.updated_at'|trans({}, 'mailing') }}" :href="path('mailing_index', { sort: 'updatedAt', direction: tableSort.nextDirectionFor('updatedAt') })" :active="tableSort.column == 'updatedAt'" :direction="tableSort.direction" /></th>
                         <th>{{ 'mailing.index.table.actions'|trans({}, 'mailing') }}</th>
                     </tr>
                     </thead>
                     <tbody>
                     {% for campaign in campaigns %}
                         <tr>
-                            <td data-label="{{ 'mailing.index.table.internal_title'|trans({}, 'mailing') }}">
+                            <td data-table-mobile="primary" data-label="{{ 'mailing.index.table.internal_title'|trans({}, 'mailing') }}">
                                 <strong>{{ campaign.internalTitle }}</strong>
                             </td>
-                            <td data-label="{{ 'mailing.index.table.email_subject'|trans({}, 'mailing') }}">{{ campaign.emailSubject }}</td>
-                            <td data-label="{{ 'mailing.index.table.status'|trans({}, 'mailing') }}">
+                            <td data-table-mobile="secondary" data-label="{{ 'mailing.index.table.email_subject'|trans({}, 'mailing') }}">{{ campaign.emailSubject }}</td>
+                            <td data-table-mobile="primary" data-label="{{ 'mailing.index.table.status'|trans({}, 'mailing') }}">
                                 <span class="internal-badge internal-badge--{{ statusBadgeVariants[campaign.status.value]|default('muted') }}">
                                     {{ ('mailing.status.' ~ campaign.status.value)|trans({}, 'mailing') }}
                                 </span>
                             </td>
-                            <td data-label="{{ 'mailing.index.table.audience'|trans({}, 'mailing') }}">
+                            <td data-table-mobile="secondary" data-label="{{ 'mailing.index.table.audience'|trans({}, 'mailing') }}">
                                 {% if campaign.hasAudienceCriteria %}
                                     <span class="internal-badge internal-badge--{{ campaign.audienceRecipientCount is not null ? 'success' : 'warning' }}">
                                         {% if campaign.audienceRecipientCount is not null %}
@@ -76,8 +81,8 @@
                                     </span>
                                 {% endif %}
                             </td>
-                            <td data-label="{{ 'mailing.index.table.updated_at'|trans({}, 'mailing') }}">{{ campaign.updatedAt|date('d/m/Y H:i') }}</td>
-                            <td data-label="{{ 'mailing.index.table.actions'|trans({}, 'mailing') }}">
+                            <td data-table-mobile="secondary" data-label="{{ 'mailing.index.table.updated_at'|trans({}, 'mailing') }}">{{ campaign.updatedAt|date('d/m/Y H:i') }}</td>
+                            <td data-table-mobile="actions" data-label="{{ 'mailing.index.table.actions'|trans({}, 'mailing') }}">
                                 <div class="mailing-index__actions">
                                     {% if campaign.isEditable %}
                                         <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('mailing_content', { uuid: campaign.uuid }) }}">

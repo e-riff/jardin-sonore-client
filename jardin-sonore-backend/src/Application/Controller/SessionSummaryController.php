@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Controller;
 
+use App\Application\Backoffice\TableSort;
 use App\Application\Form\Model\SessionSequenceFormModel;
 use App\Application\Form\Model\SessionSummaryFormModel;
 use App\Application\Form\SessionSequenceType as SessionSequenceFormType;
@@ -42,9 +43,34 @@ final class SessionSummaryController extends AbstractController
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(Request $request, SearchSessionSummaries $searchSessionSummaries): Response
     {
+        $tableSort = TableSort::fromQuery(
+            $request->query->getString('sort'),
+            $request->query->getString('direction'),
+            ['title', 'sessionDate', 'sequenceCount'],
+            'sessionDate',
+            'desc',
+        );
+        $sessions = $searchSessionSummaries($request->query->getString('query'));
+
+        usort($sessions, static function (SessionSummaryView $left, SessionSummaryView $right) use ($tableSort): int {
+            $leftValue = match ($tableSort->column) {
+                'title' => $left->title,
+                'sequenceCount' => count($left->sequences),
+                default => $left->sessionDate->format('U'),
+            };
+            $rightValue = match ($tableSort->column) {
+                'title' => $right->title,
+                'sequenceCount' => count($right->sequences),
+                default => $right->sessionDate->format('U'),
+            };
+
+            return $tableSort->compare($leftValue, $rightValue);
+        });
+
         return $this->render('session/index.html.twig', [
             'query' => $request->query->getString('query'),
-            'sessions' => $searchSessionSummaries($request->query->getString('query')),
+            'sessions' => $sessions,
+            'tableSort' => $tableSort,
         ]);
     }
 

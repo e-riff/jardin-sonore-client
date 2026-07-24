@@ -1,0 +1,10 @@
+{% props label, options = [], selected = '' %}
+
+<label class="internal-table__mobile-sort">
+    <span>{{ label }}</span>
+    <select onchange="window.location.href = this.value">
+        {% for option in options %}
+            <option value="{{ option.href }}" {% if option.value == selected %}selected{% endif %}>{{ option.label }}</option>
+        {% endfor %}
+    </select>
+</label>

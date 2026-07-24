@@ -25,27 +25,32 @@
             <p class="internal-empty-state">{{ 'sessions.summary.index.empty'|trans({}, 'sessions') }}</p>
         {% else %}
             <div class="internal-table-wrapper">
-                <table class="internal-table internal-table--responsive">
+                <twig:TableMobileSort label="Trier les séances" :selected="tableSort.column" :options="[
+                    { value: 'sessionDate', label: 'Date', href: path('session_index', { query: query, sort: 'sessionDate', direction: tableSort.nextDirectionFor('sessionDate') }) },
+                    { value: 'title', label: 'Titre', href: path('session_index', { query: query, sort: 'title', direction: tableSort.nextDirectionFor('title') }) }
+                ]" />
+                <table class="internal-table internal-table--compact-mobile">
                     <thead>
                         <tr>
-                            <th>{{ 'sessions.summary.table.title'|trans({}, 'sessions') }}</th>
-                            <th>{{ 'sessions.summary.table.date'|trans({}, 'sessions') }}</th>
-                            <th>{{ 'sessions.summary.table.sequence_count'|trans({}, 'sessions') }}</th>
+                            <th><twig:TableSortHeader label="{{ 'sessions.summary.table.title'|trans({}, 'sessions') }}" :href="path('session_index', { query: query, sort: 'title', direction: tableSort.nextDirectionFor('title') })" :active="tableSort.column == 'title'" :direction="tableSort.direction" /></th>
+                            <th><twig:TableSortHeader label="{{ 'sessions.summary.table.date'|trans({}, 'sessions') }}" :href="path('session_index', { query: query, sort: 'sessionDate', direction: tableSort.nextDirectionFor('sessionDate') })" :active="tableSort.column == 'sessionDate'" :direction="tableSort.direction" /></th>
+                            <th><twig:TableSortHeader label="{{ 'sessions.summary.table.sequence_count'|trans({}, 'sessions') }}" :href="path('session_index', { query: query, sort: 'sequenceCount', direction: tableSort.nextDirectionFor('sequenceCount') })" :active="tableSort.column == 'sequenceCount'" :direction="tableSort.direction" /></th>
                             <th>{{ 'sessions.summary.table.actions'|trans({}, 'sessions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for session in sessions %}
                             <tr>
-                                <td data-label="{{ 'sessions.summary.table.title'|trans({}, 'sessions') }}">
+                                <td data-table-mobile="primary" data-label="{{ 'sessions.summary.table.title'|trans({}, 'sessions') }}">
                                     <strong>{{ session.title }}</strong>
+                                    <span class="internal-table-note">{{ session.sessionDate|date('d/m/Y') }}</span>
                                     {% if session.theme %}
                                         <span class="internal-table-note">{{ session.theme }}</span>
                                     {% endif %}
                                 </td>
-                                <td data-label="{{ 'sessions.summary.table.date'|trans({}, 'sessions') }}">{{ session.sessionDate|date('d/m/Y') }}</td>
-                                <td data-label="{{ 'sessions.summary.table.sequence_count'|trans({}, 'sessions') }}">{{ session.sequences|length }}</td>
-                                <td data-label="{{ 'sessions.summary.table.actions'|trans({}, 'sessions') }}">
+                                <td data-table-mobile="secondary" data-label="{{ 'sessions.summary.table.date'|trans({}, 'sessions') }}">{{ session.sessionDate|date('d/m/Y') }}</td>
+                                <td data-table-mobile="secondary" data-label="{{ 'sessions.summary.table.sequence_count'|trans({}, 'sessions') }}">{{ session.sequences|length }}</td>
+                                <td data-table-mobile="actions" data-label="{{ 'sessions.summary.table.actions'|trans({}, 'sessions') }}">
                                     <div class="instrument-catalog__actions">
                                         <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('session_show', { uuid: session.uuid }) }}">{{ 'sessions.summary.table.preview'|trans({}, 'sessions') }}</a>
                                         <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('session_edit', { uuid: session.uuid }) }}">{{ 'sessions.summary.table.edit'|trans({}, 'sessions') }}</a>

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Controller;
 
+use App\Application\Backoffice\TableSort;
 use App\Application\Form\CreateMailingCampaignType;
 use App\Application\Form\EditMailingCampaignType;
 use App\Application\Form\MailingAudienceMaskType;
@@ -46,10 +47,36 @@ use Throwable;
 final class MailingController extends AbstractController
 {
     #[Route('', name: 'index', methods: ['GET'])]
-    public function index(ListMailingCampaigns $listMailingCampaigns): Response
+    public function index(Request $request, ListMailingCampaigns $listMailingCampaigns): Response
     {
+        $tableSort = TableSort::fromQuery(
+            $request->query->getString('sort'),
+            $request->query->getString('direction'),
+            ['internalTitle', 'emailSubject', 'status', 'updatedAt'],
+            'updatedAt',
+            'desc',
+        );
+        $campaigns = $listMailingCampaigns();
+        usort($campaigns, static function ($left, $right) use ($tableSort): int {
+            $leftValue = match ($tableSort->column) {
+                'emailSubject' => $left->emailSubject,
+                'status' => $left->status->value,
+                'updatedAt' => $left->updatedAt->getTimestamp(),
+                default => $left->internalTitle,
+            };
+            $rightValue = match ($tableSort->column) {
+                'emailSubject' => $right->emailSubject,
+                'status' => $right->status->value,
+                'updatedAt' => $right->updatedAt->getTimestamp(),
+                default => $right->internalTitle,
+            };
+
+            return $tableSort->compare($leftValue, $rightValue);
+        });
+
         return $this->render('mailing/index.html.twig', [
-            'campaigns' => $listMailingCampaigns(),
+            'campaigns' => $campaigns,
+            'tableSort' => $tableSort,
         ]);
     }
 

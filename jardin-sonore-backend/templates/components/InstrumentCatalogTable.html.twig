@@ -2,38 +2,22 @@
     {% set result = this.catalogResult %}
 
     <section class="internal-card">
-        <div class="instrument-catalog__controls">
-            <div class="internal-search">
-                <label for="instrument-query">{{ 'catalog.instrument.filters.query'|trans({}, 'catalog') }}</label>
-                <div>
-                    <input
-                        id="instrument-query"
-                        type="search"
-                        value="{{ query }}"
-                        data-model="debounce(300)|query"
-                        placeholder="{{ 'catalog.instrument.filters.query_placeholder'|trans({}, 'catalog') }}"
-                    >
-                </div>
-            </div>
-
-            <div class="instrument-catalog__filters instrument-catalog__filters--compact">
-                <div>
-                    <label for="instrument-tags">{{ 'catalog.instrument.filters.tags'|trans({}, 'catalog') }}</label>
-                    <div id="instrument-tags" class="instrument-catalog__tags">
-                        {% for tagOption in this.tagOptions %}
-                            <button
-                                type="button"
-                                class="internal-badge internal-badge--color instrument-catalog__tag-filter {{ this.isTagSelected(tagOption.uuid) ? 'is-selected' : '' }}"
-                                style="--badge-color: {{ tagOption.color }}"
-                                {{ live_action('toggleTag', { uuid: tagOption.uuid }) }}
-                                aria-pressed="{{ this.isTagSelected(tagOption.uuid) ? 'true' : 'false' }}"
-                            >
-                                {{ tagOption.label }}
-                            </button>
-                        {% endfor %}
+        <div class="instrument-catalog__controls instrument-catalog__controls--inline">
+            <div class="instrument-catalog__filter-row">
+                <div class="internal-search">
+                    <label for="instrument-query">{{ 'catalog.instrument.filters.query'|trans({}, 'catalog') }}</label>
+                    <div>
+                        <input
+                            id="instrument-query"
+                            type="search"
+                            value="{{ query }}"
+                            data-model="debounce(300)|query"
+                            placeholder="{{ 'catalog.instrument.filters.query_placeholder'|trans({}, 'catalog') }}"
+                        >
                     </div>
                 </div>
 
+                <div class="instrument-catalog__filters instrument-catalog__filters--selects">
                 <div>
                     <label for="instrument-active">{{ 'catalog.instrument.filters.active'|trans({}, 'catalog') }}</label>
                     <select id="instrument-active" data-model="on(change)|activeFilter">
@@ -60,6 +44,26 @@
                         <option value="without" {% if tuningFilter == 'without' %}selected{% endif %}>{{ 'catalog.instrument.filters.without_value'|trans({}, 'catalog') }}</option>
                     </select>
                 </div>
+                </div>
+            </div>
+
+            <div class="instrument-catalog__filters instrument-catalog__filters--tags">
+                <div>
+                    <label for="instrument-tags">{{ 'catalog.instrument.filters.tags'|trans({}, 'catalog') }}</label>
+                    <div id="instrument-tags" class="instrument-catalog__tags">
+                        {% for tagOption in this.tagOptions %}
+                            <button
+                                type="button"
+                                class="internal-badge internal-badge--color instrument-catalog__tag-filter {{ this.isTagSelected(tagOption.uuid) ? 'is-selected' : '' }}"
+                                style="--badge-color: {{ tagOption.color }}"
+                                {{ live_action('toggleTag', { uuid: tagOption.uuid }) }}
+                                aria-pressed="{{ this.isTagSelected(tagOption.uuid) ? 'true' : 'false' }}"
+                            >
+                                {{ tagOption.label }}
+                            </button>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -82,8 +86,16 @@
                 {{ 'catalog.instrument.index.empty'|trans({}, 'catalog') }}
             </div>
         {% else %}
-            <div class="internal-table-wrapper">
-                <table class="internal-table">
+            <div class="internal-table-wrapper internal-table-wrapper--compact-mobile">
+                <label class="internal-table__mobile-sort">
+                    <span>Trier les instruments</span>
+                    <select data-model="on(change)|sortBy">
+                        <option value="name" {% if sortBy == 'name' %}selected{% endif %}>Nom</option>
+                        <option value="tuning" {% if sortBy == 'tuning' %}selected{% endif %}>Accordage</option>
+                        <option value="quantity" {% if sortBy == 'quantity' %}selected{% endif %}>Quantité</option>
+                    </select>
+                </label>
+                <table class="internal-table internal-table--compact-mobile">
                     <thead>
                         <tr>
                             {% for column, label in {
@@ -103,24 +115,23 @@
                                 </th>
                             {% endfor %}
                             <th>{{ 'catalog.instrument.table.tags'|trans({}, 'catalog') }}</th>
-                            <th>{{ 'catalog.instrument.filters.active'|trans({}, 'catalog') }}</th>
                             <th>{{ 'catalog.instrument.table.actions'|trans({}, 'catalog') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for instrument in result.items %}
-                            <tr class="internal-table__row--clickable" tabindex="0" data-controller="catalog-row" data-catalog-row-url-value="{{ path('instrument_edit', { uuid: instrument.uuid.toRfc4122 }) }}" data-action="click->catalog-row#navigate keydown->catalog-row#navigateFromKeyboard">
-                                <td>
-                                    <strong>{{ instrument.name }}</strong>
+                            <tr class="internal-table__row--clickable" data-table-availability="{{ instrument.active ? 'active' : 'inactive' }}" tabindex="0" data-controller="catalog-row" data-catalog-row-url-value="{{ path('instrument_edit', { uuid: instrument.uuid.toRfc4122 }) }}" data-action="click->catalog-row#navigate keydown->catalog-row#navigateFromKeyboard">
+                                <td data-table-mobile="primary">
+                                    <span class="internal-table__availability-dot{{ instrument.active ? '' : ' internal-table__availability-dot--inactive' }}"></span><strong>{{ instrument.name }}</strong>
                                     {% if instrument.notes %}
                                         <span class="internal-table-note">
                                             {{ instrument.notes|length > 110 ? instrument.notes|slice(0, 110) ~ '…' : instrument.notes }}
                                         </span>
                                     {% endif %}
                                 </td>
-                                <td>{{ instrument.tuning ?? '—' }}</td>
-                                <td>{{ instrument.quantity ?? '—' }}</td>
-                                <td>
+                                <td data-table-mobile="secondary">{{ instrument.tuning ?? '—' }}</td>
+                                <td data-table-mobile="secondary">{{ instrument.quantity ?? '—' }}</td>
+                                <td data-table-mobile="secondary">
                                     {% if instrument.tags is empty %}
                                         <span class="internal-table-note">—</span>
                                     {% else %}
@@ -131,8 +142,7 @@
                                         </div>
                                     {% endif %}
                                 </td>
-                                <td><span class="internal-badge internal-badge--{{ instrument.active ? 'secondary' : 'primary' }}">{{ (instrument.active ? 'catalog.instrument.filters.active_only' : 'catalog.instrument.filters.inactive_only')|trans({}, 'catalog') }}</span></td>
-                                <td data-catalog-row-ignore>
+                                <td data-table-mobile="actions" data-catalog-row-ignore>
                                     {% include 'components/_catalog_actions.html.twig' with { editUrl: path('instrument_edit', { uuid: instrument.uuid.toRfc4122 }), deleteUrl: path('instrument_delete', { uuid: instrument.uuid.toRfc4122 }), itemLabel: instrument.name, token: csrf_token('instrument_delete_' ~ instrument.uuid.toRfc4122), editLabel: 'catalog.instrument.table.edit'|trans({}, 'catalog'), deleteLabel: 'catalog.instrument.table.delete'|trans({}, 'catalog') } only %}
                                 </td>
                             </tr>
@@ -145,22 +155,26 @@
                 <div class="instrument-catalog__pagination">
                     <button
                         type="button"
-                        class="internal-button internal-button--secondary internal-button--compact"
+                        class="internal-button internal-button--secondary internal-button--compact instrument-catalog__pagination-button"
                         {{ live_action('previousPage') }}
                         {% if page <= 1 %}disabled{% endif %}
+                        aria-label="{{ 'catalog.instrument.pagination.previous'|trans({}, 'catalog') }}"
                     >
-                        {{ 'catalog.instrument.pagination.previous'|trans({}, 'catalog') }}
+                        <span aria-hidden="true">←</span>
+                        <span class="internal-visually-hidden">{{ 'catalog.instrument.pagination.previous'|trans({}, 'catalog') }}</span>
                     </button>
 
-                    <span>{{ 'catalog.instrument.pagination.page'|trans({ current: page, total: this.pageCount }, 'catalog') }}</span>
+                    <span class="instrument-catalog__pagination-indicator" aria-label="{{ 'catalog.instrument.pagination.page'|trans({ current: page, total: this.pageCount }, 'catalog') }}"><strong>{{ page }}</strong><span>/</span>{{ this.pageCount }}</span>
 
                     <button
                         type="button"
-                        class="internal-button internal-button--secondary internal-button--compact"
+                        class="internal-button internal-button--secondary internal-button--compact instrument-catalog__pagination-button"
                         {{ live_action('nextPage') }}
                         {% if page >= this.pageCount %}disabled{% endif %}
+                        aria-label="{{ 'catalog.instrument.pagination.next'|trans({}, 'catalog') }}"
                     >
-                        {{ 'catalog.instrument.pagination.next'|trans({}, 'catalog') }}
+                        <span aria-hidden="true">→</span>
+                        <span class="internal-visually-hidden">{{ 'catalog.instrument.pagination.next'|trans({}, 'catalog') }}</span>
                     </button>
                 </div>
             {% endif %}
