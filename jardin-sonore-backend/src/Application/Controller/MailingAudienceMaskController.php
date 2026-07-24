@@ -15,6 +15,7 @@ use App\Application\Mailing\GetMailingAudienceMask;
 use App\Application\Mailing\GetMailingCampaign;
 use App\Application\Mailing\ListMailingAudienceMasks;
 use App\Application\Mailing\NewsletterAudienceMunicipalityMaterializerInterface;
+use App\Application\Mailing\NewsletterAudienceOptionsQueryInterface;
 use App\Application\Mailing\UpdateMailingCampaignAudience;
 use App\Domain\Model\AddressBook\CustomerStatus;
 use App\Domain\Model\AddressBook\OrganizationSector;
@@ -38,6 +39,7 @@ final class MailingAudienceMaskController extends AbstractController
         Request $request,
         ListMailingAudienceMasks $listMailingAudienceMasks,
         GetMailingCampaign $getMailingCampaign,
+        NewsletterAudienceOptionsQueryInterface $newsletterAudienceOptionsQuery,
     ): Response {
         $tableSort = TableSort::fromQuery(
             $request->query->getString('sort'),
@@ -58,10 +60,47 @@ final class MailingAudienceMaskController extends AbstractController
             return $tableSort->compare($leftValue, $rightValue);
         });
 
+        $audienceMaskDetails = [];
+        foreach ($audienceMasks as $audienceMask) {
+            $audienceFilter = $audienceMask->getAudienceFilter();
+            $municipalityInseeCodes = $audienceMask->getMaterializedMunicipalityInseeCodes();
+            $municipalityLabelsByInseeCode = $newsletterAudienceOptionsQuery->getMunicipalityLabelsByInseeCodes($municipalityInseeCodes);
+            $tagChoices = $newsletterAudienceOptionsQuery->getTagChoices();
+
+            $criteria = [];
+            if ([] !== $audienceFilter->getOrganizationTypes()) {
+                $criteria[] = 'Types : ' . implode(', ', array_map(static fn ($type): string => $type->value, $audienceFilter->getOrganizationTypes()));
+            }
+            if ([] !== $audienceFilter->getOrganizationSectors()) {
+                $criteria[] = 'Secteurs : ' . implode(', ', array_map(static fn ($sector): string => $sector->value, $audienceFilter->getOrganizationSectors()));
+            }
+            if ([] !== $audienceFilter->getCustomerStatuses()) {
+                $criteria[] = 'Statuts : ' . implode(', ', array_map(static fn ($status): string => $status->value, $audienceFilter->getCustomerStatuses()));
+            }
+            if ([] !== $audienceFilter->getTagUuids()) {
+                $criteria[] = 'Tags : ' . implode(', ', array_map(static fn (string $uuid): string => $tagChoices[$uuid] ?? $uuid, $audienceFilter->getTagUuids()));
+            }
+            if ([] !== $audienceFilter->getRegionCodes()) {
+                $criteria[] = 'Régions : ' . implode(', ', $audienceFilter->getRegionCodes());
+            }
+            if ([] !== $audienceFilter->getDepartmentCodes()) {
+                $criteria[] = 'Départements : ' . implode(', ', $audienceFilter->getDepartmentCodes());
+            }
+            if (null !== $audienceFilter->getRadiusKilometers()) {
+                $criteria[] = 'Rayon : ' . $audienceFilter->getRadiusKilometers() . ' km';
+            }
+
+            $audienceMaskDetails[$audienceMask->getUuid()->toRfc4122()] = [
+                'municipalities' => array_map(static fn (string $inseeCode): string => $municipalityLabelsByInseeCode[$inseeCode] ?? $inseeCode, $municipalityInseeCodes),
+                'criteria' => $criteria,
+            ];
+        }
+
         return $this->render('mailing/audience_mask/index.html.twig', [
             'campaign' => $this->resolveMailingCampaignFromQuery($request, $getMailingCampaign),
             'audienceMasks' => $audienceMasks,
             'tableSort' => $tableSort,
+            'audienceMaskDetails' => $audienceMaskDetails,
         ]);
     }
 

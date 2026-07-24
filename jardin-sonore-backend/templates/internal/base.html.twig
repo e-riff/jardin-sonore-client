@@ -6,20 +6,6 @@
     {% set currentRoute = app.request.attributes.get('_route') ?? '' %}
     {% set navGroups = [
         {
-            key: 'general',
-            route: 'internal_dashboard',
-            icon: '▦',
-            label: 'internal.base.nav.utility_group'|trans({}, 'internal'),
-            active: currentRoute starts with 'internal_',
-            links: [
-                {
-                    route: 'internal_dashboard',
-                    label: 'internal.base.nav.dashboard'|trans({}, 'internal'),
-                    active: currentRoute == 'internal_dashboard',
-                },
-            ],
-        },
-        {
             key: 'newsletters',
             route: 'mailing_index',
             icon: '✉',
@@ -36,19 +22,19 @@
                                 and not (currentRoute starts with 'mailing_campaign_recommendation_'),
                         },
                         {
-                            route: 'mailing_invalid_recipients_index',
-                    label: 'internal.base.nav.invalid_recipients'|trans({}, 'internal'),
-                    active: currentRoute starts with 'mailing_invalid_recipients_',
-                },
+                            route: 'mailing_recommendation_catalog_index',
+                            label: 'internal.base.nav.recommendation_catalog'|trans({}, 'internal'),
+                            active: currentRoute starts with 'mailing_recommendation_catalog_' or currentRoute starts with 'mailing_campaign_recommendation_',
+                        },
                         {
                             route: 'mailing_audience_mask_index',
                             label: 'internal.base.nav.audience_mask_catalog'|trans({}, 'internal'),
                             active: currentRoute starts with 'mailing_audience_mask_',
                         },
                         {
-                            route: 'mailing_recommendation_catalog_index',
-                            label: 'internal.base.nav.recommendation_catalog'|trans({}, 'internal'),
-                            active: currentRoute starts with 'mailing_recommendation_catalog_' or currentRoute starts with 'mailing_campaign_recommendation_',
+                            route: 'mailing_invalid_recipients_index',
+                            label: 'internal.base.nav.invalid_recipients'|trans({}, 'internal'),
+                            active: currentRoute starts with 'mailing_invalid_recipients_',
                         },
             ],
         },
@@ -106,7 +92,7 @@
             ],
         },
     ] %}
-    {% set activeNavGroup = navGroups|filter(group => group.active)|first ?: navGroups|first %}
+    {% set activeNavGroup = navGroups|filter(group => group.active)|first %}
 
     <div class="internal-shell" {{ stimulus_controller('internal-nav')|stimulus_controller('confirmation-dialog') }}>
         <header class="internal-header">

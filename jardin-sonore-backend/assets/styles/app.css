@@ -417,10 +417,24 @@ button:disabled {
 }
 
 .internal-page-heading {
+    position: relative;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 32px;
+    border-bottom: 1px solid color-mix(in oklab, var(--color-outline-variant) 44%, white);
+    padding-bottom: 28px;
+}
+
+.internal-page-heading::after {
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 76px;
+    height: 2px;
+    border-radius: 999px;
+    background: var(--color-primary);
+    content: "";
 }
 
 .internal-heading-actions {
@@ -444,9 +458,13 @@ button:disabled {
 .internal-page-heading h1,
 .internal-card h2 {
     margin: 0;
-    color: var(--color-on-background);
-    font-weight: 600;
+    color: color-mix(in oklab, var(--color-primary) 45%, var(--color-on-background));
+    font-weight: 500;
     line-height: 1.2;
+}
+
+.internal-page-heading h1 {
+    letter-spacing: -0.025em;
 }
 
 .internal-hero h1,
@@ -487,6 +505,18 @@ button:disabled {
 .internal-card--compact {
     gap: 16px;
     padding: 24px 26px;
+}
+
+.internal-card--form {
+    width: min(100%, 824px);
+    margin: 0 auto;
+    border-radius: 24px;
+    padding: 28px 30px;
+    box-shadow: 0 14px 36px -28px rgb(135 54 45 / 0.2);
+}
+
+.internal-card--form .internal-form {
+    max-width: none;
 }
 
 .internal-badge {
