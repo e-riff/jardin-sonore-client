@@ -48,9 +48,9 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 
 1. Stabiliser et clarifier le backend existant.
 2. Refaire le systeme de ciblage d'audience mailing et introduire les masques reutilisables.
-3. Developper le `compositeur de seances` a partir du socle deja livre.
-4. Traiter la `facturation` apres les resumes de seances.
-5. Garder `espace client`, donnees publiques front et extensions comme lots ulterieurs.
+3. Perfectionner le `compositeur de seances` et ouvrir l'espace structure associe.
+4. Traiter la `facturation` apres cette finition.
+5. Garder les donnees publiques front et extensions comme lots ulterieurs.
 
 ## Prochains Lots
 
@@ -137,36 +137,53 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
   - ce flux ne sert pas a relancer les `failed`, qui restent un sujet distinct ;
   - un masque d'audience peut aussi servir de point de depart pour une extension, avant recalcul du delta.
 
-### Lot 10. Preparation Du Prochain Module Metier
+### Lot 10. Compositeur De Seances V2 Et Espace Structure
 
-- Statut : Prochain vrai sujet recommande
+- Statut : Cadré, à implémenter
 - Le socle `resumes de seances` est deja en place : une seance contient des sequences ordonnees, ajoutees librement ou importees depuis les catalogues repertoire, medias et recommandations.
-- Objectif : transformer cette liste technique en `compositeur de seances` fluide et lisible.
-- Perimetre de cadrage :
-  - composer une seance a partir des catalogues et de blocs libres ;
-  - rendre l'ordre, le type et la source de chaque sequence immediatement lisibles ;
-  - simplifier le reordonnancement, en conservant une alternative accessible aux interactions avancees ;
-  - permettre d'editer ou de detacher une sequence sans modifier sa source catalogue ;
-  - renforcer la previsualisation dans l'ordre final.
-- Briques reutilisables deja disponibles :
-  - layout interne et composants UX Symfony deja en place ;
-  - conventions de cas d'usage, de lecture/ecriture et de mapping ;
-  - catalogues repertoire, medias et recommandations ;
-  - page de previsualisation de seance et cas d'usage de reordonnancement existant.
-- Orientation UX : `LiveComponent` pour la composition et les recherches, Stimulus pour les interactions locales telles que le glisser-deposer, Turbo pour les sous-ecrans ou formulaires isoles.
+- Le premier `compositeur de seances` est livre : ajout depuis les catalogues et en blocs libres, edition, changement de role, reordonnancement et previsualisation dans l'ordre final.
+- Principe produit : une seance est toujours unique et a jour. Le HTML, le PDF local et, plus tard, le fichier Drive representent la meme seance courante ; aucune version metier ou collection de micro-variantes n'est creee.
+
+#### Lot 10.1. Rendu Metier, Medias Et PDF Canonique
+
+- Refaire l'apercu metier en deroule vertical presentable, en reprenant le langage visuel, les couleurs et les reperes du compositeur sans ses actions d'edition.
+- Conserver les paroles repliables en HTML ; produire un rendu PDF vertical dedie et imprimable, ou les paroles sont developpees.
+- Remplacer les deux URLs historiques d'une sequence par une collection de medias : libelle, type, URL, image eventuelle et indicateur de media mis en avant.
+  - La migration transforme le lien principal en media mis en avant et le lien secondaire en lien complementaire.
+  - Une sequence conserve une copie editable de ses medias : une evolution du catalogue ne reecrit pas une seance existante.
+  - Un media YouTube mis en avant s'affiche dans un lecteur integre compact ; les autres medias restent des liens complementaires.
+- Generer un PDF canonique local apres chaque sauvegarde, via une tache Messenger dediee et un moteur PDF PHP autonome.
+- Afficher l'etat du document dans le backoffice : a jour, mise a jour en cours ou erreur relancable. Une panne de generation ne bloque pas l'enregistrement de la seance.
+
+#### Lot 10.2. Espace Structure Dans Next.js
+
+- Lier chaque seance a une vraie `Organization`. Les seances historiques non rattachees restent internes tant qu'elles n'ont pas ete associees manuellement.
+- Creer un acces partage par structure, distinct de `Person` : e-mail dedie servant d'identifiant et de recuperation, mot de passe hashe et statut actif/inactif.
+- La creation se fait dans le backoffice par lien de definition du mot de passe valable 30 jours. Le renvoi du lien invalide le precedent.
+- Ajouter un flux `mot de passe oublie` de 24 heures dans Next.js, protege par ALTCHA et limitation de frequence. Les e-mails de service partent immediatement et restent independants du mailing et de ses vagues Messenger.
+- Implementer l'espace `/espace` dans Next.js en BFF : cookie HTTP-only cote Next.js et API Symfony cote serveur. Symfony porte les droits, les seances et les documents ; Next.js porte l'interface client.
+- L'espace affiche uniquement le deroule client : liste des seances de la structure, lecture HTML et telechargement du PDF canonique. Les notes privees, le materiel et les prolongements restent internes.
+- Toute requete verifie l'appartenance a la structure ; desactiver un acces invalide immediatement ses sessions.
+
+#### Lot 10.3. Synchronisation Google Drive
+
+- Apres livraison de l'espace structure, synchroniser automatiquement le PDF canonique dans un dossier Drive partage avec un compte de service Google.
+- Le fichier Drive courant est remplace apres chaque generation PDF reussie ; le PDF local reste disponible si Drive est indisponible.
+- Conserver l'identifiant Drive, les erreurs et les tentatives de relance. La synchronisation ne bloque ni l'edition ni l'acces au PDF local.
+
+- Briques reutilisables deja disponibles : layout interne, Messenger, catalogue de medias, catalogue repertoire, previsualisation de seance et reordonnancement.
+- Orientation UX : `LiveComponent` pour les zones de composition/recherche, Stimulus pour les interactions locales et Turbo pour les sous-ecrans/formulaires isoles.
 - La facturation reste une dependance aval, apres ce module.
 - S'appuyer sur `jardin-sonore-backend/docs/architecture-boundaries.md` pour les nouvelles lectures UI et les nouveaux cas d'usage d'ecriture.
 
 ## Plus Tard
 
 - Facturation, devis et documents associes.
-- Espace client connecte.
 - Donnees publiques backend exposees au front.
 - Evolution eventuelle des providers externes mail ou de synchronisation.
 
 ## References Actives
 
-- Plan d'execution : `.codex/backend-refacto-plan.md`
 - Roadmap mailing : integree a cette roadmap maitre tant qu'aucun fichier dedie n'est recree
 - Documentation backend :
   - `jardin-sonore-backend/README.md`
@@ -186,3 +203,6 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 - 2026-07-08 : une priorite produit supplementaire est ajoutee avant `resumes de seances` : refondre le ciblage d'audience mailing avec masques reutilisables, polygones, multi-cercles et communes materialisees.
 - 2026-07-10 : la refonte UX mailing, les masques reutilisables et l'extension d'audience post-envoi sont considers comme termines ; le prochain sujet redevient `resumes de seances`.
 - 2026-07-23 : le socle des seances et de leurs sequences est constate comme livre ; le prochain lot est precise comme le `compositeur de seances`.
+- 2026-07-23 : le premier compositeur de seances est livre ; une V2 de finition devient le prochain chantier avant la facturation.
+- 2026-07-28 : les flux d'uploads et de permissions sont verifies en production apres redeploiement ; la consolidation locale face aux permissions Docker est consideree terminee.
+- 2026-07-28 : le compositeur V2 est cadre : rendu vertical, collection de medias, PDF canonique asynchrone, espace structure Next.js et synchronisation Drive ulterieure.
