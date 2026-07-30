@@ -23,3 +23,8 @@
 !/data/*.sql.xz
 
 /public/uploads/
+
+###> phpunit/phpunit ###
+/phpunit.xml
+/.phpunit.cache/
+###< phpunit/phpunit ###

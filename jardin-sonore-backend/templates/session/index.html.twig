@@ -54,6 +54,7 @@
                                     <div class="instrument-catalog__actions">
                                         <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('session_show', { uuid: session.uuid }) }}">{{ 'sessions.summary.table.preview'|trans({}, 'sessions') }}</a>
                                         <a class="internal-icon-button" href="{{ path('session_edit', { uuid: session.uuid }) }}" title="{{ 'sessions.summary.table.edit'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.summary.table.edit'|trans({}, 'sessions') }}">✎</a>
+                                        <button type="button" class="internal-icon-button internal-icon-button--danger" title="{{ 'sessions.summary.edit.remove'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.summary.edit.remove'|trans({}, 'sessions') }}" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('session_remove', { uuid: session.uuid }) }}" data-confirmation-dialog-item-value="{{ session.title }}" data-confirmation-dialog-token-value="{{ csrf_token('session_remove_' ~ session.uuid) }}">🗑</button>
                                     </div>
                                 </td>
                             </tr>

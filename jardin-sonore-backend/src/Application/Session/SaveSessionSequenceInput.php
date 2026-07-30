@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace App\Application\Session;
 
+use App\Domain\Model\Session\SessionSequenceMedia;
 use App\Domain\Model\Session\SessionSequenceSourceKind;
 use App\Domain\Model\Session\SessionSequenceType;
 use Symfony\Component\Uid\Uuid;
 
 final readonly class SaveSessionSequenceInput
 {
-    /** @param list<string> $instrumentUuids */
+    /**
+     * @param list<string>               $instrumentUuids
+     * @param list<SessionSequenceMedia> $media
+     */
     public function __construct(
         public SessionSequenceType $type,
         public string $title,
@@ -28,6 +32,7 @@ final readonly class SaveSessionSequenceInput
         public ?SessionSequenceSourceKind $sourceKind,
         public ?string $sourceTitle,
         public array $instrumentUuids,
+        public array $media = [],
     ) {
     }
 }

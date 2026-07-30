@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Session;
 
+use App\Domain\Model\Session\SessionDocumentStatus;
 use App\Domain\Model\Session\SessionSummary;
 use DateTimeImmutable;
 use Symfony\Component\Uid\Uuid;
@@ -26,6 +27,9 @@ final readonly class SessionSummaryView
         public array $instrumentUuids,
         public array $sequences,
         public DateTimeImmutable $updatedAt,
+        public SessionDocumentStatus $documentStatus,
+        public ?string $documentPath,
+        public ?string $documentError,
     ) {
     }
 
@@ -46,6 +50,9 @@ final readonly class SessionSummaryView
                 $sessionSummary->getSequences(),
             ),
             updatedAt: $sessionSummary->getUpdatedAt(),
+            documentStatus: $sessionSummary->getDocumentStatus(),
+            documentPath: $sessionSummary->getDocumentPath(),
+            documentError: $sessionSummary->getDocumentError(),
         );
     }
 }

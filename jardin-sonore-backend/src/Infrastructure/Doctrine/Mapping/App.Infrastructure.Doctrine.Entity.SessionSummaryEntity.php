@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Domain\Model\Session\SessionDocumentStatus;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Symfony\Bridge\Doctrine\Types\UuidType;
@@ -99,5 +100,27 @@ return static function (ClassMetadata $metadata): void {
         'fieldName' => 'updatedAt',
         'columnName' => 'updated_at',
         'type' => Types::DATETIME_IMMUTABLE,
+    ]);
+
+    $metadata->mapField([
+        'fieldName' => 'documentStatus',
+        'columnName' => 'document_status',
+        'type' => Types::STRING,
+        'length' => 20,
+        'enumType' => SessionDocumentStatus::class,
+        'options' => ['default' => SessionDocumentStatus::PENDING->value],
+    ]);
+    $metadata->mapField([
+        'fieldName' => 'documentPath',
+        'columnName' => 'document_path',
+        'type' => Types::STRING,
+        'length' => 500,
+        'nullable' => true,
+    ]);
+    $metadata->mapField([
+        'fieldName' => 'documentError',
+        'columnName' => 'document_error',
+        'type' => Types::TEXT,
+        'nullable' => true,
     ]);
 };

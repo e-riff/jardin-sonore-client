@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Model\Session;
 
+use InvalidArgumentException;
 use Symfony\Component\Uid\Uuid;
 
 final readonly class SessionSequence
@@ -13,7 +14,13 @@ final readonly class SessionSequence
     /** @var list<string> */
     public array $instrumentUuids;
 
-    /** @param list<string> $instrumentUuids */
+    /** @var list<SessionSequenceMedia> */
+    private array $media;
+
+    /**
+     * @param list<string>               $instrumentUuids
+     * @param list<SessionSequenceMedia> $media
+     */
     public function __construct(
         public Uuid $uuid,
         public SessionSequenceType $type,
@@ -32,12 +39,14 @@ final readonly class SessionSequence
         public ?string $sourceTitle = null,
         ?string $role = null,
         array $instrumentUuids = [],
+        array $media = [],
     ) {
         $this->role = self::nullableString($role);
         $this->instrumentUuids = array_values(array_unique(array_filter(array_map(
             static fn (mixed $instrumentUuid): string => is_string($instrumentUuid) ? trim($instrumentUuid) : '',
             $instrumentUuids,
         ), static fn (string $instrumentUuid): bool => '' !== $instrumentUuid)));
+        $this->media = $this->normalizeMedia($media);
     }
 
     /**
@@ -54,9 +63,10 @@ final readonly class SessionSequence
             'lyrics' => $this->lyrics,
             'gestures' => $this->gestures,
             'notes' => $this->notes,
-            'primaryUrl' => $this->primaryUrl,
-            'secondaryUrl' => $this->secondaryUrl,
-            'imageUrl' => $this->imageUrl,
+            'media' => array_map(
+                static fn (SessionSequenceMedia $sessionSequenceMedia): array => $sessionSequenceMedia->toArray(),
+                $this->getMedia(),
+            ),
             'showLyricsByDefault' => $this->showLyricsByDefault,
             'role' => $this->role,
             'instrumentUuids' => $this->instrumentUuids,
@@ -93,7 +103,71 @@ final readonly class SessionSequence
                 ? SessionSequenceSourceKind::from($payload['sourceKind'])
                 : null,
             sourceTitle: self::nullableString($payload['sourceTitle'] ?? null),
+            media: self::mediaFromPayload($payload),
         );
+    }
+
+    /** @return list<SessionSequenceMedia> */
+    public function getMedia(): array
+    {
+        if ([] !== $this->media) {
+            return $this->media;
+        }
+
+        $legacyMedia = [];
+        if (null !== $this->primaryUrl) {
+            $legacyMedia[] = new SessionSequenceMedia(
+                label: $this->title,
+                type: MediaResourceType::LINK,
+                url: $this->primaryUrl,
+                imageUrl: $this->imageUrl,
+                featured: true,
+                displayOnSession: true,
+            );
+        }
+        if (null !== $this->secondaryUrl) {
+            $legacyMedia[] = new SessionSequenceMedia(
+                label: $this->secondaryUrl,
+                type: MediaResourceType::LINK,
+                url: $this->secondaryUrl,
+                imageUrl: null,
+                featured: false,
+                displayOnSession: true,
+            );
+        }
+
+        return $legacyMedia;
+    }
+
+    /** @param array<string, mixed> $payload
+     * @return list<SessionSequenceMedia>
+     */
+    private static function mediaFromPayload(array $payload): array
+    {
+        if (!is_array($payload['media'] ?? null)) {
+            return [];
+        }
+
+        return array_values(array_map(
+            static fn (array $media): SessionSequenceMedia => SessionSequenceMedia::fromArray($media),
+            array_filter($payload['media'], static fn (mixed $media): bool => is_array($media)),
+        ));
+    }
+
+    /** @param list<SessionSequenceMedia> $media
+     * @return list<SessionSequenceMedia>
+     */
+    private function normalizeMedia(array $media): array
+    {
+        $featuredMediaCount = count(array_filter(
+            $media,
+            static fn (SessionSequenceMedia $sessionSequenceMedia): bool => $sessionSequenceMedia->featured,
+        ));
+        if (1 < $featuredMediaCount) {
+            throw new InvalidArgumentException('Session sequence cannot contain multiple featured media.');
+        }
+
+        return array_values($media);
     }
 
     private static function nullableString(mixed $value): ?string

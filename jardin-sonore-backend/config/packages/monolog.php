@@ -9,6 +9,7 @@ return App::config([
         'channels' => [
             'deprecation',
             'mailing_delivery',
+            'session_document',
         ],
     ],
     'when@dev' => [
@@ -32,6 +33,7 @@ return App::config([
                     'max_files' => 30,
                     'channels' => ['mailing_delivery'],
                 ],
+                'session_document' => ['type' => 'rotating_file', 'path' => '%kernel.logs_dir%/session_document.log', 'level' => 'info', 'max_files' => 30, 'channels' => ['session_document']],
             ],
         ],
     ],
@@ -57,6 +59,7 @@ return App::config([
                     'max_files' => 30,
                     'channels' => ['mailing_delivery'],
                 ],
+                'session_document' => ['type' => 'rotating_file', 'path' => '%kernel.logs_dir%/session_document.log', 'level' => 'info', 'max_files' => 30, 'channels' => ['session_document']],
             ],
         ],
     ],
@@ -94,6 +97,7 @@ return App::config([
                     'max_files' => 30,
                     'channels' => ['mailing_delivery'],
                 ],
+                'session_document' => ['type' => 'rotating_file', 'path' => '%kernel.logs_dir%/session_document.log', 'level' => 'info', 'max_files' => 30, 'channels' => ['session_document']],
             ],
         ],
     ],

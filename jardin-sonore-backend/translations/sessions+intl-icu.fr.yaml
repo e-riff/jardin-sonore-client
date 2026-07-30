@@ -194,6 +194,7 @@ sessions:
     flash:
       created: "La séance a été créée."
       updated: "La séance a été mise à jour."
+      removed: "La séance a été supprimée."
     index:
       title: "Séances | Jardin Sonore"
       eyebrow: "Séances"
@@ -226,12 +227,21 @@ sessions:
       heading: "Créer une séance"
       description: "Commencez par le titre, la date et les instruments utilisés. Le déroulé vient ensuite."
       back: "Retour à la liste"
+    document:
+      heading: "Document partagé"
+      pending: "PDF à générer"
+      generating: "Génération en cours"
+      ready: "PDF à jour"
+      failed: "La génération a échoué"
+      download: "Télécharger le PDF"
     edit:
       title: "Modifier {title} | Jardin Sonore"
       eyebrow: "Séances"
       description: "Ajustez les informations de séance puis composez le déroulé."
       preview: "Ouvrir le rendu"
       back: "Retour à la liste"
+      remove: "Supprimer la séance"
+      remove_confirm: "Supprimer définitivement cette séance et son déroulé ?"
   sequence:
     type:
       warmup: "Réveil / accueil"

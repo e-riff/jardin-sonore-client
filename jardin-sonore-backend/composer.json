@@ -12,6 +12,7 @@
         "doctrine/doctrine-bundle": "^3.2",
         "doctrine/doctrine-migrations-bundle": "^4.0",
         "doctrine/orm": "^3.6",
+        "dompdf/dompdf": "^3.1",
         "easycorp/easyadmin-bundle": "^5.0",
         "gedmo/doctrine-extensions": "^3.22",
         "longitude-one/doctrine-spatial": "^5.0",
@@ -104,7 +105,9 @@
         "phpstan/phpstan": "^2.2",
         "phpstan/phpstan-doctrine": "^2.0",
         "phpstan/phpstan-symfony": "^2.0",
+        "phpunit/phpunit": "^12.3",
         "symfony/maker-bundle": "^1.67",
+        "symfony/phpunit-bridge": "^8.1",
         "symfony/web-profiler-bundle": "8.1.*"
     }
 }

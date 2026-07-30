@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><style>body { font-family: DejaVu Sans, sans-serif; color: #26352c; } h1 { color: #557343; } article { margin: 0 0 24px; page-break-inside: avoid; } .meta { color: #68736b; font-size: 11px; }</style></head>
+<body>
+    <h1>{{ session.title }}</h1>
+    <p class="meta">{{ session.sessionDate|date('d/m/Y') }}{% if session.theme %} · {{ session.theme }}{% endif %}</p>
+    {% if session.materialSummary %}<h2>Matériel</h2><p>{{ session.materialSummary|nl2br }}</p>{% endif %}
+    {% for sequence in session.sequences %}
+        <article>
+            <p class="meta">{{ loop.index }}{% if sequence.role %} · {{ sequence.role }}{% endif %}</p>
+            <h2>{{ sequence.title }}</h2>
+            {% if sequence.subtitle %}<p>{{ sequence.subtitle }}</p>{% endif %}
+            {% if sequence.body %}<p>{{ sequence.body|nl2br }}</p>{% endif %}
+            {% if sequence.gestures %}<p><strong>Gestes :</strong><br>{{ sequence.gestures|nl2br }}</p>{% endif %}
+            {% if sequence.lyrics %}<p><strong>Paroles :</strong><br>{{ sequence.lyrics|nl2br }}</p>{% endif %}
+            {% for media in sequence.media %}{% if media.displayedOnSession %}<p><a href="{{ media.url }}">{{ media.label }}</a></p>{% endif %}{% endfor %}
+        </article>
+    {% endfor %}
+    {% if session.furtherExploration %}<h2>Pour aller plus loin</h2><p>{{ session.furtherExploration|nl2br }}</p>{% endif %}
+</body>
+</html>

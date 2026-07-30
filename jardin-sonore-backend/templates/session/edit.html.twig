@@ -11,11 +11,16 @@
         </div>
         <div class="internal-heading-actions">
             <a class="internal-button internal-button--secondary" href="{{ path('session_show', { uuid: session.uuid }) }}">{{ 'sessions.summary.edit.preview'|trans({}, 'sessions') }}</a>
-            <a class="internal-button internal-button--secondary" href="{{ path('session_index') }}">{{ 'sessions.summary.edit.back'|trans({}, 'sessions') }}</a>
+            <button type="button" class="internal-button internal-button--danger" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('session_remove', { uuid: session.uuid }) }}" data-confirmation-dialog-item-value="{{ session.title }}" data-confirmation-dialog-token-value="{{ csrf_token('session_remove_' ~ session.uuid) }}">{{ 'sessions.summary.edit.remove'|trans({}, 'sessions') }}</button>
         </div>
     </section>
 
-    <section class="internal-card internal-card--form">
+    <div class="session-document-status">
+        <span class="internal-badge internal-badge--{{ session.documentStatus.value == 'ready' ? 'success' : session.documentStatus.value == 'failed' ? 'danger' : 'warning' }}">{{ ('sessions.summary.document.' ~ session.documentStatus.value)|trans({}, 'sessions') }}</span>
+        {% if session.documentStatus.value == 'ready' and session.documentPath %}<a href="{{ path('session_document_download', { uuid: session.uuid }) }}">{{ 'sessions.summary.document.download'|trans({}, 'sessions') }}</a>{% endif %}
+    </div>
+
+    <section class="internal-card internal-card--form session-summary-edit-form">
         {% if hasErrors %}
             <div class="internal-alert internal-alert--error">{{ 'sessions.summary.form.error_notice'|trans({}, 'sessions') }}</div>
         {% endif %}

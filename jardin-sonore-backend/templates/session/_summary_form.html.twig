@@ -9,11 +9,11 @@
         {{ form_row(form.instrumentUuids) }}
     </div>
 
-    <section class="session-summary-form__private-notes">
-        <h2>{{ 'sessions.summary.form.private_notes_heading'|trans({}, 'sessions') }}</h2>
+    <details class="session-summary-form__private-notes" {% if form.generalNotes.vars.data %}open{% endif %}>
+        <summary>{{ 'sessions.summary.form.private_notes_heading'|trans({}, 'sessions') }}</summary>
         <p>{{ 'sessions.summary.form.private_notes_help'|trans({}, 'sessions') }}</p>
         {{ form_row(form.generalNotes) }}
-    </section>
+    </details>
 
     <div class="internal-form__actions">
         {% if backPath is defined %}

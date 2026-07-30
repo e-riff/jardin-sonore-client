@@ -11,6 +11,7 @@ use App\Application\Form\SessionSequenceType as SessionSequenceFormType;
 use App\Application\Form\SessionSummaryType as SessionSummaryFormType;
 use App\Application\Session\AddSessionSequence;
 use App\Application\Session\CreateSessionSummary;
+use App\Application\Session\DeleteSessionSummary;
 use App\Application\Session\GetMediaResourceForEdit;
 use App\Application\Session\GetRepertoireItemForEdit;
 use App\Application\Session\GetSessionRecommendationForEdit;
@@ -32,6 +33,8 @@ use App\Domain\Model\Session\MediaResourceType;
 use DateTimeImmutable;
 use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -138,6 +141,31 @@ final class SessionSummaryController extends AbstractController
         return $this->render('session/show.html.twig', [
             'session' => $this->getSessionSummaryView($uuid, $getSessionSummary),
         ]);
+    }
+
+    #[Route('/{uuid}/remove', name: 'remove', methods: ['POST'])]
+    public function remove(string $uuid, Request $request, DeleteSessionSummary $deleteSessionSummary): Response
+    {
+        if (!Uuid::isValid($uuid) || !$this->isCsrfTokenValid('session_remove_' . $uuid, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $deleteSessionSummary(Uuid::fromString($uuid));
+        $this->addFlash('success', ['message' => 'sessions.summary.flash.removed', 'domain' => 'sessions']);
+
+        return $this->redirectToRoute('session_index', status: Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/{uuid}/document.pdf', name: 'document_download', methods: ['GET'])]
+    public function downloadDocument(string $uuid, GetSessionSummary $getSessionSummary): Response
+    {
+        $sessionSummaryView = $this->getSessionSummaryView($uuid, $getSessionSummary);
+        if (null === $sessionSummaryView->documentPath || !is_file($sessionSummaryView->documentPath)) {
+            throw $this->createNotFoundException();
+        }
+
+        return (new BinaryFileResponse($sessionSummaryView->documentPath))
+            ->setContentDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, 'seance.pdf');
     }
 
     #[Route('/{uuid}/sequences/new', name: 'sequence_new', methods: ['GET', 'POST'])]
@@ -469,6 +497,7 @@ final class SessionSummaryController extends AbstractController
             sourceKind: $sessionSequenceFormModel->sourceKind,
             sourceTitle: $sessionSequenceFormModel->sourceTitle,
             instrumentUuids: $sessionSequenceFormModel->instrumentUuids,
+            media: array_map(static fn ($media): \App\Domain\Model\Session\SessionSequenceMedia => $media->toDomain(), $sessionSequenceFormModel->media),
         );
     }
 

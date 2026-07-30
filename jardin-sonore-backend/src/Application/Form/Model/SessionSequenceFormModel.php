@@ -40,6 +40,9 @@ final class SessionSequenceFormModel
     #[Assert\Url]
     public ?string $imageUrl = null;
 
+    /** @var list<SessionSequenceMediaFormModel> */
+    public array $media = [];
+
     public bool $showLyricsByDefault = false;
 
     #[Assert\Length(max: 255)]
@@ -67,6 +70,7 @@ final class SessionSequenceFormModel
         $formModel->primaryUrl = $sessionSequenceView->primaryUrl;
         $formModel->secondaryUrl = $sessionSequenceView->secondaryUrl;
         $formModel->imageUrl = $sessionSequenceView->imageUrl;
+        $formModel->media = array_map(SessionSequenceMediaFormModel::fromDomain(...), $sessionSequenceView->media);
         $formModel->showLyricsByDefault = $sessionSequenceView->showLyricsByDefault;
         $formModel->role = $sessionSequenceView->role;
         $formModel->sourceUuid = $sessionSequenceView->sourceUuid?->toRfc4122();
