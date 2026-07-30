@@ -326,6 +326,7 @@ sessions:
       image_url: "Visuel"
       show_lyrics_by_default: "Afficher les paroles ouvertes par défaut"
       role: "Rôle dans la séance"
+      instruments: "Instruments pour cette activité"
       submit: "Enregistrer"
       back: "Retour à la séance"
       error_notice: "Le formulaire contient des erreurs."
