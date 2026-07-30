@@ -15,6 +15,29 @@
         {{ form_row(form.generalNotes) }}
     </details>
 
+    <div
+        data-controller="ordered-choice"
+        data-ordered-choice-move-up-label-value="{{ 'sessions.summary.form.recommendations_move_up'|trans({}, 'sessions') }}"
+        data-ordered-choice-move-down-label-value="{{ 'sessions.summary.form.recommendations_move_down'|trans({}, 'sessions') }}"
+        data-ordered-choice-remove-label-value="{{ 'sessions.summary.form.recommendations_remove'|trans({}, 'sessions') }}"
+    >
+        {{ form_label(form.recommendationUuids) }}
+        {{ form_widget(form.recommendationOrder, { attr: { 'data-ordered-choice-target': 'order' } }) }}
+        {{ form_widget(form.recommendationUuids, { attr: { class: 'ordered-choice__source', 'data-ordered-choice-target': 'source' } }) }}
+        <div class="ordered-choice__add">
+            <label for="session_recommendation_add">{{ 'sessions.summary.form.recommendations_add'|trans({}, 'sessions') }}</label>
+            <select id="session_recommendation_add" data-ordered-choice-target="add" data-action="change->ordered-choice#add">
+                <option value="">{{ 'sessions.summary.form.recommendations_add_placeholder'|trans({}, 'sessions') }}</option>
+                {% for choice in form.recommendationUuids.vars.choices %}
+                    <option value="{{ choice.value }}">{{ choice.label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <ul class="ordered-choice__list" data-ordered-choice-target="list"></ul>
+        <p class="internal-form-help">{{ 'sessions.summary.form.recommendations_order_help'|trans({}, 'sessions') }}</p>
+        {{ form_errors(form.recommendationUuids) }}
+    </div>
+
     <div class="internal-form__actions">
         {% if backPath is defined %}
             <a class="internal-button internal-button--secondary internal-form__back-action" href="{{ backPath }}">{{ backLabel }}</a>

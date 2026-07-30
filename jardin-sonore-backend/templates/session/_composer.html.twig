@@ -32,38 +32,29 @@
                 <article class="session-composer__card" draggable="true" data-session-sequence-sorter-target="item" data-sequence-uuid="{{ sequence.uuid }}">
                     <div class="session-composer__drag-handle" aria-hidden="true">⠿</div>
                     <div class="session-composer__content">
-                        {% if sequence.role %}
-                            <p class="internal-eyebrow">{{ sequence.role }}</p>
-                        {% endif %}
-                        <h3><span class="session-composer__index">{{ loop.index }}</span>{{ sequence.title }}</h3>
-                        <p class="session-composer__meta">
-                            {{ sequence.type.translationKey()|trans({}, 'sessions') }}
-                            {% if sequence.sourceTitle %} · {{ sequence.sourceTitle }}{% endif %}
-                        </p>
-                        {% if sequence.subtitle %}<p class="session-composer__subtitle">{{ sequence.subtitle }}</p>{% endif %}
+                        <twig:SessionSequenceLocalDetails sessionUuid="{{ session.uuid }}" sequenceUuid="{{ sequence.uuid }}" section="role" role="{{ sequence.role ?? '' }}" body="{{ sequence.body ?? '' }}" notes="{{ sequence.notes ?? '' }}" />
+                        <h3>
+                            <span class="session-composer__index" data-session-sequence-sorter-target="index">{{ loop.index }}</span>
+                            <span>{{ sequence.title }}</span>
+                            {% if sequence.subtitle %}<span class="session-composer__source">— {{ sequence.subtitle }}</span>{% endif %}
+                            <span class="session-composer__type">{{ sequence.type.translationKey()|trans({}, 'sessions') }}</span>
+                        </h3>
+                        <twig:SessionSequenceLocalDetails sessionUuid="{{ session.uuid }}" sequenceUuid="{{ sequence.uuid }}" section="details" role="{{ sequence.role ?? '' }}" body="{{ sequence.body ?? '' }}" notes="{{ sequence.notes ?? '' }}" />
                     </div>
+                    <twig:SessionSequenceLocalDetails sessionUuid="{{ session.uuid }}" sequenceUuid="{{ sequence.uuid }}" section="notes" role="{{ sequence.role ?? '' }}" body="{{ sequence.body ?? '' }}" notes="{{ sequence.notes ?? '' }}" />
                     <div class="session-composer__actions">
                         <div class="session-composer__utility-actions">
-                            <form method="post" action="{{ path('session_sequence_move_up', { uuid: session.uuid, sequenceUuid: sequence.uuid }) }}">
-                                <button class="internal-button internal-button--secondary internal-button--compact" type="submit" data-action="click->session-sequence-sorter#moveUp" aria-label="{{ 'sessions.sequence.composer.move_up'|trans({}, 'sessions') }}">↑</button>
-                            </form>
-                            <form method="post" action="{{ path('session_sequence_move_down', { uuid: session.uuid, sequenceUuid: sequence.uuid }) }}">
-                                <button class="internal-button internal-button--secondary internal-button--compact" type="submit" data-action="click->session-sequence-sorter#moveDown" aria-label="{{ 'sessions.sequence.composer.move_down'|trans({}, 'sessions') }}">↓</button>
-                            </form>
-                            <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('session_sequence_edit', { uuid: session.uuid, sequenceUuid: sequence.uuid }) }}">{{ 'sessions.sequence.composer.edit'|trans({}, 'sessions') }}</a>
-                            <form method="post" action="{{ path('session_sequence_remove', { uuid: session.uuid, sequenceUuid: sequence.uuid }) }}" onsubmit="return confirm('{{ 'sessions.sequence.table.remove_confirm'|trans({}, 'sessions') }}');">
-                                <button class="internal-button internal-button--secondary internal-button--compact" type="submit">{{ 'sessions.sequence.composer.remove'|trans({}, 'sessions') }}</button>
-                            </form>
+                            <button
+                                type="button"
+                                class="internal-icon-button internal-icon-button--danger"
+                                title="{{ 'sessions.sequence.composer.remove'|trans({}, 'sessions') }}"
+                                aria-label="{{ 'sessions.sequence.composer.remove'|trans({}, 'sessions') }}"
+                                {{ stimulus_action('confirmation-dialog', 'open') }}
+                                data-confirmation-dialog-action-value="{{ path('session_sequence_remove', { uuid: session.uuid, sequenceUuid: sequence.uuid }) }}"
+                                data-confirmation-dialog-item-value="{{ sequence.title }}"
+                                data-confirmation-dialog-token-value="{{ csrf_token('session_sequence_remove_' ~ sequence.uuid) }}"
+                            >🗑</button>
                         </div>
-                        <details class="session-composer__role-details">
-                            <summary>{{ 'sessions.sequence.composer.role'|trans({}, 'sessions') }}</summary>
-                            <form method="post" action="{{ path('session_sequence_role', { uuid: session.uuid, sequenceUuid: sequence.uuid }) }}" class="session-composer__role-form">
-                                <input type="hidden" name="_token" value="{{ csrf_token('session_sequence_role_' ~ sequence.uuid) }}">
-                                <label for="sequence-role-{{ sequence.uuid }}">{{ 'sessions.sequence.composer.role'|trans({}, 'sessions') }}</label>
-                                <input id="sequence-role-{{ sequence.uuid }}" name="role" value="{{ sequence.role }}" maxlength="255">
-                                <button class="internal-button internal-button--secondary internal-button--compact" type="submit">{{ 'sessions.sequence.composer.save_role'|trans({}, 'sessions') }}</button>
-                            </form>
-                        </details>
                     </div>
                 </article>
             {% endfor %}

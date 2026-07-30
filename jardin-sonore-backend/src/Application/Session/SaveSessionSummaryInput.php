@@ -10,6 +10,7 @@ final readonly class SaveSessionSummaryInput
 {
     /**
      * @param list<string> $instrumentUuids
+     * @param list<string> $recommendationUuids
      */
     public function __construct(
         public string $title,
@@ -20,6 +21,7 @@ final readonly class SaveSessionSummaryInput
         public ?string $materialSummary,
         public ?string $furtherExploration,
         public array $instrumentUuids,
+        public array $recommendationUuids,
     ) {
     }
 }

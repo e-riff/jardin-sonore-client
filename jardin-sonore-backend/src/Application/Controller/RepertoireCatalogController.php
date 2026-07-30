@@ -16,6 +16,7 @@ use App\Application\Session\SaveRepertoireItemInput;
 use App\Application\Session\UpdateRepertoireItem;
 use App\Domain\Model\Session\RepertoireBlockKind;
 use InvalidArgumentException;
+use LogicException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -109,6 +110,8 @@ final class RepertoireCatalogController extends AbstractController
             $this->addFlash('success', ['message' => 'sessions.repertoire.flash.deleted', 'domain' => 'sessions']);
         } catch (InvalidArgumentException) {
             throw $this->createNotFoundException();
+        } catch (LogicException) {
+            $this->addFlash('error', ['message' => 'sessions.repertoire.flash.cannot_delete_used', 'domain' => 'sessions']);
         }
 
         return $this->redirectToRoute('repertoire_index', status: Response::HTTP_SEE_OTHER);
@@ -142,6 +145,7 @@ final class RepertoireCatalogController extends AbstractController
             source: $formModel->source,
             body: $this->buildBodyFromContentBlocks($contentBlocks),
             contentBlocks: $contentBlocks,
+            generalInstructions: $formModel->generalInstructions,
             notes: $formModel->notes,
             linkedMediaUuids: $formModel->linkedMediaUuids,
             themeUuids: $formModel->themeUuids,

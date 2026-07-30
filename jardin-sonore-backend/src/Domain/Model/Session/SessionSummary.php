@@ -33,6 +33,9 @@ final class SessionSummary implements UuidIdentifiableInterface
      */
     private array $instrumentUuids;
 
+    /** @var list<string> */
+    private array $recommendationUuids;
+
     /**
      * @var list<SessionSequence>
      */
@@ -50,6 +53,7 @@ final class SessionSummary implements UuidIdentifiableInterface
 
     /**
      * @param list<string>          $instrumentUuids
+     * @param list<string>          $recommendationUuids
      * @param list<SessionSequence> $sequences
      */
     public function __construct(
@@ -61,6 +65,7 @@ final class SessionSummary implements UuidIdentifiableInterface
         ?string $materialSummary = null,
         ?string $furtherExploration = null,
         array $instrumentUuids = [],
+        array $recommendationUuids = [],
         array $sequences = [],
         ?DateTimeImmutable $createdAt = null,
         ?DateTimeImmutable $updatedAt = null,
@@ -86,6 +91,7 @@ final class SessionSummary implements UuidIdentifiableInterface
             furtherExploration: $furtherExploration,
             instrumentUuids: $instrumentUuids,
         );
+        $this->recommendationUuids = self::normalizeUuids($recommendationUuids);
 
         foreach ($sequences as $sessionSequence) {
             $this->sequences[] = $sessionSequence;
@@ -133,6 +139,20 @@ final class SessionSummary implements UuidIdentifiableInterface
     public function getInstrumentUuids(): array
     {
         return $this->instrumentUuids;
+    }
+
+    /** @return list<string> */
+    public function getRecommendationUuids(): array
+    {
+        return $this->recommendationUuids;
+    }
+
+    /** @param list<string> $recommendationUuids */
+    public function replaceRecommendations(array $recommendationUuids): void
+    {
+        $this->recommendationUuids = self::normalizeUuids($recommendationUuids);
+        $this->updatedAt = new DateTimeImmutable();
+        $this->markDocumentPending();
     }
 
     /**
@@ -201,6 +221,7 @@ final class SessionSummary implements UuidIdentifiableInterface
 
     /**
      * @param list<string> $instrumentUuids
+     * @param list<string> $recommendationUuids
      */
     public function updateDetails(
         string $title,
@@ -211,6 +232,7 @@ final class SessionSummary implements UuidIdentifiableInterface
         ?string $materialSummary,
         ?string $furtherExploration,
         array $instrumentUuids,
+        array $recommendationUuids = [],
     ): void {
         if ('' === trim($title)) {
             throw new InvalidArgumentException('Session summary title cannot be blank.');
@@ -231,6 +253,7 @@ final class SessionSummary implements UuidIdentifiableInterface
             $normalizedInstrumentUuids,
             static fn (string $uuid): bool => '' !== $uuid,
         )));
+        $this->recommendationUuids = self::normalizeUuids($recommendationUuids);
         $this->updatedAt = new DateTimeImmutable();
         $this->markDocumentPending();
     }
@@ -368,5 +391,16 @@ final class SessionSummary implements UuidIdentifiableInterface
             ...$this->instrumentUuids,
             ...$sessionSequence->instrumentUuids,
         ]));
+    }
+
+    /** @param list<string> $uuids
+     * @return list<string>
+     */
+    private static function normalizeUuids(array $uuids): array
+    {
+        return array_values(array_unique(array_filter(array_map(
+            static fn (string $uuid): string => trim($uuid),
+            $uuids,
+        ), static fn (string $uuid): bool => '' !== $uuid)));
     }
 }

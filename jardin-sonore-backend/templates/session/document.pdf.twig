@@ -4,6 +4,7 @@
 <body>
     <h1>{{ session.title }}</h1>
     <p class="meta">{{ session.sessionDate|date('d/m/Y') }}{% if session.theme %} · {{ session.theme }}{% endif %}</p>
+    {% if session.instrumentNames is not empty %}<h2>Instruments nécessaires</h2><p>{{ session.instrumentNames|join(' · ') }}</p>{% endif %}
     {% if session.materialSummary %}<h2>Matériel</h2><p>{{ session.materialSummary|nl2br }}</p>{% endif %}
     {% for sequence in session.sequences %}
         <article>
@@ -11,11 +12,12 @@
             <h2>{{ sequence.title }}</h2>
             {% if sequence.subtitle %}<p>{{ sequence.subtitle }}</p>{% endif %}
             {% if sequence.body %}<p>{{ sequence.body|nl2br }}</p>{% endif %}
+            {% if sequence.generalInstructions %}<p>{{ sequence.generalInstructions|nl2br }}</p>{% endif %}
             {% if sequence.gestures %}<p><strong>Gestes :</strong><br>{{ sequence.gestures|nl2br }}</p>{% endif %}
             {% if sequence.lyrics %}<p><strong>Paroles :</strong><br>{{ sequence.lyrics|nl2br }}</p>{% endif %}
             {% for media in sequence.media %}{% if media.displayedOnSession %}<p><a href="{{ media.url }}">{{ media.label }}</a></p>{% endif %}{% endfor %}
         </article>
     {% endfor %}
-    {% if session.furtherExploration %}<h2>Pour aller plus loin</h2><p>{{ session.furtherExploration|nl2br }}</p>{% endif %}
+    {% if session.recommendations is not empty %}<h2>Pour aller plus loin dans la séance</h2>{% for recommendation in session.recommendations %}<p><strong>{{ recommendation.title }}</strong><br>{{ recommendation.text|nl2br }}{% if recommendation.primaryUrl %}<br>{{ recommendation.primaryUrl }}{% endif %}</p>{% endfor %}{% endif %}
 </body>
 </html>

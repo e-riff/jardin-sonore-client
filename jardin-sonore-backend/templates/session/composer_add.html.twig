@@ -13,7 +13,7 @@
                 <span>{{ 'sessions.sequence.composer.add_activity_help'|trans({}, 'sessions') }}</span>
             </a>
             <nav class="session-composer-overlay__tabs" aria-label="{{ 'sessions.sequence.composer.catalogs'|trans({}, 'sessions') }}">
-                {% for catalogName, label in { repertoire: 'sessions.sequence.composer.repertoire', media: 'sessions.sequence.composer.media', recommendation: 'sessions.sequence.composer.recommendation' } %}
+                {% for catalogName, label in { repertoire: 'sessions.sequence.composer.repertoire', media: 'sessions.sequence.composer.media' } %}
                     <a href="{{ path('session_composer_add', { uuid: session.uuid, catalog: catalogName }) }}" class="{% if catalog == catalogName %}is-active{% endif %}">{{ label|trans({}, 'sessions') }}</a>
                 {% endfor %}
             </nav>
@@ -25,18 +25,31 @@
             </form>
             <div class="session-composer-overlay__results">
                 {% for item in catalogItems %}
-                    <form method="post" action="{{ path('session_composer_add', { uuid: session.uuid, catalog: catalog }) }}" class="session-composer-overlay__item">
-                        <input type="hidden" name="_token" value="{{ csrf_token('session_sequence_add_' ~ session.uuid) }}">
-                        <input type="hidden" name="sourceUuid" value="{{ item.uuid }}">
-                        <div>
-                            <h3>{{ item.title }}</h3>
-                            {% if item.source is defined and item.source %}<p>{{ item.source }}</p>{% endif %}
-                        </div>
-                        <button class="session-composer-overlay__item-button" type="submit">
-                            <span>{{ 'sessions.sequence.composer.choose'|trans({}, 'sessions') }}</span>
-                            <span aria-hidden="true">→</span>
-                        </button>
-                    </form>
+                    {% if catalog == 'repertoire' %}
+                        <a href="{{ path('session_sequence_new', { uuid: session.uuid, composer: 1, repertoire: item.uuid }) }}" class="session-composer-overlay__item">
+                            <div>
+                                <h3>{{ item.title }}</h3>
+                                {% if item.source is defined and item.source %}<p>{{ item.source }}</p>{% endif %}
+                            </div>
+                            <span class="session-composer-overlay__item-button">
+                                <span>{{ 'sessions.sequence.composer.configure'|trans({}, 'sessions') }}</span>
+                                <span aria-hidden="true">→</span>
+                            </span>
+                        </a>
+                    {% else %}
+                        <form method="post" action="{{ path('session_composer_add', { uuid: session.uuid, catalog: catalog }) }}" class="session-composer-overlay__item">
+                            <input type="hidden" name="_token" value="{{ csrf_token('session_sequence_add_' ~ session.uuid) }}">
+                            <input type="hidden" name="sourceUuid" value="{{ item.uuid }}">
+                            <div>
+                                <h3>{{ item.title }}</h3>
+                                {% if item.source is defined and item.source %}<p>{{ item.source }}</p>{% endif %}
+                            </div>
+                            <button class="session-composer-overlay__item-button" type="submit">
+                                <span>{{ 'sessions.sequence.composer.choose'|trans({}, 'sessions') }}</span>
+                                <span aria-hidden="true">→</span>
+                            </button>
+                        </form>
+                    {% endif %}
                 {% else %}
                     <div class="internal-empty-state">{{ 'sessions.sequence.composer.catalog_empty'|trans({}, 'sessions') }}</div>
                 {% endfor %}

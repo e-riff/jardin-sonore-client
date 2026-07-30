@@ -25,6 +25,7 @@ final class RepertoireItemFormModel
     #[Assert\Valid]
     public array $contentBlocks = [];
 
+    public ?string $generalInstructions = null;
     public ?string $notes = null;
     /** @var list<string> */
     public array $linkedMediaUuids = [];
@@ -42,6 +43,7 @@ final class RepertoireItemFormModel
             static fn ($contentBlock): RepertoireBlockFormModel => RepertoireBlockFormModel::fromView($contentBlock),
             $repertoireItemView->contentBlocks,
         );
+        $formModel->generalInstructions = $repertoireItemView->generalInstructions;
         $formModel->notes = $repertoireItemView->notes;
         $formModel->linkedMediaUuids = $repertoireItemView->linkedMediaUuids;
         $formModel->themeUuids = array_column($repertoireItemView->themes, 'uuid');

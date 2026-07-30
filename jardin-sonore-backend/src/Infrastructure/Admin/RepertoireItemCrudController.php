@@ -106,6 +106,9 @@ final class RepertoireItemCrudController extends AbstractCrudController
             ->allowDelete()
             ->onlyOnForms();
         yield TextareaField::new('body', 'admin.field.body')->hideOnForm();
+        yield TextareaField::new('generalInstructions', 'Indications générales')
+            ->setFormTypeOption('required', false)
+            ->hideOnIndex();
         yield TextareaField::new('notes', 'admin.field.notes')
             ->setFormTypeOption('required', false)
             ->hideOnIndex();
@@ -198,6 +201,7 @@ final class RepertoireItemCrudController extends AbstractCrudController
             ->setTitle(trim($repertoireItemEntity->getTitle()))
             ->setSource($this->normalizeNullableString($repertoireItemEntity->getSource()))
             ->setNotes($this->normalizeNullableString($repertoireItemEntity->getNotes()))
+            ->setGeneralInstructions($this->normalizeNullableString($repertoireItemEntity->getGeneralInstructions()))
             ->setContentBlocks($normalizedBlocks)
             ->setBody($this->buildBodyFromContentBlocks($normalizedBlocks))
             ->setUpdatedAt(new DateTimeImmutable());

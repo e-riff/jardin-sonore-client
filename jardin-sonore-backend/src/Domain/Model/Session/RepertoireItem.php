@@ -20,6 +20,7 @@ final class RepertoireItem implements UuidIdentifiableInterface
     private string $title;
     private ?string $source;
     private string $body;
+    private ?string $generalInstructions;
     /** @var list<RepertoireBlock> */
     private array $contentBlocks;
     private ?string $notes;
@@ -41,6 +42,7 @@ final class RepertoireItem implements UuidIdentifiableInterface
         ?string $source = null,
         string $body = '',
         array $contentBlocks = [],
+        ?string $generalInstructions = null,
         ?string $notes = null,
         array $linkedMediaUuids = [],
         bool $active = true,
@@ -53,7 +55,7 @@ final class RepertoireItem implements UuidIdentifiableInterface
         $this->initializeActive($active);
         $this->createdAt = $createdAt ?? new DateTimeImmutable();
         $this->updatedAt = $updatedAt ?? new DateTimeImmutable();
-        $this->updateContent($title, $source, $body, $contentBlocks, $notes, $linkedMediaUuids);
+        $this->updateContent($title, $source, $body, $contentBlocks, $generalInstructions, $notes, $linkedMediaUuids);
         $this->setThemes($themes);
     }
 
@@ -81,6 +83,11 @@ final class RepertoireItem implements UuidIdentifiableInterface
     public function getBody(): string
     {
         return $this->body;
+    }
+
+    public function getGeneralInstructions(): ?string
+    {
+        return $this->generalInstructions;
     }
 
     /** @return list<RepertoireBlock> */
@@ -164,6 +171,7 @@ final class RepertoireItem implements UuidIdentifiableInterface
         ?string $source,
         string $body,
         array $contentBlocks,
+        ?string $generalInstructions,
         ?string $notes,
         array $linkedMediaUuids,
     ): void {
@@ -175,6 +183,7 @@ final class RepertoireItem implements UuidIdentifiableInterface
         $this->source = self::normalizeNullableString($source);
         $this->body = trim($body);
         $this->contentBlocks = array_values($contentBlocks);
+        $this->generalInstructions = self::normalizeNullableString($generalInstructions);
         $this->notes = self::normalizeNullableString($notes);
         $this->linkedMediaUuids = array_values(array_unique(array_filter(array_map(
             static fn (string $uuid): string => trim($uuid),

@@ -78,6 +78,7 @@ final class RepertoireItemType extends AbstractType
                 'by_reference' => false,
                 'prototype' => true,
             ])
+            ->add('generalInstructions', TextareaType::class, ['label' => 'sessions.repertoire.form.general_instructions', 'required' => false, 'attr' => ['rows' => 4]])
             ->add('notes', TextareaType::class, ['label' => 'sessions.repertoire.form.notes', 'required' => false, 'attr' => ['rows' => 5]])
             ->add('themeUuids', ChoiceType::class, ['label' => 'sessions.repertoire.form.themes', 'required' => false, 'multiple' => true, 'choices' => $themeChoices, 'autocomplete' => true])
             ->add('linkedMediaUuids', ChoiceType::class, [

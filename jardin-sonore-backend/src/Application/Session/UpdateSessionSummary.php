@@ -31,6 +31,7 @@ final readonly class UpdateSessionSummary
             materialSummary: $saveSessionSummaryInput->materialSummary,
             furtherExploration: $saveSessionSummaryInput->furtherExploration,
             instrumentUuids: $saveSessionSummaryInput->instrumentUuids,
+            recommendationUuids: $saveSessionSummaryInput->recommendationUuids,
         );
 
         $this->sessionSummaryRepository->save($sessionSummary);

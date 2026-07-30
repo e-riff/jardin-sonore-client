@@ -22,6 +22,7 @@ class RepertoireItemEntity
     private string $title = '';
     private ?string $source = null;
     private string $body = '';
+    private ?string $generalInstructions = null;
     /** @var list<array<string, mixed>> */
     private array $contentBlocks = [];
     private ?string $notes = null;
@@ -84,6 +85,18 @@ class RepertoireItemEntity
     public function setBody(string $body): static
     {
         $this->body = $body;
+
+        return $this;
+    }
+
+    public function getGeneralInstructions(): ?string
+    {
+        return $this->generalInstructions;
+    }
+
+    public function setGeneralInstructions(?string $generalInstructions): static
+    {
+        $this->generalInstructions = $generalInstructions;
 
         return $this;
     }
@@ -169,7 +182,7 @@ class RepertoireItemEntity
             $this->themes->add($theme);
         }
 
-return $this;
+        return $this;
     }
 
     public function removeTheme(ThemeEntity $theme): static

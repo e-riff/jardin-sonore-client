@@ -19,6 +19,7 @@ final readonly class SaveRepertoireItemInput
         public ?string $source,
         public string $body,
         public array $contentBlocks,
+        public ?string $generalInstructions,
         public ?string $notes,
         public array $linkedMediaUuids,
         public array $themeUuids,

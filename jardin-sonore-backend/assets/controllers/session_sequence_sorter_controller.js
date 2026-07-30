@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static targets = ['list', 'item', 'status'];
+    static targets = ['list', 'item', 'index', 'status'];
     static values = {
         url: String,
         csrfToken: String,
@@ -63,6 +63,7 @@ export default class extends Controller {
         this.draggedItem = null;
 
         if (!this.ordersMatch(this.previousOrder, this.sequenceUuids())) {
+            this.refreshIndexes();
             await this.persist(this.previousOrder);
         }
     }
@@ -77,6 +78,7 @@ export default class extends Controller {
 
         const previousOrder = this.sequenceUuids();
         this.listTarget.insertBefore(item, previousItem);
+        this.refreshIndexes();
         await this.persist(previousOrder);
     }
 
@@ -90,6 +92,7 @@ export default class extends Controller {
 
         const previousOrder = this.sequenceUuids();
         this.listTarget.insertBefore(nextItem, item);
+        this.refreshIndexes();
         await this.persist(previousOrder);
     }
 
@@ -122,6 +125,16 @@ export default class extends Controller {
     restore(sequenceUuids) {
         const itemsByUuid = new Map(this.itemTargets.map((item) => [item.dataset.sequenceUuid, item]));
         sequenceUuids.forEach((sequenceUuid) => this.listTarget.append(itemsByUuid.get(sequenceUuid)));
+        this.refreshIndexes();
+    }
+
+    refreshIndexes() {
+        this.itemTargets.forEach((item, index) => {
+            const indexElement = item.querySelector('[data-session-sequence-sorter-target="index"]');
+            if (indexElement) {
+                indexElement.textContent = index + 1;
+            }
+        });
     }
 
     ordersMatch(firstOrder, secondOrder) {
