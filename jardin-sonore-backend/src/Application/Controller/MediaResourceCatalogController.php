@@ -64,6 +64,7 @@ final class MediaResourceCatalogController extends AbstractController
                         source: $repertoireItemDomain->getSource(),
                         body: $repertoireItemDomain->getBody(),
                         contentBlocks: $repertoireItemDomain->getContentBlocks(),
+                        generalInstructions: $repertoireItemDomain->getGeneralInstructions(),
                         notes: $repertoireItemDomain->getNotes(),
                         linkedMediaUuids: $linkedMediaUuids,
                     );

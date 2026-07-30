@@ -6,9 +6,11 @@ namespace App\Application\Form;
 
 use App\Application\Form\Model\SessionSummaryFormModel;
 use App\Domain\Repository\InstrumentRepositoryInterface;
+use App\Domain\Repository\SessionRecommendationRepositoryInterface;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -20,8 +22,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 final class SessionSummaryType extends AbstractType
 {
-    public function __construct(private readonly InstrumentRepositoryInterface $instrumentRepository)
-    {
+    public function __construct(
+        private readonly InstrumentRepositoryInterface $instrumentRepository,
+        private readonly SessionRecommendationRepositoryInterface $sessionRecommendationRepository,
+    ) {
     }
 
     /**
@@ -34,6 +38,10 @@ final class SessionSummaryType extends AbstractType
 
         foreach ($this->instrumentRepository->findAllOrderedByName() as $instrument) {
             $instrumentChoices[$instrument->getName()] = $instrument->getUuid()->toRfc4122();
+        }
+        $recommendationChoices = [];
+        foreach ($this->sessionRecommendationRepository->search(activeOnly: true) as $sessionRecommendation) {
+            $recommendationChoices[$sessionRecommendation->getTitle()] = $sessionRecommendation->getUuid()->toRfc4122();
         }
 
         $builder
@@ -61,6 +69,13 @@ final class SessionSummaryType extends AbstractType
                 'required' => false,
                 'attr' => ['rows' => 5],
             ])
+            ->add('recommendationUuids', ChoiceType::class, [
+                'label' => 'sessions.summary.form.recommendations',
+                'required' => false,
+                'multiple' => true,
+                'choices' => $recommendationChoices,
+            ])
+            ->add('recommendationOrder', HiddenType::class)
             ->add('submit', SubmitType::class, [
                 'label' => 'sessions.summary.form.submit',
                 'attr' => ['class' => 'internal-button'],

@@ -928,6 +928,39 @@ form.internal-form > .internal-form__actions > .internal-form__back-action {
 .session-summary-edit-form .internal-form__back-action { margin-right: 0; }
 .session-summary-form__private-notes summary { cursor: pointer; color: var(--color-primary); font-family: var(--font-sans); font-size: 1rem; font-weight: 700; }
 .session-summary-form__private-notes[open] summary { margin-bottom: 12px; }
+.session-sequence-local-details { display: grid; gap: 8px; margin: 8px 0; }
+.session-sequence-local-details > button { width: fit-content; border: 0; padding: 0; background: transparent; text-align: left; cursor: pointer; }
+.session-sequence-local-details__instructions { display: grid; gap: 6px; margin-top: 10px; }
+.session-sequence-local-details__instruction-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.session-sequence-local-details__instruction,
+.session-sequence-local-details__add-instruction { width: 100%; border: 1px solid color-mix(in oklab, var(--color-outline-variant) 52%, white); border-radius: 10px; padding: 9px 12px; background: color-mix(in oklab, var(--color-surface-container-low) 68%, white); color: var(--color-on-surface); font-family: var(--font-sans); font-size: .88rem; line-height: 1.35; text-align: left; cursor: pointer; }
+.session-sequence-local-details__instruction:hover,
+.session-sequence-local-details__add-instruction:hover { border-color: color-mix(in oklab, var(--color-primary) 50%, var(--color-outline-variant)); background: var(--color-surface-container-lowest); }
+.session-sequence-local-details__add-instruction { width: 2rem; height: 2rem; border-style: dashed; border-radius: 999px; padding: 0; color: var(--color-primary); font-size: 1.2rem; font-weight: 700; line-height: 1; text-align: center; }
+.session-sequence-local-details__instruction-actions { display: flex; gap: 4px; }
+.session-sequence-local-details__form { display: flex; flex-wrap: wrap; gap: 8px; }
+.session-sequence-local-details__form input,
+.session-sequence-local-details__form textarea { min-width: 0; flex: 1 1 220px; box-sizing: border-box; border: 0; border-radius: 9px; padding: 9px 12px; background: transparent; color: var(--color-on-surface); font: inherit; line-height: 1.45; outline: 0; }
+.session-sequence-local-details__instruction-row .session-sequence-local-details__form { border: 1px solid color-mix(in oklab, var(--color-primary) 55%, var(--color-outline-variant)); border-radius: 10px; background: color-mix(in oklab, var(--color-primary-fixed) 25%, white); box-shadow: inset 0 0 0 1px color-mix(in oklab, white 65%, transparent); }
+.session-sequence-local-details__new-instruction { border: 1px dashed color-mix(in oklab, var(--color-primary) 48%, var(--color-outline-variant)); border-radius: 10px; background: color-mix(in oklab, var(--color-primary-fixed) 16%, white); }
+.session-sequence-local-details__form input::placeholder,
+.session-sequence-local-details__form textarea::placeholder { color: color-mix(in oklab, var(--color-on-surface-variant) 72%, transparent); }
+.session-sequence-local-details__form input:focus-visible,
+.session-sequence-local-details__form textarea:focus-visible { outline: 2px solid color-mix(in oklab, var(--color-primary) 50%, transparent); outline-offset: -2px; }
+.session-sequence-local-details__notes { width: 100%; box-sizing: border-box; border: 1px solid color-mix(in oklab, var(--color-outline-variant) 60%, white); border-radius: 14px; padding: 12px 14px; background: var(--color-surface-container-low); }
+.session-sequence-local-details__notes summary { cursor: pointer; color: var(--color-on-surface-variant); font-family: var(--font-sans); font-size: .84rem; font-weight: 700; }
+.session-sequence-local-details__notes form { margin-top: 12px; }
+.session-sequence-local-details__notes textarea { width: 100%; min-height: 4.5rem; resize: none; padding: 2px 0; }
+.session-sequence-local-details__notes textarea:focus-visible { outline-offset: 4px; }
+.session-sequence-local-details__notes form .internal-button { width: fit-content; }
+.session-sequence-local-details__add-note { width: 100%; border: 0; padding: 10px 0 0; background: transparent; color: var(--color-on-surface); font-family: var(--font-sans); text-align: left; cursor: pointer; }
+.session-sequence-local-details--notes { grid-column: 1 / -1; margin: 0; }
+.ordered-choice__source { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.ordered-choice__add { display: grid; gap: 6px; }
+.ordered-choice__add label { font-size: .82rem; }
+.ordered-choice__list { display: grid; gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
+.ordered-choice__item { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid color-mix(in oklab, var(--color-outline-variant) 60%, white); border-radius: 10px; padding: 10px 12px; }
+.ordered-choice__actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 
 .session-summary-form__private-notes h2,
 .session-summary-form__private-notes p {
@@ -982,6 +1015,7 @@ form.internal-form > .internal-form__actions > .internal-form__back-action {
 }
 
 .session-composer__card {
+    position: relative;
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     gap: 16px;
@@ -1020,8 +1054,10 @@ form.internal-form > .internal-form__actions > .internal-form__back-action {
 
 .session-composer__content h3 {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
     align-items: center;
+    padding-right: 42px;
 }
 
 .session-composer__index {
@@ -1037,12 +1073,28 @@ form.internal-form > .internal-form__actions > .internal-form__back-action {
     font-weight: 700;
 }
 
+.session-composer__source {
+    color: var(--color-on-surface-variant);
+    font-size: .94em;
+    font-weight: 400;
+}
+
+.session-composer__type {
+    border-radius: 999px;
+    padding: 3px 8px;
+    background: color-mix(in oklab, var(--color-primary-fixed) 52%, white);
+    color: var(--color-primary);
+    font-family: var(--font-sans);
+    font-size: .68rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
 .session-composer__content .internal-eyebrow {
     margin-bottom: 6px;
 }
 
-.session-composer__meta,
-.session-composer__subtitle,
 .session-composer-overlay__item p {
     margin: 6px 0 0;
     color: var(--color-on-surface-variant);
@@ -1051,16 +1103,14 @@ form.internal-form > .internal-form__actions > .internal-form__back-action {
 }
 
 .session-composer__actions {
-    display: grid;
-    gap: 12px;
-    grid-column: 1 / -1;
+    position: absolute;
+    top: 18px;
+    right: 18px;
 }
 
 .session-composer__utility-actions {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    justify-content: flex-start;
+    justify-content: flex-end;
 }
 
 .session-composer__utility-actions form {
@@ -1249,6 +1299,11 @@ form.internal-form > .internal-form__actions > .internal-form__back-action {
     transition: background 150ms ease, border-color 150ms ease;
 }
 
+a.session-composer-overlay__item {
+    color: inherit;
+    text-decoration: none;
+}
+
 .session-composer-overlay__item:hover,
 .session-composer-overlay__item:focus-within {
     border-color: color-mix(in oklab, var(--color-primary) 46%, var(--color-outline-variant));
@@ -1271,11 +1326,7 @@ form.internal-form > .internal-form__actions > .internal-form__back-action {
 
 @media (min-width: 761px) {
     .session-composer__card {
-        grid-template-columns: auto minmax(0, 1fr) minmax(220px, auto);
-    }
-
-    .session-composer__actions {
-        grid-column: auto;
+        grid-template-columns: auto minmax(0, 1fr);
     }
 }
 
@@ -2652,10 +2703,6 @@ form.internal-form > .internal-form__actions > .internal-form__back-action {
 
     .session-composer__card {
         grid-template-columns: auto minmax(0, 1fr);
-    }
-
-    .session-composer__actions {
-        grid-column: 1 / -1;
     }
 
     .session-composer-overlay {

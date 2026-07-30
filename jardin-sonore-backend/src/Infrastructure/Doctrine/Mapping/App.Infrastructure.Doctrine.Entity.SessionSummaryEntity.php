@@ -84,6 +84,11 @@ return static function (ClassMetadata $metadata): void {
         'columnName' => 'instrument_uuids',
         'type' => Types::JSON,
     ]);
+    $metadata->mapField([
+        'fieldName' => 'recommendationUuids',
+        'columnName' => 'recommendation_uuids',
+        'type' => Types::JSON,
+    ]);
 
     $metadata->mapField([
         'fieldName' => 'sequences',

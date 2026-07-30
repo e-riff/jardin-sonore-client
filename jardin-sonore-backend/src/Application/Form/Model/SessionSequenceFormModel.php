@@ -87,10 +87,10 @@ final class SessionSequenceFormModel
         $formModel->type = SessionSequenceType::fromRepertoireItemType($repertoireItemView->type);
         $formModel->title = $repertoireItemView->title;
         $formModel->subtitle = $repertoireItemView->source;
-        $formModel->body = $repertoireItemView->body;
+        $formModel->body = '';
         $formModel->lyrics = $repertoireItemView->lyrics;
         $formModel->gestures = $repertoireItemView->gestures;
-        $formModel->notes = $repertoireItemView->notes;
+        $formModel->notes = null;
         $formModel->sourceUuid = $repertoireItemView->uuid->toRfc4122();
         $formModel->sourceKind = SessionSequenceSourceKind::REPERTOIRE_ITEM;
         $formModel->sourceTitle = $repertoireItemView->title;

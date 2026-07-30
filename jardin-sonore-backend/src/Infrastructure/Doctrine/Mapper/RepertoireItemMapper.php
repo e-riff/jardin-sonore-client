@@ -26,6 +26,7 @@ final readonly class RepertoireItemMapper
                 static fn (array $contentBlock): RepertoireBlock => RepertoireBlock::fromArray($contentBlock),
                 $repertoireItemEntity->getContentBlocks(),
             ),
+            generalInstructions: $repertoireItemEntity->getGeneralInstructions(),
             notes: $repertoireItemEntity->getNotes(),
             linkedMediaUuids: $repertoireItemEntity->getLinkedMediaUuids(),
             active: $repertoireItemEntity->isActive(),
@@ -45,6 +46,7 @@ final readonly class RepertoireItemMapper
             ->setTitle($repertoireItem->getTitle())
             ->setSource($repertoireItem->getSource())
             ->setBody($repertoireItem->getBody())
+            ->setGeneralInstructions($repertoireItem->getGeneralInstructions())
             ->setContentBlocks(array_map(
                 static fn (RepertoireBlock $contentBlock): array => $contentBlock->toArray(),
                 $repertoireItem->getContentBlocks(),

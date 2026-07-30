@@ -7,6 +7,7 @@ namespace App\Application\Controller;
 use App\Application\Backoffice\TableSort;
 use App\Application\Form\Model\SessionSequenceFormModel;
 use App\Application\Form\Model\SessionSummaryFormModel;
+use App\Application\Form\RepertoireSessionSequenceType;
 use App\Application\Form\SessionSequenceType as SessionSequenceFormType;
 use App\Application\Form\SessionSummaryType as SessionSummaryFormType;
 use App\Application\Session\AddSessionSequence;
@@ -25,8 +26,10 @@ use App\Application\Session\SearchMediaResources;
 use App\Application\Session\SearchRepertoireItems;
 use App\Application\Session\SearchSessionRecommendations;
 use App\Application\Session\SearchSessionSummaries;
+use App\Application\Session\SessionSequenceLocalSetting;
 use App\Application\Session\SessionSummaryView;
 use App\Application\Session\UpdateSessionSequence;
+use App\Application\Session\UpdateSessionSequenceLocalSetting;
 use App\Application\Session\UpdateSessionSequenceRole;
 use App\Application\Session\UpdateSessionSummary;
 use App\Domain\Model\Session\MediaResourceType;
@@ -186,7 +189,9 @@ final class SessionSummaryController extends AbstractController
         $mediaUuid = $request->query->getString('media');
         $recommendationUuid = $request->query->getString('recommendation');
 
-        if ('' !== $repertoireUuid && Uuid::isValid($repertoireUuid)) {
+        $isRepertoireSessionConfiguration = '' !== $repertoireUuid && Uuid::isValid($repertoireUuid);
+
+        if ($isRepertoireSessionConfiguration) {
             $repertoireItemView = $getRepertoireItemForEdit(Uuid::fromString($repertoireUuid));
             if (null !== $repertoireItemView) {
                 $formModel = SessionSequenceFormModel::fromRepertoireItemView($repertoireItemView);
@@ -203,7 +208,10 @@ final class SessionSummaryController extends AbstractController
             }
         }
 
-        $form = $this->createForm(SessionSequenceFormType::class, $formModel);
+        $form = $this->createForm(
+            $isRepertoireSessionConfiguration ? RepertoireSessionSequenceType::class : SessionSequenceFormType::class,
+            $formModel,
+        );
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -225,12 +233,18 @@ final class SessionSummaryController extends AbstractController
             ], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->render($openedFromComposer ? 'session/composer_activity_form.html.twig' : 'session/sequence_form.html.twig', [
-            'form' => $form->createView(),
-            'hasErrors' => $form->isSubmitted() && !$form->isValid(),
-            'session' => $sessionSummaryView,
-            'sequence' => null,
-        ], $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null);
+        return $this->render(
+            $openedFromComposer
+                ? ($isRepertoireSessionConfiguration ? 'session/composer_repertoire_form.html.twig' : 'session/composer_activity_form.html.twig')
+                : 'session/sequence_form.html.twig',
+            [
+                'form' => $form->createView(),
+                'hasErrors' => $form->isSubmitted() && !$form->isValid(),
+                'session' => $sessionSummaryView,
+                'sequence' => null,
+            ],
+            $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null,
+        );
     }
 
     #[Route('/{uuid}/sequences/{sequenceUuid}/edit', name: 'sequence_edit', methods: ['GET', 'POST'])]
@@ -292,10 +306,15 @@ final class SessionSummaryController extends AbstractController
     public function removeSequence(
         string $uuid,
         string $sequenceUuid,
+        Request $request,
         RemoveSessionSequence $removeSessionSequence,
     ): Response {
         if (!Uuid::isValid($uuid) || !Uuid::isValid($sequenceUuid)) {
             throw $this->createNotFoundException();
+        }
+
+        if (!$this->isCsrfTokenValid('session_sequence_remove_' . $sequenceUuid, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
         }
 
         $removeSessionSequence(Uuid::fromString($uuid), Uuid::fromString($sequenceUuid));
@@ -361,6 +380,26 @@ final class SessionSummaryController extends AbstractController
         return $this->redirectToRoute('session_edit', ['uuid' => $uuid], Response::HTTP_SEE_OTHER);
     }
 
+    #[Route('/{uuid}/sequences/{sequenceUuid}/local-setting', name: 'sequence_local_setting', methods: ['POST'])]
+    public function updateSequenceLocalSetting(string $uuid, string $sequenceUuid, Request $request, UpdateSessionSequenceLocalSetting $updateSessionSequenceLocalSetting): Response
+    {
+        if (!Uuid::isValid($uuid) || !Uuid::isValid($sequenceUuid)) {
+            throw $this->createNotFoundException();
+        }
+        if (!$this->isCsrfTokenValid('session_sequence_local_setting_' . $sequenceUuid, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $setting = SessionSequenceLocalSetting::tryFrom($request->request->getString('setting'));
+        if (null === $setting) {
+            throw $this->createNotFoundException();
+        }
+
+        $updateSessionSequenceLocalSetting(Uuid::fromString($uuid), Uuid::fromString($sequenceUuid), $setting, $request->request->get('value'));
+
+        return $this->redirectToRoute('session_edit', ['uuid' => $uuid], Response::HTTP_SEE_OTHER);
+    }
+
     #[Route('/{uuid}/sequences/reorder', name: 'sequence_reorder', methods: ['POST'], priority: 10)]
     public function reorderSequences(
         string $uuid,
@@ -407,7 +446,7 @@ final class SessionSummaryController extends AbstractController
     ): Response {
         $sessionSummaryView = $this->getSessionSummaryView($uuid, $getSessionSummary);
         $catalog = $request->query->getString('catalog', 'repertoire');
-        if (!in_array($catalog, ['repertoire', 'media', 'recommendation'], true)) {
+        if (!in_array($catalog, ['repertoire', 'media'], true)) {
             throw $this->createNotFoundException();
         }
 
@@ -429,9 +468,6 @@ final class SessionSummaryController extends AbstractController
                 'media' => ($mediaResourceView = $getMediaResourceForEdit($sourceUuidObject))
                     ? SessionSequenceFormModel::fromMediaResourceView($mediaResourceView)
                     : null,
-                'recommendation' => ($sessionRecommendationView = $getSessionRecommendationForEdit($sourceUuidObject))
-                    ? SessionSequenceFormModel::fromSessionRecommendationView($sessionRecommendationView)
-                    : null,
             };
 
             if (null === $formModel) {
@@ -449,7 +485,6 @@ final class SessionSummaryController extends AbstractController
         $catalogItems = match ($catalog) {
             'repertoire' => $searchRepertoireItems(query: $request->query->getString('query'), activeOnly: true),
             'media' => $searchMediaResources(query: $request->query->getString('query'), activeOnly: true),
-            'recommendation' => $searchSessionRecommendations(query: $request->query->getString('query'), activeOnly: true),
         };
 
         return $this->render('session/composer_add.html.twig', [
@@ -473,6 +508,7 @@ final class SessionSummaryController extends AbstractController
             materialSummary: $existingSessionSummaryView?->materialSummary,
             furtherExploration: $existingSessionSummaryView?->furtherExploration,
             instrumentUuids: $sessionSummaryFormModel->instrumentUuids,
+            recommendationUuids: $sessionSummaryFormModel->orderedRecommendationUuids(),
         );
     }
 

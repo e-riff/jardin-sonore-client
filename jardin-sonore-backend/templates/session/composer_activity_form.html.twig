@@ -10,7 +10,10 @@
                 <a class="session-composer-overlay__close" href="{{ path('session_edit', { uuid: session.uuid }) }}" data-turbo-frame="_top" aria-label="{{ 'sessions.sequence.composer.close'|trans({}, 'sessions') }}">×</a>
             </div>
 
-            {{ form_start(form, { attr: { class: 'internal-form internal-form--wide session-activity-form', 'data-turbo-stream': 'true' } }) }}
+            {{ form_start(form, {
+                action: path('session_sequence_new', { uuid: session.uuid, composer: 1 }),
+                attr: { class: 'internal-form internal-form--wide session-activity-form', 'data-turbo-stream': 'true' }
+            }) }}
                 <div class="internal-form__grid">
                     {{ form_row(form.type) }}
                     {{ form_row(form.title) }}

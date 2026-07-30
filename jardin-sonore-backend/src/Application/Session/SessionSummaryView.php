@@ -6,14 +6,20 @@ namespace App\Application\Session;
 
 use App\Domain\Model\Session\SessionDocumentStatus;
 use App\Domain\Model\Session\SessionSummary;
+use App\Domain\Repository\InstrumentRepositoryInterface;
+use App\Domain\Repository\RepertoireItemRepositoryInterface;
+use App\Domain\Repository\SessionRecommendationRepositoryInterface;
 use DateTimeImmutable;
 use Symfony\Component\Uid\Uuid;
 
 final readonly class SessionSummaryView
 {
     /**
-     * @param list<string>              $instrumentUuids
-     * @param list<SessionSequenceView> $sequences
+     * @param list<string>                    $instrumentUuids
+     * @param list<string>                    $instrumentNames
+     * @param list<SessionRecommendationView> $recommendations
+     * @param list<string>                    $recommendationUuids
+     * @param list<SessionSequenceView>       $sequences
      */
     public function __construct(
         public Uuid $uuid,
@@ -25,6 +31,11 @@ final readonly class SessionSummaryView
         public ?string $materialSummary,
         public ?string $furtherExploration,
         public array $instrumentUuids,
+        public array $instrumentNames,
+        /** @var list<SessionRecommendationView> */
+        public array $recommendations,
+        /** @var list<string> */
+        public array $recommendationUuids,
         public array $sequences,
         public DateTimeImmutable $updatedAt,
         public SessionDocumentStatus $documentStatus,
@@ -33,8 +44,12 @@ final readonly class SessionSummaryView
     ) {
     }
 
-    public static function fromDomain(SessionSummary $sessionSummary): self
-    {
+    public static function fromDomain(
+        SessionSummary $sessionSummary,
+        ?RepertoireItemRepositoryInterface $repertoireItemRepository = null,
+        ?InstrumentRepositoryInterface $instrumentRepository = null,
+        ?SessionRecommendationRepositoryInterface $sessionRecommendationRepository = null,
+    ): self {
         return new self(
             uuid: $sessionSummary->getUuid(),
             title: $sessionSummary->getTitle(),
@@ -45,8 +60,32 @@ final readonly class SessionSummaryView
             materialSummary: $sessionSummary->getMaterialSummary(),
             furtherExploration: $sessionSummary->getFurtherExploration(),
             instrumentUuids: $sessionSummary->getInstrumentUuids(),
+            instrumentNames: null === $instrumentRepository ? [] : array_values(array_filter(array_map(
+                static fn (string $instrumentUuid): ?string => Uuid::isValid($instrumentUuid)
+                    ? $instrumentRepository->findByUuid(Uuid::fromString($instrumentUuid))?->getName()
+                    : null,
+                $sessionSummary->getInstrumentUuids(),
+            ))),
+            recommendations: null === $sessionRecommendationRepository ? [] : array_values(array_filter(array_map(
+                static function (string $recommendationUuid) use ($sessionRecommendationRepository): ?SessionRecommendationView {
+                    if (!Uuid::isValid($recommendationUuid)) {
+                        return null;
+                    }
+
+                    $sessionRecommendation = $sessionRecommendationRepository->findByUuid(Uuid::fromString($recommendationUuid));
+
+                    return null === $sessionRecommendation ? null : SessionRecommendationView::fromDomain($sessionRecommendation);
+                },
+                $sessionSummary->getRecommendationUuids(),
+            ))),
+            recommendationUuids: $sessionSummary->getRecommendationUuids(),
             sequences: array_map(
-                static fn ($sessionSequence): SessionSequenceView => SessionSequenceView::fromDomain($sessionSequence),
+                static fn ($sessionSequence): SessionSequenceView => SessionSequenceView::fromDomain(
+                    $sessionSequence,
+                    null === $repertoireItemRepository || null === $sessionSequence->sourceUuid
+                        ? null
+                        : $repertoireItemRepository->findByUuid($sessionSequence->sourceUuid),
+                ),
                 $sessionSummary->getSequences(),
             ),
             updatedAt: $sessionSummary->getUpdatedAt(),

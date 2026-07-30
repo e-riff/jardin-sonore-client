@@ -23,6 +23,13 @@
             {% if session.theme %}<p>{{ session.theme }}</p>{% endif %}
         </section>
 
+        {% if session.instrumentNames is not empty %}
+            <section class="session-document__materials">
+                <p class="internal-eyebrow">Instruments nécessaires</p>
+                <p>{{ session.instrumentNames|join(' · ') }}</p>
+            </section>
+        {% endif %}
+
         {% if session.materialSummary %}
             <section class="session-document__materials">
                 <p class="internal-eyebrow">{{ 'sessions.preview.material_summary'|trans({}, 'sessions') }}</p>
@@ -36,6 +43,7 @@
                     <div class="session-document__number">{{ loop.index }}</div>
                     <div class="session-document__sequence-content">
                     <p class="session-document__badge">{{ sequence.type.translationKey()|trans({}, 'sessions') }}</p>
+                    {% if sequence.role %}<p class="internal-eyebrow">{{ sequence.role }}</p>{% endif %}
                     <h2>{{ sequence.title }}{% if sequence.subtitle %}<span>— {{ sequence.subtitle }}</span>{% endif %}</h2>
                     {% if sequence.subtitle %}
                         {# subtitle is visually included in the title, as in the validated layout #}
@@ -43,6 +51,10 @@
 
                     {% if sequence.body and sequence.body != sequence.lyrics %}
                         <div style="margin-top: .75rem;">{{ sequence.body|nl2br }}</div>
+                    {% endif %}
+
+                    {% if sequence.generalInstructions %}
+                        <div style="margin-top: .75rem;">{{ sequence.generalInstructions|nl2br }}</div>
                     {% endif %}
 
                     {% if sequence.gestures %}
@@ -69,10 +81,10 @@
             {% endfor %}
         </section>
 
-        {% if session.furtherExploration %}
+        {% if session.recommendations is not empty %}
             <section class="session-document__further-exploration">
-                <h2>{{ 'sessions.preview.further_exploration'|trans({}, 'sessions') }}</h2>
-                <p>{{ session.furtherExploration|nl2br }}</p>
+                <h2>Pour aller plus loin dans la séance</h2>
+                <ul>{% for recommendation in session.recommendations %}<li><strong>{{ recommendation.title }}</strong><br>{{ recommendation.text|nl2br }}{% if recommendation.primaryUrl %}<br><a href="{{ recommendation.primaryUrl }}" target="_blank" rel="noopener noreferrer">Lien</a>{% endif %}</li>{% endfor %}</ul>
             </section>
         {% endif %}
     </article>

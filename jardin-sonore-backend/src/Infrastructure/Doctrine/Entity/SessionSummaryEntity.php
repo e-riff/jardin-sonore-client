@@ -33,6 +33,9 @@ class SessionSummaryEntity
      */
     private array $instrumentUuids = [];
 
+    /** @var list<string> */
+    private array $recommendationUuids = [];
+
     /**
      * @var list<array<string, mixed>>
      */
@@ -154,6 +157,20 @@ class SessionSummaryEntity
     public function setInstrumentUuids(array $instrumentUuids): static
     {
         $this->instrumentUuids = $instrumentUuids;
+
+        return $this;
+    }
+
+    /** @return list<string> */
+    public function getRecommendationUuids(): array
+    {
+        return $this->recommendationUuids;
+    }
+
+    /** @param list<string> $recommendationUuids */
+    public function setRecommendationUuids(array $recommendationUuids): static
+    {
+        $this->recommendationUuids = $recommendationUuids;
 
         return $this;
     }

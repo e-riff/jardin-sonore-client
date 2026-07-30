@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Session;
 
+use App\Domain\Model\Session\RepertoireItem;
 use App\Domain\Model\Session\SessionSequence;
 use App\Domain\Model\Session\SessionSequenceMedia;
 use App\Domain\Model\Session\SessionSequenceSourceKind;
@@ -35,23 +36,28 @@ final readonly class SessionSequenceView
         public ?string $sourceTitle,
         public array $instrumentUuids,
         public array $media,
+        public ?string $generalInstructions = null,
     ) {
     }
 
-    public static function fromDomain(SessionSequence $sessionSequence): self
+    public static function fromDomain(SessionSequence $sessionSequence, ?RepertoireItem $repertoireItem = null): self
     {
         $media = $sessionSequence->getMedia();
         $featuredMedia = current(array_filter($media, static fn (SessionSequenceMedia $sessionSequenceMedia): bool => $sessionSequenceMedia->featured));
         $visibleNonFeaturedMedia = array_values(array_filter($media, static fn (SessionSequenceMedia $sessionSequenceMedia): bool => !$sessionSequenceMedia->featured && $sessionSequenceMedia->isDisplayedOnSession()));
+        $isSynchronizedRepertoireItem = $repertoireItem instanceof RepertoireItem
+            && SessionSequenceSourceKind::REPERTOIRE_ITEM === $sessionSequence->sourceKind
+            && null !== $sessionSequence->sourceUuid
+            && $sessionSequence->sourceUuid->equals($repertoireItem->getUuid());
 
         return new self(
             uuid: $sessionSequence->uuid,
             type: $sessionSequence->type,
-            title: $sessionSequence->title,
-            subtitle: $sessionSequence->subtitle,
+            title: $isSynchronizedRepertoireItem ? $repertoireItem->getTitle() : $sessionSequence->title,
+            subtitle: $isSynchronizedRepertoireItem ? $repertoireItem->getSource() : $sessionSequence->subtitle,
             body: $sessionSequence->body,
-            lyrics: $sessionSequence->lyrics,
-            gestures: $sessionSequence->gestures,
+            lyrics: $isSynchronizedRepertoireItem ? $repertoireItem->getLyrics() : $sessionSequence->lyrics,
+            gestures: $isSynchronizedRepertoireItem ? $repertoireItem->getGestures() : $sessionSequence->gestures,
             notes: $sessionSequence->notes,
             primaryUrl: $featuredMedia instanceof SessionSequenceMedia ? $featuredMedia->url : null,
             secondaryUrl: $visibleNonFeaturedMedia[0]->url ?? null,
@@ -63,6 +69,7 @@ final readonly class SessionSequenceView
             sourceTitle: $sessionSequence->sourceTitle,
             instrumentUuids: $sessionSequence->instrumentUuids,
             media: $media,
+            generalInstructions: $isSynchronizedRepertoireItem ? $repertoireItem->getGeneralInstructions() : null,
         );
     }
 }

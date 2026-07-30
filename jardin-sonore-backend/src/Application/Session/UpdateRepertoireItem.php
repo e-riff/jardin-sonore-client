@@ -37,6 +37,7 @@ final readonly class UpdateRepertoireItem
                 ),
                 $saveRepertoireItemInput->contentBlocks,
             ),
+            generalInstructions: $saveRepertoireItemInput->generalInstructions,
             notes: $saveRepertoireItemInput->notes,
             linkedMediaUuids: $saveRepertoireItemInput->linkedMediaUuids,
         );

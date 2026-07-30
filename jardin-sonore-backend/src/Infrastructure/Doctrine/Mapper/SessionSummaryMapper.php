@@ -21,6 +21,7 @@ final readonly class SessionSummaryMapper
             materialSummary: $sessionSummaryEntity->getMaterialSummary(),
             furtherExploration: $sessionSummaryEntity->getFurtherExploration(),
             instrumentUuids: $sessionSummaryEntity->getInstrumentUuids(),
+            recommendationUuids: $sessionSummaryEntity->getRecommendationUuids(),
             sequences: array_map(
                 static fn (array $sequence): SessionSequence => SessionSequence::fromArray($sequence),
                 $sessionSummaryEntity->getSequences(),
@@ -50,6 +51,7 @@ final readonly class SessionSummaryMapper
             ->setMaterialSummary($sessionSummary->getMaterialSummary())
             ->setFurtherExploration($sessionSummary->getFurtherExploration())
             ->setInstrumentUuids($sessionSummary->getInstrumentUuids())
+            ->setRecommendationUuids($sessionSummary->getRecommendationUuids())
             ->setSequences(array_map(
                 static fn (SessionSequence $sessionSequence): array => $sessionSequence->toArray(),
                 $sessionSummary->getSequences(),

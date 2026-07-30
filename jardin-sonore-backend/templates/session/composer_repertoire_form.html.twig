@@ -1,0 +1,33 @@
+<turbo-frame id="session-composer-overlay">
+    <section class="session-composer-overlay" role="dialog" aria-modal="true" aria-labelledby="session-repertoire-title">
+        <div class="session-composer-overlay__panel session-composer-overlay__panel--activity">
+            <div class="internal-page-heading">
+                <div>
+                    <p class="internal-eyebrow">{{ 'sessions.sequence.composer.repertoire_config_eyebrow'|trans({}, 'sessions') }}</p>
+                    <h2 id="session-repertoire-title">{{ 'sessions.sequence.composer.repertoire_config_heading'|trans({ title: form.vars.value.title }, 'sessions') }}</h2>
+                    <p>{{ 'sessions.sequence.composer.repertoire_config_description'|trans({}, 'sessions') }}</p>
+                </div>
+                <a class="session-composer-overlay__close" href="{{ path('session_edit', { uuid: session.uuid }) }}" data-turbo-frame="_top" aria-label="{{ 'sessions.sequence.composer.close'|trans({}, 'sessions') }}">×</a>
+            </div>
+
+            {{ form_start(form, {
+                action: path('session_sequence_new', { uuid: session.uuid, composer: 1, repertoire: form.vars.value.sourceUuid }),
+                attr: { class: 'internal-form internal-form--wide session-activity-form', 'data-turbo-stream': 'true' }
+            }) }}
+                {{ form_row(form.role) }}
+                {{ form_row(form.body) }}
+                <div>
+                    {{ form_row(form.notes) }}
+                    <p class="internal-form-help">{{ 'sessions.sequence.form.notes_private_help'|trans({}, 'sessions') }}</p>
+                </div>
+                {{ form_row(form.instrumentUuids) }}
+                {{ form_widget(form.sourceUuid) }}
+                {{ form_widget(form.sourceTitle) }}
+                <div class="internal-form__actions">
+                    <a class="internal-button internal-button--secondary internal-form__back-action" href="{{ path('session_edit', { uuid: session.uuid }) }}" data-turbo-frame="_top">{{ 'sessions.sequence.form.back'|trans({}, 'sessions') }}</a>
+                    {{ form_widget(form.submit) }}
+                </div>
+            {{ form_end(form) }}
+        </div>
+    </section>
+</turbo-frame>
