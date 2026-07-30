@@ -146,6 +146,8 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 
 #### Lot 10.1. Rendu Metier, Medias Et PDF Canonique
 
+- Statut : Première tranche livrée, recette PDF à poursuivre
+
 - Refaire l'apercu metier en deroule vertical presentable, en reprenant le langage visuel, les couleurs et les reperes du compositeur sans ses actions d'edition.
 - Conserver les paroles repliables en HTML ; produire un rendu PDF vertical dedie et imprimable, ou les paroles sont developpees.
 - Remplacer les deux URLs historiques d'une sequence par une collection de medias : libelle, type, URL, image eventuelle et indicateur de media mis en avant.
@@ -206,3 +208,4 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 - 2026-07-23 : le premier compositeur de seances est livre ; une V2 de finition devient le prochain chantier avant la facturation.
 - 2026-07-28 : les flux d'uploads et de permissions sont verifies en production apres redeploiement ; la consolidation locale face aux permissions Docker est consideree terminee.
 - 2026-07-28 : le compositeur V2 est cadre : rendu vertical, collection de medias, PDF canonique asynchrone, espace structure Next.js et synchronisation Drive ulterieure.
+- 2026-07-30 : la première tranche du rendu de séance est livrée : médias copiés et sélectivement visibles, prévisualisation éditoriale, état documentaire, génération PDF locale Messenger et journal dédié. La recette de génération PDF et la finition de l’éditeur de collection de médias restent à poursuivre.
