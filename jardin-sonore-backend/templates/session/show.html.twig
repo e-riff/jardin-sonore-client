@@ -41,7 +41,7 @@
                         {# subtitle is visually included in the title, as in the validated layout #}
                     {% endif %}
 
-                    {% if sequence.body %}
+                    {% if sequence.body and sequence.body != sequence.lyrics %}
                         <div style="margin-top: .75rem;">{{ sequence.body|nl2br }}</div>
                     {% endif %}
 
