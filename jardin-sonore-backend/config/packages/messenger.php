@@ -6,6 +6,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use App\Application\Mailing\Message\SendMailingCampaignRecipientMessage;
 use App\Application\Mailing\Message\SendMailingCampaignTestMessage;
+use App\Application\Session\Message\GenerateSessionDocumentMessage;
 
 return App::config([
     'framework' => [
@@ -18,6 +19,7 @@ return App::config([
             'routing' => [
                 SendMailingCampaignTestMessage::class => 'async',
                 SendMailingCampaignRecipientMessage::class => 'async',
+                GenerateSessionDocumentMessage::class => 'async',
             ],
         ],
     ],

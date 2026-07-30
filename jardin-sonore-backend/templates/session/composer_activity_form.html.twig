@@ -22,14 +22,8 @@
                 {{ form_row(form.body) }}
                 {{ form_row(form.gestures) }}
                 {{ form_row(form.lyrics) }}
-                <div class="internal-form__grid">
-                    {{ form_row(form.primaryUrl) }}
-                    {{ form_row(form.secondaryUrl) }}
-                </div>
-                <div class="internal-form__grid">
-                    {{ form_row(form.imageUrl) }}
-                    {{ form_row(form.showLyricsByDefault) }}
-                </div>
+                {{ form_row(form.media) }}
+                {{ form_row(form.showLyricsByDefault) }}
                 {{ form_row(form.notes) }}
                 {{ form_widget(form.sourceUuid) }}
                 {{ form_widget(form.sourceTitle) }}

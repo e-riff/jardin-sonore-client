@@ -41,6 +41,7 @@ final readonly class AddSessionSequence
             sourceKind: $saveSessionSequenceInput->sourceKind,
             sourceTitle: $saveSessionSequenceInput->sourceTitle,
             instrumentUuids: $saveSessionSequenceInput->instrumentUuids,
+            media: $saveSessionSequenceInput->media,
         );
 
         $sessionSummary->addSequence($sessionSequence);

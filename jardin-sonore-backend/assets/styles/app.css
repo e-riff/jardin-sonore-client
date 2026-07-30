@@ -19,6 +19,29 @@
     --font-sans: 'Plus Jakarta Sans', Arial, sans-serif;
 }
 
+.session-document { max-width: 900px; margin: 3rem auto; color: var(--color-on-background); }
+.session-document__hero { position: relative; margin: 0 auto 4rem; max-width: 760px; text-align: center; }
+.session-document__accent { width: 6rem; height: .25rem; margin: 0 auto 1.5rem; border-radius: 999px; background: var(--color-primary); }
+.session-document__date, .session-document__hero > p:last-child { color: var(--color-on-surface-variant); font-style: italic; }
+.session-document__hero h1 { margin: 0; color: var(--color-primary); font-family: var(--font-serif); font-size: clamp(2.4rem, 6vw, 4.4rem); }
+.session-document__materials, .session-document__further-exploration { margin: 0 0 3rem; padding: 2rem; border: 1px solid color-mix(in oklab, var(--color-outline-variant) 55%, white); border-radius: 2rem; background: color-mix(in oklab, var(--color-surface-container) 58%, white); box-shadow: 0 10px 30px -5px rgba(135, 54, 45, .12); }
+.session-document__sequence { display: flex; gap: 1.5rem; margin: 0 0 3rem; }
+.session-document__number { display: grid; flex: 0 0 1.75rem; height: 1.75rem; place-items: center; border-radius: 50%; background: var(--color-primary); color: var(--color-on-primary); font-size: .75rem; font-weight: 800; }
+.session-document__sequence-content { min-width: 0; flex: 1; padding: .1rem 0 1.5rem 1.5rem; border-left: 2px solid color-mix(in oklab, var(--color-primary) 20%, transparent); }
+.session-document__badge { display: inline-block; margin: 0 0 .5rem; padding: .3rem .8rem; border-radius: 999px; background: color-mix(in srgb, var(--color-primary) 10%, transparent); color: var(--color-primary); font-size: .75rem; font-weight: 800; text-transform: uppercase; }
+.session-document__sequence h2 { margin: 0 0 1rem; font-family: var(--font-serif); font-size: 1.55rem; }
+.session-document__sequence h2 span { color: var(--color-on-surface-variant); font-weight: 400; }
+.session-document__sequence-content > div { margin-top: 1rem !important; color: var(--color-on-surface-variant); line-height: 1.7; }
+.session-document__sequence details { margin-top: 1.25rem; border-radius: 1.25rem; background: rgb(255 255 255 / .55); padding: .85rem 1rem; }
+.session-document__sequence summary { color: var(--color-primary); cursor: pointer; font-family: var(--font-sans); font-weight: 700; }
+.session-document__sequence ul { margin: 1.25rem 0 0; padding: 1rem 1.25rem; border-radius: 1rem; background: rgb(255 255 255 / .55); font-family: var(--font-sans); font-size: .92rem; }
+.session-document__sequence li + li { margin-top: .5rem; }
+.session-document__sequence a { color: var(--color-primary); font-weight: 700; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.session-document__further-exploration h2 { margin-top: 0; color: var(--color-primary); font-family: var(--font-serif); }
+.session-document__sequence--manipulation .session-document__number { background: var(--color-tertiary); }
+.session-document__sequence--soundtrack .session-document__number { background: var(--color-secondary); }
+@media (max-width: 640px) { .session-document { margin: 2rem 0; } .session-document__hero { margin-bottom: 2.5rem; } .session-document__sequence { gap: 1rem; } .session-document__materials, .session-document__further-exploration { padding: 1.25rem; border-radius: 1.5rem; } }
+
 * {
     box-sizing: border-box;
 }
@@ -629,6 +652,9 @@ button:disabled {
     color: #ffffff;
 }
 
+.internal-icon-button--danger { border-color: color-mix(in oklab, #9e2f24 36%, white); color: #9e2f24; }
+.internal-icon-button--danger:hover, .internal-icon-button--danger:focus-visible { background: #9e2f24; color: #ffffff; }
+
 .internal-button--compact {
     padding: 9px 16px;
     font-size: 0.78rem;
@@ -893,6 +919,15 @@ form.internal-form > .internal-form__actions > .internal-form__back-action {
     border-top: 1px solid color-mix(in oklab, var(--color-outline-variant) 50%, white);
     padding-top: 24px;
 }
+
+.session-summary-edit-form { width: 100%; max-width: none; }
+.session-document-status { display: flex; align-items: center; gap: 14px; margin: -16px 0 24px; }
+.session-document-status a { color: var(--color-primary); font-family: var(--font-sans); font-size: .86rem; font-weight: 700; }
+.session-summary-edit-form__remove { display: flex; justify-content: flex-end; margin-top: 28px; border-top: 1px solid color-mix(in oklab, var(--color-outline-variant) 50%, white); padding-top: 20px; }
+.session-summary-edit-form .internal-form__actions { justify-content: flex-end; }
+.session-summary-edit-form .internal-form__back-action { margin-right: 0; }
+.session-summary-form__private-notes summary { cursor: pointer; color: var(--color-primary); font-family: var(--font-sans); font-size: 1rem; font-weight: 700; }
+.session-summary-form__private-notes[open] summary { margin-bottom: 12px; }
 
 .session-summary-form__private-notes h2,
 .session-summary-form__private-notes p {

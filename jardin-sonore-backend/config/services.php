@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use App\Application\Session\SessionDocumentGeneratorInterface;
+use App\Infrastructure\Session\DompdfSessionDocumentGenerator;
 use Gedmo\Sluggable\SluggableListener;
 use Gedmo\Timestampable\TimestampableListener;
 
@@ -29,6 +31,9 @@ return App::config([
             'tags' => [
                 ['doctrine.event_subscriber' => ['connection' => 'default']],
             ],
+        ],
+        SessionDocumentGeneratorInterface::class => [
+            'alias' => DompdfSessionDocumentGenerator::class,
         ],
     ],
 ]);

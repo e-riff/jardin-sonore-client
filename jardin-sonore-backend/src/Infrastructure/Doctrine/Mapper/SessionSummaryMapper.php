@@ -28,6 +28,9 @@ final readonly class SessionSummaryMapper
             createdAt: $sessionSummaryEntity->getCreatedAt(),
             updatedAt: $sessionSummaryEntity->getUpdatedAt(),
             uuid: $sessionSummaryEntity->getUuid(),
+            documentStatus: $sessionSummaryEntity->getDocumentStatus(),
+            documentPath: $sessionSummaryEntity->getDocumentPath(),
+            documentError: $sessionSummaryEntity->getDocumentError(),
         );
     }
 
@@ -53,6 +56,10 @@ final readonly class SessionSummaryMapper
             ))
             ->setCreatedAt($sessionSummary->getCreatedAt())
             ->setUpdatedAt($sessionSummary->getUpdatedAt());
+        $sessionSummaryEntity
+            ->setDocumentStatus($sessionSummary->getDocumentStatus())
+            ->setDocumentPath($sessionSummary->getDocumentPath())
+            ->setDocumentError($sessionSummary->getDocumentError());
 
         return $sessionSummaryEntity;
     }

@@ -10,11 +10,11 @@ use App\Domain\Repository\InstrumentRepositoryInterface;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\Form\Extension\Core\Type\UrlType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -81,18 +81,7 @@ final class SessionSequenceType extends AbstractType
                 'required' => false,
                 'attr' => ['rows' => 5],
             ])
-            ->add('primaryUrl', UrlType::class, [
-                'label' => 'sessions.sequence.form.primary_url',
-                'required' => false,
-            ])
-            ->add('secondaryUrl', UrlType::class, [
-                'label' => 'sessions.sequence.form.secondary_url',
-                'required' => false,
-            ])
-            ->add('imageUrl', UrlType::class, [
-                'label' => 'sessions.sequence.form.image_url',
-                'required' => false,
-            ])
+            ->add('media', CollectionType::class, ['entry_type' => SessionSequenceMediaType::class, 'allow_add' => true, 'allow_delete' => true, 'by_reference' => false, 'required' => false])
             ->add('showLyricsByDefault', CheckboxType::class, [
                 'label' => 'sessions.sequence.form.show_lyrics_by_default',
                 'required' => false,

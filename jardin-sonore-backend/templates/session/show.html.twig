@@ -15,24 +15,30 @@
         </div>
     </section>
 
-    <article class="internal-card">
-        <section class="internal-page-heading" style="margin-bottom: 2rem;">
-            <div>
-                <p class="internal-eyebrow">{{ session.sessionDate|date('d/m/Y') }}</p>
-                <h1>{{ session.title }}</h1>
-                {% if session.theme %}
-                    <p>{{ session.theme }}</p>
-                {% endif %}
-            </div>
+    <article class="session-document">
+        <section class="session-document__hero">
+            <div class="session-document__accent"></div>
+            <p class="session-document__date">{{ session.sessionDate|date('d/m/Y') }}</p>
+            <h1>{{ session.title }}</h1>
+            {% if session.theme %}<p>{{ session.theme }}</p>{% endif %}
         </section>
 
-        <section>
+        {% if session.materialSummary %}
+            <section class="session-document__materials">
+                <p class="internal-eyebrow">{{ 'sessions.preview.material_summary'|trans({}, 'sessions') }}</p>
+                <p>{{ session.materialSummary|nl2br }}</p>
+            </section>
+        {% endif %}
+
+        <section class="session-document__sequences">
             {% for sequence in session.sequences %}
-                <article class="internal-card" style="margin-bottom: 1rem;">
-                    <p class="internal-eyebrow">{{ loop.index }} · {% if sequence.role %}{{ sequence.role }} · {% endif %}{{ sequence.type.translationKey()|trans({}, 'sessions') }}</p>
-                    <h2>{{ sequence.title }}</h2>
+                <article class="session-document__sequence session-document__sequence--{{ sequence.type.value }}">
+                    <div class="session-document__number">{{ loop.index }}</div>
+                    <div class="session-document__sequence-content">
+                    <p class="session-document__badge">{{ sequence.type.translationKey()|trans({}, 'sessions') }}</p>
+                    <h2>{{ sequence.title }}{% if sequence.subtitle %}<span>— {{ sequence.subtitle }}</span>{% endif %}</h2>
                     {% if sequence.subtitle %}
-                        <p>{{ sequence.subtitle }}</p>
+                        {# subtitle is visually included in the title, as in the validated layout #}
                     {% endif %}
 
                     {% if sequence.body %}
@@ -53,32 +59,21 @@
                         </details>
                     {% endif %}
 
-                    {% if sequence.notes %}
-                        <div style="margin-top: .75rem;">
-                            <strong>{{ 'sessions.preview.notes'|trans({}, 'sessions') }}</strong>
-                            <p>{{ sequence.notes|nl2br }}</p>
-                        </div>
-                    {% endif %}
-
-                    {% if sequence.imageUrl %}
-                        <div style="margin-top: .75rem;">
-                            <img src="{{ sequence.imageUrl }}" alt="" style="max-width: 240px; border-radius: 1rem;">
-                        </div>
-                    {% endif %}
-
-                    {% if sequence.primaryUrl or sequence.secondaryUrl %}
+                    {% if sequence.media is not empty %}
                         <ul style="margin-top: .75rem;">
-                            {% if sequence.primaryUrl %}
-                                <li><a href="{{ sequence.primaryUrl }}" target="_blank" rel="noopener noreferrer">{{ sequence.primaryUrl }}</a></li>
-                            {% endif %}
-                            {% if sequence.secondaryUrl %}
-                                <li><a href="{{ sequence.secondaryUrl }}" target="_blank" rel="noopener noreferrer">{{ sequence.secondaryUrl }}</a></li>
-                            {% endif %}
+                            {% for media in sequence.media %}{% if media.displayedOnSession %}<li><a href="{{ media.url }}" target="_blank" rel="noopener noreferrer">{{ media.label }}</a></li>{% endif %}{% endfor %}
                         </ul>
                     {% endif %}
+                    </div>
                 </article>
             {% endfor %}
         </section>
 
+        {% if session.furtherExploration %}
+            <section class="session-document__further-exploration">
+                <h2>{{ 'sessions.preview.further_exploration'|trans({}, 'sessions') }}</h2>
+                <p>{{ session.furtherExploration|nl2br }}</p>
+            </section>
+        {% endif %}
     </article>
 {% endblock %}

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Doctrine\Entity;
 
+use App\Domain\Model\Session\SessionDocumentStatus;
 use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\UuidIdentifiableTrait;
 use DateTimeImmutable;
@@ -40,6 +41,12 @@ class SessionSummaryEntity
     private DateTimeImmutable $createdAt;
 
     private DateTimeImmutable $updatedAt;
+
+    private SessionDocumentStatus $documentStatus = SessionDocumentStatus::PENDING;
+
+    private ?string $documentPath = null;
+
+    private ?string $documentError = null;
 
     public function __construct()
     {
@@ -189,6 +196,42 @@ class SessionSummaryEntity
     public function setUpdatedAt(DateTimeImmutable $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
+
+        return $this;
+    }
+
+    public function getDocumentStatus(): SessionDocumentStatus
+    {
+        return $this->documentStatus;
+    }
+
+    public function setDocumentStatus(SessionDocumentStatus $documentStatus): static
+    {
+        $this->documentStatus = $documentStatus;
+
+        return $this;
+    }
+
+    public function getDocumentPath(): ?string
+    {
+        return $this->documentPath;
+    }
+
+    public function setDocumentPath(?string $documentPath): static
+    {
+        $this->documentPath = $documentPath;
+
+        return $this;
+    }
+
+    public function getDocumentError(): ?string
+    {
+        return $this->documentError;
+    }
+
+    public function setDocumentError(?string $documentError): static
+    {
+        $this->documentError = $documentError;
 
         return $this;
     }

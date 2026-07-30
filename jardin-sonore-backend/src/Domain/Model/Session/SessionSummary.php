@@ -42,6 +42,12 @@ final class SessionSummary implements UuidIdentifiableInterface
 
     private DateTimeImmutable $updatedAt;
 
+    private SessionDocumentStatus $documentStatus;
+
+    private ?string $documentPath;
+
+    private ?string $documentError;
+
     /**
      * @param list<string>          $instrumentUuids
      * @param list<SessionSequence> $sequences
@@ -59,10 +65,16 @@ final class SessionSummary implements UuidIdentifiableInterface
         ?DateTimeImmutable $createdAt = null,
         ?DateTimeImmutable $updatedAt = null,
         ?Uuid $uuid = null,
+        SessionDocumentStatus $documentStatus = SessionDocumentStatus::PENDING,
+        ?string $documentPath = null,
+        ?string $documentError = null,
     ) {
         $this->initializeUuid($uuid);
         $this->createdAt = $createdAt ?? new DateTimeImmutable();
         $this->updatedAt = $updatedAt ?? new DateTimeImmutable();
+        $this->documentStatus = $documentStatus;
+        $this->documentPath = self::normalizeNullableString($documentPath);
+        $this->documentError = self::normalizeNullableString($documentError);
         $this->sequences = [];
         $this->updateDetails(
             title: $title,
@@ -141,6 +153,52 @@ final class SessionSummary implements UuidIdentifiableInterface
         return $this->updatedAt;
     }
 
+    public function getDocumentStatus(): SessionDocumentStatus
+    {
+        return $this->documentStatus;
+    }
+
+    public function getDocumentPath(): ?string
+    {
+        return $this->documentPath;
+    }
+
+    public function getDocumentError(): ?string
+    {
+        return $this->documentError;
+    }
+
+    public function markDocumentPending(): void
+    {
+        $this->documentStatus = SessionDocumentStatus::PENDING;
+        $this->documentPath = null;
+        $this->documentError = null;
+    }
+
+    public function markDocumentGenerating(): void
+    {
+        $this->documentStatus = SessionDocumentStatus::GENERATING;
+        $this->documentError = null;
+    }
+
+    public function markDocumentReady(string $documentPath): void
+    {
+        if ('' === trim($documentPath)) {
+            throw new InvalidArgumentException('Session document path cannot be blank.');
+        }
+
+        $this->documentStatus = SessionDocumentStatus::READY;
+        $this->documentPath = trim($documentPath);
+        $this->documentError = null;
+    }
+
+    public function markDocumentFailed(string $documentError): void
+    {
+        $this->documentStatus = SessionDocumentStatus::FAILED;
+        $this->documentPath = null;
+        $this->documentError = self::normalizeNullableString($documentError) ?? 'Session document generation failed.';
+    }
+
     /**
      * @param list<string> $instrumentUuids
      */
@@ -174,6 +232,7 @@ final class SessionSummary implements UuidIdentifiableInterface
             static fn (string $uuid): bool => '' !== $uuid,
         )));
         $this->updatedAt = new DateTimeImmutable();
+        $this->markDocumentPending();
     }
 
     public function addSequence(SessionSequence $sessionSequence): void
@@ -181,6 +240,7 @@ final class SessionSummary implements UuidIdentifiableInterface
         $this->sequences[] = $sessionSequence;
         $this->addSequenceInstruments($sessionSequence);
         $this->updatedAt = new DateTimeImmutable();
+        $this->markDocumentPending();
     }
 
     public function removeInstrument(Uuid $instrumentUuid): void
@@ -197,6 +257,7 @@ final class SessionSummary implements UuidIdentifiableInterface
 
         $this->instrumentUuids = $updatedInstrumentUuids;
         $this->updatedAt = new DateTimeImmutable();
+        $this->markDocumentPending();
     }
 
     public function replaceSequence(SessionSequence $sessionSequence): void
@@ -206,6 +267,7 @@ final class SessionSummary implements UuidIdentifiableInterface
                 $this->sequences[$index] = $sessionSequence;
                 $this->addSequenceInstruments($sessionSequence);
                 $this->updatedAt = new DateTimeImmutable();
+                $this->markDocumentPending();
 
                 return;
             }
@@ -221,6 +283,7 @@ final class SessionSummary implements UuidIdentifiableInterface
             static fn (SessionSequence $sessionSequence): bool => !$sessionSequence->uuid->equals($sequenceUuid),
         ));
         $this->updatedAt = new DateTimeImmutable();
+        $this->markDocumentPending();
     }
 
     public function moveSequenceUp(Uuid $sequenceUuid): void
@@ -264,6 +327,7 @@ final class SessionSummary implements UuidIdentifiableInterface
             $requestedSequenceUuids,
         );
         $this->updatedAt = new DateTimeImmutable();
+        $this->markDocumentPending();
     }
 
     private function moveSequence(Uuid $sequenceUuid, int $direction): void
@@ -281,6 +345,7 @@ final class SessionSummary implements UuidIdentifiableInterface
 
             [$this->sequences[$index], $this->sequences[$targetIndex]] = [$this->sequences[$targetIndex], $this->sequences[$index]];
             $this->updatedAt = new DateTimeImmutable();
+            $this->markDocumentPending();
 
             return;
         }

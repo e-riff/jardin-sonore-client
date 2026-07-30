@@ -36,15 +36,8 @@
             {{ form_row(form.notes) }}
             {{ form_row(form.instrumentUuids) }}
 
-            <div class="internal-form__grid">
-                {{ form_row(form.primaryUrl) }}
-                {{ form_row(form.secondaryUrl) }}
-            </div>
-
-            <div class="internal-form__grid">
-                {{ form_row(form.imageUrl) }}
-                {{ form_row(form.showLyricsByDefault) }}
-            </div>
+            {{ form_row(form.media) }}
+            {{ form_row(form.showLyricsByDefault) }}
 
             {{ form_widget(form.sourceUuid) }}
             {{ form_widget(form.sourceTitle) }}

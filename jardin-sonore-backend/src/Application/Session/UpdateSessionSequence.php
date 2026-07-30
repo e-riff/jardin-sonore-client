@@ -41,6 +41,7 @@ final readonly class UpdateSessionSequence
             sourceKind: $saveSessionSequenceInput->sourceKind,
             sourceTitle: $saveSessionSequenceInput->sourceTitle,
             instrumentUuids: $saveSessionSequenceInput->instrumentUuids,
+            media: $saveSessionSequenceInput->media,
         ));
 
         $this->sessionSummaryRepository->save($sessionSummary);
