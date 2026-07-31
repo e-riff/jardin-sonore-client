@@ -73,6 +73,7 @@ services:
       - messenger:consume
       - --all
       - --memory-limit=256M
+      - --time-limit=300
     depends_on:
       mysql:
         condition: service_healthy

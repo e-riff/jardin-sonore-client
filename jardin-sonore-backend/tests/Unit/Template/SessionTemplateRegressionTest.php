@@ -24,6 +24,17 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertStringContainsString('{% if sequence.body and sequence.body != sequence.lyrics %}', $template);
     }
 
+    public function testPreviewOffersTheGeneratedPdfAndDoesNotUseBrowserPrinting(): void
+    {
+        $template = file_get_contents(__DIR__ . '/../../../templates/session/show.html.twig');
+
+        self::assertIsString($template);
+        self::assertStringContainsString("path('session_document_download', { uuid: session.uuid })", $template);
+        self::assertStringContainsString('{% if documentAvailable %}', $template);
+        self::assertStringNotContainsString('window.print()', $template);
+        self::assertStringContainsString('turbo-cache-control" content="no-cache"', $template);
+    }
+
     public function testSequenceInstrumentLabelIsTranslated(): void
     {
         $translations = file_get_contents(__DIR__ . '/../../../translations/sessions+intl-icu.fr.yaml');
@@ -256,7 +267,7 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertIsString($controller);
         self::assertStringContainsString('{% set isDraft = isDraft|default(false) %}', $template);
         self::assertStringContainsString("path('session_sequence_remove'", $template);
-        self::assertStringContainsString("draft: isDraft ? 1 : null", $template);
+        self::assertStringContainsString('draft: isDraft ? 1 : null', $template);
         self::assertStringContainsString("'draft' => 1", $controller);
     }
 
@@ -305,7 +316,7 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertIsString($controller);
         self::assertStringContainsString("stimulus_action('confirmation-dialog', 'open')", $template);
         self::assertStringContainsString('this.dialogTarget.showModal()', $controller);
-        self::assertStringNotContainsString("@hotwired/turbo", $controller);
+        self::assertStringNotContainsString('@hotwired/turbo', $controller);
     }
 
     public function testConfirmationDialogClosesAfterASuccessfulTurboSubmission(): void

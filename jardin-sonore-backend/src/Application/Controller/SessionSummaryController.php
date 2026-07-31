@@ -42,11 +42,13 @@ use App\Domain\Model\Session\SessionSequenceSourceKind;
 use DateTimeImmutable;
 use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\Uid\Uuid;
 
 #[Route('/sessions', name: 'session_')]
@@ -118,6 +120,8 @@ final class SessionSummaryController extends AbstractController
         Request $request,
         GetSessionSummary $getSessionSummary,
         UpdateSessionSummary $updateSessionSummary,
+        #[Autowire('%kernel.project_dir%/var/session-documents')]
+        string $sessionDocumentDirectory,
     ): Response {
         $sessionSummaryView = $this->getSessionSummaryView($uuid, $getSessionSummary);
         $formModel = SessionSummaryFormModel::fromView($sessionSummaryView);
@@ -140,15 +144,23 @@ final class SessionSummaryController extends AbstractController
             'form' => $form->createView(),
             'hasErrors' => $form->isSubmitted() && !$form->isValid(),
             'session' => $sessionSummaryView,
+            'documentAvailable' => $this->hasSessionDocument($sessionSummaryView, $sessionDocumentDirectory),
             'mediaTypes' => MediaResourceType::cases(),
         ], $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null);
     }
 
     #[Route('/{uuid}', name: 'show', methods: ['GET'])]
-    public function show(string $uuid, GetSessionSummary $getSessionSummary): Response
-    {
+    public function show(
+        string $uuid,
+        GetSessionSummary $getSessionSummary,
+        #[Autowire('%kernel.project_dir%/var/session-documents')]
+        string $sessionDocumentDirectory,
+    ): Response {
+        $sessionSummaryView = $this->getSessionSummaryView($uuid, $getSessionSummary);
+
         return $this->render('session/show.html.twig', [
-            'session' => $this->getSessionSummaryView($uuid, $getSessionSummary),
+            'session' => $sessionSummaryView,
+            'documentAvailable' => $this->hasSessionDocument($sessionSummaryView, $sessionDocumentDirectory),
         ]);
     }
 
@@ -166,15 +178,25 @@ final class SessionSummaryController extends AbstractController
     }
 
     #[Route('/{uuid}/document.pdf', name: 'document_download', methods: ['GET'])]
-    public function downloadDocument(string $uuid, GetSessionSummary $getSessionSummary): Response
-    {
+    public function downloadDocument(
+        string $uuid,
+        GetSessionSummary $getSessionSummary,
+        SluggerInterface $slugger,
+        #[Autowire('%kernel.project_dir%/var/session-documents')]
+        string $sessionDocumentDirectory,
+    ): Response {
         $sessionSummaryView = $this->getSessionSummaryView($uuid, $getSessionSummary);
-        if (null === $sessionSummaryView->documentPath || !is_file($sessionSummaryView->documentPath)) {
+        $documentPath = $this->sessionDocumentPath($sessionSummaryView, $sessionDocumentDirectory);
+        clearstatcache(true, $documentPath);
+        if (!is_file($documentPath)) {
             throw $this->createNotFoundException();
         }
 
-        return (new BinaryFileResponse($sessionSummaryView->documentPath))
-            ->setContentDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, 'seance.pdf');
+        $sessionTitleSlug = $slugger->slug($sessionSummaryView->title)->lower()->toString();
+        $documentFileName = '' === $sessionTitleSlug ? 'seance.pdf' : "seance-{$sessionTitleSlug}.pdf";
+
+        return (new BinaryFileResponse($documentPath))
+            ->setContentDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, $documentFileName);
     }
 
     #[Route('/{uuid}/sequences/new', name: 'sequence_new', methods: ['GET', 'POST'])]
@@ -727,6 +749,19 @@ final class SessionSummaryController extends AbstractController
         }
 
         return $sessionSummaryView;
+    }
+
+    private function hasSessionDocument(SessionSummaryView $sessionSummaryView, string $sessionDocumentDirectory): bool
+    {
+        $sessionDocumentPath = $this->sessionDocumentPath($sessionSummaryView, $sessionDocumentDirectory);
+        clearstatcache(true, $sessionDocumentPath);
+
+        return is_file($sessionDocumentPath);
+    }
+
+    private function sessionDocumentPath(SessionSummaryView $sessionSummaryView, string $sessionDocumentDirectory): string
+    {
+        return $sessionDocumentDirectory . '/' . $sessionSummaryView->uuid->toRfc4122() . '.pdf';
     }
 
     private function getSessionSequenceView(SessionSummaryView $sessionSummaryView, string $sequenceUuid): SessionSequenceView

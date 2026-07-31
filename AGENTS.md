@@ -93,3 +93,7 @@
 - Toujours pousser la branche distante avant de deployer.
 - Quand un tag de deploiement est cree, toujours pousser aussi le tag distant, pas seulement la branche.
 - Ne deployer qu'apres commit et tag reussis, sauf demande explicite contraire de l'utilisateur.
+
+## Suite a reprendre
+
+- Le flux de génération et de téléchargement des PDF de séance est fonctionnel. Reprendre ultérieurement l'esthétique du document PDF (hiérarchie, mise en page A4, badges et médias), sans modifier son mécanisme de génération.

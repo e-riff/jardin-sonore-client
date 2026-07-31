@@ -1,23 +1,105 @@
 <!doctype html>
 <html lang="fr">
-<head><meta charset="utf-8"><style>body { font-family: DejaVu Sans, sans-serif; color: #26352c; } h1 { color: #557343; } article { margin: 0 0 24px; page-break-inside: avoid; } .meta { color: #68736b; font-size: 11px; }</style></head>
+<head>
+    <meta charset="utf-8">
+    <style>
+        @page { margin: 18mm 16mm; }
+        * { box-sizing: border-box; }
+        body { margin: 0; color: #3f352f; font-family: DejaVu Sans, sans-serif; font-size: 10pt; line-height: 1.45; }
+        h1, h2, h3, p { margin-top: 0; }
+        h1, h2, h3 { color: #734a3e; font-family: DejaVu Serif, serif; }
+        h1 { margin-bottom: 5mm; font-size: 27pt; line-height: 1.12; }
+        h2 { margin: 0 0 3mm; font-size: 17pt; line-height: 1.2; }
+        h3 { margin: 0; font-size: 13pt; line-height: 1.25; }
+        .cover { margin: 0 0 9mm; padding: 8mm; background: #fbf4ea; border: 1px solid #dccbb8; border-radius: 5mm; }
+        .eyebrow { margin-bottom: 3mm; color: #8c6759; font-size: 8pt; font-weight: bold; letter-spacing: 1.2pt; text-transform: uppercase; }
+        .meta { margin: 0; color: #70635a; font-size: 9pt; }
+        .summary { margin: 0 0 8mm; padding: 5mm 6mm; background: #f4f0e9; border-left: 3px solid #a66d55; }
+        .summary h2 { margin-bottom: 2mm; font-size: 12pt; }
+        .sequence { margin: 0 0 7mm; padding: 6mm; border: 1px solid #dfd5c9; border-radius: 4mm; page-break-inside: avoid; }
+        .sequence-number { float: left; width: 9mm; height: 9mm; margin: 0 4mm 2mm 0; padding-top: 1.5mm; background: #734a3e; border-radius: 50%; color: #fffaf3; font-size: 9pt; font-weight: bold; text-align: center; }
+        .sequence-meta { margin: 0 0 2mm; color: #8c6759; font-size: 8pt; font-weight: bold; letter-spacing: .7pt; text-transform: uppercase; }
+        .subtitle { margin: 1mm 0 4mm; color: #70635a; font-style: italic; }
+        .section-label { margin: 4mm 0 1mm; color: #8c6759; font-size: 8pt; font-weight: bold; letter-spacing: .6pt; text-transform: uppercase; }
+        .content p { margin-bottom: 2.5mm; }
+        .badges { margin: 3mm 0 0; padding: 0; list-style: none; }
+        .badge { display: inline-block; margin: 0 2mm 2mm 0; padding: 1.8mm 3mm; background: #edf4e9; border: 1px solid #b8ceb0; border-radius: 4mm; color: #315b3d; font-size: 8.5pt; text-decoration: none; }
+        .badge--instrument { background: #f4eee6; border-color: #d9c5b2; color: #6b4c3c; }
+        .badge-icon { margin-right: 1.5mm; font-weight: bold; }
+        .media { margin-top: 4mm; }
+        .media-preview { float: left; width: 35mm; height: 20mm; margin: 0 3mm 2mm 0; border: 1px solid #d5ccc0; border-radius: 2mm; object-fit: cover; }
+        .media:after, .sequence:after { content: ''; display: block; clear: both; }
+        .recommendations { margin-top: 9mm; padding-top: 6mm; border-top: 2px solid #d9c5b2; }
+        .recommendation { margin: 0 0 5mm; padding: 4mm 5mm; background: #fbf4ea; border-radius: 3mm; page-break-inside: avoid; }
+        .recommendation h3 { margin-bottom: 2mm; }
+    </style>
+</head>
 <body>
-    <h1>{{ session.title }}</h1>
-    <p class="meta">{{ session.sessionDate|date('d/m/Y') }}{% if session.theme %} · {{ session.theme }}{% endif %}</p>
-    {% if session.instrumentNames is not empty %}<h2>Instruments nécessaires</h2><p>{{ session.instrumentNames|join(' · ') }}</p>{% endif %}
-    {% if session.materialSummary %}<h2>Matériel</h2><p>{{ session.materialSummary|nl2br }}</p>{% endif %}
-    {% for sequence in session.sequences %}
-        <article>
-            <p class="meta">{{ loop.index }}{% if sequence.role %} · {{ sequence.role }}{% endif %}</p>
+    <header class="cover">
+        <p class="eyebrow">Déroulé de séance</p>
+        <h1>{{ document.session.title }}</h1>
+        <p class="meta">{{ document.session.sessionDate|date('d/m/Y') }}{% if document.session.theme %} · {{ document.session.theme }}{% endif %}{% if document.session.organizationName %} · {{ document.session.organizationName }}{% endif %}</p>
+    </header>
+
+    {% if document.session.instrumentNames is not empty or document.session.materialSummary %}
+        <section class="summary">
+            {% if document.session.instrumentNames is not empty %}
+                <h2>Instruments nécessaires</h2>
+                <div class="badges">
+                    {% for instrumentName in document.session.instrumentNames %}<span class="badge badge--instrument">♫ {{ instrumentName }}</span>{% endfor %}
+                </div>
+            {% endif %}
+            {% if document.session.materialSummary %}
+                <p class="section-label">Matériel</p>
+                <p>{{ document.session.materialSummary|nl2br }}</p>
+            {% endif %}
+        </section>
+    {% endif %}
+
+    {% for sequence in document.session.sequences %}
+        <article class="sequence">
+            <span class="sequence-number">{{ loop.index }}</span>
+            <p class="sequence-meta">{% if sequence.role %}{{ sequence.role }} · {% endif %}{{ sequence.type.translationKey()|trans({}, 'sessions') }}</p>
             <h2>{{ sequence.title }}</h2>
-            {% if sequence.subtitle %}<p>{{ sequence.subtitle }}</p>{% endif %}
-            {% if sequence.body %}<p>{{ sequence.body|nl2br }}</p>{% endif %}
-            {% if sequence.generalInstructions %}<p>{{ sequence.generalInstructions|nl2br }}</p>{% endif %}
-            {% if sequence.gestures %}<p><strong>Gestes :</strong><br>{{ sequence.gestures|nl2br }}</p>{% endif %}
-            {% if sequence.lyrics %}<p><strong>Paroles :</strong><br>{{ sequence.lyrics|nl2br }}</p>{% endif %}
-            {% for media in sequence.media %}{% if media.displayedOnSession %}<p><a href="{{ media.url }}">{{ media.label }}</a></p>{% endif %}{% endfor %}
+            {% if sequence.subtitle %}<p class="subtitle">{{ sequence.subtitle }}</p>{% endif %}
+            {% if sequence.instrumentNames is not empty %}
+                <div class="badges">
+                    {% for instrumentName in sequence.instrumentNames %}<span class="badge badge--instrument">♫ {{ instrumentName }}</span>{% endfor %}
+                </div>
+            {% endif %}
+            <div class="content">
+                {% if sequence.body %}<p>{{ sequence.body|nl2br }}</p>{% endif %}
+                {% if sequence.generalInstructions %}<p><span class="section-label">Consignes</span><br>{{ sequence.generalInstructions|nl2br }}</p>{% endif %}
+                {% if sequence.gestures %}<p><span class="section-label">Gestes</span><br>{{ sequence.gestures|nl2br }}</p>{% endif %}
+                {% if sequence.lyrics %}<p><span class="section-label">Paroles</span><br>{{ sequence.lyrics|nl2br }}</p>{% endif %}
+            </div>
+            {% set visibleMedia = sequence.media|filter(media => media.displayedOnSession) %}
+            {% if visibleMedia is not empty %}
+                <div class="media">
+                    <p class="section-label">Médias associés</p>
+                    {% for media in visibleMedia %}
+                        {% set thumbnailDataUri = attribute(document.thumbnailDataUris, media.url)|default(null) %}
+                        {% if thumbnailDataUri %}<img class="media-preview" src="{{ thumbnailDataUri }}" alt="">{% endif %}
+                        <a class="badge" href="{{ media.url }}"><span class="badge-icon">{% if media.type.value == 'video' %}▶{% elseif media.type.value == 'soundtrack' %}♫{% else %}↗{% endif %}</span>{{ media.label }}</a>
+                    {% endfor %}
+                </div>
+            {% endif %}
         </article>
     {% endfor %}
-    {% if session.recommendations is not empty %}<h2>Pour aller plus loin dans la séance</h2>{% for recommendation in session.recommendations %}<p><strong>{{ recommendation.title }}</strong><br>{{ recommendation.text|nl2br }}{% if recommendation.primaryUrl %}<br>{{ recommendation.primaryUrl }}{% endif %}</p>{% endfor %}{% endif %}
+
+    {% if document.session.recommendations is not empty %}
+        <section class="recommendations">
+            <p class="eyebrow">Prolonger la séance</p>
+            <h2>Pour aller plus loin</h2>
+            {% for recommendation in document.session.recommendations %}
+                <article class="recommendation">
+                    <h3>{{ recommendation.title }}</h3>
+                    <p>{{ recommendation.text|nl2br }}</p>
+                    {% if recommendation.primaryUrl %}<a class="badge" href="{{ recommendation.primaryUrl }}"><span class="badge-icon">↗</span>Ouvrir la ressource</a>{% endif %}
+                    {% if recommendation.secondaryUrl %}<a class="badge" href="{{ recommendation.secondaryUrl }}"><span class="badge-icon">↗</span>Voir le complément</a>{% endif %}
+                </article>
+            {% endfor %}
+        </section>
+    {% endif %}
 </body>
 </html>

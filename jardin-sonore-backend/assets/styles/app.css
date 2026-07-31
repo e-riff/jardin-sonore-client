@@ -1105,6 +1105,39 @@ form.internal-form > .internal-form__actions > .internal-form__back-action {
     margin-bottom: 6px;
 }
 
+.session-composer__resources {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 10px;
+    padding-right: 42px;
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+}
+
+.session-composer__instrument,
+.session-composer__media {
+    border-radius: 999px;
+    padding: 5px 9px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.session-composer__instrument {
+    background: color-mix(in oklab, var(--color-secondary-fixed) 52%, white);
+    color: var(--color-on-secondary-fixed-variant);
+}
+
+.session-composer__media {
+    background: color-mix(in oklab, var(--color-primary-fixed) 38%, white);
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.session-composer__media:hover {
+    text-decoration: underline;
+}
+
 .session-composer-overlay__item p {
     margin: 6px 0 0;
     color: var(--color-on-surface-variant);

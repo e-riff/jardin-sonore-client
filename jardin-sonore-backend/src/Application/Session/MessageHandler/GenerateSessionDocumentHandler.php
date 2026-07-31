@@ -35,6 +35,12 @@ final readonly class GenerateSessionDocumentHandler
             return;
         }
 
+        if ('ready' === $sessionSummary->getDocumentStatus()->value
+            && null !== $sessionSummary->getDocumentPath()
+            && is_file($sessionSummary->getDocumentPath())) {
+            return;
+        }
+
         $sessionSummary->markDocumentGenerating();
         $this->sessionSummaryRepository->save($sessionSummary, false);
         $this->sessionDocumentLogger->info('Session document generation started.', ['session_uuid' => $generateSessionDocumentMessage->sessionUuid]);

@@ -85,6 +85,7 @@ final readonly class SessionSummaryView
                     null === $repertoireItemRepository || null === $sessionSequence->sourceUuid
                         ? null
                         : $repertoireItemRepository->findByUuid($sessionSequence->sourceUuid),
+                    $instrumentRepository,
                 ),
                 $sessionSummary->getSequences(),
             ),

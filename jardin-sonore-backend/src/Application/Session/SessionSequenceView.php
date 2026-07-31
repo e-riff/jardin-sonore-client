@@ -9,13 +9,16 @@ use App\Domain\Model\Session\SessionSequence;
 use App\Domain\Model\Session\SessionSequenceMedia;
 use App\Domain\Model\Session\SessionSequenceSourceKind;
 use App\Domain\Model\Session\SessionSequenceType;
+use App\Domain\Repository\InstrumentRepositoryInterface;
 use Symfony\Component\Uid\Uuid;
 
 final readonly class SessionSequenceView
 {
     /**
      * @param list<string>               $instrumentUuids
+     * @param list<string>               $instrumentNames
      * @param list<SessionSequenceMedia> $media
+     * @param list<SessionSequenceMedia> $composerMedia
      */
     public function __construct(
         public Uuid $uuid,
@@ -35,13 +38,18 @@ final readonly class SessionSequenceView
         public ?SessionSequenceSourceKind $sourceKind,
         public ?string $sourceTitle,
         public array $instrumentUuids,
+        public array $instrumentNames,
         public array $media,
+        public array $composerMedia,
         public ?string $generalInstructions = null,
     ) {
     }
 
-    public static function fromDomain(SessionSequence $sessionSequence, ?RepertoireItem $repertoireItem = null): self
-    {
+    public static function fromDomain(
+        SessionSequence $sessionSequence,
+        ?RepertoireItem $repertoireItem = null,
+        ?InstrumentRepositoryInterface $instrumentRepository = null,
+    ): self {
         $media = $sessionSequence->getMedia();
         $featuredMedia = current(array_filter($media, static fn (SessionSequenceMedia $sessionSequenceMedia): bool => $sessionSequenceMedia->featured));
         $visibleNonFeaturedMedia = array_values(array_filter($media, static fn (SessionSequenceMedia $sessionSequenceMedia): bool => !$sessionSequenceMedia->featured && $sessionSequenceMedia->isDisplayedOnSession()));
@@ -68,7 +76,19 @@ final readonly class SessionSequenceView
             sourceKind: $sessionSequence->sourceKind,
             sourceTitle: $sessionSequence->sourceTitle,
             instrumentUuids: $sessionSequence->instrumentUuids,
+            instrumentNames: null === $instrumentRepository ? [] : array_values(array_filter(array_map(
+                static fn (string $instrumentUuid): ?string => Uuid::isValid($instrumentUuid)
+                    ? $instrumentRepository->findByUuid(Uuid::fromString($instrumentUuid))?->getName()
+                    : null,
+                $sessionSequence->instrumentUuids,
+            ))),
             media: $media,
+            composerMedia: null === $sessionSequence->sourceKind
+                ? $media
+                : array_values(array_filter(
+                    $media,
+                    static fn (SessionSequenceMedia $sessionSequenceMedia): bool => $sessionSequenceMedia->isDisplayedOnSession(),
+                )),
             generalInstructions: $isSynchronizedRepertoireItem ? $repertoireItem->getGeneralInstructions() : null,
         );
     }

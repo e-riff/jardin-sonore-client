@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Application\Session;
 
 use App\Application\Session\SessionSequenceView;
+use App\Domain\Model\ContentCatalog\Instrument;
+use App\Domain\Model\Session\MediaResourceType;
 use App\Domain\Model\Session\RepertoireBlock;
 use App\Domain\Model\Session\RepertoireBlockKind;
 use App\Domain\Model\Session\RepertoireItem;
 use App\Domain\Model\Session\RepertoireItemType;
 use App\Domain\Model\Session\SessionSequence;
+use App\Domain\Model\Session\SessionSequenceMedia;
 use App\Domain\Model\Session\SessionSequenceSourceKind;
 use App\Domain\Model\Session\SessionSequenceType;
+use App\Domain\Repository\InstrumentRepositoryInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Uid\Uuid;
 
@@ -51,5 +55,90 @@ final class SessionSequenceViewTest extends TestCase
         self::assertSame('À reprendre en chœur.', $sessionSequenceView->generalInstructions);
         self::assertSame('Au clair de la lune', $sessionSequenceView->lyrics);
         self::assertSame('Adapter le tempo au groupe.', $sessionSequenceView->body);
+    }
+
+    public function testItResolvesSequenceInstrumentsAndKeepsAllActivityMediaInTheComposer(): void
+    {
+        $instrument = new Instrument(name: 'Kalimba');
+        $hiddenMedia = new SessionSequenceMedia(
+            label: 'Support de préparation',
+            type: MediaResourceType::LINK,
+            url: 'https://example.test/preparation',
+            imageUrl: null,
+            featured: false,
+            displayOnSession: false,
+        );
+        $visibleMedia = new SessionSequenceMedia(
+            label: 'Écoute du jour',
+            type: MediaResourceType::SOUNDTRACK,
+            url: 'https://example.test/ecoute',
+            imageUrl: null,
+            featured: false,
+            displayOnSession: true,
+        );
+        $activity = new SessionSequence(
+            uuid: Uuid::v4(),
+            type: SessionSequenceType::FREE,
+            title: 'Jeu de rythmes',
+            subtitle: null,
+            body: '',
+            lyrics: null,
+            gestures: null,
+            notes: null,
+            primaryUrl: null,
+            secondaryUrl: null,
+            imageUrl: null,
+            showLyricsByDefault: false,
+            instrumentUuids: [$instrument->getUuid()->toRfc4122()],
+            media: [$hiddenMedia, $visibleMedia],
+        );
+        $repertoireSequence = new SessionSequence(
+            uuid: Uuid::v4(),
+            type: SessionSequenceType::NURSERY_RHYME,
+            title: 'Comptine',
+            subtitle: null,
+            body: '',
+            lyrics: null,
+            gestures: null,
+            notes: null,
+            primaryUrl: null,
+            secondaryUrl: null,
+            imageUrl: null,
+            showLyricsByDefault: false,
+            sourceUuid: Uuid::v4(),
+            sourceKind: SessionSequenceSourceKind::REPERTOIRE_ITEM,
+            instrumentUuids: [$instrument->getUuid()->toRfc4122()],
+            media: [$hiddenMedia, $visibleMedia],
+        );
+        $instrumentRepository = new class($instrument) implements InstrumentRepositoryInterface {
+            public function __construct(private Instrument $instrument)
+            {
+            }
+
+            public function findByUuid(Uuid $uuid): ?Instrument
+            {
+                return $this->instrument->getUuid()->equals($uuid) ? $this->instrument : null;
+            }
+
+            public function findAllOrderedByName(): array
+            {
+                return [$this->instrument];
+            }
+
+            public function save(Instrument $instrument): void
+            {
+            }
+
+            public function delete(Instrument $instrument): void
+            {
+            }
+        };
+
+        $activityView = SessionSequenceView::fromDomain($activity, instrumentRepository: $instrumentRepository);
+        $repertoireView = SessionSequenceView::fromDomain($repertoireSequence, instrumentRepository: $instrumentRepository);
+
+        self::assertSame(['Kalimba'], $activityView->instrumentNames);
+        self::assertSame([$hiddenMedia, $visibleMedia], $activityView->composerMedia);
+        self::assertSame([$visibleMedia], $repertoireView->composerMedia);
     }
 }
