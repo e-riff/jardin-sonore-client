@@ -26,6 +26,12 @@ export default class extends Controller {
         this.dialogTarget.close();
     }
 
+    closeAfterSubmit(event) {
+        if (event.detail.success) {
+            this.close();
+        }
+    }
+
     closeOnBackdrop(event) {
         if (event.target === this.dialogTarget) {
             this.close();

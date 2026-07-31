@@ -1,0 +1,21 @@
+<turbo-frame id="session-composer-overlay">
+    <section class="session-composer-overlay" role="dialog" aria-modal="true">
+        <div class="session-composer-overlay__panel session-composer-overlay__panel--activity">
+            <div class="internal-page-heading"><div><p class="internal-eyebrow">{{ 'sessions.media.index.eyebrow'|trans({}, 'sessions') }}</p><h2>{{ 'sessions.sequence.composer.add_catalog_media'|trans({}, 'sessions') }}</h2></div><a class="session-composer-overlay__close" href="{{ path('session_sequence_edit', { uuid: session.uuid, sequenceUuid: sequence.uuid, composer: 1, draft: isDraft ? 1 : null }) }}">×</a></div>
+            <div data-controller="catalog-filter">
+                <div class="session-composer-overlay__search">
+                    <label for="composer-media-query">{{ 'sessions.sequence.composer.search'|trans({}, 'sessions') }}</label>
+                    <input id="composer-media-query" type="search" value="{{ query }}" data-catalog-filter-target="query" data-action="input->catalog-filter#filter" placeholder="{{ 'sessions.sequence.composer.search_placeholder'|trans({}, 'sessions') }}">
+                </div>
+                <div class="session-composer-overlay__results">
+            {% for mediaResource in mediaResources %}
+                <form method="post" action="{{ path('session_sequence_media_add', { uuid: session.uuid, sequenceUuid: sequence.uuid, draft: isDraft ? 1 : null }) }}" data-turbo-frame="session-composer-overlay" data-catalog-filter-target="item" data-catalog-filter-search-value="{{ mediaResource.title }} {{ mediaResource.source ?? '' }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('session_sequence_media_add_' ~ sequence.uuid) }}"><input type="hidden" name="mediaUuid" value="{{ mediaResource.uuid }}">
+                    <button class="session-composer-overlay__item session-composer-overlay__item--select" type="submit"><span><strong>{{ mediaResource.title }}</strong>{% if mediaResource.source %}<small>{{ mediaResource.source }}</small>{% endif %}</span></button>
+                </form>
+            {% else %}<p>{{ 'sessions.media.index.empty'|trans({}, 'sessions') }}</p>{% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+</turbo-frame>

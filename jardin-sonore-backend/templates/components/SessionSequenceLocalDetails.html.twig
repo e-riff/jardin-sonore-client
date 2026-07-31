@@ -8,12 +8,13 @@
         <button type="button" class="internal-eyebrow" {{ live_action('edit', { field: 'role' }) }}>{{ role ?: 'sessions.sequence.composer.add_role'|trans({}, 'sessions') }}</button>
     {% endif %}
     {% if section == 'details' %}
+        {% if showInstructionLabel %}<p class="session-sequence-local-details__instruction-label">{{ 'sessions.sequence.form.body'|trans({}, 'sessions') }}</p>{% endif %}
         <div class="session-sequence-local-details__instructions">
             {% for instruction in this.instructions %}
                 <div class="session-sequence-local-details__instruction-row">
                     {% if editingInstructionIndex == loop.index0 %}
-                        <form class="session-sequence-local-details__form" data-action="live#action:prevent" data-live-action-param="saveInstruction">
-                            <input data-model="norender|instructionValue" value="{{ instructionValue }}" data-action="blur->live#action" data-live-action-param="saveInstruction" autofocus>
+                        <form class="session-sequence-local-details__form" data-controller="instruction-shortcut" data-action="submit->instruction-shortcut#saveInstruction:prevent">
+                            <input data-instruction-shortcut-target="input" data-model="norender|instructionValue" value="{{ instructionValue }}" data-action="blur->instruction-shortcut#saveInstruction keydown->instruction-shortcut#addNextInstruction" autofocus>
                         </form>
                     {% else %}
                         <button type="button" class="session-sequence-local-details__instruction" {{ live_action('startEditInstruction', { index: loop.index0 }) }}>{{ instruction }}</button>
@@ -25,8 +26,8 @@
                 </div>
             {% endfor %}
             {% if editingInstructionIndex == this.instructions|length %}
-                <form class="session-sequence-local-details__form session-sequence-local-details__new-instruction" data-action="live#action:prevent" data-live-action-param="saveInstruction">
-                    <input data-model="norender|instructionValue" value="{{ instructionValue }}" data-action="blur->live#action" data-live-action-param="saveInstruction" autofocus>
+                <form class="session-sequence-local-details__form session-sequence-local-details__new-instruction" data-controller="instruction-shortcut" data-action="submit->instruction-shortcut#saveInstruction:prevent">
+                    <input data-instruction-shortcut-target="input" data-model="norender|instructionValue" value="{{ instructionValue }}" data-action="blur->instruction-shortcut#saveInstruction keydown->instruction-shortcut#addNextInstruction" autofocus>
                 </form>
             {% elseif editingInstructionIndex == -1 %}
                 <button type="button" class="session-sequence-local-details__add-instruction" {{ live_action('addInstruction') }} aria-label="{{ 'sessions.sequence.composer.add_instruction'|trans({}, 'sessions') }}">+</button>

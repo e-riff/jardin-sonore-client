@@ -21,6 +21,7 @@ final class SessionSequenceLocalDetails
     #[LiveProp] public string $sessionUuid;
     #[LiveProp] public string $sequenceUuid;
     #[LiveProp] public string $section = 'details';
+    #[LiveProp] public bool $showInstructionLabel = false;
     #[LiveProp(writable: true)] public ?string $role = null;
     #[LiveProp(writable: true)] public string $body = '';
     #[LiveProp(writable: true)] public ?string $notes = null;
@@ -70,7 +71,7 @@ final class SessionSequenceLocalDetails
         }
 
         [$instructions[$index], $instructions[$destinationIndex]] = [$instructions[$destinationIndex], $instructions[$index]];
-        $this->body = implode("\n", $instructions);
+        $this->body = implode("\n", array_values($instructions));
         $this->saveSetting(SessionSequenceLocalSetting::BODY, $this->body);
     }
 
@@ -106,10 +107,17 @@ final class SessionSequenceLocalDetails
             $instructions[] = $instruction;
         }
 
-        $this->body = implode("\n", $instructions);
+        $this->body = implode("\n", array_values($instructions));
         $this->saveSetting(SessionSequenceLocalSetting::BODY, $this->body);
         $this->instructionValue = '';
         $this->editingInstructionIndex = -1;
+    }
+
+    #[LiveAction]
+    public function saveAndAddInstruction(): void
+    {
+        $this->saveInstruction();
+        $this->addInstruction();
     }
 
     /** @return list<string> */

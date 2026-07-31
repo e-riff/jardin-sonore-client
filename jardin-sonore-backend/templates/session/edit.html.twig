@@ -20,7 +20,7 @@
         {% if session.documentStatus.value == 'ready' and session.documentPath %}<a href="{{ path('session_document_download', { uuid: session.uuid }) }}">{{ 'sessions.summary.document.download'|trans({}, 'sessions') }}</a>{% endif %}
     </div>
 
-    <section class="internal-card internal-card--form session-summary-edit-form">
+    <section id="session-summary-edit-form" class="internal-card internal-card--form session-summary-edit-form">
         {% if hasErrors %}
             <div class="internal-alert internal-alert--error">{{ 'sessions.summary.form.error_notice'|trans({}, 'sessions') }}</div>
         {% endif %}

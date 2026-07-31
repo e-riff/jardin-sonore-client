@@ -838,6 +838,16 @@ button:disabled {
     letter-spacing: 0.04em;
 }
 
+.session-sequence-local-details__instruction-label {
+    display: block;
+    margin: 0 0 8px;
+    color: var(--color-on-surface-variant);
+    font-family: var(--font-sans);
+    font-size: 0.84rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
 .internal-form input,
 .internal-form textarea,
 .internal-form select {
@@ -1134,10 +1144,7 @@ form.internal-form > .internal-form__actions > .internal-form__back-action {
 }
 
 .session-composer__bottom-action {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
+    justify-content: flex-end;
     padding-top: 6px;
 }
 
@@ -1258,7 +1265,7 @@ form.internal-form > .internal-form__actions > .internal-form__back-action {
 
 .session-composer-overlay__search {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: 1fr;
     gap: 10px;
     align-items: end;
 }
@@ -1310,18 +1317,71 @@ a.session-composer-overlay__item {
     background: color-mix(in oklab, var(--color-primary-fixed) 34%, white);
 }
 
-.session-composer-overlay__item-button {
-    display: inline-flex;
-    gap: 8px;
-    align-items: center;
+.session-composer-overlay__item--select {
+    width: 100%;
     border: 0;
-    padding: 6px 0;
-    background: transparent;
-    color: var(--color-primary);
+    font: inherit;
+    text-align: left;
+}
+
+.session-composer-overlay__item--select > span:first-child {
+    display: grid;
+    gap: 4px;
+}
+
+.session-composer-overlay__item--select small {
+    color: var(--color-on-surface-variant);
     font-family: var(--font-sans);
-    font-size: 0.8rem;
+}
+
+.session-activity-media > label {
+    color: var(--color-on-surface-variant);
+    font-family: var(--font-sans);
+    font-size: .84rem;
     font-weight: 700;
-    cursor: pointer;
+    letter-spacing: .04em;
+}
+
+.session-activity-media > div {
+    display: grid;
+    gap: 14px;
+}
+
+.session-activity-media > div > div {
+    border: 1px solid color-mix(in oklab, var(--color-outline-variant) 55%, white);
+    border-radius: 16px;
+    padding: 14px;
+    background: var(--color-surface-container-lowest);
+}
+
+.session-activity-media > div > div > label {
+    display: none;
+}
+
+.session-activity-media > div > div > div {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 14px;
+}
+
+.session-activity-media > div > div > div > div {
+    min-width: 0;
+}
+
+.session-activity-media > div > div > div > div:nth-last-child(-n + 2) {
+    grid-column: span 1;
+}
+
+.session-activity-media > div > div > div > div:has(input[type="checkbox"]) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+@media (max-width: 760px) {
+    .session-activity-media > div > div > div {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (min-width: 761px) {
@@ -2723,10 +2783,6 @@ a.session-composer-overlay__item {
         position: sticky;
         top: 0;
         margin-left: auto;
-    }
-
-    .session-composer-overlay__search {
-        grid-template-columns: 1fr;
     }
 
     .session-composer-overlay__item {

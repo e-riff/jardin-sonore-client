@@ -30,7 +30,7 @@ final class SessionSummaryFormModel
     /** @var list<string> */
     public array $recommendationUuids = [];
 
-    public string $recommendationOrder = '';
+    public ?string $recommendationOrder = '';
 
     public static function fromView(SessionSummaryView $sessionSummaryView): self
     {
@@ -55,7 +55,7 @@ final class SessionSummaryFormModel
         )));
         $selectedRecommendationUuidsByValue = array_fill_keys($selectedRecommendationUuids, true);
         $orderedRecommendationUuids = array_values(array_unique(array_filter(
-            array_map('trim', explode(',', $this->recommendationOrder)),
+            array_map('trim', explode(',', $this->recommendationOrder ?? '')),
             static fn (string $uuid): bool => isset($selectedRecommendationUuidsByValue[$uuid]),
         )));
 

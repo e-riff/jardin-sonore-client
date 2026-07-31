@@ -35,7 +35,7 @@
                         <twig:SessionSequenceLocalDetails sessionUuid="{{ session.uuid }}" sequenceUuid="{{ sequence.uuid }}" section="role" role="{{ sequence.role ?? '' }}" body="{{ sequence.body ?? '' }}" notes="{{ sequence.notes ?? '' }}" />
                         <h3>
                             <span class="session-composer__index" data-session-sequence-sorter-target="index">{{ loop.index }}</span>
-                            <span>{{ sequence.title }}</span>
+                            <a href="{{ path('session_sequence_edit', { uuid: session.uuid, sequenceUuid: sequence.uuid, composer: 1 }) }}" data-turbo-frame="session-composer-overlay" draggable="false">{{ sequence.title }}</a>
                             {% if sequence.subtitle %}<span class="session-composer__source">— {{ sequence.subtitle }}</span>{% endif %}
                             <span class="session-composer__type">{{ sequence.type.translationKey()|trans({}, 'sessions') }}</span>
                         </h3>
@@ -44,6 +44,7 @@
                     <twig:SessionSequenceLocalDetails sessionUuid="{{ session.uuid }}" sequenceUuid="{{ sequence.uuid }}" section="notes" role="{{ sequence.role ?? '' }}" body="{{ sequence.body ?? '' }}" notes="{{ sequence.notes ?? '' }}" />
                     <div class="session-composer__actions">
                         <div class="session-composer__utility-actions">
+                            <a class="internal-icon-button" href="{{ path('session_sequence_edit', { uuid: session.uuid, sequenceUuid: sequence.uuid, composer: 1 }) }}" data-turbo-frame="session-composer-overlay" title="{{ 'sessions.sequence.composer.edit'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.sequence.composer.edit'|trans({}, 'sessions') }}">✎</a>
                             <button
                                 type="button"
                                 class="internal-icon-button internal-icon-button--danger"
@@ -59,7 +60,7 @@
                 </article>
             {% endfor %}
         </div>
-        <div class="session-composer__bottom-action">
+        <div class="session-composer__add-actions session-composer__bottom-action">
             <a class="internal-button internal-button--secondary" href="{{ path('session_sequence_new', { uuid: session.uuid, composer: 1 }) }}" data-turbo-frame="session-composer-overlay">
                 {{ 'sessions.sequence.composer.add_activity'|trans({}, 'sessions') }}
             </a>

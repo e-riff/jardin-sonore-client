@@ -18,7 +18,7 @@ final class SessionSequenceFormModel
 
     #[Assert\NotBlank]
     #[Assert\Length(max: 255)]
-    public string $title = '';
+    public ?string $title = '';
 
     #[Assert\Length(max: 255)]
     public ?string $subtitle = null;
@@ -79,6 +79,18 @@ final class SessionSequenceFormModel
         $formModel->instrumentUuids = $sessionSequenceView->instrumentUuids;
 
         return $formModel;
+    }
+
+    public function addMediaResource(MediaResourceView $mediaResourceView): void
+    {
+        $sessionSequenceMediaFormModel = new SessionSequenceMediaFormModel();
+        $sessionSequenceMediaFormModel->label = $mediaResourceView->title;
+        $sessionSequenceMediaFormModel->type = $mediaResourceView->type;
+        $sessionSequenceMediaFormModel->url = $mediaResourceView->primaryUrl;
+        $sessionSequenceMediaFormModel->imageUrl = $mediaResourceView->imageUrl;
+        $sessionSequenceMediaFormModel->featured = [] === $this->media;
+
+        $this->media[] = $sessionSequenceMediaFormModel;
     }
 
     public static function fromRepertoireItemView(RepertoireItemView $repertoireItemView): self
