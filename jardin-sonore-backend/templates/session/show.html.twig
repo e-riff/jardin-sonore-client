@@ -2,6 +2,8 @@
 
 {% set title = session.title %}
 
+{% block head %}<meta name="turbo-cache-control" content="no-cache">{% endblock %}
+
 {% block internal_body %}
     <section class="internal-page-heading print:hidden">
         <div>
@@ -11,7 +13,11 @@
         </div>
         <div class="internal-heading-actions">
             <a class="internal-button internal-button--secondary" href="{{ path('session_edit', { uuid: session.uuid }) }}">{{ 'sessions.preview.edit'|trans({}, 'sessions') }}</a>
-            <button class="internal-button" onclick="window.print()">{{ 'sessions.preview.print'|trans({}, 'sessions') }}</button>
+            {% if documentAvailable %}
+                <a class="internal-button" href="{{ path('session_document_download', { uuid: session.uuid }) }}">{{ 'sessions.summary.document.download'|trans({}, 'sessions') }}</a>
+            {% else %}
+                <span class="internal-badge internal-badge--{{ session.documentStatus.value == 'failed' ? 'danger' : 'warning' }}">{{ ('sessions.summary.document.' ~ session.documentStatus.value)|trans({}, 'sessions') }}</span>
+            {% endif %}
         </div>
     </section>
 

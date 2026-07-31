@@ -40,6 +40,16 @@
                             <span class="session-composer__type">{{ sequence.type.translationKey()|trans({}, 'sessions') }}</span>
                         </h3>
                         <twig:SessionSequenceLocalDetails sessionUuid="{{ session.uuid }}" sequenceUuid="{{ sequence.uuid }}" section="details" role="{{ sequence.role ?? '' }}" body="{{ sequence.body ?? '' }}" notes="{{ sequence.notes ?? '' }}" />
+                        {% if sequence.instrumentNames is not empty or sequence.composerMedia is not empty %}
+                            <div class="session-composer__resources">
+                                {% for instrumentName in sequence.instrumentNames %}
+                                    <span class="session-composer__instrument">{{ instrumentName }}</span>
+                                {% endfor %}
+                                {% for media in sequence.composerMedia %}
+                                    <a class="session-composer__media" href="{{ media.url }}" target="_blank" rel="noreferrer noopener" draggable="false">↗ {{ media.label }}</a>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                     <twig:SessionSequenceLocalDetails sessionUuid="{{ session.uuid }}" sequenceUuid="{{ sequence.uuid }}" section="notes" role="{{ sequence.role ?? '' }}" body="{{ sequence.body ?? '' }}" notes="{{ sequence.notes ?? '' }}" />
                     <div class="session-composer__actions">

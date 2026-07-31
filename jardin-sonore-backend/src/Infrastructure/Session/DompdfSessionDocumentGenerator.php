@@ -5,7 +5,13 @@ declare(strict_types=1);
 namespace App\Infrastructure\Session;
 
 use App\Application\Session\SessionDocumentGeneratorInterface;
+use App\Application\Session\SessionDocumentView;
+use App\Application\Session\SessionSummaryView;
+use App\Application\Session\YoutubeThumbnailProviderInterface;
 use App\Domain\Model\Session\SessionSummary;
+use App\Domain\Repository\InstrumentRepositoryInterface;
+use App\Domain\Repository\RepertoireItemRepositoryInterface;
+use App\Domain\Repository\SessionRecommendationRepositoryInterface;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use RuntimeException;
@@ -16,6 +22,10 @@ final readonly class DompdfSessionDocumentGenerator implements SessionDocumentGe
 {
     public function __construct(
         private Environment $twig,
+        private RepertoireItemRepositoryInterface $repertoireItemRepository,
+        private InstrumentRepositoryInterface $instrumentRepository,
+        private SessionRecommendationRepositoryInterface $sessionRecommendationRepository,
+        private YoutubeThumbnailProviderInterface $youtubeThumbnailProvider,
         #[Autowire('%kernel.project_dir%/var/session-documents')]
         private string $sessionDocumentDirectory,
     ) {
@@ -29,8 +39,15 @@ final readonly class DompdfSessionDocumentGenerator implements SessionDocumentGe
 
         $options = new Options();
         $options->set('isRemoteEnabled', false);
+        $sessionSummaryView = SessionSummaryView::fromDomain(
+            $sessionSummary,
+            $this->repertoireItemRepository,
+            $this->instrumentRepository,
+            $this->sessionRecommendationRepository,
+        );
+        $sessionDocumentView = SessionDocumentView::fromSessionSummaryView($sessionSummaryView, $this->youtubeThumbnailProvider);
         $dompdf = new Dompdf($options);
-        $dompdf->loadHtml($this->twig->render('session/document.pdf.twig', ['session' => $sessionSummary]));
+        $dompdf->loadHtml($this->twig->render('session/document.pdf.twig', ['document' => $sessionDocumentView]));
         $dompdf->setPaper('A4');
         $dompdf->render();
 
