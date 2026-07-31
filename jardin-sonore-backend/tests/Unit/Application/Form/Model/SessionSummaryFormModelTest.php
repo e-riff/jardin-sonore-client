@@ -9,6 +9,15 @@ use PHPUnit\Framework\TestCase;
 
 final class SessionSummaryFormModelTest extends TestCase
 {
+    public function testRecommendationOrderCanBeMissingFromTheSubmittedForm(): void
+    {
+        $sessionSummaryFormModel = new SessionSummaryFormModel();
+        $sessionSummaryFormModel->recommendationUuids = ['first'];
+        $sessionSummaryFormModel->recommendationOrder = null;
+
+        self::assertSame(['first'], $sessionSummaryFormModel->orderedRecommendationUuids());
+    }
+
     public function testItUsesTheSubmittedRecommendationOrderWithoutTrustingUnknownValues(): void
     {
         $sessionSummaryFormModel = new SessionSummaryFormModel();

@@ -41,11 +41,6 @@ final class RepertoireSessionSequenceType extends AbstractType
                 'label' => 'sessions.sequence.form.role',
                 'required' => false,
             ])
-            ->add('body', TextareaType::class, [
-                'label' => 'sessions.sequence.form.session_instructions',
-                'required' => false,
-                'attr' => ['rows' => 5],
-            ])
             ->add('notes', TextareaType::class, [
                 'label' => 'sessions.sequence.form.notes',
                 'required' => false,

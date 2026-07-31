@@ -244,7 +244,7 @@
                 <p>{{ 'internal.confirmation.delete.description_before'|trans({}, 'internal') }} <strong {{ stimulus_target('confirmation-dialog', 'item') }}></strong>. {{ 'internal.confirmation.delete.description_after'|trans({}, 'internal') }}</p>
                 <div class="internal-confirmation-dialog__actions">
                     <button type="button" class="internal-button internal-button--secondary" {{ stimulus_action('confirmation-dialog', 'close') }}>{{ 'internal.confirmation.delete.cancel'|trans({}, 'internal') }}</button>
-                    <form method="post" {{ stimulus_target('confirmation-dialog', 'form') }}>
+                    <form method="post" {{ stimulus_target('confirmation-dialog', 'form') }} {{ stimulus_action('confirmation-dialog', 'closeAfterSubmit', 'turbo:submit-end') }}>
                         <input type="hidden" name="_token" {{ stimulus_target('confirmation-dialog', 'token') }}>
                         <button type="submit" class="internal-button internal-button--danger">{{ 'internal.confirmation.delete.confirm'|trans({}, 'internal') }}</button>
                     </form>

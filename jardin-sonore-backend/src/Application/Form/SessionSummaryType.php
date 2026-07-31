@@ -75,7 +75,9 @@ final class SessionSummaryType extends AbstractType
                 'multiple' => true,
                 'choices' => $recommendationChoices,
             ])
-            ->add('recommendationOrder', HiddenType::class)
+            ->add('recommendationOrder', HiddenType::class, [
+                'empty_data' => '',
+            ])
             ->add('submit', SubmitType::class, [
                 'label' => 'sessions.summary.form.submit',
                 'attr' => ['class' => 'internal-button'],

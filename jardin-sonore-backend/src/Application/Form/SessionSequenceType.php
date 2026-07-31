@@ -33,6 +33,7 @@ final class SessionSequenceType extends AbstractType
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $activityOnly = $options['activity_only'];
         $instrumentChoices = [];
 
         foreach ($this->instrumentRepository->findAllOrderedByName() as $instrument) {
@@ -57,14 +58,47 @@ final class SessionSequenceType extends AbstractType
             ->add('title', TextType::class, [
                 'label' => 'sessions.sequence.form.title',
             ])
-            ->add('subtitle', TextType::class, [
-                'label' => 'sessions.sequence.form.subtitle',
+            ->add('notes', TextareaType::class, [
+                'label' => 'sessions.sequence.form.notes',
+                'required' => false,
+                'attr' => ['rows' => 5],
+            ])
+            ->add('media', CollectionType::class, ['entry_type' => SessionSequenceMediaType::class, 'allow_add' => true, 'allow_delete' => true, 'by_reference' => false, 'required' => false])
+            ->add('role', TextType::class, [
+                'label' => 'sessions.sequence.form.role',
                 'required' => false,
             ])
+            ->add('sourceUuid', HiddenType::class, [
+                'required' => false,
+            ])
+            ->add('sourceTitle', HiddenType::class, [
+                'required' => false,
+            ])
+            ->add('submit', SubmitType::class, [
+                'label' => 'sessions.sequence.form.submit',
+                'attr' => ['class' => 'internal-button'],
+            ])
+            ->add('instrumentUuids', ChoiceType::class, [
+                'label' => 'sessions.sequence.form.instruments',
+                'required' => false,
+                'multiple' => true,
+                'choices' => $instrumentChoices,
+                'autocomplete' => true,
+            ]);
+
+        if ($activityOnly) {
+            return;
+        }
+
+        $builder
             ->add('body', TextareaType::class, [
                 'label' => 'sessions.sequence.form.body',
                 'required' => false,
                 'attr' => ['rows' => 5],
+            ])
+            ->add('subtitle', TextType::class, [
+                'label' => 'sessions.sequence.form.subtitle',
+                'required' => false,
             ])
             ->add('lyrics', TextareaType::class, [
                 'label' => 'sessions.sequence.form.lyrics',
@@ -76,36 +110,9 @@ final class SessionSequenceType extends AbstractType
                 'required' => false,
                 'attr' => ['rows' => 5],
             ])
-            ->add('notes', TextareaType::class, [
-                'label' => 'sessions.sequence.form.notes',
-                'required' => false,
-                'attr' => ['rows' => 5],
-            ])
-            ->add('media', CollectionType::class, ['entry_type' => SessionSequenceMediaType::class, 'allow_add' => true, 'allow_delete' => true, 'by_reference' => false, 'required' => false])
             ->add('showLyricsByDefault', CheckboxType::class, [
                 'label' => 'sessions.sequence.form.show_lyrics_by_default',
                 'required' => false,
-            ])
-            ->add('role', TextType::class, [
-                'label' => 'sessions.sequence.form.role',
-                'required' => false,
-            ])
-            ->add('instrumentUuids', ChoiceType::class, [
-                'label' => 'sessions.sequence.form.instruments',
-                'required' => false,
-                'multiple' => true,
-                'choices' => $instrumentChoices,
-                'autocomplete' => true,
-            ])
-            ->add('sourceUuid', HiddenType::class, [
-                'required' => false,
-            ])
-            ->add('sourceTitle', HiddenType::class, [
-                'required' => false,
-            ])
-            ->add('submit', SubmitType::class, [
-                'label' => 'sessions.sequence.form.submit',
-                'attr' => ['class' => 'internal-button'],
             ]);
     }
 
@@ -114,6 +121,8 @@ final class SessionSequenceType extends AbstractType
         $resolver->setDefaults([
             'data_class' => SessionSequenceFormModel::class,
             'translation_domain' => 'sessions',
+            'activity_only' => false,
         ]);
+        $resolver->setAllowedTypes('activity_only', 'bool');
     }
 }

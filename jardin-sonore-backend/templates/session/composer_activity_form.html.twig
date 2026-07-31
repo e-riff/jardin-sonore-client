@@ -1,18 +1,23 @@
+{% set isDraft = isDraft|default(false) %}
 <turbo-frame id="session-composer-overlay">
     <section class="session-composer-overlay" role="dialog" aria-modal="true" aria-labelledby="session-activity-title">
         <div class="session-composer-overlay__panel session-composer-overlay__panel--activity">
             <div class="internal-page-heading">
                 <div>
                     <p class="internal-eyebrow">{{ 'sessions.sequence.composer.activity_eyebrow'|trans({}, 'sessions') }}</p>
-                    <h2 id="session-activity-title">{{ 'sessions.sequence.composer.activity_heading'|trans({}, 'sessions') }}</h2>
+                    <h2 id="session-activity-title">{{ sequence and sequence.title ? 'sessions.sequence.edit.title'|trans({ title: sequence.title }, 'sessions') : 'sessions.sequence.composer.activity_heading'|trans({}, 'sessions') }}</h2>
                     <p>{{ 'sessions.sequence.composer.activity_description'|trans({}, 'sessions') }}</p>
                 </div>
-                <a class="session-composer-overlay__close" href="{{ path('session_edit', { uuid: session.uuid }) }}" data-turbo-frame="_top" aria-label="{{ 'sessions.sequence.composer.close'|trans({}, 'sessions') }}">×</a>
+                {% if isDraft %}
+                    <form method="post" action="{{ path('session_sequence_remove', { uuid: session.uuid, sequenceUuid: sequence.uuid }) }}" data-turbo-stream="true"><input type="hidden" name="_token" value="{{ csrf_token('session_sequence_remove_' ~ sequence.uuid) }}"><button class="session-composer-overlay__close" type="submit" aria-label="{{ 'sessions.sequence.composer.close'|trans({}, 'sessions') }}">×</button></form>
+                {% else %}
+                    <a class="session-composer-overlay__close" href="{{ path('session_edit', { uuid: session.uuid }) }}" data-turbo-frame="_top" aria-label="{{ 'sessions.sequence.composer.close'|trans({}, 'sessions') }}">×</a>
+                {% endif %}
             </div>
 
             {{ form_start(form, {
-                action: path('session_sequence_new', { uuid: session.uuid, composer: 1 }),
-                attr: { class: 'internal-form internal-form--wide session-activity-form', 'data-turbo-stream': 'true' }
+                action: path('session_sequence_edit', { uuid: session.uuid, sequenceUuid: sequence.uuid, composer: 1, draft: isDraft ? 1 : null }),
+                attr: { class: 'internal-form internal-form--wide session-activity-form', 'data-turbo-frame': 'session-composer-overlay' }
             }) }}
                 <div class="internal-form__grid">
                     {{ form_row(form.type) }}
@@ -20,19 +25,20 @@
                 </div>
                 <div class="internal-form__grid">
                     {{ form_row(form.role) }}
-                    {{ form_row(form.instrumentUuids) }}
                 </div>
-                {{ form_row(form.body) }}
-                {{ form_row(form.gestures) }}
-                {{ form_row(form.lyrics) }}
-                {{ form_row(form.media) }}
-                {{ form_row(form.showLyricsByDefault) }}
+                <twig:SessionSequenceLocalDetails sessionUuid="{{ session.uuid }}" sequenceUuid="{{ sequence.uuid }}" section="details" showInstructionLabel="true" body="{{ sequence.body ?? '' }}" />
+                {{ form_row(form.instrumentUuids) }}
+                {{ form_row(form.media, { row_attr: { class: 'session-activity-media' } }) }}
+                <div class="internal-form__actions">
+                    <button class="internal-button internal-button--secondary" type="submit" formnovalidate formaction="{{ path('session_sequence_media_picker', { uuid: session.uuid, sequenceUuid: sequence.uuid, draft: isDraft ? 1 : null }) }}" formmethod="post" name="activityMediaAction" value="open-media-picker">{{ 'sessions.sequence.composer.add_catalog_media'|trans({}, 'sessions') }}</button>
+                    <button class="internal-button internal-button--secondary" type="submit" formnovalidate formaction="{{ path('session_sequence_media_create', { uuid: session.uuid, sequenceUuid: sequence.uuid, draft: isDraft ? 1 : null }) }}" formmethod="post" name="activityMediaAction" value="open-media-create">{{ 'sessions.sequence.composer.create_catalog_media'|trans({}, 'sessions') }}</button>
+                </div>
                 {{ form_row(form.notes) }}
                 {{ form_widget(form.sourceUuid) }}
                 {{ form_widget(form.sourceTitle) }}
                 <div class="internal-form__actions">
                     <a class="internal-button internal-button--secondary internal-form__back-action" href="{{ path('session_edit', { uuid: session.uuid }) }}" data-turbo-frame="_top">{{ 'sessions.sequence.form.back'|trans({}, 'sessions') }}</a>
-                    {{ form_widget(form.submit, { label: 'sessions.sequence.composer.create_activity'|trans({}, 'sessions') }) }}
+                    {{ form_widget(form.submit, { label: 'sessions.sequence.form.submit'|trans({}, 'sessions') }) }}
                 </div>
             {{ form_end(form) }}
         </div>
