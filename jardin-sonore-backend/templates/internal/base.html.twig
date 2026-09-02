@@ -92,8 +92,6 @@
             ],
         },
     ] %}
-    {% set activeNavGroup = navGroups|filter(group => group.active)|first %}
-
     <div class="internal-shell" {{ stimulus_controller('internal-nav')|stimulus_controller('confirmation-dialog') }}>
         <header class="internal-header">
             <div class="internal-header__bar">
@@ -137,25 +135,23 @@
                 ></button>
             </div>
 
-            {% if activeNavGroup %}
-                <nav class="internal-subnav" aria-label="{{ 'internal.base.navigation_aria'|trans({}, 'internal') }}">
-                    <div class="internal-subnav__inner">
-                        {% for group in navGroups %}
-                            <div class="internal-subnav__group{{ group.active ? ' is-active' : '' }}" data-nav-group-key="{{ group.key }}">
-                                {% for link in group.links %}
-                                    <a
-                                        href="{{ path(link.route, link.routeParameters|default({})) }}"
-                                        class="internal-subnav__link{{ link.active ? ' is-active' : '' }}"
-                                        {% if link.active %}aria-current="page"{% endif %}
-                                    >
-                                        {{ link.label }}
-                                    </a>
-                                {% endfor %}
-                            </div>
-                        {% endfor %}
-                    </div>
-                </nav>
-            {% endif %}
+            <nav class="internal-subnav" aria-label="{{ 'internal.base.navigation_aria'|trans({}, 'internal') }}">
+                <div class="internal-subnav__inner">
+                    {% for group in navGroups %}
+                        <div class="internal-subnav__group{{ group.active ? ' is-active' : '' }}" data-nav-group-key="{{ group.key }}">
+                            {% for link in group.links %}
+                                <a
+                                    href="{{ path(link.route, link.routeParameters|default({})) }}"
+                                    class="internal-subnav__link{{ link.active ? ' is-active' : '' }}"
+                                    {% if link.active %}aria-current="page"{% endif %}
+                                >
+                                    {{ link.label }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </nav>
         </header>
 
         <div
