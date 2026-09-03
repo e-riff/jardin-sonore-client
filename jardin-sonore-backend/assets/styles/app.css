@@ -37,6 +37,17 @@
 .session-document__sequence ul { margin: 1.25rem 0 0; padding: 1rem 1.25rem; border-radius: 1rem; background: rgb(255 255 255 / .55); font-family: var(--font-sans); font-size: .92rem; }
 .session-document__sequence li + li { margin-top: .5rem; }
 .session-document__sequence a { color: var(--color-primary); font-weight: 700; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.session-document__lyrics { margin-top: .75rem; }
+.session-document__lyrics-panel { padding: 1.25rem 1.5rem; border: 1px solid color-mix(in oklab, var(--color-outline-variant) 48%, white); border-left: .3rem solid var(--color-secondary); border-radius: .9rem; background: rgb(255 255 255 / .62); text-align: center; }
+.session-document__lyric-pair { margin-bottom: .9rem; }
+.session-document__lyric-pair:last-child { margin-bottom: 0; }
+.session-document__lyric-line { margin: 0; color: var(--color-on-surface); font-family: var(--font-serif); line-height: 1.65; }
+.session-document__gesture { margin: .15rem 0 0; color: var(--color-on-surface-variant); font-style: italic; line-height: 1.55; }
+.session-document__lyrics-section { margin: 1rem 0 .4rem; color: var(--color-primary); font-family: var(--font-sans); font-size: .82rem; font-weight: 800; text-transform: uppercase; }
+.session-document__lyrics-break { height: .65rem; }
+.session-document__media { display: grid; gap: .75rem; margin-top: 1.25rem; padding: 1rem 1.25rem; border-radius: 1rem; background: rgb(255 255 255 / .55); font-family: var(--font-sans); font-size: .92rem; }
+.session-document__media-item { min-width: 0; }
+.session-document__youtube { display: block; width: min(100%, 640px); aspect-ratio: 16 / 9; margin: .25rem 0; border: 0; border-radius: .75rem; }
 .session-document__further-exploration h2 { margin-top: 0; color: var(--color-primary); font-family: var(--font-serif); }
 .session-document__sequence--manipulation .session-document__number { background: var(--color-tertiary); }
 .session-document__sequence--soundtrack .session-document__number { background: var(--color-secondary); }

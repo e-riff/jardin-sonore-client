@@ -19,6 +19,7 @@ final readonly class SessionSequenceView
      * @param list<string>               $instrumentNames
      * @param list<SessionSequenceMedia> $media
      * @param list<SessionSequenceMedia> $composerMedia
+     * @param list<RepertoireBlockView>  $contentBlocks
      */
     public function __construct(
         public Uuid $uuid,
@@ -42,6 +43,7 @@ final readonly class SessionSequenceView
         public array $media,
         public array $composerMedia,
         public ?string $generalInstructions = null,
+        public array $contentBlocks = [],
     ) {
     }
 
@@ -90,6 +92,9 @@ final readonly class SessionSequenceView
                     static fn (SessionSequenceMedia $sessionSequenceMedia): bool => $sessionSequenceMedia->isDisplayedOnSession(),
                 )),
             generalInstructions: $isSynchronizedRepertoireItem ? $repertoireItem->getGeneralInstructions() : null,
+            contentBlocks: $isSynchronizedRepertoireItem
+                ? array_map(RepertoireBlockView::fromDomain(...), $repertoireItem->getContentBlocks())
+                : [],
         );
     }
 }

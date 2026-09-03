@@ -31,7 +31,7 @@
 
         {% if session.instrumentNames is not empty %}
             <section class="session-document__materials">
-                <p class="internal-eyebrow">Instruments nécessaires</p>
+                <p class="internal-eyebrow">Instruments utilisés</p>
                 <p>{{ session.instrumentNames|join(' · ') }}</p>
             </section>
         {% endif %}
@@ -63,34 +63,70 @@
                         <div style="margin-top: .75rem;">{{ sequence.generalInstructions|nl2br }}</div>
                     {% endif %}
 
-                    {% if sequence.gestures %}
-                        <div style="margin-top: .75rem;">
-                            <strong>{{ 'sessions.preview.gestures'|trans({}, 'sessions') }}</strong>
-                            <p>{{ sequence.gestures|nl2br }}</p>
-                        </div>
-                    {% endif %}
-
-                    {% if sequence.lyrics %}
+                    {% if sequence.contentBlocks is not empty %}
                         <details style="margin-top: .75rem;" {% if sequence.showLyricsByDefault %}open{% endif %}>
                             <summary>{{ 'sessions.preview.lyrics'|trans({}, 'sessions') }}</summary>
-                            <div style="margin-top: .5rem;">{{ sequence.lyrics|nl2br }}</div>
+                            <div class="session-document__lyrics session-document__lyrics-panel">
+                                {% for contentBlock in sequence.contentBlocks %}
+                                    {% if contentBlock.kind.value == 'line' %}
+                                        <div class="session-document__lyric-pair">
+                                            <p class="session-document__lyric-line">{{ contentBlock.text }}</p>
+                                            {% if contentBlock.gesture %}<p class="session-document__gesture">{{ contentBlock.gesture }}</p>{% endif %}
+                                        </div>
+                                    {% elseif contentBlock.kind.value == 'section' %}
+                                        <p class="session-document__lyrics-section">{{ contentBlock.text }}</p>
+                                    {% else %}
+                                        <div class="session-document__lyrics-break"></div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </details>
+                    {% elseif sequence.lyrics %}
+                        <details style="margin-top: .75rem;" {% if sequence.showLyricsByDefault %}open{% endif %}>
+                            <summary>{{ 'sessions.preview.lyrics'|trans({}, 'sessions') }}</summary>
+                            <div class="session-document__lyrics session-document__lyrics-panel">
+                                <div class="session-document__lyric-pair">
+                                    {% if sequence.lyrics %}<p class="session-document__lyric-line">{{ sequence.lyrics|nl2br }}</p>{% endif %}
+                                    {% if sequence.gestures %}<p class="session-document__gesture">{{ sequence.gestures|nl2br }}</p>{% endif %}
+                                </div>
+                            </div>
                         </details>
                     {% endif %}
 
                     {% if sequence.media is not empty %}
-                        <ul style="margin-top: .75rem;">
-                            {% for media in sequence.media %}{% if media.displayedOnSession %}<li><a href="{{ media.url }}" target="_blank" rel="noopener noreferrer">{{ media.label }}</a></li>{% endif %}{% endfor %}
-                        </ul>
+                        <div class="session-document__media">
+                            {% for media in sequence.media %}
+                                {% if media.displayedOnSession %}
+                                    {% set youtubeVideoId = media.featured
+                                        ? media.url|replace({
+                                            'https://www.youtube.com/watch?v=': '',
+                                            'https://youtu.be/': '',
+                                            'https://www.youtube.com/embed/': ''
+                                        })|split('&')|first
+                                        : null %}
+                                    <div class="session-document__media-item">
+                                        {% if youtubeVideoId matches '/^[A-Za-z0-9_-]{11}$/' %}
+                                            <iframe class="session-document__youtube" src="https://www.youtube-nocookie.com/embed/{{ youtubeVideoId }}" title="{{ media.label }}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                                        {% else %}
+                                            <a href="{{ media.url }}" target="_blank" rel="noopener noreferrer">{{ media.label }}</a>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
                     {% endif %}
                     </div>
                 </article>
             {% endfor %}
         </section>
 
-        {% if session.recommendations is not empty %}
+        {% if session.recommendations is not empty or session.furtherExploration %}
             <section class="session-document__further-exploration">
                 <h2>Pour aller plus loin dans la séance</h2>
-                <ul>{% for recommendation in session.recommendations %}<li><strong>{{ recommendation.title }}</strong><br>{{ recommendation.text|nl2br }}{% if recommendation.primaryUrl %}<br><a href="{{ recommendation.primaryUrl }}" target="_blank" rel="noopener noreferrer">Lien</a>{% endif %}</li>{% endfor %}</ul>
+                {% if session.furtherExploration %}<p>{{ session.furtherExploration|nl2br }}</p>{% endif %}
+                {% if session.recommendations is not empty %}
+                    <ul>{% for recommendation in session.recommendations %}<li><strong>{{ recommendation.title }}</strong><br>{{ recommendation.text|nl2br }}{% if recommendation.primaryUrl %}<br><a href="{{ recommendation.primaryUrl }}" target="_blank" rel="noopener noreferrer">Lien</a>{% endif %}</li>{% endfor %}</ul>
+                {% endif %}
             </section>
         {% endif %}
     </article>

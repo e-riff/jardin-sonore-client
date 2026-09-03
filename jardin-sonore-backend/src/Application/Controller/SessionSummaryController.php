@@ -236,17 +236,6 @@ final class SessionSummaryController extends AbstractController
             }
         }
 
-        if ($openedFromComposer && !$isRepertoireSessionConfiguration && $request->isMethod('GET')) {
-            $sessionSequence = $addSessionSequence($sessionSummaryView->uuid, $this->createSequenceInput($formModel));
-
-            return $this->redirectToRoute('session_sequence_edit', [
-                'uuid' => $sessionSummaryView->uuid->toRfc4122(),
-                'sequenceUuid' => $sessionSequence->uuid->toRfc4122(),
-                'composer' => 1,
-                'draft' => 1,
-            ], Response::HTTP_SEE_OTHER);
-        }
-
         $form = $this->createForm(
             $isRepertoireSessionConfiguration ? RepertoireSessionSequenceType::class : SessionSequenceFormType::class,
             $formModel,

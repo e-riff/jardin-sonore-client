@@ -40,6 +40,9 @@
                             <span class="session-composer__type">{{ sequence.type.translationKey()|trans({}, 'sessions') }}</span>
                         </h3>
                         <twig:SessionSequenceLocalDetails sessionUuid="{{ session.uuid }}" sequenceUuid="{{ sequence.uuid }}" section="details" role="{{ sequence.role ?? '' }}" body="{{ sequence.body ?? '' }}" notes="{{ sequence.notes ?? '' }}" />
+                        {% if sequence.gestures %}
+                            <p class="session-composer__gestures"><strong>{{ 'sessions.preview.gestures'|trans({}, 'sessions') }}</strong><br>{{ sequence.gestures|nl2br }}</p>
+                        {% endif %}
                         {% if sequence.instrumentNames is not empty or sequence.composerMedia is not empty %}
                             <div class="session-composer__resources">
                                 {% for instrumentName in sequence.instrumentNames %}

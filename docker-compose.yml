@@ -74,6 +74,7 @@ services:
       - --all
       - --memory-limit=256M
       - --time-limit=300
+    restart: unless-stopped
     depends_on:
       mysql:
         condition: service_healthy

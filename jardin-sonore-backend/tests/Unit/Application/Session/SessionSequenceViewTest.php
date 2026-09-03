@@ -55,6 +55,10 @@ final class SessionSequenceViewTest extends TestCase
         self::assertSame('À reprendre en chœur.', $sessionSequenceView->generalInstructions);
         self::assertSame('Au clair de la lune', $sessionSequenceView->lyrics);
         self::assertSame('Adapter le tempo au groupe.', $sessionSequenceView->body);
+        self::assertCount(1, $sessionSequenceView->contentBlocks);
+        self::assertSame(RepertoireBlockKind::LINE, $sessionSequenceView->contentBlocks[0]->kind);
+        self::assertSame('Au clair de la lune', $sessionSequenceView->contentBlocks[0]->text);
+        self::assertSame('Avec les foulards', $sessionSequenceView->contentBlocks[0]->gesture);
     }
 
     public function testItResolvesSequenceInstrumentsAndKeepsAllActivityMediaInTheComposer(): void

@@ -117,9 +117,7 @@ final class SessionSequenceFormModel
         $formModel->title = $mediaResourceView->title;
         $formModel->subtitle = $mediaResourceView->source;
         $formModel->body = $mediaResourceView->description ?? '';
-        $formModel->primaryUrl = $mediaResourceView->primaryUrl;
-        $formModel->secondaryUrl = $mediaResourceView->secondaryUrl;
-        $formModel->imageUrl = $mediaResourceView->imageUrl;
+        $formModel->addMediaResource($mediaResourceView);
         $formModel->sourceUuid = $mediaResourceView->uuid->toRfc4122();
         $formModel->sourceKind = SessionSequenceSourceKind::MEDIA_RESOURCE;
         $formModel->sourceTitle = $mediaResourceView->title;
