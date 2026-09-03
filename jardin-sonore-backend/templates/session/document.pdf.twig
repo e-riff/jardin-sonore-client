@@ -3,39 +3,78 @@
 <head>
     <meta charset="utf-8">
     <style>
-        @page { margin: 18mm 16mm; }
+        @page { margin: 15mm 16mm 18mm; }
         * { box-sizing: border-box; }
-        body { margin: 0; color: #3f352f; font-family: DejaVu Sans, sans-serif; font-size: 10pt; line-height: 1.45; }
+        body { margin: 0; background: #fcfaf5; color: #28312f; font-family: DejaVu Sans, sans-serif; font-size: 10pt; line-height: 1.52; }
         h1, h2, h3, p { margin-top: 0; }
-        h1, h2, h3 { color: #734a3e; font-family: DejaVu Serif, serif; }
-        h1 { margin-bottom: 5mm; font-size: 27pt; line-height: 1.12; }
-        h2 { margin: 0 0 3mm; font-size: 17pt; line-height: 1.2; }
+        h1, h2, h3 { color: #28312f; font-family: DejaVu Serif, serif; }
+        h1 { position: relative; z-index: 1; margin: 0 0 4mm; font-size: 27pt; line-height: 1.12; }
+        h2 { margin: 0 0 2mm; font-size: 16pt; line-height: 1.2; }
         h3 { margin: 0; font-size: 13pt; line-height: 1.25; }
-        .cover { margin: 0 0 9mm; padding: 8mm; background: #fbf4ea; border: 1px solid #dccbb8; border-radius: 5mm; }
-        .eyebrow { margin-bottom: 3mm; color: #8c6759; font-size: 8pt; font-weight: bold; letter-spacing: 1.2pt; text-transform: uppercase; }
-        .meta { margin: 0; color: #70635a; font-size: 9pt; }
-        .summary { margin: 0 0 8mm; padding: 5mm 6mm; background: #f4f0e9; border-left: 3px solid #a66d55; }
+        .document-background { position: fixed; z-index: -1; top: -15mm; right: -16mm; bottom: -18mm; left: -16mm; background: #fcfaf5; border-top: 1.2mm solid #db765d; }
+        .page-side-rule { position: fixed; top: -15mm; right: -16mm; bottom: -18mm; width: .3mm; background: #e8ded2; }
+        .running-header { position: fixed; top: -10mm; left: 0; width: 100%; padding-bottom: 1.5mm; border-bottom: .3mm solid #d9ddd4; color: #66736e; font-size: 7pt; }
+        .running-header-mark { color: #db765d; font-weight: bold; letter-spacing: .7pt; text-transform: uppercase; }
+        .cover { margin: 0 0 7mm; padding: 8mm 12mm 7mm; }
+        .cover--title { background: #f7f1e7; border-bottom: .4mm solid #e6e1d8; }
+        .cover + .summary { margin-top: -7mm; }
+        .cover--title h1 { font-size: 31pt; }
+        .eyebrow { margin-bottom: 3mm; color: #db765d; font-size: 8pt; font-weight: bold; letter-spacing: 1.3pt; text-transform: uppercase; }
+        .meta { margin: 0; color: #52635f; font-size: 9pt; }
+        .summary { margin: 0 0 6mm; padding: 4mm 5mm; background: #f2f6f1; }
         .summary h2 { margin-bottom: 2mm; font-size: 12pt; }
-        .sequence { margin: 0 0 7mm; padding: 6mm; border: 1px solid #dfd5c9; border-radius: 4mm; page-break-inside: avoid; }
-        .sequence-number { float: left; width: 9mm; height: 9mm; margin: 0 4mm 2mm 0; padding-top: 1.5mm; background: #734a3e; border-radius: 50%; color: #fffaf3; font-size: 9pt; font-weight: bold; text-align: center; }
-        .sequence-meta { margin: 0 0 2mm; color: #8c6759; font-size: 8pt; font-weight: bold; letter-spacing: .7pt; text-transform: uppercase; }
-        .subtitle { margin: 1mm 0 4mm; color: #70635a; font-style: italic; }
-        .section-label { margin: 4mm 0 1mm; color: #8c6759; font-size: 8pt; font-weight: bold; letter-spacing: .6pt; text-transform: uppercase; }
-        .content p { margin-bottom: 2.5mm; }
-        .badges { margin: 3mm 0 0; padding: 0; list-style: none; }
-        .badge { display: inline-block; margin: 0 2mm 2mm 0; padding: 1.8mm 3mm; background: #edf4e9; border: 1px solid #b8ceb0; border-radius: 4mm; color: #315b3d; font-size: 8.5pt; text-decoration: none; }
-        .badge--instrument { background: #f4eee6; border-color: #d9c5b2; color: #6b4c3c; }
+        .sequence { margin: 0 0 6mm; page-break-inside: avoid; }
+        .sequence-heading { display: table; width: 100%; margin: 0; background: #fbf9f4; border-left: .7mm solid #d7ad59; }
+        .sequence-index { display: table-cell; width: 15mm; padding: 3mm 0 2.5mm 4mm; color: #b88148; font-family: DejaVu Serif, serif; font-size: 14pt; font-weight: normal; vertical-align: middle; }
+        .sequence-heading-copy { display: table-cell; padding: 2.5mm 4mm 2.5mm 0; vertical-align: middle; }
+        .sequence-heading-meta { margin: 0 0 1mm; color: #6f7d77; font-size: 7.5pt; font-weight: normal; letter-spacing: .55pt; text-transform: uppercase; }
+        .sequence-title-row { display: table; width: 100%; }
+        .sequence-title-row h2 { display: table-cell; margin: 0; vertical-align: baseline; }
+        .subtitle { display: table-cell; margin: 0; padding-left: 3mm; color: #52635f; font-style: italic; vertical-align: baseline; white-space: nowrap; }
+        .sequence-shell { padding: 3.5mm 5mm 4mm; background: #fffdf8; border: .4mm solid #e6e1d8; border-top: 0; }
+        .sequence-layout { display: table; width: 100%; }
+        .sequence-main { display: table-cell; vertical-align: top; }
+        .sequence-layout--with-media .sequence-main { padding-right: 4mm; }
+        .section-label { margin: 3mm 0 1mm; color: #52635f; font-size: 8pt; font-weight: bold; letter-spacing: .7pt; text-transform: uppercase; }
+        .content p { margin-bottom: 2mm; }
+        .instructions { margin-top: 3mm; }
+        .instructions-list { margin: 1.5mm 0 0; padding-left: 5mm; }
+        .instructions-list li { margin-bottom: 1.2mm; }
+        .lyrics-panel { margin: 3mm 0 0; padding: 2.5mm 5mm; background: #f6faf6; border: .3mm solid #d9ddd4; text-align: center; page-break-inside: avoid; }
+        .lyrics-panel p { margin-bottom: 0; }
+        .lyrics-panel .lyrics-panel-title { margin-bottom: 1.5mm; color: #38675a; font-size: 8pt; font-weight: bold; letter-spacing: .8pt; text-transform: uppercase; }
+        .lyric-pair { margin-bottom: 1.2mm; }
+        .lyric-line { margin: 0; font-family: DejaVu Serif, serif; font-size: 11pt; line-height: 1.22; }
+        .lyric-pair:last-child { margin-bottom: 0; }
+        .gesture { margin: .2mm 0 0; color: #66736e; font-size: 9pt; font-style: italic; line-height: 1.25; }
+        .lyrics-panel .lyrics-section { margin: 3mm 0 2mm; color: #38675a; font-size: 8pt; font-weight: bold; letter-spacing: .8pt; text-transform: uppercase; }
+        .lyrics-break { height: 3mm; }
+        .badges { margin: 2.5mm 0 0; padding: 0; list-style: none; }
+        .badge { display: inline-block; margin: 0 3mm 2mm 0; padding: 1.4mm 2.5mm; border-bottom: .4mm solid #78a596; color: #38675a; font-size: 8.5pt; text-decoration: none; }
+        .badge--instrument { background: #f7f1e7; border-bottom-color: #d7ad59; color: #755f32; }
+        .sequence .badges { margin: 1.5mm 0 0; }
+        .sequence .badge--instrument { margin: 0 1.5mm 1mm 0; padding: .7mm 1.5mm; border-bottom: 0; background: #fbf9f4; color: #6f7d77; font-size: 7pt; }
         .badge-icon { margin-right: 1.5mm; font-weight: bold; }
-        .media { margin-top: 4mm; }
-        .media-preview { float: left; width: 35mm; height: 20mm; margin: 0 3mm 2mm 0; border: 1px solid #d5ccc0; border-radius: 2mm; object-fit: cover; }
-        .media:after, .sequence:after { content: ''; display: block; clear: both; }
-        .recommendations { margin-top: 9mm; padding-top: 6mm; border-top: 2px solid #d9c5b2; }
-        .recommendation { margin: 0 0 5mm; padding: 4mm 5mm; background: #fbf4ea; border-radius: 3mm; page-break-inside: avoid; }
-        .recommendation h3 { margin-bottom: 2mm; }
+        .media-rail { display: table-cell; width: 39mm; padding-left: 4mm; border-left: .4mm solid #d9ddd4; vertical-align: top; }
+        .media-rail-title { margin: 0 0 2mm; color: #52635f; font-size: 7.5pt; font-weight: bold; letter-spacing: .6pt; text-transform: uppercase; }
+        .media-primary { margin-bottom: 2.5mm; }
+        .media-preview { display: block; width: 34mm; height: 20mm; margin: 0 0 1.5mm; border: .4mm solid #d9ddd4; object-fit: cover; }
+        .media-primary-link { color: #38675a; font-size: 8pt; font-weight: bold; text-decoration: none; }
+        .media-badges .badge { margin-right: 1mm; font-size: 7.5pt; }
+        .recommendations { margin-top: 7mm; padding: 4mm 6mm 2mm; background: #fbf0eb; border: .5mm solid #dca58d; }
+        .recommendations h2 { margin-bottom: 3mm; color: #9e6049; }
+        .recommendation { margin: 0 0 3mm; padding: 0 0 2mm; border-bottom: .3mm solid #e8cfc4; page-break-inside: avoid; }
+        .recommendation h3 { margin-bottom: 1mm; color: #755044; font-size: 11pt; }
+        .sequence--soundtrack .sequence-index { color: #78a596; }
+        .sequence--manipulation .sequence-index { color: #d7ad59; }
+        .sequence--movement .sequence-index { color: #db765d; }
     </style>
 </head>
 <body>
-    <header class="cover">
+    <div class="document-background"></div>
+    <div class="page-side-rule"></div>
+    <header class="running-header"><span class="running-header-mark">Jardin sonore</span> · {{ document.session.title }} · {{ document.session.sessionDate|date('d/m/Y') }}</header>
+    <header class="cover cover--title">
         <p class="eyebrow">Déroulé de séance</p>
         <h1>{{ document.session.title }}</h1>
         <p class="meta">{{ document.session.sessionDate|date('d/m/Y') }}{% if document.session.theme %} · {{ document.session.theme }}{% endif %}{% if document.session.organizationName %} · {{ document.session.organizationName }}{% endif %}</p>
@@ -44,9 +83,9 @@
     {% if document.session.instrumentNames is not empty or document.session.materialSummary %}
         <section class="summary">
             {% if document.session.instrumentNames is not empty %}
-                <h2>Instruments nécessaires</h2>
+                <h2>Instruments utilisés</h2>
                 <div class="badges">
-                    {% for instrumentName in document.session.instrumentNames %}<span class="badge badge--instrument">♫ {{ instrumentName }}</span>{% endfor %}
+                {% for instrumentName in document.session.instrumentNames %}<span class="badge badge--instrument">{{ instrumentName }}</span>{% endfor %}
                 </div>
             {% endif %}
             {% if document.session.materialSummary %}
@@ -57,40 +96,80 @@
     {% endif %}
 
     {% for sequence in document.session.sequences %}
-        <article class="sequence">
-            <span class="sequence-number">{{ loop.index }}</span>
-            <p class="sequence-meta">{% if sequence.role %}{{ sequence.role }} · {% endif %}{{ sequence.type.translationKey()|trans({}, 'sessions') }}</p>
-            <h2>{{ sequence.title }}</h2>
-            {% if sequence.subtitle %}<p class="subtitle">{{ sequence.subtitle }}</p>{% endif %}
-            {% if sequence.instrumentNames is not empty %}
-                <div class="badges">
-                    {% for instrumentName in sequence.instrumentNames %}<span class="badge badge--instrument">♫ {{ instrumentName }}</span>{% endfor %}
+        <article class="sequence sequence--{{ sequence.type.value }}">
+            <div class="sequence-heading">
+                <span class="sequence-index">{{ '%02d'|format(loop.index) }}</span>
+                <div class="sequence-heading-copy">
+                    <p class="sequence-heading-meta">{% if sequence.role %}{{ sequence.role }} · {% endif %}{{ sequence.type.translationKey()|trans({}, 'sessions') }}</p>
+                    <div class="sequence-title-row"><h2>{{ sequence.title }}</h2>{% if sequence.subtitle %}<p class="subtitle">{{ sequence.subtitle }}</p>{% endif %}</div>
                 </div>
-            {% endif %}
-            <div class="content">
-                {% if sequence.body %}<p>{{ sequence.body|nl2br }}</p>{% endif %}
-                {% if sequence.generalInstructions %}<p><span class="section-label">Consignes</span><br>{{ sequence.generalInstructions|nl2br }}</p>{% endif %}
-                {% if sequence.gestures %}<p><span class="section-label">Gestes</span><br>{{ sequence.gestures|nl2br }}</p>{% endif %}
-                {% if sequence.lyrics %}<p><span class="section-label">Paroles</span><br>{{ sequence.lyrics|nl2br }}</p>{% endif %}
             </div>
             {% set visibleMedia = sequence.media|filter(media => media.displayedOnSession) %}
-            {% if visibleMedia is not empty %}
-                <div class="media">
-                    <p class="section-label">Médias associés</p>
-                    {% for media in visibleMedia %}
-                        {% set thumbnailDataUri = attribute(document.thumbnailDataUris, media.url)|default(null) %}
-                        {% if thumbnailDataUri %}<img class="media-preview" src="{{ thumbnailDataUri }}" alt="">{% endif %}
-                        <a class="badge" href="{{ media.url }}"><span class="badge-icon">{% if media.type.value == 'video' %}▶{% elseif media.type.value == 'soundtrack' %}♫{% else %}↗{% endif %}</span>{{ media.label }}</a>
-                    {% endfor %}
+            <div class="sequence-shell">
+                <div class="sequence-layout{% if visibleMedia is not empty %} sequence-layout--with-media{% endif %}">
+                    <div class="sequence-main">
+                        {% if sequence.instrumentNames is not empty %}
+                            <div class="badges">
+                                {% for instrumentName in sequence.instrumentNames %}<span class="badge badge--instrument">{{ instrumentName }}</span>{% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="content">
+                            {% if sequence.body %}<p>{{ sequence.body|nl2br }}</p>{% endif %}
+                            {% if sequence.generalInstructions %}
+                                <section class="instructions">
+                                    <p class="section-label">Consignes</p>
+                                    <ul class="instructions-list">{% for instruction in sequence.generalInstructions|split('\n')|filter(instruction => instruction|trim) %}<li>{{ instruction|trim }}</li>{% endfor %}</ul>
+                                </section>
+                            {% endif %}
+                            {% if sequence.contentBlocks is not empty %}
+                                <section class="lyrics-panel">
+                                    <p class="lyrics-panel-title">Paroles et gestes</p>
+                                    {% for contentBlock in sequence.contentBlocks %}
+                                        {% if contentBlock.kind.value == 'line' %}
+                                            <div class="lyric-pair"><p class="lyric-line">{{ contentBlock.text }}</p>{% if contentBlock.gesture %}<p class="gesture">{{ contentBlock.gesture }}</p>{% endif %}</div>
+                                        {% elseif contentBlock.kind.value == 'section' %}
+                                            <p class="lyrics-section">{{ contentBlock.text }}</p>
+                                        {% else %}
+                                            <div class="lyrics-break"></div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </section>
+                            {% elseif sequence.lyrics or sequence.gestures %}
+                                <section class="lyrics-panel">
+                                    <p class="lyrics-panel-title">Paroles et gestes</p>
+                                    <div class="lyric-pair">
+                                        {% if sequence.lyrics %}<p class="lyric-line">{{ sequence.lyrics|nl2br }}</p>{% endif %}
+                                        {% if sequence.gestures %}<p class="gesture">{{ sequence.gestures|nl2br }}</p>{% endif %}
+                                    </div>
+                                </section>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if visibleMedia is not empty %}
+                        <aside class="media-rail">
+                            <p class="media-rail-title">Médias associés</p>
+                            {% for media in visibleMedia %}
+                                {% set thumbnailDataUri = attribute(document.thumbnailDataUris, media.url)|default(null) %}
+                                {% if loop.first %}
+                                    <div class="media-primary">
+                                        {% if thumbnailDataUri %}<img class="media-preview" src="{{ thumbnailDataUri }}" alt="">{% endif %}
+                                        <a class="media-primary-link" href="{{ media.url }}"><span class="badge-icon">{% if media.type.value == 'video' %}▶{% elseif media.type.value == 'soundtrack' %}♫{% else %}↗{% endif %}</span>{{ media.label }}</a>
+                                    </div>
+                                {% else %}
+                                    <div class="media-badges"><a class="badge" href="{{ media.url }}"><span class="badge-icon">{% if media.type.value == 'video' %}▶{% elseif media.type.value == 'soundtrack' %}♫{% else %}↗{% endif %}</span>{{ media.label }}</a></div>
+                                {% endif %}
+                            {% endfor %}
+                        </aside>
+                    {% endif %}
                 </div>
-            {% endif %}
+            </div>
         </article>
     {% endfor %}
 
-    {% if document.session.recommendations is not empty %}
+    {% if document.session.recommendations is not empty or document.session.furtherExploration %}
         <section class="recommendations">
-            <p class="eyebrow">Prolonger la séance</p>
             <h2>Pour aller plus loin</h2>
+            {% if document.session.furtherExploration %}<p>{{ document.session.furtherExploration|nl2br }}</p>{% endif %}
             {% for recommendation in document.session.recommendations %}
                 <article class="recommendation">
                     <h3>{{ recommendation.title }}</h3>

@@ -50,6 +50,9 @@ final readonly class DompdfSessionDocumentGenerator implements SessionDocumentGe
         $dompdf->loadHtml($this->twig->render('session/document.pdf.twig', ['document' => $sessionDocumentView]));
         $dompdf->setPaper('A4');
         $dompdf->render();
+        $canvas = $dompdf->getCanvas();
+        $font = $dompdf->getFontMetrics()->getFont('DejaVu Sans', 'normal');
+        $canvas->page_text(475, 814, 'Page {PAGE_NUM} / {PAGE_COUNT}', $font, 7, [0.4, 0.45, 0.43]);
 
         $documentPath = $this->sessionDocumentDirectory . '/' . $sessionSummary->getUuid()->toRfc4122() . '.pdf';
         $temporaryPath = $documentPath . '.tmp';

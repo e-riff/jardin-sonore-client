@@ -159,12 +159,94 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertStringNotContainsString('sequence.sourceTitle', $template);
     }
 
-    public function testActivityFormPostsToTheComposerEditionRouteForItsDraft(): void
+    public function testSessionPreviewEmbedsFeaturedYoutubeMedia(): void
+    {
+        $template = file_get_contents(__DIR__ . '/../../../templates/session/show.html.twig');
+
+        self::assertIsString($template);
+        self::assertStringContainsString('media.featured', $template);
+        self::assertStringContainsString('youtube-nocookie.com/embed/', $template);
+        self::assertStringContainsString('<iframe', $template);
+    }
+
+    public function testPdfUsesAQuietNotebookLayoutWithLinkedActivityHeadings(): void
+    {
+        $template = file_get_contents(__DIR__ . '/../../../templates/session/document.pdf.twig');
+        $generator = file_get_contents(__DIR__ . '/../../../src/Infrastructure/Session/DompdfSessionDocumentGenerator.php');
+
+        self::assertIsString($template);
+        self::assertIsString($generator);
+        self::assertStringContainsString('.document-background', $template);
+        self::assertStringNotContainsString('.paper-motif', $template);
+        self::assertStringContainsString('.cover--title', $template);
+        self::assertStringContainsString('.running-header', $template);
+        self::assertStringContainsString('.sequence-index', $template);
+        self::assertStringContainsString('.sequence-heading-copy', $template);
+        self::assertStringContainsString('.sequence-heading-meta', $template);
+        self::assertStringContainsString('.sequence-shell', $template);
+        self::assertStringContainsString('.sequence-layout', $template);
+        self::assertStringContainsString('.media-rail', $template);
+        self::assertStringContainsString('.instructions-list', $template);
+        self::assertStringContainsString('.lyrics-panel', $template);
+        self::assertStringContainsString('sequence.contentBlocks', $template);
+        self::assertStringContainsString('contentBlock.gesture', $template);
+        self::assertStringContainsString('document.session.furtherExploration', $template);
+        self::assertStringContainsString('.sequence--soundtrack', $template);
+        self::assertStringContainsString('#28312f', $template);
+        self::assertStringContainsString('#db765d', $template);
+        self::assertStringContainsString('page_text(', $generator);
+        self::assertStringContainsString('{PAGE_NUM}', $generator);
+        self::assertStringContainsString('.cover--title { background: #f7f1e7; border-bottom: .4mm solid #e6e1d8; }', $template);
+        self::assertStringContainsString('border-left: .7mm solid #d7ad59', $template);
+        self::assertStringNotContainsString('badge badge--instrument">♫', $template);
+        self::assertStringContainsString('.cover + .summary { margin-top: -7mm; }', $template);
+        self::assertStringContainsString('.sequence-title-row', $template);
+        self::assertStringContainsString('.lyric-pair { margin-bottom: 1.2mm; }', $template);
+        self::assertStringContainsString('.sequence .badge--instrument', $template);
+        self::assertStringContainsString('.gesture { margin: .2mm 0 0;', $template);
+        self::assertStringContainsString('.recommendations h2 { margin-bottom: 3mm; color: #9e6049;', $template);
+        self::assertStringNotContainsString('<p class="eyebrow">Prolonger la séance</p>', $template);
+        self::assertStringContainsString('.page-side-rule { position: fixed;', $template);
+        self::assertStringContainsString('right: -16mm;', $template);
+        self::assertStringContainsString('.lyrics-panel { margin: 3mm 0 0; padding: 2.5mm 5mm; background: #f6faf6; border: .3mm solid #d9ddd4;', $template);
+        self::assertStringNotContainsString('.lyrics-panel { margin: 3mm 0 0; padding: 2.5mm 5mm; background: #f6faf6; border-left:', $template);
+        self::assertStringContainsString('.lyrics-panel p { margin-bottom: 0; }', $template);
+        self::assertStringContainsString('.lyrics-break { height: 3mm; }', $template);
+        self::assertStringContainsString('border: .5mm solid #dca58d', $template);
+    }
+
+    public function testSessionPreviewRendersRepertoireGesturesAlongsideTheirLyricsWithoutMediaListMarkers(): void
+    {
+        $template = file_get_contents(__DIR__ . '/../../../templates/session/show.html.twig');
+
+        self::assertIsString($template);
+        self::assertStringContainsString('sequence.contentBlocks', $template);
+        self::assertStringContainsString('contentBlock.gesture', $template);
+        self::assertStringContainsString('session-document__gesture', $template);
+        self::assertStringNotContainsString('<ul style="margin-top: .75rem;">', $template);
+    }
+
+    public function testSessionPreviewGroupsLyricsAndGesturesInTheSharedLyricsPanel(): void
+    {
+        $template = file_get_contents(__DIR__ . '/../../../templates/session/show.html.twig');
+        $styles = file_get_contents(__DIR__ . '/../../../assets/styles/app.css');
+
+        self::assertIsString($template);
+        self::assertIsString($styles);
+        self::assertStringContainsString('session-document__lyrics-panel', $template);
+        self::assertStringContainsString('session-document__lyric-pair', $template);
+        self::assertStringContainsString('session.furtherExploration', $template);
+        self::assertStringContainsString('.session-document__lyrics-panel', $styles);
+        self::assertStringContainsString('text-align: center', $styles);
+    }
+
+    public function testActivityFormCreatesASequenceOnlyWhenTheNewActivityIsSubmitted(): void
     {
         $template = file_get_contents(__DIR__ . '/../../../templates/session/composer_activity_form.html.twig');
 
         self::assertIsString($template);
-        self::assertStringContainsString("action: path('session_sequence_edit', { uuid: session.uuid, sequenceUuid: sequence.uuid, composer: 1, draft: isDraft ? 1 : null })", $template);
+        self::assertStringContainsString("? path('session_sequence_new', { uuid: session.uuid, composer: 1 })", $template);
+        self::assertStringContainsString(": path('session_sequence_edit', { uuid: session.uuid, sequenceUuid: sequence.uuid, composer: 1, draft: isDraft ? 1 : null })", $template);
     }
 
     public function testComposerCardsOpenTheActivityEditorInTheOverlay(): void

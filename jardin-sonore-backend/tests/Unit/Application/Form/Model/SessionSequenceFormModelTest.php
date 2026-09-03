@@ -55,4 +55,23 @@ final class SessionSequenceFormModelTest extends TestCase
         self::assertSame('https://example.test/waves.jpg', $sessionSequenceFormModel->media[0]->imageUrl);
         self::assertTrue($sessionSequenceFormModel->media[0]->featured);
     }
+
+    public function testCreatingASequenceFromCatalogMediaKeepsTheMediaAsTheFeaturedSessionMedia(): void
+    {
+        $mediaResource = new MediaResource(
+            type: MediaResourceType::VIDEO,
+            title: 'Comptine des vagues',
+            primaryUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            imageUrl: 'https://example.test/waves.jpg',
+        );
+
+        $sessionSequenceFormModel = SessionSequenceFormModel::fromMediaResourceView(MediaResourceView::fromDomain($mediaResource));
+
+        self::assertCount(1, $sessionSequenceFormModel->media);
+        self::assertSame('Comptine des vagues', $sessionSequenceFormModel->media[0]->label);
+        self::assertSame(MediaResourceType::VIDEO, $sessionSequenceFormModel->media[0]->type);
+        self::assertSame('https://www.youtube.com/watch?v=dQw4w9WgXcQ', $sessionSequenceFormModel->media[0]->url);
+        self::assertSame('https://example.test/waves.jpg', $sessionSequenceFormModel->media[0]->imageUrl);
+        self::assertTrue($sessionSequenceFormModel->media[0]->featured);
+    }
 }
