@@ -33,6 +33,7 @@ final readonly class TwigNewsletterRenderer implements NewsletterRendererInterfa
         ));
         $heroImagePath = $mailingCampaign->getBannerImagePath() ?? self::DEFAULT_BANNER_IMAGE_PATH;
         $formattedMainText = $this->newsletterMainTextFormatter->format($mailingCampaign->getMainText());
+        $preheader = $this->resolvePreheader($mailingCampaign, $formattedMainText->text);
 
         $unsubscribeUrl = $this->urlGenerator->generate('newsletter_unsubscribe', [
             'token' => self::UNSUBSCRIBE_TOKEN_PLACEHOLDER,
@@ -41,7 +42,7 @@ final readonly class TwigNewsletterRenderer implements NewsletterRendererInterfa
         $context = [
             'campaign' => $mailingCampaign,
             'activeRecommendations' => $activeRecommendations,
-            'preheader' => $mailingCampaign->getEmailSubject(),
+            'preheader' => $preheader,
             'unsubscribeUrl' => $unsubscribeUrl,
             'heroImagePath' => $heroImagePath,
             'mainTextHtml' => $formattedMainText->html,
@@ -62,5 +63,13 @@ final readonly class TwigNewsletterRenderer implements NewsletterRendererInterfa
             'default' => 'mailing/email/default.html.twig',
             default => throw new InvalidArgumentException("Unknown mailing template key \"{$templateKey}\"."),
         };
+    }
+
+    private function resolvePreheader(MailingCampaign $mailingCampaign, string $plainTextIntroduction): string
+    {
+        $preheader = $mailingCampaign->getSubtitle() ?? $plainTextIntroduction;
+        $preheader = html_entity_decode(strip_tags($preheader), ENT_QUOTES | ENT_HTML5);
+
+        return trim(preg_replace('/\s+/', ' ', $preheader) ?? $preheader);
     }
 }
