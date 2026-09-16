@@ -67,7 +67,7 @@ final class SessionDocumentViewTest extends TestCase
             uuid: Uuid::v4(),
             title: 'Séance du matin',
             sessionDate: $now,
-            organizationName: 'Le Jardin sonore',
+            organizations: [],
             theme: null,
             generalNotes: null,
             materialSummary: null,

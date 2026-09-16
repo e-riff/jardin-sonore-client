@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Model\Session;
 
+use App\Domain\Model\AddressBook\Organization;
 use App\Domain\Model\Behavior\UuidIdentifiableInterface;
 use App\Domain\Model\Behavior\UuidIdentifiableTrait;
 use DateTimeImmutable;
@@ -18,7 +19,8 @@ final class SessionSummary implements UuidIdentifiableInterface
 
     private DateTimeImmutable $sessionDate;
 
-    private string $organizationName;
+    /** @var list<Organization> */
+    private array $organizations;
 
     private ?string $theme;
 
@@ -52,6 +54,7 @@ final class SessionSummary implements UuidIdentifiableInterface
     private ?string $documentError;
 
     /**
+     * @param list<Organization>    $organizations
      * @param list<string>          $instrumentUuids
      * @param list<string>          $recommendationUuids
      * @param list<SessionSequence> $sequences
@@ -59,7 +62,7 @@ final class SessionSummary implements UuidIdentifiableInterface
     public function __construct(
         string $title,
         DateTimeImmutable $sessionDate,
-        string $organizationName,
+        array $organizations = [],
         ?string $theme = null,
         ?string $generalNotes = null,
         ?string $materialSummary = null,
@@ -84,7 +87,7 @@ final class SessionSummary implements UuidIdentifiableInterface
         $this->updateDetails(
             title: $title,
             sessionDate: $sessionDate,
-            organizationName: $organizationName,
+            organizations: $organizations,
             theme: $theme,
             generalNotes: $generalNotes,
             materialSummary: $materialSummary,
@@ -108,9 +111,10 @@ final class SessionSummary implements UuidIdentifiableInterface
         return $this->sessionDate;
     }
 
-    public function getOrganizationName(): string
+    /** @return list<Organization> */
+    public function getOrganizations(): array
     {
-        return $this->organizationName;
+        return $this->organizations;
     }
 
     public function getTheme(): ?string
@@ -220,13 +224,14 @@ final class SessionSummary implements UuidIdentifiableInterface
     }
 
     /**
-     * @param list<string> $instrumentUuids
+     * @param list<Organization> $organizations
+     * @param list<string>       $instrumentUuids
      * @param list<string> $recommendationUuids
      */
     public function updateDetails(
         string $title,
         DateTimeImmutable $sessionDate,
-        string $organizationName,
+        array $organizations,
         ?string $theme,
         ?string $generalNotes,
         ?string $materialSummary,
@@ -240,7 +245,7 @@ final class SessionSummary implements UuidIdentifiableInterface
 
         $this->title = trim($title);
         $this->sessionDate = $sessionDate;
-        $this->organizationName = trim($organizationName);
+        $this->organizations = array_values(array_unique($organizations, SORT_REGULAR));
         $this->theme = self::normalizeNullableString($theme);
         $this->generalNotes = self::normalizeNullableString($generalNotes);
         $this->materialSummary = self::normalizeNullableString($materialSummary);

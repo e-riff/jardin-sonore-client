@@ -8,6 +8,8 @@ use App\Domain\Model\Session\SessionDocumentStatus;
 use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\UuidIdentifiableTrait;
 use DateTimeImmutable;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
 class SessionSummaryEntity
 {
@@ -18,7 +20,8 @@ class SessionSummaryEntity
 
     private DateTimeImmutable $sessionDate;
 
-    private string $organizationName = '';
+    /** @var Collection<int, OrganizationEntity> */
+    private Collection $organizations;
 
     private ?string $theme = null;
 
@@ -54,6 +57,7 @@ class SessionSummaryEntity
     public function __construct()
     {
         $this->initializeUuid();
+        $this->organizations = new ArrayCollection();
         $this->sessionDate = new DateTimeImmutable();
         $this->createdAt = new DateTimeImmutable();
         $this->updatedAt = new DateTimeImmutable();
@@ -83,14 +87,21 @@ class SessionSummaryEntity
         return $this;
     }
 
-    public function getOrganizationName(): string
+    /** @return Collection<int, OrganizationEntity> */
+    public function getOrganizations(): Collection
     {
-        return $this->organizationName;
+        return $this->organizations;
     }
 
-    public function setOrganizationName(string $organizationName): static
+    /** @param iterable<OrganizationEntity> $organizations */
+    public function replaceOrganizations(iterable $organizations): static
     {
-        $this->organizationName = $organizationName;
+        $this->organizations->clear();
+        foreach ($organizations as $organizationEntity) {
+            if (!$this->organizations->contains($organizationEntity)) {
+                $this->organizations->add($organizationEntity);
+            }
+        }
 
         return $this;
     }

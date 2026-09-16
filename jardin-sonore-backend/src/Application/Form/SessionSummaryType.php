@@ -57,6 +57,10 @@ final class SessionSummaryType extends AbstractType
                 'label' => 'sessions.summary.form.subtitle',
                 'required' => false,
             ])
+            ->add('organizations', OrganizationAutocompleteType::class, [
+                'label' => 'sessions.summary.form.organization',
+                'multiple' => true,
+            ])
             ->add('instrumentUuids', ChoiceType::class, [
                 'label' => 'sessions.summary.form.instruments',
                 'required' => false,

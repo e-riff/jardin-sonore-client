@@ -18,14 +18,14 @@ final class SessionSummaryDocumentTest extends TestCase
         $sessionSummary = new SessionSummary(
             title: 'Matin musical',
             sessionDate: new DateTimeImmutable('2026-07-30'),
-            organizationName: 'Crèche des Lilas',
+            organizations: [],
         );
         $sessionSummary->markDocumentReady('/tmp/matin-musical.pdf');
 
         $sessionSummary->updateDetails(
             title: 'Matin musical',
             sessionDate: new DateTimeImmutable('2026-07-30'),
-            organizationName: 'Crèche des Lilas',
+            organizations: [],
             theme: null,
             generalNotes: null,
             materialSummary: null,
