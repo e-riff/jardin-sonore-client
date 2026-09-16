@@ -7,4 +7,5 @@ parameters:
   app.mailing.from_email: '%env(DEFAULT_CONTACT)%'
   app.mailing.from_name: '%env(MAILING_FROM_NAME)%'
   app.portal.password_link_ttl: '%env(int:PORTAL_PASSWORD_LINK_TTL)%'
-  app.portal.public_base_url: '%env(DEFAULT_URI)%'
+  app.portal.session_ttl: '%env(int:PORTAL_SESSION_TTL)%'
+  app.portal.public_base_url: '%env(PORTAL_PUBLIC_URL)%'
