@@ -72,7 +72,9 @@ final class Version20260630213000 extends AbstractMigration
             ],
         );
 
-        $this->abortIf(false === $municipality, 'Cornimont (88310) municipality is required before seeding mailing test recipients.');
+        if (false === $municipality) {
+            return;
+        }
 
         foreach (self::TEST_EMAIL_SEEDS as $seedIndex => $seed) {
             $alreadyExists = (bool) $this->connection->fetchOne(

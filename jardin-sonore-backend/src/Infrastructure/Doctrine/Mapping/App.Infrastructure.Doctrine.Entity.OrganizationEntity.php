@@ -50,5 +50,6 @@ return static function (ClassMetadata $metadata): void {
         'fieldName' => 'people',
         'targetEntity' => PersonEntity::class,
         'mappedBy' => 'organization',
+        'cascade' => ['persist'],
     ]);
 };

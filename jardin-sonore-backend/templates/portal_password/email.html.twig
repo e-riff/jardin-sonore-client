@@ -1,0 +1,14 @@
+<div style="max-width: 600px; margin: 0 auto; padding: 24px; font-family: Arial, sans-serif; color: #25324a; line-height: 1.55;">
+    <h1 style="margin: 0 0 20px; font-size: 24px;">Jardin Sonore</h1>
+    {% if type == 'invitation' %}
+        <p>Bonjour,</p>
+        <p>Un accès à votre espace Jardin Sonore vient d’être créé. Il vous permettra prochainement de retrouver les séances d’éveil musical mises en place dans votre structure.</p>
+        <p>Pour sécuriser votre accès, choisissez votre mot de passe en cliquant sur le bouton ci-dessous.</p>
+        <p style="margin: 28px 0;"><a href="{{ passwordLink }}" style="display: inline-block; padding: 12px 18px; border-radius: 6px; background: #5367d8; color: #ffffff; font-weight: bold; text-decoration: none;">Définir mon mot de passe</a></p>
+    {% else %}
+        <p>Bonjour,</p>
+        <p>Vous avez demandé la réinitialisation du mot de passe de votre espace Jardin Sonore.</p>
+        <p style="margin: 28px 0;"><a href="{{ passwordLink }}" style="display: inline-block; padding: 12px 18px; border-radius: 6px; background: #5367d8; color: #ffffff; font-weight: bold; text-decoration: none;">Choisir un nouveau mot de passe</a></p>
+    {% endif %}
+    <p style="font-size: 14px; color: #5f6b7a;">Ce lien est personnel et utilisable une seule fois. Si vous n’êtes pas à l’origine de cette demande, vous pouvez ignorer ce message.</p>
+</div>

@@ -19,14 +19,13 @@ use App\Infrastructure\Doctrine\Repository\EmailContactDoctrineRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\QueryBuilder;
+use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminRoute;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
-use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminRoute;
-use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
-use Symfony\Component\HttpFoundation\Response;
+use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
@@ -37,6 +36,8 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use InvalidArgumentException;
 use LogicException;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 /** @extends AbstractCrudController<UserEntity> */
 final class UserCrudController extends AbstractCrudController
@@ -68,27 +69,43 @@ final class UserCrudController extends AbstractCrudController
     {
         $sendInvitation = Action::new('sendInvitation', 'Envoyer l’invitation', 'fa fa-envelope')->linkToCrudAction('sendInvitation')->displayIf(static fn (UserEntity $userEntity): bool => UserStatus::PENDING === $userEntity->getStatus());
         $sendPasswordReset = Action::new('sendPasswordReset', 'Réinitialiser le mot de passe', 'fa fa-key')->linkToCrudAction('sendPasswordReset')->displayIf(static fn (UserEntity $userEntity): bool => UserStatus::ACTIVE === $userEntity->getStatus());
+
         return $actions->update(
             Crud::PAGE_INDEX,
             Action::NEW,
             static fn (Action $action): Action => $action->setLabel('Créer un accès organisation')->setIcon('fa fa-user-plus'),
-        )->add(Crud::PAGE_INDEX, $sendInvitation)->add(Crud::PAGE_DETAIL, $sendInvitation)->add(Crud::PAGE_INDEX, $sendPasswordReset)->add(Crud::PAGE_DETAIL, $sendPasswordReset);
+        )->add(Crud::PAGE_INDEX, $sendInvitation)->add(Crud::PAGE_DETAIL, $sendInvitation)->add(Crud::PAGE_EDIT, $sendInvitation)->add(Crud::PAGE_INDEX, $sendPasswordReset)->add(Crud::PAGE_DETAIL, $sendPasswordReset)->add(Crud::PAGE_EDIT, $sendPasswordReset);
     }
 
+    /** @param AdminContext<UserEntity> $context */
     #[AdminRoute(path: '/send-invitation', name: 'send_invitation')]
     public function sendInvitation(AdminContext $context): Response
     {
         $userEntity = $context->getEntity()->getInstance();
-        if ($userEntity instanceof UserEntity) { $issued = $this->portalPasswordTokenManager->issueInvitation($userEntity); $this->portalAccountMailSender->sendInvitation($userEntity, $issued->rawToken); $this->addFlash('success', 'Invitation envoyée.'); }
-        return $this->redirect($context->getReferrer() ?? $this->generateUrl('admin'));
+        if ($userEntity instanceof UserEntity) {
+            $this->issueAndSendInvitation($userEntity, 'Invitation envoyée.');
+        }
+
+        return $this->redirect($context->getRequest()->headers->get('referer') ?? $this->generateUrl('admin'));
     }
 
+    /** @param AdminContext<UserEntity> $context */
     #[AdminRoute(path: '/send-password-reset', name: 'send_password_reset')]
     public function sendPasswordReset(AdminContext $context): Response
     {
         $userEntity = $context->getEntity()->getInstance();
-        if ($userEntity instanceof UserEntity) { $issued = $this->portalPasswordTokenManager->issuePasswordReset($userEntity); $this->portalAccountMailSender->sendPasswordReset($userEntity, $issued->rawToken); $this->addFlash('success', 'Lien de réinitialisation envoyé.'); }
-        return $this->redirect($context->getReferrer() ?? $this->generateUrl('admin'));
+        if ($userEntity instanceof UserEntity) {
+            $issuedPortalPasswordToken = $this->portalPasswordTokenManager->issuePasswordReset($userEntity);
+
+            try {
+                $this->portalAccountMailSender->sendPasswordReset($userEntity, $issuedPortalPasswordToken->rawToken);
+                $this->addFlash('success', 'Lien de réinitialisation envoyé.');
+            } catch (TransportExceptionInterface) {
+                $this->addFlash('danger', 'Le lien a été généré, mais l’e-mail n’a pas pu être envoyé. Vous pouvez réessayer.');
+            }
+        }
+
+        return $this->redirect($context->getRequest()->headers->get('referer') ?? $this->generateUrl('admin'));
     }
 
     public function configureAssets(Assets $assets): Assets
@@ -170,6 +187,7 @@ final class UserCrudController extends AbstractCrudController
         );
 
         parent::persistEntity($entityManager, $entityInstance);
+        $this->issueAndSendInvitation($entityInstance, 'Compte créé et invitation envoyée.');
     }
 
     private function resolveOrCreateContact(UserEntity $userEntity, OrganizationEntity $organizationEntity): OrganizationAccessEmailSelection
@@ -206,6 +224,18 @@ final class UserCrudController extends AbstractCrudController
         }
 
         throw new LogicException('The new portal access contact type is invalid.');
+    }
+
+    private function issueAndSendInvitation(UserEntity $userEntity, string $successMessage): void
+    {
+        $issuedPortalPasswordToken = $this->portalPasswordTokenManager->issueInvitation($userEntity);
+
+        try {
+            $this->portalAccountMailSender->sendInvitation($userEntity, $issuedPortalPasswordToken->rawToken);
+            $this->addFlash('success', $successMessage);
+        } catch (TransportExceptionInterface) {
+            $this->addFlash('danger', 'Le lien a été généré, mais l’e-mail n’a pas pu être envoyé. Vous pouvez réessayer.');
+        }
     }
 
     /** @return array<string, string> */

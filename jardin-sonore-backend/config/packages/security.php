@@ -51,6 +51,10 @@ return App::config([
         ],
         'access_control' => [
             [
+                'path' => '^/portail/definir-mot-de-passe/',
+                'roles' => 'PUBLIC_ACCESS',
+            ],
+            [
                 'path' => '^/login$',
                 'roles' => 'PUBLIC_ACCESS',
             ],
