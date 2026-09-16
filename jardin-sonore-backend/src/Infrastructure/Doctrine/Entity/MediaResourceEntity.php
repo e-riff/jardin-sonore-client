@@ -158,7 +158,7 @@ class MediaResourceEntity
             $this->themes->add($theme);
         }
 
-return $this;
+        return $this;
     }
 
     public function removeTheme(ThemeEntity $theme): static

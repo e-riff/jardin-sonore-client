@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Infrastructure\Mailing;
 
+use App\Application\Mailing\RenderedNewsletter;
 use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
-use App\Application\Mailing\RenderedNewsletter;
 use App\Infrastructure\Mailing\NewsletterMainTextFormatter;
 use App\Infrastructure\Mailing\TwigNewsletterRenderer;
 use PHPUnit\Framework\TestCase;
