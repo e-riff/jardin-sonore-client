@@ -337,6 +337,9 @@ address_book:
     legacy_import: "Ancien import"
     directory_import: "Import annuaire"
 content_catalog:
+  theme:
+    singular: "Thème"
+    plural: "Thèmes"
   instrument:
     singular: "Instrument"
     plural: "Instruments"
