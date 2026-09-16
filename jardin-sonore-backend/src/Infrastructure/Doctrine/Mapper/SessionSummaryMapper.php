@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Doctrine\Mapper;
 
+use App\Domain\Model\AddressBook\Organization;
 use App\Domain\Model\Session\SessionSequence;
 use App\Domain\Model\Session\SessionSummary;
-use App\Domain\Model\AddressBook\Organization;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\SessionSummaryEntity;
 use Doctrine\ORM\EntityManagerInterface;

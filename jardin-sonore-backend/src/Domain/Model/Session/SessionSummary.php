@@ -226,7 +226,7 @@ final class SessionSummary implements UuidIdentifiableInterface
     /**
      * @param list<Organization> $organizations
      * @param list<string>       $instrumentUuids
-     * @param list<string> $recommendationUuids
+     * @param list<string>       $recommendationUuids
      */
     public function updateDetails(
         string $title,
