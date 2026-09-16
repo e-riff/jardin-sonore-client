@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Session;
 
+use App\Domain\Model\AddressBook\Organization;
 use App\Domain\Model\Session\SessionDocumentStatus;
 use App\Domain\Model\Session\SessionSummary;
 use App\Domain\Repository\InstrumentRepositoryInterface;
@@ -25,7 +26,8 @@ final readonly class SessionSummaryView
         public Uuid $uuid,
         public string $title,
         public DateTimeImmutable $sessionDate,
-        public string $organizationName,
+        /** @var list<Organization> */
+        public array $organizations,
         public ?string $theme,
         public ?string $generalNotes,
         public ?string $materialSummary,
@@ -54,7 +56,7 @@ final readonly class SessionSummaryView
             uuid: $sessionSummary->getUuid(),
             title: $sessionSummary->getTitle(),
             sessionDate: $sessionSummary->getSessionDate(),
-            organizationName: $sessionSummary->getOrganizationName(),
+            organizations: $sessionSummary->getOrganizations(),
             theme: $sessionSummary->getTheme(),
             generalNotes: $sessionSummary->getGeneralNotes(),
             materialSummary: $sessionSummary->getMaterialSummary(),

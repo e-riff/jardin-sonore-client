@@ -24,10 +24,9 @@ final class DeleteRepertoireItemTest extends TestCase
     {
         $repertoireItem = new RepertoireItem(RepertoireItemType::NURSERY_RHYME, 'Farine et Jasmin');
         $sessionSummary = new SessionSummary(
-            uuid: Uuid::v7(),
             title: 'Brésil !',
             sessionDate: new DateTimeImmutable('2026-07-30'),
-            organizationName: 'Jardin Sonore',
+            organizations: [],
             sequences: [new SessionSequence(
                 uuid: Uuid::v7(),
                 type: SessionSequenceType::NURSERY_RHYME,
@@ -44,6 +43,7 @@ final class DeleteRepertoireItemTest extends TestCase
                 sourceUuid: $repertoireItem->getUuid(),
                 sourceKind: SessionSequenceSourceKind::REPERTOIRE_ITEM,
             )],
+            uuid: Uuid::v7(),
         );
         $repertoireItemRepository = new class($repertoireItem) implements RepertoireItemRepositoryInterface {
             public bool $deleted = false;

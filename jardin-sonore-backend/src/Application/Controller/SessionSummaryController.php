@@ -39,6 +39,8 @@ use App\Application\Session\UpdateSessionSequenceRole;
 use App\Application\Session\UpdateSessionSummary;
 use App\Domain\Model\Session\MediaResourceType;
 use App\Domain\Model\Session\SessionSequenceSourceKind;
+use App\Domain\Repository\OrganizationRepositoryInterface;
+use App\Infrastructure\Doctrine\Repository\OrganizationDoctrineRepository;
 use DateTimeImmutable;
 use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -54,6 +56,10 @@ use Symfony\Component\Uid\Uuid;
 #[Route('/sessions', name: 'session_')]
 final class SessionSummaryController extends AbstractController
 {
+    public function __construct(private readonly OrganizationRepositoryInterface $organizationRepository, private readonly OrganizationDoctrineRepository $organizationDoctrineRepository)
+    {
+    }
+
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(Request $request, SearchSessionSummaries $searchSessionSummaries): Response
     {
@@ -125,6 +131,14 @@ final class SessionSummaryController extends AbstractController
     ): Response {
         $sessionSummaryView = $this->getSessionSummaryView($uuid, $getSessionSummary);
         $formModel = SessionSummaryFormModel::fromView($sessionSummaryView);
+        foreach ($sessionSummaryView->organizations as $organization) {
+            if (null !== $organization->getId()) {
+                $organizationEntity = $this->organizationDoctrineRepository->findEntityById($organization->getId());
+                if (null !== $organizationEntity) {
+                    $formModel->organizations[] = $organizationEntity;
+                }
+            }
+        }
         $form = $this->createForm(SessionSummaryFormType::class, $formModel);
         $form->handleRequest($request);
 
@@ -690,7 +704,10 @@ final class SessionSummaryController extends AbstractController
         return new SaveSessionSummaryInput(
             title: $sessionSummaryFormModel->title,
             sessionDate: $sessionSummaryFormModel->sessionDate ?? new DateTimeImmutable(),
-            organizationName: null === $existingSessionSummaryView ? '' : $existingSessionSummaryView->organizationName,
+            organizations: array_values(array_filter(array_map(
+                fn ($organizationEntity) => $this->organizationRepository->findByUuid($organizationEntity->getUuid()),
+                $sessionSummaryFormModel->organizations,
+            ))),
             theme: $sessionSummaryFormModel->subtitle,
             generalNotes: $sessionSummaryFormModel->generalNotes,
             materialSummary: $existingSessionSummaryView?->materialSummary,
