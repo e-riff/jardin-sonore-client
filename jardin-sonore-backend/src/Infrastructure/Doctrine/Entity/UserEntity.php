@@ -12,9 +12,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[UniqueEntity(fields: ['email'], message: 'Un compte portail existe déjà pour cet e-mail. Ouvrez-le pour lui ajouter cette structure.')]
-class UserEntity implements PasswordAuthenticatedUserInterface
+class UserEntity implements PasswordAuthenticatedUserInterface, UserInterface
 {
     use ActivableTrait;
     use IdentifiableTrait;
@@ -63,6 +64,21 @@ class UserEntity implements PasswordAuthenticatedUserInterface
     public function getPassword(): string
     {
         return $this->password ?? '';
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return $this->email;
+    }
+
+    /** @return list<string> */
+    public function getRoles(): array
+    {
+        return ['ROLE_PORTAL_USER'];
+    }
+
+    public function eraseCredentials(): void
+    {
     }
 
     public function setPassword(?string $password): static

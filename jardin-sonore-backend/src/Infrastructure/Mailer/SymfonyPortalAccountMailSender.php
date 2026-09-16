@@ -10,7 +10,6 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Twig\Environment;
 
 final readonly class SymfonyPortalAccountMailSender implements PortalAccountMailSenderInterface
@@ -18,7 +17,6 @@ final readonly class SymfonyPortalAccountMailSender implements PortalAccountMail
     public function __construct(
         private MailerInterface $mailer,
         private Environment $twig,
-        private UrlGeneratorInterface $urlGenerator,
         #[Autowire('%app.portal.public_base_url%')]
         private string $publicBaseUrl,
         #[Autowire('%app.mailing.from_email%')]
@@ -40,11 +38,7 @@ final readonly class SymfonyPortalAccountMailSender implements PortalAccountMail
 
     private function send(UserEntity $userEntity, string $rawToken, string $subject, string $type): void
     {
-        $passwordLink = rtrim($this->publicBaseUrl, '/') . $this->urlGenerator->generate(
-            'portal_password_set',
-            ['token' => $rawToken],
-            UrlGeneratorInterface::ABSOLUTE_PATH,
-        );
+        $passwordLink = rtrim($this->publicBaseUrl, '/') . '/portail/definir-mot-de-passe/' . rawurlencode($rawToken);
 
         $this->mailer->send(
             (new Email())

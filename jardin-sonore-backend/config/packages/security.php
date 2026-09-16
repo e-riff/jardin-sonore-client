@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
+use App\Infrastructure\Doctrine\Entity\UserEntity;
 use App\Infrastructure\Security\AdminUserChecker;
+use App\Infrastructure\Security\PortalAccessTokenAuthenticator;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 return App::config([
@@ -20,11 +22,24 @@ return App::config([
                     'property' => 'email',
                 ],
             ],
+            'portal_user_provider' => [
+                'entity' => [
+                    'class' => UserEntity::class,
+                    'property' => 'email',
+                ],
+            ],
         ],
         'firewalls' => [
             'dev' => [
                 'pattern' => '^/(_profiler|_wdt|assets|build)/',
                 'security' => false,
+            ],
+            'portal_api' => [
+                'pattern' => '^/api/portal',
+                'stateless' => true,
+                'provider' => 'portal_user_provider',
+                'custom_authenticators' => [PortalAccessTokenAuthenticator::class],
+                'entry_point' => PortalAccessTokenAuthenticator::class,
             ],
             'main' => [
                 'lazy' => true,
@@ -50,6 +65,14 @@ return App::config([
             ],
         ],
         'access_control' => [
+            [
+                'path' => '^/api/portal/(auth/login|auth/password-reset-requests|password-tokens/)',
+                'roles' => 'PUBLIC_ACCESS',
+            ],
+            [
+                'path' => '^/api/portal',
+                'roles' => 'ROLE_PORTAL_USER',
+            ],
             [
                 'path' => '^/portail/definir-mot-de-passe/',
                 'roles' => 'PUBLIC_ACCESS',
