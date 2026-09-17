@@ -7,17 +7,24 @@ namespace App\Tests\Functional\Infrastructure\Admin;
 use App\Application\Portal\OrganizationAccessContactCreator;
 use App\Application\Portal\OrganizationAccessEmailResolver;
 use App\Application\Portal\PortalAccountMailSenderInterface;
+use App\Application\Portal\PortalImpersonationLaunchManager;
 use App\Application\Portal\PortalPasswordTokenManager;
+use App\Application\Portal\PortalSessionManager;
 use App\Domain\Model\Portal\UserStatus;
 use App\Infrastructure\Admin\UserCrudController;
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
+use App\Infrastructure\Doctrine\Entity\PortalImpersonationLaunchEntity;
+use App\Infrastructure\Doctrine\Entity\PortalSessionEntity;
 use App\Infrastructure\Doctrine\Entity\UserEntity;
 use App\Infrastructure\Doctrine\Entity\UserPasswordTokenEntity;
 use App\Infrastructure\Doctrine\Repository\EmailContactDoctrineRepository;
 use App\Kernel;
 use DateTimeImmutable;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Tools\SchemaTool;
+use Doctrine\Persistence\ManagerRegistry;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -35,7 +42,7 @@ final class UserCrudControllerTest extends WebTestCase
         return new class($options['environment'] ?? 'test', $options['debug'] ?? true) extends Kernel {
             public function getCacheDir(): string
             {
-                return '/tmp/jardin-sonore-portal-admin-cache';
+                return '/tmp/jardin-sonore-portal-admin-impersonation-cache';
             }
         };
     }
@@ -140,6 +147,161 @@ final class UserCrudControllerTest extends WebTestCase
         self::assertStringNotContainsString('Réinitialiser le mot de passe', (string) $client->getResponse()->getContent());
     }
 
+    #[RunInSeparateProcess]
+    public function testOnlyAnAdminCanSubmitTheCsrfProtectedImpersonationLaunchFormInANewTab(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $adminUserEntity = (new AdminUserEntity())->setEmail('admin-' . bin2hex(random_bytes(8)) . '@portal.test')->setPassword('unused');
+        $userEntity = (new UserEntity())->setEmail('active-' . bin2hex(random_bytes(8)) . '@portal.test')->setStatus(UserStatus::ACTIVE);
+        $entityManager->persist($adminUserEntity);
+        $entityManager->persist($userEntity);
+        $entityManager->flush();
+
+        $client->request('POST', "/backoffice/user/{$userEntity->getId()}/impersonation-launch");
+        self::assertResponseRedirects('/login');
+
+        $client->loginUser($adminUserEntity);
+        $client->request('GET', "/backoffice/user/{$userEntity->getId()}");
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString("action=\"/backoffice/user/{$userEntity->getId()}/impersonation-launch\"", (string) $client->getResponse()->getContent());
+        self::assertStringContainsString('method="post"', (string) $client->getResponse()->getContent());
+        self::assertStringContainsString('target="_blank"', (string) $client->getResponse()->getContent());
+        self::assertStringContainsString('name="_token"', (string) $client->getResponse()->getContent());
+    }
+
+    #[RunInSeparateProcess]
+    public function testAnAdminCsrfPostIssuesOneHashedLaunchWithoutPuttingItsRawTokenInTheUrl(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $adminUserEntity = (new AdminUserEntity())->setEmail('admin-' . bin2hex(random_bytes(8)) . '@portal.test')->setPassword('unused');
+        $userEntity = (new UserEntity())->setEmail('active-' . bin2hex(random_bytes(8)) . '@portal.test')->setStatus(UserStatus::ACTIVE);
+        $entityManager->persist($adminUserEntity);
+        $entityManager->persist($userEntity);
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+        $portalImpersonationLaunchSchemaTool = new SchemaTool($entityManager);
+        $portalImpersonationLaunchClassMetadata = $entityManager->getClassMetadata(PortalImpersonationLaunchEntity::class);
+        $portalImpersonationLaunchTableCreated = !$entityManager->getConnection()->createSchemaManager()->tablesExist(['portal_impersonation_launch']);
+
+        if ($portalImpersonationLaunchTableCreated) {
+            $portalImpersonationLaunchSchemaTool->createSchema([$portalImpersonationLaunchClassMetadata]);
+        }
+
+        try {
+            $client->request('POST', "/backoffice/user/{$userEntity->getId()}/impersonation-launch", ['_token' => 'invalid']);
+            self::assertResponseStatusCodeSame(403);
+            self::assertNull($entityManager->getRepository(PortalImpersonationLaunchEntity::class)->findOneBy(['user' => $userEntity]));
+
+            $crawler = $client->request('GET', "/backoffice/user/{$userEntity->getId()}");
+            $csrfToken = $crawler->filterXPath('//form[contains(@action, "/impersonation-launch")]//input[@name="_token"]')->attr('value');
+            $client->request('POST', "/backoffice/user/{$userEntity->getId()}/impersonation-launch", ['_token' => $csrfToken]);
+            self::assertResponseIsSuccessful();
+            preg_match('/name="launchToken" value="([^"]+)"/', (string) $client->getResponse()->getContent(), $matches);
+            self::assertArrayHasKey(1, $matches);
+            $rawLaunchToken = $matches[1];
+            $portalImpersonationLaunchEntity = $entityManager->getRepository(PortalImpersonationLaunchEntity::class)->findOneBy(['user' => $userEntity]);
+            self::assertInstanceOf(PortalImpersonationLaunchEntity::class, $portalImpersonationLaunchEntity);
+            self::assertSame(hash('sha256', $rawLaunchToken), $portalImpersonationLaunchEntity->getTokenHash());
+            self::assertStringNotContainsString($rawLaunchToken, $client->getRequest()->getUri());
+        } finally {
+            if ($portalImpersonationLaunchTableCreated) {
+                $portalImpersonationLaunchSchemaTool->dropSchema([$portalImpersonationLaunchClassMetadata]);
+            }
+        }
+    }
+
+    #[RunInSeparateProcess]
+    public function testPersistingAnInactiveStatusOutsideTheControllerInvalidatesPortalArtifacts(): void
+    {
+        static::createClient()->request('GET', '/login');
+        $container = static::getContainer();
+        $entityManager = $container->get(EntityManagerInterface::class);
+        $adminUserEntity = (new AdminUserEntity())->setEmail('admin-' . bin2hex(random_bytes(8)) . '@portal.test')->setPassword('unused');
+        $userEntity = (new UserEntity())->setEmail('active-' . bin2hex(random_bytes(8)) . '@portal.test')->setStatus(UserStatus::ACTIVE);
+        $entityManager->persist($adminUserEntity);
+        $entityManager->persist($userEntity);
+        $entityManager->flush();
+        $portalImpersonationLaunchSchemaTool = new SchemaTool($entityManager);
+        $portalImpersonationLaunchClassMetadata = $entityManager->getClassMetadata(PortalImpersonationLaunchEntity::class);
+        $portalImpersonationLaunchTableCreated = !$entityManager->getConnection()->createSchemaManager()->tablesExist(['portal_impersonation_launch']);
+
+        if ($portalImpersonationLaunchTableCreated) {
+            $portalImpersonationLaunchSchemaTool->createSchema([$portalImpersonationLaunchClassMetadata]);
+        }
+
+        try {
+            $container->get(PortalSessionManager::class)->create($userEntity);
+            $container->get(PortalImpersonationLaunchManager::class)->issue($userEntity, $adminUserEntity);
+            $userEntity->setStatus(UserStatus::INACTIVE);
+            $entityManager->flush();
+            $entityManager->clear();
+
+            $portalSessionEntity = $entityManager->getRepository(PortalSessionEntity::class)->findOneBy(['user' => $userEntity]);
+            $portalImpersonationLaunchEntity = $entityManager->getRepository(PortalImpersonationLaunchEntity::class)->findOneBy(['user' => $userEntity]);
+            self::assertInstanceOf(PortalSessionEntity::class, $portalSessionEntity);
+            self::assertNotNull($portalSessionEntity->getRevokedAt());
+            self::assertInstanceOf(PortalImpersonationLaunchEntity::class, $portalImpersonationLaunchEntity);
+            self::assertNotNull($portalImpersonationLaunchEntity->getInvalidatedAt());
+        } finally {
+            if ($portalImpersonationLaunchTableCreated) {
+                $portalImpersonationLaunchSchemaTool->dropSchema([$portalImpersonationLaunchClassMetadata]);
+            }
+        }
+    }
+
+    #[RunInSeparateProcess]
+    public function testFailedStatusUpdateDoesNotInvalidatePortalArtifacts(): void
+    {
+        static::createClient()->request('GET', '/login');
+        $container = static::getContainer();
+        $entityManager = $container->get(EntityManagerInterface::class);
+        $adminUserEntity = (new AdminUserEntity())->setEmail('admin-' . bin2hex(random_bytes(8)) . '@portal.test')->setPassword('unused');
+        $userEntity = (new UserEntity())->setEmail('active-' . bin2hex(random_bytes(8)) . '@portal.test')->setStatus(UserStatus::ACTIVE);
+        $duplicateEmailUserEntity = (new UserEntity())->setEmail('duplicate-' . bin2hex(random_bytes(8)) . '@portal.test')->setStatus(UserStatus::ACTIVE);
+        $entityManager->persist($adminUserEntity);
+        $entityManager->persist($userEntity);
+        $entityManager->persist($duplicateEmailUserEntity);
+        $entityManager->flush();
+        $portalImpersonationLaunchSchemaTool = new SchemaTool($entityManager);
+        $portalImpersonationLaunchClassMetadata = $entityManager->getClassMetadata(PortalImpersonationLaunchEntity::class);
+        $portalImpersonationLaunchTableCreated = !$entityManager->getConnection()->createSchemaManager()->tablesExist(['portal_impersonation_launch']);
+
+        if ($portalImpersonationLaunchTableCreated) {
+            $portalImpersonationLaunchSchemaTool->createSchema([$portalImpersonationLaunchClassMetadata]);
+        }
+
+        try {
+            $container->get(PortalSessionManager::class)->create($userEntity);
+            $container->get(PortalImpersonationLaunchManager::class)->issue($userEntity, $adminUserEntity);
+            $userEntity->setStatus(UserStatus::INACTIVE);
+            $userEntity->setEmail($duplicateEmailUserEntity->getEmail());
+
+            try {
+                $entityManager->flush();
+                self::fail('The duplicate email must make the status update fail.');
+            } catch (UniqueConstraintViolationException) {
+            }
+
+            $container->get(ManagerRegistry::class)->resetManager();
+            $reloadedEntityManager = $container->get(EntityManagerInterface::class);
+            $reloadedUserEntity = $reloadedEntityManager->getRepository(UserEntity::class)->find($userEntity->getId());
+            $portalSessionEntity = $reloadedEntityManager->getRepository(PortalSessionEntity::class)->findOneBy(['user' => $reloadedUserEntity]);
+            $portalImpersonationLaunchEntity = $reloadedEntityManager->getRepository(PortalImpersonationLaunchEntity::class)->findOneBy(['user' => $reloadedUserEntity]);
+            self::assertInstanceOf(UserEntity::class, $reloadedUserEntity);
+            self::assertSame(UserStatus::ACTIVE, $reloadedUserEntity->getStatus());
+            self::assertInstanceOf(PortalSessionEntity::class, $portalSessionEntity);
+            self::assertNull($portalSessionEntity->getRevokedAt());
+            self::assertInstanceOf(PortalImpersonationLaunchEntity::class, $portalImpersonationLaunchEntity);
+            self::assertNull($portalImpersonationLaunchEntity->getInvalidatedAt());
+        } finally {
+            if ($portalImpersonationLaunchTableCreated) {
+                $portalImpersonationLaunchSchemaTool->dropSchema([$portalImpersonationLaunchClassMetadata]);
+            }
+        }
+    }
+
     private function createController(PortalAccountMailSenderInterface $portalAccountMailSender): UserCrudController
     {
         $container = static::getContainer();
@@ -153,6 +315,8 @@ final class UserCrudControllerTest extends WebTestCase
             $container->get(OrganizationAccessEmailResolver::class),
             $container->get(PortalPasswordTokenManager::class),
             $portalAccountMailSender,
+            $container->get(PortalImpersonationLaunchManager::class),
+            'https://jardin-sonore.example.test',
         );
         $userCrudController->setContainer($container);
 

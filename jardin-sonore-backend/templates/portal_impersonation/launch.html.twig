@@ -1,0 +1,9 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <form id="portal-impersonation-launch" method="post" action="{{ portalImpersonationUrl }}">
+        <input type="hidden" name="launchToken" value="{{ rawLaunchToken }}">
+        <noscript><button type="submit">Ouvrir le portail</button></noscript>
+    </form>
+    <script>document.getElementById('portal-impersonation-launch').submit();</script>
+{% endblock %}

@@ -167,6 +167,8 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 - L'espace affiche uniquement le deroule client : liste des seances de la structure, lecture HTML et telechargement du PDF canonique. Les notes privees, le materiel et les prolongements restent internes.
 - Toute requete verifie l'appartenance a la structure ; desactiver un acces invalide immediatement ses sessions.
 
+- État au 2026-09-17 : le backend portail (sessions, API, cycle de mot de passe et impersonation admin) est livré localement ; la migration d’impersonation a été appliquée. Le BFF Next.js est commencé mais ne doit pas être déployé ni committé avant correction des écarts de sécurité documentés dans `docs/superpowers/plans/2026-09-16-portal-structures-implementation.md`.
+
 #### Lot 10.3. Synchronisation Google Drive
 
 - Apres livraison de l'espace structure, synchroniser automatiquement le PDF canonique dans un dossier Drive partage avec un compte de service Google.
