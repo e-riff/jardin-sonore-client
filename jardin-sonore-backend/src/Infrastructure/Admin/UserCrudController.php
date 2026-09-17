@@ -8,8 +8,10 @@ use App\Application\Portal\OrganizationAccessContactCreator;
 use App\Application\Portal\OrganizationAccessEmailResolver;
 use App\Application\Portal\OrganizationAccessEmailSelection;
 use App\Application\Portal\PortalAccountMailSenderInterface;
+use App\Application\Portal\PortalImpersonationLaunchManager;
 use App\Application\Portal\PortalPasswordTokenManager;
 use App\Domain\Model\Portal\UserStatus;
+use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\PersonEntity;
@@ -35,9 +37,14 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use InvalidArgumentException;
 use LogicException;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Symfony\Component\Routing\Attribute\Route;
 
 /** @extends AbstractCrudController<UserEntity> */
 final class UserCrudController extends AbstractCrudController
@@ -52,6 +59,9 @@ final class UserCrudController extends AbstractCrudController
         private readonly OrganizationAccessEmailResolver $organizationAccessEmailResolver,
         private readonly PortalPasswordTokenManager $portalPasswordTokenManager,
         private readonly PortalAccountMailSenderInterface $portalAccountMailSender,
+        private readonly PortalImpersonationLaunchManager $portalImpersonationLaunchManager,
+        #[Autowire('%app.portal.public_base_url%')]
+        private readonly string $portalPublicBaseUrl,
     ) {
     }
 
@@ -69,12 +79,37 @@ final class UserCrudController extends AbstractCrudController
     {
         $sendInvitation = Action::new('sendInvitation', 'Envoyer l’invitation', 'fa fa-envelope')->linkToCrudAction('sendInvitation')->displayIf(static fn (UserEntity $userEntity): bool => UserStatus::PENDING === $userEntity->getStatus());
         $sendPasswordReset = Action::new('sendPasswordReset', 'Réinitialiser le mot de passe', 'fa fa-key')->linkToCrudAction('sendPasswordReset')->displayIf(static fn (UserEntity $userEntity): bool => UserStatus::ACTIVE === $userEntity->getStatus());
+        $startImpersonation = Action::new('startImpersonation', 'Ouvrir le portail', 'fa fa-user-secret')
+            ->linkToUrl(fn (UserEntity $userEntity): string => $this->generateUrl('admin_user_impersonation_launch', ['id' => $userEntity->getId()]))
+            ->renderAsForm()
+            ->setTemplatePath('admin/action/portal_impersonation.html.twig')
+            ->displayIf(static fn (UserEntity $userEntity): bool => UserStatus::ACTIVE === $userEntity->getStatus());
 
         return $actions->update(
             Crud::PAGE_INDEX,
             Action::NEW,
             static fn (Action $action): Action => $action->setLabel('Créer un accès organisation')->setIcon('fa fa-user-plus'),
-        )->add(Crud::PAGE_INDEX, $sendInvitation)->add(Crud::PAGE_DETAIL, $sendInvitation)->add(Crud::PAGE_EDIT, $sendInvitation)->add(Crud::PAGE_INDEX, $sendPasswordReset)->add(Crud::PAGE_DETAIL, $sendPasswordReset)->add(Crud::PAGE_EDIT, $sendPasswordReset);
+        )->add(Crud::PAGE_INDEX, $sendInvitation)->add(Crud::PAGE_DETAIL, $sendInvitation)->add(Crud::PAGE_EDIT, $sendInvitation)->add(Crud::PAGE_INDEX, $sendPasswordReset)->add(Crud::PAGE_DETAIL, $sendPasswordReset)->add(Crud::PAGE_EDIT, $sendPasswordReset)->add(Crud::PAGE_INDEX, $startImpersonation)->add(Crud::PAGE_DETAIL, $startImpersonation)->add(Crud::PAGE_EDIT, $startImpersonation);
+    }
+
+    #[Route('/backoffice/user/{id}/impersonation-launch', name: 'admin_user_impersonation_launch', methods: ['POST'])]
+    public function launchImpersonation(Request $request, #[MapEntity(id: 'id')] UserEntity $userEntity): Response
+    {
+        $adminUserEntity = $this->getUser();
+        if (!$adminUserEntity instanceof AdminUserEntity) {
+            throw new AccessDeniedHttpException();
+        }
+
+        if (!$this->isCsrfTokenValid("portal_impersonation_{$userEntity->getId()}", $request->request->getString('_token'))) {
+            throw new AccessDeniedHttpException();
+        }
+
+        $issuedPortalImpersonationLaunch = $this->portalImpersonationLaunchManager->issue($userEntity, $adminUserEntity);
+
+        return $this->render('portal_impersonation/launch.html.twig', [
+            'portalImpersonationUrl' => rtrim($this->portalPublicBaseUrl, '/') . '/portail/impersonation',
+            'rawLaunchToken' => $issuedPortalImpersonationLaunch->rawToken,
+        ]);
     }
 
     /** @param AdminContext<UserEntity> $context */

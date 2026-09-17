@@ -60,12 +60,14 @@
 
 **Interfaces:** an admin-only CSRF-protected POST action issues `IssuedPortalImpersonationLaunch`; `PortalImpersonationLaunchManager::consume(string $rawLaunchToken): IssuedPortalSession` accepts one use within five minutes and creates a 30-minute impersonated session.
 
-- [ ] Write failing tests for admin-only issuance, one-time launch consumption, five-minute expiry, 30-minute session cap and security audit context.
-- [ ] Implement a hidden POST form targeted at a new tab rather than a GET URL token; log issuer, target, issue and consumption to a dedicated `portal_security` channel.
-- [ ] Add automatic launch/session invalidation for disabled users and preserve the regular read-only portal permission model.
-- [ ] Review migration scope, run backend tests and static/style checks; stop for validation and obtain explicit approval before any migration execution.
+- [x] Write failing tests for admin-only issuance, one-time launch consumption, five-minute expiry, 30-minute session cap and security audit context.
+- [x] Implement a hidden POST form targeted at a new tab rather than a GET URL token; log issuer, target, issue and consumption to a dedicated `portal_security` channel.
+- [x] Add automatic launch/session invalidation for disabled users and preserve the regular read-only portal permission model.
+- [x] Review migration scope, run backend tests and static/style checks. Migration `Version20260917120000` was explicitly approved and applied locally.
 
 ### Task 4: Next BFF authentication and portal shell
+
+> **Reprise 2026-09-17 — ne pas committer cette tâche avant correction.** La revue a identifié : suppression du cookie `__Host-portal_session` sans attribut `Secure` ; limitation par IP globalisée par le BFF ; `PORTAL_API_BASE_URL` absent du runtime standalone déployé ; vérification navigateur non faite ; erreurs réseau non traduites ; landmark `<main>` imbriqué. Le détail et les preuves sont dans `.superpowers/sdd/2026-09-16-portal-structures-implementation/task-4-review.md` (local, ignoré par Git). Corriger ces points, ajouter les tests de route/action réels, puis refaire lint/build/revue avant de cocher cette tâche.
 
 **Files:** create server-only `src/lib/portal/api-client.ts`, cookie/session helpers, portal route layout, connection/reset/password pages and actions; modify the public header/footer and FR dictionary; modify `scripts/deploy-client.sh` and deployment example.
 
