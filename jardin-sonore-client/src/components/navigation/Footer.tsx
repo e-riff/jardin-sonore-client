@@ -2,7 +2,6 @@
 
 import {JSX} from "react";
 import Image from "next/image";
-import {usePathname} from "next/navigation";
 import BrandLogo from "@/components/BrandLogo";
 import {getCurrentYear} from "@/lib/dates";
 import {LinkItem} from "@/types/content";
@@ -12,12 +11,6 @@ import {useTranslations} from "@/i18n/translations-provider";
 export default function Footer(): JSX.Element {
     const dictionary = useTranslations();
     const content = dictionary.footer;
-    const pathname = usePathname();
-
-    if (pathname.startsWith("/portail")) {
-        return <></>;
-    }
-
     return (
         <footer className="bg-surface-container-high px-6 py-12 text-center sm:px-margin lg:text-left">
             <div className="mx-auto max-w-7xl">
