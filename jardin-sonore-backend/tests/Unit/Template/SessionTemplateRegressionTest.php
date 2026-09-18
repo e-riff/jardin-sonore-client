@@ -90,6 +90,15 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertStringContainsString('this.removeLeadingEmptyBlock();', $controller);
     }
 
+    public function testPdfSequencesCanFlowOntoTheNextPage(): void
+    {
+        $template = file_get_contents(__DIR__ . '/../../../templates/session/document.pdf.twig');
+
+        self::assertIsString($template);
+        self::assertStringNotContainsString('.sequence { margin: 0 0 6mm; page-break-inside: avoid; }', $template);
+        self::assertStringContainsString('page-break-after: avoid;', $template);
+    }
+
     public function testSummaryFormLetsTheUserOrderSelectedRecommendations(): void
     {
         $template = file_get_contents(__DIR__ . '/../../../templates/session/_summary_form.html.twig');
