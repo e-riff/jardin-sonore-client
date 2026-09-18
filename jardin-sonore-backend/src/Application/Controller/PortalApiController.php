@@ -13,6 +13,7 @@ use App\Application\Portal\PortalSessionResponse;
 use App\Domain\Model\Portal\UserStatus;
 use App\Domain\Model\Session\SessionDocumentStatus;
 use App\Infrastructure\Doctrine\Entity\UserEntity;
+use App\Infrastructure\Security\PortalRateLimitKeyResolver;
 use Doctrine\ORM\EntityManagerInterface;
 use JsonException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -42,6 +43,7 @@ final class PortalApiController extends AbstractController
         private readonly RateLimiterFactoryInterface $portalLoginLimiter,
         #[Autowire(service: 'limiter.portal_password_reset')]
         private readonly RateLimiterFactoryInterface $portalPasswordResetLimiter,
+        private readonly PortalRateLimitKeyResolver $portalRateLimitKeyResolver,
     ) {
     }
 
@@ -217,7 +219,7 @@ final class PortalApiController extends AbstractController
 
     private function consumeLimiter(RateLimiterFactoryInterface $rateLimiterFactory, Request $request): bool
     {
-        return $rateLimiterFactory->create($request->getClientIp() ?? 'unknown')->consume()->isAccepted();
+        return $rateLimiterFactory->create($this->portalRateLimitKeyResolver->resolve($request))->consume()->isAccepted();
     }
 
     private function rawBearerToken(Request $request): ?string

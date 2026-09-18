@@ -122,10 +122,15 @@ final class UserCrudControllerTest extends WebTestCase
         $entityManager->flush();
         $client->loginUser($adminUserEntity);
 
-        $client->request('GET', '/backoffice/user');
+        $client->request('GET', '/backoffice/user?query=' . urlencode($pendingUserEntity->getEmail()));
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('Envoyer l’invitation', (string) $client->getResponse()->getContent());
+        self::assertStringNotContainsString('Réinitialiser le mot de passe', (string) $client->getResponse()->getContent());
+
+        $client->request('GET', '/backoffice/user?query=' . urlencode($activeUserEntity->getEmail()));
+        self::assertResponseIsSuccessful();
         self::assertStringContainsString('Réinitialiser le mot de passe', (string) $client->getResponse()->getContent());
+        self::assertStringNotContainsString('Envoyer l’invitation', (string) $client->getResponse()->getContent());
 
         foreach (["/backoffice/user/{$pendingUserEntity->getId()}", "/backoffice/user/{$pendingUserEntity->getId()}/edit"] as $url) {
             $client->request('GET', $url);
