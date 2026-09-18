@@ -16,6 +16,7 @@ use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\UrlType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
@@ -88,6 +89,11 @@ final class RepertoireItemType extends AbstractType
                 'choices' => $mediaChoices,
                 'autocomplete' => true,
                 'choice_attr' => static fn (?string $choice) => null === $choice ? [] : ($mediaChoiceAttributes[$choice] ?? []),
+            ])
+            ->add('youtubeVideoUrl', UrlType::class, [
+                'label' => 'sessions.repertoire.form.youtube_video_url',
+                'help' => 'sessions.repertoire.form.youtube_video_url_help',
+                'required' => false,
             ])
             ->add('active', CheckboxType::class, ['label' => 'sessions.repertoire.form.active', 'required' => false])
             ->add('submit', SubmitType::class, ['label' => 'sessions.repertoire.form.submit', 'attr' => ['class' => 'internal-button']]);

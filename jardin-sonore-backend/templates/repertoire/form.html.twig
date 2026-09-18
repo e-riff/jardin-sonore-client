@@ -118,6 +118,7 @@
                         'data-action': 'change->repertoire-media-linker#sync'
                     }
                 }) }}
+                {{ form_row(form.youtubeVideoUrl) }}
 
                 <div class="repertoire-media-linker__list" data-repertoire-media-linker-target="list">
                     {% if linkedMediaItems is defined and linkedMediaItems is not empty %}

@@ -14,6 +14,15 @@ final readonly class RepertoireBlockTextParser
     public function parse(string $importText): array
     {
         $lines = preg_split("/\r\n|\n|\r/", $importText) ?: [];
+
+        while ([] !== $lines && '' === trim($lines[0])) {
+            array_shift($lines);
+        }
+
+        while ([] !== $lines && '' === trim($lines[array_key_last($lines)])) {
+            array_pop($lines);
+        }
+
         $contentBlocks = [];
 
         foreach ($lines as $line) {

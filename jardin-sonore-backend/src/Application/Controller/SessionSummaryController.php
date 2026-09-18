@@ -7,9 +7,11 @@ namespace App\Application\Controller;
 use App\Application\Backoffice\TableSort;
 use App\Application\Form\MediaResourceType as MediaResourceFormType;
 use App\Application\Form\Model\MediaResourceFormModel;
+use App\Application\Form\Model\RepertoireYoutubeVideoFormModel;
 use App\Application\Form\Model\SessionSequenceFormModel;
 use App\Application\Form\Model\SessionSummaryFormModel;
 use App\Application\Form\RepertoireSessionSequenceType;
+use App\Application\Form\RepertoireYoutubeVideoType;
 use App\Application\Form\SessionSequenceType as SessionSequenceFormType;
 use App\Application\Form\SessionSummaryType as SessionSummaryFormType;
 use App\Application\Session\AddSessionSequence;
@@ -45,6 +47,7 @@ use DateTimeImmutable;
 use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\Request;
@@ -410,7 +413,7 @@ final class SessionSummaryController extends AbstractController
 
         if ('open-media-picker' === $request->request->getString('activityMediaAction')) {
             $sessionSequenceFormModel = SessionSequenceFormModel::fromView($sequenceView);
-            $sessionSequenceForm = $this->createForm(SessionSequenceFormType::class, $sessionSequenceFormModel, ['activity_only' => true]);
+            $sessionSequenceForm = $this->createComposerSequenceForm($sequenceView, $sessionSequenceFormModel);
             $sessionSequenceForm->handleRequest($request);
 
             if ($sessionSequenceForm->isSubmitted() && $sessionSequenceForm->isValid()) {
@@ -419,7 +422,7 @@ final class SessionSummaryController extends AbstractController
                 $sessionSummaryView = $this->getSessionSummaryView($uuid, $getSessionSummary);
                 $sequenceView = $this->getSessionSequenceView($sessionSummaryView, $sequenceUuid);
             } elseif (!$sessionSequenceForm->isSubmitted()) {
-                return $this->render('session/composer_activity_form.html.twig', [
+                return $this->render($this->composerSequenceTemplate($sequenceView), [
                     'form' => $sessionSequenceForm->createView(),
                     'hasErrors' => true,
                     'session' => $sessionSummaryView,
@@ -456,9 +459,9 @@ final class SessionSummaryController extends AbstractController
 
         $updatedSessionSummaryView = $this->getSessionSummaryView($uuid, $getSessionSummary);
         $updatedSequenceView = $this->getSessionSequenceView($updatedSessionSummaryView, $sequenceUuid);
-        $form = $this->createForm(SessionSequenceFormType::class, SessionSequenceFormModel::fromView($updatedSequenceView), ['activity_only' => true]);
+        $form = $this->createComposerSequenceForm($updatedSequenceView);
 
-        return $this->render('session/composer_activity_form.html.twig', [
+        return $this->render($this->composerSequenceTemplate($updatedSequenceView), [
             'form' => $form->createView(),
             'hasErrors' => false,
             'session' => $updatedSessionSummaryView,
@@ -475,11 +478,11 @@ final class SessionSummaryController extends AbstractController
 
         if ('open-media-create' === $request->request->getString('activityMediaAction')) {
             $sessionSequenceFormModel = SessionSequenceFormModel::fromView($sequenceView);
-            $sessionSequenceForm = $this->createForm(SessionSequenceFormType::class, $sessionSequenceFormModel, ['activity_only' => true]);
+            $sessionSequenceForm = $this->createComposerSequenceForm($sequenceView, $sessionSequenceFormModel);
             $sessionSequenceForm->handleRequest($request);
 
             if (!$sessionSequenceForm->isSubmitted()) {
-                return $this->render('session/composer_activity_form.html.twig', [
+                return $this->render($this->composerSequenceTemplate($sequenceView), [
                     'form' => $sessionSequenceForm->createView(),
                     'hasErrors' => true,
                     'session' => $sessionSummaryView,
@@ -505,17 +508,83 @@ final class SessionSummaryController extends AbstractController
 
             $updatedSessionSummaryView = $this->getSessionSummaryView($uuid, $getSessionSummary);
             $updatedSequenceView = $this->getSessionSequenceView($updatedSessionSummaryView, $sequenceUuid);
-            $sessionSequenceForm = $this->createForm(SessionSequenceFormType::class, SessionSequenceFormModel::fromView($updatedSequenceView), ['activity_only' => true]);
+            $sessionSequenceForm = $this->createComposerSequenceForm($updatedSequenceView);
 
-            return $this->render('session/composer_activity_form.html.twig', [
+            return $this->render($this->composerSequenceTemplate($updatedSequenceView), [
                 'form' => $sessionSequenceForm->createView(),
                 'hasErrors' => false,
                 'session' => $updatedSessionSummaryView,
                 'sequence' => $updatedSequenceView,
+                'isDraft' => $request->query->getBoolean('draft'),
             ]);
         }
 
         return $this->render('session/composer_activity_media_create.html.twig', ['form' => $form->createView(), 'session' => $sessionSummaryView, 'sequence' => $sequenceView, 'hasErrors' => $form->isSubmitted() && !$form->isValid()], $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null);
+    }
+
+    #[Route('/{uuid}/sequences/{sequenceUuid}/media/youtube', name: 'sequence_repertoire_youtube_create', methods: ['GET', 'POST'])]
+    public function createRepertoireYoutubeVideo(
+        string $uuid,
+        string $sequenceUuid,
+        Request $request,
+        GetSessionSummary $getSessionSummary,
+        GetRepertoireItemForEdit $getRepertoireItemForEdit,
+        CreateMediaResource $createMediaResource,
+        UpdateSessionSequence $updateSessionSequence,
+    ): Response {
+        $sessionSummaryView = $this->getSessionSummaryView($uuid, $getSessionSummary);
+        $sequenceView = $this->getSessionSequenceView($sessionSummaryView, $sequenceUuid);
+
+        if (SessionSequenceSourceKind::REPERTOIRE_ITEM !== $sequenceView->sourceKind || null === $sequenceView->sourceUuid) {
+            throw $this->createNotFoundException();
+        }
+
+        $repertoireItemView = $getRepertoireItemForEdit($sequenceView->sourceUuid);
+        if (null === $repertoireItemView) {
+            throw $this->createNotFoundException();
+        }
+
+        $repertoireYoutubeVideoFormModel = new RepertoireYoutubeVideoFormModel();
+        $form = $this->createForm(RepertoireYoutubeVideoType::class, $repertoireYoutubeVideoFormModel);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $mediaResource = $createMediaResource(new SaveMediaResourceInput(
+                type: MediaResourceType::VIDEO,
+                title: $repertoireItemView->title,
+                primaryUrl: $repertoireYoutubeVideoFormModel->youtubeUrl,
+                primaryFile: null,
+                source: $repertoireItemView->source,
+                description: null,
+                secondaryUrl: null,
+                imageUrl: null,
+                imageFile: null,
+                themeUuids: array_column($repertoireItemView->themes, 'uuid'),
+                active: true,
+            ));
+            $sessionSequenceFormModel = SessionSequenceFormModel::fromView($sequenceView);
+            $sessionSequenceFormModel->addMediaResource(\App\Application\Session\MediaResourceView::fromDomain($mediaResource));
+            $updateSessionSequence($sessionSummaryView->uuid, $sequenceView->uuid, $this->createSequenceInput($sessionSequenceFormModel));
+
+            $updatedSessionSummaryView = $this->getSessionSummaryView($uuid, $getSessionSummary);
+            $updatedSequenceView = $this->getSessionSequenceView($updatedSessionSummaryView, $sequenceUuid);
+
+            return $this->render('session/composer_repertoire_form.html.twig', [
+                'form' => $this->createComposerSequenceForm($updatedSequenceView)->createView(),
+                'hasErrors' => false,
+                'session' => $updatedSessionSummaryView,
+                'sequence' => $updatedSequenceView,
+                'isDraft' => $request->query->getBoolean('draft'),
+            ]);
+        }
+
+        return $this->render('session/composer_repertoire_youtube_form.html.twig', [
+            'form' => $form->createView(),
+            'hasErrors' => $form->isSubmitted() && !$form->isValid(),
+            'session' => $sessionSummaryView,
+            'sequence' => $sequenceView,
+            'isDraft' => $request->query->getBoolean('draft'),
+        ], $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null);
     }
 
     #[Route('/{uuid}/sequences/{sequenceUuid}/move-up', name: 'sequence_move_up', methods: ['POST'])]
@@ -740,6 +809,27 @@ final class SessionSummaryController extends AbstractController
             instrumentUuids: $sessionSequenceFormModel->instrumentUuids,
             media: array_map(static fn ($media): \App\Domain\Model\Session\SessionSequenceMedia => $media->toDomain(), $sessionSequenceFormModel->media),
         );
+    }
+
+    /**
+     * @return FormInterface<SessionSequenceFormModel>
+     */
+    private function createComposerSequenceForm(SessionSequenceView $sessionSequenceView, ?SessionSequenceFormModel $sessionSequenceFormModel = null): FormInterface
+    {
+        $isRepertoireSessionConfiguration = SessionSequenceSourceKind::REPERTOIRE_ITEM === $sessionSequenceView->sourceKind;
+
+        return $this->createForm(
+            $isRepertoireSessionConfiguration ? RepertoireSessionSequenceType::class : SessionSequenceFormType::class,
+            $sessionSequenceFormModel ?? SessionSequenceFormModel::fromView($sessionSequenceView),
+            $isRepertoireSessionConfiguration ? [] : ['activity_only' => true],
+        );
+    }
+
+    private function composerSequenceTemplate(SessionSequenceView $sessionSequenceView): string
+    {
+        return SessionSequenceSourceKind::REPERTOIRE_ITEM === $sessionSequenceView->sourceKind
+            ? 'session/composer_repertoire_form.html.twig'
+            : 'session/composer_activity_form.html.twig';
     }
 
     private function getSessionSummaryView(string $uuid, GetSessionSummary $getSessionSummary): SessionSummaryView

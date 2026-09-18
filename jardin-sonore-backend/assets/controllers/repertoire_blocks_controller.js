@@ -22,7 +22,17 @@ export default class extends Controller {
             return;
         }
 
-        source.split(/\r\n|\n|\r/).forEach((line) => {
+        const lines = source.split(/\r\n|\n|\r/);
+        while (lines.length && !lines[0].trim()) {
+            lines.shift();
+        }
+        while (lines.length && !lines.at(-1).trim()) {
+            lines.pop();
+        }
+
+        this.removeLeadingEmptyBlock();
+
+        lines.forEach((line) => {
             if (!line.trim()) {
                 this.appendBlock({ kind: "break" });
                 return;
@@ -36,6 +46,20 @@ export default class extends Controller {
 
         this.importSourceTarget.value = "";
         this.syncRows();
+    }
+
+    removeLeadingEmptyBlock() {
+        const [firstRow] = this.collectionTarget.querySelectorAll("[data-repertoire-block-row]");
+        if (!firstRow || firstRow.dataset.blockKind !== "line") {
+            return;
+        }
+
+        const text = firstRow.querySelector('textarea[name$="[text]"]')?.value.trim() ?? "";
+        const gesture = firstRow.querySelector('textarea[name$="[gesture]"]')?.value.trim() ?? "";
+
+        if (!text && !gesture) {
+            firstRow.remove();
+        }
     }
 
     addLine(event) {

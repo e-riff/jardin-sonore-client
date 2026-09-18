@@ -1116,6 +1116,17 @@ form.internal-form > .internal-form__actions > .internal-form__back-action {
     margin-bottom: 6px;
 }
 
+.session-composer__lyrics {
+    margin-top: 10px;
+    padding-right: 42px;
+    color: var(--color-on-surface-variant);
+    font-family: var(--font-serif);
+}
+
+.session-composer__lyrics p {
+    margin: 4px 0 0;
+}
+
 .session-composer__resources {
     display: flex;
     flex-wrap: wrap;
