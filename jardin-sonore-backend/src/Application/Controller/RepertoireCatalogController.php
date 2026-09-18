@@ -6,14 +6,17 @@ namespace App\Application\Controller;
 
 use App\Application\Form\Model\RepertoireItemFormModel;
 use App\Application\Form\RepertoireItemType as RepertoireItemFormType;
+use App\Application\Session\CreateMediaResource;
 use App\Application\Session\CreateRepertoireItem;
 use App\Application\Session\DeleteRepertoireItem;
 use App\Application\Session\GetMediaResourceForEdit;
 use App\Application\Session\GetRepertoireItemForEdit;
 use App\Application\Session\RepertoireBlockTextParser;
+use App\Application\Session\SaveMediaResourceInput;
 use App\Application\Session\SaveRepertoireBlockInput;
 use App\Application\Session\SaveRepertoireItemInput;
 use App\Application\Session\UpdateRepertoireItem;
+use App\Domain\Model\Session\MediaResourceType;
 use App\Domain\Model\Session\RepertoireBlockKind;
 use InvalidArgumentException;
 use LogicException;
@@ -35,13 +38,14 @@ final class RepertoireCatalogController extends AbstractController
     }
 
     #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
-    public function new(Request $request, CreateRepertoireItem $createRepertoireItem): Response
+    public function new(Request $request, CreateRepertoireItem $createRepertoireItem, CreateMediaResource $createMediaResource): Response
     {
         $formModel = new RepertoireItemFormModel();
         $form = $this->createForm(RepertoireItemFormType::class, $formModel);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $this->createYoutubeVideoAndLink($formModel, $createMediaResource);
             $createRepertoireItem($this->createInput($formModel));
             $this->addFlash('success', ['message' => 'sessions.repertoire.flash.created', 'domain' => 'sessions']);
 
@@ -62,6 +66,7 @@ final class RepertoireCatalogController extends AbstractController
         GetRepertoireItemForEdit $getRepertoireItemForEdit,
         GetMediaResourceForEdit $getMediaResourceForEdit,
         UpdateRepertoireItem $updateRepertoireItem,
+        CreateMediaResource $createMediaResource,
     ): Response {
         $itemView = Uuid::isValid($uuid) ? $getRepertoireItemForEdit(Uuid::fromString($uuid)) : null;
 
@@ -80,6 +85,7 @@ final class RepertoireCatalogController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $this->createYoutubeVideoAndLink($formModel, $createMediaResource);
             $updateRepertoireItem($itemView->uuid, $this->createInput($formModel));
             $this->addFlash('success', ['message' => 'sessions.repertoire.flash.updated', 'domain' => 'sessions']);
 
@@ -151,6 +157,29 @@ final class RepertoireCatalogController extends AbstractController
             themeUuids: $formModel->themeUuids,
             active: $formModel->active,
         );
+    }
+
+    private function createYoutubeVideoAndLink(RepertoireItemFormModel $formModel, CreateMediaResource $createMediaResource): void
+    {
+        if (null === $formModel->youtubeVideoUrl || '' === trim($formModel->youtubeVideoUrl)) {
+            return;
+        }
+
+        $mediaResource = $createMediaResource(new SaveMediaResourceInput(
+            type: MediaResourceType::VIDEO,
+            title: $formModel->title,
+            primaryUrl: $formModel->youtubeVideoUrl,
+            primaryFile: null,
+            source: $formModel->source,
+            description: null,
+            secondaryUrl: null,
+            imageUrl: null,
+            imageFile: null,
+            themeUuids: $formModel->themeUuids,
+            active: true,
+        ));
+
+        $formModel->linkedMediaUuids[] = $mediaResource->getUuid()->toRfc4122();
     }
 
     /**
