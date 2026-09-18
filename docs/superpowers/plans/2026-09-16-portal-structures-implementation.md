@@ -67,16 +67,18 @@
 
 ### Task 4: Next BFF authentication and portal shell
 
-> **Reprise 2026-09-17 — ne pas committer cette tâche avant correction.** La revue a identifié : suppression du cookie `__Host-portal_session` sans attribut `Secure` ; limitation par IP globalisée par le BFF ; `PORTAL_API_BASE_URL` absent du runtime standalone déployé ; vérification navigateur non faite ; erreurs réseau non traduites ; landmark `<main>` imbriqué. Le détail et les preuves sont dans `.superpowers/sdd/2026-09-16-portal-structures-implementation/task-4-review.md` (local, ignoré par Git). Corriger ces points, ajouter les tests de route/action réels, puis refaire lint/build/revue avant de cocher cette tâche.
+> **État au 2026-09-18.** Les corrections de sécurité BFF ont été implémentées et vérifiées (cookie `__Host-` conforme, rate limiting par IP visiteur authentifiée par secret partagé, runtime standalone et erreurs réseau). Le prototype Next a ensuite été retiré de `main` avant déploiement car son UX n’est pas validée. Reprendre cette tâche depuis les maquettes validées ; ne pas remettre en production les écrans existants tels quels.
 
 **Files:** create server-only `src/lib/portal/api-client.ts`, cookie/session helpers, portal route layout, connection/reset/password pages and actions; modify the public header/footer and FR dictionary; modify `scripts/deploy-client.sh` and deployment example.
 
 **Interfaces:** `PortalApiClient` attaches the bearer token only on server fetches; `getPortalSession()` redirects unauthenticated visitors to `/portail/connexion`; `POST /portail/seances/[uuid]/document.pdf` proxies an authorized PDF response.
 
-- [ ] Implement login, logout, reset-request and password-definition server actions. Set `__Host-portal_session` only after successful Symfony responses; clear it on logout/401 and use a session cookie for impersonation.
-- [ ] Build the compact authenticated layout and public « Espace structures » entry, with all wording in `fr.ts`.
+- [x] Implement login, logout, reset-request and password-definition server actions. Set `__Host-portal_session` only after successful Symfony responses; clear it on logout/401 and use a session cookie for impersonation.
+- [x] Implement the first compact authenticated layout and public « Espace structures » entry, with all wording in `fr.ts`.
 - [ ] Add the dedicated unavailable-token and neutral reset confirmation states. Ensure password success redirects to the authenticated list.
-- [ ] Add `CPANEL_PORTAL_API_BASE_URL` to the deployment flow and pass it as server-only `PORTAL_API_BASE_URL` during the client build; no cPanel routing or CORS configuration is added.
+- [x] Add `CPANEL_PORTAL_API_BASE_URL` to the deployment flow and pass it as server-only `PORTAL_API_BASE_URL` during the client build; no cPanel routing or CORS configuration is added.
+
+> **Publication :** ces éléments client sont volontairement absents de `main` tant que les maquettes et la recette UX ne sont pas validées. Les réintroduire seulement avec les écrans finalisés.
 - [ ] Run `npm run lint` and `npm run build`; manually verify no bearer token appears in HTML, browser storage or network calls; stop for validation.
 
 ### Task 5: Next sessions list, detail, PDF and impersonation experience
