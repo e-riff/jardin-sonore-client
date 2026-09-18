@@ -6,3 +6,8 @@ parameters:
   app.mailing.dispatch_batch_size: '%env(int:MAILING_DISPATCH_BATCH_SIZE)%'
   app.mailing.from_email: '%env(DEFAULT_CONTACT)%'
   app.mailing.from_name: '%env(MAILING_FROM_NAME)%'
+  app.portal.password_link_ttl: '%env(int:PORTAL_PASSWORD_LINK_TTL)%'
+  app.portal.session_ttl: '%env(int:PORTAL_SESSION_TTL)%'
+  app.portal.impersonation_launch_ttl: '%env(int:PORTAL_IMPERSONATION_LAUNCH_TTL)%'
+  app.portal.impersonation_session_ttl: '%env(int:PORTAL_IMPERSONATION_SESSION_TTL)%'
+  app.portal.public_base_url: '%env(PORTAL_PUBLIC_URL)%'

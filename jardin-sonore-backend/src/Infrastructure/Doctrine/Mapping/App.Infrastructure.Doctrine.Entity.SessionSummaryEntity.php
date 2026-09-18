@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Domain\Model\Session\SessionDocumentStatus;
+use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Symfony\Bridge\Doctrine\Types\UuidType;
@@ -12,7 +13,6 @@ return static function (ClassMetadata $metadata): void {
         'name' => 'session_summary',
         'indexes' => [
             'idx_session_summary_date' => ['columns' => ['session_date']],
-            'idx_session_summary_organization' => ['columns' => ['organization_name']],
         ],
         'uniqueConstraints' => [
             'uniq_session_summary_uuid' => ['columns' => ['uuid']],
@@ -44,11 +44,22 @@ return static function (ClassMetadata $metadata): void {
         'type' => Types::DATE_IMMUTABLE,
     ]);
 
-    $metadata->mapField([
-        'fieldName' => 'organizationName',
-        'columnName' => 'organization_name',
-        'type' => Types::STRING,
-        'length' => 255,
+    $metadata->mapManyToMany([
+        'fieldName' => 'organizations',
+        'targetEntity' => OrganizationEntity::class,
+        'joinTable' => [
+            'name' => 'session_summary_organization',
+            'joinColumns' => [[
+                'name' => 'session_summary_id',
+                'referencedColumnName' => 'id',
+                'onDelete' => 'CASCADE',
+            ]],
+            'inverseJoinColumns' => [[
+                'name' => 'organization_id',
+                'referencedColumnName' => 'id',
+                'onDelete' => 'CASCADE',
+            ]],
+        ],
     ]);
 
     $metadata->mapField([

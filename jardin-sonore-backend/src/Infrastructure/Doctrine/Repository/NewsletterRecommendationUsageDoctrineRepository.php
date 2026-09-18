@@ -9,7 +9,6 @@ use App\Domain\Repository\NewsletterRecommendationUsageRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\NewsletterRecommendationUsageEntity;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
-use Symfony\Component\Uid\Uuid;
 
 /** @extends ServiceEntityRepository<NewsletterRecommendationUsageEntity> */
 final class NewsletterRecommendationUsageDoctrineRepository extends ServiceEntityRepository implements NewsletterRecommendationUsageRepositoryInterface

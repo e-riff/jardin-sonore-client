@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Session;
 
+use App\Domain\Model\AddressBook\Organization;
 use DateTimeImmutable;
 
 final readonly class SaveSessionSummaryInput
@@ -15,7 +16,8 @@ final readonly class SaveSessionSummaryInput
     public function __construct(
         public string $title,
         public DateTimeImmutable $sessionDate,
-        public string $organizationName,
+        /** @var list<Organization> */
+        public array $organizations,
         public ?string $theme,
         public ?string $generalNotes,
         public ?string $materialSummary,

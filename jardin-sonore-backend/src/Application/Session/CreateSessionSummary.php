@@ -18,7 +18,7 @@ final readonly class CreateSessionSummary
         $sessionSummary = new SessionSummary(
             title: $saveSessionSummaryInput->title,
             sessionDate: $saveSessionSummaryInput->sessionDate,
-            organizationName: $saveSessionSummaryInput->organizationName,
+            organizations: $saveSessionSummaryInput->organizations,
             theme: $saveSessionSummaryInput->theme,
             generalNotes: $saveSessionSummaryInput->generalNotes,
             materialSummary: $saveSessionSummaryInput->materialSummary,

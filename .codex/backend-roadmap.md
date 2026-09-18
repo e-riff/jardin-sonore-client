@@ -167,6 +167,8 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 - L'espace affiche uniquement le deroule client : liste des seances de la structure, lecture HTML et telechargement du PDF canonique. Les notes privees, le materiel et les prolongements restent internes.
 - Toute requete verifie l'appartenance a la structure ; desactiver un acces invalide immediatement ses sessions.
 
+- État au 2026-09-18 : le backend portail (sessions, API, cycle de mot de passe et impersonation admin) est livré localement ; la migration d’impersonation a été appliquée. Le BFF Next.js a reçu les correctifs de sécurité de la tâche 4 : effacement conforme du cookie `__Host-`, erreurs réseau bornées et traduites, runtime standalone configuré et rate limiting par IP visiteur authentifiée par un secret BFF partagé. Aucun commit ni déploiement n’est encore effectué. Avant déploiement, renseigner le même secret `PORTAL_BFF_SHARED_SECRET` côté Symfony et `CPANEL_PORTAL_BFF_SHARED_SECRET` côté client.
+
 #### Lot 10.3. Synchronisation Google Drive
 
 - Apres livraison de l'espace structure, synchroniser automatiquement le PDF canonique dans un dossier Drive partage avec un compte de service Google.

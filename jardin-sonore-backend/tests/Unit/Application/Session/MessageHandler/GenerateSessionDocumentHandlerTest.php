@@ -23,7 +23,7 @@ final class GenerateSessionDocumentHandlerTest extends TestCase
         $sessionSummary = new SessionSummary(
             title: 'Séance prête',
             sessionDate: new DateTimeImmutable('2026-07-31'),
-            organizationName: 'Jardin sonore',
+            organizations: [],
         );
         $sessionSummary->markDocumentReady($documentPath);
         $sessionSummaryRepository = $this->createMock(SessionSummaryRepositoryInterface::class);

@@ -1,0 +1,10 @@
+{# @var action \EasyCorp\Bundle\EasyAdminBundle\Dto\ActionDto #}
+{# @var entity \EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto #}
+
+<form method="post" action="{{ action.linkUrl }}" target="_blank" class="ea-new-button">
+    <input type="hidden" name="_token" value="{{ csrf_token('portal_impersonation_' ~ entity.primaryKeyValue) }}">
+    <button class="btn btn-secondary action-{{ action.name }}" type="submit">
+        {% if action.icon %}<i class="action-icon {{ action.icon }}"></i>{% endif %}
+        <span class="action-label">{{ action.label|trans|raw }}</span>
+    </button>
+</form>

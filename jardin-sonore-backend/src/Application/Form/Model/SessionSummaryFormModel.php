@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Form\Model;
 
 use App\Application\Session\SessionSummaryView;
+use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use DateTimeImmutable;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -19,6 +20,9 @@ final class SessionSummaryFormModel
 
     #[Assert\Length(max: 255)]
     public ?string $subtitle = null;
+
+    /** @var list<OrganizationEntity> */
+    public array $organizations = [];
 
     public ?string $generalNotes = null;
 
