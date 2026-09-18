@@ -45,7 +45,8 @@ final class SessionSummaryDoctrineRepository extends ServiceEntityRepository imp
 
         if (null !== $query && '' !== trim($query)) {
             $queryBuilder
-                ->andWhere('LOWER(summary.title) LIKE LOWER(:query) OR LOWER(summary.organizationName) LIKE LOWER(:query)')
+                ->leftJoin('summary.organizations', 'organization')
+                ->andWhere('LOWER(summary.title) LIKE LOWER(:query) OR LOWER(organization.name) LIKE LOWER(:query)')
                 ->setParameter('query', '%' . trim($query) . '%');
         }
 

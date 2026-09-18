@@ -77,7 +77,7 @@
     <header class="cover cover--title">
         <p class="eyebrow">Déroulé de séance</p>
         <h1>{{ document.session.title }}</h1>
-        <p class="meta">{{ document.session.sessionDate|date('d/m/Y') }}{% if document.session.theme %} · {{ document.session.theme }}{% endif %}{% if document.session.organizationName %} · {{ document.session.organizationName }}{% endif %}</p>
+        <p class="meta">{{ document.session.sessionDate|date('d/m/Y') }}{% if document.session.theme %} · {{ document.session.theme }}{% endif %}</p>
     </header>
 
     {% if document.session.instrumentNames is not empty or document.session.materialSummary %}

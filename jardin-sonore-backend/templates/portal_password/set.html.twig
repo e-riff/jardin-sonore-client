@@ -1,0 +1,22 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <main style="max-width: 520px; margin: 64px auto; padding: 32px; border: 1px solid #e2e6ee; border-radius: 12px; background: #ffffff; font-family: Arial, sans-serif; color: #25324a; line-height: 1.5; box-shadow: 0 8px 24px rgba(37, 50, 74, .08);">
+        <h1 style="margin: 0 0 12px; font-size: 28px;">Définir mon mot de passe</h1>
+        <p style="margin: 0 0 24px; color: #5f6b7a;">Choisissez un mot de passe d’au moins 12 caractères. Utilisez idéalement une phrase facile à retenir, avec lettres, chiffres et caractères spéciaux.</p>
+        {{ form_start(form, {attr: {'data-turbo': 'false'}}) }}
+        {{ form_errors(form) }}
+        <div style="margin-bottom: 18px;">
+            {{ form_label(form.password.first) }}
+            {{ form_widget(form.password.first, {attr: {style: 'display:block; width:100%; box-sizing:border-box; margin-top:6px; padding:10px; border:1px solid #b8c1d1; border-radius:6px;'}}) }}
+            {{ form_errors(form.password.first) }}
+        </div>
+        <div style="margin-bottom: 24px;">
+            {{ form_label(form.password.second) }}
+            {{ form_widget(form.password.second, {attr: {style: 'display:block; width:100%; box-sizing:border-box; margin-top:6px; padding:10px; border:1px solid #b8c1d1; border-radius:6px;'}}) }}
+            {{ form_errors(form.password.second) }}
+        </div>
+        <button type="submit" style="padding: 12px 18px; border: 0; border-radius: 6px; background: #5367d8; color: #fff; font-size: 16px; font-weight: bold; cursor: pointer;">Définir mon mot de passe</button>
+        {{ form_end(form) }}
+    </main>
+{% endblock %}

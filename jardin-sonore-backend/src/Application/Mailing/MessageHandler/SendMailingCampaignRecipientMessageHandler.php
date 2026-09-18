@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Application\Mailing\MessageHandler;
 
 use App\Application\Mailing\MailingDeliveryQueueInterface;
-use App\Application\Mailing\RecordNewsletterRecommendationUsages;
 use App\Application\Mailing\Message\SendMailingCampaignRecipientMessage;
 use App\Application\Mailing\NewsletterMailSenderInterface;
 use App\Application\Mailing\NewsletterRendererInterface;
+use App\Application\Mailing\RecordNewsletterRecommendationUsages;
 use App\Domain\Model\Mailing\MailingCampaignStatus;
 use App\Domain\Model\Mailing\NewsletterRecipient;
 use App\Domain\Model\ValueObject\EmailAddress;
