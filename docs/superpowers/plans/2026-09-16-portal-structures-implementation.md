@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-09-16-portal-structures-design.md`
 
+> **Reprise UI — 2026-09-21.** Les maquettes V4 ont validé la direction éditoriale (une fiche sur surface claire, panneau PDF fonctionnel, listes à séparateurs et rayons contenus). Le plan exécutable de reprise, avec les écarts de contrat API et d’impersonation identifiés, est `docs/superpowers/plans/2026-09-21-portal-structures-ui-rebuild-implementation.md`. Il remplace les tâches client 4 à 6 ci-dessous lors de la reprise ; les tâches backend déjà cochées restent l’historique fiable.
+
 ## Global Constraints
 
 - Keep all portal UI copy in `jardin-sonore-client/src/i18n/dictionaries/fr.ts`.
