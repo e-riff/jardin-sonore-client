@@ -90,13 +90,14 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertStringContainsString('this.removeLeadingEmptyBlock();', $controller);
     }
 
-    public function testPdfSequencesCanFlowOntoTheNextPage(): void
+    public function testPdfKeepsMediaPreviewsBesideTheirSequenceWhileAllowingContentToFlow(): void
     {
         $template = file_get_contents(__DIR__ . '/../../../templates/session/document.pdf.twig');
 
         self::assertIsString($template);
         self::assertStringNotContainsString('.sequence { margin: 0 0 6mm; page-break-inside: avoid; }', $template);
-        self::assertStringNotContainsString('.sequence-layout { display: table; width: 100%; }', $template);
+        self::assertStringContainsString('.sequence-layout { display: table; width: 100%; }', $template);
+        self::assertStringContainsString('.media-rail { display: table-cell;', $template);
         self::assertStringContainsString('page-break-after: avoid;', $template);
     }
 

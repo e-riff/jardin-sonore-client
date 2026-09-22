@@ -32,7 +32,9 @@
         .sequence-title-row h2 { display: table-cell; margin: 0; vertical-align: baseline; }
         .subtitle { display: table-cell; margin: 0; padding-left: 3mm; color: #52635f; font-style: italic; vertical-align: baseline; white-space: nowrap; }
         .sequence-shell { padding: 3.5mm 5mm 4mm; background: #fffdf8; border: .4mm solid #e6e1d8; border-top: 0; }
-        .sequence-layout, .sequence-main { display: block; }
+        .sequence-layout { display: table; width: 100%; }
+        .sequence-main { display: table-cell; vertical-align: top; }
+        .sequence-layout--with-media .sequence-main { padding-right: 4mm; }
         .section-label { margin: 3mm 0 1mm; color: #52635f; font-size: 8pt; font-weight: bold; letter-spacing: .7pt; text-transform: uppercase; }
         .content p { margin-bottom: 2mm; }
         .instructions { margin-top: 3mm; }
@@ -53,7 +55,7 @@
         .sequence .badges { margin: 1.5mm 0 0; }
         .sequence .badge--instrument { margin: 0 1.5mm 1mm 0; padding: .7mm 1.5mm; border-bottom: 0; background: #fbf9f4; color: #6f7d77; font-size: 7pt; }
         .badge-icon { margin-right: 1.5mm; font-weight: bold; }
-        .media-rail { display: block; margin: 3mm 0 0; padding: 3mm 0 0; border-top: .4mm solid #d9ddd4; }
+        .media-rail { display: table-cell; width: 39mm; padding-left: 4mm; border-left: .4mm solid #d9ddd4; vertical-align: top; }
         .media-rail-title { margin: 0 0 2mm; color: #52635f; font-size: 7.5pt; font-weight: bold; letter-spacing: .6pt; text-transform: uppercase; }
         .media-primary { margin-bottom: 2.5mm; }
         .media-preview { display: block; width: 34mm; height: 20mm; margin: 0 0 1.5mm; border: .4mm solid #d9ddd4; object-fit: cover; }
