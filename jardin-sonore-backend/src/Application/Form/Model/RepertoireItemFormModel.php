@@ -29,6 +29,8 @@ final class RepertoireItemFormModel
     public ?string $notes = null;
     /** @var list<string> */
     public array $linkedMediaUuids = [];
+    #[Assert\Url]
+    public ?string $youtubeVideoUrl = null;
     /** @var list<string> */
     public array $themeUuids = [];
     public bool $active = true;

@@ -64,6 +64,56 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertStringContainsString('public ?string $generalInstructions = null;', $formModel);
     }
 
+    public function testRepertoireFormProvidesAnOptionalYoutubeVideoShortcut(): void
+    {
+        $template = file_get_contents(__DIR__ . '/../../../templates/repertoire/form.html.twig');
+        $formType = file_get_contents(__DIR__ . '/../../../src/Application/Form/RepertoireItemType.php');
+        $formModel = file_get_contents(__DIR__ . '/../../../src/Application/Form/Model/RepertoireItemFormModel.php');
+        $controller = file_get_contents(__DIR__ . '/../../../src/Application/Controller/RepertoireCatalogController.php');
+
+        self::assertIsString($template);
+        self::assertIsString($formType);
+        self::assertIsString($formModel);
+        self::assertIsString($controller);
+        self::assertStringContainsString('form.youtubeVideoUrl', $template);
+        self::assertStringContainsString("->add('youtubeVideoUrl'", $formType);
+        self::assertStringContainsString('public ?string $youtubeVideoUrl = null;', $formModel);
+        self::assertStringContainsString('CreateMediaResource $createMediaResource', $controller);
+        self::assertStringContainsString('MediaResourceType::VIDEO', $controller);
+    }
+
+    public function testRepertoireTextImportRemovesTheInitialEmptyFormRow(): void
+    {
+        $controller = file_get_contents(__DIR__ . '/../../../assets/controllers/repertoire_blocks_controller.js');
+
+        self::assertIsString($controller);
+        self::assertStringContainsString('this.removeLeadingEmptyBlock();', $controller);
+    }
+
+    public function testPdfKeepsMediaPreviewsBesideTheirSequenceWhileAllowingContentToFlow(): void
+    {
+        $template = file_get_contents(__DIR__ . '/../../../templates/session/document.pdf.twig');
+
+        self::assertIsString($template);
+        self::assertStringNotContainsString('.sequence { margin: 0 0 6mm; page-break-inside: avoid; }', $template);
+        self::assertStringContainsString('.sequence-layout { display: block; }', $template);
+        self::assertStringContainsString('.sequence-layout--with-media .media-rail { float: right;', $template);
+        self::assertStringContainsString('page-break-after: avoid;', $template);
+    }
+
+    public function testSessionPreviewsHideDatesAndPdfDisplaysTheSubtitleBelowTheTitle(): void
+    {
+        $htmlPreview = file_get_contents(__DIR__ . '/../../../templates/session/show.html.twig');
+        $pdfPreview = file_get_contents(__DIR__ . '/../../../templates/session/document.pdf.twig');
+
+        self::assertIsString($htmlPreview);
+        self::assertIsString($pdfPreview);
+        self::assertStringNotContainsString('session.sessionDate|date', $htmlPreview);
+        self::assertStringNotContainsString('document.session.sessionDate|date', $pdfPreview);
+        self::assertStringContainsString('<p class="cover-subtitle">{{ document.session.theme }}</p>', $pdfPreview);
+        self::assertStringContainsString('.cover-subtitle {', $pdfPreview);
+    }
+
     public function testSummaryFormLetsTheUserOrderSelectedRecommendations(): void
     {
         $template = file_get_contents(__DIR__ . '/../../../templates/session/_summary_form.html.twig');
@@ -126,6 +176,30 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertStringNotContainsString('form.lyrics', $template);
         self::assertStringNotContainsString('form.gestures', $template);
         self::assertStringContainsString('use Symfony\\Component\\Form\\Extension\\Core\\Type\\TextareaType;', $formType);
+    }
+
+    public function testRepertoireSessionEditorProvidesCatalogSelectionAndQuickCreationForMedia(): void
+    {
+        $template = file_get_contents(__DIR__ . '/../../../templates/session/composer_repertoire_form.html.twig');
+
+        self::assertIsString($template);
+        self::assertStringContainsString("path('session_sequence_media_picker'", $template);
+        self::assertStringContainsString("path('session_sequence_media_create'", $template);
+        self::assertStringContainsString('formaction="{{ path(\'session_sequence_media_picker\'', $template);
+        self::assertStringContainsString('formaction="{{ path(\'session_sequence_media_create\'', $template);
+    }
+
+    public function testRepertoireSessionEditorProvidesAOneFieldYoutubeVideoShortcut(): void
+    {
+        $template = file_get_contents(__DIR__ . '/../../../templates/session/composer_repertoire_form.html.twig');
+        $controller = file_get_contents(__DIR__ . '/../../../src/Application/Controller/SessionSummaryController.php');
+
+        self::assertIsString($template);
+        self::assertIsString($controller);
+        self::assertStringContainsString("path('session_sequence_repertoire_youtube_create'", $template);
+        self::assertStringContainsString("name: 'sequence_repertoire_youtube_create'", $controller);
+        self::assertStringContainsString('MediaResourceType::VIDEO', $controller);
+        self::assertStringContainsString('array_column($repertoireItemView->themes, \'uuid\')', $controller);
     }
 
     public function testComposerNumbersAreUpdatedAfterASequenceMove(): void
@@ -201,18 +275,28 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertStringNotContainsString('badge badge--instrument">♫', $template);
         self::assertStringContainsString('.cover + .summary { margin-top: -7mm; }', $template);
         self::assertStringContainsString('.sequence-title-row', $template);
-        self::assertStringContainsString('.lyric-pair { margin-bottom: 1.2mm; }', $template);
+        self::assertStringContainsString('.lyric-pair { margin-bottom: .8mm; }', $template);
         self::assertStringContainsString('.sequence .badge--instrument', $template);
-        self::assertStringContainsString('.gesture { margin: .2mm 0 0;', $template);
+        self::assertStringContainsString('.gesture { margin: 0; color: #66736e; font-size: 8.5pt;', $template);
         self::assertStringContainsString('.recommendations h2 { margin-bottom: 3mm; color: #9e6049;', $template);
         self::assertStringNotContainsString('<p class="eyebrow">Prolonger la séance</p>', $template);
         self::assertStringContainsString('.page-side-rule { position: fixed;', $template);
         self::assertStringContainsString('right: -16mm;', $template);
-        self::assertStringContainsString('.lyrics-panel { margin: 3mm 0 0; padding: 2.5mm 5mm; background: #f6faf6; border: .3mm solid #d9ddd4;', $template);
-        self::assertStringNotContainsString('.lyrics-panel { margin: 3mm 0 0; padding: 2.5mm 5mm; background: #f6faf6; border-left:', $template);
+        self::assertStringContainsString('.lyrics-panel { margin: 2mm 0 0; padding: 2mm 4mm; background: #f6faf6; border: .3mm solid #d9ddd4;', $template);
+        self::assertStringNotContainsString('.lyrics-panel { margin: 2mm 0 0; padding: 2mm 4mm; background: #f6faf6; border-left:', $template);
         self::assertStringContainsString('.lyrics-panel p { margin-bottom: 0; }', $template);
-        self::assertStringContainsString('.lyrics-break { height: 3mm; }', $template);
+        self::assertStringContainsString('.lyrics-break { height: 2mm; }', $template);
         self::assertStringContainsString('border: .5mm solid #dca58d', $template);
+    }
+
+    public function testPdfKeepsLongLyricsCompactWithoutKeepingTheWholePanelOnOnePage(): void
+    {
+        $template = file_get_contents(__DIR__ . '/../../../templates/session/document.pdf.twig');
+
+        self::assertIsString($template);
+        self::assertStringContainsString('.lyrics-panel { margin: 2mm 0 0; padding: 2mm 4mm;', $template);
+        self::assertStringContainsString('.lyric-line { margin: 0; font-family: DejaVu Serif, serif; font-size: 10pt; line-height: 1.16; }', $template);
+        self::assertStringNotContainsString('.lyrics-panel { margin: 2mm 0 0; padding: 2mm 4mm; background: #f6faf6; border: .3mm solid #d9ddd4; text-align: center; page-break-inside: avoid; }', $template);
     }
 
     public function testSessionPreviewRendersRepertoireGesturesAlongsideTheirLyricsWithoutMediaListMarkers(): void
@@ -224,6 +308,16 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertStringContainsString('contentBlock.gesture', $template);
         self::assertStringContainsString('session-document__gesture', $template);
         self::assertStringNotContainsString('<ul style="margin-top: .75rem;">', $template);
+    }
+
+    public function testComposerRendersRepertoireLyricsAndGesturesAlongsideInstructions(): void
+    {
+        $template = file_get_contents(__DIR__ . '/../../../templates/session/_composer.html.twig');
+
+        self::assertIsString($template);
+        self::assertStringContainsString('sequence.contentBlocks', $template);
+        self::assertStringContainsString('contentBlock.gesture', $template);
+        self::assertStringContainsString('sequence.lyrics', $template);
     }
 
     public function testSessionPreviewGroupsLyricsAndGesturesInTheSharedLyricsPanel(): void
@@ -384,7 +478,7 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertIsString($template);
         self::assertIsString($controller);
         self::assertStringNotContainsString('data-turbo-stream="true"', $template);
-        self::assertStringContainsString("return \$this->render('session/composer_activity_form.html.twig'", $controller);
+        self::assertStringContainsString('return $this->render($this->composerSequenceTemplate($updatedSequenceView)', $controller);
         self::assertStringContainsString('data-turbo-frame="session-composer-overlay"', $template);
         self::assertStringContainsString("'mediaResources' => \$searchMediaResources(query: \$request->query->getString('query'), activeOnly: true)", $controller);
     }

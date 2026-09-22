@@ -64,6 +64,10 @@ class EmailContactLinkEntity
 
     public function setEmailContact(?EmailContactEntity $emailContact): static
     {
+        if ($this->emailContact instanceof EmailContactEntity && $this->emailContact !== $emailContact) {
+            $this->emailContact->removeEmailContactLink($this);
+        }
+
         $this->emailContact = $emailContact;
 
         if ($emailContact instanceof EmailContactEntity && !$emailContact->getEmailContactLinks()->contains($this)) {
