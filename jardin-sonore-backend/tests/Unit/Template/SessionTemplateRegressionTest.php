@@ -101,6 +101,19 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertStringContainsString('page-break-after: avoid;', $template);
     }
 
+    public function testSessionPreviewsHideDatesAndPdfDisplaysTheSubtitleBelowTheTitle(): void
+    {
+        $htmlPreview = file_get_contents(__DIR__ . '/../../../templates/session/show.html.twig');
+        $pdfPreview = file_get_contents(__DIR__ . '/../../../templates/session/document.pdf.twig');
+
+        self::assertIsString($htmlPreview);
+        self::assertIsString($pdfPreview);
+        self::assertStringNotContainsString('session.sessionDate|date', $htmlPreview);
+        self::assertStringNotContainsString('document.session.sessionDate|date', $pdfPreview);
+        self::assertStringContainsString('<p class="cover-subtitle">{{ document.session.theme }}</p>', $pdfPreview);
+        self::assertStringContainsString('.cover-subtitle {', $pdfPreview);
+    }
+
     public function testSummaryFormLetsTheUserOrderSelectedRecommendations(): void
     {
         $template = file_get_contents(__DIR__ . '/../../../templates/session/_summary_form.html.twig');

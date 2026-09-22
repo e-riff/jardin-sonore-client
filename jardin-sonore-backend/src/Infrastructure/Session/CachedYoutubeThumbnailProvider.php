@@ -54,7 +54,7 @@ final readonly class CachedYoutubeThumbnailProvider implements YoutubeThumbnailP
         $host = strtolower($urlParts['host']);
         $youtubeVideoId = match ($host) {
             'youtu.be' => ltrim($urlParts['path'] ?? '', '/'),
-            'youtube.com', 'www.youtube.com', 'm.youtube.com' => $this->youtubeVideoIdFromYoutubePath($urlParts),
+            'youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com', 'www.youtube-nocookie.com' => $this->youtubeVideoIdFromYoutubePath($urlParts),
             default => null,
         };
 
@@ -77,6 +77,10 @@ final readonly class CachedYoutubeThumbnailProvider implements YoutubeThumbnailP
         }
 
         if (1 === preg_match('#^/embed/([A-Za-z0-9_-]{11})$#', $path, $matches)) {
+            return $matches[1];
+        }
+
+        if (1 === preg_match('#^/(?:shorts|live)/([A-Za-z0-9_-]{11})$#', $path, $matches)) {
             return $matches[1];
         }
 

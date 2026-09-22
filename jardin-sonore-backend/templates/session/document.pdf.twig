@@ -20,7 +20,7 @@
         .cover + .summary { margin-top: -7mm; }
         .cover--title h1 { font-size: 31pt; }
         .eyebrow { margin-bottom: 3mm; color: #db765d; font-size: 8pt; font-weight: bold; letter-spacing: 1.3pt; text-transform: uppercase; }
-        .meta { margin: 0; color: #52635f; font-size: 9pt; }
+        .cover-subtitle { margin: 0; color: #52635f; font-family: DejaVu Serif, serif; font-size: 16pt; line-height: 1.2; }
         .summary { margin: 0 0 6mm; padding: 4mm 5mm; background: #f2f6f1; }
         .summary h2 { margin-bottom: 2mm; font-size: 12pt; }
         .sequence { margin: 0 0 6mm; }
@@ -73,11 +73,11 @@
 <body>
     <div class="document-background"></div>
     <div class="page-side-rule"></div>
-    <header class="running-header"><span class="running-header-mark">Jardin sonore</span> · {{ document.session.title }} · {{ document.session.sessionDate|date('d/m/Y') }}</header>
+    <header class="running-header"><span class="running-header-mark">Jardin sonore</span> · {{ document.session.title }}</header>
     <header class="cover cover--title">
         <p class="eyebrow">Déroulé de séance</p>
         <h1>{{ document.session.title }}</h1>
-        <p class="meta">{{ document.session.sessionDate|date('d/m/Y') }}{% if document.session.theme %} · {{ document.session.theme }}{% endif %}</p>
+        {% if document.session.theme %}<p class="cover-subtitle">{{ document.session.theme }}</p>{% endif %}
     </header>
 
     {% if document.session.instrumentNames is not empty or document.session.materialSummary %}
