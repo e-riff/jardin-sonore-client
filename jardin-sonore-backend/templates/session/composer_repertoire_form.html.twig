@@ -26,6 +26,11 @@
                 {{ form_widget(form.sourceUuid) }}
                 {{ form_widget(form.sourceTitle) }}
                 <div class="internal-form__actions">
+                    <a class="internal-button internal-button--secondary" href="{{ path('session_sequence_repertoire_youtube_create', { uuid: session.uuid, sequenceUuid: sequence.uuid, draft: isDraft ? 1 : null }) }}">{{ 'sessions.sequence.composer.add_youtube_video'|trans({}, 'sessions') }}</a>
+                    <button class="internal-button internal-button--secondary" type="submit" formnovalidate formaction="{{ path('session_sequence_media_picker', { uuid: session.uuid, sequenceUuid: sequence.uuid, draft: isDraft ? 1 : null }) }}" formmethod="post" name="activityMediaAction" value="open-media-picker">{{ 'sessions.sequence.composer.add_catalog_media'|trans({}, 'sessions') }}</button>
+                    <button class="internal-button internal-button--secondary" type="submit" formnovalidate formaction="{{ path('session_sequence_media_create', { uuid: session.uuid, sequenceUuid: sequence.uuid, draft: isDraft ? 1 : null }) }}" formmethod="post" name="activityMediaAction" value="open-media-create">{{ 'sessions.sequence.composer.create_catalog_media'|trans({}, 'sessions') }}</button>
+                </div>
+                <div class="internal-form__actions">
                     <a class="internal-button internal-button--secondary internal-form__back-action" href="{{ path('session_edit', { uuid: session.uuid }) }}" data-turbo-frame="_top">{{ 'sessions.sequence.form.back'|trans({}, 'sessions') }}</a>
                     {{ form_widget(form.submit) }}
                 </div>

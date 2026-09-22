@@ -1,7 +1,6 @@
 'use client';
 
 import {Bars3Icon, XMarkIcon} from "@heroicons/react/24/outline";
-import {usePathname} from "next/navigation";
 import {JSX, useEffect, useState} from "react";
 import BrandLogo from "@/components/BrandLogo";
 import Button from "@/components/Button";
@@ -13,7 +12,6 @@ export default function Header(): JSX.Element {
     const [menuOpen, setMenuOpen] = useState<boolean>(false);
     const dictionary = useTranslations();
     const content = dictionary.header;
-    const pathname = usePathname();
 
     useEffect(() => {
         const onScroll = (): void => setScrolled(window.scrollY > 24);
@@ -37,10 +35,6 @@ export default function Header(): JSX.Element {
         return () => window.removeEventListener("keydown", onKeyDown);
     }, [menuOpen]);
 
-    if (pathname.startsWith("/portail")) {
-        return <></>;
-    }
-
     return (
         <header className={`fixed left-0 top-0 z-50 w-full border-b transition duration-300 ${scrolled ? "border-outline-variant/40 bg-background/88 py-2 backdrop-blur-xl" : "border-transparent bg-background/72 py-3 backdrop-blur-md"}`}>
             <nav className="mx-auto max-w-7xl px-6 sm:px-margin" aria-label={content.ariaLabel}>
@@ -55,9 +49,6 @@ export default function Header(): JSX.Element {
                                 {item.label}
                             </a>
                         ))}
-                        <a className="font-sans text-sm font-semibold tracking-wider text-on-surface-variant transition hover:text-primary" href="/portail/connexion">
-                            {content.portalCta}
-                        </a>
                         <Button className="px-5 py-2 xl:px-6" href="#contact">{content.reserveCta}</Button>
                     </div>
 
@@ -84,13 +75,6 @@ export default function Header(): JSX.Element {
                             {item.label}
                         </a>
                     ))}
-                    <a
-                        className="rounded-xl px-4 py-3 font-sans text-sm font-semibold tracking-wider text-on-surface-variant transition hover:bg-primary/10 hover:text-primary"
-                        href="/portail/connexion"
-                        onClick={() => setMenuOpen(false)}
-                    >
-                        {content.portalCta}
-                    </a>
                     <a
                         className="mt-2 inline-flex w-full items-center justify-center rounded-full border border-primary bg-primary px-6 py-3 font-sans text-sm font-bold tracking-wider text-on-primary soft-shadow transition duration-200 hover:-translate-y-0.5 hover:bg-primary-container"
                         href="#contact"

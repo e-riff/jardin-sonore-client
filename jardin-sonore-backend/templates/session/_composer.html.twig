@@ -40,7 +40,27 @@
                             <span class="session-composer__type">{{ sequence.type.translationKey()|trans({}, 'sessions') }}</span>
                         </h3>
                         <twig:SessionSequenceLocalDetails sessionUuid="{{ session.uuid }}" sequenceUuid="{{ sequence.uuid }}" section="details" role="{{ sequence.role ?? '' }}" body="{{ sequence.body ?? '' }}" notes="{{ sequence.notes ?? '' }}" />
-                        {% if sequence.gestures %}
+                        {% if sequence.contentBlocks is not empty %}
+                            <div class="session-composer__lyrics">
+                                <strong>{{ 'sessions.preview.lyrics'|trans({}, 'sessions') }}</strong>
+                                {% for contentBlock in sequence.contentBlocks %}
+                                    {% if contentBlock.kind.value == 'line' %}
+                                        <p>{{ contentBlock.text }}{% if contentBlock.gesture %}<br><em>{{ contentBlock.gesture }}</em>{% endif %}</p>
+                                    {% elseif contentBlock.kind.value == 'section' %}
+                                        <p><strong>{{ contentBlock.text }}</strong></p>
+                                    {% else %}
+                                        <br>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% elseif sequence.lyrics or sequence.gestures %}
+                            <div class="session-composer__lyrics">
+                                <strong>{{ 'sessions.preview.lyrics'|trans({}, 'sessions') }}</strong>
+                                {% if sequence.lyrics %}<p>{{ sequence.lyrics|nl2br }}</p>{% endif %}
+                                {% if sequence.gestures %}<p><em>{{ sequence.gestures|nl2br }}</em></p>{% endif %}
+                            </div>
+                        {% endif %}
+                        {% if sequence.gestures and sequence.contentBlocks is empty and not sequence.lyrics %}
                             <p class="session-composer__gestures"><strong>{{ 'sessions.preview.gestures'|trans({}, 'sessions') }}</strong><br>{{ sequence.gestures|nl2br }}</p>
                         {% endif %}
                         {% if sequence.instrumentNames is not empty or sequence.composerMedia is not empty %}

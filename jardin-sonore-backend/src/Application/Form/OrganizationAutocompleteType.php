@@ -21,7 +21,9 @@ final class OrganizationAutocompleteType extends AbstractType
             'class' => OrganizationEntity::class,
             'required' => false,
             'placeholder' => 'sessions.summary.form.organization_placeholder',
+            'min_characters' => 2,
             'max_results' => 20,
+            'preload' => false,
             'choice_label' => static fn (OrganizationEntity $organizationEntity): string => $organizationEntity->getName() . ' — ' . $organizationEntity->getMunicipalitySummary() . ' — ' . $organizationEntity->getEmailContactsSummary(),
             'filter_query' => static function (QueryBuilder $queryBuilder, string $query): void {
                 $queryBuilder

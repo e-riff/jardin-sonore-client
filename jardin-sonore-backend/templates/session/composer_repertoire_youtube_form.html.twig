@@ -1,0 +1,20 @@
+{% set isDraft = isDraft|default(false) %}
+<turbo-frame id="session-composer-overlay">
+    <section class="session-composer-overlay" role="dialog" aria-modal="true" aria-labelledby="session-repertoire-youtube-title">
+        <div class="session-composer-overlay__panel session-composer-overlay__panel--activity">
+            <div class="internal-page-heading">
+                <div>
+                    <p class="internal-eyebrow">{{ 'sessions.sequence.composer.youtube_eyebrow'|trans({}, 'sessions') }}</p>
+                    <h2 id="session-repertoire-youtube-title">{{ 'sessions.sequence.composer.youtube_heading'|trans({ title: sequence.title }, 'sessions') }}</h2>
+                    <p>{{ 'sessions.sequence.composer.youtube_description'|trans({}, 'sessions') }}</p>
+                </div>
+                <a class="session-composer-overlay__close" href="{{ path('session_sequence_edit', { uuid: session.uuid, sequenceUuid: sequence.uuid, composer: 1, draft: isDraft ? 1 : null }) }}" aria-label="{{ 'sessions.sequence.composer.close'|trans({}, 'sessions') }}">×</a>
+            </div>
+            {% if hasErrors %}<div class="internal-alert internal-alert--error">{{ 'sessions.media.form.error_notice'|trans({}, 'sessions') }}</div>{% endif %}
+            {{ form_start(form, { attr: { class: 'internal-form' } }) }}
+                {{ form_row(form.youtubeUrl) }}
+                {{ form_widget(form.submit) }}
+            {{ form_end(form) }}
+        </div>
+    </section>
+</turbo-frame>

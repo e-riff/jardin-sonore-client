@@ -8,6 +8,7 @@ use App\Domain\Model\AddressBook\Organization;
 use App\Domain\Model\Session\SessionDocumentStatus;
 use App\Domain\Model\Session\SessionSummary;
 use App\Domain\Repository\InstrumentRepositoryInterface;
+use App\Domain\Repository\MediaResourceRepositoryInterface;
 use App\Domain\Repository\RepertoireItemRepositoryInterface;
 use App\Domain\Repository\SessionRecommendationRepositoryInterface;
 use DateTimeImmutable;
@@ -51,6 +52,7 @@ final readonly class SessionSummaryView
         ?RepertoireItemRepositoryInterface $repertoireItemRepository = null,
         ?InstrumentRepositoryInterface $instrumentRepository = null,
         ?SessionRecommendationRepositoryInterface $sessionRecommendationRepository = null,
+        ?MediaResourceRepositoryInterface $mediaResourceRepository = null,
     ): self {
         return new self(
             uuid: $sessionSummary->getUuid(),
@@ -88,6 +90,7 @@ final readonly class SessionSummaryView
                         ? null
                         : $repertoireItemRepository->findByUuid($sessionSequence->sourceUuid),
                     $instrumentRepository,
+                    $mediaResourceRepository,
                 ),
                 $sessionSummary->getSequences(),
             ),

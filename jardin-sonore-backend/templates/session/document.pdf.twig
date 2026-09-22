@@ -20,11 +20,11 @@
         .cover + .summary { margin-top: -7mm; }
         .cover--title h1 { font-size: 31pt; }
         .eyebrow { margin-bottom: 3mm; color: #db765d; font-size: 8pt; font-weight: bold; letter-spacing: 1.3pt; text-transform: uppercase; }
-        .meta { margin: 0; color: #52635f; font-size: 9pt; }
+        .cover-subtitle { margin: 0; color: #52635f; font-family: DejaVu Serif, serif; font-size: 16pt; line-height: 1.2; }
         .summary { margin: 0 0 6mm; padding: 4mm 5mm; background: #f2f6f1; }
         .summary h2 { margin-bottom: 2mm; font-size: 12pt; }
-        .sequence { margin: 0 0 6mm; page-break-inside: avoid; }
-        .sequence-heading { display: table; width: 100%; margin: 0; background: #fbf9f4; border-left: .7mm solid #d7ad59; }
+        .sequence { margin: 0 0 6mm; }
+        .sequence-heading { display: table; width: 100%; margin: 0; background: #fbf9f4; border-left: .7mm solid #d7ad59; page-break-after: avoid; }
         .sequence-index { display: table-cell; width: 15mm; padding: 3mm 0 2.5mm 4mm; color: #b88148; font-family: DejaVu Serif, serif; font-size: 14pt; font-weight: normal; vertical-align: middle; }
         .sequence-heading-copy { display: table-cell; padding: 2.5mm 4mm 2.5mm 0; vertical-align: middle; }
         .sequence-heading-meta { margin: 0 0 1mm; color: #6f7d77; font-size: 7.5pt; font-weight: normal; letter-spacing: .55pt; text-transform: uppercase; }
@@ -32,30 +32,31 @@
         .sequence-title-row h2 { display: table-cell; margin: 0; vertical-align: baseline; }
         .subtitle { display: table-cell; margin: 0; padding-left: 3mm; color: #52635f; font-style: italic; vertical-align: baseline; white-space: nowrap; }
         .sequence-shell { padding: 3.5mm 5mm 4mm; background: #fffdf8; border: .4mm solid #e6e1d8; border-top: 0; }
-        .sequence-layout { display: table; width: 100%; }
-        .sequence-main { display: table-cell; vertical-align: top; }
-        .sequence-layout--with-media .sequence-main { padding-right: 4mm; }
+        .sequence-layout { display: block; }
+        .sequence-layout--with-media::after { display: block; clear: both; content: ''; }
+        .sequence-main { display: block; }
+        .sequence-layout--with-media .sequence-main { margin-right: 43mm; }
         .section-label { margin: 3mm 0 1mm; color: #52635f; font-size: 8pt; font-weight: bold; letter-spacing: .7pt; text-transform: uppercase; }
         .content p { margin-bottom: 2mm; }
         .instructions { margin-top: 3mm; }
         .instructions-list { margin: 1.5mm 0 0; padding-left: 5mm; }
         .instructions-list li { margin-bottom: 1.2mm; }
-        .lyrics-panel { margin: 3mm 0 0; padding: 2.5mm 5mm; background: #f6faf6; border: .3mm solid #d9ddd4; text-align: center; page-break-inside: avoid; }
+        .lyrics-panel { margin: 2mm 0 0; padding: 2mm 4mm; background: #f6faf6; border: .3mm solid #d9ddd4; text-align: center; }
         .lyrics-panel p { margin-bottom: 0; }
-        .lyrics-panel .lyrics-panel-title { margin-bottom: 1.5mm; color: #38675a; font-size: 8pt; font-weight: bold; letter-spacing: .8pt; text-transform: uppercase; }
-        .lyric-pair { margin-bottom: 1.2mm; }
-        .lyric-line { margin: 0; font-family: DejaVu Serif, serif; font-size: 11pt; line-height: 1.22; }
+        .lyrics-panel .lyrics-panel-title { margin-bottom: 1mm; color: #38675a; font-size: 7.5pt; font-weight: bold; letter-spacing: .7pt; text-transform: uppercase; }
+        .lyric-pair { margin-bottom: .8mm; }
+        .lyric-line { margin: 0; font-family: DejaVu Serif, serif; font-size: 10pt; line-height: 1.16; }
         .lyric-pair:last-child { margin-bottom: 0; }
-        .gesture { margin: .2mm 0 0; color: #66736e; font-size: 9pt; font-style: italic; line-height: 1.25; }
-        .lyrics-panel .lyrics-section { margin: 3mm 0 2mm; color: #38675a; font-size: 8pt; font-weight: bold; letter-spacing: .8pt; text-transform: uppercase; }
-        .lyrics-break { height: 3mm; }
+        .gesture { margin: 0; color: #66736e; font-size: 8.5pt; font-style: italic; line-height: 1.18; }
+        .lyrics-panel .lyrics-section { margin: 2mm 0 1mm; color: #38675a; font-size: 7.5pt; font-weight: bold; letter-spacing: .7pt; text-transform: uppercase; }
+        .lyrics-break { height: 2mm; }
         .badges { margin: 2.5mm 0 0; padding: 0; list-style: none; }
         .badge { display: inline-block; margin: 0 3mm 2mm 0; padding: 1.4mm 2.5mm; border-bottom: .4mm solid #78a596; color: #38675a; font-size: 8.5pt; text-decoration: none; }
         .badge--instrument { background: #f7f1e7; border-bottom-color: #d7ad59; color: #755f32; }
         .sequence .badges { margin: 1.5mm 0 0; }
         .sequence .badge--instrument { margin: 0 1.5mm 1mm 0; padding: .7mm 1.5mm; border-bottom: 0; background: #fbf9f4; color: #6f7d77; font-size: 7pt; }
         .badge-icon { margin-right: 1.5mm; font-weight: bold; }
-        .media-rail { display: table-cell; width: 39mm; padding-left: 4mm; border-left: .4mm solid #d9ddd4; vertical-align: top; }
+        .sequence-layout--with-media .media-rail { float: right; width: 39mm; padding-left: 4mm; border-left: .4mm solid #d9ddd4; }
         .media-rail-title { margin: 0 0 2mm; color: #52635f; font-size: 7.5pt; font-weight: bold; letter-spacing: .6pt; text-transform: uppercase; }
         .media-primary { margin-bottom: 2.5mm; }
         .media-preview { display: block; width: 34mm; height: 20mm; margin: 0 0 1.5mm; border: .4mm solid #d9ddd4; object-fit: cover; }
@@ -73,11 +74,11 @@
 <body>
     <div class="document-background"></div>
     <div class="page-side-rule"></div>
-    <header class="running-header"><span class="running-header-mark">Jardin sonore</span> · {{ document.session.title }} · {{ document.session.sessionDate|date('d/m/Y') }}</header>
+    <header class="running-header"><span class="running-header-mark">Jardin sonore</span> · {{ document.session.title }}</header>
     <header class="cover cover--title">
         <p class="eyebrow">Déroulé de séance</p>
         <h1>{{ document.session.title }}</h1>
-        <p class="meta">{{ document.session.sessionDate|date('d/m/Y') }}{% if document.session.theme %} · {{ document.session.theme }}{% endif %}</p>
+        {% if document.session.theme %}<p class="cover-subtitle">{{ document.session.theme }}</p>{% endif %}
     </header>
 
     {% if document.session.instrumentNames is not empty or document.session.materialSummary %}
@@ -104,9 +105,26 @@
                     <div class="sequence-title-row"><h2>{{ sequence.title }}</h2>{% if sequence.subtitle %}<p class="subtitle">{{ sequence.subtitle }}</p>{% endif %}</div>
                 </div>
             </div>
-            {% set visibleMedia = sequence.media|filter(media => media.displayedOnSession) %}
+            {% set documentMedia = sequence.documentMedia is empty ? sequence.media : sequence.documentMedia %}
+            {% set visibleMedia = documentMedia|filter(media => media.displayedOnSession) %}
             <div class="sequence-shell">
                 <div class="sequence-layout{% if visibleMedia is not empty %} sequence-layout--with-media{% endif %}">
+                    {% if visibleMedia is not empty %}
+                        <aside class="media-rail">
+                            <p class="media-rail-title">Médias associés</p>
+                            {% for media in visibleMedia %}
+                                {% set thumbnailDataUri = attribute(document.thumbnailDataUris, media.url)|default(null) %}
+                                {% if loop.first %}
+                                    <div class="media-primary">
+                                        {% if thumbnailDataUri %}<img class="media-preview" src="{{ thumbnailDataUri }}" alt="">{% endif %}
+                                        <a class="media-primary-link" href="{{ media.url }}"><span class="badge-icon">{% if media.type.value == 'video' %}▶{% elseif media.type.value == 'soundtrack' %}♫{% else %}↗{% endif %}</span>{{ media.label }}</a>
+                                    </div>
+                                {% else %}
+                                    <div class="media-badges"><a class="badge" href="{{ media.url }}"><span class="badge-icon">{% if media.type.value == 'video' %}▶{% elseif media.type.value == 'soundtrack' %}♫{% else %}↗{% endif %}</span>{{ media.label }}</a></div>
+                                {% endif %}
+                            {% endfor %}
+                        </aside>
+                    {% endif %}
                     <div class="sequence-main">
                         {% if sequence.instrumentNames is not empty %}
                             <div class="badges">
@@ -145,22 +163,6 @@
                             {% endif %}
                         </div>
                     </div>
-                    {% if visibleMedia is not empty %}
-                        <aside class="media-rail">
-                            <p class="media-rail-title">Médias associés</p>
-                            {% for media in visibleMedia %}
-                                {% set thumbnailDataUri = attribute(document.thumbnailDataUris, media.url)|default(null) %}
-                                {% if loop.first %}
-                                    <div class="media-primary">
-                                        {% if thumbnailDataUri %}<img class="media-preview" src="{{ thumbnailDataUri }}" alt="">{% endif %}
-                                        <a class="media-primary-link" href="{{ media.url }}"><span class="badge-icon">{% if media.type.value == 'video' %}▶{% elseif media.type.value == 'soundtrack' %}♫{% else %}↗{% endif %}</span>{{ media.label }}</a>
-                                    </div>
-                                {% else %}
-                                    <div class="media-badges"><a class="badge" href="{{ media.url }}"><span class="badge-icon">{% if media.type.value == 'video' %}▶{% elseif media.type.value == 'soundtrack' %}♫{% else %}↗{% endif %}</span>{{ media.label }}</a></div>
-                                {% endif %}
-                            {% endfor %}
-                        </aside>
-                    {% endif %}
                 </div>
             </div>
         </article>
