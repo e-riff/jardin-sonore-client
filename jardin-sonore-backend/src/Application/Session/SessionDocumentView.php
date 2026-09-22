@@ -22,7 +22,7 @@ final readonly class SessionDocumentView
         $thumbnailDataUris = [];
 
         foreach ($sessionSummaryView->sequences as $sessionSequenceView) {
-            foreach ($sessionSequenceView->media as $sessionSequenceMedia) {
+            foreach ([] === $sessionSequenceView->documentMedia ? $sessionSequenceView->media : $sessionSequenceView->documentMedia as $sessionSequenceMedia) {
                 if (!$sessionSequenceMedia->isDisplayedOnSession()) {
                     continue;
                 }

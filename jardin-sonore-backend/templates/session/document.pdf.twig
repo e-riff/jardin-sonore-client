@@ -32,9 +32,10 @@
         .sequence-title-row h2 { display: table-cell; margin: 0; vertical-align: baseline; }
         .subtitle { display: table-cell; margin: 0; padding-left: 3mm; color: #52635f; font-style: italic; vertical-align: baseline; white-space: nowrap; }
         .sequence-shell { padding: 3.5mm 5mm 4mm; background: #fffdf8; border: .4mm solid #e6e1d8; border-top: 0; }
-        .sequence-layout { display: table; width: 100%; }
-        .sequence-main { display: table-cell; vertical-align: top; }
-        .sequence-layout--with-media .sequence-main { padding-right: 4mm; }
+        .sequence-layout { display: block; }
+        .sequence-layout--with-media::after { display: block; clear: both; content: ''; }
+        .sequence-main { display: block; }
+        .sequence-layout--with-media .sequence-main { margin-right: 43mm; }
         .section-label { margin: 3mm 0 1mm; color: #52635f; font-size: 8pt; font-weight: bold; letter-spacing: .7pt; text-transform: uppercase; }
         .content p { margin-bottom: 2mm; }
         .instructions { margin-top: 3mm; }
@@ -55,7 +56,7 @@
         .sequence .badges { margin: 1.5mm 0 0; }
         .sequence .badge--instrument { margin: 0 1.5mm 1mm 0; padding: .7mm 1.5mm; border-bottom: 0; background: #fbf9f4; color: #6f7d77; font-size: 7pt; }
         .badge-icon { margin-right: 1.5mm; font-weight: bold; }
-        .media-rail { display: table-cell; width: 39mm; padding-left: 4mm; border-left: .4mm solid #d9ddd4; vertical-align: top; }
+        .sequence-layout--with-media .media-rail { float: right; width: 39mm; padding-left: 4mm; border-left: .4mm solid #d9ddd4; }
         .media-rail-title { margin: 0 0 2mm; color: #52635f; font-size: 7.5pt; font-weight: bold; letter-spacing: .6pt; text-transform: uppercase; }
         .media-primary { margin-bottom: 2.5mm; }
         .media-preview { display: block; width: 34mm; height: 20mm; margin: 0 0 1.5mm; border: .4mm solid #d9ddd4; object-fit: cover; }
@@ -104,9 +105,26 @@
                     <div class="sequence-title-row"><h2>{{ sequence.title }}</h2>{% if sequence.subtitle %}<p class="subtitle">{{ sequence.subtitle }}</p>{% endif %}</div>
                 </div>
             </div>
-            {% set visibleMedia = sequence.media|filter(media => media.displayedOnSession) %}
+            {% set documentMedia = sequence.documentMedia is empty ? sequence.media : sequence.documentMedia %}
+            {% set visibleMedia = documentMedia|filter(media => media.displayedOnSession) %}
             <div class="sequence-shell">
                 <div class="sequence-layout{% if visibleMedia is not empty %} sequence-layout--with-media{% endif %}">
+                    {% if visibleMedia is not empty %}
+                        <aside class="media-rail">
+                            <p class="media-rail-title">Médias associés</p>
+                            {% for media in visibleMedia %}
+                                {% set thumbnailDataUri = attribute(document.thumbnailDataUris, media.url)|default(null) %}
+                                {% if loop.first %}
+                                    <div class="media-primary">
+                                        {% if thumbnailDataUri %}<img class="media-preview" src="{{ thumbnailDataUri }}" alt="">{% endif %}
+                                        <a class="media-primary-link" href="{{ media.url }}"><span class="badge-icon">{% if media.type.value == 'video' %}▶{% elseif media.type.value == 'soundtrack' %}♫{% else %}↗{% endif %}</span>{{ media.label }}</a>
+                                    </div>
+                                {% else %}
+                                    <div class="media-badges"><a class="badge" href="{{ media.url }}"><span class="badge-icon">{% if media.type.value == 'video' %}▶{% elseif media.type.value == 'soundtrack' %}♫{% else %}↗{% endif %}</span>{{ media.label }}</a></div>
+                                {% endif %}
+                            {% endfor %}
+                        </aside>
+                    {% endif %}
                     <div class="sequence-main">
                         {% if sequence.instrumentNames is not empty %}
                             <div class="badges">
@@ -145,22 +163,6 @@
                             {% endif %}
                         </div>
                     </div>
-                    {% if visibleMedia is not empty %}
-                        <aside class="media-rail">
-                            <p class="media-rail-title">Médias associés</p>
-                            {% for media in visibleMedia %}
-                                {% set thumbnailDataUri = attribute(document.thumbnailDataUris, media.url)|default(null) %}
-                                {% if loop.first %}
-                                    <div class="media-primary">
-                                        {% if thumbnailDataUri %}<img class="media-preview" src="{{ thumbnailDataUri }}" alt="">{% endif %}
-                                        <a class="media-primary-link" href="{{ media.url }}"><span class="badge-icon">{% if media.type.value == 'video' %}▶{% elseif media.type.value == 'soundtrack' %}♫{% else %}↗{% endif %}</span>{{ media.label }}</a>
-                                    </div>
-                                {% else %}
-                                    <div class="media-badges"><a class="badge" href="{{ media.url }}"><span class="badge-icon">{% if media.type.value == 'video' %}▶{% elseif media.type.value == 'soundtrack' %}♫{% else %}↗{% endif %}</span>{{ media.label }}</a></div>
-                                {% endif %}
-                            {% endfor %}
-                        </aside>
-                    {% endif %}
                 </div>
             </div>
         </article>

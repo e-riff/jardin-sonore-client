@@ -96,8 +96,8 @@ final class SessionTemplateRegressionTest extends TestCase
 
         self::assertIsString($template);
         self::assertStringNotContainsString('.sequence { margin: 0 0 6mm; page-break-inside: avoid; }', $template);
-        self::assertStringContainsString('.sequence-layout { display: table; width: 100%; }', $template);
-        self::assertStringContainsString('.media-rail { display: table-cell;', $template);
+        self::assertStringContainsString('.sequence-layout { display: block; }', $template);
+        self::assertStringContainsString('.sequence-layout--with-media .media-rail { float: right;', $template);
         self::assertStringContainsString('page-break-after: avoid;', $template);
     }
 
