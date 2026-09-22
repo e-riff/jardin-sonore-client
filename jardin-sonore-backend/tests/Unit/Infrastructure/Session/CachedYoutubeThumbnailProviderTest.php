@@ -119,6 +119,27 @@ final class CachedYoutubeThumbnailProviderTest extends TestCase
         self::assertSame($newThumbnailBytes, file_get_contents($this->cacheDirectory . '/dQw4w9WgXcQ.jpg'));
     }
 
+    public function testDownloadsThumbnailForYoutubeShortUrl(): void
+    {
+        $thumbnailBytes = "\xFF\xD8\xFF\xE0short-thumbnail";
+        $downloader = new class($thumbnailBytes) implements YoutubeThumbnailDownloaderInterface {
+            public function __construct(private readonly string $thumbnailBytes)
+            {
+            }
+
+            public function download(string $youtubeVideoId): ?string
+            {
+                return 'dQw4w9WgXcQ' === $youtubeVideoId ? $this->thumbnailBytes : null;
+            }
+        };
+        $thumbnailProvider = new CachedYoutubeThumbnailProvider($this->cacheDirectory, $downloader);
+
+        self::assertSame(
+            'data:image/jpeg;base64,' . base64_encode($thumbnailBytes),
+            $thumbnailProvider->getThumbnailDataUri('https://www.youtube.com/shorts/dQw4w9WgXcQ'),
+        );
+    }
+
     public function testRejectsUrlsOutsideTheStrictYoutubeFormats(): void
     {
         $downloader = new class implements YoutubeThumbnailDownloaderInterface {
@@ -132,6 +153,6 @@ final class CachedYoutubeThumbnailProviderTest extends TestCase
         self::assertNull($thumbnailProvider->getThumbnailDataUri('https://youtube.example/watch?v=dQw4w9WgXcQ'));
         self::assertNull($thumbnailProvider->getThumbnailDataUri('http://www.youtube.com/watch?v=dQw4w9WgXcQ'));
         self::assertNull($thumbnailProvider->getThumbnailDataUri('https://www.youtube.com/watch?v=invalid'));
-        self::assertNull($thumbnailProvider->getThumbnailDataUri('https://www.youtube.com/shorts/dQw4w9WgXcQ'));
+        self::assertNull($thumbnailProvider->getThumbnailDataUri('https://www.youtube.com/shorts/invalid'));
     }
 }
