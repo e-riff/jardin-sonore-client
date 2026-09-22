@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Session;
 
 use App\Domain\Repository\InstrumentRepositoryInterface;
+use App\Domain\Repository\MediaResourceRepositoryInterface;
 use App\Domain\Repository\RepertoireItemRepositoryInterface;
 use App\Domain\Repository\SessionRecommendationRepositoryInterface;
 use App\Domain\Repository\SessionSummaryRepositoryInterface;
@@ -17,6 +18,7 @@ final readonly class GetSessionSummary
         private RepertoireItemRepositoryInterface $repertoireItemRepository,
         private InstrumentRepositoryInterface $instrumentRepository,
         private SessionRecommendationRepositoryInterface $sessionRecommendationRepository,
+        private MediaResourceRepositoryInterface $mediaResourceRepository,
     ) {
     }
 
@@ -29,6 +31,7 @@ final readonly class GetSessionSummary
             $this->repertoireItemRepository,
             $this->instrumentRepository,
             $this->sessionRecommendationRepository,
+            $this->mediaResourceRepository,
         );
     }
 }

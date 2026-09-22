@@ -92,9 +92,10 @@
                         </details>
                     {% endif %}
 
-                    {% if sequence.media is not empty %}
+                    {% set documentMedia = sequence.documentMedia is empty ? sequence.media : sequence.documentMedia %}
+                    {% if documentMedia is not empty %}
                         <div class="session-document__media">
-                            {% for media in sequence.media %}
+                            {% for media in documentMedia %}
                                 {% if media.displayedOnSession %}
                                     {% set youtubeVideoId = media.featured
                                         ? media.url|replace({

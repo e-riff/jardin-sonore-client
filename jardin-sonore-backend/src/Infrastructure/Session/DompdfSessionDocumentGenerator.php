@@ -10,6 +10,7 @@ use App\Application\Session\SessionSummaryView;
 use App\Application\Session\YoutubeThumbnailProviderInterface;
 use App\Domain\Model\Session\SessionSummary;
 use App\Domain\Repository\InstrumentRepositoryInterface;
+use App\Domain\Repository\MediaResourceRepositoryInterface;
 use App\Domain\Repository\RepertoireItemRepositoryInterface;
 use App\Domain\Repository\SessionRecommendationRepositoryInterface;
 use Dompdf\Dompdf;
@@ -25,6 +26,7 @@ final readonly class DompdfSessionDocumentGenerator implements SessionDocumentGe
         private RepertoireItemRepositoryInterface $repertoireItemRepository,
         private InstrumentRepositoryInterface $instrumentRepository,
         private SessionRecommendationRepositoryInterface $sessionRecommendationRepository,
+        private MediaResourceRepositoryInterface $mediaResourceRepository,
         private YoutubeThumbnailProviderInterface $youtubeThumbnailProvider,
         #[Autowire('%kernel.project_dir%/var/session-documents')]
         private string $sessionDocumentDirectory,
@@ -44,6 +46,7 @@ final readonly class DompdfSessionDocumentGenerator implements SessionDocumentGe
             $this->repertoireItemRepository,
             $this->instrumentRepository,
             $this->sessionRecommendationRepository,
+            $this->mediaResourceRepository,
         );
         $sessionDocumentView = SessionDocumentView::fromSessionSummaryView($sessionSummaryView, $this->youtubeThumbnailProvider);
         $dompdf = new Dompdf($options);

@@ -7,6 +7,7 @@ namespace App\Tests\Unit\Application\Session;
 use App\Application\Session\SessionSequenceView;
 use App\Domain\Model\ContentCatalog\Instrument;
 use App\Domain\Model\Session\MediaResourceType;
+use App\Domain\Model\Session\MediaResource;
 use App\Domain\Model\Session\RepertoireBlock;
 use App\Domain\Model\Session\RepertoireBlockKind;
 use App\Domain\Model\Session\RepertoireItem;
@@ -16,11 +17,71 @@ use App\Domain\Model\Session\SessionSequenceMedia;
 use App\Domain\Model\Session\SessionSequenceSourceKind;
 use App\Domain\Model\Session\SessionSequenceType;
 use App\Domain\Repository\InstrumentRepositoryInterface;
+use App\Domain\Repository\MediaResourceRepositoryInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Uid\Uuid;
 
 final class SessionSequenceViewTest extends TestCase
 {
+    public function testRepertoireSourceExposesItsLinkedMediaInTheDocument(): void
+    {
+        $youtubeMedia = new MediaResource(
+            type: MediaResourceType::VIDEO,
+            title: 'Le réveil du dragon',
+            primaryUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        );
+        $repertoireItem = new RepertoireItem(
+            type: RepertoireItemType::NURSERY_RHYME,
+            title: 'Le réveil du dragon',
+            linkedMediaUuids: [$youtubeMedia->getUuid()->toRfc4122()],
+        );
+        $sessionSequence = new SessionSequence(
+            uuid: Uuid::v4(),
+            type: SessionSequenceType::NURSERY_RHYME,
+            title: 'Le réveil du dragon',
+            subtitle: null,
+            body: '',
+            lyrics: null,
+            gestures: null,
+            notes: null,
+            primaryUrl: null,
+            secondaryUrl: null,
+            imageUrl: null,
+            showLyricsByDefault: false,
+            sourceUuid: $repertoireItem->getUuid(),
+            sourceKind: SessionSequenceSourceKind::REPERTOIRE_ITEM,
+        );
+        $mediaResourceRepository = new class($youtubeMedia) implements MediaResourceRepositoryInterface {
+            public function __construct(private MediaResource $youtubeMedia)
+            {
+            }
+
+            public function findByUuid(Uuid $uuid): ?MediaResource
+            {
+                return $this->youtubeMedia->getUuid()->equals($uuid) ? $this->youtubeMedia : null;
+            }
+
+            public function search(?string $query = null, ?MediaResourceType $mediaResourceType = null, bool $activeOnly = false): array
+            {
+                return [$this->youtubeMedia];
+            }
+
+            public function save(MediaResource $mediaResource): void
+            {
+            }
+
+            public function delete(MediaResource $mediaResource): void
+            {
+            }
+        };
+
+        $sessionSequenceView = SessionSequenceView::fromDomain($sessionSequence, $repertoireItem, mediaResourceRepository: $mediaResourceRepository);
+
+        self::assertCount(1, $sessionSequenceView->documentMedia);
+        self::assertSame($youtubeMedia->getPrimaryUrl(), $sessionSequenceView->documentMedia[0]->url);
+        self::assertTrue($sessionSequenceView->documentMedia[0]->featured);
+    }
+
     public function testRepertoireSourceSuppliesCurrentPublicContentWhileKeepingSessionInstructions(): void
     {
         $repertoireItem = new RepertoireItem(

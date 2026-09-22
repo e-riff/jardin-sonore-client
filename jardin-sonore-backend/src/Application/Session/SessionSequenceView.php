@@ -10,6 +10,7 @@ use App\Domain\Model\Session\SessionSequenceMedia;
 use App\Domain\Model\Session\SessionSequenceSourceKind;
 use App\Domain\Model\Session\SessionSequenceType;
 use App\Domain\Repository\InstrumentRepositoryInterface;
+use App\Domain\Repository\MediaResourceRepositoryInterface;
 use Symfony\Component\Uid\Uuid;
 
 final readonly class SessionSequenceView
@@ -19,6 +20,7 @@ final readonly class SessionSequenceView
      * @param list<string>               $instrumentNames
      * @param list<SessionSequenceMedia> $media
      * @param list<SessionSequenceMedia> $composerMedia
+     * @param list<SessionSequenceMedia> $documentMedia
      * @param list<RepertoireBlockView>  $contentBlocks
      */
     public function __construct(
@@ -42,6 +44,7 @@ final readonly class SessionSequenceView
         public array $instrumentNames,
         public array $media,
         public array $composerMedia,
+        public array $documentMedia = [],
         public ?string $generalInstructions = null,
         public array $contentBlocks = [],
     ) {
@@ -51,6 +54,7 @@ final readonly class SessionSequenceView
         SessionSequence $sessionSequence,
         ?RepertoireItem $repertoireItem = null,
         ?InstrumentRepositoryInterface $instrumentRepository = null,
+        ?MediaResourceRepositoryInterface $mediaResourceRepository = null,
     ): self {
         $media = $sessionSequence->getMedia();
         $featuredMedia = current(array_filter($media, static fn (SessionSequenceMedia $sessionSequenceMedia): bool => $sessionSequenceMedia->featured));
@@ -59,6 +63,29 @@ final readonly class SessionSequenceView
             && SessionSequenceSourceKind::REPERTOIRE_ITEM === $sessionSequence->sourceKind
             && null !== $sessionSequence->sourceUuid
             && $sessionSequence->sourceUuid->equals($repertoireItem->getUuid());
+        $linkedMedia = [];
+
+        if ($isSynchronizedRepertoireItem && null !== $mediaResourceRepository) {
+            foreach ($repertoireItem->getLinkedMediaUuids() as $linkedMediaUuid) {
+                if (!Uuid::isValid($linkedMediaUuid)) {
+                    continue;
+                }
+
+                $mediaResource = $mediaResourceRepository->findByUuid(Uuid::fromString($linkedMediaUuid));
+                if (null === $mediaResource || !$mediaResource->isActive()) {
+                    continue;
+                }
+
+                $linkedMedia[] = new SessionSequenceMedia(
+                    label: $mediaResource->getTitle(),
+                    type: $mediaResource->getType(),
+                    url: $mediaResource->getPrimaryUrl(),
+                    imageUrl: $mediaResource->getImageUrl(),
+                    featured: [] === $media && [] === $linkedMedia,
+                    displayOnSession: true,
+                );
+            }
+        }
 
         return new self(
             uuid: $sessionSequence->uuid,
@@ -91,6 +118,7 @@ final readonly class SessionSequenceView
                     $media,
                     static fn (SessionSequenceMedia $sessionSequenceMedia): bool => $sessionSequenceMedia->isDisplayedOnSession(),
                 )),
+            documentMedia: array_merge($linkedMedia, $media),
             generalInstructions: $isSynchronizedRepertoireItem ? $repertoireItem->getGeneralInstructions() : null,
             contentBlocks: $isSynchronizedRepertoireItem
                 ? array_map(RepertoireBlockView::fromDomain(...), $repertoireItem->getContentBlocks())
