@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import {useActionState, useEffect} from "react";
+import {useActionState, useEffect, useState} from "react";
 import {useFormStatus} from "react-dom";
 import {useRouter} from "next/navigation";
 import {updatePortalProfileAction, type PortalProfileFormState} from "@/app/portail/actions";
@@ -12,6 +12,7 @@ import type {Dictionary} from "@/i18n/types";
 type AccountContent = Dictionary["portal"]["account"];
 
 const initialState: PortalProfileFormState = {status: "idle"};
+const MAX_AVATAR_SIZE_BYTES = 2_000_000;
 
 function ProfileSubmitButton({content}: {content: AccountContent}): React.JSX.Element {
     const {pending} = useFormStatus();
@@ -21,6 +22,7 @@ function ProfileSubmitButton({content}: {content: AccountContent}): React.JSX.El
 
 export default function PortalProfileForm({account, content}: {account: PortalAccount; content: AccountContent}): React.JSX.Element {
     const [state, formAction] = useActionState(updatePortalProfileAction, initialState);
+    const [avatarError, setAvatarError] = useState<string | null>(null);
     const router = useRouter();
     const {notify} = usePortalToast();
 
@@ -29,10 +31,21 @@ export default function PortalProfileForm({account, content}: {account: PortalAc
             notify(content.saved, "success");
             router.refresh();
         }
-        if (state.status === "error") notify(content.error, "error");
+        if (state.status === "error" && state.field !== "avatar") notify(content.error, "error");
     }, [content.error, content.saved, notify, router, state]);
 
-    return <form action={formAction} className="portal-content-sheet mt-8 grid gap-5">
+    const displayedAvatarError = avatarError ?? (state.field === "avatar" ? content.photoInvalid : null);
+
+    const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+        const avatar = event.currentTarget.files?.item(0);
+        setAvatarError(avatar && avatar.size > MAX_AVATAR_SIZE_BYTES ? content.photoTooLarge : null);
+    };
+
+    const preventInvalidAvatarSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
+        if (avatarError) event.preventDefault();
+    };
+
+    return <form action={formAction} className="portal-content-sheet mt-8 grid gap-5" onSubmit={preventInvalidAvatarSubmit}>
         <label className="grid gap-2 text-sm font-semibold">
             <span>{content.emailLabel}</span>
             <input className="rounded-lg border border-outline-variant bg-surface-container-low px-4 py-3 text-on-surface-variant" defaultValue={account.email} readOnly />
@@ -44,8 +57,9 @@ export default function PortalProfileForm({account, content}: {account: PortalAc
         {account.avatarPath ? <div className="grid gap-2 text-sm font-semibold"><span>{content.currentPhoto}</span><Image alt={content.currentPhotoAlt} className="h-16 w-16 rounded-full border border-outline-variant object-cover" height={64} src="/portail/avatar" unoptimized width={64} /></div> : null}
         <label className="grid gap-2 text-sm font-semibold">
             <span>{content.photoLabel} <span className="font-normal text-on-surface-variant">({content.optional})</span></span>
-            <input accept="image/jpeg,image/png,image/webp" className="block w-full text-sm text-on-surface-variant file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:font-semibold file:text-primary" name="avatar" type="file" />
+            <input accept="image/jpeg,image/png,image/webp" aria-describedby={displayedAvatarError ? "portal-avatar-error" : undefined} aria-invalid={Boolean(displayedAvatarError)} className="block w-full text-sm text-on-surface-variant file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:font-semibold file:text-primary" name="avatar" onChange={handleAvatarChange} type="file" />
             <span className="text-xs font-normal text-on-surface-variant">{content.photoHint}</span>
+            {displayedAvatarError ? <span className="text-sm font-normal text-primary" id="portal-avatar-error" role="alert">{displayedAvatarError}</span> : null}
         </label>
         <label className="grid gap-2 text-sm font-semibold"><span>{content.firstNameLabel}</span><input className="rounded-lg border border-outline-variant px-4 py-3" defaultValue={account.firstName ?? ""} name="firstName" autoComplete="given-name" /></label>
         <label className="grid gap-2 text-sm font-semibold"><span>{content.lastNameLabel}</span><input className="rounded-lg border border-outline-variant px-4 py-3" defaultValue={account.lastName ?? ""} name="lastName" autoComplete="family-name" /></label>

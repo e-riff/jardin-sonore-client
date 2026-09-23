@@ -38,7 +38,7 @@ export async function requestPortalPasswordResetAction(formData: FormData): Prom
     redirect(`${portalRoutes.passwordReset}?sent=1`);
 }
 
-export interface PortalProfileFormState { status: "idle" | "success" | "error"; }
+export interface PortalProfileFormState { status: "idle" | "success" | "error"; field?: "avatar"; }
 
 export async function updatePortalProfileAction(_previousState: PortalProfileFormState, formData: FormData): Promise<PortalProfileFormState> {
     const token = await getPortalAccessToken();
@@ -48,8 +48,9 @@ export async function updatePortalProfileAction(_previousState: PortalProfileFor
         const portalApiClient = await PortalApiClient.fromCurrentRequest(token);
         const avatar = formData.get("avatar");
         if (avatar && typeof avatar !== "string" && avatar.size > 0) {
+            if (avatar.size > 2_000_000) return {status: "error", field: "avatar"};
             const avatarResult = await portalApiClient.updateAvatar(avatar);
-            if (!avatarResult.response.ok) return {status: "error"};
+            if (!avatarResult.response.ok) return {status: "error", field: "avatar"};
         }
         const result = await portalApiClient.updateProfile({
             firstName: typeof formData.get("firstName") === "string" ? String(formData.get("firstName")).trim() : "",
