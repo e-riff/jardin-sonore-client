@@ -6,16 +6,17 @@ import Image from "next/image";
 import Link from "next/link";
 import {usePathname} from "next/navigation";
 import BrandLogo from "@/components/BrandLogo";
-import {portalAccountDisplayName, type PortalAccount} from "@/lib/portal/types";
+import {portalAccountDisplayName, portalAvatarUrl} from "@/lib/portal/types";
 import {portalRoutes} from "@/lib/portal/routes";
 import {useTranslations} from "@/i18n/translations-provider";
+import {usePortalAccount} from "@/components/portal/PortalAccountProvider";
 
 interface PortalAccountHeaderProps {
-    account: PortalAccount;
     onLogout: () => Promise<void>;
 }
 
-export default function PortalAccountHeader({account, onLogout}: PortalAccountHeaderProps): JSX.Element {
+export default function PortalAccountHeader({onLogout}: PortalAccountHeaderProps): JSX.Element {
+    const {account} = usePortalAccount();
     const content = useTranslations().portal.shell;
     const accountMenuRef = useRef<HTMLDetailsElement>(null);
     const pathname = usePathname();
@@ -64,7 +65,7 @@ export default function PortalAccountHeader({account, onLogout}: PortalAccountHe
                     <details className="group relative" ref={accountMenuRef}>
                     <summary aria-label={content.accountMenu} className="flex h-10 cursor-pointer list-none items-center gap-2 rounded-full border border-primary/25 bg-surface-container-low px-1.5 pr-3 text-primary" title={account.email}>
                         <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-container-lowest">
-                            {account.avatarPath ? <Image alt="" className="h-full w-full object-cover" height={28} src="/portail/avatar" unoptimized width={28} /> : accountInitials ? <span aria-hidden="true" className="text-[0.65rem] font-bold">{accountInitials}</span> : <UserCircleIcon aria-hidden="true" className="h-5 w-5" />}
+                            {account.avatarPath ? <Image alt="" className="h-full w-full object-cover" height={28} src={portalAvatarUrl(account.avatarPath)} unoptimized width={28} /> : accountInitials ? <span aria-hidden="true" className="text-[0.65rem] font-bold">{accountInitials}</span> : <UserCircleIcon aria-hidden="true" className="h-5 w-5" />}
                         </span>
                         <span className="hidden max-w-44 truncate text-sm font-semibold text-on-surface-variant md:block">{accountDisplayName}</span>
                     </summary>
@@ -79,7 +80,7 @@ export default function PortalAccountHeader({account, onLogout}: PortalAccountHe
                 </div>
                 <div className="flex items-center gap-2 lg:hidden">
                     <Link aria-label={content.profileLink} className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-primary/25 bg-surface-container-low text-primary" href="/portail/compte" onClick={closeMobileMenu} title={accountDisplayName}>
-                        {account.avatarPath ? <Image alt="" className="h-full w-full object-cover" height={40} src="/portail/avatar" unoptimized width={40} /> : accountInitials ? <span aria-hidden="true" className="text-xs font-bold">{accountInitials}</span> : <UserCircleIcon aria-hidden="true" className="h-5 w-5" />}
+                        {account.avatarPath ? <Image alt="" className="h-full w-full object-cover" height={40} src={portalAvatarUrl(account.avatarPath)} unoptimized width={40} /> : accountInitials ? <span aria-hidden="true" className="text-xs font-bold">{accountInitials}</span> : <UserCircleIcon aria-hidden="true" className="h-5 w-5" />}
                     </Link>
                     <button aria-controls="portal-mobile-menu" aria-expanded={mobileMenuOpen} aria-label={mobileMenuOpen ? "Fermer le menu" : content.navigationLabel} className="rounded-full p-2 text-primary transition hover:bg-primary/10" onClick={() => setMobileMenuOpen((isOpen) => !isOpen)} type="button">
                         {mobileMenuOpen ? <XMarkIcon aria-hidden="true" className="h-6 w-6" /> : <Bars3Icon aria-hidden="true" className="h-6 w-6" />}

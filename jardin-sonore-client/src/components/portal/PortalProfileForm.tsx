@@ -3,11 +3,11 @@
 import Image from "next/image";
 import {useActionState, useEffect, useState} from "react";
 import {useFormStatus} from "react-dom";
-import {useRouter} from "next/navigation";
 import {updatePortalProfileAction, type PortalProfileFormState} from "@/app/portail/actions";
 import {usePortalToast} from "@/components/portal/PortalToastProvider";
-import type {PortalAccount} from "@/lib/portal/types";
+import {portalAvatarUrl} from "@/lib/portal/types";
 import type {Dictionary} from "@/i18n/types";
+import {usePortalAccount} from "@/components/portal/PortalAccountProvider";
 
 type AccountContent = Dictionary["portal"]["account"];
 
@@ -20,19 +20,19 @@ function ProfileSubmitButton({content}: {content: AccountContent}): React.JSX.El
     return <button className="rounded-lg bg-primary px-5 py-3 font-semibold text-white disabled:cursor-wait disabled:opacity-60" disabled={pending} type="submit">{pending ? content.saving : content.submit}</button>;
 }
 
-export default function PortalProfileForm({account, content}: {account: PortalAccount; content: AccountContent}): React.JSX.Element {
+export default function PortalProfileForm({content}: {content: AccountContent}): React.JSX.Element {
     const [state, formAction] = useActionState(updatePortalProfileAction, initialState);
     const [avatarError, setAvatarError] = useState<string | null>(null);
-    const router = useRouter();
     const {notify} = usePortalToast();
+    const {account, setAccount} = usePortalAccount();
 
     useEffect(() => {
         if (state.status === "success") {
+            if (state.account) setAccount(state.account);
             notify(content.saved, "success");
-            router.refresh();
         }
         if (state.status === "error" && state.field !== "avatar") notify(content.error, "error");
-    }, [content.error, content.saved, notify, router, state]);
+    }, [content.error, content.saved, notify, setAccount, state]);
 
     const displayedAvatarError = avatarError ?? (state.field === "avatar" ? content.photoInvalid : null);
 
@@ -54,7 +54,7 @@ export default function PortalProfileForm({account, content}: {account: PortalAc
             <span>{account.organizations.length > 1 ? content.organizationPlural : content.organizationSingle}</span>
             <input className="rounded-lg border border-outline-variant bg-surface-container-low px-4 py-3 text-on-surface-variant" defaultValue={account.organizations.map((organization) => organization.name).join(", ")} readOnly />
         </label>
-        {account.avatarPath ? <div className="grid gap-2 text-sm font-semibold"><span>{content.currentPhoto}</span><Image alt={content.currentPhotoAlt} className="h-16 w-16 rounded-full border border-outline-variant object-cover" height={64} src="/portail/avatar" unoptimized width={64} /></div> : null}
+        {account.avatarPath ? <div className="grid gap-2 text-sm font-semibold"><span>{content.currentPhoto}</span><Image alt={content.currentPhotoAlt} className="h-16 w-16 rounded-full border border-outline-variant object-cover" height={64} src={portalAvatarUrl(account.avatarPath)} unoptimized width={64} /></div> : null}
         <label className="grid gap-2 text-sm font-semibold">
             <span>{content.photoLabel} <span className="font-normal text-on-surface-variant">({content.optional})</span></span>
             <input accept="image/jpeg,image/png,image/webp" aria-describedby={displayedAvatarError ? "portal-avatar-error" : undefined} aria-invalid={Boolean(displayedAvatarError)} className="block w-full text-sm text-on-surface-variant file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:font-semibold file:text-primary" name="avatar" onChange={handleAvatarChange} type="file" />

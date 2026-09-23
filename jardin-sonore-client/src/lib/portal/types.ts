@@ -19,6 +19,8 @@ export const portalAccountDisplayName = (account: PortalAccount): string => {
     return account.email;
 };
 
+export const portalAvatarUrl = (avatarPath: string): string => `/portail/avatar?v=${encodeURIComponent(avatarPath)}`;
+
 export interface PortalProfileData { firstName: string; lastName: string; newSessionNotificationsEnabled: boolean; }
 
 export interface PortalLoginData {

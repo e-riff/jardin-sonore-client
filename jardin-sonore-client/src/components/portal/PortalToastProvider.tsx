@@ -39,7 +39,7 @@ export function PortalToastProvider({children}: {children: ReactNode}): React.JS
 function PortalToastRegion({toasts, close}: {toasts: PortalToast[]; close: (id: number) => void}): React.JSX.Element {
     const content = useTranslations().portal.notifications;
 
-    return <div aria-live="polite" className="pointer-events-none fixed inset-x-4 bottom-5 z-50 flex flex-col items-center gap-3 sm:inset-x-auto sm:right-6 sm:items-end">
+    return <div aria-live="polite" className="pointer-events-none fixed inset-x-4 bottom-5 z-50 flex flex-col items-center gap-3 sm:inset-x-auto sm:right-6 sm:w-96 sm:items-end">
         {toasts.map((toast) => <div className={`pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border px-4 py-3 shadow-lg ${toneClasses[toast.tone]}`} key={toast.id} role={toast.tone === "error" ? "alert" : "status"}>
             <p className="flex-1 text-sm font-semibold leading-5">{toast.message}</p>
             <button aria-label={content.close} className="-mr-1 -mt-1 grid h-7 w-7 shrink-0 place-items-center rounded-full text-lg leading-none transition hover:bg-black/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current" onClick={() => close(toast.id)} type="button">×</button>
