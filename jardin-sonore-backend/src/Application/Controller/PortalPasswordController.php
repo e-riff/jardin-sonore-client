@@ -9,7 +9,6 @@ use App\Application\Portal\PortalPasswordTokenManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
 use Twig\Environment;
 
 final class PortalPasswordController extends AbstractController
@@ -18,7 +17,6 @@ final class PortalPasswordController extends AbstractController
     {
     }
 
-    #[Route('/portail/definir-mot-de-passe/{token}', name: 'portal_password_set', methods: ['GET', 'POST'])]
     public function set(Request $request, string $token): Response
     {
         $userPasswordTokenEntity = $this->portalPasswordTokenManager->findUsable($token);

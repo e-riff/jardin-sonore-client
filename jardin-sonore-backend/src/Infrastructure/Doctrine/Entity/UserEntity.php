@@ -25,9 +25,14 @@ class UserEntity implements PasswordAuthenticatedUserInterface, UserInterface
     public const string NEW_ACCESS_CONTACT_PERSON = 'person';
 
     private string $email = '';
+    private ?string $firstName = null;
+    private ?string $lastName = null;
+    private ?string $avatarPath = null;
+    private bool $newSessionNotificationsEnabled = false;
     private ?string $password = null;
     private UserStatus $status = UserStatus::PENDING;
     private ?OrganizationEntity $organizationForNewAccess = null;
+    private ?string $organizationIdForNewAccess = null;
     private ?string $linkedEmailAddressForNewAccess = null;
     private string $newAccessContactType = self::NEW_ACCESS_CONTACT_ORGANIZATION;
     private ?string $newPersonFirstNameForNewAccess = null;
@@ -59,6 +64,61 @@ class UserEntity implements PasswordAuthenticatedUserInterface, UserInterface
         $this->email = mb_strtolower(trim($email));
 
         return $this;
+    }
+
+    public function getFirstName(): ?string
+    {
+        return $this->firstName;
+    }
+
+    public function setFirstName(?string $firstName): static
+    {
+        $this->firstName = self::nullableString($firstName);
+
+        return $this;
+    }
+
+    public function getLastName(): ?string
+    {
+        return $this->lastName;
+    }
+
+    public function setLastName(?string $lastName): static
+    {
+        $this->lastName = self::nullableString($lastName);
+
+        return $this;
+    }
+
+    public function getAvatarPath(): ?string
+    {
+        return $this->avatarPath;
+    }
+
+    public function setAvatarPath(?string $avatarPath): static
+    {
+        $this->avatarPath = self::nullableString($avatarPath);
+
+        return $this;
+    }
+
+    public function isNewSessionNotificationsEnabled(): bool
+    {
+        return $this->newSessionNotificationsEnabled;
+    }
+
+    public function setNewSessionNotificationsEnabled(bool $newSessionNotificationsEnabled): static
+    {
+        $this->newSessionNotificationsEnabled = $newSessionNotificationsEnabled;
+
+        return $this;
+    }
+
+    private static function nullableString(?string $value): ?string
+    {
+        $value = null === $value ? null : trim($value);
+
+        return null === $value || '' === $value ? null : $value;
     }
 
     public function getPassword(): string
@@ -96,6 +156,18 @@ class UserEntity implements PasswordAuthenticatedUserInterface, UserInterface
     public function setOrganizationForNewAccess(?OrganizationEntity $organizationEntity): static
     {
         $this->organizationForNewAccess = $organizationEntity;
+
+        return $this;
+    }
+
+    public function getOrganizationIdForNewAccess(): ?string
+    {
+        return $this->organizationIdForNewAccess;
+    }
+
+    public function setOrganizationIdForNewAccess(?string $organizationIdForNewAccess): static
+    {
+        $this->organizationIdForNewAccess = $organizationIdForNewAccess;
 
         return $this;
     }
@@ -167,6 +239,13 @@ class UserEntity implements PasswordAuthenticatedUserInterface, UserInterface
     public function getOrganizationAccesses(): Collection
     {
         return $this->organizationAccesses;
+    }
+
+    public function getOrganizationAccessSummary(): string
+    {
+        return implode(', ', $this->organizationAccesses->map(
+            static fn (UserOrganizationAccessEntity $userOrganizationAccessEntity): string => (string) $userOrganizationAccessEntity,
+        )->toArray());
     }
 
     public function addOrganizationAccess(UserOrganizationAccessEntity $userOrganizationAccessEntity): static

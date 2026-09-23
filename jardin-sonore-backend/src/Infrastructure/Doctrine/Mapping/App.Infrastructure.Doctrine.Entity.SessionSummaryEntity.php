@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use App\Domain\Model\Session\SessionDocumentStatus;
-use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
+use App\Infrastructure\Doctrine\Entity\SessionSummaryOrganizationEntity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Symfony\Bridge\Doctrine\Types\UuidType;
@@ -44,22 +44,12 @@ return static function (ClassMetadata $metadata): void {
         'type' => Types::DATE_IMMUTABLE,
     ]);
 
-    $metadata->mapManyToMany([
-        'fieldName' => 'organizations',
-        'targetEntity' => OrganizationEntity::class,
-        'joinTable' => [
-            'name' => 'session_summary_organization',
-            'joinColumns' => [[
-                'name' => 'session_summary_id',
-                'referencedColumnName' => 'id',
-                'onDelete' => 'CASCADE',
-            ]],
-            'inverseJoinColumns' => [[
-                'name' => 'organization_id',
-                'referencedColumnName' => 'id',
-                'onDelete' => 'CASCADE',
-            ]],
-        ],
+    $metadata->mapOneToMany([
+        'fieldName' => 'organizationShares',
+        'targetEntity' => SessionSummaryOrganizationEntity::class,
+        'mappedBy' => 'sessionSummary',
+        'cascade' => ['persist', 'remove'],
+        'orphanRemoval' => true,
     ]);
 
     $metadata->mapField([

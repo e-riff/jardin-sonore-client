@@ -18,8 +18,11 @@
     </section>
 
     <div class="session-document-status">
-        <span class="internal-badge internal-badge--{{ session.documentStatus.value == 'ready' ? 'success' : session.documentStatus.value == 'failed' ? 'danger' : 'warning' }}">{{ ('sessions.summary.document.' ~ session.documentStatus.value)|trans({}, 'sessions') }}</span>
-        {% if documentAvailable %}<a href="{{ path('session_document_download', { uuid: session.uuid }) }}">{{ 'sessions.summary.document.download'|trans({}, 'sessions') }}</a>{% endif %}
+        {% if documentAvailable %}<a class="internal-button internal-button--compact" href="{{ path('session_document_download', { uuid: session.uuid }) }}">{{ 'sessions.summary.document.download'|trans({}, 'sessions') }}</a>{% endif %}
+        <form method="post" action="{{ path('session_document_regenerate', { uuid: session.uuid }) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('session_document_regenerate_' ~ session.uuid) }}">
+            <button class="internal-button internal-button--secondary internal-button--compact" type="submit">{{ 'sessions.summary.document.regenerate'|trans({}, 'sessions') }}</button>
+        </form>
     </div>
 
     <section id="session-summary-edit-form" class="internal-card internal-card--form session-summary-edit-form">

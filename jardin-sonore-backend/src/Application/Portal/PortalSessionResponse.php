@@ -19,6 +19,7 @@ final readonly class PortalSessionResponse
         public string $uuid,
         public string $title,
         public string $sessionDate,
+        public ?string $sharedAt,
         public array $organizations,
         public ?string $theme,
         public ?string $generalNotes,
@@ -36,10 +37,16 @@ final readonly class PortalSessionResponse
     {
         $authorizedOrganizationUuids = array_flip(array_map(static fn (OrganizationEntity $organizationEntity): string => $organizationEntity->getUuid()->toRfc4122(), $authorizedOrganizationEntities));
         $organizations = [];
-        foreach ($sessionSummaryEntity->getOrganizations() as $organizationEntity) {
+        $sharedAt = null;
+        foreach ($sessionSummaryEntity->getOrganizationShares() as $organizationShare) {
+            $organizationEntity = $organizationShare->getOrganization();
             $uuid = $organizationEntity->getUuid()->toRfc4122();
             if (isset($authorizedOrganizationUuids[$uuid])) {
                 $organizations[] = ['uuid' => $uuid, 'name' => $organizationEntity->getName()];
+                $organizationSharedAt = $organizationShare->getSharedAt()->format('Y-m-d');
+                if (null === $sharedAt || $organizationSharedAt > $sharedAt) {
+                    $sharedAt = $organizationSharedAt;
+                }
             }
         }
         usort($organizations, static fn (array $left, array $right): int => $left['name'] <=> $right['name']);
@@ -48,6 +55,7 @@ final readonly class PortalSessionResponse
             $sessionSummaryEntity->getUuid()->toRfc4122(),
             $sessionSummaryEntity->getTitle(),
             $sessionSummaryEntity->getSessionDate()->format('Y-m-d'),
+            $sharedAt,
             $organizations,
             $sessionSummaryEntity->getTheme(),
             $sessionSummaryEntity->getGeneralNotes(),
@@ -67,6 +75,7 @@ final readonly class PortalSessionResponse
             'uuid' => $this->uuid,
             'title' => $this->title,
             'sessionDate' => $this->sessionDate,
+            'sharedAt' => $this->sharedAt,
             'organizations' => $this->organizations,
             'theme' => $this->theme,
             'documentStatus' => $this->documentStatus,
