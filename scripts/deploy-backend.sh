@@ -18,6 +18,7 @@ fi
 : "${CPANEL_BACKEND_PATH:?Missing CPANEL_BACKEND_PATH. Set it in .env.deploy.local or in the shell environment.}"
 : "${CPANEL_PHP_BIN:=php}"
 : "${CPANEL_COMPOSER_BIN:=composer}"
+: "${CPANEL_PORTAL_PUBLIC_URL:=${CPANEL_PUBLIC_SITE_URL:-https://jardin-sonore.fr}}"
 : "${CPANEL_BACKEND_RUN_MIGRATIONS:=1}"
 : "${CPANEL_BACKEND_STOP_MESSENGER_WORKERS:=1}"
 
@@ -51,6 +52,7 @@ rsync -az --delete \
 REMOTE_COMMANDS=(
   "set -euo pipefail"
   "cd '$CPANEL_BACKEND_PATH'"
+  "if grep -q '^PORTAL_PUBLIC_URL=' .env.local; then sed -i 's|^PORTAL_PUBLIC_URL=.*|PORTAL_PUBLIC_URL=$CPANEL_PORTAL_PUBLIC_URL|' .env.local; else printf '%s\\n' 'PORTAL_PUBLIC_URL=$CPANEL_PORTAL_PUBLIC_URL' >> .env.local; fi"
   "mkdir -p '$CPANEL_BACKEND_PATH/public/uploads/media/resources' '$CPANEL_BACKEND_PATH/public/uploads/media/images' '$CPANEL_BACKEND_PATH/public/uploads/session/recommendations' '$CPANEL_BACKEND_PATH/public/uploads/mailing/banners' '$CPANEL_BACKEND_PATH/public/uploads/mailing/recommendations'"
   "chmod -R ug+rwX '$CPANEL_BACKEND_PATH/public/uploads'"
   'if [[ -d var/cache/prod ]]; then mv var/cache/prod "var/cache/prod.previous.$(date +%s)"; fi'
