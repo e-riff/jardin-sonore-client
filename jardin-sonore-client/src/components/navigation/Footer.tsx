@@ -12,9 +12,9 @@ export default function Footer(): JSX.Element {
     const dictionary = useTranslations();
     const content = dictionary.footer;
     return (
-        <footer className="bg-surface-container-high px-6 py-12 text-center sm:px-margin lg:text-left">
+        <footer className="bg-surface-container-high px-6 py-9 text-center sm:px-margin lg:py-8 lg:text-left">
             <div className="mx-auto max-w-7xl">
-                <div className="grid gap-10 lg:grid-cols-[minmax(0,1.35fr)_auto_auto] lg:items-start lg:gap-16">
+                <div className="grid gap-8 lg:grid-cols-[minmax(0,1.35fr)_auto_auto] lg:items-start lg:gap-12">
                     <div className="mx-auto max-w-130 lg:mx-0">
                         <BrandLogo label={dictionary.brand.name} className="text-2xl font-semibold" colorized={false} />
                         <p className="mt-4 font-serif text-xl italic leading-8 text-on-surface-variant">
@@ -25,7 +25,7 @@ export default function Footer(): JSX.Element {
                         </p>
                     </div>
 
-                    <div className="flex flex-col items-center gap-6 lg:items-start">
+                    <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-start lg:gap-8">
                         <div role="group" aria-labelledby="footer-social-title">
                             <p className="mb-3 font-sans text-xs font-bold uppercase tracking-[0.18em] text-primary" id="footer-social-title">{content.socialTitle}</p>
                             <div className="flex justify-center gap-3 lg:justify-start" aria-label={content.socialAriaLabel}>
@@ -73,7 +73,7 @@ export default function Footer(): JSX.Element {
 
                     <nav className="hidden lg:block" aria-label={content.ariaLabel}>
                         <p className="mb-4 font-sans text-xs font-bold uppercase tracking-[0.18em] text-primary">{content.navigationTitle}</p>
-                        <div className="grid gap-3">
+                        <div className="grid grid-cols-2 gap-x-8 gap-y-3">
                             {content.links.map((link: LinkItem) => (
                                 <a className="font-sans text-sm font-semibold text-on-surface-variant transition hover:text-primary" href={link.href} key={link.label}>
                                     {link.label}
@@ -83,7 +83,7 @@ export default function Footer(): JSX.Element {
                     </nav>
                 </div>
 
-                <div className="mt-9 border-t border-outline-variant/30 pt-6 text-center">
+                <div className="mt-7 border-t border-outline-variant/30 pt-5 text-center">
                     <p className="text-sm leading-6 text-on-surface-variant/80">
                         © {getCurrentYear()} {content.copyrightHolder}. {content.copyrightDescription}
                     </p>

@@ -1,0 +1,7 @@
+import {getTranslations} from "@/i18n/server";
+import {loginPortalAction} from "@/app/portail/actions";
+
+export default async function PortalLoginPage(): Promise<React.JSX.Element> {
+    const content = (await getTranslations()).portal.login;
+    return <section className="portal-shell flex min-h-screen items-center justify-center px-4 py-16"><div className="w-full max-w-112 rounded-xl border border-outline-variant bg-white p-8 shadow-sm"><p className="portal-eyebrow">{content.eyebrow}</p><h1 className="font-serif text-3xl font-semibold">{content.title}</h1><p className="mt-3 text-sm leading-6 text-on-surface-variant">{content.description}</p><form action={loginPortalAction} className="mt-8 grid gap-5" name="portal-login"><label className="grid gap-2 text-sm font-semibold" htmlFor="portal-email"><span>{content.emailLabel}</span><input className="rounded-lg border border-outline-variant px-4 py-3" id="portal-email" name="email" type="email" autoComplete="username" required /></label><label className="grid gap-2 text-sm font-semibold" htmlFor="portal-password"><span>{content.passwordLabel}</span><input className="rounded-lg border border-outline-variant px-4 py-3" id="portal-password" name="password" type="password" autoComplete="current-password" required /></label><button className="rounded-lg bg-primary px-5 py-3 font-semibold text-white" type="submit">{content.submit}</button></form><a className="mt-6 inline-block text-sm font-semibold text-primary underline" href="/portail/reinitialiser-mot-de-passe">{content.resetLink}</a></div></section>;
+}

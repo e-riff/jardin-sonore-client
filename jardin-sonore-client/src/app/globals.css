@@ -72,6 +72,17 @@
     outline: 3px solid color-mix(in oklab, var(--color-primary) 82%, white);
     outline-offset: 4px;
   }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a[href] {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [role="button"][aria-disabled="true"] {
+    cursor: not-allowed;
+  }
 }
 
 @layer utilities {
@@ -100,6 +111,14 @@
 }
 
 @layer components {
+  .portal-shell { background: var(--color-background); color: var(--color-on-surface); font-family: var(--font-sans); min-height: 100vh; }
+  body:has(.portal-shell) > header,
+  body:has(.portal-shell) > footer { display: none; }
+  .portal-content-sheet { background: white; border: 1px solid rgb(219 193 189 / .55); border-radius: .75rem; box-shadow: 0 12px 28px -20px rgb(28 27 26 / .16); padding: clamp(1.25rem, 4vw, 3rem); }
+  .portal-document-panel { background: var(--color-surface-container-low); border: 1px solid rgb(219 193 189 / .7); border-radius: .5rem; padding: 1.5rem; }
+  .portal-eyebrow { color: var(--color-primary); font-size: .75rem; font-weight: 700; letter-spacing: .1em; margin-bottom: .4rem; text-transform: uppercase; }
+  .portal-document-link { background: var(--color-primary); border-radius: .5rem; color: white; display: inline-block; font-size: .875rem; font-weight: 700; margin-top: 1rem; padding: .7rem 1rem; }
+  .portal-document-link:hover { background: var(--color-primary-container); }
   form label:has(input:required) > span:first-child::after,
   form label:has(textarea:required) > span:first-child::after,
   form label:has(select:required) > span:first-child::after {

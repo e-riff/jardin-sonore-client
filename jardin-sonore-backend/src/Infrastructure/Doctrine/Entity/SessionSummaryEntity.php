@@ -20,8 +20,8 @@ class SessionSummaryEntity
 
     private DateTimeImmutable $sessionDate;
 
-    /** @var Collection<int, OrganizationEntity> */
-    private Collection $organizations;
+    /** @var Collection<int, SessionSummaryOrganizationEntity> */
+    private Collection $organizationShares;
 
     private ?string $theme = null;
 
@@ -57,7 +57,7 @@ class SessionSummaryEntity
     public function __construct()
     {
         $this->initializeUuid();
-        $this->organizations = new ArrayCollection();
+        $this->organizationShares = new ArrayCollection();
         $this->sessionDate = new DateTimeImmutable();
         $this->createdAt = new DateTimeImmutable();
         $this->updatedAt = new DateTimeImmutable();
@@ -90,20 +90,48 @@ class SessionSummaryEntity
     /** @return Collection<int, OrganizationEntity> */
     public function getOrganizations(): Collection
     {
-        return $this->organizations;
+        return new ArrayCollection($this->organizationShares->map(
+            static fn (SessionSummaryOrganizationEntity $organizationShare): OrganizationEntity => $organizationShare->getOrganization(),
+        )->toArray());
     }
 
     /** @param iterable<OrganizationEntity> $organizations */
     public function replaceOrganizations(iterable $organizations): static
     {
-        $this->organizations->clear();
+        $organizationEntities = [];
         foreach ($organizations as $organizationEntity) {
-            if (!$this->organizations->contains($organizationEntity)) {
-                $this->organizations->add($organizationEntity);
+            $organizationEntities[$this->organizationKey($organizationEntity)] = $organizationEntity;
+        }
+
+        foreach ($this->organizationShares->toArray() as $organizationShare) {
+            if (!isset($organizationEntities[$this->organizationKey($organizationShare->getOrganization())])) {
+                $this->organizationShares->removeElement($organizationShare);
+            }
+        }
+
+        foreach ($organizationEntities as $organizationKey => $organizationEntity) {
+            $alreadyShared = $this->organizationShares->exists(
+                fn (int $index, SessionSummaryOrganizationEntity $organizationShare): bool => $organizationKey === $this->organizationKey($organizationShare->getOrganization()),
+            );
+            if (!$alreadyShared) {
+                $this->organizationShares->add(new SessionSummaryOrganizationEntity($this, $organizationEntity));
             }
         }
 
         return $this;
+    }
+
+    /** @return Collection<int, SessionSummaryOrganizationEntity> */
+    public function getOrganizationShares(): Collection
+    {
+        return $this->organizationShares;
+    }
+
+    private function organizationKey(OrganizationEntity $organizationEntity): string
+    {
+        return null === $organizationEntity->getId()
+            ? 'object-' . spl_object_id($organizationEntity)
+            : 'id-' . $organizationEntity->getId();
     }
 
     public function getTheme(): ?string

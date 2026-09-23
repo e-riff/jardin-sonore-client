@@ -129,16 +129,21 @@ abstract class DirectoryEntryEntity
         foreach ($this->contactDetails?->getAddressContacts() ?? [] as $addressContactEntity) {
             $municipalityEntity = $addressContactEntity->getMunicipality();
 
-            if (null === $municipalityEntity) {
-                continue;
+            if (null !== $municipalityEntity) {
+                $postalCode = $municipalityEntity->getPostalCode();
+                $label = null !== $postalCode && '' !== $postalCode
+                    ? "{$postalCode} — {$municipalityEntity->getName()}"
+                    : $municipalityEntity->getName();
+
+                return $label;
             }
 
-            $postalCode = $municipalityEntity->getPostalCode();
-            $label = null !== $postalCode && '' !== $postalCode
-                ? "{$postalCode} — {$municipalityEntity->getName()}"
-                : $municipalityEntity->getName();
-
-            return $label;
+            $postalCode = $addressContactEntity->getPostalCode();
+            $city = $addressContactEntity->getCity();
+            $label = trim(implode(' — ', array_filter([$postalCode, $city])));
+            if ('' !== $label) {
+                return $label;
+            }
         }
 
         return '—';

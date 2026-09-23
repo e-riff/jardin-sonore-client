@@ -1,7 +1,8 @@
 'use client';
 
-import {Bars3Icon, XMarkIcon} from "@heroicons/react/24/outline";
+import {Bars3Icon, UserCircleIcon, XMarkIcon} from "@heroicons/react/24/outline";
 import {JSX, useEffect, useState} from "react";
+import Link from "next/link";
 import BrandLogo from "@/components/BrandLogo";
 import Button from "@/components/Button";
 import {useTranslations} from "@/i18n/translations-provider";
@@ -39,17 +40,25 @@ export default function Header(): JSX.Element {
         <header className={`fixed left-0 top-0 z-50 w-full border-b transition duration-300 ${scrolled ? "border-outline-variant/40 bg-background/88 py-2 backdrop-blur-xl" : "border-transparent bg-background/72 py-3 backdrop-blur-md"}`}>
             <nav className="mx-auto max-w-7xl px-6 sm:px-margin" aria-label={content.ariaLabel}>
                 <div className="flex items-center justify-between">
-                    <a href="#" aria-label={content.homeAriaLabel} onClick={() => setMenuOpen(false)}>
+                    <Link href="/" aria-label={content.homeAriaLabel} onClick={() => setMenuOpen(false)}>
                         <BrandLogo label={dictionary.brand.name} className="text-2xl font-semibold md:text-[1.7rem]" />
-                    </a>
+                    </Link>
 
                     <div className="hidden items-center gap-6 lg:flex xl:gap-8">
                         {content.navigation.map((item: LinkItem) => (
-                            <a className="font-sans text-sm font-semibold tracking-wider text-on-surface-variant transition hover:text-primary" href={item.href} key={item.href}>
+                            <a className="font-sans text-sm font-semibold tracking-wider text-on-surface-variant transition hover:text-primary" href={`/${item.href}`} key={item.href}>
                                 {item.label}
                             </a>
                         ))}
-                        <Button className="px-5 py-2 xl:px-6" href="#contact">{content.reserveCta}</Button>
+                        <Button className="px-5 py-2 xl:px-6" href="/#contact">{content.reserveCta}</Button>
+                        <Link
+                            aria-label={content.portalLink}
+                            className="rounded-full p-2 text-on-surface-variant transition hover:bg-primary/10 hover:text-primary"
+                            href="/portail/seances"
+                            title={content.portalLink}
+                        >
+                            <UserCircleIcon aria-hidden="true" className="h-[1.35rem] w-[1.35rem]" />
+                        </Link>
                     </div>
 
                     <button
@@ -68,20 +77,27 @@ export default function Header(): JSX.Element {
                     {content.navigation.map((item: LinkItem) => (
                         <a
                             className="rounded-xl px-4 py-3 font-sans text-sm font-semibold tracking-wider text-on-surface-variant transition hover:bg-primary/10 hover:text-primary"
-                            href={item.href}
+                            href={`/${item.href}`}
                             key={item.href}
                             onClick={() => setMenuOpen(false)}
                         >
                             {item.label}
                         </a>
                     ))}
-                    <a
+                    <Link
+                        className="rounded-xl px-4 py-3 font-sans text-sm font-semibold text-on-surface-variant transition hover:bg-primary/10 hover:text-primary"
+                        href="/portail/seances"
+                        onClick={() => setMenuOpen(false)}
+                    >
+                        {content.portalLink}
+                    </Link>
+                    <Link
                         className="mt-2 inline-flex w-full items-center justify-center rounded-full border border-primary bg-primary px-6 py-3 font-sans text-sm font-bold tracking-wider text-on-primary soft-shadow transition duration-200 hover:-translate-y-0.5 hover:bg-primary-container"
-                        href="#contact"
+                        href="/#contact"
                         onClick={() => setMenuOpen(false)}
                     >
                         {content.reserveCta}
-                    </a>
+                    </Link>
                 </div>
             </nav>
         </header>

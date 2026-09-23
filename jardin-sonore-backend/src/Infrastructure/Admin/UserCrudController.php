@@ -19,8 +19,6 @@ use App\Infrastructure\Doctrine\Entity\UserEntity;
 use App\Infrastructure\Doctrine\Entity\UserOrganizationAccessEntity;
 use App\Infrastructure\Doctrine\Repository\EmailContactDoctrineRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\EntityRepository;
-use Doctrine\ORM\QueryBuilder;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminRoute;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
@@ -32,14 +30,14 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\Field;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use InvalidArgumentException;
 use LogicException;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
-use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -152,13 +150,13 @@ final class UserCrudController extends AbstractCrudController
     {
         yield IdField::new('id')->onlyOnDetail();
         yield TextField::new('uuid')->onlyOnDetail();
-        yield Field::new('organizationForNewAccess', 'Structure')
-            ->setFormType(EntityType::class)
-            ->setFormTypeOption('class', OrganizationEntity::class)
-            ->setFormTypeOption('choice_label', static fn (OrganizationEntity $organizationEntity): string => (string) $organizationEntity)
-            ->setFormTypeOption('query_builder', static fn (EntityRepository $organizationEntityRepository): QueryBuilder => $organizationEntityRepository->createQueryBuilder('organization')->orderBy('organization.name', 'ASC'))
-            ->setFormTypeOption('placeholder', 'Choisir une structure')
-            ->setFormTypeOption('attr', ['data-portal-access-email-target' => 'organization'])
+        yield TextField::new('organizationIdForNewAccess', 'Structure')
+            ->setFormTypeOption('attr', [
+                'data-controller' => 'organization-autocomplete',
+                'data-organization-autocomplete-url-value' => $this->generateUrl('admin_portal_organization_autocomplete'),
+                'data-portal-access-email-target' => 'organization',
+                'placeholder' => 'Rechercher une structure',
+            ])
             ->onlyWhenCreating();
         yield ChoiceField::new('linkedEmailAddressForNewAccess', 'E-mail associé')
             ->renderAsNativeWidget()
@@ -189,6 +187,41 @@ final class UserCrudController extends AbstractCrudController
             ->setFormTypeOption('attr', ['data-portal-access-email-target' => 'person-last-name'])
             ->onlyWhenCreating();
         yield EmailField::new('email', 'E-mail')->onlyOnIndex();
+        yield TextField::new('firstName', 'Prénom')->hideWhenCreating();
+        yield TextField::new('lastName', 'Nom')->hideWhenCreating();
+        yield BooleanField::new('newSessionNotificationsEnabled', 'Recevoir les nouvelles séances par e-mail')->hideWhenCreating();
+        yield ImageField::new('avatarPath', 'Photo de profil')
+            ->setBasePath('/uploads/portal/avatars')
+            ->setUploadDir('public/uploads/portal/avatars')
+            ->setUploadedFileNamePattern('[uuid].[extension]')
+            ->mimeTypes('image/jpeg,image/png,image/webp')
+            ->maxSize('2M')
+            ->hideWhenCreating()
+            ->hideOnIndex();
+        yield TextField::new('organizationAccessSummary', 'Structure')
+            ->onlyOnIndex()
+            ->formatValue(static function (mixed $value, ?UserEntity $userEntity): string {
+                if (!$userEntity instanceof UserEntity) {
+                    return '';
+                }
+
+                $organizationLabels = [];
+                foreach ($userEntity->getOrganizationAccesses() as $userOrganizationAccessEntity) {
+                    if (!$userOrganizationAccessEntity->isActive()) {
+                        continue;
+                    }
+
+                    $organizationEntity = $userOrganizationAccessEntity->getOrganization();
+                    $municipality = $organizationEntity->getMunicipalitySummary();
+                    $organizationLabels[] = '—' === $municipality
+                        ? htmlspecialchars($organizationEntity->getName(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+                        : htmlspecialchars($organizationEntity->getName(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+                            . ' <em class="text-muted">' . htmlspecialchars($municipality, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</em>';
+                }
+
+                return '' === implode(', ', $organizationLabels) ? '—' : implode(', ', $organizationLabels);
+            })
+            ->renderAsHtml();
         yield ChoiceField::new('status', 'État')
             ->setChoices(['En attente' => UserStatus::PENDING, 'Actif' => UserStatus::ACTIVE, 'Inactif' => UserStatus::INACTIVE])
             ->hideOnForm();
@@ -207,7 +240,10 @@ final class UserCrudController extends AbstractCrudController
             return;
         }
 
-        $organizationEntity = $entityInstance->getOrganizationForNewAccess();
+        $organizationId = $entityInstance->getOrganizationIdForNewAccess();
+        $organizationEntity = null === $organizationId || !ctype_digit($organizationId)
+            ? null
+            : $entityManager->find(OrganizationEntity::class, (int) $organizationId);
 
         if (!$organizationEntity instanceof OrganizationEntity) {
             throw new LogicException('A portal account must be created from an organization.');
@@ -223,6 +259,28 @@ final class UserCrudController extends AbstractCrudController
 
         parent::persistEntity($entityManager, $entityInstance);
         $this->issueAndSendInvitation($entityInstance, 'Compte créé et invitation envoyée.');
+    }
+
+    #[Route('/backoffice/portal-organizations/autocomplete', name: 'admin_portal_organization_autocomplete', methods: ['GET'])]
+    public function autocompleteOrganization(Request $request): JsonResponse
+    {
+        $query = trim($request->query->getString('q'));
+        $queryBuilder = $this->entityManager->getRepository(OrganizationEntity::class)
+            ->createQueryBuilder('organization')
+            ->leftJoin('organization.contactDetails', 'contactDetails')->addSelect('contactDetails')
+            ->leftJoin('contactDetails.addressContacts', 'addressContact')->addSelect('addressContact')
+            ->leftJoin('addressContact.municipality', 'municipality')->addSelect('municipality')
+            ->orderBy('organization.name', 'ASC')
+            ->setMaxResults(25);
+        if ('' !== $query) {
+            $queryBuilder->andWhere('LOWER(organization.name) LIKE LOWER(:query)')->setParameter('query', '%' . $query . '%');
+        }
+
+        return new JsonResponse(['items' => array_map(static function (OrganizationEntity $organizationEntity): array {
+            $municipality = $organizationEntity->getMunicipalitySummary();
+
+            return ['id' => (string) $organizationEntity->getId(), 'label' => '—' === $municipality ? $organizationEntity->getName() : "{$organizationEntity->getName()} — {$municipality}"];
+        }, $queryBuilder->getQuery()->getResult())]);
     }
 
     private function resolveOrCreateContact(UserEntity $userEntity, OrganizationEntity $organizationEntity): OrganizationAccessEmailSelection

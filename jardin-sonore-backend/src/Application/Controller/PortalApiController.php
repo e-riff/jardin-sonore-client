@@ -10,6 +10,7 @@ use App\Application\Portal\PortalSessionAccessService;
 use App\Application\Portal\PortalSessionManager;
 use App\Application\Portal\PortalSessionReader;
 use App\Application\Portal\PortalSessionResponse;
+use App\Application\Storage\PortalAvatarStorageInterface;
 use App\Domain\Model\Portal\UserStatus;
 use App\Domain\Model\Session\SessionDocumentStatus;
 use App\Infrastructure\Doctrine\Entity\UserEntity;
@@ -19,6 +20,7 @@ use JsonException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -125,11 +127,74 @@ final class PortalApiController extends AbstractController
 
         return new JsonResponse([
             'email' => $userEntity->getEmail(),
+            'firstName' => $userEntity->getFirstName(),
+            'lastName' => $userEntity->getLastName(),
+            'avatarPath' => $userEntity->getAvatarPath(),
+            'newSessionNotificationsEnabled' => $userEntity->isNewSessionNotificationsEnabled(),
             'organizations' => array_map(static fn ($organizationEntity): array => [
                 'uuid' => $organizationEntity->getUuid()->toRfc4122(),
                 'name' => $organizationEntity->getName(),
             ], $this->portalSessionReader->authorizedOrganizations($userEntity)),
         ]);
+    }
+
+    #[Route('/me/profile', methods: ['PATCH'])]
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $payload = $this->jsonPayload($request);
+        $firstName = isset($payload['firstName']) && is_string($payload['firstName']) ? trim($payload['firstName']) : null;
+        $lastName = isset($payload['lastName']) && is_string($payload['lastName']) ? trim($payload['lastName']) : null;
+        $newSessionNotificationsEnabled = isset($payload['newSessionNotificationsEnabled']) && is_bool($payload['newSessionNotificationsEnabled'])
+            ? $payload['newSessionNotificationsEnabled']
+            : null;
+        if ((null !== $firstName && 100 < mb_strlen($firstName)) || (null !== $lastName && 100 < mb_strlen($lastName))) {
+            return new JsonResponse(['message' => 'Profile fields are too long.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $userEntity = $this->portalUser();
+        $userEntity->setFirstName($firstName)->setLastName($lastName);
+        if (null !== $newSessionNotificationsEnabled) {
+            $userEntity->setNewSessionNotificationsEnabled($newSessionNotificationsEnabled);
+        }
+        $this->entityManager->flush();
+
+        return $this->me();
+    }
+
+    #[Route('/me/avatar', methods: ['POST'])]
+    public function updateAvatar(Request $request, PortalAvatarStorageInterface $portalAvatarStorage): JsonResponse
+    {
+        $uploadedFile = $request->files->get('avatar');
+        if (!$uploadedFile instanceof UploadedFile
+            || !$uploadedFile->isValid()
+            || 2_000_000 < $uploadedFile->getSize()
+            || !in_array($uploadedFile->getMimeType(), ['image/jpeg', 'image/png', 'image/webp'], true)) {
+            return new JsonResponse(['message' => 'Please upload a JPEG, PNG or WebP image under 2 MB.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $userEntity = $this->portalUser();
+        $userEntity->setAvatarPath($portalAvatarStorage->store($uploadedFile));
+        $this->entityManager->flush();
+
+        return $this->me();
+    }
+
+    #[Route('/me/avatar', methods: ['GET'])]
+    public function avatar(): Response
+    {
+        $avatarPath = $this->portalUser()->getAvatarPath();
+        if (null === $avatarPath) {
+            throw $this->createNotFoundException();
+        }
+
+        $avatarFilePath = $this->getParameter('kernel.project_dir') . '/public/uploads/portal/avatars/' . basename($avatarPath);
+        if (!is_file($avatarFilePath)) {
+            throw $this->createNotFoundException();
+        }
+
+        return (new BinaryFileResponse($avatarFilePath))
+            ->setPrivate()
+            ->setMaxAge(0);
     }
 
     #[Route('/sessions', methods: ['GET'])]
