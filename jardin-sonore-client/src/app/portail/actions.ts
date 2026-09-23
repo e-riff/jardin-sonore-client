@@ -57,11 +57,10 @@ export async function updatePortalProfileAction(_previousState: PortalProfileFor
             newSessionNotificationsEnabled: formData.get("newSessionNotificationsEnabled") === "on",
         });
         if (!result.response.ok) return {status: "error"};
+        revalidatePath("/portail", "layout");
     } catch {
         return {status: "error"};
     }
-
-    revalidatePath("/portail", "layout");
 
     return {status: "success"};
 }

@@ -32,8 +32,11 @@ final readonly class PortalSessionResponse
     ) {
     }
 
-    /** @param list<OrganizationEntity> $authorizedOrganizationEntities */
-    public static function fromEntity(SessionSummaryEntity $sessionSummaryEntity, array $authorizedOrganizationEntities): self
+    /**
+     * @param list<OrganizationEntity>        $authorizedOrganizationEntities
+     * @param list<array<string, mixed>>|null $sequences
+     */
+    public static function fromEntity(SessionSummaryEntity $sessionSummaryEntity, array $authorizedOrganizationEntities, ?array $sequences = null): self
     {
         $authorizedOrganizationUuids = array_flip(array_map(static fn (OrganizationEntity $organizationEntity): string => $organizationEntity->getUuid()->toRfc4122(), $authorizedOrganizationEntities));
         $organizations = [];
@@ -63,7 +66,7 @@ final readonly class PortalSessionResponse
             $sessionSummaryEntity->getFurtherExploration(),
             $sessionSummaryEntity->getInstrumentUuids(),
             $sessionSummaryEntity->getRecommendationUuids(),
-            $sessionSummaryEntity->getSequences(),
+            $sequences ?? $sessionSummaryEntity->getSequences(),
             $sessionSummaryEntity->getDocumentStatus()->value,
         );
     }
