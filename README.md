@@ -177,6 +177,7 @@ Avant de deployer, verifier:
 - `CONTACT_EMAIL`;
 - `CONTACT_PHONE`;
 - les variables Symfony backend en prod: `APP_ENV`, `APP_SECRET`, `DATABASE_URL`, `MAILER_DSN`;
+- les variables BFF client dans `.env.deploy.local`: `CPANEL_PORTAL_API_BASE_URL` et `CPANEL_PORTAL_BFF_SHARED_SECRET` (elles restent exclusivement côté serveur);
 - le build avec `make app-build`.
 
 ## Backend

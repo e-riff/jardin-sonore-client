@@ -31,20 +31,22 @@ final class OrganizationAutocompleteTypeTest extends WebTestCase
         $client = static::createClient();
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
         $adminUserEntity = (new AdminUserEntity())->setEmail('admin-' . bin2hex(random_bytes(8)) . '@autocomplete.test')->setPassword('unused');
-        $firstOrganizationEntity = (new OrganizationEntity())->setName('Alouette ' . bin2hex(random_bytes(8)));
-        $secondOrganizationEntity = (new OrganizationEntity())->setName('Boreale ' . bin2hex(random_bytes(8)));
+        $firstOrganizationSearchTerm = 'Alouette ' . bin2hex(random_bytes(8));
+        $secondOrganizationSearchTerm = 'Boreale ' . bin2hex(random_bytes(8));
+        $firstOrganizationEntity = (new OrganizationEntity())->setName($firstOrganizationSearchTerm);
+        $secondOrganizationEntity = (new OrganizationEntity())->setName($secondOrganizationSearchTerm);
         $entityManager->persist($adminUserEntity);
         $entityManager->persist($firstOrganizationEntity);
         $entityManager->persist($secondOrganizationEntity);
         $entityManager->flush();
         $client->loginUser($adminUserEntity);
 
-        $client->request('GET', '/autocomplete/organization_autocomplete_type?query=Alouette');
+        $client->request('GET', '/autocomplete/organization_autocomplete_type?query=' . urlencode($firstOrganizationSearchTerm));
         self::assertResponseIsSuccessful();
         self::assertStringContainsString($firstOrganizationEntity->getName(), (string) $client->getResponse()->getContent());
         self::assertStringNotContainsString($secondOrganizationEntity->getName(), (string) $client->getResponse()->getContent());
 
-        $client->request('GET', '/autocomplete/organization_autocomplete_type?query=Boreale');
+        $client->request('GET', '/autocomplete/organization_autocomplete_type?query=' . urlencode($secondOrganizationSearchTerm));
         self::assertResponseIsSuccessful();
         self::assertStringContainsString($secondOrganizationEntity->getName(), (string) $client->getResponse()->getContent());
         self::assertStringNotContainsString($firstOrganizationEntity->getName(), (string) $client->getResponse()->getContent());

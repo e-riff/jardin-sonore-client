@@ -6,8 +6,8 @@ namespace App\Tests\Unit\Application\Session;
 
 use App\Application\Session\SessionSequenceView;
 use App\Domain\Model\ContentCatalog\Instrument;
-use App\Domain\Model\Session\MediaResourceType;
 use App\Domain\Model\Session\MediaResource;
+use App\Domain\Model\Session\MediaResourceType;
 use App\Domain\Model\Session\RepertoireBlock;
 use App\Domain\Model\Session\RepertoireBlockKind;
 use App\Domain\Model\Session\RepertoireItem;

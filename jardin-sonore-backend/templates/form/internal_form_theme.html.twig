@@ -9,3 +9,59 @@
         {{ form_help(form) }}
     </div>
 {% endblock %}
+
+{% block collection_entry_row %}
+    {% if form_parent(form).vars.name == 'organizationAccesses' and value.organization is defined %}
+        {% set is_complex = form_parent(form).vars.ea_vars.field.customOptions.get('entryIsComplex') ?? false %}
+        {% set allows_deleting_items = form_parent(form).vars.allow_delete|default(false) %}
+        {% set render_expanded = not form.vars.valid or form_parent(form).vars.ea_vars.field.customOptions.get('renderExpanded')|default(false) %}
+        {% set municipality = value.organization.municipalitySummary %}
+        <div class="field-collection-item {{ is_complex ? 'field-collection-item-complex' }} {{ not form.vars.valid ? 'is-invalid' }}">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button {{ render_expanded ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#{{ id }}-contents">
+                        <twig:ea:Icon name="internal:chevron-right" class="form-collection-item-collapse-marker" />
+                        {{ value.organization.name }}
+                        {% if municipality != '—' %}<em class="ms-2 text-muted">{{ municipality }}</em>{% endif %}
+                    </button>
+                    {% if allows_deleting_items and not disabled %}
+                        <button type="button" class="btn btn-link btn-link-danger field-collection-delete-button" title="{{ 'action.remove_item'|trans({}, 'EasyAdminBundle') }}">
+                            <twig:ea:Icon name="internal:delete" />
+                        </button>
+                    {% endif %}
+                </h2>
+                <div id="{{ id }}-contents" class="accordion-collapse collapse {{ render_expanded ? 'show' }}">
+                    <div class="accordion-body"><div class="row">{{ form_widget(form) }}</div></div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        {% set is_array_field = 'EasyCorp\\Bundle\\EasyAdminBundle\\Field\\ArrayField' == form_parent(form).vars.ea_vars.field.fieldFqcn|default(false) %}
+        {% set is_complex = form_parent(form).vars.ea_vars.field.customOptions.get('entryIsComplex') ?? false %}
+        {% set to_string_method = form_parent(form).vars.ea_vars.field.customOptions.get('entryToStringMethod') ?? null %}
+        {% set allows_deleting_items = form_parent(form).vars.allow_delete|default(false) %}
+        {% set render_expanded = not form.vars.valid or form_parent(form).vars.ea_vars.field.customOptions.get('renderExpanded')|default(false) %}
+        <div class="field-collection-item {{ is_complex ? 'field-collection-item-complex' }} {{ not form.vars.valid ? 'is-invalid' }}">
+            {% if is_array_field %}
+                {{ form_label(form) }}
+                {{ form_widget(form) }}
+                {% if allows_deleting_items and not disabled %}
+                    <button type="button" class="btn btn-link btn-link-danger field-collection-delete-button" title="{{ 'action.remove_item'|trans({}, 'EasyAdminBundle') }}"><twig:ea:Icon name="internal:delete" /></button>
+                {% endif %}
+            {% else %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button {{ render_expanded ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#{{ id }}-contents">
+                            <twig:ea:Icon name="internal:chevron-right" class="form-collection-item-collapse-marker" />
+                            {{ value|ea_as_string(to_string_method) }}
+                        </button>
+                        {% if allows_deleting_items and not disabled %}
+                            <button type="button" class="btn btn-link btn-link-danger field-collection-delete-button" title="{{ 'action.remove_item'|trans({}, 'EasyAdminBundle') }}"><twig:ea:Icon name="internal:delete" /></button>
+                        {% endif %}
+                    </h2>
+                    <div id="{{ id }}-contents" class="accordion-collapse collapse {{ render_expanded ? 'show' }}"><div class="accordion-body"><div class="row">{{ form_widget(form) }}</div></div></div>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endblock %}

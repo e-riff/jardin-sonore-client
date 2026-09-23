@@ -200,12 +200,15 @@ sessions:
       created: "La séance a été créée."
       updated: "La séance a été mise à jour."
       removed: "La séance a été supprimée."
+      document_regeneration_requested: "La régénération du PDF a été demandée."
+      documents_regeneration_requested: "La régénération de {count, plural, =0 {tous les PDF} one {# PDF} other {# PDF}} a été demandée."
     index:
       title: "Séances | Jardin Sonore"
       eyebrow: "Séances"
       heading: "Résumés de séance"
       description: "Préparez le déroulé de chaque séance puis ouvrez son rendu imprimable."
       create: "Créer une séance"
+      regenerate_documents: "Régénérer tous les PDF"
       search: "Recherche"
       search_submit: "Filtrer"
       empty: "Aucune séance ne correspond à la recherche."
@@ -248,6 +251,7 @@ sessions:
       ready: "PDF à jour"
       failed: "La génération a échoué"
       download: "Télécharger le PDF"
+      regenerate: "Régénérer le PDF"
     edit:
       title: "Modifier {title} | Jardin Sonore"
       eyebrow: "Séances"

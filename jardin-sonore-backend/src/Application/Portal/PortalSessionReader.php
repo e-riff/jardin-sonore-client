@@ -54,7 +54,7 @@ final readonly class PortalSessionReader
     {
         $page = max(1, $page);
         $queryBuilder = $this->authorizedSessionsQueryBuilder($userEntity, $organizationUuid)
-            ->orderBy('session.sessionDate', 'DESC')
+            ->orderBy('organizationShare.sharedAt', 'DESC')
             ->addOrderBy('session.updatedAt', 'DESC')
             ->addOrderBy('session.id', 'DESC');
         $total = (int) (clone $queryBuilder)
@@ -91,7 +91,8 @@ final readonly class PortalSessionReader
         $queryBuilder = $this->entityManager->createQueryBuilder()
             ->select('session')
             ->from(SessionSummaryEntity::class, 'session')
-            ->innerJoin('session.organizations', 'organization')
+            ->innerJoin('session.organizationShares', 'organizationShare')
+            ->innerJoin('organizationShare.organization', 'organization')
             ->innerJoin(UserOrganizationAccessEntity::class, 'access', 'WITH', 'access.organization = organization')
             ->where('access.user = :user')
             ->andWhere('access.active = :active')

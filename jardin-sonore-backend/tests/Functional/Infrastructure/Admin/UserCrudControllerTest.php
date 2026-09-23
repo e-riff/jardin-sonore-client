@@ -65,7 +65,7 @@ final class UserCrudControllerTest extends WebTestCase
             );
         $userCrudController = $this->createController($portalAccountMailSender);
         $userEntity = (new UserEntity())
-            ->setOrganizationForNewAccess($organizationEntity)
+            ->setOrganizationIdForNewAccess((string) $organizationEntity->getId())
             ->setEmail(strtoupper($emailAddress))
             ->setNewAccessContactType(UserEntity::NEW_ACCESS_CONTACT_PERSON)
             ->setNewPersonFirstNameForNewAccess('Anne')
@@ -93,7 +93,7 @@ final class UserCrudControllerTest extends WebTestCase
         $portalAccountMailSender->method('sendInvitation')->willThrowException(new TransportException('SMTP unavailable'));
         $userCrudController = $this->createController($portalAccountMailSender);
         $userEntity = (new UserEntity())
-            ->setOrganizationForNewAccess($organizationEntity)
+            ->setOrganizationIdForNewAccess((string) $organizationEntity->getId())
             ->setEmail('smtp-' . bin2hex(random_bytes(8)) . '@portal.test')
             ->setNewAccessContactType(UserEntity::NEW_ACCESS_CONTACT_ORGANIZATION);
 
@@ -144,6 +144,9 @@ final class UserCrudControllerTest extends WebTestCase
             self::assertResponseIsSuccessful();
             self::assertStringContainsString('Réinitialiser le mot de passe', (string) $client->getResponse()->getContent());
             self::assertStringNotContainsString('Envoyer l’invitation', (string) $client->getResponse()->getContent());
+            self::assertStringContainsString('Prénom', (string) $client->getResponse()->getContent());
+            self::assertStringContainsString('Nom', (string) $client->getResponse()->getContent());
+            self::assertStringContainsString('Photo de profil', (string) $client->getResponse()->getContent());
         }
 
         $client->request('GET', "/backoffice/user/{$inactiveUserEntity->getId()}");
