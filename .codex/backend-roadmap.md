@@ -159,6 +159,7 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 
 #### Lot 10.2. Espace Structure Dans Next.js
 
+- Statut : backend livré ; interface publique volontairement masquée en production en attente de maquettes validées.
 - Lier chaque seance a une vraie `Organization`. Les seances historiques non rattachees restent internes tant qu'elles n'ont pas ete associees manuellement.
 - Creer un acces partage par structure, distinct de `Person` : e-mail dedie servant d'identifiant et de recuperation, mot de passe hashe et statut actif/inactif.
 - La creation se fait dans le backoffice par lien de definition du mot de passe valable 30 jours. Le renvoi du lien invalide le precedent.
@@ -167,7 +168,18 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 - L'espace affiche uniquement le deroule client : liste des seances de la structure, lecture HTML et telechargement du PDF canonique. Les notes privees, le materiel et les prolongements restent internes.
 - Toute requete verifie l'appartenance a la structure ; desactiver un acces invalide immediatement ses sessions.
 
-- État au 2026-09-18 : le backend portail (sessions, API, cycle de mot de passe et impersonation admin) est livré localement ; la migration d’impersonation a été appliquée. Le BFF Next.js a reçu les correctifs de sécurité de la tâche 4 : effacement conforme du cookie `__Host-`, erreurs réseau bornées et traduites, runtime standalone configuré et rate limiting par IP visiteur authentifiée par un secret BFF partagé. Aucun commit ni déploiement n’est encore effectué. Avant déploiement, renseigner le même secret `PORTAL_BFF_SHARED_SECRET` côté Symfony et `CPANEL_PORTAL_BFF_SHARED_SECRET` côté client.
+- État au 2026-09-18 : le backend portail est déployé sur `main` avec le tag `deploy-backend-20260918-01`. Il comprend comptes, accès aux organisations, rattachement des séances, API en lecture seule, cycle de mot de passe, sessions opaques, rate limiting et impersonation administrateur. Les migrations portail ont été appliquées en production.
+- Le client Next.js initial a été retiré de la livraison publique avant déploiement : aucune route `/portail/**`, aucun lien « Espace structures » et aucune variable BFF portail ne sont exposés. Cette décision est volontaire : l’interface n’est pas encore suffisamment aboutie visuellement et fonctionnellement. Le backend reste disponible pour la reprise, mais l’impersonation ne doit pas être utilisée en production tant que son écran d’atterrissage Next n’est pas réintroduit.
+- Correctif livré : l’autocomplétion des structures lors de l’édition d’une séance ne précharge plus des résultats non filtrés ; elle démarre la recherche distante à partir de deux caractères.
+
+#### Reprise Portail — Préparer Puis Implémenter Les Maquettes
+
+1. Partir de la branche de travail `feat/session-organization-portal-users`, qui conserve le prototype front retiré de `main`. Ne pas réexposer ce prototype tel quel.
+2. Produire et valider les maquettes responsive avant développement : connexion ; demande/confirmation de réinitialisation ; définition de mot de passe et lien indisponible ; liste de séances avec filtre, pagination et état vide ; fiche de séance avec PDF prêt ; fiche avec PDF en préparation/indisponible ; bandeau d’impersonation.
+3. À partir des maquettes validées, reconstruire le client Next.js avec une hiérarchie et des dimensions réellement adaptées desktop/mobile. Prévoir dès la conception les états chargement, erreur réseau, non autorisé, aucune séance et document indisponible.
+4. Terminer les écrans authentifiés manquants : liste, filtre par organisation, détail de séance, séquences, recommandations, médias sûrs et téléchargement PDF ; implémenter aussi l’atterrissage d’impersonation et sa sortie explicite.
+5. Faire une recette navigateur de bout en bout avec un compte local : invitation, définition/réinitialisation du mot de passe, connexion, accès autorisé/interdit, PDF, désactivation, retrait d’accès et impersonation.
+6. Seulement après validation UX, sécurité et recette, réintroduire les routes, le BFF et l’entrée publique dans une branche dédiée ; rétablir alors les secrets de build Next et effectuer un déploiement client séparé.
 
 #### Lot 10.3. Synchronisation Google Drive
 
@@ -211,3 +223,4 @@ Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat pr
 - 2026-07-28 : les flux d'uploads et de permissions sont verifies en production apres redeploiement ; la consolidation locale face aux permissions Docker est consideree terminee.
 - 2026-07-28 : le compositeur V2 est cadre : rendu vertical, collection de medias, PDF canonique asynchrone, espace structure Next.js et synchronisation Drive ulterieure.
 - 2026-07-30 : la première tranche du rendu de séance est livrée : médias copiés et sélectivement visibles, prévisualisation éditoriale, état documentaire, génération PDF locale Messenger et journal dédié. La recette de génération PDF et la finition de l’éditeur de collection de médias restent à poursuivre.
+- 2026-09-18 : le backend portail et le correctif d’autocomplétion des structures sont déployés via `deploy-backend-20260918-01`. Le portail Next.js est retiré de la production en attente de maquettes et d’une reprise UX complète.

@@ -23,6 +23,8 @@ use App\Application\Session\GetRepertoireItemForEdit;
 use App\Application\Session\GetSessionRecommendationForEdit;
 use App\Application\Session\GetSessionSummary;
 use App\Application\Session\MoveSessionSequence;
+use App\Application\Session\RegenerateSessionDocument;
+use App\Application\Session\RegenerateSessionDocuments;
 use App\Application\Session\RemoveSessionSequence;
 use App\Application\Session\ReorderSessionSequences;
 use App\Application\Session\SaveMediaResourceInput;
@@ -97,6 +99,23 @@ final class SessionSummaryController extends AbstractController
         ]);
     }
 
+    #[Route('/documents/regenerate', name: 'documents_regenerate', methods: ['POST'])]
+    public function regenerateDocuments(Request $request, RegenerateSessionDocuments $regenerateSessionDocuments): Response
+    {
+        if (!$this->isCsrfTokenValid('session_documents_regenerate', (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $count = $regenerateSessionDocuments();
+        $this->addFlash('success', [
+            'message' => 'sessions.summary.flash.documents_regeneration_requested',
+            'parameters' => ['count' => $count],
+            'domain' => 'sessions',
+        ]);
+
+        return $this->redirectToRoute('session_index', status: Response::HTTP_SEE_OTHER);
+    }
+
     #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
     public function new(Request $request, CreateSessionSummary $createSessionSummary): Response
     {
@@ -164,6 +183,22 @@ final class SessionSummaryController extends AbstractController
             'documentAvailable' => $this->hasSessionDocument($sessionSummaryView, $sessionDocumentDirectory),
             'mediaTypes' => MediaResourceType::cases(),
         ], $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null);
+    }
+
+    #[Route('/{uuid}/document/regenerate', name: 'document_regenerate', methods: ['POST'])]
+    public function regenerateDocument(string $uuid, Request $request, RegenerateSessionDocument $regenerateSessionDocument): Response
+    {
+        if (!Uuid::isValid($uuid) || !$this->isCsrfTokenValid('session_document_regenerate_' . $uuid, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $regenerateSessionDocument(Uuid::fromString($uuid));
+        $this->addFlash('success', [
+            'message' => 'sessions.summary.flash.document_regeneration_requested',
+            'domain' => 'sessions',
+        ]);
+
+        return $this->redirectToRoute('session_edit', ['uuid' => $uuid], Response::HTTP_SEE_OTHER);
     }
 
     #[Route('/{uuid}', name: 'show', methods: ['GET'])]

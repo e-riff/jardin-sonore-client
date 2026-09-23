@@ -14,6 +14,7 @@ const fr = {
         homeAriaLabel: "Accueil Jardin Sonore",
         menuAriaLabel: "Ouvrir le menu",
         reserveCta: "Demander des renseignements",
+        portalLink: "Espace structures",
         navigation: [
             {label: "Intervenant", href: "#intervenant-musical"},
             {label: "Formats", href: "#formats"},
@@ -347,7 +348,26 @@ const fr = {
             {label: "Approche", href: "#approche"},
             {label: "En séance", href: "#en-seance"},
             {label: "Contact", href: "#contact"},
+            {label: "Espace structures", href: "/portail/seances"},
         ],
+    },
+    portal: {
+        login: {eyebrow: "Espace structures", title: "Accéder à vos séances", description: "Connectez-vous pour consulter les séances partagées avec votre structure.", emailLabel: "Adresse e-mail", passwordLabel: "Mot de passe", submit: "Se connecter", resetLink: "Mot de passe oublié ?"},
+        reset: {eyebrow: "Espace structures", title: "Réinitialiser votre mot de passe", description: "Indiquez votre adresse e-mail pour recevoir un lien de réinitialisation.", emailLabel: "Adresse e-mail", submit: "Envoyer le lien", loginLink: "Revenir à la connexion", portalLink: "Retour à mon espace", sentLoggedIn: "Un lien de modification vient d’être envoyé à votre adresse e-mail.", sentAnonymous: "Si cette adresse est associée à un compte, un lien de réinitialisation vient de vous être envoyé."},
+        password: {eyebrow: "Espace structures", title: "Définir votre mot de passe", description: "Choisissez un mot de passe pour accéder à vos séances.", passwordLabel: "Nouveau mot de passe", confirmationLabel: "Confirmer le mot de passe", submit: "Enregistrer et accéder aux séances", unavailable: "Ce lien n’est plus disponible. Demandez un nouveau lien de réinitialisation.", error: "Le mot de passe n’a pas pu être enregistré.", minimumLength: "12 caractères minimum", lowercase: "une minuscule", uppercase: "une majuscule", digit: "un chiffre", mismatch: "Les mots de passe ne sont pas identiques."},
+        shell: {homeAriaLabel: "Espace structures Jardin Sonore", navigationLabel: "Navigation de l’espace", sessionsLink: "Séances", nurseryRhymesLink: "Comptines", activitiesLink: "Activités", comingSoon: "À venir", profileLink: "Mon profil", publicSiteLink: "Voir le site", publicSiteReturnLabel: "Retour au site", accountMenu: "Ouvrir les options du compte", accountTitle: "Mon compte", accountSettings: "Mes informations", resetPassword: "Modifier mon mot de passe", logout: "Se déconnecter"},
+        document: {
+            eyebrow: "Document de séance", title: "Le déroulé en PDF",
+            ready: {description: "Le document de cette séance est disponible au téléchargement.", action: "Télécharger le PDF"},
+            pending: {description: "Le document est en cours de préparation. Il apparaîtra ici dès qu’il sera disponible."},
+            unavailable: {description: "Le document n’est pas disponible pour cette séance."},
+        },
+        sessions: {title: "Vos séances", introduction: "Retrouvez les séances partagées avec votre structure.", organizationLabel: "Structure", allOrganizations: "Toutes les structures", filter: "Filtrer", sortLabel: "Trier par", sortDate: "Date", sortTitle: "A à Z", sortTheme: "Thème", sharedAt: "Partagée le", empty: "Aucune séance n’est encore partagée avec votre structure."},
+        detail: {back: "Retour", downloadPdf: "PDF", downloadPdfAriaLabel: "Télécharger le PDF", pdfPreparing: "PDF en préparation", pdfUnavailable: "PDF indisponible", intention: "Intention de séance", material: "Instruments et matériel", sequence: "Déroulé", exploration: "Pour aller plus loin"},
+        account: {eyebrow: "Mon compte", title: "Vos informations", description: "Personnalisez le nom et la photo affichés dans votre espace.", saved: "Vos informations ont été enregistrées.", error: "Vos informations n’ont pas pu être enregistrées. Vérifiez le format de votre photo.", saving: "Enregistrement…", emailLabel: "Adresse e-mail", organizationSingle: "Votre structure", organizationPlural: "Vos structures", currentPhoto: "Photo actuelle", currentPhotoAlt: "Votre photo de profil", photoLabel: "Photo de profil", optional: "facultatif", photoHint: "JPEG, PNG ou WebP — 2 Mo maximum.", firstNameLabel: "Prénom", lastNameLabel: "Nom", notificationsTitle: "M’informer des nouvelles séances", notificationsDescription: "Recevez un e-mail lorsqu’une nouvelle séance devient disponible pour votre structure.", submit: "Enregistrer"},
+        preview: {title: "Déroulé", resourceFallback: "Ressource associée", lyricsAndGestures: "Paroles et gestes", sequenceFallback: "Séquence", types: {warmup: "Mise en route", nursery_rhyme: "Comptine", fingerplay: "Jeu de doigts", soundtrack: "Bande-son", manipulation: "Manipulation", movement: "Mouvement", closing: "Clôture", free: "Temps libre"}},
+        unavailable: {eyebrow: "Espace structures", title: "Service momentanément indisponible", description: "Nous ne pouvons pas joindre vos séances pour le moment. Merci de réessayer.", action: "Revenir à la connexion"},
+        impersonation: {title: "Mode aperçu administrateur", description: "Vous consultez le portail temporairement au nom de ce compte.", action: "Terminer la session d’aperçu"},
     },
 } as const;
 

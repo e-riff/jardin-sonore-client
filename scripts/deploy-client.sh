@@ -19,6 +19,8 @@ fi
 : "${CPANEL_APP_PATH:?Missing CPANEL_APP_PATH. Set it in .env.deploy.local or in the shell environment.}"
 : "${CPANEL_BUILD_ENV:=docker}"
 : "${CPANEL_PUBLIC_SITE_URL:=https://jardin-sonore.fr}"
+: "${CPANEL_PORTAL_API_BASE_URL:?Missing CPANEL_PORTAL_API_BASE_URL. Set it in .env.deploy.local or in the shell environment.}"
+: "${CPANEL_PORTAL_BFF_SHARED_SECRET:?Missing CPANEL_PORTAL_BFF_SHARED_SECRET. Set it in .env.deploy.local or in the shell environment.}"
 
 SSH_KEY_OPTION=()
 if [[ -n "${CPANEL_SSH_KEY:-}" ]]; then
@@ -38,6 +40,8 @@ case "$CPANEL_BUILD_ENV" in
       --user "$(id -u):$(id -g)" \
       -e NEXT_TELEMETRY_DISABLED=1 \
       -e PUBLIC_SITE_URL="$CPANEL_PUBLIC_SITE_URL" \
+      -e PORTAL_API_BASE_URL="$CPANEL_PORTAL_API_BASE_URL" \
+      -e PORTAL_BFF_SHARED_SECRET="$CPANEL_PORTAL_BFF_SHARED_SECRET" \
       -e npm_config_cache=/tmp/npm-cache \
       -v "$CLIENT_DIR:/app" \
       -w /app \
@@ -46,6 +50,8 @@ case "$CPANEL_BUILD_ENV" in
     ;;
   local)
     export PUBLIC_SITE_URL="$CPANEL_PUBLIC_SITE_URL"
+    export PORTAL_API_BASE_URL="$CPANEL_PORTAL_API_BASE_URL"
+    export PORTAL_BFF_SHARED_SECRET="$CPANEL_PORTAL_BFF_SHARED_SECRET"
     npm ci
     npm run lint
     npm run build
@@ -62,6 +68,8 @@ mkdir -p "$DEPLOY_DIR/.next" "$DEPLOY_DIR/public"
 cp -R .next/standalone/. "$DEPLOY_DIR/"
 cp -R .next/static "$DEPLOY_DIR/.next/static"
 cp -R public/. "$DEPLOY_DIR/public/"
+printf 'PORTAL_API_BASE_URL=%s\n' "$CPANEL_PORTAL_API_BASE_URL" > "$DEPLOY_DIR/.env"
+printf 'PORTAL_BFF_SHARED_SECRET=%s\n' "$CPANEL_PORTAL_BFF_SHARED_SECRET" >> "$DEPLOY_DIR/.env"
 
 rsync -az --delete \
   -e "${SSH_COMMAND[*]}" \

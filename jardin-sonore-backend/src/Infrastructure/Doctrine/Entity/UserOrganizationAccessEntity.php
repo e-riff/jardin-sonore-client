@@ -16,6 +16,19 @@ class UserOrganizationAccessEntity
     private OrganizationEntity $organization;
     private ?PersonEntity $person = null;
 
+    public function __toString(): string
+    {
+        if (!isset($this->organization)) {
+            return '';
+        }
+
+        $municipality = $this->organization->getMunicipalitySummary();
+
+        return '—' === $municipality
+            ? $this->organization->getName()
+            : "{$this->organization->getName()} — {$municipality}";
+    }
+
     public function getUser(): UserEntity
     {
         return $this->user;

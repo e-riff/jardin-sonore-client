@@ -16,7 +16,7 @@
             {% if documentAvailable %}
                 <a class="internal-button" href="{{ path('session_document_download', { uuid: session.uuid }) }}">{{ 'sessions.summary.document.download'|trans({}, 'sessions') }}</a>
             {% else %}
-                <span class="internal-badge internal-badge--{{ session.documentStatus.value == 'failed' ? 'danger' : 'warning' }}">{{ ('sessions.summary.document.' ~ session.documentStatus.value)|trans({}, 'sessions') }}</span>
+                <span class="internal-badge internal-badge--{{ session.documentStatus.value == 'ready' ? 'success' : session.documentStatus.value == 'failed' ? 'danger' : 'warning' }}">{{ ('sessions.summary.document.' ~ session.documentStatus.value)|trans({}, 'sessions') }}</span>
             {% endif %}
         </div>
     </section>
