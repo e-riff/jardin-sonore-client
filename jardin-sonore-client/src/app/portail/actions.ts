@@ -5,6 +5,7 @@ import {revalidatePath} from "next/cache";
 import {PortalApiClient} from "@/lib/portal/api-client";
 import {clearPortalSession, getPortalAccessToken, setPortalSession} from "@/lib/portal/session";
 import {portalRoutes} from "@/lib/portal/routes";
+import type {PortalAccount} from "@/lib/portal/types";
 
 export async function logoutPortalAction(): Promise<void> {
     const token = await getPortalAccessToken();
@@ -38,7 +39,7 @@ export async function requestPortalPasswordResetAction(formData: FormData): Prom
     redirect(`${portalRoutes.passwordReset}?sent=1`);
 }
 
-export interface PortalProfileFormState { status: "idle" | "success" | "error"; field?: "avatar"; }
+export interface PortalProfileFormState { status: "idle" | "success" | "error"; field?: "avatar"; account?: PortalAccount; }
 
 export async function updatePortalProfileAction(_previousState: PortalProfileFormState, formData: FormData): Promise<PortalProfileFormState> {
     const token = await getPortalAccessToken();
@@ -57,13 +58,13 @@ export async function updatePortalProfileAction(_previousState: PortalProfileFor
             lastName: typeof formData.get("lastName") === "string" ? String(formData.get("lastName")).trim() : "",
             newSessionNotificationsEnabled: formData.get("newSessionNotificationsEnabled") === "on",
         });
-        if (!result.response.ok) return {status: "error"};
+        if (!result.response.ok || !result.data) return {status: "error"};
         revalidatePath("/portail", "layout");
+
+        return {status: "success", account: result.data};
     } catch {
         return {status: "error"};
     }
-
-    return {status: "success"};
 }
 
 export interface PortalPasswordFormState { status: "idle" | "error" | "unavailable"; }
