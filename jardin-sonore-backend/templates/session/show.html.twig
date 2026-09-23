@@ -55,11 +55,24 @@
                     {% endif %}
 
                     {% if sequence.body and sequence.body != sequence.lyrics %}
-                        <div style="margin-top: .75rem;">{{ sequence.body|nl2br }}</div>
+                        {% set bodyInstructions = sequence.body|split('\n')|filter(instruction => instruction|trim) %}
+                        {% if bodyInstructions|length > 1 %}
+                            <ul class="session-document__instructions">
+                                {% for instruction in bodyInstructions %}
+                                    <li><span aria-hidden="true" class="session-document__instruction-bullet">●</span><span>{{ instruction|trim }}</span></li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <div style="margin-top: .75rem;">{{ sequence.body|nl2br }}</div>
+                        {% endif %}
                     {% endif %}
 
                     {% if sequence.generalInstructions %}
-                        <div style="margin-top: .75rem;">{{ sequence.generalInstructions|nl2br }}</div>
+                        <ul class="session-document__instructions">
+                            {% for instruction in sequence.generalInstructions|split('\n')|filter(instruction => instruction|trim) %}
+                                <li><span aria-hidden="true" class="session-document__instruction-bullet">●</span><span>{{ instruction|trim }}</span></li>
+                            {% endfor %}
+                        </ul>
                     {% endif %}
 
                     {% if sequence.contentBlocks is not empty %}

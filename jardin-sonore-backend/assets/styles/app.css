@@ -36,6 +36,9 @@
 .session-document__sequence summary { color: var(--color-primary); cursor: pointer; font-family: var(--font-sans); font-weight: 700; }
 .session-document__sequence ul { margin: 1.25rem 0 0; padding: 1rem 1.25rem; border-radius: 1rem; background: rgb(255 255 255 / .55); font-family: var(--font-sans); font-size: .92rem; }
 .session-document__sequence li + li { margin-top: .5rem; }
+.session-document__instructions { display: grid; gap: .5rem; margin: 1.25rem 0 0; padding: 1rem 1.25rem; border-radius: 1rem; background: rgb(255 255 255 / .55); font-family: var(--font-sans); font-size: .92rem; list-style: none; }
+.session-document__instructions li { display: flex; gap: .65rem; align-items: flex-start; }
+.session-document__instruction-bullet { flex: 0 0 auto; color: var(--color-primary); font-size: .66rem; line-height: 1.8; }
 .session-document__sequence a { color: var(--color-primary); font-weight: 700; text-decoration-thickness: 1px; text-underline-offset: 3px; }
 .session-document__lyrics { margin-top: .75rem; }
 .session-document__lyrics-panel { padding: 1.25rem 1.5rem; border: 1px solid color-mix(in oklab, var(--color-outline-variant) 48%, white); border-left: .3rem solid var(--color-secondary); border-radius: .9rem; background: rgb(255 255 255 / .62); text-align: center; }
@@ -943,7 +946,7 @@ form.internal-form > .internal-form__actions > .internal-form__back-action {
 
 .session-summary-edit-form { width: 100%; max-width: none; }
 .session-document-status { display: flex; align-items: center; gap: 14px; margin: -16px 0 24px; }
-.session-document-status a { color: var(--color-primary); font-family: var(--font-sans); font-size: .86rem; font-weight: 700; }
+.session-document-status > a:not(.internal-button) { color: var(--color-primary); font-family: var(--font-sans); font-size: .86rem; font-weight: 700; }
 .session-summary-edit-form__remove { display: flex; justify-content: flex-end; margin-top: 28px; border-top: 1px solid color-mix(in oklab, var(--color-outline-variant) 50%, white); padding-top: 20px; }
 .session-summary-edit-form .internal-form__actions { justify-content: flex-end; }
 .session-summary-edit-form .internal-form__back-action { margin-right: 0; }
@@ -2038,6 +2041,8 @@ a.session-composer-overlay__item {
     gap: 8px;
     justify-content: flex-end;
 }
+
+.session-index__document-action { display: inline-flex; }
 
 .internal-search__field--themes { min-width: min(100%, 27rem); }
 

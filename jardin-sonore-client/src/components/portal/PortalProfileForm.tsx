@@ -5,6 +5,7 @@ import {useActionState, useEffect} from "react";
 import {useFormStatus} from "react-dom";
 import {useRouter} from "next/navigation";
 import {updatePortalProfileAction, type PortalProfileFormState} from "@/app/portail/actions";
+import {usePortalToast} from "@/components/portal/PortalToastProvider";
 import type {PortalAccount} from "@/lib/portal/types";
 import type {Dictionary} from "@/i18n/types";
 
@@ -21,14 +22,17 @@ function ProfileSubmitButton({content}: {content: AccountContent}): React.JSX.El
 export default function PortalProfileForm({account, content}: {account: PortalAccount; content: AccountContent}): React.JSX.Element {
     const [state, formAction] = useActionState(updatePortalProfileAction, initialState);
     const router = useRouter();
+    const {notify} = usePortalToast();
 
     useEffect(() => {
-        if (state.status === "success") router.refresh();
-    }, [router, state.status]);
+        if (state.status === "success") {
+            notify(content.saved, "success");
+            router.refresh();
+        }
+        if (state.status === "error") notify(content.error, "error");
+    }, [content.error, content.saved, notify, router, state]);
 
     return <form action={formAction} className="portal-content-sheet mt-8 grid gap-5">
-        {state.status === "success" && <p aria-live="polite" className="rounded-lg bg-secondary-container p-4 text-on-secondary-container">{content.saved}</p>}
-        {state.status === "error" && <p aria-live="assertive" className="rounded-lg bg-primary-fixed p-4 text-primary">{content.error}</p>}
         <label className="grid gap-2 text-sm font-semibold">
             <span>{content.emailLabel}</span>
             <input className="rounded-lg border border-outline-variant bg-surface-container-low px-4 py-3 text-on-surface-variant" defaultValue={account.email} readOnly />

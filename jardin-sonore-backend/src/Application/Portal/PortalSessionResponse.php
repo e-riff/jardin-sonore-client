@@ -12,6 +12,7 @@ final readonly class PortalSessionResponse
     /**
      * @param list<array{uuid: string, name: string}> $organizations
      * @param list<string>                            $instrumentUuids
+     * @param list<string>                            $instrumentNames
      * @param list<string>                            $recommendationUuids
      * @param list<array<string, mixed>>              $sequences
      */
@@ -26,6 +27,7 @@ final readonly class PortalSessionResponse
         public ?string $materialSummary,
         public ?string $furtherExploration,
         public array $instrumentUuids,
+        public array $instrumentNames,
         public array $recommendationUuids,
         public array $sequences,
         public string $documentStatus,
@@ -35,8 +37,9 @@ final readonly class PortalSessionResponse
     /**
      * @param list<OrganizationEntity>        $authorizedOrganizationEntities
      * @param list<array<string, mixed>>|null $sequences
+     * @param list<string>|null               $instrumentNames
      */
-    public static function fromEntity(SessionSummaryEntity $sessionSummaryEntity, array $authorizedOrganizationEntities, ?array $sequences = null): self
+    public static function fromEntity(SessionSummaryEntity $sessionSummaryEntity, array $authorizedOrganizationEntities, ?array $sequences = null, ?array $instrumentNames = null): self
     {
         $authorizedOrganizationUuids = array_flip(array_map(static fn (OrganizationEntity $organizationEntity): string => $organizationEntity->getUuid()->toRfc4122(), $authorizedOrganizationEntities));
         $organizations = [];
@@ -65,6 +68,7 @@ final readonly class PortalSessionResponse
             $sessionSummaryEntity->getMaterialSummary(),
             $sessionSummaryEntity->getFurtherExploration(),
             $sessionSummaryEntity->getInstrumentUuids(),
+            $instrumentNames ?? [],
             $sessionSummaryEntity->getRecommendationUuids(),
             $sequences ?? $sessionSummaryEntity->getSequences(),
             $sessionSummaryEntity->getDocumentStatus()->value,
@@ -93,6 +97,7 @@ final readonly class PortalSessionResponse
             'materialSummary' => $this->materialSummary,
             'furtherExploration' => $this->furtherExploration,
             'instrumentUuids' => $this->instrumentUuids,
+            'instrumentNames' => $this->instrumentNames,
             'recommendationUuids' => $this->recommendationUuids,
             'sequences' => $this->sequences,
         ];

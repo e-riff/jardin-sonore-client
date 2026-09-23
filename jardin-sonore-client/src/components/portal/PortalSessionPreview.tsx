@@ -13,6 +13,12 @@ function sequenceTypeLabel(value: unknown, labels: Record<string, string>): stri
     return type ? (labels[type] ?? type.replaceAll("_", " ")) : null;
 }
 
+function instructionLines(value: unknown): string[] {
+    const instructions = stringValue(value);
+
+    return instructions ? instructions.split("\n").map((instruction) => instruction.trim()).filter(Boolean) : [];
+}
+
 function youtubeEmbedUrl(url: string): string | null {
     const videoId = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([A-Za-z0-9_-]{11})/)?.[1];
 
@@ -50,5 +56,9 @@ export default async function PortalSessionPreview({sequences}: {sequences: Sequ
     const content = (await getTranslations()).portal.preview;
     const sequenceTypeLabels = content.types as Record<string, string>;
 
-    return <section className="mt-8 border-t border-outline-variant pt-6"><h2 className="font-serif text-2xl">{content.title}</h2><div className="mt-5 grid gap-5">{sequences.map((sequence, index) => <article className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 shadow-sm" key={`${stringValue(sequence.uuid) ?? "sequence"}-${index}`}><div className="flex gap-4"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">{index + 1}</span><div className="min-w-0 flex-1">{sequenceTypeLabel(sequence.type, sequenceTypeLabels) && <p className="portal-eyebrow">{sequenceTypeLabel(sequence.type, sequenceTypeLabels)}</p>}{stringValue(sequence.role) && <p className="text-sm font-semibold text-primary">{stringValue(sequence.role)}</p>}<h3 className="font-serif text-xl font-semibold">{stringValue(sequence.title) ?? content.sequenceFallback}</h3>{stringValue(sequence.subtitle) && <p className="mt-1 text-on-surface-variant">{stringValue(sequence.subtitle)}</p>}{stringValue(sequence.body) && stringValue(sequence.body) !== stringValue(sequence.lyrics) && <p className="mt-4 whitespace-pre-wrap leading-7">{stringValue(sequence.body)}</p>}{stringValue(sequence.generalInstructions) && <p className="mt-4 whitespace-pre-wrap rounded-lg border-l-4 border-primary/35 pl-4 text-sm leading-6">{stringValue(sequence.generalInstructions)}</p>}<SequenceLyrics sequence={sequence} title={content.lyricsAndGestures} /><SequenceMedia media={sequence.documentMedia ?? sequence.media} resourceFallback={content.resourceFallback} /></div></div></article>)}</div></section>;
+    return <section className="mt-8 border-t border-outline-variant pt-6"><h2 className="font-serif text-2xl">{content.title}</h2><div className="mt-5 grid gap-5">{sequences.map((sequence, index) => { const body = stringValue(sequence.body); const bodyInstructions = instructionLines(sequence.body); const instructions = instructionLines(sequence.generalInstructions); const role = stringValue(sequence.role); const type = sequenceTypeLabel(sequence.type, sequenceTypeLabels); return <article className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 shadow-sm" key={`${stringValue(sequence.uuid) ?? "sequence"}-${index}`}><div className="flex gap-4"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">{index + 1}</span><div className="min-w-0 flex-1">{role && <p className="text-base font-bold text-primary">{role}</p>}{type && <p className="mt-0.5 text-sm italic text-on-surface-variant">{type}</p>}<h3 className="mt-1 font-serif text-xl font-semibold">{stringValue(sequence.title) ?? content.sequenceFallback}</h3>{stringValue(sequence.subtitle) && <p className="mt-1 text-on-surface-variant">{stringValue(sequence.subtitle)}</p>}{body && body !== stringValue(sequence.lyrics) && (bodyInstructions.length > 1 ? <InstructionList instructions={bodyInstructions} /> : <p className="mt-4 whitespace-pre-wrap leading-7">{body}</p>)}{instructions.length > 0 && <InstructionList instructions={instructions} />}<SequenceLyrics sequence={sequence} title={content.lyricsAndGestures} /><SequenceMedia media={sequence.documentMedia ?? sequence.media} resourceFallback={content.resourceFallback} /></div></div></article>; })}</div></section>;
+}
+
+function InstructionList({instructions}: {instructions: string[]}): JSX.Element {
+    return <ul className="mt-4 space-y-1 rounded-lg border-l-4 border-primary/35 px-4 py-3 text-sm leading-6">{instructions.map((instruction, instructionIndex) => <li className="flex gap-2" key={instructionIndex}><span aria-hidden="true" className="pt-0.5 text-primary">●</span><span>{instruction}</span></li>)}</ul>;
 }

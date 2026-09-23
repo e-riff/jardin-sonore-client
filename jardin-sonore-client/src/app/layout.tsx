@@ -2,6 +2,7 @@ import type {Metadata} from "next";
 import {JSX, ReactNode} from "react";
 import Footer from "@/components/navigation/Footer";
 import Header from "@/components/navigation/Header";
+import {PortalToastProvider} from "@/components/portal/PortalToastProvider";
 import fr from "@/i18n/dictionaries/fr";
 import {defaultLocale} from "@/i18n/locales";
 import {getTranslations} from "@/i18n/server";
@@ -84,9 +85,11 @@ export default async function RootLayout({children}: RootLayoutProps): Promise<J
         <html lang={defaultLocale}>
             <body className="min-h-screen bg-background text-on-background antialiased">
                 <TranslationsProvider dictionary={dictionary}>
-                    <Header />
-                    <main>{children}</main>
-                    <Footer />
+                    <PortalToastProvider>
+                        <Header />
+                        <main>{children}</main>
+                        <Footer />
+                    </PortalToastProvider>
                 </TranslationsProvider>
             </body>
         </html>

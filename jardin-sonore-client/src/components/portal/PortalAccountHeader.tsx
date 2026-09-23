@@ -7,6 +7,7 @@ import Link from "next/link";
 import {usePathname} from "next/navigation";
 import BrandLogo from "@/components/BrandLogo";
 import {portalAccountDisplayName, type PortalAccount} from "@/lib/portal/types";
+import {portalRoutes} from "@/lib/portal/routes";
 import {useTranslations} from "@/i18n/translations-provider";
 
 interface PortalAccountHeaderProps {
@@ -50,7 +51,10 @@ export default function PortalAccountHeader({account, onLogout}: PortalAccountHe
     return <header className="border-b border-primary/20 border-t-4 border-primary bg-surface-container-lowest px-4 py-4 sm:px-6">
         <div className="mx-auto max-w-6xl">
             <div className="flex items-center justify-between gap-4">
-                <Link aria-label={content.publicSiteLink} className="flex flex-col items-start" href="/" onClick={() => { closeAccountMenu(); closeMobileMenu(); }}><BrandLogo className="text-xl font-semibold sm:text-2xl" label="Jardin Sonore" /><span className="mt-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-on-surface-variant">{content.publicSiteReturnLabel}</span></Link>
+                <div className="flex flex-col items-start">
+                    <Link aria-label={content.homeAriaLabel} href={portalRoutes.sessions} onClick={() => { closeAccountMenu(); closeMobileMenu(); }}><BrandLogo className="text-xl font-semibold sm:text-2xl" label="Jardin Sonore" /></Link>
+                    <Link className="mt-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-on-surface-variant hover:text-primary" href="/" onClick={() => { closeAccountMenu(); closeMobileMenu(); }}>{content.publicSiteReturnLabel}</Link>
+                </div>
                 <div className="hidden items-center gap-3 lg:flex">
                     <nav aria-label={content.navigationLabel} className="flex items-center gap-5 text-sm font-semibold text-on-surface-variant">
                         <Link aria-current={isSessionsActive ? "page" : undefined} className={navigationLinkClassName(isSessionsActive)} href="/portail/seances" onClick={closeAccountMenu}>{isSessionsActive ? <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-primary" /> : null}{content.sessionsLink}</Link>
