@@ -7,8 +7,14 @@ namespace App\Tests\Functional\Application\Controller;
 use App\Application\Portal\PortalPasswordTokenManager;
 use App\Application\Portal\PortalSessionManager;
 use App\Domain\Model\Portal\UserStatus;
+use App\Domain\Model\Session\MediaResourceType;
+use App\Domain\Model\Session\RepertoireItemType;
 use App\Domain\Model\Session\SessionDocumentStatus;
+use App\Domain\Model\Session\SessionSequenceSourceKind;
+use App\Domain\Model\Session\SessionSequenceType;
+use App\Infrastructure\Doctrine\Entity\MediaResourceEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
+use App\Infrastructure\Doctrine\Entity\RepertoireItemEntity;
 use App\Infrastructure\Doctrine\Entity\SessionSummaryEntity;
 use App\Infrastructure\Doctrine\Entity\UserEntity;
 use App\Infrastructure\Doctrine\Entity\UserOrganizationAccessEntity;
@@ -19,9 +25,11 @@ use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Uid\Uuid;
 
 final class PortalApiControllerTest extends WebTestCase
 {
+    /** @param array<string, mixed> $options */
     protected static function createKernel(array $options = []): \Symfony\Component\HttpKernel\KernelInterface
     {
         return new class($options['environment'] ?? 'test', $options['debug'] ?? true) extends Kernel {
@@ -283,6 +291,46 @@ final class PortalApiControllerTest extends WebTestCase
         self::assertSame(['recommendation-uuid'], $detail['recommendationUuids']);
     }
 
+    public function testSessionDetailExposesYoutubeMediaLinkedFromItsRepertoireItem(): void
+    {
+        [$client, $userEntity, $organizationEntity] = $this->createActiveUserWithOrganization();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $youtubeMediaEntity = (new MediaResourceEntity())
+            ->setTitle('La comptine en vidéo')
+            ->setType(MediaResourceType::VIDEO)
+            ->setPrimaryUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+        $repertoireItemEntity = (new RepertoireItemEntity())
+            ->setTitle('La comptine')
+            ->setType(RepertoireItemType::NURSERY_RHYME)
+            ->setLinkedMediaUuids([$youtubeMediaEntity->getUuid()->toRfc4122()]);
+        $sessionSummaryEntity = $this->createSessionSummary('Séance avec comptine', new DateTimeImmutable('2026-09-15'), [$organizationEntity])
+            ->setSequences([[
+                'uuid' => Uuid::v4()->toRfc4122(),
+                'type' => SessionSequenceType::NURSERY_RHYME->value,
+                'title' => 'La comptine',
+                'subtitle' => null,
+                'body' => '',
+                'lyrics' => null,
+                'gestures' => null,
+                'notes' => null,
+                'media' => [],
+                'showLyricsByDefault' => false,
+                'sourceUuid' => $repertoireItemEntity->getUuid()->toRfc4122(),
+                'sourceKind' => SessionSequenceSourceKind::REPERTOIRE_ITEM->value,
+                'sourceTitle' => 'La comptine',
+            ]]);
+        $entityManager->persist($youtubeMediaEntity);
+        $entityManager->persist($repertoireItemEntity);
+        $entityManager->persist($sessionSummaryEntity);
+        $entityManager->flush();
+        $token = $this->login($client, $userEntity);
+
+        $client->request('GET', '/api/portal/sessions/' . $sessionSummaryEntity->getUuid()->toRfc4122(), server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
+
+        self::assertResponseIsSuccessful();
+        self::assertSame('https://www.youtube.com/watch?v=dQw4w9WgXcQ', $this->responseJson($client)['sequences'][0]['documentMedia'][0]['url']);
+    }
+
     public function testReadyDocumentStreamsPdfAndPendingDocumentReturnsNotFound(): void
     {
         [$client, $userEntity, $organizationEntity] = $this->createActiveUserWithOrganization();
@@ -367,7 +415,10 @@ final class PortalApiControllerTest extends WebTestCase
         return $this->responseJson($client)['token'];
     }
 
-    /** @param array<string, mixed> $payload */
+    /**
+     * @param array<string, mixed> $payload
+     * @param array<string, mixed> $server
+     */
     private function requestJson(KernelBrowser $client, string $method, string $uri, array $payload, array $server = []): void
     {
         $client->request($method, $uri, server: [

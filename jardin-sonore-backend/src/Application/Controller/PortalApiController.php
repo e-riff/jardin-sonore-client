@@ -233,6 +233,7 @@ final class PortalApiController extends AbstractController
         return new JsonResponse(PortalSessionResponse::fromEntity(
             $sessionSummaryEntity,
             $this->portalSessionReader->authorizedOrganizations($userEntity),
+            $this->portalSessionReader->detailSequences($sessionSummaryEntity),
         )->toArray());
     }
 

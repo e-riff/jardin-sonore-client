@@ -4,20 +4,33 @@ declare(strict_types=1);
 
 namespace App\Application\Portal;
 
+use App\Application\Session\RepertoireBlockView;
+use App\Application\Session\SessionSequenceView;
+use App\Domain\Model\Session\SessionSequence;
+use App\Domain\Model\Session\SessionSequenceMedia;
+use App\Domain\Repository\MediaResourceRepositoryInterface;
+use App\Domain\Repository\RepertoireItemRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\SessionSummaryEntity;
 use App\Infrastructure\Doctrine\Entity\UserEntity;
 use App\Infrastructure\Doctrine\Entity\UserOrganizationAccessEntity;
+use App\Infrastructure\Doctrine\Mapper\SessionSummaryMapper;
 use Doctrine\ORM\EntityManagerInterface;
+use InvalidArgumentException;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\Uid\Uuid;
+use ValueError;
 
 final readonly class PortalSessionReader
 {
     private const int PAGE_SIZE = 20;
 
-    public function __construct(private EntityManagerInterface $entityManager)
-    {
+    public function __construct(
+        private EntityManagerInterface $entityManager,
+        private SessionSummaryMapper $sessionSummaryMapper,
+        private RepertoireItemRepositoryInterface $repertoireItemRepository,
+        private MediaResourceRepositoryInterface $mediaResourceRepository,
+    ) {
     }
 
     /** @return list<OrganizationEntity> */
@@ -84,6 +97,52 @@ final readonly class PortalSessionReader
             ->getOneOrNullResult();
 
         return $sessionEntity instanceof SessionSummaryEntity ? $sessionEntity : null;
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function detailSequences(SessionSummaryEntity $sessionSummaryEntity): array
+    {
+        try {
+            $sessionSequences = $this->sessionSummaryMapper->toDomain($sessionSummaryEntity)->getSequences();
+        } catch (InvalidArgumentException|ValueError) {
+            return $sessionSummaryEntity->getSequences();
+        }
+
+        return array_map(function (SessionSequence $sessionSequence): array {
+            $repertoireItem = null === $sessionSequence->sourceUuid
+                ? null
+                : $this->repertoireItemRepository->findByUuid($sessionSequence->sourceUuid);
+            $sessionSequenceView = SessionSequenceView::fromDomain(
+                $sessionSequence,
+                $repertoireItem,
+                mediaResourceRepository: $this->mediaResourceRepository,
+            );
+
+            return [
+                'uuid' => $sessionSequenceView->uuid->toRfc4122(),
+                'type' => $sessionSequenceView->type->value,
+                'title' => $sessionSequenceView->title,
+                'subtitle' => $sessionSequenceView->subtitle,
+                'body' => $sessionSequenceView->body,
+                'lyrics' => $sessionSequenceView->lyrics,
+                'gestures' => $sessionSequenceView->gestures,
+                'notes' => $sessionSequenceView->notes,
+                'media' => array_map(static fn (SessionSequenceMedia $media): array => $media->toArray(), $sessionSequenceView->media),
+                'documentMedia' => array_map(static fn (SessionSequenceMedia $media): array => $media->toArray(), $sessionSequenceView->documentMedia),
+                'showLyricsByDefault' => $sessionSequenceView->showLyricsByDefault,
+                'role' => $sessionSequenceView->role,
+                'instrumentUuids' => $sessionSequenceView->instrumentUuids,
+                'sourceUuid' => $sessionSequenceView->sourceUuid?->toRfc4122(),
+                'sourceKind' => $sessionSequenceView->sourceKind?->value,
+                'sourceTitle' => $sessionSequenceView->sourceTitle,
+                'generalInstructions' => $sessionSequenceView->generalInstructions,
+                'contentBlocks' => array_map(static fn (RepertoireBlockView $contentBlock): array => [
+                    'kind' => $contentBlock->kind->value,
+                    'text' => $contentBlock->text,
+                    'gesture' => $contentBlock->gesture,
+                ], $sessionSequenceView->contentBlocks),
+            ];
+        }, $sessionSequences);
     }
 
     private function authorizedSessionsQueryBuilder(UserEntity $userEntity, ?string $organizationUuid = null): \Doctrine\ORM\QueryBuilder
