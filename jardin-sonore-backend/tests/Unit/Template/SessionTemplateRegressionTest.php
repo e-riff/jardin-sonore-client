@@ -97,7 +97,13 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertIsString($template);
         self::assertStringNotContainsString('.sequence { margin: 0 0 6mm; page-break-inside: avoid; }', $template);
         self::assertStringContainsString('.sequence-layout { display: block; }', $template);
-        self::assertStringContainsString('.sequence-layout--with-media .media-rail { float: right;', $template);
+        self::assertStringContainsString('.sequence-layout--with-media { display: table; width: 100%; }', $template);
+        self::assertStringContainsString('.sequence-layout--with-media .sequence-main { display: table-cell;', $template);
+        self::assertStringContainsString('.sequence-layout--with-media .media-rail { display: table-cell;', $template);
+        self::assertStringContainsString('.instructions-list li { display: table; width: 100%;', $template);
+        self::assertStringContainsString('height: 1.4mm; margin-top: 2.7mm;', $template);
+        self::assertStringContainsString('class="instruction-bullet"><span class="instruction-bullet-dot"></span>', $template);
+        self::assertStringContainsString('class="instruction-text"', $template);
         self::assertStringContainsString('page-break-after: avoid;', $template);
     }
 
@@ -112,6 +118,59 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertStringNotContainsString('document.session.sessionDate|date', $pdfPreview);
         self::assertStringContainsString('<p class="cover-subtitle">{{ document.session.theme }}</p>', $pdfPreview);
         self::assertStringContainsString('.cover-subtitle {', $pdfPreview);
+    }
+
+    public function testPdfPrioritizesSequencePurposeBeforeItsType(): void
+    {
+        $template = file_get_contents(__DIR__ . '/../../../templates/session/document.pdf.twig');
+
+        self::assertIsString($template);
+        self::assertStringContainsString('{% if sequence.role %}<p class="sequence-heading-role">{{ sequence.role }}</p>{% endif %}', $template);
+        self::assertStringContainsString('<p class="sequence-heading-type">{{ sequence.type.translationKey()|trans({}, \'sessions\') }}</p>', $template);
+        self::assertStringContainsString('.sequence-heading-role {', $template);
+        self::assertStringContainsString('.sequence-heading-type {', $template);
+    }
+
+    public function testSessionDocumentActionsKeepDownloadReadableAndExposeRegenerationFromTheIndex(): void
+    {
+        $editTemplate = file_get_contents(__DIR__ . '/../../../templates/session/edit.html.twig');
+        $indexTemplate = file_get_contents(__DIR__ . '/../../../templates/session/index.html.twig');
+        $styles = file_get_contents(__DIR__ . '/../../../assets/styles/app.css');
+
+        self::assertIsString($editTemplate);
+        self::assertIsString($indexTemplate);
+        self::assertIsString($styles);
+        self::assertStringContainsString('session-document-status > a:not(.internal-button)', $styles);
+        self::assertStringContainsString("path('session_document_download'", $indexTemplate);
+        self::assertStringContainsString("path('session_document_regenerate'", $indexTemplate);
+        self::assertStringContainsString('title="{{ \'sessions.summary.document.regenerate\'|trans({}, \'sessions\') }}"', $indexTemplate);
+    }
+
+    public function testSessionInstructionsUseVisibleBulletsAndPdfMediaLabelsStayBounded(): void
+    {
+        $htmlPreview = file_get_contents(__DIR__ . '/../../../templates/session/show.html.twig');
+        $pdfPreview = file_get_contents(__DIR__ . '/../../../templates/session/document.pdf.twig');
+
+        self::assertIsString($htmlPreview);
+        self::assertIsString($pdfPreview);
+        self::assertStringContainsString('session-document__instruction-bullet', $htmlPreview);
+        self::assertStringContainsString('instruction-bullet', $pdfPreview);
+        self::assertStringContainsString('media.label|slice(0, 54)', $pdfPreview);
+        self::assertStringContainsString('.media-primary-link { display: block;', $pdfPreview);
+        self::assertStringContainsString('max-height: 9mm;', $pdfPreview);
+    }
+
+    public function testMultilineSequenceBodiesRenderAsVisibleInstructionLists(): void
+    {
+        $htmlPreview = file_get_contents(__DIR__ . '/../../../templates/session/show.html.twig');
+        $pdfPreview = file_get_contents(__DIR__ . '/../../../templates/session/document.pdf.twig');
+
+        self::assertIsString($htmlPreview);
+        self::assertIsString($pdfPreview);
+        self::assertStringContainsString("sequence.body|split('\\n')", $htmlPreview);
+        self::assertStringContainsString("sequence.body|split('\\n')", $pdfPreview);
+        self::assertStringContainsString('session-document__instruction-bullet', $htmlPreview);
+        self::assertStringContainsString('instruction-bullet', $pdfPreview);
     }
 
     public function testSummaryFormLetsTheUserOrderSelectedRecommendations(): void
@@ -256,7 +315,8 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertStringContainsString('.running-header', $template);
         self::assertStringContainsString('.sequence-index', $template);
         self::assertStringContainsString('.sequence-heading-copy', $template);
-        self::assertStringContainsString('.sequence-heading-meta', $template);
+        self::assertStringContainsString('.sequence-heading-role', $template);
+        self::assertStringContainsString('.sequence-heading-type', $template);
         self::assertStringContainsString('.sequence-shell', $template);
         self::assertStringContainsString('.sequence-layout', $template);
         self::assertStringContainsString('.media-rail', $template);
@@ -275,8 +335,13 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertStringNotContainsString('badge badge--instrument">♫', $template);
         self::assertStringContainsString('.cover + .summary { margin-top: -7mm; }', $template);
         self::assertStringContainsString('.sequence-title-row', $template);
+        self::assertStringContainsString('.sequence-title-row { display: block; width: 100%; }', $template);
+        self::assertStringContainsString('.subtitle { display: block;', $template);
+        self::assertStringContainsString('white-space: normal;', $template);
         self::assertStringContainsString('.lyric-pair { margin-bottom: .8mm; }', $template);
         self::assertStringContainsString('.sequence .badge--instrument', $template);
+        self::assertStringContainsString('.media-primary-link { display: block;', $template);
+        self::assertStringContainsString('overflow-wrap: anywhere;', $template);
         self::assertStringContainsString('.gesture { margin: 0; color: #66736e; font-size: 8.5pt;', $template);
         self::assertStringContainsString('.recommendations h2 { margin-bottom: 3mm; color: #9e6049;', $template);
         self::assertStringNotContainsString('<p class="eyebrow">Prolonger la séance</p>', $template);

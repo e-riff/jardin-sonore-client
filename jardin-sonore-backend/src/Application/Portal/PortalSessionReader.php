@@ -8,6 +8,7 @@ use App\Application\Session\RepertoireBlockView;
 use App\Application\Session\SessionSequenceView;
 use App\Domain\Model\Session\SessionSequence;
 use App\Domain\Model\Session\SessionSequenceMedia;
+use App\Domain\Repository\InstrumentRepositoryInterface;
 use App\Domain\Repository\MediaResourceRepositoryInterface;
 use App\Domain\Repository\RepertoireItemRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
@@ -30,6 +31,7 @@ final readonly class PortalSessionReader
         private SessionSummaryMapper $sessionSummaryMapper,
         private RepertoireItemRepositoryInterface $repertoireItemRepository,
         private MediaResourceRepositoryInterface $mediaResourceRepository,
+        private InstrumentRepositoryInterface $instrumentRepository,
     ) {
     }
 
@@ -143,6 +145,21 @@ final readonly class PortalSessionReader
                 ], $sessionSequenceView->contentBlocks),
             ];
         }, $sessionSequences);
+    }
+
+    /** @return list<string> */
+    public function instrumentNames(SessionSummaryEntity $sessionSummaryEntity): array
+    {
+        return array_values(array_filter(array_map(
+            function (string $instrumentUuid): ?string {
+                if (!Uuid::isValid($instrumentUuid)) {
+                    return null;
+                }
+
+                return $this->instrumentRepository->findByUuid(Uuid::fromString($instrumentUuid))?->getName();
+            },
+            $sessionSummaryEntity->getInstrumentUuids(),
+        )));
     }
 
     private function authorizedSessionsQueryBuilder(UserEntity $userEntity, ?string $organizationUuid = null): \Doctrine\ORM\QueryBuilder

@@ -65,6 +65,7 @@ export interface PortalSessionDetail extends PortalSessionSummary {
     materialSummary: string | null;
     furtherExploration: string | null;
     instrumentUuids: string[];
+    instrumentNames: string[];
     recommendationUuids: string[];
     sequences: Array<Record<string, unknown>>;
 }

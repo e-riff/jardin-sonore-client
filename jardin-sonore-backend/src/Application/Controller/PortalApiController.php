@@ -234,6 +234,7 @@ final class PortalApiController extends AbstractController
             $sessionSummaryEntity,
             $this->portalSessionReader->authorizedOrganizations($userEntity),
             $this->portalSessionReader->detailSequences($sessionSummaryEntity),
+            $this->portalSessionReader->instrumentNames($sessionSummaryEntity),
         )->toArray());
     }
 

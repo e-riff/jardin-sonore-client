@@ -12,6 +12,7 @@ use App\Domain\Model\Session\RepertoireItemType;
 use App\Domain\Model\Session\SessionDocumentStatus;
 use App\Domain\Model\Session\SessionSequenceSourceKind;
 use App\Domain\Model\Session\SessionSequenceType;
+use App\Infrastructure\Doctrine\Entity\InstrumentEntity;
 use App\Infrastructure\Doctrine\Entity\MediaResourceEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\RepertoireItemEntity;
@@ -240,15 +241,17 @@ final class PortalApiControllerTest extends WebTestCase
     {
         [$client, $userEntity, $organizationEntity] = $this->createActiveUserWithOrganization();
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $instrumentEntity = (new InstrumentEntity())->setName('Anneaux en métal');
         $sessionSummaryEntity = $this->createSessionSummary('Séance portail', new DateTimeImmutable('2026-09-14'), [$organizationEntity])
             ->setTheme('Les sons de l’eau')
             ->setGeneralNotes('Une intention pédagogique.')
             ->setMaterialSummary('Des bols et des cuillères.')
             ->setFurtherExploration('Prolonger à la maison.')
-            ->setInstrumentUuids(['instrument-uuid'])
+            ->setInstrumentUuids([$instrumentEntity->getUuid()->toRfc4122()])
             ->setRecommendationUuids(['recommendation-uuid'])
             ->setSequences([['title' => 'Accueil']])
             ->setDocumentStatus(SessionDocumentStatus::READY);
+        $entityManager->persist($instrumentEntity);
         $entityManager->persist($sessionSummaryEntity);
         $entityManager->flush();
         $token = $this->login($client, $userEntity);
@@ -284,10 +287,12 @@ final class PortalApiControllerTest extends WebTestCase
             'materialSummary',
             'furtherExploration',
             'instrumentUuids',
+            'instrumentNames',
             'recommendationUuids',
             'sequences',
         ], array_keys($detail));
-        self::assertSame(['instrument-uuid'], $detail['instrumentUuids']);
+        self::assertSame([$instrumentEntity->getUuid()->toRfc4122()], $detail['instrumentUuids']);
+        self::assertSame(['Anneaux en métal'], $detail['instrumentNames']);
         self::assertSame(['recommendation-uuid'], $detail['recommendationUuids']);
     }
 
