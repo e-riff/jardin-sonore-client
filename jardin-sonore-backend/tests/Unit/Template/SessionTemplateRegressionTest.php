@@ -125,10 +125,11 @@ final class SessionTemplateRegressionTest extends TestCase
         $template = file_get_contents(__DIR__ . '/../../../templates/session/document.pdf.twig');
 
         self::assertIsString($template);
-        self::assertStringContainsString('{% if sequence.role %}<p class="sequence-heading-role">{{ sequence.role }}</p>{% endif %}', $template);
-        self::assertStringContainsString('<p class="sequence-heading-type">{{ sequence.type.translationKey()|trans({}, \'sessions\') }}</p>', $template);
+        self::assertStringContainsString('<p class="sequence-heading-meta">{% if sequence.role %}<span class="sequence-heading-role">{{ sequence.role }}</span> — {% endif %}<span class="sequence-heading-type">{{ sequence.type.translationKey()|trans({}, \'sessions\') }}</span></p>', $template);
+        self::assertStringContainsString('<div class="sequence-title-row"><h2>{{ sequence.title }}</h2>{% if sequence.subtitle %}<span class="subtitle"> — {{ sequence.subtitle }}</span>{% endif %}</div>', $template);
         self::assertStringContainsString('.sequence-heading-role {', $template);
         self::assertStringContainsString('.sequence-heading-type {', $template);
+        self::assertStringContainsString('.subtitle { display: inline;', $template);
     }
 
     public function testSessionDocumentActionsKeepDownloadReadableAndExposeRegenerationFromTheIndex(): void
@@ -336,7 +337,7 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertStringContainsString('.cover + .summary { margin-top: -7mm; }', $template);
         self::assertStringContainsString('.sequence-title-row', $template);
         self::assertStringContainsString('.sequence-title-row { display: block; width: 100%; }', $template);
-        self::assertStringContainsString('.subtitle { display: block;', $template);
+        self::assertStringContainsString('.subtitle { display: inline;', $template);
         self::assertStringContainsString('white-space: normal;', $template);
         self::assertStringContainsString('.lyric-pair { margin-bottom: .8mm; }', $template);
         self::assertStringContainsString('.sequence .badge--instrument', $template);

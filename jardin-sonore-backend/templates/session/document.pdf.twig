@@ -27,11 +27,12 @@
         .sequence-heading { display: table; width: 100%; margin: 0; background: #fbf9f4; border-left: .7mm solid #d7ad59; page-break-after: avoid; }
         .sequence-index { display: table-cell; width: 15mm; padding: 3mm 0 2.5mm 4mm; color: #b88148; font-family: DejaVu Serif, serif; font-size: 14pt; font-weight: normal; vertical-align: middle; }
         .sequence-heading-copy { display: table-cell; padding: 2.5mm 4mm 2.5mm 0; vertical-align: middle; }
-        .sequence-heading-role { margin: 0 0 .6mm; color: #9e6049; font-size: 9pt; font-weight: bold; letter-spacing: .45pt; text-transform: uppercase; }
-        .sequence-heading-type { margin: 0 0 1mm; color: #6f7d77; font-size: 7.5pt; font-style: italic; font-weight: normal; }
+        .sequence-heading-meta { margin: 0 0 1mm; }
+        .sequence-heading-role { color: #9e6049; font-size: 9pt; font-weight: bold; letter-spacing: .45pt; text-transform: uppercase; }
+        .sequence-heading-type { color: #6f7d77; font-size: 7.5pt; font-style: italic; font-weight: normal; }
         .sequence-title-row { display: block; width: 100%; }
-        .sequence-title-row h2 { display: block; margin: 0; }
-        .subtitle { display: block; margin: 1mm 0 0; color: #52635f; font-style: italic; white-space: normal; }
+        .sequence-title-row h2 { display: inline; margin: 0; }
+        .subtitle { display: inline; margin: 0; color: #52635f; font-size: 10pt; font-style: italic; white-space: normal; }
         .sequence-shell { padding: 3.5mm 5mm 4mm; background: #fffdf8; border: .4mm solid #e6e1d8; border-top: 0; }
         .sequence-layout { display: block; }
         .sequence-layout--with-media { display: table; width: 100%; }
@@ -105,9 +106,8 @@
             <div class="sequence-heading">
                 <span class="sequence-index">{{ '%02d'|format(loop.index) }}</span>
                 <div class="sequence-heading-copy">
-                    {% if sequence.role %}<p class="sequence-heading-role">{{ sequence.role }}</p>{% endif %}
-                    <p class="sequence-heading-type">{{ sequence.type.translationKey()|trans({}, 'sessions') }}</p>
-                    <div class="sequence-title-row"><h2>{{ sequence.title }}</h2>{% if sequence.subtitle %}<p class="subtitle">{{ sequence.subtitle }}</p>{% endif %}</div>
+                    <p class="sequence-heading-meta">{% if sequence.role %}<span class="sequence-heading-role">{{ sequence.role }}</span> — {% endif %}<span class="sequence-heading-type">{{ sequence.type.translationKey()|trans({}, 'sessions') }}</span></p>
+                    <div class="sequence-title-row"><h2>{{ sequence.title }}</h2>{% if sequence.subtitle %}<span class="subtitle"> — {{ sequence.subtitle }}</span>{% endif %}</div>
                 </div>
             </div>
             {% set documentMedia = sequence.documentMedia is empty ? sequence.media : sequence.documentMedia %}
