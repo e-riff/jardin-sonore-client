@@ -12,7 +12,7 @@ const formatDate = (date: string): string => frenchDateFormatter.format(new Date
 
 export default function PortalSessionsList({account, content, filters, response, query}: {account: PortalAccount; content: Dictionary["portal"]["sessions"]; filters: Dictionary["portal"]["filters"]; response: PortalSessionListResponse; query: PortalListQuery}): React.JSX.Element {
     return <>
-        <PortalListFilters content={filters} kind="sessions" organizations={account.organizations} query={query} themes={response.availableThemes} />
+        <PortalListFilters content={filters} key={JSON.stringify(query)} kind="sessions" organizations={account.organizations} query={query} themes={response.availableThemes} />
         {response.items.length === 0 ? <p className="mt-8 text-on-surface-variant">{content.empty}</p> : <div className="mt-5 divide-y divide-outline-variant border-y border-outline-variant">{response.items.map((session) => <article className="py-5" key={session.slug}>
             <p className="text-sm text-on-surface-variant">{content.sharedAt} {formatDate(session.sharedAt ?? session.sessionDate)}</p>
             {account.organizations.length > 1 ? <p className="mt-1 text-sm text-on-surface-variant">{session.organizations.map((organization) => organization.name).join(", ")}</p> : null}
