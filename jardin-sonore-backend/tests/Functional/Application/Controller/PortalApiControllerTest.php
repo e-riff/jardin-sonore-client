@@ -405,6 +405,7 @@ final class PortalApiControllerTest extends WebTestCase
     {
         return (new SessionSummaryEntity())
             ->setTitle($title)
+            ->setSlug('session-' . Uuid::v4()->toRfc4122())
             ->setSessionDate($sessionDate)
             ->replaceOrganizations($organizationEntities);
     }
