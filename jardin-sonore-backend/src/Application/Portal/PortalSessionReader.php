@@ -146,7 +146,7 @@ final readonly class PortalSessionReader
             $authorizedOrganizationEntities,
         ), true);
         $organizationsBySourceUuid = [];
-        $sessions = $this->authorizedSessionsQueryBuilder($userEntity, $organizationUuid)->getQuery()->getResult();
+        $sessions = $this->authorizedSessionsQueryBuilder($userEntity)->getQuery()->getResult();
         foreach ($sessions as $sessionSummaryEntity) {
             if (!$sessionSummaryEntity instanceof SessionSummaryEntity) {
                 continue;
@@ -155,7 +155,7 @@ final readonly class PortalSessionReader
             foreach ($sessionSummaryEntity->getOrganizationShares() as $organizationShare) {
                 $organizationEntity = $organizationShare->getOrganization();
                 $uuid = $organizationEntity->getUuid()->toRfc4122();
-                if (isset($authorizedOrganizationUuids[$uuid]) && (null === $organizationUuid || $uuid === $organizationUuid)) {
+                if (isset($authorizedOrganizationUuids[$uuid])) {
                     $sessionOrganizations[$uuid] = $organizationEntity;
                 }
             }
@@ -171,6 +171,13 @@ final readonly class PortalSessionReader
                     $organizationsBySourceUuid[$sourceUuid][$uuid] = $organizationEntity;
                 }
             }
+        }
+
+        if (null !== $organizationUuid) {
+            $organizationsBySourceUuid = array_filter(
+                $organizationsBySourceUuid,
+                static fn (array $organizations): bool => isset($organizations[$organizationUuid]),
+            );
         }
 
         return array_map(static fn (array $organizations): array => array_values($organizations), $organizationsBySourceUuid);

@@ -478,7 +478,10 @@ final class PortalApiControllerTest extends WebTestCase
         $client->request('GET', '/api/portal/repertoire?q=pluie&theme[]=' . $nightThemeEntity->getUuid()->toRfc4122() . '&organization=' . $secondOrganizationEntity->getUuid()->toRfc4122(), server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
         self::assertResponseIsSuccessful();
         self::assertSame([$firstItemEntity->getSlug()], array_column($this->responseJson($client)['items'], 'slug'));
-        self::assertSame([$secondOrganizationEntity->getUuid()->toRfc4122()], array_column($this->responseJson($client)['items'][0]['organizations'], 'uuid'));
+        self::assertEqualsCanonicalizing(
+            [$organizationEntity->getUuid()->toRfc4122(), $secondOrganizationEntity->getUuid()->toRfc4122()],
+            array_column($this->responseJson($client)['items'][0]['organizations'], 'uuid'),
+        );
         self::assertSame('https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg', $this->responseJson($client)['items'][0]['thumbnailUrl']);
 
         $client->request('GET', '/api/portal/repertoire?sort=updatedAt&direction=asc', server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);

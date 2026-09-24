@@ -54,3 +54,8 @@ export function portalListQueryToSearchParams(query: PortalListQuery): URLSearch
 export function updatePortalListQuery(query: PortalListQuery, patch: Partial<PortalListQuery>): PortalListQuery {
     return {...query, ...patch, page: 1};
 }
+
+export function applyPortalListQueryPatch(queryRef: {current: PortalListQuery}, patch: Partial<PortalListQuery>): PortalListQuery {
+    queryRef.current = updatePortalListQuery(queryRef.current, patch);
+    return queryRef.current;
+}

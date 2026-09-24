@@ -13,7 +13,7 @@ const dateFormatter = new Intl.DateTimeFormat("fr-FR", {dateStyle: "medium"});
 export default function PortalRepertoireList({account, content, filters, response, query}: {account: PortalAccount; content: Dictionary["portal"]["repertoire"]; filters: Dictionary["portal"]["filters"]; response: PortalRepertoireListResponse; query: PortalListQuery}): React.JSX.Element {
     const detailSearch = portalListQueryToSearchParams(query).toString();
     return <>
-        <PortalListFilters content={filters} kind="repertoire" organizations={account.organizations} query={query} themes={response.availableThemes} />
+        <PortalListFilters content={filters} key={JSON.stringify(query)} kind="repertoire" organizations={account.organizations} query={query} themes={response.availableThemes} />
         {response.items.length === 0 ? <p className="mt-8 text-on-surface-variant">{content.empty}</p> : <div className="mt-5 divide-y divide-outline-variant border-y border-outline-variant">{response.items.map((item) => <article className="flex gap-4 py-5 sm:gap-6" key={item.slug}>
             {item.thumbnailUrl ? <Image alt="" className="h-20 w-28 shrink-0 rounded-md object-cover sm:h-24 sm:w-36" height={96} src={item.thumbnailUrl} unoptimized width={144} /> : null}
             <div className="min-w-0 flex-1">
