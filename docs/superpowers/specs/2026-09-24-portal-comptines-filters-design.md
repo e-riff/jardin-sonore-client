@@ -21,7 +21,7 @@ Les endpoints de listes appliquent les critères en SQL avant pagination :
 
 - `q` recherche dans le titre et les libellés de catégories ;
 - `organization` limite à une structure autorisée ;
-- `theme` peut être répété et conserve un élément dès qu'au moins une catégorie sélectionnée correspond ;
+- `theme[]` peut être répété et conserve un élément dès qu'au moins une catégorie sélectionnée correspond ;
 - `type` limite les comptines à `nursery_rhyme` ou `fingerplay` ;
 - `sort` et `direction` définissent l'ordre.
 
@@ -29,7 +29,7 @@ Les critères se combinent en ET, sauf les catégories répétées qui se combin
 
 `GET /api/portal/repertoire` renvoie les éléments accessibles, leurs catégories colorées et les structures par lesquelles ils sont accessibles. `GET /api/portal/repertoire/{slug}` garde la même règle d'autorisation et répond 404 pour un slug absent, inactif ou non accessible.
 
-Les réponses de séance passent de `theme` à `themes`, une liste explicite de catégories `{uuid, label, color}`. Les résumés de séance et de répertoire exposent leurs structures pour permettre le filtre dédié.
+Les réponses de séance passent de `theme` à `themes`, une liste explicite de catégories `{uuid, label, color}`. Le sous-titre libre est conservé dans `subtitle`. Les résumés de séance et de répertoire exposent leurs structures pour permettre le filtre dédié. Les listes renvoient aussi les catégories disponibles parmi les contenus autorisés.
 
 ## Interface portail
 

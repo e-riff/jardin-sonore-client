@@ -50,3 +50,7 @@ export function portalListQueryToSearchParams(query: PortalListQuery): URLSearch
     if (query.page > 1) searchParams.set("page", String(query.page));
     return searchParams;
 }
+
+export function updatePortalListQuery(query: PortalListQuery, patch: Partial<PortalListQuery>): PortalListQuery {
+    return {...query, ...patch, page: 1};
+}

@@ -2,7 +2,7 @@
 
 import {usePathname, useRouter} from "next/navigation";
 import type {Dictionary} from "@/i18n/types";
-import {portalListQueryToSearchParams, type PortalListKind, type PortalListQuery, type PortalListSort} from "@/lib/portal/list-query";
+import {portalListQueryToSearchParams, updatePortalListQuery, type PortalListKind, type PortalListQuery, type PortalListSort} from "@/lib/portal/list-query";
 import type {PortalOrganization, PortalTheme} from "@/lib/portal/types";
 
 interface PortalListFiltersProps {
@@ -17,7 +17,7 @@ export default function PortalListFilters({kind, query, organizations, themes, c
     const router = useRouter();
     const pathname = usePathname();
     const update = (patch: Partial<PortalListQuery>): void => {
-        const next = {...query, ...patch, page: 1};
+        const next = updatePortalListQuery(query, patch);
         const search = portalListQueryToSearchParams(next).toString();
         router.replace(`${pathname}${search ? `?${search}` : ""}`, {scroll: false});
     };

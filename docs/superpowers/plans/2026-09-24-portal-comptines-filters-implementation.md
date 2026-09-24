@@ -14,7 +14,7 @@
 
 - N'exposer que les éléments actifs `nursery_rhyme` et `fingerplay` référencés par une séance autorisée.
 - `organization` est masqué en mono-structure et ne peut jamais étendre les droits.
-- Les paramètres `theme` répétés se combinent en OU ; les autres critères se combinent en ET.
+- Les paramètres `theme[]` répétés se combinent en OU ; les autres critères se combinent en ET.
 - Les changements de filtre ou tri réinitialisent `page` à 1 et sont persistés dans l'URL.
 - Séances : date ou titre ; comptines : dernière mise à jour ou titre ; directions `asc` et `desc`.
 - Utiliser les couleurs de thèmes persistées, ne pas ajouter de dépendance ni exposer le cookie BFF.
@@ -76,7 +76,7 @@ private Collection $themes;
 - [ ] **Step 1: Écrire les tests rouges de recherche, structure, thèmes et tri.**
 
 ```php
-$client->request('GET', '/api/portal/sessions?q=pluie&theme=' . $rainThemeUuid . '&theme=' . $nightThemeUuid . '&sort=title&direction=asc');
+$client->request('GET', '/api/portal/sessions?q=pluie&theme[]=' . $rainThemeUuid . '&theme[]=' . $nightThemeUuid . '&sort=title&direction=asc');
 self::assertSame(['la-pluie', 'nuit-douce'], array_column($this->responseJson($client)['items'], 'slug'));
 self::assertArrayNotHasKey('theme', $this->responseJson($client)['items'][0]);
 ```
@@ -110,7 +110,7 @@ if ([] !== $criteria->themeUuids) {
 - [ ] **Step 1: Écrire les tests rouges du répertoire.**
 
 ```php
-$client->request('GET', '/api/portal/repertoire?type=fingerplay&theme=' . $rainThemeUuid . '&organization=' . $organizationUuid);
+$client->request('GET', '/api/portal/repertoire?type=fingerplay&theme[]=' . $rainThemeUuid . '&organization=' . $organizationUuid);
 self::assertSame(['tape-tape'], array_column($this->responseJson($client)['items'], 'slug'));
 self::assertSame(1, $this->responseJson($client)['pagination']['total']);
 ```
@@ -144,7 +144,7 @@ $items = $this->repertoireItemDoctrineRepository->findPortalItems($sourceUuids, 
 
 ```ts
 expect(portalListQueryToSearchParams({query: "pluie", organizationUuid: "org", themeUuids: ["rain", "night"], type: "fingerplay", sort: "updatedAt", direction: "desc", page: 2}).toString())
-    .toBe("q=pluie&organization=org&theme=rain&theme=night&type=fingerplay&sort=updatedAt&direction=desc&page=2");
+    .toBe("q=pluie&organization=org&theme%5B%5D=rain&theme%5B%5D=night&type=fingerplay&page=2");
 ```
 
 - [ ] **Step 2: Lancer le test ou lint rouge.** Run `npm run lint`. Expected: FAIL après import du helper absent.
