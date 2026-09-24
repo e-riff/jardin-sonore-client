@@ -6,10 +6,13 @@ import type {
     PortalLoginData,
     PortalPasswordData,
     PortalProfileData,
+    PortalRepertoireDetail,
+    PortalRepertoireListResponse,
     PortalSessionDetail,
     PortalSessionListResponse,
     PortalTokenResponse,
 } from "./types.ts";
+import {portalListQueryToSearchParams, type PortalListQuery} from "./list-query";
 
 export type {
     PortalAccount,
@@ -17,6 +20,8 @@ export type {
     PortalLoginData,
     PortalPasswordData,
     PortalProfileData,
+    PortalRepertoireDetail,
+    PortalRepertoireListResponse,
     PortalSessionDetail,
     PortalSessionListResponse,
     PortalTokenResponse,
@@ -112,17 +117,16 @@ export class PortalApiClient {
         return this.request("/api/portal/me/avatar", {}, true);
     }
 
-    public async sessions(organizationUuid?: string, page?: number): Promise<PortalApiResult<PortalSessionListResponse>> {
-        const searchParams = new URLSearchParams();
-        if (organizationUuid) {
-            searchParams.set("organization", organizationUuid);
-        }
-        if (page) {
-            searchParams.set("page", String(page));
-        }
-        const queryString = searchParams.toString();
+    public async sessions(query?: PortalListQuery): Promise<PortalApiResult<PortalSessionListResponse>> {
+        return this.getJson<PortalSessionListResponse>(this.listPath("/api/portal/sessions", query));
+    }
 
-        return this.getJson<PortalSessionListResponse>(`/api/portal/sessions${queryString ? `?${queryString}` : ""}`);
+    public async repertoire(query?: PortalListQuery): Promise<PortalApiResult<PortalRepertoireListResponse>> {
+        return this.getJson<PortalRepertoireListResponse>(this.listPath("/api/portal/repertoire", query));
+    }
+
+    public async repertoireItem(slug: string): Promise<PortalApiResult<PortalRepertoireDetail>> {
+        return this.getJson<PortalRepertoireDetail>(`/api/portal/repertoire/${encodeURIComponent(slug)}`);
     }
 
     public async session(slug: string): Promise<PortalApiResult<PortalSessionDetail>> {
@@ -131,6 +135,11 @@ export class PortalApiClient {
 
     public document(slug: string): Promise<Response> {
         return this.request(`/api/portal/sessions/${encodeURIComponent(slug)}/document.pdf`, {}, true);
+    }
+
+    private listPath(path: string, query?: PortalListQuery): string {
+        const searchParams = query ? portalListQueryToSearchParams(query).toString() : "";
+        return `${path}${searchParams ? `?${searchParams}` : ""}`;
     }
 
     private async getJson<T>(path: string): Promise<PortalApiResult<T>> {
