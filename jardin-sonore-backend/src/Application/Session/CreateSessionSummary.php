@@ -37,7 +37,11 @@ final readonly class CreateSessionSummary
         return $sessionSummary;
     }
 
-    /** @return list<\App\Domain\Model\ContentCatalog\Theme> */
+    /**
+     * @param list<string> $themeUuids
+     *
+     * @return list<\App\Domain\Model\ContentCatalog\Theme>
+     */
     private function resolveThemes(array $themeUuids): array
     {
         return array_values(array_filter(array_map(

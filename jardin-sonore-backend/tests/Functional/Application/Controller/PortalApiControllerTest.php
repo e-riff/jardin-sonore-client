@@ -17,6 +17,7 @@ use App\Infrastructure\Doctrine\Entity\MediaResourceEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\RepertoireItemEntity;
 use App\Infrastructure\Doctrine\Entity\SessionSummaryEntity;
+use App\Infrastructure\Doctrine\Entity\ThemeEntity;
 use App\Infrastructure\Doctrine\Entity\UserEntity;
 use App\Infrastructure\Doctrine\Entity\UserOrganizationAccessEntity;
 use App\Kernel;
@@ -203,18 +204,34 @@ final class PortalApiControllerTest extends WebTestCase
         $response = $this->responseJson($client);
         self::assertSame(2, $response['pagination']['total']);
         self::assertSame([
-            $olderSessionEntity->getSlug(),
             $sharedSessionEntity->getSlug(),
+            $olderSessionEntity->getSlug(),
         ], array_column($response['items'], 'slug'));
         self::assertSame([
             ['uuid' => $secondOrganizationEntity->getUuid()->toRfc4122(), 'name' => $secondOrganizationEntity->getName()],
             ['uuid' => $firstOrganizationEntity->getUuid()->toRfc4122(), 'name' => $firstOrganizationEntity->getName()],
-        ], $response['items'][1]['organizations']);
+        ], $response['items'][0]['organizations']);
 
         $client->request('GET', '/api/portal/sessions?organization=' . $secondOrganizationEntity->getUuid()->toRfc4122(), server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
 
         self::assertResponseIsSuccessful();
         self::assertSame([$sharedSessionEntity->getSlug()], array_column($this->responseJson($client)['items'], 'slug'));
+
+        $client->request('GET', '/api/portal/sessions?organization=invalid', server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
+        self::assertResponseIsSuccessful();
+        self::assertSame(0, $this->responseJson($client)['pagination']['total']);
+
+        $client->request('GET', '/api/portal/sessions?organization=' . Uuid::v4()->toRfc4122(), server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
+        self::assertResponseIsSuccessful();
+        self::assertSame(0, $this->responseJson($client)['pagination']['total']);
+
+        $client->request('GET', '/api/portal/sessions?sort=date&direction=asc', server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
+        self::assertResponseIsSuccessful();
+        self::assertSame([$olderSessionEntity->getSlug(), $sharedSessionEntity->getSlug()], array_column($this->responseJson($client)['items'], 'slug'));
+
+        $client->request('GET', '/api/portal/sessions?sort=title&direction=desc', server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
+        self::assertResponseIsSuccessful();
+        self::assertSame([$sharedSessionEntity->getSlug(), $olderSessionEntity->getSlug()], array_column($this->responseJson($client)['items'], 'slug'));
     }
 
     public function testUnauthorizedSessionDetailAndDocumentAreIndistinguishableFromMissingResources(): void
@@ -235,6 +252,36 @@ final class PortalApiControllerTest extends WebTestCase
             $client->request('GET', $url, server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
             self::assertResponseStatusCodeSame(404);
         }
+    }
+
+    public function testSessionFilterCombinesThemesAndSearch(): void
+    {
+        [$client, $userEntity, $organizationEntity] = $this->createActiveUserWithOrganization();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $rainThemeLabel = 'Pluie ' . bin2hex(random_bytes(4));
+        $nightThemeLabel = 'Nuit ' . bin2hex(random_bytes(4));
+        $rainThemeEntity = (new ThemeEntity())->setLabel($rainThemeLabel)->setColor('#2563eb');
+        $nightThemeEntity = (new ThemeEntity())->setLabel($nightThemeLabel)->setColor('#312e81');
+        $rainSessionEntity = $this->createSessionSummary('La pluie chante', new DateTimeImmutable('2026-09-11'), [$organizationEntity]);
+        $nightSessionEntity = $this->createSessionSummary('Nuit étoilée', new DateTimeImmutable('2026-09-12'), [$organizationEntity]);
+        $rainSessionEntity->addTheme($rainThemeEntity);
+        $nightSessionEntity->addTheme($nightThemeEntity);
+        $entityManager->persist($rainThemeEntity);
+        $entityManager->persist($nightThemeEntity);
+        $entityManager->persist($rainSessionEntity);
+        $entityManager->persist($nightSessionEntity);
+        $entityManager->flush();
+        $token = $this->login($client, $userEntity);
+
+        $client->request('GET', '/api/portal/sessions?theme[]=' . $rainThemeEntity->getUuid()->toRfc4122() . '&theme[]=' . $nightThemeEntity->getUuid()->toRfc4122() . '&sort=title&direction=asc', server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
+
+        self::assertResponseIsSuccessful();
+        self::assertSame([$rainSessionEntity->getSlug(), $nightSessionEntity->getSlug()], array_column($this->responseJson($client)['items'], 'slug'));
+        self::assertSame([$rainThemeLabel], array_column($this->responseJson($client)['items'][0]['themes'], 'label'));
+
+        $client->request('GET', '/api/portal/sessions?q=pluie&theme[]=' . $nightThemeEntity->getUuid()->toRfc4122(), server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
+        self::assertResponseIsSuccessful();
+        self::assertSame(0, $this->responseJson($client)['pagination']['total']);
     }
 
     public function testAuthorizedSessionIsResolvedBySlug(): void
@@ -283,7 +330,8 @@ final class PortalApiControllerTest extends WebTestCase
             'sessionDate',
             'sharedAt',
             'organizations',
-            'theme',
+            'themes',
+            'subtitle',
             'documentStatus',
         ], array_keys($listItem));
         self::assertSame(SessionDocumentStatus::READY->value, $listItem['documentStatus']);
@@ -298,7 +346,8 @@ final class PortalApiControllerTest extends WebTestCase
             'sessionDate',
             'sharedAt',
             'organizations',
-            'theme',
+            'themes',
+            'subtitle',
             'documentStatus',
             'generalNotes',
             'materialSummary',
@@ -311,6 +360,7 @@ final class PortalApiControllerTest extends WebTestCase
         self::assertSame([$instrumentEntity->getUuid()->toRfc4122()], $detail['instrumentUuids']);
         self::assertSame(['Anneaux en métal'], $detail['instrumentNames']);
         self::assertSame(['recommendation-uuid'], $detail['recommendationUuids']);
+        self::assertSame('Les sons de l’eau', $detail['subtitle']);
     }
 
     public function testSessionDetailExposesYoutubeMediaLinkedFromItsRepertoireItem(): void
