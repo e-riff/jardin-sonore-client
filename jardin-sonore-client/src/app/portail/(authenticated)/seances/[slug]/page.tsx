@@ -1,16 +1,19 @@
-import {notFound} from "next/navigation";
+import {notFound, redirect} from "next/navigation";
 import PortalDocumentPanel from "@/components/portal/PortalDocumentPanel";
 import PortalSessionActions from "@/components/portal/PortalSessionActions";
 import PortalSessionPreview from "@/components/portal/PortalSessionPreview";
 import PortalThemeBadges from "@/components/portal/PortalThemeBadges";
 import {PortalApiClient} from "@/lib/portal/api-client";
 import {getPortalAccessToken} from "@/lib/portal/session";
+import {portalRequestOrUnavailable} from "@/lib/portal/request-or-unavailable";
+import {portalRoutes} from "@/lib/portal/routes";
 import {getTranslations} from "@/i18n/server";
 
 export default async function PortalSessionPage({params}: {params: Promise<{slug: string}>}): Promise<React.JSX.Element> {
     const [{slug}, token, dictionary] = await Promise.all([params, getPortalAccessToken(), getTranslations()]);
     if (!token) notFound();
-    const result = await (await PortalApiClient.fromCurrentRequest(token)).session(slug);
+    const result = await portalRequestOrUnavailable(async () => (await PortalApiClient.fromCurrentRequest(token)).session(slug));
+    if (result.response.status === 401) redirect(portalRoutes.sessionInvalid);
     if (result.response.status === 404 || !result.response.ok || !result.data) notFound();
     const session = result.data;
     const content = dictionary.portal.detail;

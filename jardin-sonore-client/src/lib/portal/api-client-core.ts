@@ -12,7 +12,7 @@ import type {
     PortalSessionListResponse,
     PortalTokenResponse,
 } from "./types.ts";
-import {portalListQueryToSearchParams, type PortalListQuery} from "./list-query";
+import {portalListQueryToSearchParams, type PortalListQuery} from "./list-query.ts";
 
 export type {
     PortalAccount,

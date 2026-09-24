@@ -25,6 +25,7 @@ export default function PortalAccountHeader({onLogout}: PortalAccountHeaderProps
     const accountDisplayName = portalAccountDisplayName(account);
     const closeAccountMenu = (): void => accountMenuRef.current?.removeAttribute("open");
     const isSessionsActive = pathname.startsWith("/portail/seances");
+    const isRepertoireActive = pathname.startsWith("/portail/comptines");
     const isProfileActive = pathname.startsWith("/portail/compte");
     const navigationLinkClassName = (isActive: boolean): string => `inline-flex items-center gap-1.5 hover:text-primary ${isActive ? "text-primary" : ""}`;
     const mobileNavigationLinkClassName = (isActive: boolean): string => `flex items-center gap-2 rounded-md px-3 py-2 font-semibold text-primary hover:bg-primary/10 ${isActive ? "bg-primary/10" : ""}`;
@@ -59,7 +60,7 @@ export default function PortalAccountHeader({onLogout}: PortalAccountHeaderProps
                 <div className="hidden items-center gap-3 lg:flex">
                     <nav aria-label={content.navigationLabel} className="flex items-center gap-5 text-sm font-semibold text-on-surface-variant">
                         <Link aria-current={isSessionsActive ? "page" : undefined} className={navigationLinkClassName(isSessionsActive)} href="/portail/seances" onClick={closeAccountMenu}>{isSessionsActive ? <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-primary" /> : null}{content.sessionsLink}</Link>
-                        <button className="flex cursor-not-allowed flex-col items-start leading-none text-on-surface-variant/60" disabled type="button"><span>{content.nurseryRhymesLink}</span><span className="mt-1 text-[0.6rem] font-medium uppercase tracking-[0.12em]">{content.comingSoon}</span></button>
+                        <Link aria-current={isRepertoireActive ? "page" : undefined} className={navigationLinkClassName(isRepertoireActive)} href={portalRoutes.repertoire} onClick={closeAccountMenu}>{isRepertoireActive ? <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-primary" /> : null}{content.nurseryRhymesLink}</Link>
                         <button className="flex cursor-not-allowed flex-col items-start leading-none text-on-surface-variant/60" disabled type="button"><span>{content.activitiesLink}</span><span className="mt-1 text-[0.6rem] font-medium uppercase tracking-[0.12em]">{content.comingSoon}</span></button>
                     </nav>
                     <details className="group relative" ref={accountMenuRef}>
@@ -90,7 +91,7 @@ export default function PortalAccountHeader({onLogout}: PortalAccountHeaderProps
             <div aria-hidden={!mobileMenuOpen} className={`${mobileMenuOpen ? "grid" : "hidden"} gap-2 pb-2 pt-5 lg:hidden`} id="portal-mobile-menu">
                 <nav aria-label={content.navigationLabel} className="grid gap-1 border-b border-outline-variant pb-3">
                     <Link aria-current={isSessionsActive ? "page" : undefined} className={mobileNavigationLinkClassName(isSessionsActive)} href="/portail/seances" onClick={closeMobileMenu}>{isSessionsActive ? <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-primary" /> : null}{content.sessionsLink}</Link>
-                    <button className="flex cursor-not-allowed flex-col items-start rounded-md px-3 py-2 text-left font-semibold text-on-surface-variant/60" disabled type="button"><span>{content.nurseryRhymesLink}</span><span className="mt-1 text-[0.6rem] font-medium uppercase tracking-[0.12em]">{content.comingSoon}</span></button>
+                    <Link aria-current={isRepertoireActive ? "page" : undefined} className={mobileNavigationLinkClassName(isRepertoireActive)} href={portalRoutes.repertoire} onClick={closeMobileMenu}>{isRepertoireActive ? <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-primary" /> : null}{content.nurseryRhymesLink}</Link>
                     <button className="flex cursor-not-allowed flex-col items-start rounded-md px-3 py-2 text-left font-semibold text-on-surface-variant/60" disabled type="button"><span>{content.activitiesLink}</span><span className="mt-1 text-[0.6rem] font-medium uppercase tracking-[0.12em]">{content.comingSoon}</span></button>
                 </nav>
                 <div className="px-3 pt-2">
