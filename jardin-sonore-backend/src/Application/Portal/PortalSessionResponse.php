@@ -6,15 +6,17 @@ namespace App\Application\Portal;
 
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\SessionSummaryEntity;
+use App\Infrastructure\Doctrine\Entity\ThemeEntity;
 
 final readonly class PortalSessionResponse
 {
     /**
-     * @param list<array{uuid: string, name: string}> $organizations
-     * @param list<string>                            $instrumentUuids
-     * @param list<string>                            $instrumentNames
-     * @param list<string>                            $recommendationUuids
-     * @param list<array<string, mixed>>              $sequences
+     * @param list<array{uuid: string, name: string}>                 $organizations
+     * @param list<array{uuid: string, label: string, color: string}> $themes
+     * @param list<string>                                            $instrumentUuids
+     * @param list<string>                                            $instrumentNames
+     * @param list<string>                                            $recommendationUuids
+     * @param list<array<string, mixed>>                              $sequences
      */
     private function __construct(
         public string $slug,
@@ -22,7 +24,8 @@ final readonly class PortalSessionResponse
         public string $sessionDate,
         public ?string $sharedAt,
         public array $organizations,
-        public ?string $theme,
+        public array $themes,
+        public ?string $subtitle,
         public ?string $generalNotes,
         public ?string $materialSummary,
         public ?string $furtherExploration,
@@ -63,6 +66,11 @@ final readonly class PortalSessionResponse
             $sessionSummaryEntity->getSessionDate()->format('Y-m-d'),
             $sharedAt,
             $organizations,
+            array_map(static fn (ThemeEntity $themeEntity): array => [
+                'uuid' => $themeEntity->getUuid()->toRfc4122(),
+                'label' => $themeEntity->getLabel(),
+                'color' => $themeEntity->getColor(),
+            ], $sessionSummaryEntity->getThemes()->toArray()),
             $sessionSummaryEntity->getTheme(),
             $sessionSummaryEntity->getGeneralNotes(),
             $sessionSummaryEntity->getMaterialSummary(),
@@ -84,7 +92,8 @@ final readonly class PortalSessionResponse
             'sessionDate' => $this->sessionDate,
             'sharedAt' => $this->sharedAt,
             'organizations' => $this->organizations,
-            'theme' => $this->theme,
+            'themes' => $this->themes,
+            'subtitle' => $this->subtitle,
             'documentStatus' => $this->documentStatus,
         ];
 

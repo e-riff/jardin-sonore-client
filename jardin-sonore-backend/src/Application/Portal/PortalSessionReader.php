@@ -65,13 +65,33 @@ final readonly class PortalSessionReader
     }
 
     /** @return array{items: list<SessionSummaryEntity>, total: int, page: int, pageSize: int} */
-    public function paginated(UserEntity $userEntity, ?string $organizationUuid, int $page): array
+    public function paginated(UserEntity $userEntity, PortalListCriteria $criteria): array
     {
-        $page = max(1, $page);
-        $queryBuilder = $this->authorizedSessionsQueryBuilder($userEntity, $organizationUuid)
-            ->orderBy('organizationShare.sharedAt', 'DESC')
-            ->addOrderBy('session.updatedAt', 'DESC')
-            ->addOrderBy('session.id', 'DESC');
+        $page = $criteria->page;
+        $queryBuilder = $this->authorizedSessionsQueryBuilder($userEntity, $criteria->organizationUuid);
+        if (null !== $criteria->query || [] !== $criteria->themeUuids) {
+            $queryBuilder->leftJoin('session.themes', 'theme');
+        }
+        if (null !== $criteria->query) {
+            $queryBuilder
+                ->andWhere($queryBuilder->expr()->orX('LOWER(session.title) LIKE :query', 'LOWER(theme.label) LIKE :query'))
+                ->setParameter('query', '%' . mb_strtolower($criteria->query) . '%');
+        }
+        if ([] !== $criteria->themeUuids) {
+            $themeCondition = $queryBuilder->expr()->orX();
+            foreach ($criteria->themeUuids as $index => $themeUuid) {
+                $parameterName = "themeUuid{$index}";
+                $themeCondition->add("theme.uuid = :{$parameterName}");
+                $queryBuilder->setParameter($parameterName, Uuid::fromString($themeUuid), UuidType::NAME);
+            }
+            $queryBuilder->andWhere($themeCondition);
+        }
+        if ('title' === $criteria->sort) {
+            $queryBuilder->orderBy('session.title', strtoupper($criteria->direction));
+        } else {
+            $queryBuilder->orderBy('session.sessionDate', strtoupper($criteria->direction));
+        }
+        $queryBuilder->addOrderBy('session.id', 'DESC');
         $total = (int) (clone $queryBuilder)
             ->select('COUNT(DISTINCT session.id)')
             ->getQuery()
@@ -175,10 +195,14 @@ final readonly class PortalSessionReader
             ->setParameter('user', $userEntity)
             ->setParameter('active', true);
 
-        if (null !== $organizationUuid && Uuid::isValid($organizationUuid)) {
-            $queryBuilder
-                ->andWhere('organization.uuid = :organizationUuid')
-                ->setParameter('organizationUuid', Uuid::fromString($organizationUuid), UuidType::NAME);
+        if (null !== $organizationUuid) {
+            if (!Uuid::isValid($organizationUuid)) {
+                $queryBuilder->andWhere('1 = 0');
+            } else {
+                $queryBuilder
+                    ->andWhere('organization.uuid = :organizationUuid')
+                    ->setParameter('organizationUuid', Uuid::fromString($organizationUuid), UuidType::NAME);
+            }
         }
 
         return $queryBuilder;

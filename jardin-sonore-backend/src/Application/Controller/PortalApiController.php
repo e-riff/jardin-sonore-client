@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Controller;
 
 use App\Application\Portal\PortalAccountMailSenderInterface;
+use App\Application\Portal\PortalListCriteria;
 use App\Application\Portal\PortalPasswordTokenManager;
 use App\Application\Portal\PortalSessionAccessService;
 use App\Application\Portal\PortalSessionManager;
@@ -203,8 +204,7 @@ final class PortalApiController extends AbstractController
         $userEntity = $this->portalUser();
         $paginatedSessions = $this->portalSessionReader->paginated(
             $userEntity,
-            $request->query->getString('organization') ?: null,
-            max(1, $request->query->getInt('page', 1)),
+            PortalListCriteria::fromRequest($request),
         );
         $authorizedOrganizationEntities = $this->portalSessionReader->authorizedOrganizations($userEntity);
 
