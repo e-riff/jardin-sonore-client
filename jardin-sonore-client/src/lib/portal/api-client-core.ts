@@ -125,12 +125,12 @@ export class PortalApiClient {
         return this.getJson<PortalSessionListResponse>(`/api/portal/sessions${queryString ? `?${queryString}` : ""}`);
     }
 
-    public async session(uuid: string): Promise<PortalApiResult<PortalSessionDetail>> {
-        return this.getJson<PortalSessionDetail>(`/api/portal/sessions/${encodeURIComponent(uuid)}`);
+    public async session(slug: string): Promise<PortalApiResult<PortalSessionDetail>> {
+        return this.getJson<PortalSessionDetail>(`/api/portal/sessions/${encodeURIComponent(slug)}`);
     }
 
-    public document(uuid: string): Promise<Response> {
-        return this.request(`/api/portal/sessions/${encodeURIComponent(uuid)}/document.pdf`, {}, true);
+    public document(slug: string): Promise<Response> {
+        return this.request(`/api/portal/sessions/${encodeURIComponent(slug)}/document.pdf`, {}, true);
     }
 
     private async getJson<T>(path: string): Promise<PortalApiResult<T>> {

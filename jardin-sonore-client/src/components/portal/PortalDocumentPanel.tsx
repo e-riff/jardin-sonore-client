@@ -7,10 +7,10 @@ import {useTranslations} from "@/i18n/translations-provider";
 
 interface PortalDocumentPanelProps {
     status: PortalDocumentStatus;
-    sessionUuid: string;
+    sessionSlug: string;
 }
 
-export default function PortalDocumentPanel({status, sessionUuid}: PortalDocumentPanelProps): JSX.Element {
+export default function PortalDocumentPanel({status, sessionSlug}: PortalDocumentPanelProps): JSX.Element {
     const content = useTranslations().portal.document;
     const state = portalDocumentState(status);
 
@@ -18,6 +18,6 @@ export default function PortalDocumentPanel({status, sessionUuid}: PortalDocumen
         <p className="portal-eyebrow">{content.eyebrow}</p>
         <h2 className="font-serif text-xl font-semibold text-on-surface" id="portal-document-title">{content.title}</h2>
         <p className="mt-2 text-sm leading-6 text-on-surface-variant">{content[state].description}</p>
-        {state === "ready" && <a className="portal-document-link" href={`/portail/seances/${encodeURIComponent(sessionUuid)}/document.pdf`}>{content.ready.action}</a>}
+        {state === "ready" && <a className="portal-document-link" href={`/portail/seances/${encodeURIComponent(sessionSlug)}/document.pdf`}>{content.ready.action}</a>}
     </aside>;
 }

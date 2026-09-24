@@ -6,6 +6,6 @@ export const portalRoutes = {
     passwordReset: "/portail/reinitialiser-mot-de-passe",
     sessionInvalid: "/portail/session-invalide",
     definePassword: (token: string): string => `/portail/definir-mot-de-passe/${encodeURIComponent(token)}`,
-    session: (uuid: string): string => `/portail/seances/${encodeURIComponent(uuid)}`,
-    document: (uuid: string): string => `/portail/seances/${encodeURIComponent(uuid)}/document.pdf`,
+    session: (slug: string): string => `/portail/seances/${encodeURIComponent(slug)}`,
+    document: (slug: string): string => `/portail/seances/${encodeURIComponent(slug)}/document.pdf`,
 } as const;

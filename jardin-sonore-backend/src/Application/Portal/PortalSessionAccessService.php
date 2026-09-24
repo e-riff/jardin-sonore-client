@@ -13,8 +13,8 @@ final readonly class PortalSessionAccessService
     {
     }
 
-    public function findAuthorizedSession(UserEntity $userEntity, string $sessionUuid): ?SessionSummaryEntity
+    public function findAuthorizedSession(UserEntity $userEntity, string $sessionSlug): ?SessionSummaryEntity
     {
-        return $this->portalSessionReader->findAuthorized($userEntity, $sessionUuid);
+        return $this->portalSessionReader->findAuthorizedBySlug($userEntity, $sessionSlug);
     }
 }

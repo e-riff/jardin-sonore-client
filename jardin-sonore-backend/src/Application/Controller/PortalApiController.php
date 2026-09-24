@@ -221,11 +221,11 @@ final class PortalApiController extends AbstractController
         ]);
     }
 
-    #[Route('/sessions/{uuid}', methods: ['GET'])]
-    public function detail(string $uuid): JsonResponse
+    #[Route('/sessions/{slug}', methods: ['GET'])]
+    public function detail(string $slug): JsonResponse
     {
         $userEntity = $this->portalUser();
-        $sessionSummaryEntity = $this->portalSessionAccessService->findAuthorizedSession($userEntity, $uuid);
+        $sessionSummaryEntity = $this->portalSessionAccessService->findAuthorizedSession($userEntity, $slug);
         if (null === $sessionSummaryEntity) {
             throw $this->createNotFoundException();
         }
@@ -238,14 +238,14 @@ final class PortalApiController extends AbstractController
         )->toArray());
     }
 
-    #[Route('/sessions/{uuid}/document.pdf', methods: ['GET'])]
+    #[Route('/sessions/{slug}/document.pdf', methods: ['GET'])]
     public function document(
-        string $uuid,
+        string $slug,
         SluggerInterface $slugger,
         #[Autowire('%kernel.project_dir%/var/session-documents')]
         string $sessionDocumentDirectory,
     ): Response {
-        $sessionSummaryEntity = $this->portalSessionAccessService->findAuthorizedSession($this->portalUser(), $uuid);
+        $sessionSummaryEntity = $this->portalSessionAccessService->findAuthorizedSession($this->portalUser(), $slug);
         if (null === $sessionSummaryEntity || SessionDocumentStatus::READY !== $sessionSummaryEntity->getDocumentStatus()) {
             throw $this->createNotFoundException();
         }

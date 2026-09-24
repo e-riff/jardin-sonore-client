@@ -86,15 +86,15 @@ final readonly class PortalSessionReader
         return ['items' => $items, 'total' => $total, 'page' => $page, 'pageSize' => self::PAGE_SIZE];
     }
 
-    public function findAuthorized(UserEntity $userEntity, string $sessionUuid): ?SessionSummaryEntity
+    public function findAuthorizedBySlug(UserEntity $userEntity, string $sessionSlug): ?SessionSummaryEntity
     {
-        if (!Uuid::isValid($sessionUuid)) {
+        if ('' === trim($sessionSlug)) {
             return null;
         }
 
         $sessionEntity = $this->authorizedSessionsQueryBuilder($userEntity)
-            ->andWhere('session.uuid = :uuid')
-            ->setParameter('uuid', Uuid::fromString($sessionUuid), UuidType::NAME)
+            ->andWhere('session.slug = :slug')
+            ->setParameter('slug', $sessionSlug)
             ->getQuery()
             ->getOneOrNullResult();
 
