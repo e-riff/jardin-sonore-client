@@ -7,6 +7,7 @@ namespace App\Application\Controller;
 use App\Application\Portal\PortalAccountMailSenderInterface;
 use App\Application\Portal\PortalListCriteria;
 use App\Application\Portal\PortalPasswordTokenManager;
+use App\Application\Portal\PortalRepertoireReader;
 use App\Application\Portal\PortalSessionAccessService;
 use App\Application\Portal\PortalSessionManager;
 use App\Application\Portal\PortalSessionReader;
@@ -40,6 +41,7 @@ final class PortalApiController extends AbstractController
         private readonly PortalPasswordTokenManager $portalPasswordTokenManager,
         private readonly PortalAccountMailSenderInterface $portalAccountMailSender,
         private readonly PortalSessionReader $portalSessionReader,
+        private readonly PortalRepertoireReader $portalRepertoireReader,
         private readonly PortalSessionAccessService $portalSessionAccessService,
         private readonly UserPasswordHasherInterface $userPasswordHasher,
         #[Autowire(service: 'limiter.portal_login')]
@@ -218,6 +220,7 @@ final class PortalApiController extends AbstractController
                 'pageSize' => $paginatedSessions['pageSize'],
                 'total' => $paginatedSessions['total'],
             ],
+            'availableThemes' => $this->portalSessionReader->availableThemes($userEntity),
         ]);
     }
 
@@ -236,6 +239,29 @@ final class PortalApiController extends AbstractController
             $this->portalSessionReader->detailSequences($sessionSummaryEntity),
             $this->portalSessionReader->instrumentNames($sessionSummaryEntity),
         )->toArray());
+    }
+
+    #[Route('/repertoire', methods: ['GET'])]
+    public function repertoire(Request $request): JsonResponse
+    {
+        $page = $this->portalRepertoireReader->paginated($this->portalUser(), PortalListCriteria::fromRequest($request, true));
+
+        return new JsonResponse([
+            'items' => $page['items'],
+            'pagination' => ['page' => $page['page'], 'pageSize' => $page['pageSize'], 'total' => $page['total']],
+            'availableThemes' => $this->portalRepertoireReader->availableThemes($this->portalUser()),
+        ]);
+    }
+
+    #[Route('/repertoire/{slug}', methods: ['GET'])]
+    public function repertoireDetail(string $slug): JsonResponse
+    {
+        $item = $this->portalRepertoireReader->findAuthorizedBySlug($this->portalUser(), $slug);
+        if (null === $item) {
+            throw $this->createNotFoundException();
+        }
+
+        return new JsonResponse($item);
     }
 
     #[Route('/sessions/{slug}/document.pdf', methods: ['GET'])]

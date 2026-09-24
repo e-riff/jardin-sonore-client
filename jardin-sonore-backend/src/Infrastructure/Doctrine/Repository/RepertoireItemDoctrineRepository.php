@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Doctrine\Repository;
 
+use App\Application\Portal\PortalListCriteria;
 use App\Domain\Model\Session\RepertoireItem;
 use App\Domain\Model\Session\RepertoireItemType;
 use App\Domain\Repository\RepertoireItemRepositoryInterface;
@@ -12,6 +13,7 @@ use App\Infrastructure\Doctrine\Entity\ThemeEntity;
 use App\Infrastructure\Doctrine\Mapper\RepertoireItemMapper;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -29,6 +31,88 @@ final class RepertoireItemDoctrineRepository extends ServiceEntityRepository imp
         $entity = $this->findOneBy(['uuid' => $uuid]);
 
         return $entity instanceof RepertoireItemEntity ? $this->repertoireItemMapper->toDomain($entity) : null;
+    }
+
+    /**
+     * @param list<string> $sourceUuids
+     *
+     * @return array{items: list<RepertoireItemEntity>, total: int, page: int, pageSize: int}
+     */
+    public function paginatedPortalItems(array $sourceUuids, PortalListCriteria $criteria): array
+    {
+        $pageSize = 20;
+        if ([] === $sourceUuids) {
+            return ['items' => [], 'total' => 0, 'page' => $criteria->page, 'pageSize' => $pageSize];
+        }
+
+        $queryBuilder = $this->createQueryBuilder('item')
+            ->andWhere('item.active = :active')
+            ->andWhere('item.type IN (:types)')
+            ->setParameter('active', true)
+            ->setParameter('types', [RepertoireItemType::NURSERY_RHYME->value, RepertoireItemType::FINGERPLAY->value]);
+        $sourceCondition = $queryBuilder->expr()->orX();
+        foreach ($sourceUuids as $index => $sourceUuid) {
+            $parameterName = "sourceUuid{$index}";
+            $sourceCondition->add("item.uuid = :{$parameterName}");
+            $queryBuilder->setParameter($parameterName, Uuid::fromString($sourceUuid), UuidType::NAME);
+        }
+        $queryBuilder->andWhere($sourceCondition);
+        if (null !== $criteria->type) {
+            $queryBuilder->andWhere('item.type = :type')->setParameter('type', $criteria->type);
+        }
+        if (null !== $criteria->query) {
+            $queryBuilder
+                ->leftJoin('item.themes', 'searchTheme')
+                ->andWhere($queryBuilder->expr()->orX('LOWER(item.title) LIKE :query', 'LOWER(searchTheme.label) LIKE :query'))
+                ->setParameter('query', '%' . mb_strtolower($criteria->query) . '%');
+        }
+        if ([] !== $criteria->themeUuids) {
+            $queryBuilder->innerJoin('item.themes', 'filterTheme');
+            $themeCondition = $queryBuilder->expr()->orX();
+            foreach ($criteria->themeUuids as $index => $themeUuid) {
+                $parameterName = "themeUuid{$index}";
+                $themeCondition->add("filterTheme.uuid = :{$parameterName}");
+                $queryBuilder->setParameter($parameterName, Uuid::fromString($themeUuid), UuidType::NAME);
+            }
+            $queryBuilder->andWhere($themeCondition);
+        }
+        $total = (int) (clone $queryBuilder)->select('COUNT(DISTINCT item.id)')->getQuery()->getSingleScalarResult();
+        $queryBuilder
+            ->select('DISTINCT item')
+            ->orderBy('title' === $criteria->sort ? 'item.title' : 'item.updatedAt', strtoupper($criteria->direction))
+            ->addOrderBy('item.id', 'DESC')
+            ->setFirstResult(($criteria->page - 1) * $pageSize)
+            ->setMaxResults($pageSize);
+
+        return ['items' => $queryBuilder->getQuery()->getResult(), 'total' => $total, 'page' => $criteria->page, 'pageSize' => $pageSize];
+    }
+
+    /**
+     * @param list<string> $sourceUuids
+     *
+     * @return list<array{uuid: Uuid|string, label: string, color: string}>
+     */
+    public function portalThemes(array $sourceUuids): array
+    {
+        if ([] === $sourceUuids) {
+            return [];
+        }
+        $queryBuilder = $this->createQueryBuilder('item')
+            ->select('DISTINCT theme.uuid AS uuid, theme.label AS label, theme.color AS color')
+            ->innerJoin('item.themes', 'theme')
+            ->andWhere('item.active = :active')
+            ->andWhere('item.type IN (:types)')
+            ->setParameter('active', true)
+            ->setParameter('types', [RepertoireItemType::NURSERY_RHYME->value, RepertoireItemType::FINGERPLAY->value])
+            ->orderBy('theme.label', 'ASC');
+        $sourceCondition = $queryBuilder->expr()->orX();
+        foreach ($sourceUuids as $index => $sourceUuid) {
+            $parameterName = "sourceUuid{$index}";
+            $sourceCondition->add("item.uuid = :{$parameterName}");
+            $queryBuilder->setParameter($parameterName, Uuid::fromString($sourceUuid), UuidType::NAME);
+        }
+
+        return $queryBuilder->andWhere($sourceCondition)->getQuery()->getResult();
     }
 
     public function search(?RepertoireItemType $repertoireItemType = null, ?string $query = null, bool $activeOnly = false): array
