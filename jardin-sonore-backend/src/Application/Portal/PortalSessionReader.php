@@ -64,24 +64,40 @@ final readonly class PortalSessionReader
             ->getSingleScalarResult();
     }
 
+    /** @return list<array{uuid: string, label: string, color: string}> */
+    public function availableThemes(UserEntity $userEntity): array
+    {
+        $themes = $this->authorizedSessionsQueryBuilder($userEntity)
+            ->select('DISTINCT theme.uuid AS uuid, theme.label AS label, theme.color AS color')
+            ->innerJoin('session.themes', 'theme')
+            ->orderBy('theme.label', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return array_map(static fn (array $theme): array => [
+            'uuid' => $theme['uuid'] instanceof Uuid ? $theme['uuid']->toRfc4122() : (string) $theme['uuid'],
+            'label' => $theme['label'],
+            'color' => $theme['color'],
+        ], $themes);
+    }
+
     /** @return array{items: list<SessionSummaryEntity>, total: int, page: int, pageSize: int} */
     public function paginated(UserEntity $userEntity, PortalListCriteria $criteria): array
     {
         $page = $criteria->page;
         $queryBuilder = $this->authorizedSessionsQueryBuilder($userEntity, $criteria->organizationUuid);
-        if (null !== $criteria->query || [] !== $criteria->themeUuids) {
-            $queryBuilder->leftJoin('session.themes', 'theme');
-        }
         if (null !== $criteria->query) {
             $queryBuilder
-                ->andWhere($queryBuilder->expr()->orX('LOWER(session.title) LIKE :query', 'LOWER(theme.label) LIKE :query'))
+                ->leftJoin('session.themes', 'searchTheme')
+                ->andWhere($queryBuilder->expr()->orX('LOWER(session.title) LIKE :query', 'LOWER(searchTheme.label) LIKE :query'))
                 ->setParameter('query', '%' . mb_strtolower($criteria->query) . '%');
         }
         if ([] !== $criteria->themeUuids) {
+            $queryBuilder->innerJoin('session.themes', 'filterTheme');
             $themeCondition = $queryBuilder->expr()->orX();
             foreach ($criteria->themeUuids as $index => $themeUuid) {
                 $parameterName = "themeUuid{$index}";
-                $themeCondition->add("theme.uuid = :{$parameterName}");
+                $themeCondition->add("filterTheme.uuid = :{$parameterName}");
                 $queryBuilder->setParameter($parameterName, Uuid::fromString($themeUuid), UuidType::NAME);
             }
             $queryBuilder->andWhere($themeCondition);
@@ -119,6 +135,45 @@ final readonly class PortalSessionReader
             ->getOneOrNullResult();
 
         return $sessionEntity instanceof SessionSummaryEntity ? $sessionEntity : null;
+    }
+
+    /** @return array<string, list<OrganizationEntity>> */
+    public function authorizedRepertoireOrganizations(UserEntity $userEntity, ?string $organizationUuid = null): array
+    {
+        $authorizedOrganizationEntities = $this->authorizedOrganizations($userEntity);
+        $authorizedOrganizationUuids = array_fill_keys(array_map(
+            static fn (OrganizationEntity $organizationEntity): string => $organizationEntity->getUuid()->toRfc4122(),
+            $authorizedOrganizationEntities,
+        ), true);
+        $organizationsBySourceUuid = [];
+        $sessions = $this->authorizedSessionsQueryBuilder($userEntity, $organizationUuid)->getQuery()->getResult();
+        foreach ($sessions as $sessionSummaryEntity) {
+            if (!$sessionSummaryEntity instanceof SessionSummaryEntity) {
+                continue;
+            }
+            $sessionOrganizations = [];
+            foreach ($sessionSummaryEntity->getOrganizationShares() as $organizationShare) {
+                $organizationEntity = $organizationShare->getOrganization();
+                $uuid = $organizationEntity->getUuid()->toRfc4122();
+                if (isset($authorizedOrganizationUuids[$uuid]) && (null === $organizationUuid || $uuid === $organizationUuid)) {
+                    $sessionOrganizations[$uuid] = $organizationEntity;
+                }
+            }
+            foreach ($sessionSummaryEntity->getSequences() as $sequence) {
+                if (!is_array($sequence)
+                    || 'repertoire_item' !== ($sequence['sourceKind'] ?? null)
+                    || !is_string($sequence['sourceUuid'] ?? null)
+                    || !Uuid::isValid($sequence['sourceUuid'])) {
+                    continue;
+                }
+                $sourceUuid = $sequence['sourceUuid'];
+                foreach ($sessionOrganizations as $uuid => $organizationEntity) {
+                    $organizationsBySourceUuid[$sourceUuid][$uuid] = $organizationEntity;
+                }
+            }
+        }
+
+        return array_map(static fn (array $organizations): array => array_values($organizations), $organizationsBySourceUuid);
     }
 
     /** @return list<array<string, mixed>> */
