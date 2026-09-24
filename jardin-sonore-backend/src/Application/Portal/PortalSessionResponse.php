@@ -17,7 +17,7 @@ final readonly class PortalSessionResponse
      * @param list<array<string, mixed>>              $sequences
      */
     private function __construct(
-        public string $uuid,
+        public string $slug,
         public string $title,
         public string $sessionDate,
         public ?string $sharedAt,
@@ -58,7 +58,7 @@ final readonly class PortalSessionResponse
         usort($organizations, static fn (array $left, array $right): int => $left['name'] <=> $right['name']);
 
         return new self(
-            $sessionSummaryEntity->getUuid()->toRfc4122(),
+            $sessionSummaryEntity->getSlug(),
             $sessionSummaryEntity->getTitle(),
             $sessionSummaryEntity->getSessionDate()->format('Y-m-d'),
             $sharedAt,
@@ -79,7 +79,7 @@ final readonly class PortalSessionResponse
     public function toArray(bool $withDetails = true): array
     {
         $response = [
-            'uuid' => $this->uuid,
+            'slug' => $this->slug,
             'title' => $this->title,
             'sessionDate' => $this->sessionDate,
             'sharedAt' => $this->sharedAt,

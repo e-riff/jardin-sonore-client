@@ -37,6 +37,7 @@ admin:
   field:
     id: "ID"
     uuid: "UUID"
+    slug: "Slug"
     code: "Code"
     name: "Nom"
     first_name: "Prénom"

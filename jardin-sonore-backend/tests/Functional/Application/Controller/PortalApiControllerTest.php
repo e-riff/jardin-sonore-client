@@ -203,9 +203,9 @@ final class PortalApiControllerTest extends WebTestCase
         $response = $this->responseJson($client);
         self::assertSame(2, $response['pagination']['total']);
         self::assertSame([
-            $olderSessionEntity->getUuid()->toRfc4122(),
-            $sharedSessionEntity->getUuid()->toRfc4122(),
-        ], array_column($response['items'], 'uuid'));
+            $olderSessionEntity->getSlug(),
+            $sharedSessionEntity->getSlug(),
+        ], array_column($response['items'], 'slug'));
         self::assertSame([
             ['uuid' => $secondOrganizationEntity->getUuid()->toRfc4122(), 'name' => $secondOrganizationEntity->getName()],
             ['uuid' => $firstOrganizationEntity->getUuid()->toRfc4122(), 'name' => $firstOrganizationEntity->getName()],
@@ -214,7 +214,7 @@ final class PortalApiControllerTest extends WebTestCase
         $client->request('GET', '/api/portal/sessions?organization=' . $secondOrganizationEntity->getUuid()->toRfc4122(), server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
 
         self::assertResponseIsSuccessful();
-        self::assertSame([$sharedSessionEntity->getUuid()->toRfc4122()], array_column($this->responseJson($client)['items'], 'uuid'));
+        self::assertSame([$sharedSessionEntity->getSlug()], array_column($this->responseJson($client)['items'], 'slug'));
     }
 
     public function testUnauthorizedSessionDetailAndDocumentAreIndistinguishableFromMissingResources(): void
@@ -229,12 +229,29 @@ final class PortalApiControllerTest extends WebTestCase
         $token = $this->login($client, $userEntity);
 
         foreach ([
-            '/api/portal/sessions/' . $forbiddenSessionEntity->getUuid()->toRfc4122(),
-            '/api/portal/sessions/' . $forbiddenSessionEntity->getUuid()->toRfc4122() . '/document.pdf',
+            '/api/portal/sessions/' . $forbiddenSessionEntity->getSlug(),
+            '/api/portal/sessions/' . $forbiddenSessionEntity->getSlug() . '/document.pdf',
         ] as $url) {
             $client->request('GET', $url, server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
             self::assertResponseStatusCodeSame(404);
         }
+    }
+
+    public function testAuthorizedSessionIsResolvedBySlug(): void
+    {
+        [$client, $userEntity, $organizationEntity] = $this->createActiveUserWithOrganization();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $sessionSlug = 'seance-automne-' . bin2hex(random_bytes(4));
+        $sessionSummaryEntity = $this->createSessionSummary('Séance automne', new DateTimeImmutable('2026-09-11'), [$organizationEntity])
+            ->setSlug($sessionSlug);
+        $entityManager->persist($sessionSummaryEntity);
+        $entityManager->flush();
+        $token = $this->login($client, $userEntity);
+
+        $client->request('GET', '/api/portal/sessions/' . $sessionSlug, server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
+
+        self::assertResponseIsSuccessful();
+        self::assertSame($sessionSlug, $this->responseJson($client)['slug']);
     }
 
     public function testSessionResponsesExposeOnlyThePortalContract(): void
@@ -261,7 +278,7 @@ final class PortalApiControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $listItem = $this->responseJson($client)['items'][0];
         self::assertSame([
-            'uuid',
+            'slug',
             'title',
             'sessionDate',
             'sharedAt',
@@ -271,12 +288,12 @@ final class PortalApiControllerTest extends WebTestCase
         ], array_keys($listItem));
         self::assertSame(SessionDocumentStatus::READY->value, $listItem['documentStatus']);
 
-        $client->request('GET', '/api/portal/sessions/' . $sessionSummaryEntity->getUuid()->toRfc4122(), server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
+        $client->request('GET', '/api/portal/sessions/' . $sessionSummaryEntity->getSlug(), server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
 
         self::assertResponseIsSuccessful();
         $detail = $this->responseJson($client);
         self::assertSame([
-            'uuid',
+            'slug',
             'title',
             'sessionDate',
             'sharedAt',
@@ -330,7 +347,7 @@ final class PortalApiControllerTest extends WebTestCase
         $entityManager->flush();
         $token = $this->login($client, $userEntity);
 
-        $client->request('GET', '/api/portal/sessions/' . $sessionSummaryEntity->getUuid()->toRfc4122(), server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
+        $client->request('GET', '/api/portal/sessions/' . $sessionSummaryEntity->getSlug(), server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
 
         self::assertResponseIsSuccessful();
         self::assertSame('https://www.youtube.com/watch?v=dQw4w9WgXcQ', $this->responseJson($client)['sequences'][0]['documentMedia'][0]['url']);
@@ -360,18 +377,18 @@ final class PortalApiControllerTest extends WebTestCase
         try {
             $client->request('GET', '/api/portal/sessions', server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
             self::assertResponseIsSuccessful();
-            self::assertContains($readySessionEntity->getUuid()->toRfc4122(), array_column($this->responseJson($client)['items'], 'uuid'));
+            self::assertContains($readySessionEntity->getSlug(), array_column($this->responseJson($client)['items'], 'slug'));
 
-            $client->request('GET', '/api/portal/sessions/' . $readySessionEntity->getUuid()->toRfc4122(), server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
+            $client->request('GET', '/api/portal/sessions/' . $readySessionEntity->getSlug(), server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
             self::assertResponseIsSuccessful();
             self::assertSame(SessionDocumentStatus::READY->value, $this->responseJson($client)['documentStatus']);
 
-            $client->request('GET', '/api/portal/sessions/' . $readySessionEntity->getUuid()->toRfc4122() . '/document.pdf', server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
+            $client->request('GET', '/api/portal/sessions/' . $readySessionEntity->getSlug() . '/document.pdf', server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
             self::assertResponseIsSuccessful();
             self::assertSame('application/pdf', $client->getResponse()->headers->get('Content-Type'));
             self::assertStringContainsString('attachment;', (string) $client->getResponse()->headers->get('Content-Disposition'));
 
-            $client->request('GET', '/api/portal/sessions/' . $pendingSessionEntity->getUuid()->toRfc4122() . '/document.pdf', server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
+            $client->request('GET', '/api/portal/sessions/' . $pendingSessionEntity->getSlug() . '/document.pdf', server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
             self::assertResponseStatusCodeSame(404);
         } finally {
             @unlink($documentPath);

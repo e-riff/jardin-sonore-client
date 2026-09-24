@@ -44,7 +44,7 @@ export interface PortalApiResult<T> {
 export type PortalDocumentStatus = "pending" | "generating" | "ready" | "failed";
 
 export interface PortalSessionSummary {
-    uuid: string;
+    slug: string;
     title: string;
     sessionDate: string;
     sharedAt: string | null;

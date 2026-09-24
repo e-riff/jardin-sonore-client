@@ -87,6 +87,7 @@ final class RepertoireItemCrudController extends AbstractCrudController
     {
         yield IdField::new('id', 'admin.field.id')->hideOnForm();
         yield TextField::new('uuid', 'admin.field.uuid')->onlyOnDetail();
+        yield TextField::new('slug', 'admin.field.slug')->onlyOnDetail();
         yield ChoiceField::new('type', 'admin.field.type')
             ->setChoices($this->repertoireTypeChoices())
             ->setFormTypeOption('choice_translation_domain', 'sessions')
