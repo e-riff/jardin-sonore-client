@@ -1,45 +1,25 @@
-"use client";
-
 import Link from "next/link";
-import {useMemo, useState} from "react";
+import PortalListFilters from "@/components/portal/PortalListFilters";
+import PortalListPagination from "@/components/portal/PortalListPagination";
+import PortalThemeBadges from "@/components/portal/PortalThemeBadges";
 import type {Dictionary} from "@/i18n/types";
-import type {PortalAccount, PortalSessionSummary} from "@/lib/portal/types";
+import type {PortalListQuery} from "@/lib/portal/list-query";
 import {portalRoutes} from "@/lib/portal/routes";
+import type {PortalAccount, PortalSessionListResponse} from "@/lib/portal/types";
 
-type SessionsContent = Dictionary["portal"]["sessions"];
-type SortKey = "date" | "title" | "theme";
-
-const frenchCollator = new Intl.Collator("fr", {sensitivity: "base"});
 const frenchDateFormatter = new Intl.DateTimeFormat("fr-FR", {timeZone: "UTC"});
+const formatDate = (date: string): string => frenchDateFormatter.format(new Date(`${date}T12:00:00Z`));
 
-function formatSharedDate(sharedAt: string): string {
-    return frenchDateFormatter.format(new Date(`${sharedAt}T12:00:00Z`));
-}
-
-function compareSessions(sortKey: SortKey, left: PortalSessionSummary, right: PortalSessionSummary): number {
-    if (sortKey === "date") return (right.sharedAt ?? right.sessionDate).localeCompare(left.sharedAt ?? left.sessionDate);
-    if (sortKey === "theme") return frenchCollator.compare(left.theme ?? "\uffff", right.theme ?? "\uffff") || frenchCollator.compare(left.title, right.title);
-
-    return frenchCollator.compare(left.title, right.title);
-}
-
-function SortButton({active, children, onClick}: {active: boolean; children: string; onClick: () => void}): React.JSX.Element {
-    return <button aria-pressed={active} className={`rounded-md px-3 py-2 text-sm font-semibold transition ${active ? "bg-primary text-white" : "text-primary hover:bg-primary/10"}`} onClick={onClick} type="button">{children}</button>;
-}
-
-export default function PortalSessionsList({account, content, sessions}: {account: PortalAccount; content: SessionsContent; sessions: PortalSessionSummary[]}): React.JSX.Element {
-    const [organizationUuid, setOrganizationUuid] = useState<string>("");
-    const [sortKey, setSortKey] = useState<SortKey>("date");
-    const visibleSessions = useMemo(() => sessions
-        .filter((session) => "" === organizationUuid || session.organizations.some((organization) => organization.uuid === organizationUuid))
-        .toSorted((left, right) => compareSessions(sortKey, left, right)), [organizationUuid, sessions, sortKey]);
-
+export default function PortalSessionsList({account, content, filters, response, query}: {account: PortalAccount; content: Dictionary["portal"]["sessions"]; filters: Dictionary["portal"]["filters"]; response: PortalSessionListResponse; query: PortalListQuery}): React.JSX.Element {
     return <>
-        <div className="mt-8 flex flex-col gap-4 rounded-xl border border-outline-variant bg-surface-container-low p-3 sm:flex-row sm:items-end sm:justify-between">
-            {account.organizations.length > 1 ? <label className="grid min-w-0 gap-1 text-sm font-semibold"><span>{content.organizationLabel}</span><select className="min-w-0 rounded-md border border-outline-variant bg-white px-3 py-2 font-normal" onChange={(event) => setOrganizationUuid(event.target.value)} value={organizationUuid}><option value="">{content.allOrganizations}</option>{account.organizations.map((organization) => <option key={organization.uuid} value={organization.uuid}>{organization.name}</option>)}</select></label> : null}
-            <div className="grid gap-1"><span className="text-sm font-semibold">{content.sortLabel}</span><div className="flex w-full rounded-lg border border-outline-variant bg-white p-1 sm:w-auto"><SortButton active={sortKey === "date"} onClick={() => setSortKey("date")}>{content.sortDate}</SortButton><SortButton active={sortKey === "title"} onClick={() => setSortKey("title")}>{content.sortTitle}</SortButton><SortButton active={sortKey === "theme"} onClick={() => setSortKey("theme")}>{content.sortTheme}</SortButton></div></div>
-        </div>
-        <div className="mt-5 divide-y divide-outline-variant border-y border-outline-variant">{visibleSessions.map((session) => <Link className="block py-5 transition hover:text-primary" href={portalRoutes.session(session.slug)} key={session.slug}>{session.sharedAt ? <p className="text-sm text-on-surface-variant">{content.sharedAt} {formatSharedDate(session.sharedAt)}</p> : null}{account.organizations.length > 1 ? <p className="mt-1 text-sm text-on-surface-variant">{session.organizations.map((organization) => organization.name).join(", ")}</p> : null}<div className="mt-1 flex flex-wrap items-center gap-2"><h2 className="font-serif text-xl font-semibold">{session.title}</h2>{session.theme ? <span className="rounded-full bg-secondary-container px-2.5 py-1 text-xs font-semibold text-secondary">{session.theme}</span> : null}</div></Link>)}</div>
-        {visibleSessions.length === 0 ? <p className="mt-8 text-on-surface-variant">{content.empty}</p> : null}
+        <PortalListFilters content={filters} kind="sessions" organizations={account.organizations} query={query} themes={response.availableThemes} />
+        {response.items.length === 0 ? <p className="mt-8 text-on-surface-variant">{content.empty}</p> : <div className="mt-5 divide-y divide-outline-variant border-y border-outline-variant">{response.items.map((session) => <article className="py-5" key={session.slug}>
+            <p className="text-sm text-on-surface-variant">{content.sharedAt} {formatDate(session.sharedAt ?? session.sessionDate)}</p>
+            {account.organizations.length > 1 ? <p className="mt-1 text-sm text-on-surface-variant">{session.organizations.map((organization) => organization.name).join(", ")}</p> : null}
+            <h2 className="mt-1 font-serif text-xl font-semibold"><Link className="hover:text-primary" href={portalRoutes.session(session.slug)}>{session.title}</Link></h2>
+            {session.subtitle ? <p className="mt-1 text-sm text-on-surface-variant">{session.subtitle}</p> : null}
+            <div className="mt-2"><PortalThemeBadges themes={session.themes} /></div>
+        </article>)}</div>}
+        <PortalListPagination basePath={portalRoutes.sessions} content={filters} pagination={response.pagination} query={query} />
     </>;
 }

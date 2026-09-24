@@ -43,23 +43,51 @@ export interface PortalApiResult<T> {
 
 export type PortalDocumentStatus = "pending" | "generating" | "ready" | "failed";
 
+export interface PortalTheme {uuid: string; label: string; color: string;}
+export interface PortalPagination {page: number; pageSize: number; total: number;}
+
 export interface PortalSessionSummary {
     slug: string;
     title: string;
     sessionDate: string;
     sharedAt: string | null;
     organizations: PortalOrganization[];
-    theme: string | null;
+    themes: PortalTheme[];
+    subtitle: string | null;
     documentStatus: PortalDocumentStatus;
 }
 
 export interface PortalSessionListResponse {
     items: PortalSessionSummary[];
-    pagination: {
-        page: number;
-        pageSize: number;
-        total: number;
-    };
+    pagination: PortalPagination;
+    availableThemes: PortalTheme[];
+}
+
+export interface PortalRepertoireSummary {
+    slug: string;
+    title: string;
+    type: "nursery_rhyme" | "fingerplay";
+    updatedAt: string;
+    organizations: PortalOrganization[];
+    themes: PortalTheme[];
+    thumbnailUrl: string | null;
+}
+
+export interface PortalRepertoireListResponse {
+    items: PortalRepertoireSummary[];
+    pagination: PortalPagination;
+    availableThemes: PortalTheme[];
+}
+
+export interface PortalRepertoireMedia {type: "video" | "soundtrack" | "link"; title: string; url: string;}
+export interface PortalRepertoireBlock {kind: string; text?: string; gesture?: string;}
+export interface PortalRepertoireDetail extends PortalRepertoireSummary {
+    source: string | null;
+    body: string;
+    generalInstructions: string | null;
+    contentBlocks: PortalRepertoireBlock[];
+    notes: string | null;
+    media: PortalRepertoireMedia[];
 }
 
 export interface PortalSessionDetail extends PortalSessionSummary {
