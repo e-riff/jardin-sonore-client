@@ -27,6 +27,9 @@ class SessionSummaryEntity
 
     private ?string $theme = null;
 
+    /** @var Collection<int, ThemeEntity> */
+    private Collection $themes;
+
     private ?string $generalNotes = null;
 
     private ?string $materialSummary = null;
@@ -60,6 +63,7 @@ class SessionSummaryEntity
     {
         $this->initializeUuid();
         $this->organizationShares = new ArrayCollection();
+        $this->themes = new ArrayCollection();
         $this->sessionDate = new DateTimeImmutable();
         $this->createdAt = new DateTimeImmutable();
         $this->updatedAt = new DateTimeImmutable();
@@ -156,6 +160,28 @@ class SessionSummaryEntity
     public function setTheme(?string $theme): static
     {
         $this->theme = $theme;
+
+        return $this;
+    }
+
+    /** @return Collection<int, ThemeEntity> */
+    public function getThemes(): Collection
+    {
+        return $this->themes;
+    }
+
+    public function addTheme(ThemeEntity $themeEntity): static
+    {
+        if (!$this->themes->contains($themeEntity)) {
+            $this->themes->add($themeEntity);
+        }
+
+        return $this;
+    }
+
+    public function removeTheme(ThemeEntity $themeEntity): static
+    {
+        $this->themes->removeElement($themeEntity);
 
         return $this;
     }

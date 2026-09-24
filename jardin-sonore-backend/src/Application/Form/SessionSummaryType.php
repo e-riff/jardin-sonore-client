@@ -7,6 +7,7 @@ namespace App\Application\Form;
 use App\Application\Form\Model\SessionSummaryFormModel;
 use App\Domain\Repository\InstrumentRepositoryInterface;
 use App\Domain\Repository\SessionRecommendationRepositoryInterface;
+use App\Domain\Repository\ThemeRepositoryInterface;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
@@ -25,6 +26,7 @@ final class SessionSummaryType extends AbstractType
     public function __construct(
         private readonly InstrumentRepositoryInterface $instrumentRepository,
         private readonly SessionRecommendationRepositoryInterface $sessionRecommendationRepository,
+        private readonly ThemeRepositoryInterface $themeRepository,
     ) {
     }
 
@@ -40,8 +42,12 @@ final class SessionSummaryType extends AbstractType
             $instrumentChoices[$instrument->getName()] = $instrument->getUuid()->toRfc4122();
         }
         $recommendationChoices = [];
+        $themeChoices = [];
         foreach ($this->sessionRecommendationRepository->search(activeOnly: true) as $sessionRecommendation) {
             $recommendationChoices[$sessionRecommendation->getTitle()] = $sessionRecommendation->getUuid()->toRfc4122();
+        }
+        foreach ($this->themeRepository->findAllOrderedByLabel() as $theme) {
+            $themeChoices[$theme->getLabel()] = $theme->getUuid()->toRfc4122();
         }
 
         $builder
@@ -56,6 +62,13 @@ final class SessionSummaryType extends AbstractType
             ->add('subtitle', TextType::class, [
                 'label' => 'sessions.summary.form.subtitle',
                 'required' => false,
+            ])
+            ->add('themeUuids', ChoiceType::class, [
+                'label' => 'sessions.summary.form.themes',
+                'required' => false,
+                'multiple' => true,
+                'choices' => $themeChoices,
+                'autocomplete' => true,
             ])
             ->add('organizations', OrganizationAutocompleteType::class, [
                 'label' => 'sessions.summary.form.organization',

@@ -9,13 +9,17 @@ use App\Domain\Model\Session\SessionSequence;
 use App\Domain\Model\Session\SessionSummary;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\SessionSummaryEntity;
+use App\Infrastructure\Doctrine\Entity\ThemeEntity;
 use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 
 final readonly class SessionSummaryMapper
 {
-    public function __construct(private OrganizationMapper $organizationMapper, private EntityManagerInterface $entityManager)
-    {
+    public function __construct(
+        private OrganizationMapper $organizationMapper,
+        private ThemeMapper $themeMapper,
+        private EntityManagerInterface $entityManager,
+    ) {
     }
 
     public function toDomain(SessionSummaryEntity $sessionSummaryEntity): SessionSummary
@@ -42,6 +46,7 @@ final readonly class SessionSummaryMapper
             documentStatus: $sessionSummaryEntity->getDocumentStatus(),
             documentPath: $sessionSummaryEntity->getDocumentPath(),
             documentError: $sessionSummaryEntity->getDocumentError(),
+            themes: array_map(fn (ThemeEntity $themeEntity): \App\Domain\Model\ContentCatalog\Theme => $this->themeMapper->toDomain($themeEntity), $sessionSummaryEntity->getThemes()->toArray()),
         );
     }
 

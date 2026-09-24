@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Domain\Model\Session\SessionDocumentStatus;
 use App\Infrastructure\Doctrine\Entity\SessionSummaryOrganizationEntity;
+use App\Infrastructure\Doctrine\Entity\ThemeEntity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Symfony\Bridge\Doctrine\Types\UuidType;
@@ -64,6 +65,15 @@ return static function (ClassMetadata $metadata): void {
         'type' => Types::STRING,
         'length' => 255,
         'nullable' => true,
+    ]);
+    $metadata->mapManyToMany([
+        'fieldName' => 'themes',
+        'targetEntity' => ThemeEntity::class,
+        'joinTable' => [
+            'name' => 'session_summary_theme',
+            'joinColumns' => [['name' => 'session_summary_id', 'referencedColumnName' => 'id', 'onDelete' => 'CASCADE']],
+            'inverseJoinColumns' => [['name' => 'theme_id', 'referencedColumnName' => 'id', 'onDelete' => 'CASCADE']],
+        ],
     ]);
 
     $metadata->mapField([

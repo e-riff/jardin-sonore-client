@@ -818,6 +818,7 @@ final class SessionSummaryController extends AbstractController
             furtherExploration: $existingSessionSummaryView?->furtherExploration,
             instrumentUuids: $sessionSummaryFormModel->instrumentUuids,
             recommendationUuids: $sessionSummaryFormModel->orderedRecommendationUuids(),
+            themeUuids: $sessionSummaryFormModel->themeUuids,
         );
     }
 

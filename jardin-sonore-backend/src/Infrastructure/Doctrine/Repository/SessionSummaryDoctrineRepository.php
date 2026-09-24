@@ -8,6 +8,7 @@ use App\Application\Session\Message\GenerateSessionDocumentMessage;
 use App\Domain\Model\Session\SessionSummary;
 use App\Domain\Repository\SessionSummaryRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\SessionSummaryEntity;
+use App\Infrastructure\Doctrine\Entity\ThemeEntity;
 use App\Infrastructure\Doctrine\Mapper\SessionSummaryMapper;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -61,14 +62,33 @@ final class SessionSummaryDoctrineRepository extends ServiceEntityRepository imp
     {
         $entity = $this->findOneBy(['uuid' => $sessionSummary->getUuid()]);
 
-        $this->getEntityManager()->persist($this->sessionSummaryMapper->toEntity(
+        $sessionSummaryEntity = $this->sessionSummaryMapper->toEntity(
             sessionSummary: $sessionSummary,
             sessionSummaryEntity: $entity instanceof SessionSummaryEntity ? $entity : null,
-        ));
+        );
+        $this->syncThemes($sessionSummaryEntity, $sessionSummary->getThemes());
+        $this->getEntityManager()->persist($sessionSummaryEntity);
         $this->getEntityManager()->flush();
 
         if ($scheduleDocumentGeneration && 'pending' === $sessionSummary->getDocumentStatus()->value) {
             $this->messageBus->dispatch(new GenerateSessionDocumentMessage($sessionSummary->getUuid()->toRfc4122()));
+        }
+    }
+
+    /** @param list<\App\Domain\Model\ContentCatalog\Theme> $themes */
+    private function syncThemes(SessionSummaryEntity $sessionSummaryEntity, array $themes): void
+    {
+        $wantedThemeUuids = array_map(static fn ($theme): string => $theme->getUuid()->toRfc4122(), $themes);
+        foreach ($sessionSummaryEntity->getThemes()->toArray() as $themeEntity) {
+            if (!in_array($themeEntity->getUuid()->toRfc4122(), $wantedThemeUuids, true)) {
+                $sessionSummaryEntity->removeTheme($themeEntity);
+            }
+        }
+        foreach ($wantedThemeUuids as $themeUuid) {
+            $themeEntity = $this->getEntityManager()->getRepository(ThemeEntity::class)->findOneBy(['uuid' => $themeUuid]);
+            if ($themeEntity instanceof ThemeEntity) {
+                $sessionSummaryEntity->addTheme($themeEntity);
+            }
         }
     }
 
