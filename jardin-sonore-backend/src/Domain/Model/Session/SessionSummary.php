@@ -7,6 +7,7 @@ namespace App\Domain\Model\Session;
 use App\Domain\Model\AddressBook\Organization;
 use App\Domain\Model\Behavior\UuidIdentifiableInterface;
 use App\Domain\Model\Behavior\UuidIdentifiableTrait;
+use App\Domain\Model\ContentCatalog\Theme;
 use DateTimeImmutable;
 use InvalidArgumentException;
 use Symfony\Component\Uid\Uuid;
@@ -23,6 +24,9 @@ final class SessionSummary implements UuidIdentifiableInterface
     private array $organizations;
 
     private ?string $theme;
+
+    /** @var list<Theme> */
+    private array $themes;
 
     private ?string $generalNotes;
 
@@ -58,6 +62,7 @@ final class SessionSummary implements UuidIdentifiableInterface
      * @param list<string>          $instrumentUuids
      * @param list<string>          $recommendationUuids
      * @param list<SessionSequence> $sequences
+     * @param list<Theme>           $themes
      */
     public function __construct(
         string $title,
@@ -76,6 +81,7 @@ final class SessionSummary implements UuidIdentifiableInterface
         SessionDocumentStatus $documentStatus = SessionDocumentStatus::PENDING,
         ?string $documentPath = null,
         ?string $documentError = null,
+        array $themes = [],
     ) {
         $this->initializeUuid($uuid);
         $this->createdAt = $createdAt ?? new DateTimeImmutable();
@@ -95,6 +101,7 @@ final class SessionSummary implements UuidIdentifiableInterface
             instrumentUuids: $instrumentUuids,
         );
         $this->recommendationUuids = self::normalizeUuids($recommendationUuids);
+        $this->themes = array_values(array_unique($themes, SORT_REGULAR));
 
         foreach ($sequences as $sessionSequence) {
             $this->sequences[] = $sessionSequence;
@@ -120,6 +127,12 @@ final class SessionSummary implements UuidIdentifiableInterface
     public function getTheme(): ?string
     {
         return $this->theme;
+    }
+
+    /** @return list<Theme> */
+    public function getThemes(): array
+    {
+        return $this->themes;
     }
 
     public function getGeneralNotes(): ?string
@@ -227,6 +240,7 @@ final class SessionSummary implements UuidIdentifiableInterface
      * @param list<Organization> $organizations
      * @param list<string>       $instrumentUuids
      * @param list<string>       $recommendationUuids
+     * @param list<Theme>        $themes
      */
     public function updateDetails(
         string $title,
@@ -238,6 +252,7 @@ final class SessionSummary implements UuidIdentifiableInterface
         ?string $furtherExploration,
         array $instrumentUuids,
         array $recommendationUuids = [],
+        array $themes = [],
     ): void {
         if ('' === trim($title)) {
             throw new InvalidArgumentException('Session summary title cannot be blank.');
@@ -259,6 +274,7 @@ final class SessionSummary implements UuidIdentifiableInterface
             static fn (string $uuid): bool => '' !== $uuid,
         )));
         $this->recommendationUuids = self::normalizeUuids($recommendationUuids);
+        $this->themes = array_values(array_unique($themes, SORT_REGULAR));
         $this->updatedAt = new DateTimeImmutable();
         $this->markDocumentPending();
     }

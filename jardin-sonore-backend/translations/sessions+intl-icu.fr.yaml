@@ -223,6 +223,7 @@ sessions:
       title: "Titre"
       session_date: "Date"
       subtitle: "Sous-titre"
+      themes: "Catégories"
       organization: "Structure"
       organization_placeholder: "Aucune structure"
       instruments: "Instruments utilisés"

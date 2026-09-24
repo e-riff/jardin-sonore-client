@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace App\Application\Session;
 
 use App\Domain\Repository\SessionSummaryRepositoryInterface;
+use App\Domain\Repository\ThemeRepositoryInterface;
 use InvalidArgumentException;
 use Symfony\Component\Uid\Uuid;
 
 final readonly class UpdateSessionSummary
 {
-    public function __construct(private SessionSummaryRepositoryInterface $sessionSummaryRepository)
-    {
+    public function __construct(
+        private SessionSummaryRepositoryInterface $sessionSummaryRepository,
+        private ThemeRepositoryInterface $themeRepository,
+    ) {
     }
 
     public function __invoke(Uuid $uuid, SaveSessionSummaryInput $saveSessionSummaryInput): void
@@ -32,8 +35,18 @@ final readonly class UpdateSessionSummary
             furtherExploration: $saveSessionSummaryInput->furtherExploration,
             instrumentUuids: $saveSessionSummaryInput->instrumentUuids,
             recommendationUuids: $saveSessionSummaryInput->recommendationUuids,
+            themes: $this->resolveThemes($saveSessionSummaryInput->themeUuids),
         );
 
         $this->sessionSummaryRepository->save($sessionSummary);
+    }
+
+    /** @return list<\App\Domain\Model\ContentCatalog\Theme> */
+    private function resolveThemes(array $themeUuids): array
+    {
+        return array_values(array_filter(array_map(
+            fn (string $themeUuid) => Uuid::isValid($themeUuid) ? $this->themeRepository->findByUuid(Uuid::fromString($themeUuid)) : null,
+            array_unique($themeUuids),
+        )));
     }
 }

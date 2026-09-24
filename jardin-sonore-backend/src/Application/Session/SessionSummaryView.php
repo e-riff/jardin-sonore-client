@@ -17,11 +17,12 @@ use Symfony\Component\Uid\Uuid;
 final readonly class SessionSummaryView
 {
     /**
-     * @param list<string>                    $instrumentUuids
-     * @param list<string>                    $instrumentNames
-     * @param list<SessionRecommendationView> $recommendations
-     * @param list<string>                    $recommendationUuids
-     * @param list<SessionSequenceView>       $sequences
+     * @param list<string>                                       $instrumentUuids
+     * @param list<string>                                       $instrumentNames
+     * @param list<SessionRecommendationView>                    $recommendations
+     * @param list<string>                                       $recommendationUuids
+     * @param list<SessionSequenceView>                          $sequences
+     * @param list<array{uuid:string,label:string,color:string}> $themes
      */
     public function __construct(
         public Uuid $uuid,
@@ -44,6 +45,7 @@ final readonly class SessionSummaryView
         public SessionDocumentStatus $documentStatus,
         public ?string $documentPath,
         public ?string $documentError,
+        public array $themes = [],
     ) {
     }
 
@@ -60,6 +62,11 @@ final readonly class SessionSummaryView
             sessionDate: $sessionSummary->getSessionDate(),
             organizations: $sessionSummary->getOrganizations(),
             theme: $sessionSummary->getTheme(),
+            themes: array_map(static fn ($theme): array => [
+                'uuid' => $theme->getUuid()->toRfc4122(),
+                'label' => $theme->getLabel(),
+                'color' => $theme->getColor(),
+            ], $sessionSummary->getThemes()),
             generalNotes: $sessionSummary->getGeneralNotes(),
             materialSummary: $sessionSummary->getMaterialSummary(),
             furtherExploration: $sessionSummary->getFurtherExploration(),
