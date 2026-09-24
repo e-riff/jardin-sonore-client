@@ -495,6 +495,39 @@ final class PortalApiControllerTest extends WebTestCase
         self::assertSame(['https://videos.example.org/watch/one'], array_column($this->responseJson($client)['media'], 'url'));
     }
 
+    public function testCategoryTotalsAreCalculatedBeforePaginationForBothLists(): void
+    {
+        [$client, $userEntity, $organizationEntity] = $this->createActiveUserWithOrganization();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $themeEntity = (new ThemeEntity())->setLabel('Catégorie ' . bin2hex(random_bytes(4)))->setColor('#224466');
+        $entityManager->persist($themeEntity);
+        for ($index = 1; 21 >= $index; ++$index) {
+            $itemEntity = (new RepertoireItemEntity())
+                ->setTitle(sprintf('Comptine %02d', $index))
+                ->setSlug('comptine-' . Uuid::v4()->toRfc4122())
+                ->addTheme($themeEntity);
+            $sessionEntity = $this->createSessionSummary(
+                sprintf('Séance %02d', $index),
+                new DateTimeImmutable('2026-09-01')->modify("+{$index} days"),
+                [$organizationEntity],
+            )->addTheme($themeEntity)->setSequences([$this->repertoireSequence($itemEntity)]);
+            $entityManager->persist($itemEntity);
+            $entityManager->persist($sessionEntity);
+        }
+        $entityManager->flush();
+        $token = $this->login($client, $userEntity);
+        $filter = '?theme[]=' . $themeEntity->getUuid()->toRfc4122() . '&page=2';
+
+        foreach (['sessions', 'repertoire'] as $endpoint) {
+            $client->request('GET', "/api/portal/{$endpoint}{$filter}", server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
+            self::assertResponseIsSuccessful();
+            $response = $this->responseJson($client);
+            self::assertSame(21, $response['pagination']['total']);
+            self::assertSame(2, $response['pagination']['page']);
+            self::assertCount(1, $response['items']);
+        }
+    }
+
     public function testReadyDocumentStreamsPdfAndPendingDocumentReturnsNotFound(): void
     {
         [$client, $userEntity, $organizationEntity] = $this->createActiveUserWithOrganization();
