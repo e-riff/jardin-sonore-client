@@ -28,6 +28,7 @@ return App::config([
     'doctrine' => [
         'dbal' => [
             'url' => '%env(resolve:DATABASE_URL)%',
+            'schema_filter' => '~^(?!messenger_messages$).*~',
             'types' => [
                 'geometry_point' => PointType::class,
                 'geometry_polygon' => PolygonType::class,
