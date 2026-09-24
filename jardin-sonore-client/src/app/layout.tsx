@@ -83,11 +83,11 @@ export default async function RootLayout({children}: RootLayoutProps): Promise<J
 
     return (
         <html lang={defaultLocale}>
-            <body className="min-h-screen bg-background text-on-background antialiased">
+            <body className="flex min-h-screen flex-col bg-background text-on-background antialiased">
                 <TranslationsProvider dictionary={dictionary}>
                     <PortalToastProvider>
                         <Header />
-                        <main>{children}</main>
+                        <main className="flex-1">{children}</main>
                         <Footer />
                     </PortalToastProvider>
                 </TranslationsProvider>
