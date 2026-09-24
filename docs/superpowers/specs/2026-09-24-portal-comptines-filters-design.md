@@ -50,7 +50,7 @@ La structure est un sélecteur unique, visible uniquement pour un compte associ�
 - filtre structure conditionnel ;
 - filtre catégories cumulables ;
 - filtre de type : toutes, comptines ou jeux de doigts ;
-- tri par titre ou date, dans les deux directions ;
+- tri par titre ou date de dernière mise à jour, dans les deux directions ;
 - liste et fiche accessibles à partir de `/portail/comptines` et `/portail/comptines/{slug}`.
 
 La liste présente une vignette uniquement lorsqu'une vidéo YouTube exploitable existe. La fiche affiche les blocs structurés, paroles et gestes, médias et catégories ; les sections non renseignées sont omises.
