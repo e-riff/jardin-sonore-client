@@ -17,6 +17,7 @@ return static function (ClassMetadata $metadata): void {
         ],
         'uniqueConstraints' => [
             'uniq_repertoire_item_uuid' => ['columns' => ['uuid']],
+            'uniq_repertoire_item_slug' => ['columns' => ['slug']],
         ],
     ]);
     $metadata->mapField(['fieldName' => 'id', 'type' => Types::INTEGER, 'id' => true]);
@@ -24,6 +25,7 @@ return static function (ClassMetadata $metadata): void {
     $metadata->mapField(['fieldName' => 'uuid', 'type' => UuidType::NAME, 'unique' => true]);
     $metadata->mapField(['fieldName' => 'type', 'type' => Types::STRING, 'length' => 32, 'enumType' => RepertoireItemType::class]);
     $metadata->mapField(['fieldName' => 'title', 'type' => Types::STRING, 'length' => 255]);
+    $metadata->mapField(['fieldName' => 'slug', 'type' => Types::STRING, 'length' => 255]);
     $metadata->mapField(['fieldName' => 'source', 'type' => Types::STRING, 'length' => 255, 'nullable' => true]);
     $metadata->mapField(['fieldName' => 'body', 'type' => Types::TEXT]);
     $metadata->mapField(['fieldName' => 'generalInstructions', 'columnName' => 'general_instructions', 'type' => Types::TEXT, 'nullable' => true]);

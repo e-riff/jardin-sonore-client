@@ -16,6 +16,7 @@ return static function (ClassMetadata $metadata): void {
         ],
         'uniqueConstraints' => [
             'uniq_session_summary_uuid' => ['columns' => ['uuid']],
+            'uniq_session_summary_slug' => ['columns' => ['slug']],
         ],
     ]);
 
@@ -34,6 +35,12 @@ return static function (ClassMetadata $metadata): void {
 
     $metadata->mapField([
         'fieldName' => 'title',
+        'type' => Types::STRING,
+        'length' => 255,
+    ]);
+
+    $metadata->mapField([
+        'fieldName' => 'slug',
         'type' => Types::STRING,
         'length' => 255,
     ]);

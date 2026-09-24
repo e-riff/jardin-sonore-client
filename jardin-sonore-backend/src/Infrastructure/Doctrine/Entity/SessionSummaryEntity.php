@@ -18,6 +18,8 @@ class SessionSummaryEntity
 
     private string $title = '';
 
+    private string $slug = '';
+
     private DateTimeImmutable $sessionDate;
 
     /** @var Collection<int, SessionSummaryOrganizationEntity> */
@@ -71,6 +73,18 @@ class SessionSummaryEntity
     public function setTitle(string $title): static
     {
         $this->title = $title;
+
+        return $this;
+    }
+
+    public function getSlug(): string
+    {
+        return $this->slug;
+    }
+
+    public function setSlug(string $slug): static
+    {
+        $this->slug = $slug;
 
         return $this;
     }

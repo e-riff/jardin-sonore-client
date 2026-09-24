@@ -20,6 +20,7 @@ class RepertoireItemEntity
 
     private RepertoireItemType $type = RepertoireItemType::NURSERY_RHYME;
     private string $title = '';
+    private string $slug = '';
     private ?string $source = null;
     private string $body = '';
     private ?string $generalInstructions = null;
@@ -61,6 +62,18 @@ class RepertoireItemEntity
     public function setTitle(string $title): static
     {
         $this->title = $title;
+
+        return $this;
+    }
+
+    public function getSlug(): string
+    {
+        return $this->slug;
+    }
+
+    public function setSlug(string $slug): static
+    {
+        $this->slug = $slug;
 
         return $this;
     }
