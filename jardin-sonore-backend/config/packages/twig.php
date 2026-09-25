@@ -10,6 +10,9 @@ return App::config([
         'form_themes' => [
             'form/internal_form_theme.html.twig',
         ],
+        'globals' => [
+            'public_site_url' => '%app.portal.public_base_url%',
+        ],
     ],
     'when@test' => [
         'twig' => [
