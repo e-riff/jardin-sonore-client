@@ -319,7 +319,7 @@ final class PortalApiControllerTest extends WebTestCase
             ->setFurtherExploration('Prolonger à la maison.')
             ->setInstrumentUuids([$instrumentEntity->getUuid()->toRfc4122()])
             ->setRecommendationUuids(['recommendation-uuid'])
-            ->setSequences([['title' => 'Accueil']])
+            ->setSequences([['type' => SessionSequenceType::WARMUP->value, 'title' => 'Accueil']])
             ->setDocumentStatus(SessionDocumentStatus::READY);
         $entityManager->persist($instrumentEntity);
         $entityManager->persist($sessionSummaryEntity);

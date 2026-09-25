@@ -17,9 +17,6 @@ export default async function PortalRepertoirePage({searchParams}: {searchParams
     if (!response.response.ok || !response.data) redirect(portalRoutes.unavailable);
 
     return <section>
-        <p className="portal-eyebrow">{portalAccountDisplayName(account)}<span className="mx-2 text-outline-variant">—</span><span className="text-secondary">{account.organizations.map((organization) => organization.name).join(", ")}</span></p>
-        <h1 className="font-serif text-4xl font-semibold">{dictionary.portal.repertoire.title}</h1>
-        <p className="mt-3 text-on-surface-variant">{dictionary.portal.repertoire.introduction}</p>
-        <PortalRepertoireList account={account} content={dictionary.portal.repertoire} filters={dictionary.portal.filters} query={query} response={response.data} />
+        <PortalRepertoireList account={account} accountLabel={portalAccountDisplayName(account)} content={dictionary.portal.repertoire} filters={dictionary.portal.filters} query={query} response={response.data} />
     </section>;
 }

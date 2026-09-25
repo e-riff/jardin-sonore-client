@@ -16,5 +16,5 @@ export default async function PortalSessionsPage({searchParams}: {searchParams: 
     if (response.response.status === 401) redirect(portalRoutes.sessionInvalid);
     if (!response.response.ok || !response.data) redirect(portalRoutes.unavailable);
     const accountDisplayName = portalAccountDisplayName(account);
-    return <section><p className="portal-eyebrow">{accountDisplayName}<span className="mx-2 text-outline-variant">—</span><span className="text-secondary">{account.organizations.map((organization) => organization.name).join(", ")}</span></p><h1 className="font-serif text-4xl font-semibold">{dictionary.portal.sessions.title}</h1><p className="mt-3 text-on-surface-variant">{dictionary.portal.sessions.introduction}</p><PortalSessionsList account={account} content={dictionary.portal.sessions} filters={dictionary.portal.filters} query={query} response={response.data} /></section>;
+    return <section><PortalSessionsList account={account} accountLabel={accountDisplayName} content={dictionary.portal.sessions} filters={dictionary.portal.filters} query={query} response={response.data} /></section>;
 }

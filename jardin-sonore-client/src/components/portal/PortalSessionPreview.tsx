@@ -1,5 +1,7 @@
 import type {JSX} from "react";
-import {getTranslations} from "@/i18n/server";
+import {ArrowTopRightOnSquareIcon} from "@heroicons/react/24/outline";
+import PortalLyrics from "@/components/portal/PortalLyrics";
+import type {PortalRepertoireBlock} from "@/lib/portal/types";
 
 type Sequence = Record<string, unknown>;
 
@@ -25,7 +27,7 @@ function youtubeEmbedUrl(url: string): string | null {
     return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}` : null;
 }
 
-function SequenceMedia({media, resourceFallback}: {media: unknown; resourceFallback: string}): JSX.Element | null {
+export function SequenceMedia({media, resourceFallback}: {media: unknown; resourceFallback: string}): JSX.Element | null {
     if (!Array.isArray(media)) return null;
     const displayedMedia = media.filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null && (item.displayOnSession === true || item.featured === true));
     if (displayedMedia.length === 0) return null;
@@ -35,24 +37,28 @@ function SequenceMedia({media, resourceFallback}: {media: unknown; resourceFallb
         const label = stringValue(item.label) ?? resourceFallback;
         const embedUrl = url ? youtubeEmbedUrl(url) : null;
         if (embedUrl) return <iframe allowFullScreen className="aspect-video w-full rounded-lg border border-outline-variant" key={`${url}-${index}`} loading="lazy" referrerPolicy="strict-origin-when-cross-origin" src={embedUrl} title={label} />;
-        return url ? <a className="rounded-lg border border-outline-variant p-4 font-semibold text-primary underline" href={url} key={`${url}-${index}`} rel="noopener noreferrer" target="_blank">{label}</a> : null;
+        return url ? <a className="inline-flex items-start gap-2 rounded-lg border border-outline-variant p-4 font-semibold text-primary underline underline-offset-4" href={url} key={`${url}-${index}`} rel="noopener noreferrer" target="_blank"><ArrowTopRightOnSquareIcon aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0" /><span>{label}</span></a> : null;
     })}</div>;
 }
 
 function SequenceLyrics({sequence, title}: {sequence: Sequence; title: string}): JSX.Element | null {
-    const contentBlocks = Array.isArray(sequence.contentBlocks) ? sequence.contentBlocks.filter((block): block is Record<string, unknown> => typeof block === "object" && block !== null) : [];
+    const contentBlocks: PortalRepertoireBlock[] = Array.isArray(sequence.contentBlocks) ? sequence.contentBlocks.flatMap((block) => {
+        if (typeof block !== "object" || block === null) return [];
+        return [{kind: stringValue(block.kind) ?? "line", text: stringValue(block.text) ?? undefined, gesture: stringValue(block.gesture) ?? undefined}];
+    }) : [];
     const lyrics = stringValue(sequence.lyrics);
     const gestures = stringValue(sequence.gestures);
     if (contentBlocks.length === 0 && !lyrics && !gestures) return null;
 
     return <details className="mt-5 rounded-lg bg-surface-container-low p-4" open={sequence.showLyricsByDefault === true}>
         <summary className="cursor-pointer font-semibold">{title}</summary>
-        <div className="mt-4 grid gap-3 whitespace-pre-wrap text-sm leading-6">{contentBlocks.length > 0 ? contentBlocks.map((block, index) => { const gesture = stringValue(block.gesture); return block.kind === "section" ? <p className="text-center font-semibold" key={index}>{stringValue(block.text)}</p> : gesture ? <div className="grid gap-2 text-center sm:grid-cols-2 sm:gap-4" key={index}><p className="sm:text-right">{stringValue(block.text)}</p><p className="border-primary/20 italic text-on-surface-variant sm:border-l sm:pl-4 sm:text-left">{gesture}</p></div> : <p className="text-center" key={index}>{stringValue(block.text)}</p>; }) : gestures ? <div className="grid gap-2 text-center sm:grid-cols-2 sm:gap-4"><p className="sm:text-right">{lyrics}</p><p className="border-primary/20 italic text-on-surface-variant sm:border-l sm:pl-4 sm:text-left">{gestures}</p></div> : <p className="text-center">{lyrics}</p>}</div>
+        <div className="mt-4"><PortalLyrics blocks={contentBlocks} body={lyrics ?? ""} compact gestures={gestures ?? ""} /></div>
     </details>;
 }
 
 export default async function PortalSessionPreview({sequences}: {sequences: Sequence[]}): Promise<JSX.Element | null> {
     if (sequences.length === 0) return null;
+    const {getTranslations} = await import("@/i18n/server");
     const content = (await getTranslations()).portal.preview;
     const sequenceTypeLabels = content.types as Record<string, string>;
 
