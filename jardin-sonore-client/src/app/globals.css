@@ -119,6 +119,9 @@
   .portal-eyebrow { color: var(--color-primary); font-size: .75rem; font-weight: 700; letter-spacing: .1em; margin-bottom: .4rem; text-transform: uppercase; }
   .portal-document-link { background: var(--color-primary); border-radius: .5rem; color: white; display: inline-block; font-size: .875rem; font-weight: 700; margin-top: 1rem; padding: .7rem 1rem; }
   .portal-document-link:hover { background: var(--color-primary-container); }
+  .portal-theme-badge { display: inline-flex; align-items: center; gap: .375rem; border-radius: 999px; background: color-mix(in oklab, var(--badge-color) 18%, white); padding: .375rem .625rem; color: color-mix(in oklab, var(--badge-color) 84%, #1f2937); font-size: .7rem; font-weight: 700; line-height: 1.1; }
+  .portal-theme-badge::before { display: block; width: .5rem; height: .5rem; flex: none; border-radius: 999px; background: var(--badge-color); content: ""; }
+  .portal-theme-badge--selected { box-shadow: inset 0 0 0 2px var(--badge-color); }
   form label:has(input:required) > span:first-child::after,
   form label:has(textarea:required) > span:first-child::after,
   form label:has(select:required) > span:first-child::after {

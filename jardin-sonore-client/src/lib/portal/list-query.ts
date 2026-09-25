@@ -55,6 +55,37 @@ export function updatePortalListQuery(query: PortalListQuery, patch: Partial<Por
     return {...query, ...patch, page: 1};
 }
 
+export function togglePortalListTheme(query: PortalListQuery, themeUuid: string): PortalListQuery {
+    return updatePortalListQuery(query, {
+        themeUuids: query.themeUuids.includes(themeUuid)
+            ? query.themeUuids.filter((uuid) => uuid !== themeUuid)
+            : [...query.themeUuids, themeUuid],
+    });
+}
+
+export function selectPortalListSort(query: PortalListQuery, sort: PortalListSort): PortalListQuery {
+    return updatePortalListQuery(query, {
+        sort,
+        direction: query.sort === sort ? query.direction === "asc" ? "desc" : "asc" : sort === "title" ? "asc" : "desc",
+    });
+}
+
+export function hasActivePortalListFilters(query: PortalListQuery, kind: PortalListKind): boolean {
+    const defaultSort = kind === "sessions" ? "date" : "updatedAt";
+    return query.query !== ""
+        || query.organizationUuid !== ""
+        || query.themeUuids.length > 0
+        || query.type !== ""
+        || query.sort !== defaultSort
+        || query.direction !== "desc";
+}
+
+export const PORTAL_CATEGORY_PREVIEW_LIMIT = 6;
+
+export function portalCategoryPreview<T>(themes: T[], expanded: boolean): T[] {
+    return expanded ? themes : themes.slice(0, PORTAL_CATEGORY_PREVIEW_LIMIT);
+}
+
 export function applyPortalListQueryPatch(queryRef: {current: PortalListQuery}, patch: Partial<PortalListQuery>): PortalListQuery {
     queryRef.current = updatePortalListQuery(queryRef.current, patch);
     return queryRef.current;
