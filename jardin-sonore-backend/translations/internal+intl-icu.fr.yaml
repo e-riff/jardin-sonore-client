@@ -12,6 +12,7 @@ internal:
     brand: "Jardin Sonore"
     brand_aria: "Accueil interne Jardin Sonore"
     subtitle: "Interface interne"
+    public_site_link: "Retour au site public"
     navigation_aria: "Navigation interne"
     nav:
       toggle: "Menu"

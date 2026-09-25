@@ -142,7 +142,6 @@ button:disabled {
     font-weight: 600;
 }
 
-.internal-brand small,
 .internal-header__meta span {
     display: block;
     margin-top: 4px;
@@ -151,6 +150,23 @@ button:disabled {
     font-size: 0.72rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
+}
+
+.internal-public-site-link {
+    display: block;
+    margin-top: 4px;
+    color: var(--color-primary);
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-transform: uppercase;
+}
+
+.internal-public-site-link:hover {
+    color: var(--color-on-surface);
 }
 
 .internal-primary-nav {
@@ -2773,10 +2789,6 @@ a.session-composer-overlay__item {
 
     .internal-brand strong {
         font-size: 1.2rem;
-    }
-
-    .internal-brand small {
-        display: none;
     }
 
     .internal-mobile-nav-shell {
