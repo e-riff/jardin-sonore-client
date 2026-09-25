@@ -57,6 +57,8 @@ final class SessionSummary implements UuidIdentifiableInterface
 
     private ?string $documentError;
 
+    private bool $published;
+
     /**
      * @param list<Organization>    $organizations
      * @param list<string>          $instrumentUuids
@@ -82,6 +84,7 @@ final class SessionSummary implements UuidIdentifiableInterface
         ?string $documentPath = null,
         ?string $documentError = null,
         array $themes = [],
+        bool $published = false,
     ) {
         $this->initializeUuid($uuid);
         $this->createdAt = $createdAt ?? new DateTimeImmutable();
@@ -89,6 +92,7 @@ final class SessionSummary implements UuidIdentifiableInterface
         $this->documentStatus = $documentStatus;
         $this->documentPath = self::normalizeNullableString($documentPath);
         $this->documentError = self::normalizeNullableString($documentError);
+        $this->published = $published;
         $this->sequences = [];
         $this->updateDetails(
             title: $title,
@@ -203,6 +207,16 @@ final class SessionSummary implements UuidIdentifiableInterface
     public function getDocumentError(): ?string
     {
         return $this->documentError;
+    }
+
+    public function isPublished(): bool
+    {
+        return $this->published;
+    }
+
+    public function setPublished(bool $published): void
+    {
+        $this->published = $published;
     }
 
     public function markDocumentPending(): void

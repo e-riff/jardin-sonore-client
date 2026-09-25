@@ -18,6 +18,10 @@ export default class extends Controller {
             return;
         }
 
+        if (event.target !== this.element || event.defaultPrevented) {
+            return;
+        }
+
         event.preventDefault();
         window.location.assign(this.urlValue);
     }

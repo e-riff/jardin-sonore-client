@@ -146,4 +146,10 @@ return static function (ClassMetadata $metadata): void {
         'type' => Types::TEXT,
         'nullable' => true,
     ]);
+
+    $metadata->mapField([
+        'fieldName' => 'published',
+        'type' => Types::BOOLEAN,
+        'options' => ['default' => false],
+    ]);
 };

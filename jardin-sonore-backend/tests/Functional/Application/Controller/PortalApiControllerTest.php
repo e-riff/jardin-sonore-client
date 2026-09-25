@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Application\Controller;
 
+use App\Application\Portal\PortalImpersonationLaunchManager;
 use App\Application\Portal\PortalPasswordTokenManager;
 use App\Application\Portal\PortalSessionManager;
 use App\Domain\Model\Portal\UserStatus;
@@ -12,6 +13,7 @@ use App\Domain\Model\Session\RepertoireItemType;
 use App\Domain\Model\Session\SessionDocumentStatus;
 use App\Domain\Model\Session\SessionSequenceSourceKind;
 use App\Domain\Model\Session\SessionSequenceType;
+use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
 use App\Infrastructure\Doctrine\Entity\InstrumentEntity;
 use App\Infrastructure\Doctrine\Entity\MediaResourceEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
@@ -69,6 +71,28 @@ final class PortalApiControllerTest extends WebTestCase
                 'name' => $organizationEntity->getName(),
             ]],
         ], $this->responseJson($client));
+    }
+
+    public function testImpersonationLaunchCanBeConsumedOnceWithoutAnExistingPortalSession(): void
+    {
+        [$client, $userEntity] = $this->createActiveUserWithOrganization();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $adminUserEntity = (new AdminUserEntity())->setEmail('admin-' . bin2hex(random_bytes(8)) . '@portal.test')->setPassword('unused');
+        $entityManager->persist($adminUserEntity);
+        $entityManager->flush();
+        $launchToken = static::getContainer()->get(PortalImpersonationLaunchManager::class)->issue($userEntity, $adminUserEntity)->rawToken;
+
+        $this->requestJson($client, 'POST', '/api/portal/auth/impersonation-launch', ['launchToken' => $launchToken]);
+        self::assertResponseIsSuccessful();
+        $sessionToken = $this->responseJson($client)['token'];
+        self::assertIsString($sessionToken);
+
+        $client->request('GET', '/api/portal/me', server: ['HTTP_AUTHORIZATION' => "Bearer {$sessionToken}"]);
+        self::assertResponseIsSuccessful();
+        self::assertSame($userEntity->getEmail(), $this->responseJson($client)['email']);
+
+        $this->requestJson($client, 'POST', '/api/portal/auth/impersonation-launch', ['launchToken' => $launchToken]);
+        self::assertResponseStatusCodeSame(404);
     }
 
     public function testInvalidLoginIsRejected(): void
@@ -409,6 +433,30 @@ final class PortalApiControllerTest extends WebTestCase
         self::assertSame('https://www.youtube.com/watch?v=dQw4w9WgXcQ', $this->responseJson($client)['sequences'][0]['documentMedia'][0]['url']);
     }
 
+    public function testUnpublishedSessionAndItsExclusiveRepertoireItemAreHiddenFromPortal(): void
+    {
+        [$client, $userEntity, $organizationEntity] = $this->createActiveUserWithOrganization();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $repertoireItemEntity = (new RepertoireItemEntity())->setTitle('Comptine brouillon')->setSlug('brouillon-' . bin2hex(random_bytes(4)));
+        $sessionSummaryEntity = $this->createSessionSummary('Séance brouillon', new DateTimeImmutable('2026-09-25'), [$organizationEntity])
+            ->setPublished(false)
+            ->setSequences([$this->repertoireSequence($repertoireItemEntity)]);
+        $entityManager->persist($repertoireItemEntity);
+        $entityManager->persist($sessionSummaryEntity);
+        $entityManager->flush();
+        $token = $this->login($client, $userEntity);
+
+        $client->request('GET', '/api/portal/sessions', server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
+        self::assertResponseIsSuccessful();
+        self::assertNotContains($sessionSummaryEntity->getSlug(), array_column($this->responseJson($client)['items'], 'slug'));
+
+        $client->request('GET', '/api/portal/sessions/' . $sessionSummaryEntity->getSlug(), server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
+        self::assertResponseStatusCodeSame(404);
+
+        $client->request('GET', '/api/portal/repertoire/' . $repertoireItemEntity->getSlug(), server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
+        self::assertResponseStatusCodeSame(404);
+    }
+
     public function testRepertoireListsOnlyActiveItemsReferencedByAuthorizedSessions(): void
     {
         [$client, $userEntity, $organizationEntity] = $this->createActiveUserWithOrganization();
@@ -454,16 +502,17 @@ final class PortalApiControllerTest extends WebTestCase
         $nightThemeEntity = (new ThemeEntity())->setLabel('Nuit ' . bin2hex(random_bytes(4)))->setColor('#654321');
         $youtubeMediaEntity = (new MediaResourceEntity())->setType(MediaResourceType::VIDEO)->setTitle('Vidéo')->setPrimaryUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
         $otherMediaEntity = (new MediaResourceEntity())->setType(MediaResourceType::VIDEO)->setTitle('Autre vidéo')->setPrimaryUrl('https://videos.example.org/watch/one');
+        $youtubeLinkEntity = (new MediaResourceEntity())->setType(MediaResourceType::LINK)->setTitle('Lien YouTube')->setPrimaryUrl('https://youtu.be/9bZkp7q19f0');
         $unsafeMediaEntity = (new MediaResourceEntity())->setType(MediaResourceType::LINK)->setTitle('Lien dangereux')->setPrimaryUrl('javascript:alert(1)');
         $firstItemEntity = (new RepertoireItemEntity())->setTitle('Pluie douce')->setSlug('pluie-' . bin2hex(random_bytes(4)))->setUpdatedAt(new DateTimeImmutable('2026-09-10'))
             ->setLinkedMediaUuids([$youtubeMediaEntity->getUuid()->toRfc4122()])->addTheme($rainThemeEntity)->addTheme($nightThemeEntity);
         $secondItemEntity = (new RepertoireItemEntity())->setTitle('Nuit bleue')->setSlug('nuit-' . bin2hex(random_bytes(4)))->setUpdatedAt(new DateTimeImmutable('2026-09-20'))
-            ->setLinkedMediaUuids([$otherMediaEntity->getUuid()->toRfc4122(), $unsafeMediaEntity->getUuid()->toRfc4122()])->addTheme($nightThemeEntity);
+            ->setLinkedMediaUuids([$otherMediaEntity->getUuid()->toRfc4122(), $youtubeLinkEntity->getUuid()->toRfc4122(), $unsafeMediaEntity->getUuid()->toRfc4122()])->addTheme($nightThemeEntity);
         $firstSessionEntity = $this->createSessionSummary('Une séance', new DateTimeImmutable('2026-09-10'), [$organizationEntity])
             ->setSequences([$this->repertoireSequence($firstItemEntity), $this->repertoireSequence($secondItemEntity)]);
         $secondSessionEntity = $this->createSessionSummary('Deuxième séance', new DateTimeImmutable('2026-09-11'), [$secondOrganizationEntity])
             ->setSequences([$this->repertoireSequence($firstItemEntity)]);
-        foreach ([$secondOrganizationEntity, $secondAccessEntity, $rainThemeEntity, $nightThemeEntity, $youtubeMediaEntity, $otherMediaEntity, $unsafeMediaEntity, $firstItemEntity, $secondItemEntity, $firstSessionEntity, $secondSessionEntity] as $entity) {
+        foreach ([$secondOrganizationEntity, $secondAccessEntity, $rainThemeEntity, $nightThemeEntity, $youtubeMediaEntity, $otherMediaEntity, $youtubeLinkEntity, $unsafeMediaEntity, $firstItemEntity, $secondItemEntity, $firstSessionEntity, $secondSessionEntity] as $entity) {
             $entityManager->persist($entity);
         }
         $entityManager->flush();
@@ -487,6 +536,7 @@ final class PortalApiControllerTest extends WebTestCase
         $client->request('GET', '/api/portal/repertoire?sort=updatedAt&direction=asc', server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
         self::assertResponseIsSuccessful();
         self::assertSame([$firstItemEntity->getSlug(), $secondItemEntity->getSlug()], array_column($this->responseJson($client)['items'], 'slug'));
+        self::assertSame('https://i.ytimg.com/vi/9bZkp7q19f0/hqdefault.jpg', $this->responseJson($client)['items'][1]['thumbnailUrl']);
 
         $client->request('GET', '/api/portal/repertoire?organization=' . Uuid::v4()->toRfc4122(), server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
         self::assertResponseIsSuccessful();
@@ -494,8 +544,8 @@ final class PortalApiControllerTest extends WebTestCase
 
         $client->request('GET', '/api/portal/repertoire/' . $secondItemEntity->getSlug(), server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
         self::assertResponseIsSuccessful();
-        self::assertNull($this->responseJson($client)['thumbnailUrl']);
-        self::assertSame(['https://videos.example.org/watch/one'], array_column($this->responseJson($client)['media'], 'url'));
+        self::assertSame('https://i.ytimg.com/vi/9bZkp7q19f0/hqdefault.jpg', $this->responseJson($client)['thumbnailUrl']);
+        self::assertSame(['https://videos.example.org/watch/one', 'https://youtu.be/9bZkp7q19f0'], array_column($this->responseJson($client)['media'], 'url'));
     }
 
     public function testCategoryTotalsAreCalculatedBeforePaginationForBothLists(): void
@@ -602,6 +652,7 @@ final class PortalApiControllerTest extends WebTestCase
             ->setTitle($title)
             ->setSlug('session-' . Uuid::v4()->toRfc4122())
             ->setSessionDate($sessionDate)
+            ->setPublished(true)
             ->replaceOrganizations($organizationEntities);
     }
 

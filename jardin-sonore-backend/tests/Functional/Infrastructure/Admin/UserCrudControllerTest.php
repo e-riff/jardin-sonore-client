@@ -170,6 +170,12 @@ final class UserCrudControllerTest extends WebTestCase
         self::assertResponseRedirects('/login');
 
         $client->loginUser($adminUserEntity);
+        $indexCrawler = $client->request('GET', '/backoffice/user?query=' . urlencode($userEntity->getEmail()));
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $indexCrawler->filterXPath('//form[contains(@action, "/impersonation-launch")]//input[@name="_token"]'));
+        $indexCsrfToken = $indexCrawler->filterXPath('//form[contains(@action, "/impersonation-launch")]//input[@name="_token"]')->attr('value');
+        self::assertNotNull($indexCsrfToken);
+        self::assertNotSame('', $indexCsrfToken);
         $client->request('GET', "/backoffice/user/{$userEntity->getId()}");
         self::assertResponseIsSuccessful();
         self::assertStringContainsString("action=\"/backoffice/user/{$userEntity->getId()}/impersonation-launch\"", (string) $client->getResponse()->getContent());

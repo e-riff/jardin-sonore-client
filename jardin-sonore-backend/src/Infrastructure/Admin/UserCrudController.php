@@ -70,7 +70,7 @@ final class UserCrudController extends AbstractCrudController
 
     public function configureCrud(Crud $crud): Crud
     {
-        return $crud->setEntityLabelInSingular('Compte portail')->setEntityLabelInPlural('Comptes portail')->setDefaultSort(['email' => 'ASC'])->setSearchFields(['email']);
+        return $crud->setEntityLabelInSingular('Compte portail')->setEntityLabelInPlural('Comptes portail')->setDefaultSort(['email' => 'ASC'])->setSearchFields(['email'])->showEntityActionsInlined();
     }
 
     public function configureActions(Actions $actions): Actions

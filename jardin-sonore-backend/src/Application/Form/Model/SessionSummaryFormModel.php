@@ -21,6 +21,8 @@ final class SessionSummaryFormModel
     #[Assert\Length(max: 255)]
     public ?string $subtitle = null;
 
+    public bool $published = false;
+
     /** @var list<string> */
     public array $themeUuids = [];
 
@@ -45,6 +47,7 @@ final class SessionSummaryFormModel
         $formModel->title = $sessionSummaryView->title;
         $formModel->sessionDate = $sessionSummaryView->sessionDate;
         $formModel->subtitle = $sessionSummaryView->theme;
+        $formModel->published = $sessionSummaryView->published;
         $formModel->themeUuids = array_column($sessionSummaryView->themes, 'uuid');
         $formModel->generalNotes = $sessionSummaryView->generalNotes;
         $formModel->instrumentUuids = $sessionSummaryView->instrumentUuids;

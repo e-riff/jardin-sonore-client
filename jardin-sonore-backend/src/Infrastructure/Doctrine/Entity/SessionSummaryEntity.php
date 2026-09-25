@@ -59,6 +59,8 @@ class SessionSummaryEntity
 
     private ?string $documentError = null;
 
+    private bool $published = false;
+
     public function __construct()
     {
         $this->initializeUuid();
@@ -328,6 +330,18 @@ class SessionSummaryEntity
     public function setDocumentError(?string $documentError): static
     {
         $this->documentError = $documentError;
+
+        return $this;
+    }
+
+    public function isPublished(): bool
+    {
+        return $this->published;
+    }
+
+    public function setPublished(bool $published): static
+    {
+        $this->published = $published;
 
         return $this;
     }

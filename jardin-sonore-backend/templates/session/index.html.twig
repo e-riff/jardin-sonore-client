@@ -20,9 +20,28 @@
 
     <section class="internal-card">
         <form class="internal-search" method="get">
-            <label for="session-query">{{ 'sessions.summary.index.search'|trans({}, 'sessions') }}</label>
-            <div>
-                <input id="session-query" name="query" value="{{ query }}">
+            <div class="internal-search__row">
+                <div class="internal-search__field">
+                    <label for="session-query">{{ 'sessions.summary.index.search'|trans({}, 'sessions') }}</label>
+                    <input id="session-query" name="query" value="{{ query }}">
+                </div>
+                <div class="internal-search__field internal-search__field--compact">
+                    <label for="session-publication">{{ 'sessions.summary.table.publication'|trans({}, 'sessions') }}</label>
+                    <select id="session-publication" name="publication">
+                        <option value="">{{ 'sessions.summary.index.all_publication'|trans({}, 'sessions') }}</option>
+                        <option value="published" {{ publicationFilter == 'published' ? 'selected' : '' }}>{{ 'sessions.summary.index.published_only'|trans({}, 'sessions') }}</option>
+                        <option value="unpublished" {{ publicationFilter == 'unpublished' ? 'selected' : '' }}>{{ 'sessions.summary.index.unpublished_only'|trans({}, 'sessions') }}</option>
+                    </select>
+                </div>
+                <div class="internal-search__field internal-search__field--compact">
+                    <label for="session-theme">{{ 'sessions.summary.table.themes'|trans({}, 'sessions') }}</label>
+                    <select id="session-theme" name="theme">
+                        <option value="">{{ 'sessions.summary.index.all_themes'|trans({}, 'sessions') }}</option>
+                        {% for themeOption in themes %}
+                            <option value="{{ themeOption.uuid.toRfc4122 }}" {{ themeUuid == themeOption.uuid.toRfc4122 ? 'selected' : '' }}>{{ themeOption.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
                 <button class="internal-button internal-button--secondary" type="submit">{{ 'sessions.summary.index.search_submit'|trans({}, 'sessions') }}</button>
             </div>
         </form>
@@ -32,30 +51,46 @@
         {% else %}
             <div class="internal-table-wrapper">
                 <twig:TableMobileSort label="Trier les séances" :selected="tableSort.column" :options="[
-                    { value: 'sessionDate', label: 'Date', href: path('session_index', { query: query, sort: 'sessionDate', direction: tableSort.nextDirectionFor('sessionDate') }) },
-                    { value: 'title', label: 'Titre', href: path('session_index', { query: query, sort: 'title', direction: tableSort.nextDirectionFor('title') }) }
+                    { value: 'sessionDate', label: 'Date', href: path('session_index', { query: query, publication: publicationFilter, theme: themeUuid, sort: 'sessionDate', direction: tableSort.nextDirectionFor('sessionDate') }) },
+                    { value: 'title', label: 'Titre', href: path('session_index', { query: query, publication: publicationFilter, theme: themeUuid, sort: 'title', direction: tableSort.nextDirectionFor('title') }) }
                 ]" />
-                <table class="internal-table internal-table--compact-mobile">
+                <table class="internal-table internal-table--compact-mobile session-index-table">
                     <thead>
                         <tr>
-                            <th><twig:TableSortHeader label="{{ 'sessions.summary.table.title'|trans({}, 'sessions') }}" :href="path('session_index', { query: query, sort: 'title', direction: tableSort.nextDirectionFor('title') })" :active="tableSort.column == 'title'" :direction="tableSort.direction" /></th>
-                            <th><twig:TableSortHeader label="{{ 'sessions.summary.table.date'|trans({}, 'sessions') }}" :href="path('session_index', { query: query, sort: 'sessionDate', direction: tableSort.nextDirectionFor('sessionDate') })" :active="tableSort.column == 'sessionDate'" :direction="tableSort.direction" /></th>
-                            <th><twig:TableSortHeader label="{{ 'sessions.summary.table.sequence_count'|trans({}, 'sessions') }}" :href="path('session_index', { query: query, sort: 'sequenceCount', direction: tableSort.nextDirectionFor('sequenceCount') })" :active="tableSort.column == 'sequenceCount'" :direction="tableSort.direction" /></th>
+                            <th><twig:TableSortHeader label="{{ 'sessions.summary.table.title'|trans({}, 'sessions') }}" :href="path('session_index', { query: query, publication: publicationFilter, theme: themeUuid, sort: 'title', direction: tableSort.nextDirectionFor('title') })" :active="tableSort.column == 'title'" :direction="tableSort.direction" /></th>
+                            <th><twig:TableSortHeader label="{{ 'sessions.summary.table.date'|trans({}, 'sessions') }}" :href="path('session_index', { query: query, publication: publicationFilter, theme: themeUuid, sort: 'sessionDate', direction: tableSort.nextDirectionFor('sessionDate') })" :active="tableSort.column == 'sessionDate'" :direction="tableSort.direction" /></th>
+                            <th>{{ 'sessions.summary.table.themes'|trans({}, 'sessions') }}</th>
+                            <th>{{ 'sessions.summary.table.publication'|trans({}, 'sessions') }}</th>
                             <th>{{ 'sessions.summary.table.actions'|trans({}, 'sessions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for session in sessions %}
-                            <tr>
+                            <tr class="internal-table__row--clickable" data-table-availability="{{ session.published ? 'active' : 'inactive' }}" tabindex="0" data-controller="catalog-row" data-catalog-row-url-value="{{ path('session_edit', { uuid: session.uuid }) }}" data-action="click->catalog-row#navigate keydown->catalog-row#navigateFromKeyboard">
                                 <td data-table-mobile="primary" data-label="{{ 'sessions.summary.table.title'|trans({}, 'sessions') }}">
-                                    <strong>{{ session.title }}</strong>
+                                    <span class="internal-table__availability-dot{{ session.published ? '' : ' internal-table__availability-dot--inactive' }}"></span><strong>{{ session.title }}</strong>
                                     <span class="internal-table-note">{{ session.sessionDate|date('d/m/Y') }}</span>
                                     {% if session.theme %}
                                         <span class="internal-table-note">{{ session.theme }}</span>
                                     {% endif %}
                                 </td>
                                 <td data-table-mobile="secondary" data-label="{{ 'sessions.summary.table.date'|trans({}, 'sessions') }}">{{ session.sessionDate|date('d/m/Y') }}</td>
-                                <td data-table-mobile="secondary" data-label="{{ 'sessions.summary.table.sequence_count'|trans({}, 'sessions') }}">{{ session.sequences|length }}</td>
+                                <td data-table-mobile="themes" data-label="{{ 'sessions.summary.table.themes'|trans({}, 'sessions') }}"><div class="instrument-catalog__tags">{% for theme in session.themes %}<span class="internal-badge internal-badge--color" style="--badge-color: {{ theme.color }}">{{ theme.label }}</span>{% endfor %}</div></td>
+                                <td data-table-mobile="publication" data-label="{{ 'sessions.summary.table.publication'|trans({}, 'sessions') }}">
+                                    <button type="button" class="session-publication-switch session-publication-switch--button"
+                                            role="switch" aria-checked="{{ session.published ? 'true' : 'false' }}"
+                                            aria-label="{{ 'sessions.summary.table.publication_switch'|trans({title: session.title}, 'sessions') }}"
+                                            data-controller="session-publication" data-action="click->session-publication#toggle"
+                                            data-session-publication-url-value="{{ path('session_publication', { uuid: session.uuid }) }}"
+                                            data-session-publication-token-value="{{ csrf_token('session_publication_' ~ session.uuid) }}"
+                                            data-session-publication-published-value="{{ session.published ? 'true' : 'false' }}"
+                                            data-session-publication-published-label-value="{{ 'sessions.summary.table.published'|trans({}, 'sessions') }}"
+                                            data-session-publication-unpublished-label-value="{{ 'sessions.summary.table.unpublished'|trans({}, 'sessions') }}"
+                                            data-session-publication-error-label-value="{{ 'sessions.summary.table.publication_error'|trans({}, 'sessions') }}">
+                                            <span class="session-publication-switch__track" aria-hidden="true"><span class="session-publication-switch__thumb"></span></span>
+                                            <span class="internal-visually-hidden" aria-live="polite" data-session-publication-target="status">{{ (session.published ? 'sessions.summary.table.published' : 'sessions.summary.table.unpublished')|trans({}, 'sessions') }}</span>
+                                    </button>
+                                </td>
                                 <td data-table-mobile="actions" data-label="{{ 'sessions.summary.table.actions'|trans({}, 'sessions') }}">
                                     <div class="instrument-catalog__actions">
                                         <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('session_show', { uuid: session.uuid }) }}">{{ 'sessions.summary.table.preview'|trans({}, 'sessions') }}</a>
@@ -64,7 +99,6 @@
                                             <input type="hidden" name="_token" value="{{ csrf_token('session_document_regenerate_' ~ session.uuid) }}">
                                             <button class="internal-icon-button" type="submit" title="{{ 'sessions.summary.document.regenerate'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.summary.document.regenerate'|trans({}, 'sessions') }}">⟳</button>
                                         </form>
-                                        <a class="internal-icon-button" href="{{ path('session_edit', { uuid: session.uuid }) }}" title="{{ 'sessions.summary.table.edit'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.summary.table.edit'|trans({}, 'sessions') }}">✎</a>
                                         <button type="button" class="internal-icon-button internal-icon-button--danger" title="{{ 'sessions.summary.edit.remove'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.summary.edit.remove'|trans({}, 'sessions') }}" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('session_remove', { uuid: session.uuid }) }}" data-confirmation-dialog-item-value="{{ session.title }}" data-confirmation-dialog-token-value="{{ csrf_token('session_remove_' ~ session.uuid) }}">🗑</button>
                                     </div>
                                 </td>
