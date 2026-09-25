@@ -26,6 +26,7 @@ final readonly class SaveSessionSummaryInput
         public array $instrumentUuids,
         public array $recommendationUuids,
         public array $themeUuids = [],
+        public bool $published = false,
     ) {
     }
 }

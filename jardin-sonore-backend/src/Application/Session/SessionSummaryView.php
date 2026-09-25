@@ -46,6 +46,7 @@ final readonly class SessionSummaryView
         public ?string $documentPath,
         public ?string $documentError,
         public array $themes = [],
+        public bool $published = false,
     ) {
     }
 
@@ -105,6 +106,7 @@ final readonly class SessionSummaryView
             documentStatus: $sessionSummary->getDocumentStatus(),
             documentPath: $sessionSummary->getDocumentPath(),
             documentError: $sessionSummary->getDocumentError(),
+            published: $sessionSummary->isPublished(),
         );
     }
 }

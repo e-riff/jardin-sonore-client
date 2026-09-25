@@ -43,6 +43,25 @@ test("keeps the repertoire token in the authorization header", async () => {
     assert.equal(new Headers(requests[1].init?.headers).get("authorization"), "Bearer opaque-access-token");
 });
 
+test("exchanges an impersonation launch token without a portal session", async () => {
+    const requests: Array<{input: string | URL | Request; init?: RequestInit}> = [];
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async (input, init): Promise<Response> => {
+        requests.push({input, init});
+        return Response.json({token: "short-lived-session"});
+    };
+    try {
+        const result = await new PortalApiClient(undefined, "https://admin.example.test").consumeImpersonationLaunch("one-time-launch");
+        assert.equal(result.data?.token, "short-lived-session");
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
+    assert.equal(requests[0].input, "https://admin.example.test/api/portal/auth/impersonation-launch");
+    assert.equal(requests[0].init?.method, "POST");
+    assert.equal(requests[0].init?.body, '{"launchToken":"one-time-launch"}');
+    assert.equal(new Headers(requests[0].init?.headers).get("authorization"), null);
+});
+
 test("encodes a session identifier before loading its authenticated detail", async () => {
     const requests: Array<{input: string | URL | Request; init?: RequestInit}> = [];
     const originalFetch = globalThis.fetch;

@@ -14,15 +14,15 @@ export default function PortalRepertoireList({account, accountLabel, content, fi
     const detailSearch = portalListQueryToSearchParams(query).toString();
     return <>
         <PortalListFilters accountLabel={accountLabel} content={filters} introduction={content.introduction} kind="repertoire" organizations={account.organizations} query={query} themes={response.availableThemes} title={content.title} />
-        {response.items.length === 0 ? <p className="mt-8 text-on-surface-variant">{content.empty}</p> : <div className="mt-5 divide-y divide-outline-variant border-y border-outline-variant">{response.items.map((item) => <article className="flex gap-4 py-5 sm:gap-6" key={item.slug}>
+        {response.items.length === 0 ? <p className="mt-8 text-on-surface-variant">{content.empty}</p> : <div className="mt-5 divide-y divide-outline-variant border-y border-outline-variant">{response.items.map((item) => <article key={item.slug}><Link className="flex cursor-pointer gap-4 rounded-md px-3 py-5 transition-colors hover:bg-surface-container-low focus-visible:bg-surface-container-low focus-visible:outline-2 focus-visible:outline-primary sm:gap-6" href={`${portalRoutes.repertoireItem(item.slug)}${detailSearch ? `?${detailSearch}` : ""}`}>
             <div className="min-w-0 flex-1">
                 <p className="text-sm text-on-surface-variant">{item.type === "fingerplay" ? filters.fingerplay : filters.nurseryRhyme} · {content.updatedAt} {dateFormatter.format(new Date(item.updatedAt))}</p>
-                <h2 className="mt-1 font-serif text-xl font-semibold"><Link className="hover:text-primary" href={`${portalRoutes.repertoireItem(item.slug)}${detailSearch ? `?${detailSearch}` : ""}`}>{item.title}</Link></h2>
+                <h2 className="mt-1 font-serif text-xl font-semibold">{item.title}</h2>
                 {account.organizations.length > 1 ? <p className="mt-1 text-sm text-on-surface-variant">{item.organizations.map((organization) => organization.name).join(", ")}</p> : null}
                 <div className="mt-2"><PortalThemeBadges themes={item.themes} /></div>
             </div>
             {item.thumbnailUrl ? <Image alt="" className="h-20 w-28 shrink-0 rounded-md object-cover sm:h-24 sm:w-36" height={96} src={item.thumbnailUrl} unoptimized width={144} /> : null}
-        </article>)}</div>}
+        </Link></article>)}</div>}
         <PortalListPagination basePath={portalRoutes.repertoire} content={filters} pagination={response.pagination} query={query} />
     </>;
 }

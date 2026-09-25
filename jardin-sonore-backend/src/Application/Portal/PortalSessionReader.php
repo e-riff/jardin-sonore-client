@@ -254,8 +254,10 @@ final readonly class PortalSessionReader
             ->innerJoin(UserOrganizationAccessEntity::class, 'access', 'WITH', 'access.organization = organization')
             ->where('access.user = :user')
             ->andWhere('access.active = :active')
+            ->andWhere('session.published = :published')
             ->setParameter('user', $userEntity)
-            ->setParameter('active', true);
+            ->setParameter('active', true)
+            ->setParameter('published', true);
 
         if (null !== $organizationUuid) {
             if (!Uuid::isValid($organizationUuid)) {

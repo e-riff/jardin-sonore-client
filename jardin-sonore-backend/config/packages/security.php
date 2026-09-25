@@ -66,7 +66,7 @@ return App::config([
         ],
         'access_control' => [
             [
-                'path' => '^/api/portal/(auth/login|auth/password-reset-requests|password-tokens/)',
+                'path' => '^/api/portal/(auth/login|auth/impersonation-launch|auth/password-reset-requests|password-tokens/)',
                 'roles' => 'PUBLIC_ACCESS',
             ],
             [

@@ -2060,6 +2060,78 @@ a.session-composer-overlay__item {
 
 .session-index__document-action { display: inline-flex; }
 
+.session-publication-control {
+    position: relative;
+}
+
+.internal-form input.session-publication-switch__input[type="checkbox"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.session-publication-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: .55rem;
+    cursor: pointer;
+    font-size: .85rem;
+    font-weight: 600;
+}
+
+.session-publication-switch--button {
+    padding: .2rem;
+    border: 0;
+    background: transparent;
+    color: var(--color-on-background);
+    font: inherit;
+    font-size: .75rem;
+    white-space: nowrap;
+}
+
+.session-publication-switch__track {
+    display: inline-flex;
+    align-items: center;
+    width: 2.25rem;
+    height: 1.25rem;
+    padding: .15rem;
+    border-radius: 999px;
+    background: var(--color-outline-variant);
+    transition: background-color .15s ease;
+}
+
+.session-publication-switch__thumb {
+    width: .95rem;
+    height: .95rem;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px #0003;
+    transition: transform .15s ease;
+}
+
+.session-publication-switch__input:checked + .session-publication-switch .session-publication-switch__track,
+.session-publication-switch--button[aria-checked="true"] .session-publication-switch__track {
+    background: var(--color-secondary);
+}
+
+.session-publication-switch__input:checked + .session-publication-switch .session-publication-switch__thumb,
+.session-publication-switch--button[aria-checked="true"] .session-publication-switch__thumb {
+    transform: translateX(1rem);
+}
+
+.session-publication-switch__input:focus-visible + .session-publication-switch,
+.session-publication-switch--button:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 3px;
+    border-radius: .3rem;
+}
+
+.session-publication-switch--button:disabled {
+    cursor: wait;
+    opacity: .6;
+}
+
 .internal-search__field--themes { min-width: min(100%, 27rem); }
 
 .internal-icon-button { align-items: center; background: #fff; border: 1px solid rgba(30, 41, 59, .18); border-radius: .75rem; color: #334155; display: inline-flex; font-size: 1rem; height: 2.25rem; justify-content: center; text-decoration: none; width: 2.25rem; }
@@ -3111,6 +3183,28 @@ a.session-composer-overlay__item {
         min-width: 0;
         padding-right: 12px;
         overflow: hidden;
+    }
+
+    .session-index-table tbody tr {
+        flex-wrap: wrap;
+    }
+
+    .session-index-table td[data-table-mobile="publication"] {
+        display: flex;
+        align-items: center;
+        flex: 0 0 auto;
+        margin-left: auto;
+    }
+
+    .session-index-table td[data-table-mobile="themes"] {
+        display: block;
+        flex-basis: 100%;
+        padding-top: 0;
+    }
+
+    .session-index-table td[data-table-mobile="actions"] {
+        flex-basis: 100%;
+        padding-top: 0;
     }
 
     .internal-table--compact-mobile .instrument-catalog__actions {

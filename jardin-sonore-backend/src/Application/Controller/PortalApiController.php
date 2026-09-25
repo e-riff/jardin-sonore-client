@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Controller;
 
 use App\Application\Portal\PortalAccountMailSenderInterface;
+use App\Application\Portal\PortalImpersonationLaunchManager;
 use App\Application\Portal\PortalListCriteria;
 use App\Application\Portal\PortalPasswordTokenManager;
 use App\Application\Portal\PortalRepertoireReader;
@@ -19,6 +20,7 @@ use App\Infrastructure\Doctrine\Entity\UserEntity;
 use App\Infrastructure\Security\PortalRateLimitKeyResolver;
 use Doctrine\ORM\EntityManagerInterface;
 use JsonException;
+use LogicException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -38,6 +40,7 @@ final class PortalApiController extends AbstractController
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly PortalSessionManager $portalSessionManager,
+        private readonly PortalImpersonationLaunchManager $portalImpersonationLaunchManager,
         private readonly PortalPasswordTokenManager $portalPasswordTokenManager,
         private readonly PortalAccountMailSenderInterface $portalAccountMailSender,
         private readonly PortalSessionReader $portalSessionReader,
@@ -83,6 +86,24 @@ final class PortalApiController extends AbstractController
         }
 
         return new Response(status: Response::HTTP_NO_CONTENT);
+    }
+
+    #[Route('/auth/impersonation-launch', methods: ['POST'])]
+    public function consumeImpersonationLaunch(Request $request): JsonResponse
+    {
+        $payload = $this->jsonPayload($request);
+        $launchToken = $payload['launchToken'] ?? null;
+        if (!is_string($launchToken) || 1 !== preg_match('/^[a-f0-9]{64}$/', $launchToken)) {
+            return new JsonResponse(['message' => 'This impersonation link is unavailable.'], Response::HTTP_NOT_FOUND);
+        }
+
+        try {
+            $issuedPortalSession = $this->portalImpersonationLaunchManager->consume($launchToken);
+        } catch (LogicException) {
+            return new JsonResponse(['message' => 'This impersonation link is unavailable.'], Response::HTTP_NOT_FOUND);
+        }
+
+        return new JsonResponse(['token' => $issuedPortalSession->rawToken]);
     }
 
     #[Route('/auth/password-reset-requests', methods: ['POST'])]

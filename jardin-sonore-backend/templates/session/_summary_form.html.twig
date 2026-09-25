@@ -2,8 +2,20 @@
     <div class="internal-form__grid">
         {{ form_row(form.title) }}
         {{ form_row(form.subtitle) }}
+        {{ form_row(form.themeUuids) }}
         {{ form_row(form.organizations) }}
     </div>
+
+    {% if form.published is defined %}
+        <div class="session-publication-control">
+            {{ form_widget(form.published, { attr: { class: 'session-publication-switch__input' } }) }}
+            <label class="session-publication-switch" for="{{ form.published.vars.id }}">
+                <span class="session-publication-switch__track" aria-hidden="true"><span class="session-publication-switch__thumb"></span></span>
+                <span>{{ 'sessions.summary.form.published'|trans({}, 'sessions') }}</span>
+            </label>
+            {{ form_errors(form.published) }}
+        </div>
+    {% endif %}
 
     <div class="internal-form__grid">
         {{ form_row(form.sessionDate) }}

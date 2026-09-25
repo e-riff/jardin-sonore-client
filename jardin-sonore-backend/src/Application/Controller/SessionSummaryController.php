@@ -37,6 +37,7 @@ use App\Application\Session\SearchSessionSummaries;
 use App\Application\Session\SessionSequenceLocalSetting;
 use App\Application\Session\SessionSequenceView;
 use App\Application\Session\SessionSummaryView;
+use App\Application\Session\SetSessionPublication;
 use App\Application\Session\UpdateSessionSequence;
 use App\Application\Session\UpdateSessionSequenceLocalSetting;
 use App\Application\Session\UpdateSessionSequenceRole;
@@ -44,6 +45,7 @@ use App\Application\Session\UpdateSessionSummary;
 use App\Domain\Model\Session\MediaResourceType;
 use App\Domain\Model\Session\SessionSequenceSourceKind;
 use App\Domain\Repository\OrganizationRepositoryInterface;
+use App\Domain\Repository\ThemeRepositoryInterface;
 use App\Infrastructure\Doctrine\Repository\OrganizationDoctrineRepository;
 use DateTimeImmutable;
 use InvalidArgumentException;
@@ -52,6 +54,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\HeaderUtils;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -66,26 +69,39 @@ final class SessionSummaryController extends AbstractController
     }
 
     #[Route('', name: 'index', methods: ['GET'])]
-    public function index(Request $request, SearchSessionSummaries $searchSessionSummaries): Response
+    public function index(Request $request, SearchSessionSummaries $searchSessionSummaries, ThemeRepositoryInterface $themeRepository): Response
     {
+        $publicationFilter = $request->query->getString('publication');
+        if (!in_array($publicationFilter, ['published', 'unpublished'], true)) {
+            $publicationFilter = '';
+        }
+        $themeUuid = $request->query->getString('theme');
+        $themes = $themeRepository->findAllOrderedByLabel();
+        if (!in_array($themeUuid, array_map(static fn ($theme): string => $theme->getUuid()->toRfc4122(), $themes), true)) {
+            $themeUuid = '';
+        }
         $tableSort = TableSort::fromQuery(
             $request->query->getString('sort'),
             $request->query->getString('direction'),
-            ['title', 'sessionDate', 'sequenceCount'],
+            ['title', 'sessionDate'],
             'sessionDate',
             'desc',
         );
         $sessions = $searchSessionSummaries($request->query->getString('query'));
+        if ('' !== $publicationFilter) {
+            $sessions = array_values(array_filter($sessions, static fn (SessionSummaryView $session): bool => $session->published === ('published' === $publicationFilter)));
+        }
+        if ('' !== $themeUuid) {
+            $sessions = array_values(array_filter($sessions, static fn (SessionSummaryView $session): bool => in_array($themeUuid, array_column($session->themes, 'uuid'), true)));
+        }
 
         usort($sessions, static function (SessionSummaryView $left, SessionSummaryView $right) use ($tableSort): int {
             $leftValue = match ($tableSort->column) {
                 'title' => $left->title,
-                'sequenceCount' => count($left->sequences),
                 default => $left->sessionDate->format('U'),
             };
             $rightValue = match ($tableSort->column) {
                 'title' => $right->title,
-                'sequenceCount' => count($right->sequences),
                 default => $right->sessionDate->format('U'),
             };
 
@@ -94,9 +110,32 @@ final class SessionSummaryController extends AbstractController
 
         return $this->render('session/index.html.twig', [
             'query' => $request->query->getString('query'),
+            'publicationFilter' => $publicationFilter,
+            'themeUuid' => $themeUuid,
+            'themes' => $themes,
             'sessions' => $sessions,
             'tableSort' => $tableSort,
         ]);
+    }
+
+    #[Route('/{uuid}/publication', name: 'publication', methods: ['POST'])]
+    public function publication(string $uuid, Request $request, SetSessionPublication $setSessionPublication): JsonResponse
+    {
+        if (!Uuid::isValid($uuid) || !$this->isCsrfTokenValid("session_publication_{$uuid}", $request->request->getString('_token'))) {
+            return new JsonResponse(['message' => 'Access denied.'], Response::HTTP_FORBIDDEN);
+        }
+
+        $publishedValue = $request->request->getString('published');
+        if (!in_array($publishedValue, ['0', '1'], true)) {
+            return new JsonResponse(['message' => 'Invalid publication state.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $published = $setSessionPublication(Uuid::fromString($uuid), '1' === $publishedValue);
+        if (null === $published) {
+            return new JsonResponse(['message' => 'Session not found.'], Response::HTTP_NOT_FOUND);
+        }
+
+        return new JsonResponse(['published' => $published]);
     }
 
     #[Route('/documents/regenerate', name: 'documents_regenerate', methods: ['POST'])]
@@ -161,7 +200,7 @@ final class SessionSummaryController extends AbstractController
                 }
             }
         }
-        $form = $this->createForm(SessionSummaryFormType::class, $formModel);
+        $form = $this->createForm(SessionSummaryFormType::class, $formModel, ['allow_publication' => true]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -819,6 +858,7 @@ final class SessionSummaryController extends AbstractController
             instrumentUuids: $sessionSummaryFormModel->instrumentUuids,
             recommendationUuids: $sessionSummaryFormModel->orderedRecommendationUuids(),
             themeUuids: $sessionSummaryFormModel->themeUuids,
+            published: $sessionSummaryFormModel->published,
         );
     }
 

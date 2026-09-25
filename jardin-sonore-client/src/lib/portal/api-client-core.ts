@@ -85,6 +85,10 @@ export class PortalApiClient {
         return this.jsonRequest<PortalTokenResponse>("/api/portal/auth/login", data);
     }
 
+    public async consumeImpersonationLaunch(launchToken: string): Promise<PortalApiResult<PortalTokenResponse>> {
+        return this.jsonRequest<PortalTokenResponse>("/api/portal/auth/impersonation-launch", {launchToken});
+    }
+
     public async logout(): Promise<Response> {
         return this.request("/api/portal/auth/logout", {method: "POST"}, true);
     }

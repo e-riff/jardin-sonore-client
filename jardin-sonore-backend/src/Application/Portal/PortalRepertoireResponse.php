@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Application\Portal;
 
-use App\Domain\Model\Session\MediaResourceType;
 use App\Infrastructure\Doctrine\Entity\MediaResourceEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\RepertoireItemEntity;
@@ -37,9 +36,6 @@ final readonly class PortalRepertoireResponse
         ], $mediaEntities);
         $thumbnailUrl = null;
         foreach ($mediaEntities as $mediaEntity) {
-            if (MediaResourceType::VIDEO !== $mediaEntity->getType()) {
-                continue;
-            }
             $videoId = self::youtubeVideoId($mediaEntity->getPrimaryUrl());
             if (null !== $videoId) {
                 $thumbnailUrl = "https://i.ytimg.com/vi/{$videoId}/hqdefault.jpg";

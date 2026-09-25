@@ -9,6 +9,7 @@ use App\Domain\Repository\InstrumentRepositoryInterface;
 use App\Domain\Repository\SessionRecommendationRepositoryInterface;
 use App\Domain\Repository\ThemeRepositoryInterface;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
@@ -99,6 +100,13 @@ final class SessionSummaryType extends AbstractType
                 'label' => 'sessions.summary.form.submit',
                 'attr' => ['class' => 'internal-button'],
             ]);
+
+        if ($options['allow_publication']) {
+            $builder->add('published', CheckboxType::class, [
+                'label' => 'sessions.summary.form.published',
+                'required' => false,
+            ]);
+        }
     }
 
     public function configureOptions(OptionsResolver $resolver): void
@@ -106,6 +114,7 @@ final class SessionSummaryType extends AbstractType
         $resolver->setDefaults([
             'data_class' => SessionSummaryFormModel::class,
             'translation_domain' => 'sessions',
+            'allow_publication' => false,
         ]);
     }
 }

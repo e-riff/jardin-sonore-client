@@ -37,6 +37,7 @@ final readonly class UpdateSessionSummary
             recommendationUuids: $saveSessionSummaryInput->recommendationUuids,
             themes: $this->resolveThemes($saveSessionSummaryInput->themeUuids),
         );
+        $sessionSummary->setPublished($saveSessionSummaryInput->published);
 
         $this->sessionSummaryRepository->save($sessionSummary);
     }
