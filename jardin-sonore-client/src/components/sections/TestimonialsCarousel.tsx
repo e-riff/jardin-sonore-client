@@ -279,7 +279,7 @@ export default function TestimonialsCarousel({items, quoteMark}: TestimonialsCar
             <div className={`pointer-events-none absolute inset-y-16 left-0 z-10 hidden w-16 bg-linear-to-r from-background via-background/70 to-transparent transition-opacity md:block ${canScrollLeft ? "opacity-100" : "opacity-0"}`} />
             <div className={`pointer-events-none absolute inset-y-16 right-0 z-10 hidden w-24 bg-linear-to-l from-background via-background/82 to-transparent transition-opacity md:block ${canScrollRight ? "opacity-100" : "opacity-0"}`} />
             <div
-                className="scroll-smooth flex touch-pan-x snap-x snap-proximity items-stretch gap-gutter overflow-x-auto pb-8 pr-6 pl-1 scrollbar-hide md:overscroll-y-contain md:pr-28"
+                className="scroll-smooth flex touch-pan-y snap-x snap-proximity items-stretch gap-gutter overflow-x-hidden pb-8 pr-6 pl-1 md:pr-28"
                 ref={trackRef}
             >
                 {items.map((testimonial: TestimonialItem) => (

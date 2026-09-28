@@ -4,6 +4,7 @@ import CtaSection from "@/components/sections/CtaSection";
 import ExplorationSection from "@/components/sections/ExplorationSection";
 import FounderSection from "@/components/sections/FounderSection";
 import Hero from "@/components/Hero";
+import PortalShowcaseSection from "@/components/sections/PortalShowcaseSection";
 import ServicesSection from "@/components/sections/ServicesSection";
 import StatsSection from "@/components/sections/StatsSection";
 import StructuredData from "@/components/StructuredData";
@@ -18,6 +19,7 @@ export default function Home(): JSX.Element {
             <ServicesSection />
             <AboutSection />
             <ExplorationSection />
+            <PortalShowcaseSection />
             <CtaSection />
         </>
     );
