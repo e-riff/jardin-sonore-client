@@ -10,6 +10,7 @@ use App\Application\Portal\PortalAccountMailSenderInterface;
 use App\Application\Portal\PortalImpersonationLaunchManager;
 use App\Application\Portal\PortalPasswordTokenManager;
 use App\Application\Portal\PortalSessionManager;
+use App\Domain\Model\Portal\PortalPasswordPolicy;
 use App\Domain\Model\Portal\UserStatus;
 use App\Infrastructure\Admin\UserCrudController;
 use App\Infrastructure\Doctrine\Entity\UserEntity;
@@ -44,6 +45,7 @@ final class UserCrudControllerTest extends TestCase
             $entityManager,
             $clock,
             $this->createStub(UserPasswordHasherInterface::class),
+            new PortalPasswordPolicy(),
             86400,
         );
         $userCrudController = new UserCrudController(

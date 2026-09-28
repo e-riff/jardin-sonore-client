@@ -178,7 +178,7 @@ final class PortalApiControllerTest extends WebTestCase
         $issuedPortalSession = static::getContainer()->get(PortalSessionManager::class)->create($userEntity);
 
         $this->requestJson($client, 'POST', '/api/portal/password-tokens/' . $issuedPortalPasswordToken->rawToken . '/consume', [
-            'password' => 'Une phrase de passe solide',
+            'password' => 'Une phrase de passe solide 2026',
         ]);
 
         self::assertResponseIsSuccessful();
@@ -192,6 +192,76 @@ final class PortalApiControllerTest extends WebTestCase
 
         $client->request('GET', '/api/portal/me', server: ['HTTP_AUTHORIZATION' => 'Bearer ' . $response['token']]);
         self::assertResponseIsSuccessful();
+    }
+
+    public function testPasswordTokenConsumptionRequiresThePasswordRulesAndKeepsTheTokenUsableAfterInvalidPasswords(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $userEntity = (new UserEntity())->setEmail('pending-' . bin2hex(random_bytes(8)) . '@portal.test');
+        $organizationEntity = (new OrganizationEntity())->setName('Structure invitée');
+        $userOrganizationAccessEntity = (new UserOrganizationAccessEntity())
+            ->setOrganization($organizationEntity)
+            ->setUser($userEntity);
+        $userEntity->addOrganizationAccess($userOrganizationAccessEntity);
+        $entityManager->persist($organizationEntity);
+        $entityManager->persist($userEntity);
+        $entityManager->persist($userOrganizationAccessEntity);
+        $entityManager->flush();
+
+        $portalPasswordTokenManager = static::getContainer()->get(PortalPasswordTokenManager::class);
+        $issuedPortalPasswordToken = $portalPasswordTokenManager->issueInvitation($userEntity);
+        $invalidPasswords = ['Aa1', 'abcdefghijkl1', 'ABCDEFGHIJKL1', 'Abcdefghijkl'];
+
+        foreach ($invalidPasswords as $invalidPassword) {
+            $this->requestJson($client, 'POST', '/api/portal/password-tokens/' . $issuedPortalPasswordToken->rawToken . '/consume', [
+                'password' => $invalidPassword,
+            ]);
+
+            self::assertResponseStatusCodeSame(422);
+            self::assertSame('Le mot de passe doit contenir au moins 12 caractères, une minuscule, une majuscule et un chiffre.', $this->responseJson($client)['message'] ?? null);
+            self::assertNotNull($portalPasswordTokenManager->findUsable($issuedPortalPasswordToken->rawToken));
+        }
+
+        $this->requestJson($client, 'POST', '/api/portal/password-tokens/' . $issuedPortalPasswordToken->rawToken . '/consume', [
+            'password' => 'Une phrase de passe solide 2026',
+        ]);
+
+        self::assertResponseIsSuccessful();
+        self::assertIsString($this->responseJson($client)['token'] ?? null);
+    }
+
+    public function testPasswordResetChangesPasswordWhileKeepingLegacyPasswordLoginBeforeReset(): void
+    {
+        [$client, $userEntity] = $this->createActiveUserWithOrganization();
+        $legacyPassword = 'ancien';
+        $userEntity->setPassword(static::getContainer()->get(UserPasswordHasherInterface::class)->hashPassword($userEntity, $legacyPassword));
+        static::getContainer()->get(EntityManagerInterface::class)->flush();
+        $issuedPasswordReset = static::getContainer()->get(PortalPasswordTokenManager::class)->issuePasswordReset($userEntity);
+
+        $this->requestJson($client, 'POST', '/api/portal/auth/login', [
+            'email' => $userEntity->getEmail(),
+            'password' => $legacyPassword,
+        ]);
+        self::assertResponseIsSuccessful();
+
+        $this->requestJson($client, 'POST', '/api/portal/password-tokens/' . $issuedPasswordReset->rawToken . '/consume', [
+            'password' => 'Une phrase de passe solide 2026',
+        ]);
+        self::assertResponseIsSuccessful();
+
+        $this->requestJson($client, 'POST', '/api/portal/auth/login', [
+            'email' => $userEntity->getEmail(),
+            'password' => $legacyPassword,
+        ]);
+        self::assertResponseStatusCodeSame(401);
+
+        $this->requestJson($client, 'POST', '/api/portal/auth/login', [
+            'email' => $userEntity->getEmail(),
+            'password' => 'Une phrase de passe solide 2026',
+        ]);
+        self::assertResponseIsSuccessful();
+        self::assertIsString($this->responseJson($client)['token'] ?? null);
     }
 
     public function testPrivateEndpointsRequireABearerSession(): void

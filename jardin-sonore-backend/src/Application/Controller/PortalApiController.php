@@ -14,6 +14,7 @@ use App\Application\Portal\PortalSessionManager;
 use App\Application\Portal\PortalSessionReader;
 use App\Application\Portal\PortalSessionResponse;
 use App\Application\Storage\PortalAvatarStorageInterface;
+use App\Application\Validation\Constraint\PortalPassword;
 use App\Domain\Model\Portal\UserStatus;
 use App\Domain\Model\Session\SessionDocumentStatus;
 use App\Infrastructure\Doctrine\Entity\UserEntity;
@@ -33,6 +34,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/portal')]
 final class PortalApiController extends AbstractController
@@ -47,6 +49,7 @@ final class PortalApiController extends AbstractController
         private readonly PortalRepertoireReader $portalRepertoireReader,
         private readonly PortalSessionAccessService $portalSessionAccessService,
         private readonly UserPasswordHasherInterface $userPasswordHasher,
+        private readonly ValidatorInterface $validator,
         #[Autowire(service: 'limiter.portal_login')]
         private readonly RateLimiterFactoryInterface $portalLoginLimiter,
         #[Autowire(service: 'limiter.portal_password_reset')]
@@ -133,8 +136,13 @@ final class PortalApiController extends AbstractController
         $userPasswordTokenEntity = $this->portalPasswordTokenManager->findUsable($token);
         $payload = $this->jsonPayload($request);
         $password = isset($payload['password']) && is_string($payload['password']) ? $payload['password'] : '';
-        if (null === $userPasswordTokenEntity || 12 > mb_strlen($password)) {
+        if (null === $userPasswordTokenEntity) {
             return new JsonResponse(['message' => 'This password link is unavailable.'], Response::HTTP_NOT_FOUND);
+        }
+
+        $passwordViolations = $this->validator->validate($password, new PortalPassword());
+        if (0 < $passwordViolations->count()) {
+            return new JsonResponse(['message' => $passwordViolations[0]->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $userEntity = $userPasswordTokenEntity->getUser();
