@@ -1,6 +1,6 @@
 # Backend Roadmap - Jardin Sonore
 
-Ce fichier est la roadmap maitre du backend. Il doit rester centre sur l'etat present, les decisions vivantes et les prochains lots. Le pilotage d'execution detaille vit dans `.codex/backend-refacto-plan.md`.
+> **Archive technique.** Le pilotage actif, les priorités et les statuts à jour sont dans la [roadmap centrale](../ROADMAP.md). Les sections ci-dessous conservent les décisions et lots historiques du backend ; leurs mentions de « roadmap maître », « prochains lots » ou travaux futurs décrivent leur contexte d'origine et ne priment pas sur la roadmap centrale. Les anciens points sur le portail masqué, son bandeau, son menu et la règle de mot de passe sont notamment dépassés. Le détail historique d'exécution figure dans `.codex/backend-refacto-plan.md`.
 
 ## Etat Actuel
 
