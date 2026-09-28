@@ -7,7 +7,7 @@ export default async function CtaSection(): Promise<JSX.Element> {
     const content = dictionary.cta;
 
     return (
-        <section className="px-6 pb-xl sm:px-margin" id={"contact"}>
+        <section className="bg-surface-container-low px-6 py-lg sm:px-margin lg:py-16" id="contact">
             <div className="relative mx-auto max-w-7xl overflow-hidden rounded-xl bg-primary px-8 py-16 text-center text-on-primary soft-shadow sm:px-16 md:px-24 md:py-24">
                 <div className="relative z-10">
                     <p className="mb-3 font-sans text-xs font-bold uppercase tracking-[0.22em] text-on-primary/75">{content.eyebrow}</p>
