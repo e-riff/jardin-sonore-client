@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Application\Portal;
 
 use App\Domain\Model\Portal\PasswordTokenType;
+use App\Domain\Model\Portal\PortalPasswordPolicy;
 use App\Domain\Model\Portal\UserStatus;
 use App\Infrastructure\Doctrine\Entity\UserEntity;
 use App\Infrastructure\Doctrine\Entity\UserPasswordTokenEntity;
 use Doctrine\ORM\EntityManagerInterface;
+use InvalidArgumentException;
 use LogicException;
 use Symfony\Component\Clock\ClockInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -20,6 +22,7 @@ final class PortalPasswordTokenManager
         private readonly EntityManagerInterface $entityManager,
         private readonly ClockInterface $clock,
         private readonly UserPasswordHasherInterface $userPasswordHasher,
+        private readonly PortalPasswordPolicy $portalPasswordPolicy,
         #[Autowire('%app.portal.password_link_ttl%')]
         private readonly int $passwordLinkTtl,
     ) {
@@ -59,6 +62,10 @@ final class PortalPasswordTokenManager
 
         if (!$userPasswordTokenEntity->isUsableAt($now)) {
             throw new LogicException('The portal password token is no longer usable.');
+        }
+
+        if (!$this->portalPasswordPolicy->isValid($plainPassword)) {
+            throw new InvalidArgumentException('The portal password does not meet the password policy.');
         }
 
         $userEntity = $userPasswordTokenEntity->getUser();

@@ -6,10 +6,12 @@ namespace App\Tests\Unit\Application\Portal;
 
 use App\Application\Portal\PortalPasswordTokenManager;
 use App\Domain\Model\Portal\PasswordTokenType;
+use App\Domain\Model\Portal\PortalPasswordPolicy;
 use App\Domain\Model\Portal\UserStatus;
 use App\Infrastructure\Doctrine\Entity\UserEntity;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use InvalidArgumentException;
 use LogicException;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Clock\MockClock;
@@ -26,6 +28,7 @@ final class PortalPasswordTokenManagerTest extends TestCase
             $entityManager,
             new MockClock($now),
             $this->createStub(UserPasswordHasherInterface::class),
+            new PortalPasswordPolicy(),
             3600,
         );
 
@@ -49,6 +52,7 @@ final class PortalPasswordTokenManagerTest extends TestCase
             $entityManager,
             new MockClock($now),
             $userPasswordHasher,
+            new PortalPasswordPolicy(),
             3600,
         );
         $issuedPortalPasswordToken = $portalPasswordTokenManager->issueInvitation($userEntity);
@@ -70,11 +74,12 @@ final class PortalPasswordTokenManagerTest extends TestCase
             $this->createStub(EntityManagerInterface::class),
             new MockClock($now),
             $userPasswordHasher,
+            new PortalPasswordPolicy(),
             3600,
         );
 
         $issuedPortalPasswordToken = $portalPasswordTokenManager->issuePasswordReset($userEntity);
-        $portalPasswordTokenManager->consumeWithPassword($issuedPortalPasswordToken->tokenEntity, 'Une phrase de passe solide');
+        $portalPasswordTokenManager->consumeWithPassword($issuedPortalPasswordToken->tokenEntity, 'Une phrase de passe solide 2026');
 
         self::assertSame(PasswordTokenType::PASSWORD_RESET, $issuedPortalPasswordToken->tokenEntity->getType());
         self::assertSame(UserStatus::ACTIVE, $userEntity->getStatus());
@@ -87,6 +92,7 @@ final class PortalPasswordTokenManagerTest extends TestCase
             $this->createStub(EntityManagerInterface::class),
             new MockClock(new DateTimeImmutable()),
             $this->createStub(UserPasswordHasherInterface::class),
+            new PortalPasswordPolicy(),
             3600,
         );
 
@@ -101,11 +107,36 @@ final class PortalPasswordTokenManagerTest extends TestCase
             $this->createStub(EntityManagerInterface::class),
             new MockClock(new DateTimeImmutable()),
             $this->createStub(UserPasswordHasherInterface::class),
+            new PortalPasswordPolicy(),
             3600,
         );
 
         $this->expectException(LogicException::class);
 
         $portalPasswordTokenManager->issuePasswordReset(new UserEntity());
+    }
+
+    public function testItRejectsInvalidPasswordsWithoutConsumingTheTokenOrHashingThePassword(): void
+    {
+        $now = new DateTimeImmutable('2026-09-16T10:00:00+00:00');
+        $userEntity = new UserEntity();
+        $userPasswordHasher = $this->createMock(UserPasswordHasherInterface::class);
+        $userPasswordHasher->expects(self::never())->method('hashPassword');
+        $portalPasswordTokenManager = new PortalPasswordTokenManager(
+            $this->createStub(EntityManagerInterface::class),
+            new MockClock($now),
+            $userPasswordHasher,
+            new PortalPasswordPolicy(),
+            3600,
+        );
+        $issuedPortalPasswordToken = $portalPasswordTokenManager->issueInvitation($userEntity);
+
+        try {
+            $portalPasswordTokenManager->consumeWithPassword($issuedPortalPasswordToken->tokenEntity, 'ancien');
+            self::fail('An invalid password must not be consumed.');
+        } catch (InvalidArgumentException) {
+            self::assertSame(UserStatus::PENDING, $userEntity->getStatus());
+            self::assertTrue($issuedPortalPasswordToken->tokenEntity->isUsableAt($now));
+        }
     }
 }

@@ -1,3 +1,6 @@
+portal:
+  password:
+    invalid: "Le mot de passe doit contenir au moins 12 caractères, une minuscule, une majuscule et un chiffre."
 mailing:
   audience:
     validation:

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Application\Form;
 
+use App\Application\Validation\Constraint\PortalPassword;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
 /** @extends AbstractType<array<string, mixed>> */
@@ -24,7 +24,7 @@ final class PortalSetPasswordType extends AbstractType
             'invalid_message' => 'Les mots de passe doivent être identiques.',
             'constraints' => [
                 new NotBlank(message: 'Veuillez choisir un mot de passe.'),
-                new Length(min: 12, minMessage: 'Le mot de passe doit contenir au moins {{ limit }} caractères.'),
+                new PortalPassword(),
             ],
         ]);
     }

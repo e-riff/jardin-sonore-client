@@ -27,7 +27,7 @@ export default function PortalAccountHeader({onLogout}: PortalAccountHeaderProps
     const isSessionsActive = pathname.startsWith("/portail/seances");
     const isRepertoireActive = pathname.startsWith("/portail/comptines");
     const isProfileActive = pathname.startsWith("/portail/compte");
-    const navigationLinkClassName = (isActive: boolean): string => `inline-flex items-center gap-1.5 hover:text-primary ${isActive ? "text-primary" : ""}`;
+    const navigationLinkClassName = (isActive: boolean): string => `relative inline-flex items-center pl-3 hover:text-primary ${isActive ? "text-primary" : ""}`;
     const mobileNavigationLinkClassName = (isActive: boolean): string => `flex items-center gap-2 rounded-md px-3 py-2 font-semibold text-primary hover:bg-primary/10 ${isActive ? "bg-primary/10" : ""}`;
     const closeMobileMenu = (): void => setMobileMenuOpen(false);
 
@@ -59,8 +59,8 @@ export default function PortalAccountHeader({onLogout}: PortalAccountHeaderProps
                 </div>
                 <div className="hidden items-center gap-3 lg:flex">
                     <nav aria-label={content.navigationLabel} className="flex items-center gap-5 text-sm font-semibold text-on-surface-variant">
-                        <Link aria-current={isSessionsActive ? "page" : undefined} className={navigationLinkClassName(isSessionsActive)} href="/portail/seances" onClick={closeAccountMenu}>{isSessionsActive ? <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-primary" /> : null}{content.sessionsLink}</Link>
-                        <Link aria-current={isRepertoireActive ? "page" : undefined} className={navigationLinkClassName(isRepertoireActive)} href={portalRoutes.repertoire} onClick={closeAccountMenu}>{isRepertoireActive ? <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-primary" /> : null}{content.nurseryRhymesLink}</Link>
+                        <Link aria-current={isSessionsActive ? "page" : undefined} className={navigationLinkClassName(isSessionsActive)} href="/portail/seances" onClick={closeAccountMenu}><span aria-hidden="true" className={`absolute left-0 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full ${isSessionsActive ? "bg-primary" : "bg-transparent"}`} />{content.sessionsLink}</Link>
+                        <Link aria-current={isRepertoireActive ? "page" : undefined} className={navigationLinkClassName(isRepertoireActive)} href={portalRoutes.repertoire} onClick={closeAccountMenu}><span aria-hidden="true" className={`absolute left-0 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full ${isRepertoireActive ? "bg-primary" : "bg-transparent"}`} />{content.nurseryRhymesLink}</Link>
                         <button className="flex cursor-not-allowed flex-col items-start leading-none text-on-surface-variant/60" disabled type="button"><span>{content.activitiesLink}</span><span className="mt-1 text-[0.6rem] font-medium uppercase tracking-[0.12em]">{content.comingSoon}</span></button>
                     </nav>
                     <details className="group relative" ref={accountMenuRef}>
