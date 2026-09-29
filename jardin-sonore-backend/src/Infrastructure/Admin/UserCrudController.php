@@ -19,12 +19,10 @@ use App\Infrastructure\Doctrine\Entity\UserEntity;
 use App\Infrastructure\Doctrine\Entity\UserOrganizationAccessEntity;
 use App\Infrastructure\Doctrine\Repository\EmailContactDoctrineRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminRoute;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
-use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
@@ -33,6 +31,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use InvalidArgumentException;
 use LogicException;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
@@ -58,6 +57,7 @@ final class UserCrudController extends AbstractCrudController
         private readonly PortalPasswordTokenManager $portalPasswordTokenManager,
         private readonly PortalAccountMailSenderInterface $portalAccountMailSender,
         private readonly PortalImpersonationLaunchManager $portalImpersonationLaunchManager,
+        private readonly AdminUrlGenerator $adminUrlGenerator,
         #[Autowire('%app.portal.public_base_url%')]
         private readonly string $portalPublicBaseUrl,
     ) {
@@ -75,8 +75,16 @@ final class UserCrudController extends AbstractCrudController
 
     public function configureActions(Actions $actions): Actions
     {
-        $sendInvitation = Action::new('sendInvitation', 'Envoyer l’invitation', 'fa fa-envelope')->linkToCrudAction('sendInvitation')->displayIf(static fn (UserEntity $userEntity): bool => UserStatus::PENDING === $userEntity->getStatus());
-        $sendPasswordReset = Action::new('sendPasswordReset', 'Réinitialiser le mot de passe', 'fa fa-key')->linkToCrudAction('sendPasswordReset')->displayIf(static fn (UserEntity $userEntity): bool => UserStatus::ACTIVE === $userEntity->getStatus());
+        $sendInvitation = Action::new('sendInvitation', 'Envoyer l’invitation', 'fa fa-envelope')
+            ->linkToUrl(fn (UserEntity $userEntity): string => $this->generateUrl('admin_user_send_invitation', ['id' => $userEntity->getId()]))
+            ->renderAsForm()
+            ->setTemplatePath('admin/action/portal_account_mail.html.twig')
+            ->displayIf(static fn (UserEntity $userEntity): bool => UserStatus::PENDING === $userEntity->getStatus());
+        $sendPasswordReset = Action::new('sendPasswordReset', 'Réinitialiser le mot de passe', 'fa fa-key')
+            ->linkToUrl(fn (UserEntity $userEntity): string => $this->generateUrl('admin_user_send_password_reset', ['id' => $userEntity->getId()]))
+            ->renderAsForm()
+            ->setTemplatePath('admin/action/portal_account_mail.html.twig')
+            ->displayIf(static fn (UserEntity $userEntity): bool => UserStatus::ACTIVE === $userEntity->getStatus());
         $startImpersonation = Action::new('startImpersonation', 'Ouvrir le portail', 'fa fa-user-secret')
             ->linkToUrl(fn (UserEntity $userEntity): string => $this->generateUrl('admin_user_impersonation_launch', ['id' => $userEntity->getId()]))
             ->renderAsForm()
@@ -110,35 +118,47 @@ final class UserCrudController extends AbstractCrudController
         ]);
     }
 
-    /** @param AdminContext<UserEntity> $context */
-    #[AdminRoute(path: '/send-invitation', name: 'send_invitation')]
-    public function sendInvitation(AdminContext $context): Response
+    #[Route('/backoffice/user/{id}/send-invitation', name: 'admin_user_send_invitation', methods: ['POST'])]
+    public function sendInvitation(Request $request, #[MapEntity(id: 'id')] UserEntity $userEntity): Response
     {
-        $userEntity = $context->getEntity()->getInstance();
-        if ($userEntity instanceof UserEntity) {
-            $this->issueAndSendInvitation($userEntity, 'Invitation envoyée.');
+        if (UserStatus::PENDING !== $userEntity->getStatus()
+            || !$this->isCsrfTokenValid("portal_invitation_{$userEntity->getId()}", $request->request->getString('_token'))) {
+            throw new AccessDeniedHttpException();
         }
 
-        return $this->redirect($context->getRequest()->headers->get('referer') ?? $this->generateUrl('admin'));
+        $this->issueAndSendInvitation($userEntity, 'Invitation envoyée.');
+
+        return $this->redirectToAccountDetail($userEntity);
     }
 
-    /** @param AdminContext<UserEntity> $context */
-    #[AdminRoute(path: '/send-password-reset', name: 'send_password_reset')]
-    public function sendPasswordReset(AdminContext $context): Response
+    #[Route('/backoffice/user/{id}/send-password-reset', name: 'admin_user_send_password_reset', methods: ['POST'])]
+    public function sendPasswordReset(Request $request, #[MapEntity(id: 'id')] UserEntity $userEntity): Response
     {
-        $userEntity = $context->getEntity()->getInstance();
-        if ($userEntity instanceof UserEntity) {
-            $issuedPortalPasswordToken = $this->portalPasswordTokenManager->issuePasswordReset($userEntity);
-
-            try {
-                $this->portalAccountMailSender->sendPasswordReset($userEntity, $issuedPortalPasswordToken->rawToken);
-                $this->addFlash('success', 'Lien de réinitialisation envoyé.');
-            } catch (TransportExceptionInterface) {
-                $this->addFlash('danger', 'Le lien a été généré, mais l’e-mail n’a pas pu être envoyé. Vous pouvez réessayer.');
-            }
+        if (UserStatus::ACTIVE !== $userEntity->getStatus()
+            || !$this->isCsrfTokenValid("portal_password_reset_{$userEntity->getId()}", $request->request->getString('_token'))) {
+            throw new AccessDeniedHttpException();
         }
 
-        return $this->redirect($context->getRequest()->headers->get('referer') ?? $this->generateUrl('admin'));
+        $issuedPortalPasswordToken = $this->portalPasswordTokenManager->issuePasswordReset($userEntity);
+
+        try {
+            $this->portalAccountMailSender->sendPasswordReset($userEntity, $issuedPortalPasswordToken->rawToken);
+            $this->addFlash('success', 'Lien de réinitialisation envoyé.');
+        } catch (TransportExceptionInterface) {
+            $this->addFlash('danger', 'Le lien a été généré, mais l’e-mail n’a pas pu être envoyé. Vous pouvez réessayer.');
+        }
+
+        return $this->redirectToAccountDetail($userEntity);
+    }
+
+    private function redirectToAccountDetail(UserEntity $userEntity): Response
+    {
+        return $this->redirect($this->adminUrlGenerator
+            ->unsetAll()
+            ->setController(self::class)
+            ->setAction(Action::DETAIL)
+            ->setEntityId($userEntity->getId())
+            ->generateUrl());
     }
 
     public function configureAssets(Assets $assets): Assets

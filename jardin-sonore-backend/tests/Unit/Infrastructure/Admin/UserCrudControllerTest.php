@@ -16,6 +16,7 @@ use App\Infrastructure\Admin\UserCrudController;
 use App\Infrastructure\Doctrine\Entity\UserEntity;
 use App\Infrastructure\Doctrine\Repository\EmailContactDoctrineRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
@@ -56,6 +57,7 @@ final class UserCrudControllerTest extends TestCase
             $portalPasswordTokenManager,
             $this->createStub(PortalAccountMailSenderInterface::class),
             $portalImpersonationLaunchManager,
+            (new ReflectionClass(AdminUrlGenerator::class))->newInstanceWithoutConstructor(),
             'https://jardin-sonore.example.test',
         );
 

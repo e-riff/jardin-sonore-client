@@ -25,6 +25,7 @@ use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\Persistence\ManagerRegistry;
+use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -33,6 +34,7 @@ use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockFileSessionStorage;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Mailer\Exception\TransportException;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 final class UserCrudControllerTest extends WebTestCase
 {
@@ -126,17 +128,20 @@ final class UserCrudControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('Envoyer l’invitation', (string) $client->getResponse()->getContent());
         self::assertStringNotContainsString('Réinitialiser le mot de passe', (string) $client->getResponse()->getContent());
+        $this->assertAccountActionForm($client->getResponse()->getContent(), $pendingUserEntity, 'send-invitation');
 
         $client->request('GET', '/backoffice/user?query=' . urlencode($activeUserEntity->getEmail()));
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('Réinitialiser le mot de passe', (string) $client->getResponse()->getContent());
         self::assertStringNotContainsString('Envoyer l’invitation', (string) $client->getResponse()->getContent());
+        $this->assertAccountActionForm($client->getResponse()->getContent(), $activeUserEntity, 'send-password-reset');
 
         foreach (["/backoffice/user/{$pendingUserEntity->getId()}", "/backoffice/user/{$pendingUserEntity->getId()}/edit"] as $url) {
             $client->request('GET', $url);
             self::assertResponseIsSuccessful();
             self::assertStringContainsString('Envoyer l’invitation', (string) $client->getResponse()->getContent());
             self::assertStringNotContainsString('Réinitialiser le mot de passe', (string) $client->getResponse()->getContent());
+            $this->assertAccountActionForm($client->getResponse()->getContent(), $pendingUserEntity, 'send-invitation');
         }
 
         foreach (["/backoffice/user/{$activeUserEntity->getId()}", "/backoffice/user/{$activeUserEntity->getId()}/edit"] as $url) {
@@ -144,6 +149,7 @@ final class UserCrudControllerTest extends WebTestCase
             self::assertResponseIsSuccessful();
             self::assertStringContainsString('Réinitialiser le mot de passe', (string) $client->getResponse()->getContent());
             self::assertStringNotContainsString('Envoyer l’invitation', (string) $client->getResponse()->getContent());
+            $this->assertAccountActionForm($client->getResponse()->getContent(), $activeUserEntity, 'send-password-reset');
             self::assertStringContainsString('Prénom', (string) $client->getResponse()->getContent());
             self::assertStringContainsString('Nom', (string) $client->getResponse()->getContent());
             self::assertStringContainsString('Photo de profil', (string) $client->getResponse()->getContent());
@@ -153,6 +159,63 @@ final class UserCrudControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertStringNotContainsString('Envoyer l’invitation', (string) $client->getResponse()->getContent());
         self::assertStringNotContainsString('Réinitialiser le mot de passe', (string) $client->getResponse()->getContent());
+    }
+
+    #[RunInSeparateProcess]
+    public function testPasswordAccountActionsRejectUnsafeRequestsAndSendExactlyOnce(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $adminUserEntity = (new AdminUserEntity())->setEmail('admin-' . bin2hex(random_bytes(8)) . '@portal.test')->setPassword('unused');
+        $pendingUserEntity = (new UserEntity())->setEmail('pending-' . bin2hex(random_bytes(8)) . '@portal.test');
+        $activeUserEntity = (new UserEntity())->setEmail('active-' . bin2hex(random_bytes(8)) . '@portal.test')->setStatus(UserStatus::ACTIVE);
+        $entityManager->persist($adminUserEntity);
+        $entityManager->persist($pendingUserEntity);
+        $entityManager->persist($activeUserEntity);
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+
+        $client->request('GET', "/backoffice/user/{$pendingUserEntity->getId()}");
+        $csrfTokenManager = static::getContainer()->get(CsrfTokenManagerInterface::class);
+        $requestStack = static::getContainer()->get(RequestStack::class);
+        $requestStack->push($client->getRequest());
+
+        foreach ([[$pendingUserEntity, 'send-invitation', 'portal_invitation_'], [$activeUserEntity, 'send-password-reset', 'portal_password_reset_']] as [$userEntity, $actionPath, $csrfPrefix]) {
+            $url = "/backoffice/user/{$userEntity->getId()}/{$actionPath}";
+            $crossActionToken = (string) $csrfTokenManager->getToken(('send-invitation' === $actionPath ? 'portal_password_reset_' : 'portal_invitation_') . $userEntity->getId());
+
+            $client->request('GET', $url);
+            self::assertResponseStatusCodeSame(405);
+            foreach ([[], ['_token' => 'wrong'], ['_token' => $crossActionToken]] as $payload) {
+                $client->request('POST', $url, $payload);
+                self::assertResponseStatusCodeSame(403);
+            }
+            $otherUserEntity = $userEntity === $pendingUserEntity ? $activeUserEntity : $pendingUserEntity;
+            $client->request('POST', "/backoffice/user/{$otherUserEntity->getId()}/{$actionPath}", ['_token' => (string) $csrfTokenManager->getToken($csrfPrefix . $otherUserEntity->getId())]);
+            self::assertResponseStatusCodeSame(403);
+            self::assertCount(0, $entityManager->getRepository(UserPasswordTokenEntity::class)->findBy(['user' => $userEntity]));
+
+            $crawler = $client->request('GET', "/backoffice/user/{$userEntity->getId()}");
+            $token = $crawler->filterXPath("//form[contains(@action, '/{$actionPath}')]//input[@name='_token']")->attr('value');
+            self::assertNotNull($token);
+            $client->request('POST', $url, ['_token' => $token], server: ['HTTP_REFERER' => 'https://attacker.example/leave']);
+            self::assertResponseRedirects("/backoffice/user/{$userEntity->getId()}");
+            self::assertCount(1, $entityManager->getRepository(UserPasswordTokenEntity::class)->findBy(['user' => $userEntity]));
+            self::assertEmailCount(1);
+            self::assertSame(
+                'send-invitation' === $actionPath ? 'Invitation à votre espace Jardin Sonore' : 'Réinitialisez votre mot de passe Jardin Sonore',
+                self::getMailerEvent()?->getMessage()->getSubject(),
+            );
+        }
+
+        $requestStack->pop();
+    }
+
+    private function assertAccountActionForm(string $html, UserEntity $userEntity, string $actionPath): void
+    {
+        self::assertStringContainsString("action=\"/backoffice/user/{$userEntity->getId()}/{$actionPath}\"", $html);
+        self::assertStringContainsString('method="post"', $html);
+        self::assertStringContainsString('name="_token"', $html);
     }
 
     #[RunInSeparateProcess]
@@ -330,6 +393,7 @@ final class UserCrudControllerTest extends WebTestCase
             $container->get(PortalPasswordTokenManager::class),
             $portalAccountMailSender,
             $container->get(PortalImpersonationLaunchManager::class),
+            $container->get(AdminUrlGenerator::class),
             'https://jardin-sonore.example.test',
         );
         $userCrudController->setContainer($container);

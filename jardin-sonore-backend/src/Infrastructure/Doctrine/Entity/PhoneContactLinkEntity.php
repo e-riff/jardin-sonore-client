@@ -62,6 +62,10 @@ class PhoneContactLinkEntity
 
     public function setPhoneContact(?PhoneContactEntity $phoneContact): static
     {
+        if ($this->phoneContact instanceof PhoneContactEntity && $this->phoneContact !== $phoneContact) {
+            $this->phoneContact->removePhoneContactLink($this);
+        }
+
         $this->phoneContact = $phoneContact;
 
         if ($phoneContact instanceof PhoneContactEntity && !$phoneContact->getPhoneContactLinks()->contains($this)) {

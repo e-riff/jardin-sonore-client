@@ -102,7 +102,7 @@ final class AddressContactCrudController extends AbstractCrudController
         $contactDetailsEntity = $this->findRequestedContactDetails();
 
         if ($contactDetailsEntity instanceof ContactDetailsEntity) {
-            $addressContactEntity->setContactDetails($contactDetailsEntity);
+            $contactDetailsEntity->addAddressContact($addressContactEntity);
         }
 
         return $addressContactEntity;

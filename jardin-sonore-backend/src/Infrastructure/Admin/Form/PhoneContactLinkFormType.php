@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Infrastructure\Admin\Form;
 
 use App\Domain\Model\AddressBook\PhoneContactType;
+use App\Domain\Model\ValueObject\PhoneNumber;
+use App\Infrastructure\Doctrine\Entity\PhoneContactEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactLinkEntity;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
@@ -12,6 +14,8 @@ use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TelType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
@@ -43,6 +47,26 @@ final class PhoneContactLinkFormType extends AbstractType
                 'label' => 'admin.field.link_active',
                 'required' => false,
             ]);
+
+        $builder->addEventListener(FormEvents::PRE_SUBMIT, static function (FormEvent $event): void {
+            $submittedData = $event->getData();
+            $phoneContactLinkEntity = $event->getForm()->getData();
+            $submittedValue = is_array($submittedData) ? ($submittedData['phoneNumber'] ?? null) : null;
+
+            if (!$phoneContactLinkEntity instanceof PhoneContactLinkEntity || !is_string($submittedValue) || '' === trim($submittedValue)) {
+                return;
+            }
+
+            $phoneContactEntity = $phoneContactLinkEntity->getPhoneContact();
+
+            if (
+                $phoneContactEntity instanceof PhoneContactEntity
+                && 1 < $phoneContactEntity->getPhoneContactLinks()->count()
+                && PhoneNumber::normalize($submittedValue) !== $phoneContactEntity->getPhoneNumber()
+            ) {
+                $phoneContactLinkEntity->setPhoneContact(new PhoneContactEntity());
+            }
+        });
     }
 
     public function configureOptions(OptionsResolver $resolver): void
