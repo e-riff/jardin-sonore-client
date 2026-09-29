@@ -61,9 +61,11 @@ class AddressContactEntity
         return $this->type;
     }
 
-    public function setType(AddressContactType $type): static
+    public function setType(?AddressContactType $type): static
     {
-        $this->type = $type;
+        if ($type instanceof AddressContactType) {
+            $this->type = $type;
+        }
 
         return $this;
     }

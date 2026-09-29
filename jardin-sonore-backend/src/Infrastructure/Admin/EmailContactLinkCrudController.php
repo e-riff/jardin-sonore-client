@@ -97,7 +97,7 @@ final class EmailContactLinkCrudController extends AbstractCrudController
         $contactDetailsEntity = $this->findRequestedContactDetails();
 
         if ($contactDetailsEntity instanceof ContactDetailsEntity) {
-            $emailContactLink->setContactDetails($contactDetailsEntity);
+            $contactDetailsEntity->addEmailContactLink($emailContactLink);
         }
 
         return $emailContactLink;
