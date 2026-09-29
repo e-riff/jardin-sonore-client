@@ -16,11 +16,12 @@ L'interface concernée est le backoffice EasyAdmin, réservé aux comptes `ROLE_
 
 ## Personnes liées à une structure
 
-- Sur le détail d'une structure, afficher la liste de ses personnes avec nom, rôle et accès direct à leur fiche. Garder l'action existante de création d'une personne préliée à la structure.
-- La fiche personne existante reste le seul écran d'édition de son identité, de son rôle, de sa structure et de ses coordonnées. Un administrateur peut y accéder depuis la fiche structure ; aucun droit d'écriture n'est ajouté au portail.
+- Sur le détail d'une structure, afficher la liste de ses personnes en lecture seule, avec nom, rôle et accès direct à leur fiche. Garder l'action existante de création d'une personne préliée à la structure.
+- Sur le formulaire d'édition de la structure, permettre de modifier le prénom, le nom et le poste de ses personnes. Ne pas exposer leur structure ni leurs coordonnées partagées dans cette collection. La fiche personne reste accessible pour consulter et modifier l'ensemble de ses coordonnées ; aucun droit d'écriture n'est ajouté au portail.
 - Ajouter `organization.name` aux champs recherchables de la liste EasyAdmin des personnes. Une recherche par nom de structure retourne uniquement les personnes de cette structure, sans changer les autres critères de recherche ou les filtres existants.
+- Ajouter l'adresse des e-mails liés aux champs de recherche des structures afin de retrouver une organisation depuis une adresse connue.
 - Éditer une valeur d'e-mail ou de téléphone liée par référence à plusieurs fiches ne doit pas modifier les autres fiches. Le formulaire doit détacher le lien local avant de changer la valeur, puis laisser la résolution existante rattacher une valeur déjà connue si elle existe. Les propriétés du lien (libellé, type, activation) et son retrait restent locales à la personne. Préserver les préférences et les liens des autres fiches.
-- Tester la navigation structure → personne → édition, la recherche par structure, et une modification de coordonnées partagées qui laisse les autres fiches intactes.
+- Tester la séparation lecture/édition entre le détail et le formulaire de structure, la navigation structure → personne → édition, la recherche par structure, et une modification de coordonnées partagées qui laisse les autres fiches intactes.
 
 ## Adresse IP de la limitation du portail
 

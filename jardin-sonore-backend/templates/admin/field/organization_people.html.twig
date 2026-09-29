@@ -4,25 +4,12 @@
 {% else %}
     <ul class="list-unstyled mb-0">
         {% for person in people %}
-            <li class="mb-3">
-                <form action="{{ person.inlineEditUrl }}" method="post" class="d-flex flex-wrap align-items-end gap-2">
-                    <input type="hidden" name="_token" value="{{ csrf_token('organization_person_edit_' ~ entity.instance.id ~ '_' ~ person.personId) }}">
-                    <a href="{{ person.detailUrl }}">{{ person.name }}</a>
-                    <div>
-                        <label class="form-label" for="person-{{ person.personId }}-first-name">{{ 'admin.field.first_name'|trans({}, 'backoffice') }}</label>
-                        <input class="form-control form-control-sm" id="person-{{ person.personId }}-first-name" name="firstName" value="{{ person.firstName }}" required maxlength="255">
-                    </div>
-                    <div>
-                        <label class="form-label" for="person-{{ person.personId }}-last-name">{{ 'admin.field.last_name'|trans({}, 'backoffice') }}</label>
-                        <input class="form-control form-control-sm" id="person-{{ person.personId }}-last-name" name="lastName" value="{{ person.lastName }}" required maxlength="255">
-                    </div>
-                    <div>
-                        <label class="form-label" for="person-{{ person.personId }}-role">{{ 'admin.field.role'|trans({}, 'backoffice') }}</label>
-                        <input class="form-control form-control-sm" id="person-{{ person.personId }}-role" name="role" value="{{ person.role ?? '' }}" maxlength="255">
-                    </div>
-                    <button class="btn btn-sm btn-primary" type="submit">{{ 'admin.action.save_person'|trans({}, 'backoffice') }}</button>
-                    <a href="{{ person.editUrl }}">{{ 'admin.action.edit_person'|trans({}, 'backoffice') }}</a>
-                </form>
+            <li>
+                <a href="{{ person.detailUrl }}">{{ person.name }}</a>
+                {% if person.role is not empty %}
+                    <span>— {{ person.role }}</span>
+                {% endif %}
+                <a href="{{ person.editUrl }}">{{ 'admin.action.edit_person'|trans({}, 'backoffice') }}</a>
             </li>
         {% endfor %}
     </ul>

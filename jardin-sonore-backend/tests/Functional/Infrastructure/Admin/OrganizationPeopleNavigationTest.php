@@ -69,6 +69,7 @@ final class OrganizationPeopleNavigationTest extends WebTestCase
             $editUrl = "{$detailUrl}/edit";
             self::assertCount(1, $crawler->filterXPath("//a[contains(@href, '{$detailUrl}') and contains(., '{$personEntity->getFirstName()}')]"));
             self::assertCount(1, $crawler->filterXPath("//a[contains(@href, '{$editUrl}')]"));
+            self::assertCount(0, $crawler->filterXPath("//a[contains(@href, '{$detailUrl}')]/ancestor::li[1]//form"));
             $client->request('GET', $detailUrl);
             self::assertResponseIsSuccessful();
             $client->request('GET', $editUrl);
@@ -79,12 +80,12 @@ final class OrganizationPeopleNavigationTest extends WebTestCase
     }
 
     #[RunInSeparateProcess]
-    public function testOrganizationAdminCanEditPersonIdentityInlineWithCsrf(): void
+    public function testOrganizationEditFormEditsLinkedPersonFieldsInline(): void
     {
         $client = static::createClient();
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
         $adminUserEntity = $this->createAdmin($entityManager);
-        $organizationEntity = (new OrganizationEntity())->setName('Structure édition ' . bin2hex(random_bytes(8)));
+        $organizationEntity = (new OrganizationEntity())->setName('Structure édition formulaire ' . bin2hex(random_bytes(8)));
         $personEntity = (new PersonEntity())->setFirstName('Alice')->setLastName('Initial')->setRole('Direction');
         $organizationEntity->addPerson($personEntity);
         $entityManager->persist($organizationEntity);
@@ -92,18 +93,24 @@ final class OrganizationPeopleNavigationTest extends WebTestCase
         $entityManager->flush();
         $client->loginUser($adminUserEntity);
 
-        $personEditUrl = "/backoffice/organization/{$organizationEntity->getId()}/people/{$personEntity->getId()}/edit";
-        $crawler = $client->request('GET', "/backoffice/organization/{$organizationEntity->getId()}");
-        self::assertResponseIsSuccessful();
-        $tokenField = $crawler->filterXPath('//form[@action="' . $personEditUrl . '"]//input[@name="_token"]');
-        self::assertCount(1, $tokenField);
+        $crawler = $client->request('GET', "/backoffice/organization/{$organizationEntity->getId()}/edit");
 
-        $client->request('POST', $personEditUrl, [
-            '_token' => $tokenField->attr('value'),
-            'firstName' => 'Alice modifiée',
-            'lastName' => 'Nouveau nom',
-            'role' => 'Accueil',
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $crawler->filterXPath('//input[contains(@name, "[people]") and contains(@name, "[firstName]")]'));
+        self::assertCount(1, $crawler->filterXPath('//input[contains(@name, "[people]") and contains(@name, "[lastName]")]'));
+        self::assertCount(1, $crawler->filterXPath('//input[contains(@name, "[people]") and contains(@name, "[role]")]'));
+        self::assertCount(0, $crawler->filterXPath('//input[contains(@name, "[people]") and contains(@name, "[contactDetails]")]'));
+
+        $firstNameField = $crawler->filterXPath('//input[contains(@name, "[people]") and contains(@name, "[firstName]")]');
+        $lastNameField = $crawler->filterXPath('//input[contains(@name, "[people]") and contains(@name, "[lastName]")]');
+        $roleField = $crawler->filterXPath('//input[contains(@name, "[people]") and contains(@name, "[role]")]');
+        $form = $crawler->filterXPath('//form[.//input[contains(@name, "[people]") and contains(@name, "[firstName]")]]')->form();
+        $form->setValues([
+            (string) $firstNameField->attr('name') => 'Alice modifiée',
+            (string) $lastNameField->attr('name') => 'Nouveau nom',
+            (string) $roleField->attr('name') => 'Accueil',
         ]);
+        $client->submit($form);
 
         self::assertResponseRedirects();
         $updatedPersonEntity = static::getContainer()->get(EntityManagerInterface::class)->find(PersonEntity::class, $personEntity->getId());
@@ -111,40 +118,6 @@ final class OrganizationPeopleNavigationTest extends WebTestCase
         self::assertSame('Alice modifiée', $updatedPersonEntity->getFirstName());
         self::assertSame('Nouveau nom', $updatedPersonEntity->getLastName());
         self::assertSame('Accueil', $updatedPersonEntity->getRole());
-    }
-
-    #[RunInSeparateProcess]
-    public function testInlinePersonEditRejectsInvalidCsrfAndPeopleFromAnotherOrganization(): void
-    {
-        $client = static::createClient();
-        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
-        $adminUserEntity = $this->createAdmin($entityManager);
-        $organizationEntity = (new OrganizationEntity())->setName('Structure autorisée ' . bin2hex(random_bytes(8)));
-        $otherOrganizationEntity = (new OrganizationEntity())->setName('Structure autre ' . bin2hex(random_bytes(8)));
-        $linkedPersonEntity = (new PersonEntity())->setFirstName('Bob')->setLastName('Lié');
-        $personEntity = (new PersonEntity())->setFirstName('Alice')->setLastName('Privée')->setOrganization($otherOrganizationEntity);
-        $organizationEntity->addPerson($linkedPersonEntity);
-        foreach ([$organizationEntity, $otherOrganizationEntity, $linkedPersonEntity, $personEntity] as $entity) {
-            $entityManager->persist($entity);
-        }
-        $entityManager->flush();
-        $client->loginUser($adminUserEntity);
-
-        $client->request('POST', "/backoffice/organization/{$organizationEntity->getId()}/people/{$linkedPersonEntity->getId()}/edit", [
-            '_token' => 'invalid',
-            'firstName' => 'Attaque',
-            'lastName' => 'Refusée',
-            'role' => '',
-        ]);
-        self::assertResponseStatusCodeSame(403);
-
-        $client->request('POST', "/backoffice/organization/{$organizationEntity->getId()}/people/{$personEntity->getId()}/edit", [
-            '_token' => 'invalid',
-            'firstName' => 'Attaque',
-            'lastName' => 'Refusée',
-            'role' => '',
-        ]);
-        self::assertResponseStatusCodeSame(404);
     }
 
     #[RunInSeparateProcess]
