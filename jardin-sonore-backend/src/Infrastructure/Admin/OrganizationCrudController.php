@@ -10,6 +10,7 @@ use App\Domain\Model\AddressBook\DirectoryEntryType;
 use App\Domain\Model\AddressBook\OrganizationSector;
 use App\Domain\Model\AddressBook\OrganizationType;
 use App\Infrastructure\Admin\Filter\OrganizationDepartmentFilter;
+use App\Infrastructure\Admin\Form\OrganizationPersonFormType;
 use App\Infrastructure\Admin\Formatter\ContactDisplayFormatter;
 use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
 use App\Infrastructure\Doctrine\Entity\DepartmentEntity;
@@ -33,6 +34,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\UrlField;
@@ -40,11 +42,6 @@ use EasyCorp\Bundle\EasyAdminBundle\Filter\BooleanFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
@@ -54,7 +51,6 @@ final class OrganizationCrudController extends AbstractCrudController
 {
     public function __construct(
         private readonly AdminUrlGenerator $adminUrlGenerator,
-        private readonly EntityManagerInterface $entityManager,
         private readonly SharedContactLinkResolver $sharedContactLinkResolver,
         private readonly TranslatorInterface $translator,
     ) {
@@ -104,49 +100,6 @@ final class OrganizationCrudController extends AbstractCrudController
             ->add(Crud::PAGE_DETAIL, $addEmail)
             ->add(Crud::PAGE_DETAIL, $addPhone)
             ->add(Crud::PAGE_DETAIL, $addAddress);
-    }
-
-    #[Route('/backoffice/organization/{organizationId}/people/{personId}/edit', name: 'admin_organization_person_edit', methods: ['POST'])]
-    public function editPerson(
-        Request $request,
-        int $organizationId,
-        int $personId,
-    ): Response {
-        $organizationEntity = $this->entityManager->find(OrganizationEntity::class, $organizationId);
-        $personEntity = $this->entityManager->find(PersonEntity::class, $personId);
-
-        if (!$organizationEntity instanceof OrganizationEntity || !$personEntity instanceof PersonEntity) {
-            throw new NotFoundHttpException();
-        }
-
-        if ($personEntity->getOrganization() !== $organizationEntity) {
-            throw new NotFoundHttpException();
-        }
-
-        $csrfTokenId = "organization_person_edit_{$organizationEntity->getId()}_{$personEntity->getId()}";
-        if (!$this->isCsrfTokenValid($csrfTokenId, $request->request->getString('_token'))) {
-            throw new AccessDeniedHttpException();
-        }
-
-        $firstName = trim($request->request->getString('firstName'));
-        $lastName = trim($request->request->getString('lastName'));
-        $role = trim($request->request->getString('role'));
-
-        if ('' === $firstName || '' === $lastName || 255 < mb_strlen($firstName) || 255 < mb_strlen($lastName) || 255 < mb_strlen($role)) {
-            $this->addFlash('danger', 'admin.organization.person_edit.invalid');
-
-            return $this->redirectToOrganizationDetail($organizationEntity);
-        }
-
-        $personEntity
-            ->setFirstName($firstName)
-            ->setLastName($lastName)
-            ->setRole('' === $role ? null : $role);
-        $this->entityManager->flush();
-
-        $this->addFlash('success', 'admin.organization.person_edit.success');
-
-        return $this->redirectToOrganizationDetail($organizationEntity);
     }
 
     public function configureFilters(Filters $filters): Filters
@@ -228,6 +181,13 @@ final class OrganizationCrudController extends AbstractCrudController
             ->formatValue(static fn (mixed $value): string => ContactDisplayFormatter::textSummary($value))
             ->renderAsHtml()
             ->onlyOnDetail();
+        if (Crud::PAGE_EDIT === $pageName) {
+            yield CollectionField::new('people', 'admin.field.people')
+                ->setEntryType(OrganizationPersonFormType::class)
+                ->setEntryIsComplex()
+                ->setFormTypeOption('by_reference', false)
+                ->setColumns('col-md-12 col-xxl-10');
+        }
         yield AssociationField::new('people', 'admin.field.people')
             ->formatValue(fn (mixed $value): array => $this->formatPeople($value))
             ->setTemplatePath('admin/field/organization_people.html.twig')
@@ -296,7 +256,7 @@ final class OrganizationCrudController extends AbstractCrudController
     }
 
     /**
-     * @return list<array{name: string, firstName: string, lastName: string, role: ?string, personId: int, detailUrl: string, editUrl: string, inlineEditUrl: string}>
+     * @return list<array{name: string, role: ?string, detailUrl: string, editUrl: string}>
      */
     private function formatPeople(mixed $value): array
     {
@@ -325,30 +285,13 @@ final class OrganizationCrudController extends AbstractCrudController
                 ->generateUrl();
             $people[] = [
                 'name' => (string) $personEntity,
-                'firstName' => $personEntity->getFirstName(),
-                'lastName' => $personEntity->getLastName(),
                 'role' => $personEntity->getRole(),
-                'personId' => $personEntity->getId(),
                 'detailUrl' => $detailUrl,
                 'editUrl' => $editUrl,
-                'inlineEditUrl' => $this->generateUrl('admin_organization_person_edit', [
-                    'organizationId' => $personEntity->getOrganization()?->getId(),
-                    'personId' => $personEntity->getId(),
-                ]),
             ];
         }
 
         return $people;
-    }
-
-    private function redirectToOrganizationDetail(OrganizationEntity $organizationEntity): Response
-    {
-        return $this->redirect($this->adminUrlGenerator
-            ->unsetAll()
-            ->setController(self::class)
-            ->setAction(Action::DETAIL)
-            ->setEntityId($organizationEntity->getId())
-            ->generateUrl());
     }
 
     /**

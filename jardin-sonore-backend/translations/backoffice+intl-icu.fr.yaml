@@ -32,8 +32,6 @@ admin:
   action:
     add_person: "Ajouter une personne"
     edit_person: "Modifier"
-    save_person: "Enregistrer"
-    view_person: "Voir la fiche"
     add_email: "Ajouter un e-mail"
     add_phone: "Ajouter un téléphone"
     add_address: "Ajouter une adresse"
@@ -159,9 +157,6 @@ admin:
       edit: "Modifier une commune"
       detail: "Détail de la commune"
   organization:
-    person_edit:
-      success: "La fiche de la personne a été mise à jour."
-      invalid: "Vérifiez les champs de la personne avant l’enregistrement."
     page:
       index: "Organisations"
       new: "Créer une organisation"
