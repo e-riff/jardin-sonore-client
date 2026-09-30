@@ -152,4 +152,10 @@ return static function (ClassMetadata $metadata): void {
         'type' => Types::BOOLEAN,
         'options' => ['default' => false],
     ]);
+    $metadata->mapField([
+        'fieldName' => 'firstPublishedAt',
+        'columnName' => 'first_published_at',
+        'type' => Types::DATETIME_IMMUTABLE,
+        'nullable' => true,
+    ]);
 };

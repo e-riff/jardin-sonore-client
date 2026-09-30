@@ -56,6 +56,30 @@ composer run cs-check
 composer run stan
 ```
 
+## Notifications de première publication et cron cPanel
+
+La publication enregistre ses destinataires dans `session_notification_delivery` dans la même transaction que la séance. La commande suivante met au maximum 100 livraisons en file sur le transport `async` existant :
+
+```bash
+php bin/console app:sessions:dispatch-notifications --env=prod --no-debug --recover-after=30
+```
+
+**État intermédiaire :** le traitement Messenger est préparé ; la mise en file refuse de démarrer tant que le sender et les templates du mail ne sont pas installés. La simulation reste disponible :
+
+```bash
+php bin/console app:sessions:dispatch-notifications --dry-run --recover-after=30
+```
+
+Sur cPanel, conserver le cron qui lance déjà `messenger:consume async` pendant une durée limitée. Après finalisation des mails, ajouter la commande de distribution avant la consommation dans ce script cron. Elle peut aussi avoir son propre cron toutes les minutes. Aucun processus permanent ni Supervisor n'est nécessaire. Utiliser le même binaire PHP, le même répertoire backend et les mêmes options de consommation que le cron existant. Ne pas remplacer ce cron à partir d'un exemple générique.
+
+`--recover-after` vaut 15 minutes par défaut. Choisir une valeur supérieure à l'intervalle entre deux démarrages du worker et à son éventuel retard de traitement. Exemple : pour un worker lancé toutes les 5 minutes, 30 minutes laissent une marge. Les livraisons `pending` sont immédiatement distribuables ; les `queued` anciennes sont redistribuées pour récupérer un arrêt ou un message perdu. Si le lot comporte plus de 100 destinataires, les passages suivants continuent la distribution.
+
+Un verrou de ligne protège chaque distribution et chaque traitement, y compris pendant l'appel SMTP. Les messages dupliqués pour une livraison `sent` ou `skipped` ne renvoient pas le mail. Juste avant l'envoi, le traitement relit l'adresse du compte, son statut, sa préférence et ses accès actifs aux structures partagées ; le mail ne contient que les noms de structures auxquelles ce compte a accès. Une séance dépubliée ou un compte devenu inéligible conduit à `skipped`.
+
+En cas d'échec, la livraison passe en `failed` avec son compteur de tentatives et sa dernière erreur. L'exception est propagée : Messenger utilise sa stratégie de reprise existante, puis le transport `failed` si les reprises sont épuisées. Le cron de distribution ne recycle pas les échecs SMTP : consulter `messenger:failed:show`, corriger la cause puis utiliser `messenger:failed:retry` pour les messages concernés. Les notifications ne modifient pas le fonctionnement des newsletters ou de la génération PDF qui utilisent aussi `async`.
+
+SMTP ne permet pas de garantir une livraison exactement une fois : si le serveur accepte le mail et que le processus s'arrête avant l'enregistrement de `sent`, une reprise peut exceptionnellement le renvoyer. Les verrous et états terminaux évitent les doublons dus aux exécutions concurrentes ordinaires.
+
 ## Verifications
 
 Pour un changement backend significatif :

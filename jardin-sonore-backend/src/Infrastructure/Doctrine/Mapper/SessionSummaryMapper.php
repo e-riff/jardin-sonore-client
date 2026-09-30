@@ -48,6 +48,7 @@ final readonly class SessionSummaryMapper
             documentError: $sessionSummaryEntity->getDocumentError(),
             themes: array_map(fn (ThemeEntity $themeEntity): \App\Domain\Model\ContentCatalog\Theme => $this->themeMapper->toDomain($themeEntity), $sessionSummaryEntity->getThemes()->toArray()),
             published: $sessionSummaryEntity->isPublished(),
+            firstPublishedAt: $sessionSummaryEntity->getFirstPublishedAt(),
         );
     }
 
@@ -83,6 +84,7 @@ final readonly class SessionSummaryMapper
             ->setCreatedAt($sessionSummary->getCreatedAt())
             ->setUpdatedAt($sessionSummary->getUpdatedAt());
         $sessionSummaryEntity->setPublished($sessionSummary->isPublished());
+        $sessionSummaryEntity->setFirstPublishedAt($sessionSummary->getFirstPublishedAt());
         $sessionSummaryEntity
             ->setDocumentStatus($sessionSummary->getDocumentStatus())
             ->setDocumentPath($sessionSummary->getDocumentPath())

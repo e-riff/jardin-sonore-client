@@ -59,6 +59,10 @@ final class SessionSummary implements UuidIdentifiableInterface
 
     private bool $published;
 
+    private bool $publicationExplicitlySet = false;
+
+    private ?DateTimeImmutable $firstPublishedAt;
+
     /**
      * @param list<Organization>    $organizations
      * @param list<string>          $instrumentUuids
@@ -85,6 +89,7 @@ final class SessionSummary implements UuidIdentifiableInterface
         ?string $documentError = null,
         array $themes = [],
         bool $published = false,
+        ?DateTimeImmutable $firstPublishedAt = null,
     ) {
         $this->initializeUuid($uuid);
         $this->createdAt = $createdAt ?? new DateTimeImmutable();
@@ -93,6 +98,7 @@ final class SessionSummary implements UuidIdentifiableInterface
         $this->documentPath = self::normalizeNullableString($documentPath);
         $this->documentError = self::normalizeNullableString($documentError);
         $this->published = $published;
+        $this->firstPublishedAt = $firstPublishedAt;
         $this->sequences = [];
         $this->updateDetails(
             title: $title,
@@ -216,7 +222,22 @@ final class SessionSummary implements UuidIdentifiableInterface
 
     public function setPublished(bool $published): void
     {
+        $this->publicationExplicitlySet = true;
+        if ($published && null === $this->firstPublishedAt) {
+            $this->firstPublishedAt = new DateTimeImmutable();
+        }
+
         $this->published = $published;
+    }
+
+    public function isPublicationExplicitlySet(): bool
+    {
+        return $this->publicationExplicitlySet;
+    }
+
+    public function getFirstPublishedAt(): ?DateTimeImmutable
+    {
+        return $this->firstPublishedAt;
     }
 
     public function markDocumentPending(): void

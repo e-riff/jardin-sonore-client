@@ -61,6 +61,8 @@ class SessionSummaryEntity
 
     private bool $published = false;
 
+    private ?DateTimeImmutable $firstPublishedAt = null;
+
     public function __construct()
     {
         $this->initializeUuid();
@@ -342,6 +344,18 @@ class SessionSummaryEntity
     public function setPublished(bool $published): static
     {
         $this->published = $published;
+
+        return $this;
+    }
+
+    public function getFirstPublishedAt(): ?DateTimeImmutable
+    {
+        return $this->firstPublishedAt;
+    }
+
+    public function setFirstPublishedAt(?DateTimeImmutable $firstPublishedAt): static
+    {
+        $this->firstPublishedAt = $firstPublishedAt;
 
         return $this;
     }
