@@ -10,7 +10,12 @@ use App\Domain\Repository\SessionSummaryRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\SessionSummaryEntity;
 use App\Infrastructure\Doctrine\Entity\ThemeEntity;
 use App\Infrastructure\Doctrine\Mapper\SessionSummaryMapper;
+use App\Infrastructure\Session\SessionNotificationDeliveryStore;
+use App\Infrastructure\Session\SessionNotificationRecipientReader;
+use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\LockMode;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Uid\Uuid;
@@ -24,6 +29,8 @@ final class SessionSummaryDoctrineRepository extends ServiceEntityRepository imp
         ManagerRegistry $managerRegistry,
         private readonly SessionSummaryMapper $sessionSummaryMapper,
         private readonly MessageBusInterface $messageBus,
+        private readonly SessionNotificationRecipientReader $sessionNotificationRecipientReader,
+        private readonly SessionNotificationDeliveryStore $sessionNotificationDeliveryStore,
     ) {
         parent::__construct($managerRegistry, SessionSummaryEntity::class);
     }
@@ -60,15 +67,33 @@ final class SessionSummaryDoctrineRepository extends ServiceEntityRepository imp
 
     public function save(SessionSummary $sessionSummary, bool $scheduleDocumentGeneration = true): void
     {
-        $entity = $this->findOneBy(['uuid' => $sessionSummary->getUuid()]);
+        $this->getEntityManager()->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($sessionSummary): void {
+            $entity = $this->findOneBy(['uuid' => $sessionSummary->getUuid()]);
+            if ($entity instanceof SessionSummaryEntity) {
+                $entityManager->refresh($entity, LockMode::PESSIMISTIC_WRITE);
+            }
+            $persistedFirstPublishedAt = $entity?->getFirstPublishedAt();
+            $wasPublished = $entity?->isPublished() ?? false;
+            $requestedPublished = null !== $entity && !$sessionSummary->isPublicationExplicitlySet()
+                ? $wasPublished
+                : $sessionSummary->isPublished();
+            $isFirstPublication = $requestedPublished && !$wasPublished && null === $persistedFirstPublishedAt;
+            $firstPublishedAt = $persistedFirstPublishedAt ?? ($wasPublished ? $entity->getUpdatedAt() : $sessionSummary->getFirstPublishedAt());
 
-        $sessionSummaryEntity = $this->sessionSummaryMapper->toEntity(
-            sessionSummary: $sessionSummary,
-            sessionSummaryEntity: $entity instanceof SessionSummaryEntity ? $entity : null,
-        );
-        $this->syncThemes($sessionSummaryEntity, $sessionSummary->getThemes());
-        $this->getEntityManager()->persist($sessionSummaryEntity);
-        $this->getEntityManager()->flush();
+            $sessionSummaryEntity = $this->sessionSummaryMapper->toEntity($sessionSummary, $entity);
+            $sessionSummaryEntity->setPublished($requestedPublished);
+            $sessionSummaryEntity->setFirstPublishedAt($firstPublishedAt);
+            if ($isFirstPublication && null === $sessionSummaryEntity->getFirstPublishedAt()) {
+                $sessionSummaryEntity->setFirstPublishedAt(new DateTimeImmutable());
+            }
+            $this->syncThemes($sessionSummaryEntity, $sessionSummary->getThemes());
+            $entityManager->persist($sessionSummaryEntity);
+            $entityManager->flush();
+
+            if ($isFirstPublication) {
+                $this->sessionNotificationDeliveryStore->schedule($sessionSummaryEntity, $this->sessionNotificationRecipientReader->eligibleUsers($sessionSummaryEntity));
+            }
+        });
 
         if ($scheduleDocumentGeneration && 'pending' === $sessionSummary->getDocumentStatus()->value) {
             $this->messageBus->dispatch(new GenerateSessionDocumentMessage($sessionSummary->getUuid()->toRfc4122()));
