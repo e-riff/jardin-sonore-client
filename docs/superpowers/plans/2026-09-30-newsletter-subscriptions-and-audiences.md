@@ -10,7 +10,7 @@
 
 **Spec:** [Cadrage du 30 septembre](../specs/2026-09-30-session-notifications-newsletter-design.md), lot 2 et vérifications associées. [ROADMAP.md](../../../ROADMAP.md) définit l'ordre actif.
 
-**Statut :** plan approuvé par l’utilisateur ; partie 1 implémentée et vérifiée, migration générée, simulée et appliquée en local (développement et test). Partie 2 implémentée et vérifiée localement ; parties 3–5 à réaliser. Clôture commit/tag/push/déploiement explicitement demandée le 30 septembre ; reprise le 1er octobre à la partie 3. Exécution directe dans cette session, partie par partie avec arrêt entre parties, conformément au point de reprise.
+**Statut :** plan approuvé par l’utilisateur ; partie 1 implémentée et vérifiée, migration générée, simulée et appliquée en local (développement et test). Partie 2 implémentée et vérifiée localement ; parties 3–5 à réaliser. Parties 1–2 committées et déployées sous `deploy-availability-newsletter-20260930-01` (`afbcece`), branche/tag poussés, migrations production appliquées par le script backend ; reprise le 1er octobre à la partie 3. Exécution directe dans cette session, partie par partie avec arrêt entre parties, conformément au point de reprise.
 
 ## Global Constraints
 
@@ -56,7 +56,7 @@
 - [x] **4. GREEN :** même commande, puis `make backend-cs-check` et `make backend-stan`.
 - [x] **5. Générer et relire :** `docker compose exec -T php php bin/console make:migration`. Uniquement les trois colonnes d'inscription libre, aucun backfill de consentement ou d'inscription confirmée. Donner une description explicite et retirer le commentaire généré inutile. Présenter la migration avant de demander son exécution ; préparer la base de test selon les conventions existantes.
 
-**Résultat partie 1 :** cinq tests écrits et exécutés avant implémentation : échecs sur les méthodes absentes, puis succès (5 tests / 25 assertions). `make backend-cs-check` et `make backend-stan` réussis. Migration `Version20260930130613` générée, commentaire automatique retiré, description renseignée, simulation réussie. `doctrine:schema:update --dump-sql` contient uniquement les trois colonnes prévues. Migration appliquée sur les bases locales de développement et de test après accord utilisateur ; schéma de développement synchronisé. Aucun consentement historique modifié. Arrêt avant partie 2 pour le déploiement demandé du lot notifications. Les nouveaux changements restent non committés ; un déploiement des notifications doit utiliser l’état committé avant ce lot.
+**Résultat partie 1 :** cinq tests écrits et exécutés avant implémentation : échecs sur les méthodes absentes, puis succès (5 tests / 25 assertions). `make backend-cs-check` et `make backend-stan` réussis. Migration `Version20260930130613` générée, commentaire automatique retiré, description renseignée, simulation réussie. `doctrine:schema:update --dump-sql` contient uniquement les trois colonnes prévues. Migration appliquée sur les bases locales de développement et de test après accord utilisateur ; schéma de développement synchronisé. Aucun consentement historique modifié. Arrêt avant partie 2 pour le déploiement demandé du lot notifications. À cet arrêt historique, les changements étaient non committés et exclus de la première livraison notifications. Les parties 1–2 ont ensuite été livrées lors de la clôture de session.
 
 ## Partie 2 — Consentement newsletter du profil
 

@@ -1,9 +1,9 @@
 # Notifications de séances et inscription à la newsletter
 
 Date : 30 septembre 2026.
-Statut au 30 septembre 2026 : lot 1 implémenté et vérifié localement, activation en production encore attendue ; lots 2 (abonnements et audiences) et 3 (inscription publique) à relire et planifier avant implémentation.
+Statut de clôture au 30 septembre 2026 : notifications et parties 1–2 du lot newsletter déployées sous `deploy-availability-newsletter-20260930-01` (`afbcece`). Trois crons présents, deux nouvelles migrations appliquées par le script de déploiement. Reprise à la partie 3 newsletter (audiences), puis 4 (consentement avant SMTP) et 5 (backoffice). Inscription publique avec confirmation encore à planifier.
 
-Le point de reprise et les priorités sont dans [ROADMAP.md](../../../ROADMAP.md). Le [plan du lot 1](../plans/2026-09-30-session-first-publication-notifications.md) conserve les résultats de recette et les étapes historiques. Prochaine étape : plan du lot 2, incluant les personnes sans structure via une inscription libre explicite ; puis plan du lot 3 pour leur inscription depuis le footer.
+Le point de reprise et les priorités sont dans [ROADMAP.md](../../../ROADMAP.md). Le [plan du lot 1](../plans/2026-09-30-session-first-publication-notifications.md) conserve les résultats de recette et les étapes historiques. Prochaine étape : partie 3 du [plan newsletter approuvé](../plans/2026-09-30-newsletter-subscriptions-and-audiences.md), incluant les comptes du portail et les abonnés libres confirmés ; puis inscription publique dans le footer. La [conception de première disponibilité par structure](2026-09-30-session-availability-notifications-design.md) remplace les détails du déclenchement global de première publication conservés ci-dessous pour historique.
 
 ## Objectif et périmètre
 
@@ -15,7 +15,7 @@ La page légale est reportée à la demande de l'utilisateur. Le cadrage ne modi
 
 ## Décisions convenues
 
-- Une notification de séance est envoyée uniquement lors de sa première mise en ligne. Les éditions suivantes ne produisent pas de notification.
+- Une notification est programmée à la première disponibilité de la séance pour une structure : rattachement d’une séance active ou activation d’une séance rattachée. Les éditions, republications et rattachements rétablis ne produisent pas de nouvel envoi ; une même séance/un même compte reçoit au plus une livraison.
 - Le profil du portail propose deux cases indépendantes : nouvelles séances et newsletter.
 - Les utilisateurs du portail abonnés à la newsletter sont sélectionnés quand au moins une de leurs structures appartient à l'audience de la campagne.
 - Les abonnés libres constituent un groupe supplémentaire activable ou désactivable pour chaque campagne, indépendamment du ciblage géographique ou par structure.
