@@ -41,7 +41,7 @@ export async function requestPortalPasswordResetAction(formData: FormData): Prom
     redirect(`${portalRoutes.passwordReset}?sent=1`);
 }
 
-export interface PortalProfileFormState { status: "idle" | "success" | "error"; field?: "avatar"; account?: PortalAccount; }
+export interface PortalProfileFormState { status: "idle" | "success" | "error"; field?: "avatar" | "newsletter"; account?: PortalAccount; }
 
 export async function updatePortalProfileAction(_previousState: PortalProfileFormState, formData: FormData): Promise<PortalProfileFormState> {
     const token = await getPortalAccessToken();
@@ -58,9 +58,13 @@ export async function updatePortalProfileAction(_previousState: PortalProfileFor
         const result = await portalApiClient.updateProfile({
             firstName: typeof formData.get("firstName") === "string" ? String(formData.get("firstName")).trim() : "",
             lastName: typeof formData.get("lastName") === "string" ? String(formData.get("lastName")).trim() : "",
+            newsletterSubscribed: formData.get("newsletterSubscribed") === "on",
             newSessionNotificationsEnabled: formData.get("newSessionNotificationsEnabled") === "on",
         });
-        if (!result.response.ok || !result.data) return {status: "error"};
+        if (!result.response.ok || !result.data) {
+            const errorData = result.data as unknown as {code?: string} | null;
+            return {status: "error", field: errorData?.code === "newsletter_subscription_blocked" ? "newsletter" : undefined};
+        }
         revalidatePath("/portail", "layout");
 
         return {status: "success", account: result.data};

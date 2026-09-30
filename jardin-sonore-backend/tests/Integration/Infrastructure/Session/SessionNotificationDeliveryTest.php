@@ -224,6 +224,19 @@ final class SessionNotificationDeliveryTest extends KernelTestCase
         self::assertSame(2, (int) $this->state()['attempts']);
     }
 
+    public function testRemovedTriggeringStructureDoesNotFallBackToAnAlreadyKnownStructure(): void
+    {
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $otherOrganizationEntity = $this->fixtureOrganizations[1];
+        $this->sessionSummaryEntity->replaceOrganizations([$otherOrganizationEntity]);
+        $entityManager->flush();
+
+        $this->handle();
+
+        self::assertSame([], $this->sent);
+        self::assertSame(SessionNotificationDeliveryEntity::STATUS_SKIPPED, $this->connection->fetchOne('SELECT status FROM session_notification_delivery WHERE id = ?', [$this->deliveryId]));
+    }
+
     public function testSingleActiveOrganizationHidesStructureNames(): void
     {
         $this->connection->executeStatement('UPDATE user_organization_access SET active = 0 WHERE user_id = ? AND organization_id NOT IN (SELECT organization_id FROM session_summary_organization WHERE session_summary_id = ?)', [$this->userEntity->getId(), $this->sessionSummaryEntity->getId()]);

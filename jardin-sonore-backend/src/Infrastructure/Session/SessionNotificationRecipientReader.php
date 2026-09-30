@@ -22,11 +22,21 @@ final class SessionNotificationRecipientReader extends ServiceEntityRepository
         parent::__construct($managerRegistry, UserEntity::class);
     }
 
-    /** @return list<UserEntity> */
-    public function eligibleUsers(SessionSummaryEntity $sessionSummaryEntity): array
+    /**
+     * @param list<int>|null $organizationIds
+     *
+     * @return list<UserEntity>
+     */
+    public function eligibleUsers(SessionSummaryEntity $sessionSummaryEntity, ?array $organizationIds = null): array
     {
+        if ([] === $organizationIds) {
+            return [];
+        }
         $queryBuilder = $this->createQueryBuilder('portalUser');
         $expr = $queryBuilder->expr();
+        if (null !== $organizationIds) {
+            $queryBuilder->andWhere($expr->in('IDENTITY(share.organization)', ':organizationIds'))->setParameter('organizationIds', $organizationIds);
+        }
 
         return $queryBuilder
             ->distinct()
@@ -35,7 +45,7 @@ final class SessionNotificationRecipientReader extends ServiceEntityRepository
                 $expr->eq('share.organization', 'access.organization'),
                 $expr->eq('share.sessionSummary', ':session'),
             ))
-            ->where($expr->andX(
+            ->andWhere($expr->andX(
                 $expr->eq('portalUser.active', ':active'),
                 $expr->eq('portalUser.status', ':status'),
                 $expr->eq('portalUser.newSessionNotificationsEnabled', ':enabled'),
@@ -54,6 +64,13 @@ final class SessionNotificationRecipientReader extends ServiceEntityRepository
     {
         $queryBuilder = $this->createQueryBuilder('portalUser');
         $expr = $queryBuilder->expr();
+        $organizationIds = $sessionNotificationDeliveryEntity->getOrganizationIds();
+        if ([] === $organizationIds) {
+            return null;
+        }
+        if (null !== $organizationIds) {
+            $queryBuilder->andWhere($expr->in('organization.id', ':organizationIds'))->setParameter('organizationIds', $organizationIds);
+        }
         // Scalar hydration reads current account data and rights even in a long-lived worker.
         /** @var list<array{email: string, firstName: ?string, sessionTitle: string, sessionDate: DateTimeImmutable, sessionSlug: string, organizationName: string}> $rows */
         $rows = $queryBuilder
@@ -63,7 +80,7 @@ final class SessionNotificationRecipientReader extends ServiceEntityRepository
             ->innerJoin(SessionSummaryOrganizationEntity::class, 'share', 'WITH', $expr->eq('share.organization', 'access.organization'))
             ->innerJoin('share.sessionSummary', 'summary')
             ->innerJoin('share.organization', 'organization')
-            ->where($expr->andX(
+            ->andWhere($expr->andX(
                 $expr->eq('portalUser', ':user'),
                 $expr->eq('summary', ':session'),
                 $expr->eq('summary.published', ':enabled'),

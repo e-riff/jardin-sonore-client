@@ -81,6 +81,25 @@ services:
       mailpit:
         condition: service_healthy
 
+  session-notification-dispatcher:
+    image: jardin-sonore-backend-php:dev
+    container_name: jardin-sonore-session-notifications
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    env_file:
+      - ./jardin-sonore-backend/.env.local
+    volumes:
+      - ./jardin-sonore-backend:/app
+      - ./docker/backend/php/session-notification-dispatcher.sh:/usr/local/bin/session-notification-dispatcher:ro
+    entrypoint: ["/bin/sh", "/usr/local/bin/session-notification-dispatcher"]
+    restart: unless-stopped
+    depends_on:
+      php:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      mailpit:
+        condition: service_healthy
+
   nginx:
     image: nginx:1.27-alpine
     container_name: nginx

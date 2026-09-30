@@ -32,6 +32,9 @@ final class EmailContact implements IdentifiableInterface, UuidIdentifiableInter
         ?string $unsubscribeToken = null,
         ?Uuid $uuid = null,
         ?int $id = null,
+        private bool $freeNewsletterSubscription = false,
+        private ?DateTimeImmutable $freeNewsletterSubscriptionConfirmedAt = null,
+        private ?string $freeNewsletterSubscriptionOrigin = null,
     ) {
         $this->initializeId($id);
         $this->initializeUuid($uuid);
@@ -75,6 +78,21 @@ final class EmailContact implements IdentifiableInterface, UuidIdentifiableInter
     public function isUnsubscribed(): bool
     {
         return $this->unsubscribedAt instanceof DateTimeImmutable;
+    }
+
+    public function hasFreeNewsletterSubscription(): bool
+    {
+        return $this->freeNewsletterSubscription;
+    }
+
+    public function getFreeNewsletterSubscriptionConfirmedAt(): ?DateTimeImmutable
+    {
+        return $this->freeNewsletterSubscriptionConfirmedAt;
+    }
+
+    public function getFreeNewsletterSubscriptionOrigin(): ?string
+    {
+        return $this->freeNewsletterSubscriptionOrigin;
     }
 
     public function unsubscribe(?DateTimeImmutable $unsubscribedAt = null): void

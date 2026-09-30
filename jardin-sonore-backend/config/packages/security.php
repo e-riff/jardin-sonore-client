@@ -66,6 +66,10 @@ return App::config([
         ],
         'access_control' => [
             [
+                'path' => '^/newsletter/unsubscribe/[^/]+$',
+                'roles' => 'PUBLIC_ACCESS',
+            ],
+            [
                 'path' => '^/api/portal/(auth/login|auth/impersonation-launch|auth/password-reset-requests|password-tokens/)',
                 'roles' => 'PUBLIC_ACCESS',
             ],

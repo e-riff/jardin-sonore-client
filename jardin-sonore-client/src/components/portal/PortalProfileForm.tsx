@@ -31,8 +31,8 @@ export default function PortalProfileForm({content}: {content: AccountContent}):
             if (state.account) setAccount(state.account);
             notify(content.saved, "success");
         }
-        if (state.status === "error" && state.field !== "avatar") notify(content.error, "error");
-    }, [content.error, content.saved, notify, setAccount, state]);
+        if (state.status === "error" && state.field !== "avatar") notify(state.field === "newsletter" ? content.newsletterUnavailable : content.error, "error");
+    }, [content.error, content.newsletterUnavailable, content.saved, notify, setAccount, state]);
 
     const displayedAvatarError = avatarError ?? (state.field === "avatar" ? content.photoInvalid : null);
 
@@ -66,6 +66,10 @@ export default function PortalProfileForm({content}: {content: AccountContent}):
         <label className="flex items-start gap-3 rounded-lg border border-outline-variant bg-surface-container-low p-4 text-sm">
             <input className="mt-0.5 h-4 w-4 accent-primary" defaultChecked={account.newSessionNotificationsEnabled} name="newSessionNotificationsEnabled" type="checkbox" />
             <span><span className="block font-semibold">{content.notificationsTitle}</span><span className="mt-1 block text-on-surface-variant">{content.notificationsDescription}</span></span>
+        </label>
+        <label className="flex items-start gap-3 rounded-lg border border-outline-variant bg-surface-container-low p-4 text-sm">
+            <input className="mt-0.5 h-4 w-4 accent-primary" defaultChecked={account.newsletterSubscribed} name="newsletterSubscribed" type="checkbox" />
+            <span><span className="block font-semibold">{content.newsletterTitle}</span><span className="mt-1 block text-on-surface-variant">{content.newsletterDescription}</span></span>
         </label>
         <ProfileSubmitButton content={content} />
     </form>;

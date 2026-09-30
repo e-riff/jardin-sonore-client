@@ -31,6 +31,12 @@ class EmailContactEntity
 
     private ?DateTimeImmutable $unsubscribedAt = null;
 
+    private bool $freeNewsletterSubscription = false;
+
+    private ?DateTimeImmutable $freeNewsletterSubscriptionConfirmedAt = null;
+
+    private ?string $freeNewsletterSubscriptionOrigin = null;
+
     /**
      * @var Collection<int, EmailContactLinkEntity>
      */
@@ -118,6 +124,49 @@ class EmailContactEntity
     public function isUnsubscribed(): bool
     {
         return $this->unsubscribedAt instanceof DateTimeImmutable;
+    }
+
+    public function hasFreeNewsletterSubscription(): bool
+    {
+        return $this->freeNewsletterSubscription;
+    }
+
+    public function setFreeNewsletterSubscription(bool $freeNewsletterSubscription): static
+    {
+        $this->freeNewsletterSubscription = $freeNewsletterSubscription;
+
+        return $this;
+    }
+
+    public function getFreeNewsletterSubscriptionConfirmedAt(): ?DateTimeImmutable
+    {
+        return $this->freeNewsletterSubscriptionConfirmedAt;
+    }
+
+    public function setFreeNewsletterSubscriptionConfirmedAt(?DateTimeImmutable $confirmedAt): static
+    {
+        $this->freeNewsletterSubscriptionConfirmedAt = $confirmedAt;
+
+        return $this;
+    }
+
+    public function getFreeNewsletterSubscriptionOrigin(): ?string
+    {
+        return $this->freeNewsletterSubscriptionOrigin;
+    }
+
+    public function setFreeNewsletterSubscriptionOrigin(?string $origin): static
+    {
+        $this->freeNewsletterSubscriptionOrigin = $origin;
+
+        return $this;
+    }
+
+    public function confirmFreeNewsletterSubscription(DateTimeImmutable $confirmedAt, string $origin): void
+    {
+        $this->freeNewsletterSubscription = true;
+        $this->freeNewsletterSubscriptionConfirmedAt = $confirmedAt;
+        $this->freeNewsletterSubscriptionOrigin = $origin;
     }
 
     /**

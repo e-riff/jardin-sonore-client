@@ -56,15 +56,15 @@ composer run cs-check
 composer run stan
 ```
 
-## Notifications de première publication et cron cPanel
+## Notifications de disponibilité et cron cPanel
 
-La publication enregistre ses destinataires dans `session_notification_delivery` dans la même transaction que la séance. La commande suivante met au maximum 100 livraisons en file sur le transport `async` existant :
+La première disponibilité d’une séance publiée pour une structure enregistre ses destinataires dans `session_notification_delivery` dans la même transaction que la séance. La commande suivante met au maximum 100 livraisons en file sur le transport `async` existant :
 
 ```bash
 php bin/console app:sessions:dispatch-notifications --env=prod --no-debug --recover-after=30
 ```
 
-**État local :** le sender et les templates HTML/texte sont branchés ; les exemples fictifs ont été envoyés au Mailpit local pour revue et corrigés après retour utilisateur. Le lien de notification conserve désormais la destination de la fiche à travers la connexion au portail. La recette locale est passée : programmation et reprises, préférences/adresse/droits relus avant envoi, rendu des mails et retour à la fiche après connexion. Activation en production et contrôle du rendu réel dans Gmail/Outlook restent à faire. La simulation est disponible :
+**État local :** le sender et les templates HTML/texte sont branchés ; les exemples fictifs ont été envoyés au Mailpit local pour revue et corrigés après retour utilisateur. Le lien de notification conserve désormais la destination de la fiche à travers la connexion au portail. La recette locale est passée : programmation et reprises, préférences/adresse/droits relus avant envoi, rendu des mails et retour à la fiche après connexion. Le code et les deux migrations notifications sont déployés sous `deploy-notifications-20260930-01` (`e3ff7ca`). Les trois crons cPanel ont été installés par l’utilisateur et leur présence vérifiée. Le contrôle du rendu réel dans Gmail/Outlook reste à faire. L’évolution suivante reste locale : rattacher une séance publiée à une nouvelle structure ou publier un brouillon rattaché programme les nouveaux comptes éligibles. La table `session_organization_availability` conserve les premières disponibilités, même après retrait du rattachement. Une séance/un compte reçoit au plus une livraison ; republications et rattachements rétablis ne déclenchent pas de renvoi. La migration `Version20260930140509`, appliquée en développement/test, initialise l’existant sans programmer de mail. La simulation est disponible :
 
 ```bash
 php bin/console app:sessions:dispatch-notifications --dry-run --recover-after=30
@@ -75,21 +75,31 @@ Les deux crons cPanel communiqués par l'utilisateur s'exécutent chaque minute 
 - `messenger:consume async --env=prod --time-limit=240 --memory-limit=256M`, protégé par `/tmp/jardin-sonore-messenger.lock`, traite les messages. Le verrou empêche le chevauchement des lancements pendant les quatre minutes de consommation.
 - `app:mailing:dispatch-pending-campaigns --env=prod --no-debug`, protégé par `/tmp/jardin-sonore-mailing-dispatch.lock`, programme les campagnes.
 
-Pour les notifications, ajouter un troisième cron de distribution, distinct, avec le même répertoire et binaire PHP :
+Le troisième cron de distribution installé pour les notifications utilise avec le même répertoire et binaire PHP :
 
 ```cron
 * * * * * flock -n /tmp/jardin-sonore-session-notifications-dispatch.lock sh -lc 'cd /home/riem3079/repositories/jardin-sonore-backend && /opt/alt/php85/usr/bin/php bin/console app:sessions:dispatch-notifications --env=prod --no-debug --recover-after=30' >> /home/riem3079/logs/jardin-sonore-session-notifications-dispatch.log 2>&1
 ```
 
-C'est une proposition d'exploitation, **aucun cron de production n'a été installé ou modifié**. Les trois crons utilisent un seul worker `async` : les deux distributeurs mettent les messages en file, le worker les traite avec les PDF et les autres messages existants. Aucun Supervisor n'est nécessaire. Une file ou un worker distinct pourra être envisagé si le volume des campagnes retarde les notifications ; cette charge n'a pas été mesurée.
+Les crons ont été ajoutés par l’utilisateur ; Codex a vérifié leur présence sans modifier la crontab. Les trois crons utilisent un seul worker `async` : les deux distributeurs mettent les messages en file, le worker les traite avec les PDF et les autres messages existants. Aucun Supervisor n'est nécessaire. Une file ou un worker distinct pourra être envisagé si le volume des campagnes retarde les notifications ; cette charge n'a pas été mesurée.
 
 `--recover-after` vaut 15 minutes par défaut. Choisir une valeur supérieure à l'intervalle entre deux démarrages du worker et à son éventuel retard de traitement. Exemple : pour un worker lancé toutes les 5 minutes, 30 minutes laissent une marge. Les livraisons `pending` sont immédiatement distribuables ; les `queued` anciennes sont redistribuées pour récupérer un arrêt ou un message perdu. Si le lot comporte plus de 100 destinataires, les passages suivants continuent la distribution.
 
-Un verrou de ligne protège chaque distribution et chaque traitement, y compris pendant l'appel SMTP. Les messages dupliqués pour une livraison `sent` ou `skipped` ne renvoient pas le mail. Juste avant l'envoi, le traitement relit l'adresse du compte, son statut, sa préférence et ses accès actifs aux structures partagées ; le mail ne contient que les noms de structures auxquelles ce compte a accès. Une séance dépubliée ou un compte devenu inéligible conduit à `skipped`.
+Un verrou de ligne protège chaque distribution et chaque traitement, y compris pendant l'appel SMTP. Les messages dupliqués pour une livraison `sent` ou `skipped` ne renvoient pas le mail. Juste avant l'envoi, le traitement relit l'adresse du compte, son statut, sa préférence et ses accès actifs aux structures partagées ayant déclenché la livraison ; le mail ne contient que les noms de structures auxquelles ce compte a accès. Une séance dépubliée ou un compte devenu inéligible conduit à `skipped`.
 
 En cas d'échec, la livraison passe en `failed` avec son compteur de tentatives et sa dernière erreur. L'exception est propagée : Messenger utilise sa stratégie de reprise existante, puis le transport `failed` si les reprises sont épuisées. Le cron de distribution ne recycle pas les échecs SMTP : consulter `messenger:failed:show`, corriger la cause puis utiliser `messenger:failed:retry` pour les messages concernés. Les notifications ne modifient pas le fonctionnement des newsletters ou de la génération PDF qui utilisent aussi `async`.
 
 SMTP ne permet pas de garantir une livraison exactement une fois : si le serveur accepte le mail et que le processus s'arrête avant l'enregistrement de `sent`, une reprise peut exceptionnellement le renvoyer. Les verrous et états terminaux évitent les doublons dus aux exécutions concurrentes ordinaires.
+
+## Distribution locale et préférence newsletter
+
+Le service Compose `session-notification-dispatcher` lance `app:sessions:dispatch-notifications --recover-after=30` toutes les 60 secondes. Il distribue uniquement les notifications ; le worker Messenger existant les envoie vers Mailpit en local. Suivre ses passages avec `docker compose logs --tail=30 session-notification-dispatcher`. La boucle continue au passage suivant si une distribution échoue. Aucun port HTTP supplémentaire n’est ouvert.
+
+Le profil expose `newsletterSubscribed`, calculé depuis le consentement du contact portant l’adresse actuelle du compte. Une lecture ne crée pas de contact. Un choix explicite crée ou réutilise le contact ; un retrait conserve le jeton et l’historique. Un contact inactif ne peut pas être réactivé depuis le profil. L’appartenance au groupe libre reste distincte, réservée aux inscriptions libres confirmées. Les contacts e-mail survivent désormais au retrait de leurs liens d’annuaire pour conserver ces informations. Le lien `/newsletter/unsubscribe/{token}` est accessible publiquement et ne modifie pas les notifications de séances.
+
+La case du profil est locale ; l’ajout des comptes et abonnés libres aux audiences reste à réaliser (parties 3–5 du plan newsletter).
+
+Le contrôle rapide du compteur en production n’a pas reproduit « 1 mail envoyé » : les derniers logs du distributeur indiquaient 0 destinataire mis en file et la base comptait 574 livraisons envoyées, réparties en 205, 174 et 195. Aucun compteur n’a été modifié faute d’anomalie établie.
 
 ## Verifications
 

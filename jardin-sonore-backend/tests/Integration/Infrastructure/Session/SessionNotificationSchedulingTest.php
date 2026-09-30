@@ -302,6 +302,71 @@ final class SessionNotificationSchedulingTest extends KernelTestCase
         self::assertSame([$userEntity->getId()], $this->recipientIds($sessionSummaryEntity));
     }
 
+    public function testPublishedSessionWithoutStructuresNotifiesWhenFirstAttached(): void
+    {
+        $organizationEntity = $this->organization();
+        $userEntity = $this->user([$organizationEntity]);
+        $sessionSummaryEntity = $this->session([]);
+        self::getContainer()->get(SetSessionPublication::class)($sessionSummaryEntity->getUuid(), true);
+        self::assertSame([], $this->recipientIds($sessionSummaryEntity));
+
+        $this->updateOrganizations($sessionSummaryEntity, [$organizationEntity], true);
+
+        self::assertSame([$userEntity->getId()], $this->recipientIds($sessionSummaryEntity));
+    }
+
+    public function testPublishedSessionNotifiesOnlyNewStructureUsersAndNeverDuplicatesAUser(): void
+    {
+        $firstOrganizationEntity = $this->organization();
+        $secondOrganizationEntity = $this->organization();
+        $firstUserEntity = $this->user([$firstOrganizationEntity]);
+        $secondUserEntity = $this->user([$secondOrganizationEntity]);
+        $sharedUserEntity = $this->user([$firstOrganizationEntity, $secondOrganizationEntity]);
+        $sessionSummaryEntity = $this->session([$firstOrganizationEntity]);
+        self::getContainer()->get(SetSessionPublication::class)($sessionSummaryEntity->getUuid(), true);
+
+        $this->updateOrganizations($sessionSummaryEntity, [$firstOrganizationEntity, $secondOrganizationEntity], true);
+
+        $expectedIds = [$firstUserEntity->getId(), $secondUserEntity->getId(), $sharedUserEntity->getId()];
+        sort($expectedIds);
+        self::assertSame($expectedIds, $this->recipientIds($sessionSummaryEntity));
+        $thirdUserEntity = $this->user([$firstOrganizationEntity]);
+        $this->updateOrganizations($sessionSummaryEntity, [$secondOrganizationEntity], true);
+        $this->updateOrganizations($sessionSummaryEntity, [$firstOrganizationEntity, $secondOrganizationEntity], true);
+        self::assertSame($expectedIds, $this->recipientIds($sessionSummaryEntity));
+        self::assertNotContains($thirdUserEntity->getId(), $this->recipientIds($sessionSummaryEntity));
+    }
+
+    public function testNewStructureAttachedWhileUnpublishedIsNotifiedOnlyUponPublication(): void
+    {
+        $firstOrganizationEntity = $this->organization();
+        $secondOrganizationEntity = $this->organization();
+        $firstUserEntity = $this->user([$firstOrganizationEntity]);
+        $secondUserEntity = $this->user([$secondOrganizationEntity]);
+        $sessionSummaryEntity = $this->session([$firstOrganizationEntity]);
+        $setSessionPublication = self::getContainer()->get(SetSessionPublication::class);
+        $setSessionPublication($sessionSummaryEntity->getUuid(), true);
+        $setSessionPublication($sessionSummaryEntity->getUuid(), false);
+
+        $this->updateOrganizations($sessionSummaryEntity, [$firstOrganizationEntity, $secondOrganizationEntity], false);
+        self::assertSame([$firstUserEntity->getId()], $this->recipientIds($sessionSummaryEntity));
+        $setSessionPublication($sessionSummaryEntity->getUuid(), true);
+
+        self::assertSame([$firstUserEntity->getId(), $secondUserEntity->getId()], $this->recipientIds($sessionSummaryEntity));
+    }
+
+    /** @param list<OrganizationEntity> $organizationEntities */
+    private function updateOrganizations(SessionSummaryEntity $sessionSummaryEntity, array $organizationEntities, bool $published): void
+    {
+        $organizationMapper = new OrganizationMapper();
+        self::getContainer()->get(UpdateSessionSummary::class)($sessionSummaryEntity->getUuid(), new SaveSessionSummaryInput(
+            title: $sessionSummaryEntity->getTitle(), sessionDate: $sessionSummaryEntity->getSessionDate(),
+            organizations: array_map($organizationMapper->toDomain(...), $organizationEntities),
+            theme: null, generalNotes: null, materialSummary: null, furtherExploration: null,
+            instrumentUuids: [], recommendationUuids: [], published: $published,
+        ));
+    }
+
     private function organization(): OrganizationEntity
     {
         $organizationEntity = (new OrganizationEntity())->setName('Test notifications ' . bin2hex(random_bytes(8)));

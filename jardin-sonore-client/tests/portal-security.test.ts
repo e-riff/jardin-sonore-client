@@ -92,7 +92,7 @@ test("authenticates profile updates", async () => {
     };
 
     try {
-        await new PortalApiClient("opaque-access-token", "https://admin.example.test").updateProfile({firstName: "Anaïs", lastName: "Martin", newSessionNotificationsEnabled: true});
+        await new PortalApiClient("opaque-access-token", "https://admin.example.test").updateProfile({firstName: "Anaïs", lastName: "Martin", newsletterSubscribed: false, newSessionNotificationsEnabled: true});
     } finally {
         globalThis.fetch = originalFetch;
     }

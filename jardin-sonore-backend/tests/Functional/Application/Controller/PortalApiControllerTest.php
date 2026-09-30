@@ -14,6 +14,7 @@ use App\Domain\Model\Session\SessionDocumentStatus;
 use App\Domain\Model\Session\SessionSequenceSourceKind;
 use App\Domain\Model\Session\SessionSequenceType;
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
+use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 use App\Infrastructure\Doctrine\Entity\InstrumentEntity;
 use App\Infrastructure\Doctrine\Entity\MediaResourceEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
@@ -65,6 +66,7 @@ final class PortalApiControllerTest extends WebTestCase
             'firstName' => null,
             'lastName' => null,
             'avatarPath' => null,
+            'newsletterSubscribed' => false,
             'newSessionNotificationsEnabled' => false,
             'organizations' => [[
                 'uuid' => $organizationEntity->getUuid()->toRfc4122(),
@@ -142,6 +144,89 @@ final class PortalApiControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertTrue($this->responseJson($client)['newSessionNotificationsEnabled']);
+    }
+
+    public function testProfileNewsletterPreferenceIsIndependentAndOptional(): void
+    {
+        [$client, $userEntity] = $this->createActiveUserWithOrganization();
+        $token = $this->login($client, $userEntity);
+        $server = ['HTTP_AUTHORIZATION' => "Bearer {$token}"];
+        $this->requestJson($client, 'PATCH', '/api/portal/me/profile', [
+            'firstName' => 'Anaïs', 'lastName' => 'Martin',
+            'newsletterSubscribed' => true, 'newSessionNotificationsEnabled' => false,
+        ], $server);
+        self::assertResponseIsSuccessful();
+        self::assertTrue($this->responseJson($client)['newsletterSubscribed']);
+        self::assertFalse($this->responseJson($client)['newSessionNotificationsEnabled']);
+
+        $this->requestJson($client, 'PATCH', '/api/portal/me/profile', [
+            'firstName' => 'Anaïs', 'lastName' => 'Martin', 'newSessionNotificationsEnabled' => true,
+        ], $server);
+        self::assertResponseIsSuccessful();
+        self::assertTrue($this->responseJson($client)['newsletterSubscribed']);
+        self::assertTrue($this->responseJson($client)['newSessionNotificationsEnabled']);
+
+        $this->requestJson($client, 'PATCH', '/api/portal/me/profile', [
+            'firstName' => 'Anaïs', 'lastName' => 'Martin', 'newsletterSubscribed' => false,
+        ], $server);
+        self::assertResponseIsSuccessful();
+        self::assertFalse($this->responseJson($client)['newsletterSubscribed']);
+        self::assertTrue($this->responseJson($client)['newSessionNotificationsEnabled']);
+    }
+
+    public function testPublicUnsubscribeUpdatesProfileAndPreservesSessionNotifications(): void
+    {
+        [$client, $userEntity] = $this->createActiveUserWithOrganization();
+        $token = $this->login($client, $userEntity);
+        $server = ['HTTP_AUTHORIZATION' => "Bearer {$token}"];
+        $this->requestJson($client, 'PATCH', '/api/portal/me/profile', [
+            'newsletterSubscribed' => true, 'newSessionNotificationsEnabled' => true,
+        ], $server);
+        self::assertResponseIsSuccessful();
+        $emailContactEntity = static::getContainer()->get(EntityManagerInterface::class)->getRepository(EmailContactEntity::class)->findOneBy(['emailAddress' => $userEntity->getEmail()]);
+        self::assertInstanceOf(EmailContactEntity::class, $emailContactEntity);
+        $client->request('GET', '/newsletter/unsubscribe/' . $emailContactEntity->getUnsubscribeToken());
+        self::assertResponseIsSuccessful();
+        $client->request('GET', '/api/portal/me', server: $server);
+        self::assertResponseIsSuccessful();
+        self::assertFalse($this->responseJson($client)['newsletterSubscribed']);
+        self::assertTrue($this->responseJson($client)['newSessionNotificationsEnabled']);
+    }
+
+    public function testProfileRejectsInvalidNewsletterValueWithoutSavingNamesOrNotifications(): void
+    {
+        [$client, $userEntity] = $this->createActiveUserWithOrganization();
+        $token = $this->login($client, $userEntity);
+        $server = ['HTTP_AUTHORIZATION' => "Bearer {$token}"];
+        $this->requestJson($client, 'PATCH', '/api/portal/me/profile', [
+            'firstName' => 'Must not save', 'newsletterSubscribed' => 'true', 'newSessionNotificationsEnabled' => true,
+        ], $server);
+        self::assertResponseStatusCodeSame(422);
+        $client->request('GET', '/api/portal/me', server: $server);
+        self::assertResponseIsSuccessful();
+        self::assertNull($this->responseJson($client)['firstName']);
+        self::assertFalse($this->responseJson($client)['newSessionNotificationsEnabled']);
+    }
+
+    public function testBlockedNewsletterAddressDoesNotPartiallyUpdateProfile(): void
+    {
+        [$client, $userEntity] = $this->createActiveUserWithOrganization();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $emailContactEntity = (new EmailContactEntity())->setEmailAddress($userEntity->getEmail())->setActive(false)->setOptInNewsletter(false);
+        $entityManager->persist($emailContactEntity);
+        $entityManager->flush();
+        $token = $this->login($client, $userEntity);
+        $server = ['HTTP_AUTHORIZATION' => "Bearer {$token}"];
+
+        $this->requestJson($client, 'PATCH', '/api/portal/me/profile', [
+            'firstName' => 'Must not save', 'newsletterSubscribed' => true, 'newSessionNotificationsEnabled' => true,
+        ], $server);
+        self::assertResponseStatusCodeSame(422);
+        $client->request('GET', '/api/portal/me', server: $server);
+        self::assertResponseIsSuccessful();
+        self::assertNull($this->responseJson($client)['firstName']);
+        self::assertFalse($this->responseJson($client)['newsletterSubscribed']);
+        self::assertFalse($this->responseJson($client)['newSessionNotificationsEnabled']);
     }
 
     public function testPasswordResetRequestHasTheSameNeutralResponseForKnownAndUnknownAddresses(): void

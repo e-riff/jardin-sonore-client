@@ -10,28 +10,33 @@ Mise à jour le 30 septembre 2026. Ce document est le **seul pilotage actif** de
 - Portail structures accessible avec comptes, séances, comptines, profil et impersonation ; le bandeau du portail et la stabilité du menu sont livrés.
 - Règle de mot de passe du portail centralisée. Le traitement d'une réussite partielle lors de l'édition du profil reste distinct et ouvert.
 
-## Point de reprise — pause du 30 septembre 2026
+## Point de reprise — 1er octobre 2026
 
-- [x] Notifications de première publication implémentées et vérifiées localement, sans nouvel envoi aux modifications ou republications.
-- [x] Mails de service corrigés et approuvés dans Mailpit ; retour à la fiche après connexion vérifié.
-- [x] Recette : 219 tests backend / 1 257 assertions ; contrôles front et qualité réussis. Correction de la lecture des préférences lors d'une attente de verrou couverte par un test.
-- [ ] Activer les notifications en production lors d'un déploiement autorisé : migrations, troisième cron de distribution, contrôle Gmail/Outlook. Conserver les deux crons existants et le worker `async` commun.
-- [ ] **Prochain lot à reprendre : abonnement newsletter, notamment des personnes sans structure.** Préparer d'abord le plan du consentement distinct des notifications (deux coches dans le portail), des abonnés libres et de l'adaptation des audiences. Préparer ensuite le lot d'inscription publique avec confirmation depuis le footer.
-- [ ] Ajouter les comptes du portail selon leurs structures et les abonnés supplémentaires comme un groupe activable/désactivable dans les audiences ; dédupliquer tous les destinataires par e-mail.
-- [ ] Traiter les adresses déjà inscrites et les changements d'adresse des comptes, sans créer de doublons ni perdre les choix de consentement ; réutiliser la présentation des mails de service.
-- [ ] Page légale reportée à la demande de l'utilisateur.
+**Reprendre directement la partie 3 du [plan newsletter](docs/superpowers/plans/2026-09-30-newsletter-subscriptions-and-audiences.md) : résolution des audiences.** Les parties 1 (stockage) et 2 (préférence du profil) sont terminées ; ne pas les recommencer.
 
-Le travail est en pause sur la branche `feat/session-first-publication-notifications`. Aucun déploiement ni changement de cron en production effectué. Reprendre partie par partie avec un arrêt entre chaque partie.
+- [x] Notifications à la première disponibilité par structure : rattachement d’une séance active ou activation d’une séance rattachée ; historique durable, un mail au plus par séance/compte, droits des structures déclencheuses relus avant SMTP.
+- [x] Deux préférences indépendantes dans le profil : nouvelles séances et newsletter ; consentement porté par l’adresse, lien public de désabonnement et conservation de l’historique des contacts sans lien d’annuaire.
+- [x] Les trois crons cPanel sont présents ; distribution locale ajoutée à Docker toutes les 60 secondes.
+- [x] Recette locale : 238 tests backend / 1 371 assertions, style et PHPStan, lint/build front et recette navigateur. Les migrations `Version20260930130613` et `Version20260930140509` sont appliquées en développement/test ; schéma synchronisé.
+- [ ] Livraison de clôture demandée le 30 septembre : commit, tag `deploy-availability-newsletter-20260930-01`, push branche/tag, migrations et déploiement backend/front ; consigner les vérifications de production après livraison.
+- [ ] **Partie 3 :** réunir annuaire, comptes du portail selon leurs structures et abonnés libres confirmés ; option libre désactivée par défaut, ciblage existant conservé, déduplication par e-mail.
+- [ ] **Partie 4 :** vérifier le consentement courant juste avant SMTP et terminer proprement les livraisons annulées.
+- [ ] **Partie 5 :** ajouter l’option d’audience au backoffice et préserver son état dans les masques, duplications et extensions ; recette du lot complet.
+- [ ] Ensuite seulement : inscription publique avec confirmation depuis le footer. Aucun formulaire public ou mécanisme de confirmation livré à ce stade.
+- [ ] Contrôler le rendu réel Gmail/Outlook. Le « 1 mail envoyé » rapporté n’a pas été reproduit : distributeur à 0 lors du contrôle, 574 livraisons envoyées réparties en 205/174/195 ; aucun compteur modifié.
+- [ ] Page légale et finitions PDF reportées.
 
-Le [cadrage notifications/newsletter](docs/superpowers/specs/2026-09-30-session-notifications-newsletter-design.md) distingue ces trois lots. Le [plan des notifications](docs/superpowers/plans/2026-09-30-session-first-publication-notifications.md) contient la recette locale et l'historique ; les plans des lots newsletter et inscription publique restent à rédiger. Les personnes sans structure peuvent s'inscrire librement ; ce groupe repose sur une inscription explicite confirmée, et non sur la seule absence de structure. Les finitions PDF restent en P3.
+Branche conservée : `feat/session-first-publication-notifications`. Arrêt à la frontière de la partie 2 newsletter. Les choix de consentement historiques restent inchangés ; l’abonnement depuis le profil ne donne pas automatiquement l’appartenance au groupe libre. Les nouveaux comptes ne sont pas encore ajoutés aux audiences par la partie 3.
+
+La [conception des disponibilités](docs/superpowers/specs/2026-09-30-session-availability-notifications-design.md) remplace le déclenchement uniquement à la première publication globale. Le [plan des disponibilités](docs/superpowers/plans/2026-09-30-session-availability-notifications.md) et le [plan initial](docs/superpowers/plans/2026-09-30-session-first-publication-notifications.md) conservent la recette et l’historique ; le [cadrage newsletter](docs/superpowers/specs/2026-09-30-session-notifications-newsletter-design.md) sépare audiences et inscription publique.
 
 ## P0 — Fiabilité, visibilité et demandes entrantes
 
 | Chantier | Bénéfice attendu | Dépendances / critère de départ |
 | --- | --- | --- |
 | Sécuriser les actions administrateur d'invitation et de réinitialisation : POST, CSRF et redirection interne ; vérifier la provenance de l'IP utilisée pour limiter les tentatives sur le portail. | Éviter les actions déclenchées par une requête non autorisée et rendre la limitation fiable. | Tests ciblés ; examiner la chaîne de proxies en production avant de modifier le traitement de l'IP. |
-| Activer en production les notifications de première publication, implémentées et vérifiées localement. | Prévenir les comptes éligibles une seule fois par séance, avec un mail soigné. | Migrations et déploiement à autoriser ; ajouter le cron de distribution documenté, conserver le worker `async` ; contrôler Gmail/Outlook. |
-| Abonnement newsletter des comptes du portail et des personnes sans structure, puis inscription publique depuis le footer. | Permettre un consentement distinct et inclure les abonnés libres dans les campagnes choisies. | Planifier les lots 2 et 3 du cadrage ; préserver les consentements historiques et dédupliquer les audiences par e-mail. |
+| Contrôler le rendu réel des notifications dans Gmail/Outlook. | Prévenir les comptes éligibles une seule fois par séance, avec un mail soigné. | Crons en place ; clôture de livraison suivie ci-dessus, recette réelle sur une nouvelle disponibilité choisie par l’utilisateur. |
+| Abonnement newsletter des comptes du portail et des personnes sans structure, puis inscription publique depuis le footer. | Permettre un consentement distinct et inclure les abonnés libres dans les campagnes choisies. | Reprendre partie 3 du plan approuvé ; puis contrôle avant SMTP, backoffice et inscription publique. |
 | Préparer la page légale et l'information sur les données personnelles, accessibles depuis le pied de page — reporté à la demande de l'utilisateur. | Donner des informations fiables aux visiteurs et aux structures. | Reprendre après le chantier notifications/newsletter ; valider les mentions propres à l'activité et les traitements réels avant publication. |
 | Analyser Search Console et la fiche Google Business Profile, puis corriger les écarts constatés. | Comprendre les recherches et améliorer la découverte locale. | Accès aux deux outils ; relever requêtes, pages, indexation et cohérence des coordonnées/zone. |
 | Créer une page d'offre « ateliers crèches et EAJE » et expliquer concrètement le portail dans « En séance ». | Répondre aux questions des prospects et montrer les ressources offertes après intervention. | Décrire la zone habituelle, les déplacements possibles pour les séances spéciales et les modalités pratiques ; utiliser uniquement des exemples ou visuels autorisés du portail. |

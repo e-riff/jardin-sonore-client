@@ -38,12 +38,7 @@ final class SharedContactSubscriber
             $this->deduplicatePhoneContactLink($entityManager, $unitOfWork, $phoneContactLink);
         }
 
-        foreach ($this->managedEntities($unitOfWork, EmailContactEntity::class) as $emailContact) {
-            if ($emailContact->getEmailContactLinks()->isEmpty()) {
-                $entityManager->remove($emailContact);
-                $unitOfWork->computeChangeSet($entityManager->getClassMetadata(EmailContactEntity::class), $emailContact);
-            }
-        }
+        // Email consent and unsubscribe history survive the removal of directory links.
 
         foreach ($this->managedEntities($unitOfWork, PhoneContactEntity::class) as $phoneContact) {
             if ($phoneContact->getPhoneContactLinks()->isEmpty()) {
