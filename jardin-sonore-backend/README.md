@@ -64,7 +64,7 @@ La première disponibilité d’une séance publiée pour une structure enregist
 php bin/console app:sessions:dispatch-notifications --env=prod --no-debug --recover-after=30
 ```
 
-**État local :** le sender et les templates HTML/texte sont branchés ; les exemples fictifs ont été envoyés au Mailpit local pour revue et corrigés après retour utilisateur. Le lien de notification conserve désormais la destination de la fiche à travers la connexion au portail. La recette locale est passée : programmation et reprises, préférences/adresse/droits relus avant envoi, rendu des mails et retour à la fiche après connexion. Le code et les deux migrations notifications sont déployés sous `deploy-notifications-20260930-01` (`e3ff7ca`). Les trois crons cPanel ont été installés par l’utilisateur et leur présence vérifiée. Le contrôle du rendu réel dans Gmail/Outlook reste à faire. L’évolution suivante reste locale : rattacher une séance publiée à une nouvelle structure ou publier un brouillon rattaché programme les nouveaux comptes éligibles. La table `session_organization_availability` conserve les premières disponibilités, même après retrait du rattachement. Une séance/un compte reçoit au plus une livraison ; republications et rattachements rétablis ne déclenchent pas de renvoi. La migration `Version20260930140509`, appliquée en développement/test, initialise l’existant sans programmer de mail. La simulation est disponible :
+**État local :** le sender et les templates HTML/texte sont branchés ; les exemples fictifs ont été envoyés au Mailpit local pour revue et corrigés après retour utilisateur. Le lien de notification conserve désormais la destination de la fiche à travers la connexion au portail. La recette locale est passée : programmation et reprises, préférences/adresse/droits relus avant envoi, rendu des mails et retour à la fiche après connexion. Le code et les deux migrations notifications sont déployés sous `deploy-notifications-20260930-01` (`e3ff7ca`). Les trois crons cPanel ont été installés par l’utilisateur et leur présence vérifiée. Le contrôle du rendu réel dans Gmail/Outlook reste à faire. L’évolution livrée sous `deploy-availability-newsletter-20260930-01` (`afbcece`) fonctionne ainsi : rattacher une séance publiée à une nouvelle structure ou publier un brouillon rattaché programme les nouveaux comptes éligibles. La table `session_organization_availability` conserve les premières disponibilités, même après retrait du rattachement. Une séance/un compte reçoit au plus une livraison ; republications et rattachements rétablis ne déclenchent pas de renvoi. La migration `Version20260930140509`, appliquée en développement/test/production, initialise l’existant sans programmer de mail. La simulation est disponible :
 
 ```bash
 php bin/console app:sessions:dispatch-notifications --dry-run --recover-after=30
@@ -97,7 +97,7 @@ Le service Compose `session-notification-dispatcher` lance `app:sessions:dispatc
 
 Le profil expose `newsletterSubscribed`, calculé depuis le consentement du contact portant l’adresse actuelle du compte. Une lecture ne crée pas de contact. Un choix explicite crée ou réutilise le contact ; un retrait conserve le jeton et l’historique. Un contact inactif ne peut pas être réactivé depuis le profil. L’appartenance au groupe libre reste distincte, réservée aux inscriptions libres confirmées. Les contacts e-mail survivent désormais au retrait de leurs liens d’annuaire pour conserver ces informations. Le lien `/newsletter/unsubscribe/{token}` est accessible publiquement et ne modifie pas les notifications de séances.
 
-La case du profil est locale ; l’ajout des comptes et abonnés libres aux audiences reste à réaliser (parties 3–5 du plan newsletter).
+La case du profil et son consentement sont déployés ; l’ajout des comptes et abonnés libres aux audiences reste à réaliser (parties 3–5 du plan newsletter).
 
 Le contrôle rapide du compteur en production n’a pas reproduit « 1 mail envoyé » : les derniers logs du distributeur indiquaient 0 destinataire mis en file et la base comptait 574 livraisons envoyées, réparties en 205, 174 et 195. Aucun compteur n’a été modifié faute d’anomalie établie.
 
@@ -108,3 +108,9 @@ Pour un changement backend significatif :
 - lancer au minimum `make backend-cs-check` ou un check cible equivalent ;
 - lancer `make backend-stan` si l'environnement de cache/container le permet ;
 - lancer la commande metier touchee en dry-run quand c'est pertinent, par exemple pour l'import annuaire.
+
+## Livraison de clôture du 30 septembre 2026
+
+Tag `deploy-availability-newsletter-20260930-01`, commit `afbcece`, branche et tag poussés avant déploiement. Backend et front livrés depuis une archive du tag. Le script `make deploy-backend` a appliqué `Version20260930130613` et `Version20260930140509`, vidé le cache et envoyé le signal d’arrêt aux workers ; les crons relancent leur consommation habituelle. Contrôles : 52 migrations exécutées, aucune en attente, schéma synchronisé, files async/failed vides, trois crons présents, aucune structure de séance publiée absente de l’historique initialisé. Aucun changement manuel cPanel nécessaire. Le rendu Gmail/Outlook reste à contrôler et les audiences newsletter sont la prochaine partie à développer.
+
+Contrôles HTTP après livraison : vitrine et connexion 200, destination après connexion conservée, désabonnement public avec jeton fictif inexistant 200, profil sans authentification 401. Aucun destinataire réel modifié ni mail externe de test envoyé.
