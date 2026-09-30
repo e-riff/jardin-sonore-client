@@ -127,7 +127,7 @@ final class OrganizationPeopleNavigationTest extends WebTestCase
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
         $adminUserEntity = $this->createAdmin($entityManager);
         $suffix = bin2hex(random_bytes(6));
-        $organizationEntity = (new OrganizationEntity())->setName("Harmonie Céleste {$suffix}");
+        $organizationEntity = (new OrganizationEntity())->setName("Harmonie {$suffix} Céleste");
         $otherOrganizationEntity = (new OrganizationEntity())->setName("Maison Forestière {$suffix}");
         $matchingPersonEntity = (new PersonEntity())->setFirstName("Alice{$suffix}")->setLastName('Dupont')->setOrganization($organizationEntity);
         $otherPersonEntity = (new PersonEntity())->setFirstName("Bob{$suffix}")->setLastName('Martin')->setOrganization($otherOrganizationEntity);
@@ -137,7 +137,7 @@ final class OrganizationPeopleNavigationTest extends WebTestCase
         $entityManager->flush();
         $client->loginUser($adminUserEntity);
 
-        foreach (["Harmonie Céleste {$suffix}", 'Harmonie Céleste', "Alice{$suffix}"] as $query) {
+        foreach (["Harmonie {$suffix} Céleste", "Harmonie {$suffix}", "Alice{$suffix}"] as $query) {
             $client->request('GET', '/backoffice/person?query=' . urlencode($query));
             self::assertResponseIsSuccessful();
             $html = (string) $client->getResponse()->getContent();
