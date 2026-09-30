@@ -100,6 +100,28 @@ return static function (ClassMetadata $metadata): void {
         'nullable' => true,
     ]);
 
+    $metadata->mapField([
+        'fieldName' => 'freeNewsletterSubscription',
+        'columnName' => 'free_newsletter_subscription',
+        'type' => Types::BOOLEAN,
+        'options' => ['default' => false],
+    ]);
+
+    $metadata->mapField([
+        'fieldName' => 'freeNewsletterSubscriptionConfirmedAt',
+        'columnName' => 'free_newsletter_subscription_confirmed_at',
+        'type' => Types::DATETIME_IMMUTABLE,
+        'nullable' => true,
+    ]);
+
+    $metadata->mapField([
+        'fieldName' => 'freeNewsletterSubscriptionOrigin',
+        'columnName' => 'free_newsletter_subscription_origin',
+        'type' => Types::STRING,
+        'length' => 64,
+        'nullable' => true,
+    ]);
+
     $metadata->mapOneToMany([
         'fieldName' => 'emailContactLinks',
         'targetEntity' => EmailContactLinkEntity::class,

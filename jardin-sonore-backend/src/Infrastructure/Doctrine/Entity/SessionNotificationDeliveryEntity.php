@@ -27,6 +27,8 @@ class SessionNotificationDeliveryEntity
     public function __construct(
         private SessionSummaryEntity $sessionSummary,
         private UserEntity $user,
+        /** @var list<int>|null */
+        private ?array $organizationIds = null,
     ) {
         $this->createdAt = new DateTimeImmutable();
     }
@@ -39,6 +41,12 @@ class SessionNotificationDeliveryEntity
     public function getUser(): UserEntity
     {
         return $this->user;
+    }
+
+    /** @return list<int>|null */
+    public function getOrganizationIds(): ?array
+    {
+        return $this->organizationIds;
     }
 
     public function getStatus(): string

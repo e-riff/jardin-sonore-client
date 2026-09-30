@@ -12,6 +12,7 @@ use App\Infrastructure\Doctrine\Entity\ThemeEntity;
 use App\Infrastructure\Doctrine\Mapper\SessionSummaryMapper;
 use App\Infrastructure\Session\SessionNotificationDeliveryStore;
 use App\Infrastructure\Session\SessionNotificationRecipientReader;
+use App\Infrastructure\Session\SessionOrganizationAvailabilityStore;
 use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\LockMode;
@@ -31,6 +32,7 @@ final class SessionSummaryDoctrineRepository extends ServiceEntityRepository imp
         private readonly MessageBusInterface $messageBus,
         private readonly SessionNotificationRecipientReader $sessionNotificationRecipientReader,
         private readonly SessionNotificationDeliveryStore $sessionNotificationDeliveryStore,
+        private readonly SessionOrganizationAvailabilityStore $sessionOrganizationAvailabilityStore,
     ) {
         parent::__construct($managerRegistry, SessionSummaryEntity::class);
     }
@@ -90,8 +92,13 @@ final class SessionSummaryDoctrineRepository extends ServiceEntityRepository imp
             $entityManager->persist($sessionSummaryEntity);
             $entityManager->flush();
 
-            if ($isFirstPublication) {
-                $this->sessionNotificationDeliveryStore->schedule($sessionSummaryEntity, $this->sessionNotificationRecipientReader->eligibleUsers($sessionSummaryEntity));
+            $newOrganizationIds = $this->sessionOrganizationAvailabilityStore->recordNewAvailability($sessionSummaryEntity);
+            if ([] !== $newOrganizationIds) {
+                $this->sessionNotificationDeliveryStore->schedule(
+                    $sessionSummaryEntity,
+                    $this->sessionNotificationRecipientReader->eligibleUsers($sessionSummaryEntity, $newOrganizationIds),
+                    $newOrganizationIds,
+                );
             }
         });
 

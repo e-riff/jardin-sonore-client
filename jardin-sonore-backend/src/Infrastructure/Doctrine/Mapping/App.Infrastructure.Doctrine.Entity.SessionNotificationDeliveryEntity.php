@@ -25,6 +25,7 @@ return static function (ClassMetadata $metadata): void {
     $metadata->mapField(['fieldName' => 'sentAt', 'columnName' => 'sent_at', 'type' => Types::DATETIME_IMMUTABLE, 'nullable' => true]);
     $metadata->mapField(['fieldName' => 'attempts', 'type' => Types::INTEGER, 'options' => ['default' => 0]]);
     $metadata->mapField(['fieldName' => 'lastError', 'columnName' => 'last_error', 'type' => Types::TEXT, 'nullable' => true]);
+    $metadata->mapField(['fieldName' => 'organizationIds', 'columnName' => 'organization_ids', 'type' => Types::JSON, 'nullable' => true]);
     $metadata->mapManyToOne([
         'fieldName' => 'sessionSummary',
         'targetEntity' => SessionSummaryEntity::class,

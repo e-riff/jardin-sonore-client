@@ -24,6 +24,9 @@ final readonly class EmailContactMapper
             unsubscribeToken: $emailContactEntity->getUnsubscribeToken(),
             uuid: $emailContactEntity->getUuid(),
             id: $emailContactEntity->getId(),
+            freeNewsletterSubscription: $emailContactEntity->hasFreeNewsletterSubscription(),
+            freeNewsletterSubscriptionConfirmedAt: $emailContactEntity->getFreeNewsletterSubscriptionConfirmedAt(),
+            freeNewsletterSubscriptionOrigin: $emailContactEntity->getFreeNewsletterSubscriptionOrigin(),
         );
     }
 
@@ -38,7 +41,10 @@ final readonly class EmailContactMapper
             ->setActive($emailContact->isActive())
             ->setSource($emailContact->getSource())
             ->setUnsubscribedAt($emailContact->getUnsubscribedAt())
-            ->setUnsubscribeToken($emailContact->getUnsubscribeToken());
+            ->setUnsubscribeToken($emailContact->getUnsubscribeToken())
+            ->setFreeNewsletterSubscription($emailContact->hasFreeNewsletterSubscription())
+            ->setFreeNewsletterSubscriptionConfirmedAt($emailContact->getFreeNewsletterSubscriptionConfirmedAt())
+            ->setFreeNewsletterSubscriptionOrigin($emailContact->getFreeNewsletterSubscriptionOrigin());
 
         return $emailContactEntity;
     }

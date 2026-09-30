@@ -25,11 +25,23 @@ final class SessionNotificationDeliveryStore extends ServiceEntityRepository
         parent::__construct($managerRegistry, SessionNotificationDeliveryEntity::class);
     }
 
-    /** @param list<UserEntity> $userEntities */
-    public function schedule(SessionSummaryEntity $sessionSummaryEntity, array $userEntities): void
+    /**
+     * @param list<UserEntity> $userEntities
+     * @param list<int>|null   $organizationIds
+     */
+    public function schedule(SessionSummaryEntity $sessionSummaryEntity, array $userEntities, ?array $organizationIds = null): void
     {
+        $connection = $this->getEntityManager()->getConnection();
+        $queryBuilder = $connection->createQueryBuilder()
+            ->select('user_id')
+            ->from('session_notification_delivery')
+            ->where('session_summary_id = :sessionId')
+            ->setParameter('sessionId', $sessionSummaryEntity->getId());
+        $knownUserIds = array_map(intval(...), $connection->fetchFirstColumn($queryBuilder->getSQL() . ' FOR UPDATE', $queryBuilder->getParameters()));
         foreach ($userEntities as $userEntity) {
-            $this->getEntityManager()->persist(new SessionNotificationDeliveryEntity($sessionSummaryEntity, $userEntity));
+            if (!in_array($userEntity->getId(), $knownUserIds, true)) {
+                $this->getEntityManager()->persist(new SessionNotificationDeliveryEntity($sessionSummaryEntity, $userEntity, $organizationIds));
+            }
         }
     }
 

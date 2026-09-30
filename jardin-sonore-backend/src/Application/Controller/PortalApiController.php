@@ -18,8 +18,11 @@ use App\Application\Validation\Constraint\PortalPassword;
 use App\Domain\Model\Portal\UserStatus;
 use App\Domain\Model\Session\SessionDocumentStatus;
 use App\Infrastructure\Doctrine\Entity\UserEntity;
+use App\Infrastructure\Portal\PortalNewsletterSubscriptionManager;
 use App\Infrastructure\Security\PortalRateLimitKeyResolver;
+use Doctrine\DBAL\Exception as DbalException;
 use Doctrine\ORM\EntityManagerInterface;
+use DomainException;
 use JsonException;
 use LogicException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -41,6 +44,7 @@ final class PortalApiController extends AbstractController
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
+        private readonly PortalNewsletterSubscriptionManager $portalNewsletterSubscriptionManager,
         private readonly PortalSessionManager $portalSessionManager,
         private readonly PortalImpersonationLaunchManager $portalImpersonationLaunchManager,
         private readonly PortalPasswordTokenManager $portalPasswordTokenManager,
@@ -162,6 +166,7 @@ final class PortalApiController extends AbstractController
             'firstName' => $userEntity->getFirstName(),
             'lastName' => $userEntity->getLastName(),
             'avatarPath' => $userEntity->getAvatarPath(),
+            'newsletterSubscribed' => $this->portalNewsletterSubscriptionManager->isEnabled($userEntity),
             'newSessionNotificationsEnabled' => $userEntity->isNewSessionNotificationsEnabled(),
             'organizations' => array_map(static fn ($organizationEntity): array => [
                 'uuid' => $organizationEntity->getUuid()->toRfc4122(),
@@ -183,12 +188,27 @@ final class PortalApiController extends AbstractController
             return new JsonResponse(['message' => 'Profile fields are too long.'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $userEntity = $this->portalUser();
-        $userEntity->setFirstName($firstName)->setLastName($lastName);
-        if (null !== $newSessionNotificationsEnabled) {
-            $userEntity->setNewSessionNotificationsEnabled($newSessionNotificationsEnabled);
+        if (array_key_exists('newsletterSubscribed', $payload) && !is_bool($payload['newsletterSubscribed'])) {
+            return new JsonResponse(['message' => 'Newsletter preference must be a boolean.'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
-        $this->entityManager->flush();
+
+        $userEntity = $this->portalUser();
+        try {
+            $this->entityManager->getConnection()->transactional(function () use ($payload, $userEntity, $firstName, $lastName, $newSessionNotificationsEnabled): void {
+                if (array_key_exists('newsletterSubscribed', $payload)) {
+                    $this->portalNewsletterSubscriptionManager->setEnabled($userEntity, $payload['newsletterSubscribed']);
+                }
+                $userEntity->setFirstName($firstName)->setLastName($lastName);
+                if (null !== $newSessionNotificationsEnabled) {
+                    $userEntity->setNewSessionNotificationsEnabled($newSessionNotificationsEnabled);
+                }
+                $this->entityManager->flush();
+            });
+        } catch (DomainException) {
+            return new JsonResponse(['message' => 'This newsletter address is blocked.', 'code' => 'newsletter_subscription_blocked'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        } catch (DbalException) {
+            return new JsonResponse(['message' => 'Profile preferences are temporarily unavailable.'], Response::HTTP_SERVICE_UNAVAILABLE);
+        }
 
         return $this->me();
     }
