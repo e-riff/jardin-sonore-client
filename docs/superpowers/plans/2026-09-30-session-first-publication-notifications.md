@@ -1,5 +1,9 @@
 # Notifications de première publication — Implementation Plan
 
+**État au 30 septembre 2026 :** lot implémenté, committé et vérifié localement ; activation en production et contrôle Gmail/Outlook encore à faire. Les notes de parties ci-dessous conservent leur état historique à chaque arrêt ; le résultat de la partie 6 fait référence pour la recette finale. Les cases RED non réalisées restent ouvertes à titre de trace, sans constituer le prochain travail à reprendre.
+
+**Suite :** [ROADMAP.md](../../../ROADMAP.md) définit la priorité active : planifier le lot 2 du [cadrage](../specs/2026-09-30-session-notifications-newsletter-design.md), abonnement newsletter du portail et des personnes sans structure via le groupe libre, puis le lot 3 d'inscription publique avec confirmation depuis le footer.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task in this session. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Envoyer un e-mail Jardin Sonore soigné aux comptes éligibles lors de la première publication d'une séance, sans envoi rétroactif ou nouvelle notification à la republication.
