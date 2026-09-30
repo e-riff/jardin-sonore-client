@@ -90,6 +90,22 @@ final class SessionNotificationRecipientReader extends ServiceEntityRepository
             sessionDate: $first['sessionDate'],
             sessionSlug: $first['sessionSlug'],
             organizationNames: array_values(array_unique(array_column($rows, 'organizationName'))),
+            hasMultipleOrganizations: $this->hasMultipleOrganizations($sessionNotificationDeliveryEntity->getUser()),
         );
+    }
+
+    private function hasMultipleOrganizations(UserEntity $userEntity): bool
+    {
+        $queryBuilder = $this->createQueryBuilder('portalUser');
+        $expr = $queryBuilder->expr();
+        $count = $queryBuilder->select('COUNT(DISTINCT organization.id)')
+            ->innerJoin('portalUser.organizationAccesses', 'access')
+            ->innerJoin('access.organization', 'organization')
+            ->where($expr->andX($expr->eq('portalUser', ':user'), $expr->eq('access.active', ':active')))
+            ->setParameter('user', $userEntity)
+            ->setParameter('active', true)
+            ->getQuery()->getSingleScalarResult();
+
+        return 1 < (int) $count;
     }
 }

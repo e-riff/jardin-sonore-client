@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ emailSubject }}</title>
+</head>
+<body bgcolor="#f3ede9" style="margin:0; padding:0; background-color:#f3ede9; color:#34372f; font-family:Arial, sans-serif;">
+    <div style="display:none; max-height:0; overflow:hidden; opacity:0; font-size:1px; line-height:1px; mso-hide:all;">{{ preheader }}</div>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f3ede9">
+        <tr>
+            <td align="center" style="padding:28px 12px;">
+                <!--[if mso]><table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0"><tr><td><![endif]-->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#fffdfa" style="width:100%; max-width:600px; background-color:#fffdfa; border:1px solid #e5dcd3;">
+                    <tr>
+                        <td align="center" style="padding:30px 24px 24px; border-bottom:1px solid #e5dcd3;">
+                            <p style="margin:0; font-family:Georgia, serif; font-size:29px; line-height:36px; font-weight:bold; color:#47664b;">{{ 'common.brand'|trans({}, 'service_email', 'fr') }}</p>
+                            <p style="margin:8px 0 0; font-size:11px; line-height:18px; letter-spacing:1.5px; text-transform:uppercase; color:#70655a;">{{ 'common.portal'|trans({}, 'service_email', 'fr') }}</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:30px 24px 12px;">
+                            <p style="margin:0 0 18px; font-size:15px; line-height:25px;">{% if firstName %}{{ 'common.greeting_named'|trans({'%first_name%': firstName}, 'service_email', 'fr') }}{% else %}{{ 'common.greeting'|trans({}, 'service_email', 'fr') }}{% endif %}</p>
+                            {% block content %}{% endblock %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="center" style="padding:14px 24px 26px;">
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                                <tr>
+                                    <td align="center" bgcolor="#47664b" style="background-color:#47664b; border-radius:6px; padding:15px 24px;">
+                                        <a href="{{ actionUrl }}" style="display:inline-block; color:#ffffff; font-family:Arial, sans-serif; font-size:15px; line-height:22px; font-weight:bold; text-decoration:none;">{{ actionLabel }}</a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:0 24px 28px;">
+                            {% block closing %}{% endblock %}
+                            <p style="margin:0; color:#47664b; font-size:15px; line-height:25px;">{{ 'common.signature'|trans({}, 'service_email', 'fr')|nl2br }}</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td bgcolor="#f8f3ef" style="padding:22px 24px; background-color:#f8f3ef; border-top:1px solid #e5dcd3;">
+                            <p style="margin:0 0 8px; font-size:12px; line-height:20px; color:#70655a;">{{ 'common.fallback_link'|trans({}, 'service_email', 'fr') }}</p>
+                            <p style="margin:0 0 18px; font-size:12px; line-height:20px; overflow-wrap:anywhere; word-break:break-all;"><a href="{{ actionUrl }}" style="color:#47664b; text-decoration:underline;">{{ actionUrl }}</a></p>
+                            <p style="margin:0; font-size:12px; line-height:20px; color:#70655a;">{{ footerNotice }}</p>
+                            {% block footer %}{% endblock %}
+                        </td>
+                    </tr>
+                </table>
+                <!--[if mso]></td></tr></table><![endif]-->
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

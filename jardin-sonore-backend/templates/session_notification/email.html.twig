@@ -1,0 +1,24 @@
+{% extends 'service_email/base.html.twig' %}
+
+{% block content %}
+    <p style="margin:0 0 22px; font-size:15px; line-height:25px;">{{ 'session.intro'|trans({}, 'service_email', 'fr') }}</p>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f3ede9" style="background-color:#f3ede9; border-left:3px solid #A64D43;">
+        <tr>
+            <td style="padding:18px 20px;">
+                <h1 style="margin:0 0 8px; font-family:Georgia, serif; font-size:24px; line-height:32px; font-weight:normal; color:#47664b; overflow-wrap:break-word;">{{ session.sessionTitle }}</h1>
+                <p style="margin:0; font-size:15px; line-height:24px; color:#34372f;">{{ sessionDateLabel }}</p>
+                {% if session.hasMultipleOrganizations %}
+                    <p style="margin:10px 0 0; font-size:14px; line-height:23px; color:#70655a;">{{ session.organizationNames|join(' · ') }}</p>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+{% endblock %}
+
+{% block closing %}
+    <p style="margin:0 0 22px; font-size:14px; line-height:24px; color:#70655a;">{{ 'session.closing'|trans({}, 'service_email', 'fr') }}</p>
+{% endblock %}
+
+{% block footer %}
+    <p style="margin:10px 0 0; font-size:12px; line-height:20px;"><a href="{{ preferencesUrl }}" style="color:#47664b; text-decoration:underline;">{{ 'session.preferences'|trans({}, 'service_email', 'fr') }}</a></p>
+{% endblock %}

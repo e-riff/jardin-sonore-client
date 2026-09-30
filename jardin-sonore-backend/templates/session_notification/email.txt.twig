@@ -1,0 +1,18 @@
+{% extends 'service_email/base.txt.twig' %}
+
+{% block content %}{% autoescape false %}
+{{ 'session.intro'|trans({}, 'service_email', 'fr') }}
+
+{{ session.sessionTitle }}
+{{ sessionDateLabel }}
+{% if session.hasMultipleOrganizations %}{{ session.organizationNames|join(' · ') }}
+{% endif %}
+{% endautoescape %}{% endblock %}
+
+{% block closing %}{{ 'session.closing'|trans({}, 'service_email', 'fr') }}
+
+{% endblock %}
+
+{% block footer %}{% autoescape false %}{{ 'session.preferences'|trans({}, 'service_email', 'fr') }}
+{{ preferencesUrl }}
+{% endautoescape %}{% endblock %}

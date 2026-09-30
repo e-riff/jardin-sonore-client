@@ -64,13 +64,13 @@ La publication enregistre ses destinataires dans `session_notification_delivery`
 php bin/console app:sessions:dispatch-notifications --env=prod --no-debug --recover-after=30
 ```
 
-**État intermédiaire :** le traitement Messenger est préparé ; la mise en file refuse de démarrer tant que le sender et les templates du mail ne sont pas installés. La simulation reste disponible :
+**État local :** le sender et les templates HTML/texte sont branchés ; les exemples fictifs ont été envoyés au Mailpit local pour revue et corrigés après retour utilisateur. Le lien de notification conserve désormais la destination de la fiche à travers la connexion au portail. La recette finale et les vérifications comportementales restent à réaliser avant activation en production. La simulation est disponible :
 
 ```bash
 php bin/console app:sessions:dispatch-notifications --dry-run --recover-after=30
 ```
 
-Sur cPanel, conserver le cron qui lance déjà `messenger:consume async` pendant une durée limitée. Après finalisation des mails, ajouter la commande de distribution avant la consommation dans ce script cron. Elle peut aussi avoir son propre cron toutes les minutes. Aucun processus permanent ni Supervisor n'est nécessaire. Utiliser le même binaire PHP, le même répertoire backend et les mêmes options de consommation que le cron existant. Ne pas remplacer ce cron à partir d'un exemple générique.
+Sur cPanel, le cron existant lance déjà `messenger:consume async` pendant une durée limitée. La distribution peut être ajoutée avant la consommation dans ce script cron, ou avoir son propre cron. L'organisation définitive (cron commun ou séparé, éventuelle séparation des workers/files) reste à préciser avec l'utilisateur avant déploiement. Aucun processus permanent ni Supervisor n'est nécessaire pour le fonctionnement préparé. Utiliser le même binaire PHP, le même répertoire backend et les mêmes options de consommation que le cron existant. Ne pas remplacer ce cron à partir d'un exemple générique.
 
 `--recover-after` vaut 15 minutes par défaut. Choisir une valeur supérieure à l'intervalle entre deux démarrages du worker et à son éventuel retard de traitement. Exemple : pour un worker lancé toutes les 5 minutes, 30 minutes laissent une marge. Les livraisons `pending` sont immédiatement distribuables ; les `queued` anciennes sont redistribuées pour récupérer un arrêt ou un message perdu. Si le lot comporte plus de 100 destinataires, les passages suivants continuent la distribution.
 
