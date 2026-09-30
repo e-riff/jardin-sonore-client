@@ -96,4 +96,6 @@
 
 ## Suite a reprendre
 
-- Le flux de génération et de téléchargement des PDF de séance est fonctionnel. Reprendre ultérieurement l'esthétique du document PDF (hiérarchie, mise en page A4, badges et médias), sans modifier son mécanisme de génération.
+- Consulter d'abord [ROADMAP.md](ROADMAP.md), seule source des priorités et du point de reprise ; les plans datés conservent le détail d'exécution.
+- Au 30 septembre 2026 : notifications de première publication implémentées et vérifiées localement ; activation en production encore à faire. Prochain lot : abonnement newsletter des comptes du portail et des personnes sans structure, puis inscription publique avec confirmation depuis le footer.
+- Les finitions esthétiques des PDF restent un chantier ultérieur, sans modification du mécanisme fonctionnel de génération/téléchargement.

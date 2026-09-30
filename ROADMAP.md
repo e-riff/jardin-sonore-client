@@ -16,12 +16,14 @@ Mise à jour le 30 septembre 2026. Ce document est le **seul pilotage actif** de
 - [x] Mails de service corrigés et approuvés dans Mailpit ; retour à la fiche après connexion vérifié.
 - [x] Recette : 219 tests backend / 1 257 assertions ; contrôles front et qualité réussis. Correction de la lecture des préférences lors d'une attente de verrou couverte par un test.
 - [ ] Activer les notifications en production lors d'un déploiement autorisé : migrations, troisième cron de distribution, contrôle Gmail/Outlook. Conserver les deux crons existants et le worker `async` commun.
-- [ ] **Prochain lot à reprendre : newsletter.** Préparer le plan du consentement distinct des notifications (deux coches dans le portail), des abonnés extérieurs et de leur inscription avec confirmation depuis le footer.
+- [ ] **Prochain lot à reprendre : abonnement newsletter, notamment des personnes sans structure.** Préparer d'abord le plan du consentement distinct des notifications (deux coches dans le portail), des abonnés libres et de l'adaptation des audiences. Préparer ensuite le lot d'inscription publique avec confirmation depuis le footer.
 - [ ] Ajouter les comptes du portail selon leurs structures et les abonnés supplémentaires comme un groupe activable/désactivable dans les audiences ; dédupliquer tous les destinataires par e-mail.
 - [ ] Traiter les adresses déjà inscrites et les changements d'adresse des comptes, sans créer de doublons ni perdre les choix de consentement ; réutiliser la présentation des mails de service.
 - [ ] Page légale reportée à la demande de l'utilisateur.
 
 Le travail est en pause sur la branche `feat/session-first-publication-notifications`. Aucun déploiement ni changement de cron en production effectué. Reprendre partie par partie avec un arrêt entre chaque partie.
+
+Le [cadrage notifications/newsletter](docs/superpowers/specs/2026-09-30-session-notifications-newsletter-design.md) distingue ces trois lots. Le [plan des notifications](docs/superpowers/plans/2026-09-30-session-first-publication-notifications.md) contient la recette locale et l'historique ; les plans des lots newsletter et inscription publique restent à rédiger. Les personnes sans structure peuvent s'inscrire librement ; ce groupe repose sur une inscription explicite confirmée, et non sur la seule absence de structure. Les finitions PDF restent en P3.
 
 ## P0 — Fiabilité, visibilité et demandes entrantes
 
@@ -29,7 +31,8 @@ Le travail est en pause sur la branche `feat/session-first-publication-notificat
 | --- | --- | --- |
 | Sécuriser les actions administrateur d'invitation et de réinitialisation : POST, CSRF et redirection interne ; vérifier la provenance de l'IP utilisée pour limiter les tentatives sur le portail. | Éviter les actions déclenchées par une requête non autorisée et rendre la limitation fiable. | Tests ciblés ; examiner la chaîne de proxies en production avant de modifier le traitement de l'IP. |
 | Activer en production les notifications de première publication, implémentées et vérifiées localement. | Prévenir les comptes éligibles une seule fois par séance, avec un mail soigné. | Migrations et déploiement à autoriser ; ajouter le cron de distribution documenté, conserver le worker `async` ; contrôler Gmail/Outlook. |
-| Préparer la page légale et l'information sur les données personnelles, accessibles depuis le pied de page. | Donner des informations fiables aux visiteurs et aux structures. | Valider les mentions propres à l'activité et les traitements réels avant publication. |
+| Abonnement newsletter des comptes du portail et des personnes sans structure, puis inscription publique depuis le footer. | Permettre un consentement distinct et inclure les abonnés libres dans les campagnes choisies. | Planifier les lots 2 et 3 du cadrage ; préserver les consentements historiques et dédupliquer les audiences par e-mail. |
+| Préparer la page légale et l'information sur les données personnelles, accessibles depuis le pied de page — reporté à la demande de l'utilisateur. | Donner des informations fiables aux visiteurs et aux structures. | Reprendre après le chantier notifications/newsletter ; valider les mentions propres à l'activité et les traitements réels avant publication. |
 | Analyser Search Console et la fiche Google Business Profile, puis corriger les écarts constatés. | Comprendre les recherches et améliorer la découverte locale. | Accès aux deux outils ; relever requêtes, pages, indexation et cohérence des coordonnées/zone. |
 | Créer une page d'offre « ateliers crèches et EAJE » et expliquer concrètement le portail dans « En séance ». | Répondre aux questions des prospects et montrer les ressources offertes après intervention. | Décrire la zone habituelle, les déplacements possibles pour les séances spéciales et les modalités pratiques ; utiliser uniquement des exemples ou visuels autorisés du portail. |
 

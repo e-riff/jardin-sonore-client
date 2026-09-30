@@ -1,7 +1,9 @@
 # Notifications de séances et inscription à la newsletter
 
 Date : 30 septembre 2026.
-Statut : conception à relire avant planification et implémentation.
+Statut au 30 septembre 2026 : lot 1 implémenté et vérifié localement, activation en production encore attendue ; lots 2 (abonnements et audiences) et 3 (inscription publique) à relire et planifier avant implémentation.
+
+Le point de reprise et les priorités sont dans [ROADMAP.md](../../../ROADMAP.md). Le [plan du lot 1](../plans/2026-09-30-session-first-publication-notifications.md) conserve les résultats de recette et les étapes historiques. Prochaine étape : plan du lot 2, incluant les personnes sans structure via une inscription libre explicite ; puis plan du lot 3 pour leur inscription depuis le footer.
 
 ## Objectif et périmètre
 
@@ -23,7 +25,9 @@ La page légale est reportée à la demande de l'utilisateur. Le cadrage ne modi
 
 Les précisions de fonctionnement ci-dessous sont les propositions de conception soumises à relecture.
 
-## Socle existant
+## Socle existant au cadrage initial
+
+Les constats ci-dessous décrivent l'état avant le lot 1. Depuis, les notifications de première publication, la présentation commune des mails de service et le retour à la fiche après connexion sont implémentés et vérifiés localement ; voir le plan du lot 1 pour l'état final.
 
 - `EmailContactEntity` possède une adresse normalisée et unique, un état actif, `optInNewsletter`, un jeton de désinscription et `unsubscribedAt`. Ses liens vers l'annuaire sont facultatifs.
 - `DoctrineNewsletterAudienceResolver` sélectionne actuellement les contacts via leurs liens vers des entrées actives de l'annuaire et déduplique par adresse.
