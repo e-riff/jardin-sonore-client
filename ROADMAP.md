@@ -1,6 +1,6 @@
 # Roadmap Jardin Sonore
 
-Mise à jour le 28 septembre 2026. Ce document est le **seul pilotage actif** des chantiers produit et techniques. Les autres plans et bilans cités en fin de page apportent du contexte ou conservent l'historique ; leurs listes de tâches ne définissent plus les priorités. L'ordre général est : **visibilité et nouvelles demandes**, puis **gain de temps dans le backoffice**. Les priorités indiquent un ordre de travail, pas un engagement de livraison simultanée.
+Mise à jour le 30 septembre 2026. Ce document est le **seul pilotage actif** des chantiers produit et techniques. Les autres plans et bilans cités en fin de page apportent du contexte ou conservent l'historique ; leurs listes de tâches ne définissent plus les priorités. L'ordre général est : **visibilité et nouvelles demandes**, puis **gain de temps dans le backoffice**. Les priorités indiquent un ordre de travail, pas un engagement de livraison simultanée.
 
 ## Livré — hors travaux futurs
 
@@ -10,12 +10,25 @@ Mise à jour le 28 septembre 2026. Ce document est le **seul pilotage actif** de
 - Portail structures accessible avec comptes, séances, comptines, profil et impersonation ; le bandeau du portail et la stabilité du menu sont livrés.
 - Règle de mot de passe du portail centralisée. Le traitement d'une réussite partielle lors de l'édition du profil reste distinct et ouvert.
 
+## Point de reprise — pause du 30 septembre 2026
+
+- [x] Notifications de première publication implémentées et vérifiées localement, sans nouvel envoi aux modifications ou republications.
+- [x] Mails de service corrigés et approuvés dans Mailpit ; retour à la fiche après connexion vérifié.
+- [x] Recette : 219 tests backend / 1 257 assertions ; contrôles front et qualité réussis. Correction de la lecture des préférences lors d'une attente de verrou couverte par un test.
+- [ ] Activer les notifications en production lors d'un déploiement autorisé : migrations, troisième cron de distribution, contrôle Gmail/Outlook. Conserver les deux crons existants et le worker `async` commun.
+- [ ] **Prochain lot à reprendre : newsletter.** Préparer le plan du consentement distinct des notifications (deux coches dans le portail), des abonnés extérieurs et de leur inscription avec confirmation depuis le footer.
+- [ ] Ajouter les comptes du portail selon leurs structures et les abonnés supplémentaires comme un groupe activable/désactivable dans les audiences ; dédupliquer tous les destinataires par e-mail.
+- [ ] Traiter les adresses déjà inscrites et les changements d'adresse des comptes, sans créer de doublons ni perdre les choix de consentement ; réutiliser la présentation des mails de service.
+- [ ] Page légale reportée à la demande de l'utilisateur.
+
+Le travail est en pause sur la branche `feat/session-first-publication-notifications`. Aucun déploiement ni changement de cron en production effectué. Reprendre partie par partie avec un arrêt entre chaque partie.
+
 ## P0 — Fiabilité, visibilité et demandes entrantes
 
 | Chantier | Bénéfice attendu | Dépendances / critère de départ |
 | --- | --- | --- |
 | Sécuriser les actions administrateur d'invitation et de réinitialisation : POST, CSRF et redirection interne ; vérifier la provenance de l'IP utilisée pour limiter les tentatives sur le portail. | Éviter les actions déclenchées par une requête non autorisée et rendre la limitation fiable. | Tests ciblés ; examiner la chaîne de proxies en production avant de modifier le traitement de l'IP. |
-| Rendre effectives les notifications de nouvelles séances pour les utilisateurs qui les ont activées. | Prévenir les structures dès qu'une séance leur est publiée. | Vérifier le déclencheur de publication, la préférence enregistrée, les destinataires et l'absence de doublons. |
+| Activer en production les notifications de première publication, implémentées et vérifiées localement. | Prévenir les comptes éligibles une seule fois par séance, avec un mail soigné. | Migrations et déploiement à autoriser ; ajouter le cron de distribution documenté, conserver le worker `async` ; contrôler Gmail/Outlook. |
 | Préparer la page légale et l'information sur les données personnelles, accessibles depuis le pied de page. | Donner des informations fiables aux visiteurs et aux structures. | Valider les mentions propres à l'activité et les traitements réels avant publication. |
 | Analyser Search Console et la fiche Google Business Profile, puis corriger les écarts constatés. | Comprendre les recherches et améliorer la découverte locale. | Accès aux deux outils ; relever requêtes, pages, indexation et cohérence des coordonnées/zone. |
 | Créer une page d'offre « ateliers crèches et EAJE » et expliquer concrètement le portail dans « En séance ». | Répondre aux questions des prospects et montrer les ressources offertes après intervention. | Décrire la zone habituelle, les déplacements possibles pour les séances spéciales et les modalités pratiques ; utiliser uniquement des exemples ou visuels autorisés du portail. |

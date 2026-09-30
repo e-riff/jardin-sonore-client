@@ -64,13 +64,24 @@ La publication enregistre ses destinataires dans `session_notification_delivery`
 php bin/console app:sessions:dispatch-notifications --env=prod --no-debug --recover-after=30
 ```
 
-**État local :** le sender et les templates HTML/texte sont branchés ; les exemples fictifs ont été envoyés au Mailpit local pour revue et corrigés après retour utilisateur. Le lien de notification conserve désormais la destination de la fiche à travers la connexion au portail. La recette finale et les vérifications comportementales restent à réaliser avant activation en production. La simulation est disponible :
+**État local :** le sender et les templates HTML/texte sont branchés ; les exemples fictifs ont été envoyés au Mailpit local pour revue et corrigés après retour utilisateur. Le lien de notification conserve désormais la destination de la fiche à travers la connexion au portail. La recette locale est passée : programmation et reprises, préférences/adresse/droits relus avant envoi, rendu des mails et retour à la fiche après connexion. Activation en production et contrôle du rendu réel dans Gmail/Outlook restent à faire. La simulation est disponible :
 
 ```bash
 php bin/console app:sessions:dispatch-notifications --dry-run --recover-after=30
 ```
 
-Sur cPanel, le cron existant lance déjà `messenger:consume async` pendant une durée limitée. La distribution peut être ajoutée avant la consommation dans ce script cron, ou avoir son propre cron. L'organisation définitive (cron commun ou séparé, éventuelle séparation des workers/files) reste à préciser avec l'utilisateur avant déploiement. Aucun processus permanent ni Supervisor n'est nécessaire pour le fonctionnement préparé. Utiliser le même binaire PHP, le même répertoire backend et les mêmes options de consommation que le cron existant. Ne pas remplacer ce cron à partir d'un exemple générique.
+Les deux crons cPanel communiqués par l'utilisateur s'exécutent chaque minute :
+
+- `messenger:consume async --env=prod --time-limit=240 --memory-limit=256M`, protégé par `/tmp/jardin-sonore-messenger.lock`, traite les messages. Le verrou empêche le chevauchement des lancements pendant les quatre minutes de consommation.
+- `app:mailing:dispatch-pending-campaigns --env=prod --no-debug`, protégé par `/tmp/jardin-sonore-mailing-dispatch.lock`, programme les campagnes.
+
+Pour les notifications, ajouter un troisième cron de distribution, distinct, avec le même répertoire et binaire PHP :
+
+```cron
+* * * * * flock -n /tmp/jardin-sonore-session-notifications-dispatch.lock sh -lc 'cd /home/riem3079/repositories/jardin-sonore-backend && /opt/alt/php85/usr/bin/php bin/console app:sessions:dispatch-notifications --env=prod --no-debug --recover-after=30' >> /home/riem3079/logs/jardin-sonore-session-notifications-dispatch.log 2>&1
+```
+
+C'est une proposition d'exploitation, **aucun cron de production n'a été installé ou modifié**. Les trois crons utilisent un seul worker `async` : les deux distributeurs mettent les messages en file, le worker les traite avec les PDF et les autres messages existants. Aucun Supervisor n'est nécessaire. Une file ou un worker distinct pourra être envisagé si le volume des campagnes retarde les notifications ; cette charge n'a pas été mesurée.
 
 `--recover-after` vaut 15 minutes par défaut. Choisir une valeur supérieure à l'intervalle entre deux démarrages du worker et à son éventuel retard de traitement. Exemple : pour un worker lancé toutes les 5 minutes, 30 minutes laissent une marge. Les livraisons `pending` sont immédiatement distribuables ; les `queued` anciennes sont redistribuées pour récupérer un arrêt ou un message perdu. Si le lot comporte plus de 100 destinataires, les passages suivants continuent la distribution.
 

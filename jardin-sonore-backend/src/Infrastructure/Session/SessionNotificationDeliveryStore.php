@@ -11,6 +11,7 @@ use App\Infrastructure\Doctrine\Entity\UserEntity;
 use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\LockMode;
+use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
 use InvalidArgumentException;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -122,12 +123,17 @@ final class SessionNotificationDeliveryStore extends ServiceEntityRepository
 
     private function lockedDelivery(int $deliveryId): ?SessionNotificationDeliveryEntity
     {
-        $sessionNotificationDeliveryEntity = $this->find($deliveryId);
-        if (null !== $sessionNotificationDeliveryEntity) {
-            $this->getEntityManager()->refresh($sessionNotificationDeliveryEntity, LockMode::PESSIMISTIC_WRITE);
-        }
+        $queryBuilder = $this->createQueryBuilder('delivery');
+        // Acquire the lock before any consistent read creates a REPEATABLE READ snapshot.
+        $sessionNotificationDeliveryEntity = $queryBuilder
+            ->where($queryBuilder->expr()->eq('delivery.id', ':deliveryId'))
+            ->setParameter('deliveryId', $deliveryId)
+            ->getQuery()
+            ->setLockMode(LockMode::PESSIMISTIC_WRITE)
+            ->setHint(Query::HINT_REFRESH, true)
+            ->getOneOrNullResult();
 
-        return $sessionNotificationDeliveryEntity;
+        return $sessionNotificationDeliveryEntity instanceof SessionNotificationDeliveryEntity ? $sessionNotificationDeliveryEntity : null;
     }
 
     private function isTerminal(SessionNotificationDeliveryEntity $sessionNotificationDeliveryEntity): bool
