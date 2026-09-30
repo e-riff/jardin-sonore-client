@@ -5,6 +5,7 @@ import {revalidatePath} from "next/cache";
 import {PortalApiClient} from "@/lib/portal/api-client";
 import {clearPortalSession, getPortalAccessToken, setPortalSession} from "@/lib/portal/session";
 import {portalRoutes} from "@/lib/portal/routes";
+import {resolvePortalLoginDestination} from "@/lib/portal/login-destination";
 import type {PortalAccount} from "@/lib/portal/types";
 
 export async function logoutPortalAction(): Promise<void> {
@@ -17,16 +18,17 @@ export async function logoutPortalAction(): Promise<void> {
 export async function loginPortalAction(formData: FormData): Promise<void> {
     const email = formData.get("email");
     const password = formData.get("password");
+    const destination = resolvePortalLoginDestination(formData.get("next"));
     const result = await (await PortalApiClient.fromCurrentRequest()).login({
         email: typeof email === "string" ? email.trim() : "",
         password: typeof password === "string" ? password : "",
     });
     const token = result.data?.token;
     if (!result.response.ok || !token) {
-        redirect(`${portalRoutes.login}?error=1`);
+        redirect(`${portalRoutes.login}?error=1&next=${encodeURIComponent(destination)}`);
     }
     await setPortalSession(token);
-    redirect(portalRoutes.sessions);
+    redirect(destination);
 }
 
 export async function requestPortalPasswordResetAction(formData: FormData): Promise<void> {

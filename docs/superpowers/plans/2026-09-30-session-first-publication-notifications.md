@@ -134,6 +134,7 @@ Les tests d'intégration nécessitent un schéma de test adapté ; le préparer 
 
 **Files:**
 - Create: `jardin-sonore-backend/templates/service_email/base.html.twig`.
+- Create: `jardin-sonore-backend/templates/service_email/base.txt.twig`.
 - Create: `jardin-sonore-backend/templates/session_notification/email.html.twig` et `email.txt.twig`.
 - Create: `jardin-sonore-backend/src/Infrastructure/Mailer/SymfonySessionNotificationMailSender.php`.
 - Create: `jardin-sonore-backend/translations/service_email.fr.yaml`.
@@ -149,9 +150,17 @@ Les tests d'intégration nécessitent un schéma de test adapté ; le préparer 
 
 - [ ] **Step 1: Écrire les tests de rendu.** `testSessionEmailIncludesDateTitleAndAuthorizedStructures`, `testAllActionLinksAreAbsolute`, `testAllServiceEmailsHavePlainText`, `testUntrustedTitlesAndNamesAreEscaped`, `testInvitationDescribesAvailablePortal`. Capturer les `Email` avec mailer factice.
 - [ ] **Step 2: Constater les échecs attendus** avant création des templates et de la version texte.
-- [ ] **Step 3: Implémenter et brancher le sender.** Fond crème `#f3ede9`, surface claire `#fffdfa`, vert `#47664b`, terracotta `#A64D43`, largeur fluide plafonnée à 600 px, contenu structuré et bouton « Découvrir la séance ». Les textes vont dans `service_email.fr.yaml`. L'aperçu de boîte mail est explicite, le titre/date/structures sont en texte ; aucun PDF annoncé prêt. Invitation et reset utilisent le même socle visuel.
-- [ ] **Step 4: Préparer des aperçus locaux avec données fictives.** Montrer les variantes séance, invitation et reset sur mobile/desktop ; réutiliser les services existants, ne pas démarrer un serveur parallèle. Prévoir la confirmation newsletter via le même socle dans son lot futur.
+- [x] **Step 3: Implémenter et brancher le sender.** Fond crème `#f3ede9`, surface claire `#fffdfa`, vert `#47664b`, terracotta `#A64D43`, largeur fluide plafonnée à 600 px, contenu structuré et bouton « Découvrir la séance ». Les textes vont dans `service_email.fr.yaml`. L'aperçu de boîte mail est explicite, le titre/date/structures sont en texte ; aucun PDF annoncé prêt. Invitation et reset utilisent le même socle visuel.
+- [x] **Step 4: Préparer des aperçus locaux avec données fictives.** Montrer les variantes séance, invitation et reset sur mobile/desktop ; réutiliser les services existants, ne pas démarrer un serveur parallèle. Prévoir la confirmation newsletter via le même socle dans son lot futur.
 - [ ] **Step 5: Valider.** Tests de rendu, lint Twig/traductions et qualité backend. Faire relire le mail de séance ; préparer les essais Gmail/Outlook avant livraison, sans envoyer de message à un tiers sans instruction.
+
+**Partie 4 — prête pour revue :** bases HTML et texte partagées, templates séance/invitation/reset, domaine de traductions `service_email`, sender de notification branché par alias. Date française explicite, salutation personnalisée avec fallback, contenu lisible sans images, liens absolus et lien de préférence de notifications. L'invitation décrit désormais l'espace disponible. Le test unitaire préexistant du sender d'invitation a été adapté à son constructeur et au contexte des deux templates ; aucun nouveau test ni exécution PHPUnit pour cette partie.
+
+**Contrôles :** lint des 9 fichiers Twig, lint YAML après correction d'une valeur contenant deux-points, `lint:container`, `composer stan` et `composer cs-check` réussis. Aperçus générés avec les classes de sender et les templates réels, données fictives et SMTP explicitement dirigé vers `mailpit:1025`. L'API Mailpit confirme les trois messages à `exemples@jardin-sonore.test` : séance (`9h3eaz82dwnFaadBvyc8Jn`), invitation (`BnbsCtjtY3xSheXUAmVVQP`) et reset (`5VUxiQuHNzHkyns4R24oi7`). Six captures mobile/ordinateur dans le répertoire de suivi ignoré, HTML/texte dans `jardin-sonore-backend/var/service-email-previews/`. Aperçu de séance contrôlé à 390 px : document et viewport de même largeur, aucun débordement horizontal.
+
+**Suite et limites :** revue visuelle utilisateur dans Mailpit, puis partie 5 (retour à la fiche après connexion). Les boutons des exemples utilisent des slugs/tokens fictifs. Aucun message envoyé vers un serveur SMTP externe, aucun compte créé, aucune distribution de notifications réelles déclenchée, aucune modification du cron ou déploiement. Gmail/Outlook et les tests automatiques restent à vérifier. Le choix cron commun/séparé et d'éventuels workers distincts reste ouvert jusqu'à clarification de l'exploitation cPanel. Arrêt à cette partie pour revue et suivi des tokens.
+
+**Correction après revue utilisateur :** retrait des deux titres de contenu des mails invitation/reset et du surtitre de notification. Le bloc séance affiche uniquement son titre, sa date et, si le compte possède plusieurs accès actifs à des structures distinctes, les noms des structures concernées auxquelles il a accès. `SessionNotificationMailView::hasMultipleOrganizations` transporte ce choix, calculé depuis les accès actifs actuels du compte ; il ne dépend pas du nombre de structures partagées pour la seule séance. HTML et texte corrigés, traductions devenues inutiles retirées. Objet et preheader restent distincts. Quatre exemples corrigés renvoyés dans Mailpit : invitation/reset, notification multi-structures et notification mono-structure (titre « Un voyage au pays des sons »). Contrôles Twig, style et analyse statique réussis ; les captures de la première proposition restent historiques, les derniers mails Mailpit font référence.
 
 ## Task 5: Partie 5 — Accès à la fiche après connexion
 
@@ -169,9 +178,15 @@ Les tests d'intégration nécessitent un schéma de test adapté ; le préparer 
 
 - [ ] **Step 1: Écrire les tests de destination.** Route valide, valeur absente, URL externe, `//host`, traversée et séparateurs encodés, fragment/query et valeur de formulaire manipulée.
 - [ ] **Step 2: Exécuter les tests et constater l'échec sur le helper absent.** Depuis `jardin-sonore-client/` : `node --test src/lib/portal/login-destination.test.mjs`. Suivre la transpilation TypeScript utilisée par `list-query.test.mjs` ; garder le helper sans import runtime de module frère pour pouvoir le charger de la même façon.
-- [ ] **Step 3: Implémenter le helper et l'intégration.** Conserver `next` lors d'un échec de connexion ; ne pas toucher aux autres redirections du portail. Ajouter le retour immédiat d'un compte connecté et adapter le lien du sender.
+- [x] **Step 3: Implémenter le helper et l'intégration.** Conserver `next` lors d'un échec de connexion ; ne pas toucher aux autres redirections du portail. Ajouter le retour immédiat d'un compte connecté et adapter le lien du sender.
 - [ ] **Step 4: Valider le parcours avec le navigateur existant.** Lien connecté, lien déconnecté puis connexion, droits absents et paramètre malveillant. Aucun droit d'accès n'est accordé par le lien.
 - [ ] **Step 5: Exécuter lint et build front**, tests du helper et tests de liens du sender ; rendre compte des effets de navigation.
+
+**Implémentation partie 5 :** helper pur `resolvePortalLoginDestination` utilisé pour la query et le champ caché relu par l'action serveur. Seule une fiche sous `/portail/seances/` avec un segment canonique est acceptée : origines, séparateurs, traversée, query/fragment, encodages invalides ou doubles et caractères de contrôle sont refusés ; destination par défaut = liste des séances. L'erreur de connexion conserve la destination. La page vérifie le compte courant avec `/me` avant le retour direct ; un cookie expiré (401) laisse le formulaire accessible, une indisponibilité suit le comportement existant du portail. Aucun changement des droits backend ni des autres actions de redirection.
+
+**Lien du sender :** URL absolue `/portail/connexion?next=<fiche encodée>` dans les versions HTML et texte. Deux nouveaux exemples de séance envoyés dans Mailpit avec ce lien, données fictives et transport local explicite.
+
+**Contrôles et arrêt :** `npm run lint` et `npm run build` depuis `jardin-sonore-client/` réussis ; compilation TypeScript et routes Next.js incluses dans le build. `composer cs-check` et `composer stan` réussis pour le sender modifié. Aucun test automatique ajouté ou lancé, aucune recette de connexion navigateur effectuée ; les étapes correspondantes restent ouvertes. Aucun serveur supplémentaire, commit ou déploiement. Arrêt à la partie 5 ; suite = recette finale du lot, revue et clarification du cron cPanel avant livraison.
 
 ## Task 6: Partie 6 — Recette du lot et préparation de livraison
 

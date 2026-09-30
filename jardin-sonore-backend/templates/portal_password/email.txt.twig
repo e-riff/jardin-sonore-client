@@ -1,0 +1,7 @@
+{% extends 'service_email/base.txt.twig' %}
+
+{% block content %}
+{{ (type ~ '.intro')|trans({}, 'service_email', 'fr') }}
+
+{{ (type ~ '.instructions')|trans({}, 'service_email', 'fr') }}
+{% endblock %}

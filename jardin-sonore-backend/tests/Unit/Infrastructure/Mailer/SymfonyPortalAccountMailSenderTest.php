@@ -9,6 +9,8 @@ use App\Infrastructure\Mailer\SymfonyPortalAccountMailSender;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
+use Symfony\Component\Translation\Loader\ArrayLoader as TranslationArrayLoader;
+use Symfony\Component\Translation\Translator;
 use Twig\Environment;
 use Twig\Loader\ArrayLoader;
 
@@ -27,9 +29,16 @@ final class SymfonyPortalAccountMailSenderTest extends TestCase
 
                 return true;
             }));
+        $translator = new Translator('fr');
+        $translator->addLoader('array', new TranslationArrayLoader());
+        $translator->addResource('array', ['invitation.subject' => 'Invitation à votre espace Jardin Sonore'], 'fr', 'service_email');
         $portalAccountMailSender = new SymfonyPortalAccountMailSender(
             $mailer,
-            new Environment(new ArrayLoader(['portal_password/email.html.twig' => '{{ passwordLink }}'])),
+            new Environment(new ArrayLoader([
+                'portal_password/email.html.twig' => '{{ actionUrl }}',
+                'portal_password/email.txt.twig' => '{{ actionUrl }}',
+            ])),
+            $translator,
             'https://jardin-sonore.local',
             'bonjour@jardin-sonore.test',
             'Jardin Sonore',

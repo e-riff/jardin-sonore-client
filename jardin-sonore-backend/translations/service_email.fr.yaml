@@ -1,0 +1,29 @@
+common:
+  brand: Jardin Sonore
+  portal: Votre espace structures
+  greeting: Bonjour,
+  greeting_named: 'Bonjour %first_name%,'
+  signature: "À bientôt,\nJardin Sonore"
+  fallback_link: 'Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :'
+session:
+  subject: 'Nouvelle séance : %title%'
+  preheader: Une nouvelle séance vous attend dans votre espace Jardin Sonore.
+  intro: Le compte rendu d’une nouvelle séance d’éveil musical est disponible dans votre espace.
+  action: Découvrir la séance
+  closing: Retrouvez les moments de la séance et les ressources pour prolonger les découvertes musicales.
+  notice: Vous recevez ce message car vous avez activé les notifications de nouvelles séances.
+  preferences: Gérer mes notifications
+invitation:
+  subject: Invitation à votre espace Jardin Sonore
+  preheader: Votre espace est prêt. Choisissez votre mot de passe pour le découvrir.
+  intro: Votre accès à l’espace Jardin Sonore vient d’être créé. Vous pouvez y retrouver les séances d’éveil musical partagées avec votre structure et les ressources qui les accompagnent.
+  instructions: Pour commencer, choisissez votre mot de passe grâce au bouton ci-dessous.
+  action: Définir mon mot de passe
+  notice: Ce lien est personnel et utilisable une seule fois. Si cette invitation ne vous concerne pas, vous pouvez ignorer ce message.
+password_reset:
+  subject: Réinitialisez votre mot de passe Jardin Sonore
+  preheader: Un lien personnel pour choisir votre nouveau mot de passe.
+  intro: Vous avez demandé à réinitialiser le mot de passe de votre espace Jardin Sonore.
+  instructions: Le bouton ci-dessous vous permet d’en choisir un nouveau et de retrouver votre espace.
+  action: Choisir un nouveau mot de passe
+  notice: 'Ce lien est personnel et utilisable une seule fois. Si vous n’avez pas fait cette demande, ignorez ce message : votre mot de passe reste inchangé.'

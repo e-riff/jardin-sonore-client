@@ -6,7 +6,9 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use App\Application\Portal\PortalAccountMailSenderInterface;
 use App\Application\Session\SessionDocumentGeneratorInterface;
+use App\Application\Session\SessionNotificationMailSenderInterface;
 use App\Infrastructure\Mailer\SymfonyPortalAccountMailSender;
+use App\Infrastructure\Mailer\SymfonySessionNotificationMailSender;
 use App\Infrastructure\Session\DompdfSessionDocumentGenerator;
 use Gedmo\Sluggable\SluggableListener;
 use Gedmo\Timestampable\TimestampableListener;
@@ -39,6 +41,9 @@ return App::config([
         ],
         PortalAccountMailSenderInterface::class => [
             'alias' => SymfonyPortalAccountMailSender::class,
+        ],
+        SessionNotificationMailSenderInterface::class => [
+            'alias' => SymfonySessionNotificationMailSender::class,
         ],
     ],
 ]);

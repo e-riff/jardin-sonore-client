@@ -16,6 +16,7 @@ final readonly class SessionNotificationMailView
         public DateTimeImmutable $sessionDate,
         public string $sessionSlug,
         public array $organizationNames,
+        public bool $hasMultipleOrganizations = false,
     ) {
     }
 }
