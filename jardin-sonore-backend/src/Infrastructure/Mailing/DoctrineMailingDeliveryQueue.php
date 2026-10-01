@@ -172,6 +172,15 @@ final readonly class DoctrineMailingDeliveryQueue implements MailingDeliveryQueu
         ]);
     }
 
+    public function markCancelled(int $deliveryRecipientId): void
+    {
+        $this->connection->update(self::TABLE, [
+            'status' => MailingDeliveryRecipientStatus::CANCELLED->value,
+            'updated_at' => $this->currentTimestamp(),
+            'last_error' => null,
+        ], ['id' => $deliveryRecipientId]);
+    }
+
     public function cancelPendingRecipients(string $campaignUuid): int
     {
         $now = $this->currentTimestamp();

@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use App\Application\Mailing\NewsletterRecipientEligibilityInterface;
 use App\Application\Portal\PortalAccountMailSenderInterface;
 use App\Application\Session\SessionDocumentGeneratorInterface;
 use App\Application\Session\SessionNotificationMailSenderInterface;
 use App\Infrastructure\Mailer\SymfonyPortalAccountMailSender;
 use App\Infrastructure\Mailer\SymfonySessionNotificationMailSender;
+use App\Infrastructure\Mailing\DoctrineNewsletterRecipientEligibility;
 use App\Infrastructure\Session\DompdfSessionDocumentGenerator;
 use Gedmo\Sluggable\SluggableListener;
 use Gedmo\Timestampable\TimestampableListener;
@@ -44,6 +46,9 @@ return App::config([
         ],
         SessionNotificationMailSenderInterface::class => [
             'alias' => SymfonySessionNotificationMailSender::class,
+        ],
+        NewsletterRecipientEligibilityInterface::class => [
+            'alias' => DoctrineNewsletterRecipientEligibility::class,
         ],
     ],
 ]);

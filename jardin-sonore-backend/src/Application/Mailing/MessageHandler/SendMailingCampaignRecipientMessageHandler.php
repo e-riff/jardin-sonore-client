@@ -7,6 +7,7 @@ namespace App\Application\Mailing\MessageHandler;
 use App\Application\Mailing\MailingDeliveryQueueInterface;
 use App\Application\Mailing\Message\SendMailingCampaignRecipientMessage;
 use App\Application\Mailing\NewsletterMailSenderInterface;
+use App\Application\Mailing\NewsletterRecipientEligibilityInterface;
 use App\Application\Mailing\NewsletterRendererInterface;
 use App\Application\Mailing\RecordNewsletterRecommendationUsages;
 use App\Domain\Model\Mailing\MailingCampaignStatus;
@@ -31,6 +32,7 @@ final readonly class SendMailingCampaignRecipientMessageHandler
         private MailingDeliveryQueueInterface $mailingDeliveryQueue,
         private RecordNewsletterRecommendationUsages $recordNewsletterRecommendationUsages,
         private LoggerInterface $mailingDeliveryLogger,
+        private NewsletterRecipientEligibilityInterface $newsletterRecipientEligibility,
     ) {
     }
 
@@ -57,16 +59,26 @@ final readonly class SendMailingCampaignRecipientMessageHandler
         }
 
         try {
-            $renderedNewsletter = $this->newsletterRenderer->render($mailingCampaign);
-            $this->newsletterMailSender->sendToRecipient($renderedNewsletter, $newsletterRecipient);
-            $this->mailingDeliveryQueue->markSent($message->deliveryRecipientId);
-            $this->mailingDeliveryLogger->info('Newsletter recipient sent.', [
-                'campaign_uuid' => $mailingCampaign->getUuid()->toRfc4122(),
-                'campaign_title' => $mailingCampaign->getInternalTitle(),
-                'delivery_recipient_id' => $message->deliveryRecipientId,
-                'recipient_email' => $newsletterRecipient->getEmailAddress()->value(),
-                'recipient_display_name' => $newsletterRecipient->getDisplayName(),
-            ]);
+            if (!$this->newsletterRecipientEligibility->isEligible($newsletterRecipient->getEmailAddress()->value())) {
+                $this->mailingDeliveryQueue->markCancelled($message->deliveryRecipientId);
+                $this->mailingDeliveryLogger->info('Newsletter recipient cancelled after eligibility check.', [
+                    'campaign_uuid' => $mailingCampaign->getUuid()->toRfc4122(),
+                    'campaign_title' => $mailingCampaign->getInternalTitle(),
+                    'delivery_recipient_id' => $message->deliveryRecipientId,
+                    'recipient_email' => $newsletterRecipient->getEmailAddress()->value(),
+                ]);
+            } else {
+                $renderedNewsletter = $this->newsletterRenderer->render($mailingCampaign);
+                $this->newsletterMailSender->sendToRecipient($renderedNewsletter, $newsletterRecipient);
+                $this->mailingDeliveryQueue->markSent($message->deliveryRecipientId);
+                $this->mailingDeliveryLogger->info('Newsletter recipient sent.', [
+                    'campaign_uuid' => $mailingCampaign->getUuid()->toRfc4122(),
+                    'campaign_title' => $mailingCampaign->getInternalTitle(),
+                    'delivery_recipient_id' => $message->deliveryRecipientId,
+                    'recipient_email' => $newsletterRecipient->getEmailAddress()->value(),
+                    'recipient_display_name' => $newsletterRecipient->getDisplayName(),
+                ]);
+            }
         } catch (Throwable $throwable) {
             $this->mailingDeliveryQueue->markFailed($message->deliveryRecipientId, $throwable->getMessage());
             $this->mailingDeliveryLogger->error('Newsletter recipient failed.', [

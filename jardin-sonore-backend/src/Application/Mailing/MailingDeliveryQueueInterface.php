@@ -35,6 +35,8 @@ interface MailingDeliveryQueueInterface
 
     public function markFailed(int $deliveryRecipientId, string $lastError): void;
 
+    public function markCancelled(int $deliveryRecipientId): void;
+
     public function cancelPendingRecipients(string $campaignUuid): int;
 
     public function hasOutstandingRecipients(string $campaignUuid): bool;
