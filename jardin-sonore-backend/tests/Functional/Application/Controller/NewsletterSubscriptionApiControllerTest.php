@@ -35,12 +35,12 @@ final class NewsletterSubscriptionApiControllerTest extends WebTestCase
         }
     }
 
-    public function testValidSecretRejectsInvalidTokenFormat(): void
+    public function testValidSecretRejectsInvalidConfirmationTokenFromRequestBody(): void
     {
         $client = static::createClient();
         $secret = (string) ($_ENV['PORTAL_BFF_SHARED_SECRET'] ?? $_SERVER['PORTAL_BFF_SHARED_SECRET'] ?? '');
         self::assertNotSame('', $secret);
-        $client->request('GET', '/api/newsletter/confirmations/invalid', server: ['HTTP_X_PORTAL_BFF_SECRET' => $secret]);
+        $client->jsonRequest('POST', '/api/newsletter/confirmations', ['token' => 'invalid'], ['HTTP_X_PORTAL_BFF_SECRET' => $secret]);
         self::assertResponseStatusCodeSame(400);
     }
 

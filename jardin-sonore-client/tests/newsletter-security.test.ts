@@ -31,20 +31,21 @@ test("newsletter client sends secret only to backend and disables caching", asyn
     }
 });
 
-test("reading confirmation calls GET while confirming calls POST", async () => {
+test("confirmation sends the token in a POST body to a constant path", async () => {
     const originalFetch = globalThis.fetch;
     const originalSecret = process.env.PORTAL_BFF_SHARED_SECRET;
     process.env.PORTAL_BFF_SHARED_SECRET = "test-only-secret";
-    const methods: string[] = [];
+    const requests: Array<{url: string; init?: RequestInit}> = [];
     globalThis.fetch = async (_url, init) => {
-        methods.push(init?.method ?? "GET");
+        requests.push({url: String(_url), init});
         return Response.json({state: init?.method === "POST" ? "confirmed" : "ready"});
     };
     try {
         const client = new NewsletterApiClient("https://backend.example.test");
-        assert.equal(await client.confirmationState(token), "ready");
         assert.equal(await client.confirm(token), "confirmed");
-        assert.deepEqual(methods, ["GET", "POST"]);
+        assert.equal(requests[0].url, "https://backend.example.test/api/newsletter/confirmations");
+        assert.equal(requests[0].init?.method, "POST");
+        assert.deepEqual(JSON.parse(String(requests[0].init?.body)), {token});
     } finally {
         globalThis.fetch = originalFetch;
         if (originalSecret === undefined) delete process.env.PORTAL_BFF_SHARED_SECRET;
@@ -76,13 +77,16 @@ test("malformed JSON and overlong addresses are rejected", async () => {
     }
 });
 
-test("confirmation mutation refuses foreign origins and invalid tokens", async () => {
-    assert.equal((await handleNewsletterConfirmation(new Request("http://localhost:3000/api/newsletter/confirmations/token", {
+test("confirmation refuses foreign origins and invalid body tokens", async () => {
+    const foreignResponse = await handleNewsletterConfirmation(new Request("http://localhost:3000/api/newsletter/confirmations/confirm", {
         method: "POST", headers: {origin: "https://foreign.example.test"},
-    }), token)).status, 403);
-    assert.equal((await handleNewsletterConfirmation(new Request("http://localhost:3000/api/newsletter/confirmations/token", {
-        method: "POST", headers: {origin: "http://localhost:3000"},
-    }), "invalid")).status, 400);
+        body: JSON.stringify({token}),
+    }));
+    assert.equal(foreignResponse.status, 403);
+    const invalidTokenResponse = await handleNewsletterConfirmation(new Request("http://localhost:3000/api/newsletter/confirmations/confirm", {
+        method: "POST", headers: {origin: "http://localhost:3000"}, body: JSON.stringify({token: "invalid"}),
+    }));
+    assert.equal(invalidTokenResponse.status, 400);
 });
 
 test("valid captcha permits one subscription and its replay never reaches backend", async () => {
@@ -127,9 +131,9 @@ test("backend failures expose only a generic response and disable caching", asyn
     try {
         for (const status of [429, 500]) {
             globalThis.fetch = async () => new Response("private backend details", {status});
-            const response = await handleNewsletterConfirmation(new Request("http://localhost:3000/api/newsletter/confirmations/token", {
-                method: "POST", headers: {origin: "http://localhost:3000"},
-            }), token);
+            const response = await handleNewsletterConfirmation(new Request("http://localhost:3000/api/newsletter/confirmations/confirm", {
+                method: "POST", headers: {origin: "http://localhost:3000"}, body: JSON.stringify({token}),
+            }));
             assert.equal(response.status, status === 429 ? 429 : 503);
             assert.equal(response.headers.get("Cache-Control"), "no-store");
             assert.deepEqual(await response.json(), {status: "unavailable"});

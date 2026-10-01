@@ -21,12 +21,8 @@ export class NewsletterApiClient {
         return {status: response.status};
     }
 
-    async confirmationState(token: string): Promise<NewsletterConfirmationState> {
-        return this.readState(await this.request(`/confirmations/${encodeURIComponent(token)}`, "GET"));
-    }
-
     async confirm(token: string): Promise<NewsletterConfirmationState> {
-        return this.readState(await this.request(`/confirmations/${encodeURIComponent(token)}`, "POST"));
+        return this.readState(await this.request("/confirmations", "POST", {token}));
     }
 
     private async readState(response: Response): Promise<NewsletterConfirmationState> {
@@ -38,7 +34,7 @@ export class NewsletterApiClient {
         return data.state as NewsletterConfirmationState;
     }
 
-    private async request(path: string, method: string, body?: {emailAddress: string}, clientIp?: string): Promise<Response> {
+    private async request(path: string, method: string, body?: {emailAddress?: string; token?: string}, clientIp?: string): Promise<Response> {
         const secret = process.env.PORTAL_BFF_SHARED_SECRET;
         if (!this.baseUrl || !secret) throw new NewsletterApiUnavailableError();
         const headers = new Headers({Accept: "application/json", "X-Portal-Bff-Secret": secret});

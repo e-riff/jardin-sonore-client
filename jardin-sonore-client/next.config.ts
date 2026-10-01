@@ -2,9 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  logging: {incomingRequests: {ignore: [/\/newsletter\/confirmer\/[a-f0-9]{64}/, /\/api\/newsletter\/confirmations\/[a-f0-9]{64}/]}},
+  logging: {incomingRequests: {ignore: [/\/newsletter\/confirmer\/confirmation/, /\/api\/newsletter\/confirmations\/confirmation/, /\/newsletter\/confirmer\/[a-f0-9]{64}/, /\/api\/newsletter\/confirmations\/[a-f0-9]{64}/]}},
   async headers() {
-    return [{source: "/newsletter/confirmer/:token", headers: [{key: "Referrer-Policy", value: "no-referrer"}]}];
+    return [{source: "/newsletter/confirmer/confirmation", headers: [{key: "Referrer-Policy", value: "no-referrer"}]}];
   },
   experimental: {
     serverActions: {

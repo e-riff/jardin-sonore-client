@@ -12,7 +12,7 @@ use Throwable;
 #[AsMonologProcessor]
 final class NewsletterTokenRedactionProcessor implements ProcessorInterface
 {
-    private const string TOKEN_PATH_PATTERN = '~(/(?:api/newsletter/confirmations|newsletter/confirmer)/)[a-f0-9]{64}~';
+    private const string TOKEN_PATH_PATTERN = '~(/(?:api/newsletter/confirmations|newsletter/confirmer)/)(?:[a-f0-9]{64}|confirmation#[a-f0-9]{64})~';
 
     public function __invoke(LogRecord $record): LogRecord
     {

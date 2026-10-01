@@ -13,6 +13,7 @@
 ## Global Constraints
 
 - Jetons valables 48 heures ; seul leur SHA-256 est persisté, jamais le jeton brut dans une file ou un journal.
+- Lien de confirmation avec jeton dans le fragment URL, jamais dans le chemin ; confirmation par POST avec jeton dans le corps, hors journaux d’accès HTTP.
 - Demandes : cinq par minute et par IP, trois par heure par adresse normalisée, délai minimal de 60 secondes entre deux envois par adresse.
 - Nouveau contact public : `optInNewsletter=false`. Confirmation publique par POST seulement. Origines `footer` et `backoffice`.
 - Activation administrative directe avec attestation obligatoire du consentement préalable. Une adresse techniquement inactive reste bloquée.
@@ -238,6 +239,6 @@ Les six tâches sont implémentées et vérifiées localement. Les cases ci-dess
 - Recette ayant révélé deux collations différentes dans la base de développement : comparaison binaire après normalisation de casse/espaces. Test reproduit le conflit avec une table temporaire de connexion avant correction ; 22 tests resolver / 68 assertions ensuite réussis. Aucun changement de schéma nécessaire.
 - Navigateur fermé, données fictives locales nettoyées ; aucun serveur supplémentaire, aucun envoi externe ou campagne lancée. Les références navigateur ont été rafraîchies et les clics vérifiés sur le DOM réel ; aucun contournement ajouté au produit.
 
-Les jetons sont masqués dans Monolog et exclus des logs entrants Next. Les journaux d’accès de l’hébergeur restent à contrôler avant livraison. Le stockage anti-rejeu ALTCHA existant reste en mémoire pour l’instance unique actuelle.
+Les jetons sont masqués dans Monolog et exclus des logs entrants Next. Contrôle cPanel du 1er octobre : les journaux d’accès Apache accessibles incluent le chemin demandé. Le lien utilise donc `/newsletter/confirmer/confirmation#<jeton>` : le fragment n’est transmis ni à Apache, ni à Next ou dans le référent. Le clic explicite envoie ensuite le jeton dans le corps JSON d’un POST dont le chemin est constant ; le corps n’est pas consigné par les journaux d’accès. Le stockage anti-rejeu ALTCHA existant reste en mémoire pour l’instance unique actuelle.
 
 Aucun commit supplémentaire ni déploiement effectué pour ce lot. Propositions : `feat(mailing): expose free subscribers in audience controls` puis `feat(newsletter): add confirmed footer signup and subscriber management`. La livraison ultérieure doit inclure l’accord pour la migration production, les commits, tag et push de branche/tag avant déploiement.

@@ -30,7 +30,7 @@ final readonly class SymfonyNewsletterConfirmationMailSender implements Newslett
             'emailSubject' => $this->translator->trans('confirmation.subject', [], 'newsletter', 'fr'),
             'preheader' => $this->translator->trans('confirmation.preheader', [], 'newsletter', 'fr'),
             'firstName' => '',
-            'actionUrl' => rtrim($this->publicBaseUrl, '/') . '/newsletter/confirmer/' . rawurlencode($rawToken),
+            'actionUrl' => rtrim($this->publicBaseUrl, '/') . '/newsletter/confirmer/confirmation#' . rawurlencode($rawToken),
             'actionLabel' => $this->translator->trans('confirmation.action', [], 'newsletter', 'fr'),
             'footerNotice' => $this->translator->trans('confirmation.notice', [], 'newsletter', 'fr'),
         ];

@@ -62,9 +62,14 @@ final readonly class NewsletterSubscriptionApiController
         return new JsonResponse(['state' => $this->subscriptionManager->confirmationState($token)->value], headers: ['Cache-Control' => 'no-store']);
     }
 
-    #[Route('/confirmations/{token}', name: 'confirm', methods: ['POST'])]
-    public function confirm(string $token): JsonResponse
+    #[Route('/confirmations', name: 'confirm', methods: ['POST'])]
+    public function confirm(Request $request): JsonResponse
     {
+        $data = $request->toArray();
+        $token = $data['token'] ?? null;
+        if (!is_string($token)) {
+            throw new BadRequestHttpException();
+        }
         $this->validateTokenFormat($token);
 
         return new JsonResponse(['state' => $this->subscriptionManager->confirm($token)->value], headers: ['Cache-Control' => 'no-store']);
