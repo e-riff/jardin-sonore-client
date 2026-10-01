@@ -366,7 +366,7 @@ const fr = {
             unavailable: "Ce lien a expiré ou n’est plus disponible. Faites une nouvelle demande depuis le pied de page pour recevoir un nouveau lien.",
             error: "La confirmation est indisponible pour le moment. Merci de réessayer.",
             retry: "Réessayer",
-            return: "Revenir au formulaire d’inscription",
+            return: "Revenir à l’accueil",
         },
     },
     footer: {

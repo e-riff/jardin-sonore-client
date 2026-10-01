@@ -54,6 +54,6 @@ export default function NewsletterConfirmationPanel({linkIsValid}: {
         {state === "ready" && token && <button onClick={confirm} disabled={pending} className="mt-6 min-h-11 rounded-lg bg-primary px-5 py-3 font-semibold text-on-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary disabled:opacity-60">
             {pending ? content.confirming : error ? content.retry : content.submit}
         </button>}
-        <Link href="/#newsletter" className="mt-6 block text-sm font-semibold text-primary underline underline-offset-4">{content.return}</Link>
+        <Link href="/" className="mt-6 block text-sm font-semibold text-primary underline underline-offset-4">{content.return}</Link>
     </div>;
 }
