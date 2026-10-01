@@ -106,10 +106,14 @@ Le worker Messenger consomme les messages.
 
 Pour chaque recipient :
 
-1. le rendu final est genere ;
-2. le lien de desinscription personnalise est injecte ;
-3. l'e-mail est envoye ;
-4. le statut passe en `sent` ou `failed`.
+1. le consentement courant de l'adresse est relu directement en base, sans utiliser un contact ORM deja charge ;
+2. si le contact est absent, inactif, non abonne ou desinscrit, la livraison passe en `cancelled`, sans rendu ni SMTP ;
+3. sinon le rendu final est genere, le lien de desinscription personnalise est injecte et l'e-mail est envoye ;
+4. le statut passe en `sent` ou `failed`. Une erreur de lecture du consentement reste une erreur reprise par Messenger, pas une annulation reussie.
+
+Les livraisons envoyees et annulees participent a la meme finalisation de campagne : la derniere annulation termine la campagne, une campagne stoppee reste stoppee et une autre livraison en echec conserve l'etat d'echec. L'envoi de test manuel reste distinct.
+
+Ce controle respecte les retraits intervenus apres la mise en file. Un retrait concurrent apres le dernier controle ne peut toutefois pas annuler un message deja accepte par le serveur SMTP.
 
 ### 8. Desinscription
 
