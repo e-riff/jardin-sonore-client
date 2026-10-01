@@ -9,6 +9,7 @@ use App\Application\Mailing\NewsletterAudienceResolverInterface;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Domain\Model\Mailing\NewsletterAudienceRadiusOrigin;
 use App\Domain\Model\Mailing\NewsletterRecipient;
+use App\Domain\Model\Portal\UserStatus;
 use App\Domain\Model\ValueObject\EmailAddress;
 use BackedEnum;
 use Doctrine\DBAL\ArrayParameterType;
@@ -49,16 +50,32 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
         }
 
         $queryBuilder = $this->createQueryBuilder();
-        $this->applyOrganizationFilters($queryBuilder, $newsletterAudienceFilter);
-        $this->applyCustomerStatusFilter($queryBuilder, $newsletterAudienceFilter);
-        $this->applyTagFilter($queryBuilder, $newsletterAudienceFilter);
-        $this->applyGeographicFilters($queryBuilder, $newsletterAudienceFilter);
+        $this->applyAudienceFilters($queryBuilder, $newsletterAudienceFilter);
 
         $recipientsByEmailAddress = $this->mapRecipientsByEmailAddress($queryBuilder);
         $explicitOrganizationRecipients = $this->findExplicitOrganizationRecipients($newsletterAudienceFilter);
 
         foreach ($explicitOrganizationRecipients as $emailAddress => $newsletterRecipient) {
             $recipientsByEmailAddress[$emailAddress] = $newsletterRecipient;
+        }
+
+        $portalQueryBuilder = $this->createPortalQueryBuilder();
+        $this->applyAudienceFilters($portalQueryBuilder, $newsletterAudienceFilter, includePersonOrganization: false);
+        $recipientsByEmailAddress += $this->mapRecipientsByEmailAddress($portalQueryBuilder);
+
+        if ([] !== $newsletterAudienceFilter->getOrganizationUuids()) {
+            $explicitPortalQueryBuilder = $this->createPortalQueryBuilder();
+            $this->applyExplicitOrganizationFilter($explicitPortalQueryBuilder, $newsletterAudienceFilter, includePersonOrganization: false);
+            $recipientsByEmailAddress += $this->mapRecipientsByEmailAddress($explicitPortalQueryBuilder);
+        }
+
+        if ($newsletterAudienceFilter->includesFreeSubscribers()) {
+            $freeQueryBuilder = $this->createEligibleEmailQueryBuilder();
+            $freeQueryBuilder
+                ->addSelect('NULL AS display_name')
+                ->andWhere($freeQueryBuilder->expr()->eq(self::EMAIL_ALIAS . '.free_newsletter_subscription', '1'))
+                ->andWhere($freeQueryBuilder->expr()->isNotNull(self::EMAIL_ALIAS . '.free_newsletter_subscription_confirmed_at'));
+            $recipientsByEmailAddress += $this->mapRecipientsByEmailAddress($freeQueryBuilder);
         }
 
         $recipients = array_values($recipientsByEmailAddress);
@@ -71,7 +88,7 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
         return new NewsletterAudienceResolution($total, $recipients);
     }
 
-    private function createQueryBuilder(): QueryBuilder
+    private function createEligibleEmailQueryBuilder(): QueryBuilder
     {
         $queryBuilder = $this->connection->createQueryBuilder();
         $expr = $queryBuilder->expr();
@@ -80,6 +97,23 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
             ->select(
                 self::EMAIL_ALIAS . '.email_address',
                 self::EMAIL_ALIAS . '.unsubscribe_token',
+            )
+            ->from('email_contact', self::EMAIL_ALIAS)
+            ->where($expr->eq(self::EMAIL_ALIAS . '.active', '1'))
+            ->andWhere($expr->eq(self::EMAIL_ALIAS . '.opt_in_newsletter', '1'))
+            ->andWhere($expr->isNull(self::EMAIL_ALIAS . '.unsubscribed_at'))
+            ->andWhere('TRIM(' . self::EMAIL_ALIAS . ".email_address) <> ''")
+            ->andWhere('TRIM(' . self::EMAIL_ALIAS . ".unsubscribe_token) <> ''")
+            ->orderBy(self::EMAIL_ALIAS . '.email_address', 'ASC');
+    }
+
+    private function createQueryBuilder(): QueryBuilder
+    {
+        $queryBuilder = $this->createEligibleEmailQueryBuilder();
+        $expr = $queryBuilder->expr();
+
+        return $queryBuilder
+            ->addSelect(
                 sprintf(
                     'CASE WHEN %s.id IS NOT NULL THEN TRIM(CONCAT(%s.first_name, \' \', %s.last_name)) ELSE %s.name END AS display_name',
                     self::PERSON_ALIAS,
@@ -88,7 +122,6 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
                     self::ORGANIZATION_ALIAS,
                 ),
             )
-            ->from('email_contact', self::EMAIL_ALIAS)
             ->innerJoin(self::EMAIL_ALIAS, 'contact_details_email_link', self::EMAIL_LINK_ALIAS, self::EMAIL_LINK_ALIAS . '.email_contact_id = ' . self::EMAIL_ALIAS . '.id')
             ->innerJoin(self::EMAIL_LINK_ALIAS, 'contact_details', self::CONTACT_ALIAS, self::CONTACT_ALIAS . '.id = ' . self::EMAIL_LINK_ALIAS . '.contact_details_id')
             ->innerJoin(self::CONTACT_ALIAS, 'directory_entry', self::ENTRY_ALIAS, self::ENTRY_ALIAS . '.id = ' . self::CONTACT_ALIAS . '.directory_entry_id')
@@ -97,23 +130,49 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
             ->leftJoin(self::PERSON_ALIAS, 'organization', self::PERSON_ORGANIZATION_ALIAS, self::PERSON_ORGANIZATION_ALIAS . '.id = ' . self::PERSON_ALIAS . '.organization_id')
             ->leftJoin(self::PERSON_ORGANIZATION_ALIAS, 'directory_entry', self::ORGANIZATION_ENTRY_ALIAS, self::ORGANIZATION_ENTRY_ALIAS . '.id = ' . self::PERSON_ORGANIZATION_ALIAS . '.id')
             ->leftJoin(self::ORGANIZATION_ENTRY_ALIAS, 'contact_details', self::ORGANIZATION_CONTACT_ALIAS, self::ORGANIZATION_CONTACT_ALIAS . '.directory_entry_id = ' . self::ORGANIZATION_ENTRY_ALIAS . '.id')
-            ->where($expr->eq(self::EMAIL_ALIAS . '.active', '1'))
             ->andWhere($expr->eq(self::EMAIL_LINK_ALIAS . '.active', '1'))
-            ->andWhere($expr->eq(self::EMAIL_ALIAS . '.opt_in_newsletter', '1'))
-            ->andWhere($expr->isNull(self::EMAIL_ALIAS . '.unsubscribed_at'))
-            ->andWhere('TRIM(' . self::EMAIL_ALIAS . ".email_address) <> ''")
-            ->andWhere('TRIM(' . self::EMAIL_ALIAS . ".unsubscribe_token) <> ''")
             ->andWhere($expr->eq(self::ENTRY_ALIAS . '.active', '1'))
             ->andWhere($expr->or(
                 $expr->isNull(self::ORGANIZATION_ENTRY_ALIAS . '.id'),
                 $expr->eq(self::ORGANIZATION_ENTRY_ALIAS . '.active', '1'),
-            ))
-            ->orderBy(self::EMAIL_ALIAS . '.email_address', 'ASC');
+            ));
+    }
+
+    private function createPortalQueryBuilder(): QueryBuilder
+    {
+        $queryBuilder = $this->createEligibleEmailQueryBuilder();
+        $expr = $queryBuilder->expr();
+
+        return $queryBuilder
+            ->addSelect("TRIM(CONCAT(COALESCE(portal_user.first_name, ''), ' ', COALESCE(portal_user.last_name, ''))) AS display_name")
+            ->innerJoin(self::EMAIL_ALIAS, 'portal_user', 'portal_user', 'LOWER(TRIM(portal_user.email)) = LOWER(TRIM(' . self::EMAIL_ALIAS . '.email_address))')
+            ->innerJoin('portal_user', 'user_organization_access', 'portal_access', 'portal_access.user_id = portal_user.id')
+            ->innerJoin('portal_access', 'organization', self::ORGANIZATION_ALIAS, self::ORGANIZATION_ALIAS . '.id = portal_access.organization_id')
+            ->innerJoin(self::ORGANIZATION_ALIAS, 'directory_entry', self::ENTRY_ALIAS, self::ENTRY_ALIAS . '.id = ' . self::ORGANIZATION_ALIAS . '.id')
+            ->leftJoin(self::ENTRY_ALIAS, 'contact_details', self::CONTACT_ALIAS, self::CONTACT_ALIAS . '.directory_entry_id = ' . self::ENTRY_ALIAS . '.id')
+            ->andWhere($expr->eq('portal_user.active', '1'))
+            ->andWhere($expr->eq('portal_user.status', ':portalActiveStatus'))
+            ->setParameter('portalActiveStatus', UserStatus::ACTIVE->value)
+            ->andWhere("TRIM(portal_user.password) <> ''")
+            ->andWhere($expr->eq('portal_access.active', '1'))
+            ->andWhere($expr->eq(self::ENTRY_ALIAS . '.active', '1'));
+    }
+
+    private function applyAudienceFilters(
+        QueryBuilder $queryBuilder,
+        NewsletterAudienceFilter $newsletterAudienceFilter,
+        bool $includePersonOrganization = true,
+    ): void {
+        $this->applyOrganizationFilters($queryBuilder, $newsletterAudienceFilter, $includePersonOrganization);
+        $this->applyCustomerStatusFilter($queryBuilder, $newsletterAudienceFilter, $includePersonOrganization);
+        $this->applyTagFilter($queryBuilder, $newsletterAudienceFilter, $includePersonOrganization);
+        $this->applyGeographicFilters($queryBuilder, $newsletterAudienceFilter, $includePersonOrganization);
     }
 
     private function applyOrganizationFilters(
         QueryBuilder $queryBuilder,
         NewsletterAudienceFilter $newsletterAudienceFilter,
+        bool $includePersonOrganization,
     ): void {
         $organizationTypes = $this->enumValues($newsletterAudienceFilter->getOrganizationTypes());
 
@@ -123,6 +182,7 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
                     $queryBuilder,
                     'type',
                     ':organizationTypes',
+                    $includePersonOrganization,
                 ))
                 ->setParameter('organizationTypes', $organizationTypes, ArrayParameterType::STRING);
         }
@@ -135,6 +195,7 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
                     $queryBuilder,
                     'sector',
                     ':organizationSectors',
+                    $includePersonOrganization,
                 ))
                 ->setParameter('organizationSectors', $organizationSectors, ArrayParameterType::STRING);
         }
@@ -143,6 +204,7 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
     private function applyCustomerStatusFilter(
         QueryBuilder $queryBuilder,
         NewsletterAudienceFilter $newsletterAudienceFilter,
+        bool $includePersonOrganization,
     ): void {
         $customerStatuses = $this->enumValues($newsletterAudienceFilter->getCustomerStatuses());
 
@@ -152,11 +214,11 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
 
         $queryBuilder
             ->andWhere(
-                sprintf(
+                $includePersonOrganization ? sprintf(
                     'COALESCE(%s.customer_status, %s.customer_status) IN (:customerStatuses)',
                     self::ORGANIZATION_ENTRY_ALIAS,
                     self::ENTRY_ALIAS,
-                ),
+                ) : $queryBuilder->expr()->in(self::ENTRY_ALIAS . '.customer_status', ':customerStatuses'),
             )
             ->setParameter('customerStatuses', $customerStatuses, ArrayParameterType::STRING);
     }
@@ -164,6 +226,7 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
     private function applyTagFilter(
         QueryBuilder $queryBuilder,
         NewsletterAudienceFilter $newsletterAudienceFilter,
+        bool $includePersonOrganization,
     ): void {
         $tagUuids = array_map(
             static fn (string $tagUuid): string => Uuid::fromString($tagUuid)->toBinary(),
@@ -181,11 +244,12 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
                     SELECT 1
                     FROM directory_entry_tag entry_tag
                     INNER JOIN tag ON tag.id = entry_tag.tag_id
-                    WHERE entry_tag.directory_entry_id IN (%s.id, %s.id)
+                    WHERE entry_tag.directory_entry_id IN (%s)
                     AND tag.uuid IN (:tagUuids)
                 )',
-                    self::ENTRY_ALIAS,
-                    self::ORGANIZATION_ENTRY_ALIAS,
+                    $includePersonOrganization
+                        ? self::ENTRY_ALIAS . '.id, ' . self::ORGANIZATION_ENTRY_ALIAS . '.id'
+                        : self::ENTRY_ALIAS . '.id',
                 ),
             )
             ->setParameter('tagUuids', $tagUuids, ArrayParameterType::BINARY);
@@ -194,6 +258,7 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
     private function applyGeographicFilters(
         QueryBuilder $queryBuilder,
         NewsletterAudienceFilter $newsletterAudienceFilter,
+        bool $includePersonOrganization,
     ): void {
         $geographicTargets = [];
         $expr = $queryBuilder->expr();
@@ -246,11 +311,15 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
                 INNER JOIN department ON department.id = municipality.department_id
                 INNER JOIN region ON region.id = department.region_id
                 WHERE address.active = 1
-                AND (address.contact_details_id = %s.id OR address.contact_details_id = %s.id)
+                AND (%s)
                 AND (%s)
             )',
-            self::CONTACT_ALIAS,
-            self::ORGANIZATION_CONTACT_ALIAS,
+            $includePersonOrganization
+                ? $expr->or(
+                    $expr->eq('address.contact_details_id', self::CONTACT_ALIAS . '.id'),
+                    $expr->eq('address.contact_details_id', self::ORGANIZATION_CONTACT_ALIAS . '.id'),
+                )
+                : $expr->eq('address.contact_details_id', self::CONTACT_ALIAS . '.id'),
             implode("\nOR ", $geographicTargets),
         ));
     }
@@ -354,32 +423,43 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
         }
 
         $queryBuilder = $this->createQueryBuilder();
-        $organizationUuidBinaries = array_map(
-            static fn (string $organizationUuid): string => Uuid::fromString($organizationUuid)->toBinary(),
-            $organizationUuids,
-        );
-        $queryBuilder
-            ->andWhere(sprintf(
-                '(%s.uuid IN (:organizationUuids) OR %s.uuid IN (:organizationUuids))',
-                self::ENTRY_ALIAS,
-                self::ORGANIZATION_ENTRY_ALIAS,
-            ))
-            ->setParameter('organizationUuids', $organizationUuidBinaries, ArrayParameterType::BINARY);
+        $this->applyExplicitOrganizationFilter($queryBuilder, $newsletterAudienceFilter);
 
         return $this->mapRecipientsByEmailAddress($queryBuilder);
+    }
+
+    private function applyExplicitOrganizationFilter(
+        QueryBuilder $queryBuilder,
+        NewsletterAudienceFilter $newsletterAudienceFilter,
+        bool $includePersonOrganization = true,
+    ): void {
+        $organizationUuidBinaries = array_map(
+            static fn (string $organizationUuid): string => Uuid::fromString($organizationUuid)->toBinary(),
+            $newsletterAudienceFilter->getOrganizationUuids(),
+        );
+        $expr = $queryBuilder->expr();
+        $entryMatches = $expr->in(self::ENTRY_ALIAS . '.uuid', ':organizationUuids');
+        $queryBuilder
+            ->andWhere($includePersonOrganization ? $expr->or(
+                $entryMatches,
+                $expr->in(self::ORGANIZATION_ENTRY_ALIAS . '.uuid', ':organizationUuids'),
+            ) : $entryMatches)
+            ->setParameter('organizationUuids', $organizationUuidBinaries, ArrayParameterType::BINARY);
     }
 
     private function organizationFieldMatchesExpression(
         QueryBuilder $queryBuilder,
         string $field,
         string $parameter,
-    ): CompositeExpression {
+        bool $includePersonOrganization,
+    ): CompositeExpression|string {
         $expr = $queryBuilder->expr();
+        $organizationMatches = $expr->in(self::ORGANIZATION_ALIAS . ".{$field}", $parameter);
 
-        return $expr->or(
-            $expr->in(self::ORGANIZATION_ALIAS . ".{$field}", $parameter),
+        return $includePersonOrganization ? $expr->or(
+            $organizationMatches,
             $expr->in(self::PERSON_ORGANIZATION_ALIAS . ".{$field}", $parameter),
-        );
+        ) : $organizationMatches;
     }
 
     private function radiusTargetExpression(): string

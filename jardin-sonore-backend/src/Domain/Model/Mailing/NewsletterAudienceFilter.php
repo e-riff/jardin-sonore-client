@@ -35,6 +35,7 @@ final readonly class NewsletterAudienceFilter
         private ?string $radiusOriginMunicipalityInseeCode = null,
         private ?float $radiusOriginCustomLatitude = null,
         private ?float $radiusOriginCustomLongitude = null,
+        private bool $includeFreeSubscribers = false,
     ) {
         $this->assertEnumList($organizationTypes, OrganizationType::class, 'organization types');
         $this->assertEnumList($organizationSectors, OrganizationSector::class, 'organization sectors');
@@ -141,6 +142,11 @@ final readonly class NewsletterAudienceFilter
         return $this->radiusOriginCustomLongitude;
     }
 
+    public function includesFreeSubscribers(): bool
+    {
+        return $this->includeFreeSubscribers;
+    }
+
     public function hasActiveCriteria(): bool
     {
         return [] !== $this->organizationTypes
@@ -151,7 +157,8 @@ final readonly class NewsletterAudienceFilter
             || [] !== $this->regionCodes
             || [] !== $this->departmentCodes
             || [] !== $this->municipalityInseeCodes
-            || null !== $this->radiusKilometers;
+            || null !== $this->radiusKilometers
+            || $this->includeFreeSubscribers;
     }
 
     /**

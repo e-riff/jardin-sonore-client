@@ -33,6 +33,7 @@ final readonly class NewsletterAudienceFilterArrayMapper
             radiusOriginMunicipalityInseeCode: $this->nullableString($audienceFilter, 'radiusOriginMunicipalityInseeCode'),
             radiusOriginCustomLatitude: $this->nullableFloat($audienceFilter, 'radiusOriginCustomLatitude'),
             radiusOriginCustomLongitude: $this->nullableFloat($audienceFilter, 'radiusOriginCustomLongitude'),
+            includeFreeSubscribers: $this->boolean($audienceFilter, 'includeFreeSubscribers'),
         );
     }
 
@@ -55,7 +56,22 @@ final readonly class NewsletterAudienceFilterArrayMapper
             'radiusOriginMunicipalityInseeCode' => $audienceFilter->getRadiusOriginMunicipalityInseeCode(),
             'radiusOriginCustomLatitude' => $audienceFilter->getRadiusOriginCustomLatitude(),
             'radiusOriginCustomLongitude' => $audienceFilter->getRadiusOriginCustomLongitude(),
+            'includeFreeSubscribers' => $audienceFilter->includesFreeSubscribers(),
         ];
+    }
+
+    /** @param array<string, mixed> $values */
+    private function boolean(array $values, string $key): bool
+    {
+        if (!array_key_exists($key, $values)) {
+            return false;
+        }
+
+        if (!is_bool($values[$key])) {
+            throw new InvalidArgumentException("Mailing audience filter {$key} must be a boolean.");
+        }
+
+        return $values[$key];
     }
 
     /**
