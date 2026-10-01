@@ -18,6 +18,8 @@ final class MailingAudienceFormModel
      */
     public array $organizationTypes = [];
 
+    public bool $includeFreeSubscribers = false;
+
     /**
      * @var list<OrganizationSector>
      */
@@ -70,6 +72,7 @@ final class MailingAudienceFormModel
     public static function fromAudienceFilter(NewsletterAudienceFilter $newsletterAudienceFilter): self
     {
         $formModel = new self();
+        $formModel->includeFreeSubscribers = $newsletterAudienceFilter->includesFreeSubscribers();
         $formModel->organizationTypes = $newsletterAudienceFilter->getOrganizationTypes();
         $formModel->organizationSectors = $newsletterAudienceFilter->getOrganizationSectors();
         $formModel->customerStatuses = $newsletterAudienceFilter->getCustomerStatuses();
@@ -98,6 +101,7 @@ final class MailingAudienceFormModel
         $municipalityInseeCodes = self::normalizeStringList($this->municipalityInseeCodes);
 
         return new NewsletterAudienceFilter(
+            includeFreeSubscribers: $this->includeFreeSubscribers,
             organizationTypes: $this->organizationTypes,
             organizationSectors: $this->organizationSectors,
             customerStatuses: $this->customerStatuses,

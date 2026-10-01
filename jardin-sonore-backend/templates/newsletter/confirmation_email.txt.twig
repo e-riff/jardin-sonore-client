@@ -1,0 +1,6 @@
+{% extends 'service_email/base.txt.twig' %}
+{% block content %}
+{{ 'confirmation.intro'|trans({}, 'newsletter', 'fr') }}
+
+{{ 'confirmation.instructions'|trans({}, 'newsletter', 'fr') }}
+{% endblock %}

@@ -1,13 +1,12 @@
-import {NextRequest} from "next/server";
-import {getSiteUrl} from "@/lib/site-url";
+import {getSiteUrl} from "./site-url.ts";
 
 const siteUrl = getSiteUrl();
 const isProduction = process.env.NODE_ENV === "production";
 
-function getAllowedOrigins(request: NextRequest): Set<string> {
+function getAllowedOrigins(request: Request): Set<string> {
     const origins = new Set([
         new URL(siteUrl).origin,
-        request.nextUrl.origin,
+        new URL(request.url).origin,
     ]);
 
     for (const origin of [...origins]) {
@@ -34,7 +33,7 @@ function getOrigin(value: string | null): string | null {
     }
 }
 
-export function isAllowedRequestOrigin(request: NextRequest): boolean {
+export function isAllowedRequestOrigin(request: Request): boolean {
     const allowedOrigins = getAllowedOrigins(request);
     const origin = getOrigin(request.headers.get("origin"));
     const referer = getOrigin(request.headers.get("referer"));

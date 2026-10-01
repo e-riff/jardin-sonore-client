@@ -8,6 +8,7 @@ use App\Domain\Model\AddressBook\ContactDataSource;
 use App\Infrastructure\Admin\Formatter\ContactDisplayFormatter;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 use BackedEnum;
+use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
@@ -22,6 +23,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\BooleanFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\DateTimeFilter;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
@@ -57,6 +59,9 @@ final class EmailContactCrudController extends AbstractCrudController
     {
         return $actions
             ->add(Crud::PAGE_INDEX, Action::DETAIL)
+            ->add(Crud::PAGE_INDEX, Action::new('addSubscriber', 'admin.email_contact.add_subscriber')->createAsGlobalAction()->linkToRoute('newsletter_subscriber_new'))
+            ->add(Crud::PAGE_INDEX, Action::new('manageSubscription', 'admin.email_contact.manage_subscription')->linkToRoute('newsletter_subscriber_edit', static fn (EmailContactEntity $emailContactEntity): array => ['uuid' => $emailContactEntity->getUuid()->toRfc4122()]))
+            ->add(Crud::PAGE_DETAIL, Action::new('manageSubscription', 'admin.email_contact.manage_subscription')->linkToRoute('newsletter_subscriber_edit', static fn (EmailContactEntity $emailContactEntity): array => ['uuid' => $emailContactEntity->getUuid()->toRfc4122()]))
             ->disable(Action::NEW);
     }
 
@@ -64,6 +69,8 @@ final class EmailContactCrudController extends AbstractCrudController
     {
         return $filters
             ->add(ChoiceFilter::new('source', 'admin.field.source')->setChoices($this->sourceChoices())->setFormTypeOption('value_type_options.translation_domain', 'backoffice'))
+            ->add(BooleanFilter::new('freeNewsletterSubscription', 'admin.email_contact.free_subscription'))
+            ->add(ChoiceFilter::new('freeNewsletterSubscriptionOrigin', 'admin.email_contact.subscription_origin')->setChoices(['admin.email_contact.origin_footer' => 'footer', 'admin.email_contact.origin_backoffice' => 'backoffice'])->setFormTypeOption('value_type_options.translation_domain', 'backoffice'))
             ->add(BooleanFilter::new('optInNewsletter', 'admin.field.opt_in_newsletter'))
             ->add(DateTimeFilter::new('unsubscribedAt', 'admin.field.unsubscribed_at'))
             ->add(BooleanFilter::new('active', 'admin.field.active'));
@@ -77,7 +84,8 @@ final class EmailContactCrudController extends AbstractCrudController
             ->formatValue(static fn (mixed $value): string => ContactDisplayFormatter::emailLink($value))
             ->renderAsHtml()
             ->hideOnForm();
-        yield EmailField::new('emailAddress', 'admin.field.email_address')->onlyOnForms();
+        yield EmailField::new('emailAddress', 'admin.field.email_address')->onlyOnForms()
+            ->setFormTypeOption('disabled', true)->setHelp('admin.email_contact.edit_address_help');
         yield TextField::new('linkedDirectoryEntriesSummary', 'admin.field.contact_details')
             ->formatValue(static fn (mixed $value): string => ContactDisplayFormatter::textSummary($value))
             ->renderAsHtml()
@@ -87,10 +95,32 @@ final class EmailContactCrudController extends AbstractCrudController
             ->formatValue(fn (mixed $value): string => $this->translateEnumValue('address_book.contact_source', $value))
             ->setFormTypeOption('required', false)
             ->setFormTypeOption('placeholder', '');
-        yield BooleanField::new('optInNewsletter', 'admin.field.opt_in_newsletter');
+        yield BooleanField::new('optInNewsletter', 'admin.field.opt_in_newsletter')->renderAsSwitch(false)->hideOnForm();
+        yield BooleanField::new('freeNewsletterSubscription', 'admin.email_contact.free_subscription')->renderAsSwitch(false)->hideOnForm();
+        yield DateTimeField::new('freeNewsletterSubscriptionConfirmedAt', 'admin.email_contact.subscription_date')->hideOnForm();
+        yield ChoiceField::new('freeNewsletterSubscriptionOrigin', 'admin.email_contact.subscription_origin')
+            ->setChoices(['admin.email_contact.origin_footer' => 'footer', 'admin.email_contact.origin_backoffice' => 'backoffice'])->hideOnForm();
         yield DateTimeField::new('unsubscribedAt', 'admin.field.unsubscribed_at')->hideOnForm();
         yield TextField::new('unsubscribeToken', 'admin.field.unsubscribe_token')->onlyOnDetail();
         yield BooleanField::new('active', 'admin.field.shared_active');
+    }
+
+    public function updateEntity(EntityManagerInterface $entityManager, object $entityInstance): void
+    {
+        if ($entityInstance instanceof EmailContactEntity) {
+            $originalData = $entityManager->getUnitOfWork()->getOriginalEntityData($entityInstance);
+            if (($originalData['optInNewsletter'] ?? null) !== $entityInstance->hasOptInNewsletter()
+                || ($originalData['freeNewsletterSubscription'] ?? null) !== $entityInstance->hasFreeNewsletterSubscription()
+                || ($originalData['unsubscribedAt'] ?? null) !== $entityInstance->getUnsubscribedAt()
+                || ($originalData['freeNewsletterSubscriptionConfirmedAt'] ?? null) !== $entityInstance->getFreeNewsletterSubscriptionConfirmedAt()
+                || ($originalData['freeNewsletterSubscriptionOrigin'] ?? null) !== $entityInstance->getFreeNewsletterSubscriptionOrigin()) {
+                throw new BadRequestHttpException('Use the newsletter subscription actions.');
+            }
+            if (($originalData['emailAddress'] ?? null) !== $entityInstance->getEmailAddress()) {
+                throw new BadRequestHttpException('Add the corrected address with its own consent.');
+            }
+        }
+        parent::updateEntity($entityManager, $entityInstance);
     }
 
     /**

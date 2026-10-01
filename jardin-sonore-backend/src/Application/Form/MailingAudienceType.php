@@ -17,6 +17,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\ChoiceList\ArrayChoiceList;
 use Symfony\Component\Form\ChoiceList\ChoiceListInterface;
 use Symfony\Component\Form\ChoiceList\Loader\ChoiceLoaderInterface;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
@@ -84,6 +85,12 @@ final class MailingAudienceType extends AbstractType
         ];
 
         $builder
+            ->add('includeFreeSubscribers', CheckboxType::class, [
+                'label' => 'mailing.audience.form.include_free_subscribers',
+                'help' => 'mailing.audience.form.include_free_subscribers_help',
+                'required' => false,
+                'disabled' => $locked,
+            ])
             ->add('geographicMode', ChoiceType::class, [
                 'label' => 'mailing.audience.form.geographic_mode',
                 'help' => 'mailing.audience.form.geographic_mode_help',

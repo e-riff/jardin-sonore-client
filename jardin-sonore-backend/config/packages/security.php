@@ -34,6 +34,10 @@ return App::config([
                 'pattern' => '^/(_profiler|_wdt|assets|build)/',
                 'security' => false,
             ],
+            'newsletter_api' => [
+                'pattern' => '^/api/newsletter/',
+                'stateless' => true,
+            ],
             'portal_api' => [
                 'pattern' => '^/api/portal',
                 'stateless' => true,
@@ -65,6 +69,7 @@ return App::config([
             ],
         ],
         'access_control' => [
+            ['path' => '^/api/newsletter/', 'roles' => 'PUBLIC_ACCESS'],
             [
                 'path' => '^/newsletter/unsubscribe/[^/]+$',
                 'roles' => 'PUBLIC_ACCESS',

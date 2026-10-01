@@ -1,0 +1,22 @@
+{% extends 'internal/base.html.twig' %}
+{% set title = 'subscriber.title'|trans({}, 'newsletter') %}
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div><p class="internal-eyebrow">{{ 'subscriber.eyebrow'|trans({}, 'newsletter') }}</p><h1>{{ title }}</h1><p>{{ 'subscriber.description'|trans({}, 'newsletter') }}</p></div>
+        <div class="internal-heading-actions"><a class="internal-button internal-button--secondary" href="{{ emailsUrl }}">{{ 'subscriber.back'|trans({}, 'newsletter') }}</a></div>
+    </section>
+    <section class="internal-card">
+        {% if emailContact %}
+            <p>{{ (emailContact.active and emailContact.optInNewsletter and not emailContact.unsubscribed ? 'subscriber.current_enabled' : 'subscriber.current_disabled')|trans({}, 'newsletter') }}</p>
+            <p>{{ 'subscriber.address_correction'|trans({}, 'newsletter') }} <a href="{{ path('newsletter_subscriber_new') }}">{{ 'subscriber.add_corrected'|trans({}, 'newsletter') }}</a></p>
+        {% endif %}
+        {{ form(form) }}
+        {% if emailContact and emailContact.optInNewsletter %}
+            <form method="post" action="{{ path('newsletter_subscriber_unsubscribe', {uuid: emailContact.uuid}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('newsletter_unsubscribe_' ~ emailContact.uuid) }}">
+                <button type="submit" id="newsletter-unsubscribe" class="internal-button internal-button--secondary">{{ 'subscriber.unsubscribe'|trans({}, 'newsletter') }}</button>
+                <p>{{ 'subscriber.unsubscribe_help'|trans({}, 'newsletter') }}</p>
+            </form>
+        {% endif %}
+    </section>
+{% endblock %}

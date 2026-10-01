@@ -1,0 +1,5 @@
+{% extends 'service_email/base.html.twig' %}
+{% block content %}
+    <p style="margin:0 0 18px; font-size:15px; line-height:25px;">{{ 'confirmation.intro'|trans({}, 'newsletter', 'fr') }}</p>
+    <p style="margin:0; font-size:15px; line-height:25px;">{{ 'confirmation.instructions'|trans({}, 'newsletter', 'fr') }}</p>
+{% endblock %}

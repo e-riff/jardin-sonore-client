@@ -108,11 +108,17 @@ class EmailContactLinkEntity
             return $this;
         }
 
-        if (!$this->getEmailContact() instanceof EmailContactEntity) {
+        $emailContactEntity = $this->getEmailContact();
+        $normalizedEmailAddress = mb_strtolower(trim($emailAddress));
+        if ($emailContactEntity instanceof EmailContactEntity && '' !== $emailContactEntity->getEmailAddress()
+            && $emailContactEntity->getEmailAddress() !== $normalizedEmailAddress) {
+            // Consent and pending confirmation belong to the previous address.
+            $this->setEmailContact((new EmailContactEntity())->setOptInNewsletter(false));
+        } elseif (!$emailContactEntity instanceof EmailContactEntity) {
             $this->setEmailContact(new EmailContactEntity());
         }
 
-        $this->emailContact->setEmailAddress($emailAddress);
+        $this->emailContact->setEmailAddress($normalizedEmailAddress);
 
         return $this;
     }

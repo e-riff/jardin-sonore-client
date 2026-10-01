@@ -145,7 +145,7 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
 
         return $queryBuilder
             ->addSelect("TRIM(CONCAT(COALESCE(portal_user.first_name, ''), ' ', COALESCE(portal_user.last_name, ''))) AS display_name")
-            ->innerJoin(self::EMAIL_ALIAS, 'portal_user', 'portal_user', 'LOWER(TRIM(portal_user.email)) = LOWER(TRIM(' . self::EMAIL_ALIAS . '.email_address))')
+            ->innerJoin(self::EMAIL_ALIAS, 'portal_user', 'portal_user', 'CAST(LOWER(TRIM(portal_user.email)) AS BINARY) = CAST(LOWER(TRIM(' . self::EMAIL_ALIAS . '.email_address)) AS BINARY)')
             ->innerJoin('portal_user', 'user_organization_access', 'portal_access', 'portal_access.user_id = portal_user.id')
             ->innerJoin('portal_access', 'organization', self::ORGANIZATION_ALIAS, self::ORGANIZATION_ALIAS . '.id = portal_access.organization_id')
             ->innerJoin(self::ORGANIZATION_ALIAS, 'directory_entry', self::ENTRY_ALIAS, self::ENTRY_ALIAS . '.id = ' . self::ORGANIZATION_ALIAS . '.id')
