@@ -30,6 +30,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[Route('/mailing/audience-masks', name: 'mailing_audience_mask_')]
 final class MailingAudienceMaskController extends AbstractController
@@ -38,6 +39,7 @@ final class MailingAudienceMaskController extends AbstractController
     public function index(
         Request $request,
         ListMailingAudienceMasks $listMailingAudienceMasks,
+        TranslatorInterface $translator,
         GetMailingCampaign $getMailingCampaign,
         NewsletterAudienceOptionsQueryInterface $newsletterAudienceOptionsQuery,
     ): Response {
@@ -68,6 +70,9 @@ final class MailingAudienceMaskController extends AbstractController
             $tagChoices = $newsletterAudienceOptionsQuery->getTagChoices();
 
             $criteria = [];
+            if ($audienceFilter->includesFreeSubscribers()) {
+                $criteria[] = $translator->trans('mailing.audience.form.include_free_subscribers', [], 'mailing');
+            }
             if ([] !== $audienceFilter->getOrganizationTypes()) {
                 $criteria[] = 'Types : ' . implode(', ', array_map(static fn ($type): string => $type->value, $audienceFilter->getOrganizationTypes()));
             }
@@ -318,6 +323,7 @@ final class MailingAudienceMaskController extends AbstractController
         $customLongitude = $this->nullableFloat($submittedAudienceData['radiusOriginCustomLongitude'] ?? null, 'radiusOriginCustomLongitude');
 
         return new NewsletterAudienceFilter(
+            includeFreeSubscribers: in_array($submittedAudienceData['includeFreeSubscribers'] ?? false, [true, 1, '1'], true),
             organizationTypes: $organizationTypes,
             organizationSectors: $organizationSectors,
             customerStatuses: $customerStatuses,

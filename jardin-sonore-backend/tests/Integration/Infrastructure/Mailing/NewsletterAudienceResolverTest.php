@@ -97,6 +97,19 @@ final class NewsletterAudienceResolverTest extends KernelTestCase
         self::assertSame(['confirmed@example.test'], $this->addresses(new NewsletterAudienceFilter(includeFreeSubscribers: true)));
     }
 
+    public function testPortalAndDirectoryAddressesMayUseDifferentDatabaseCollations(): void
+    {
+        $this->email('mixed-collation');
+        $this->user('mixed-collation', [$this->organization()]);
+        // A connection-local table reproduces imported schemas without altering real tables.
+        $this->connection->executeStatement("CREATE TEMPORARY TABLE portal_user AS SELECT id, CONVERT(CONCAT(' ', UPPER(email), ' ') USING utf8mb4) COLLATE utf8mb4_unicode_ci AS email, first_name, last_name, active, status, password FROM portal_user");
+        try {
+            self::assertSame(['mixed-collation@example.test'], $this->addresses());
+        } finally {
+            $this->connection->executeStatement('DROP TEMPORARY TABLE portal_user');
+        }
+    }
+
     public function testUnionDeduplicatesBeforeLimitAndPreservesPlusAndDotVariants(): void
     {
         $organizationEntity = $this->organization();

@@ -9,7 +9,7 @@ const subscribe = (): (() => void) => (): void => {};
 const getClientSnapshot = (): boolean => true;
 const getServerSnapshot = (): boolean => false;
 
-export default function AltchaWidget(): JSX.Element {
+export default function AltchaWidget({className = "mt-6 [&_altcha-widget]:w-full"}: {className?: string}): JSX.Element {
     const isClient = useSyncExternalStore(subscribe, getClientSnapshot, getServerSnapshot);
 
     if (!isClient) {
@@ -17,7 +17,7 @@ export default function AltchaWidget(): JSX.Element {
     }
 
     return (
-        <div className="mt-6 [&_altcha-widget]:w-full">
+        <div className={`${className} [&_altcha-widget]:w-full`}>
             <altcha-widget
                 challenge="/api/altcha/challenge"
                 configuration={JSON.stringify({hideFooter: true, minDuration: 600})}

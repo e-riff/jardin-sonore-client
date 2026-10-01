@@ -306,6 +306,8 @@ mailing:
       materialized_municipalities_truncated: "Au-delà de 100 communes, la carte passe en affichage simplifié par points plutôt qu’en polygones."
       origin_home: "Jardin Sonore"
     form:
+      include_free_subscribers: "Inclure les abonnés libres"
+      include_free_subscribers_help: "Ajoute les abonnés libres confirmés et consentants, indépendamment des critères de structure. Les adresses communes aux différents groupes sont comptées une seule fois."
       organization_types: "Types d’établissement"
       organization_types_help: "Pour une personne rattachée à une organisation, le type de cette organisation est utilisé."
       organization_sectors: "Secteurs"
@@ -476,3 +478,6 @@ mailing:
       active_help: "Une recommandation masquée reste dans la bibliothèque mais ne peut plus être ajoutée à une campagne."
       submit: "Enregistrer la recommandation"
       error_notice: "Le formulaire contient une erreur. Vérifiez les champs indiqués et sélectionnez de nouveau l’image avant de renvoyer le formulaire."
+
+mailing.audience.result.free_included: "Abonnés libres inclus, sans critères de structure. Le total ne compte chaque adresse qu’une fois."
+mailing.audience.result.free_excluded: "Abonnés libres exclus de cette audience."

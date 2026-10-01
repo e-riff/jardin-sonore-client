@@ -175,6 +175,14 @@ admin:
       edit: "Modifier les coordonnées"
       detail: "Détail des coordonnées"
   email_contact:
+    add_subscriber: "Ajouter un abonné"
+    manage_subscription: "Gérer l’abonnement"
+    free_subscription: "Inscription libre"
+    subscription_date: "Inscription enregistrée le"
+    subscription_origin: "Origine de l’inscription"
+    origin_footer: "Formulaire du site"
+    origin_backoffice: "Saisie avec consentement recueilli"
+    edit_address_help: "L’adresse ne peut pas être remplacée ici, afin de préserver son consentement et ses demandes de confirmation. Utilisez Gérer l’abonnement pour ajouter l’adresse corrigée sans transférer son consentement."
     page:
       index: "E-mails"
       new: "Créer un e-mail"

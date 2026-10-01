@@ -2,6 +2,7 @@
 
 import {JSX} from "react";
 import Image from "next/image";
+import NewsletterSignupForm from "@/components/newsletter/NewsletterSignupForm";
 import BrandLogo from "@/components/BrandLogo";
 import {getCurrentYear} from "@/lib/dates";
 import {LinkItem} from "@/types/content";
@@ -15,14 +16,9 @@ export default function Footer(): JSX.Element {
         <footer className="bg-surface-container-high px-6 py-9 text-center sm:px-margin lg:py-8 lg:text-left">
             <div className="mx-auto max-w-7xl">
                 <div className="grid gap-8 lg:grid-cols-[minmax(0,1.35fr)_auto_auto] lg:items-start lg:gap-12">
-                    <div className="mx-auto max-w-130 lg:mx-0">
+                    <div className="mx-auto w-full max-w-130 lg:mx-0">
                         <BrandLogo label={dictionary.brand.name} className="text-2xl font-semibold" colorized={false} />
-                        <p className="mt-4 font-serif text-xl italic leading-8 text-on-surface-variant">
-                            {dictionary.hero.tagline}
-                        </p>
-                        <p className="mt-3 font-sans text-xs font-bold uppercase tracking-[0.18em] text-on-surface-variant/70">
-                            {dictionary.hero.serviceArea}
-                        </p>
+                        <NewsletterSignupForm />
                     </div>
 
                     <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-start lg:gap-8">

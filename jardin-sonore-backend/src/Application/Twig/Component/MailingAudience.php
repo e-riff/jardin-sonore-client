@@ -406,6 +406,7 @@ final class MailingAudience
         $rawAudienceFilter = $formModel->toAudienceFilter();
 
         return new NewsletterAudienceFilter(
+            includeFreeSubscribers: $rawAudienceFilter->includesFreeSubscribers(),
             organizationTypes: $rawAudienceFilter->getOrganizationTypes(),
             organizationSectors: $rawAudienceFilter->getOrganizationSectors(),
             customerStatuses: $rawAudienceFilter->getCustomerStatuses(),

@@ -10,6 +10,8 @@ use App\Domain\Repository\EmailContactRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 use App\Infrastructure\Doctrine\Mapper\EmailContactMapper;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\LockMode;
+use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
 
@@ -68,12 +70,24 @@ final class EmailContactDoctrineRepository extends ServiceEntityRepository imple
 
     public function save(EmailContact $emailContact): void
     {
-        $emailContactEntity = $this->findOneBy(['uuid' => $emailContact->getUuid()]);
-
-        $this->getEntityManager()->persist($this->emailContactMapper->toEntity(
-            emailContact: $emailContact,
-            emailContactEntity: $emailContactEntity instanceof EmailContactEntity ? $emailContactEntity : null,
-        ));
-        $this->getEntityManager()->flush();
+        $entityManager = $this->getEntityManager();
+        $connection = $entityManager->getConnection();
+        $connection->transactional(function () use ($emailContact, $entityManager, $connection): void {
+            $emailContactEntity = $this->createQueryBuilder('contact')->where('contact.uuid = :uuid')
+                ->setParameter('uuid', $emailContact->getUuid(), 'uuid')->getQuery()
+                ->setLockMode(LockMode::PESSIMISTIC_WRITE)->setHint(Query::HINT_REFRESH, true)->getOneOrNullResult();
+            if ($emailContactEntity instanceof EmailContactEntity && $emailContact->isUnsubscribed()) {
+                // Preserve history refreshed under the same lock used by confirmation.
+                $emailContactEntity->setOptInNewsletter(false)->setUnsubscribedAt($emailContactEntity->getUnsubscribedAt() ?? $emailContact->getUnsubscribedAt());
+                $connection->executeStatement('UPDATE newsletter_subscription_request SET consumed_at = ? WHERE email_contact_id = ? AND consumed_at IS NULL',
+                    [$emailContactEntity->getUnsubscribedAt()?->format('Y-m-d H:i:s'), $emailContactEntity->getId()]);
+            } else {
+                $entityManager->persist($this->emailContactMapper->toEntity(
+                    emailContact: $emailContact,
+                    emailContactEntity: $emailContactEntity instanceof EmailContactEntity ? $emailContactEntity : null,
+                ));
+            }
+            $entityManager->flush();
+        });
     }
 }

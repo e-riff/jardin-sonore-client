@@ -26,11 +26,7 @@ final readonly class UnsubscribeNewsletterRecipient
             return false;
         }
 
-        if ($emailContact->isUnsubscribed()) {
-            return true;
-        }
-
-        $emailContact->unsubscribe();
+        $emailContact->unsubscribe($emailContact->getUnsubscribedAt());
         $this->emailContactRepository->save($emailContact);
 
         return true;

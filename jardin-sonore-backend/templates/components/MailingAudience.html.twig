@@ -175,6 +175,7 @@
                 {{ form_row(form.organizationSectors) }}
                 {{ form_row(form.customerStatuses) }}
                 {{ form_row(form.tagUuids) }}
+                {{ form_row(form.includeFreeSubscribers) }}
             </div>
         </section>
 
@@ -212,6 +213,8 @@
             <p class="internal-eyebrow">{{ (is_extension_mode ? 'mailing.audience.extend.result.eyebrow' : 'mailing.audience.result.eyebrow')|trans({}, 'mailing') }}</p>
             <h2>{{ (is_extension_mode ? 'mailing.audience.extend.result.title' : 'mailing.audience.result.title')|trans({}, 'mailing') }}</h2>
         </div>
+
+        <p>{{ (form.includeFreeSubscribers.vars.data ? 'mailing.audience.result.free_included' : 'mailing.audience.result.free_excluded')|trans({}, 'mailing') }}</p>
 
         {% set resolution = this.audienceResolution %}
         {% set audience_delta = this.audienceDelta %}

@@ -2,7 +2,7 @@
 
 ## Vue macro
 
-Le module de mailing permet de preparer une newsletter dans le backoffice, de definir son audience a partir de l'annuaire, d'envoyer un test, puis de lancer un envoi reel cadence dans le temps.
+Le module de mailing permet de preparer une newsletter dans le backoffice, de definir son audience a partir de l'annuaire, des comptes eligibles du portail et des abonnes libres confirmes, d'envoyer un test, puis de lancer un envoi reel cadence dans le temps.
 
 L'architecture se decoupe en trois couches fonctionnelles :
 
@@ -572,3 +572,20 @@ Verifier :
 - `src/Infrastructure/Mailing/MailingDeliveryRecipientStore.php`
 - `src/Infrastructure/Mailing/TwigNewsletterRenderer.php`
 - `src/Infrastructure/Mailer/SymfonyNewsletterMailSender.php`
+
+
+## Abonnés libres et inscription publique
+
+Dans l’audience d’une campagne, « Inclure les abonnés libres » est désactivé par défaut. Cette option reste enregistrée dans le filtre, les masques, duplications et extensions. Les abonnés libres confirmés sont ajoutés sans critères de structure, avec déduplication par adresse ; le consentement courant reste revérifié avant SMTP.
+
+Dans E-mails, « Ajouter un abonné » permet une activation directe avec attestation obligatoire d’un consentement déjà recueilli. « Gérer l’abonnement » permet de retirer le consentement ou de réactiver avec une nouvelle attestation. Les filtres distinguent appartenance libre, origine footer/backoffice, opt-in, date de retrait et état technique actif. Les champs de consentement sont en lecture seule dans EasyAdmin.
+
+Une adresse n’est pas remplacée dans E-mails : ajouter l’adresse corrigée avec son propre consentement et retirer l’ancienne séparément. La correction d’un lien de l’annuaire crée un autre contact sans reprendre le consentement de l’ancien. Les dates/origines historiques et les autres liens restent attachés à l’adresse concernée.
+
+Le footer public vérifie ALTCHA dans Next puis appelle Symfony avec le secret BFF côté serveur. Une demande crée ou réutilise le contact sans activer le consentement. Symfony persiste uniquement le SHA-256 du jeton dans `newsletter_subscription_request`, envoie le mail après validation de la transaction et utilise `app.portal.public_base_url` pour le lien. Le GET affiche l’état sans activation ; le bouton effectue le POST explicite. Validité 48 heures, délai entre mails 60 secondes, cinq demandes/minute/IP et trois/heure/adresse ; réponse d’inscription générique.
+
+Un renvoi remplace le jeton précédent. Une confirmation est consommée une seule fois. Tout retrait depuis le backoffice, le portail ou le lien public invalide les demandes en attente ; une nouvelle inscription volontaire reste possible. Les verrous suivent l’ordre contact puis demande pour éviter les courses entre confirmation, renvoi et retrait.
+
+Configuration requise : `PORTAL_API_BASE_URL` et `PORTAL_BFF_SHARED_SECRET` dans le serveur Next, même secret côté Symfony, URL publique du portail et transport Mailer corrects. La migration `Version20261001101645` est appliquée localement en développement/test, avec schémas synchronisés. Les logs applicatifs masquent les jetons ; contrôler également les journaux d’accès de l’hébergeur avant déploiement. ALTCHA conserve son stockage anti-rejeu existant en mémoire, à partager si plusieurs instances Next sont déployées.
+
+Recette locale du 1er octobre : 311 tests backend / 1 706 assertions, 14 tests Node, style/PHPStan/conteneur/Twig/YAML et lint/build réussis. Mailpit et navigateur ont validé footer, confirmation explicite, mobile/clavier, ajout/retrait administrateur et inclusion dans l’audience. Ce nouveau lot n’est pas encore déployé.

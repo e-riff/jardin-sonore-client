@@ -62,6 +62,12 @@ final readonly class PortalNewsletterSubscriptionManager
             throw new DomainException('This newsletter address is blocked.');
         }
 
+        if (!$enabled) {
+            // The profile transaction already holds the contact lock used by confirmation.
+            $connection->executeStatement('UPDATE newsletter_subscription_request SET consumed_at = ? WHERE email_contact_id = ? AND consumed_at IS NULL',
+                [(new DateTimeImmutable())->format('Y-m-d H:i:s'), $emailContactEntity->getId()]);
+        }
+
         $emailContactEntity->setOptInNewsletter($enabled)
             ->setUnsubscribedAt($enabled ? null : ($emailContactEntity->getUnsubscribedAt() ?? new DateTimeImmutable()));
     }
