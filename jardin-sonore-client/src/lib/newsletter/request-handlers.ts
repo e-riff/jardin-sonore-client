@@ -31,8 +31,18 @@ export async function handleNewsletterSubscription(request: Request): Promise<Re
     }
 }
 
-export async function handleNewsletterConfirmation(request: Request, token: string): Promise<Response> {
+export async function handleNewsletterConfirmation(request: Request): Promise<Response> {
     if (!isAllowedRequestOrigin(request)) return jsonResponse({status: "invalid"}, 403);
+    let input: unknown;
+    try {
+        const text = await request.text();
+        if (text.length > 1024) return jsonResponse({status: "invalid"}, 400);
+        input = JSON.parse(text);
+    } catch {
+        return jsonResponse({status: "invalid"}, 400);
+    }
+    if (typeof input !== "object" || input === null || !("token" in input) || typeof input.token !== "string") return jsonResponse({status: "invalid"}, 400);
+    const token = input.token;
     if (!/^[a-f0-9]{64}$/.test(token)) return jsonResponse({status: "invalid"}, 400);
     try {
         return jsonResponse({state: await new NewsletterApiClient().confirm(token)}, 200);

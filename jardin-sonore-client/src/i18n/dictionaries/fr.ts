@@ -357,6 +357,7 @@ const fr = {
         },
         confirmation: {
             title: "Votre inscription à la newsletter",
+            loading: "Lecture du lien de confirmation…",
             description: "Confirmez que vous souhaitez recevoir la newsletter Jardin Sonore à l’adresse indiquée lors de votre demande.",
             submit: "Confirmer mon inscription",
             confirming: "Confirmation en cours…",

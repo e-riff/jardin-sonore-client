@@ -20,8 +20,8 @@ final class SymfonyNewsletterConfirmationMailSenderTest extends TestCase
         $mailer->expects(self::once())->method('send')->with(self::callback(static function (Email $email): bool {
             self::assertSame('fixture@example.test', $email->getTo()[0]->getAddress());
             self::assertSame('bonjour@example.test', $email->getFrom()[0]->getAddress());
-            self::assertStringContainsString('https://www.example.test/newsletter/confirmer/test-token', (string) $email->getHtmlBody());
-            self::assertStringContainsString('https://www.example.test/newsletter/confirmer/test-token', (string) $email->getTextBody());
+            self::assertStringContainsString('https://www.example.test/newsletter/confirmer/confirmation#test-token', (string) $email->getHtmlBody());
+            self::assertStringContainsString('https://www.example.test/newsletter/confirmer/confirmation#test-token', (string) $email->getTextBody());
 
             return true;
         }));
