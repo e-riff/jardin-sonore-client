@@ -1,4 +1,8 @@
+import type {Metadata} from "next";
+import fr from "@/i18n/dictionaries/fr";
 import {getTranslations} from "@/i18n/server";
+
+export const metadata: Metadata = {title: fr.portal.unavailable.title};
 
 export default async function PortalUnavailablePage(): Promise<React.JSX.Element> {
     const content = (await getTranslations()).portal.unavailable;

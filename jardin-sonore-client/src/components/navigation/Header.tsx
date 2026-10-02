@@ -69,7 +69,7 @@ export default function Header(): JSX.Element {
                         aria-label={menuOpen ? "Fermer le menu" : content.menuAriaLabel}
                         onClick={() => setMenuOpen((isOpen) => !isOpen)}
                     >
-                        {menuOpen ? <XMarkIcon className="h-6 w-6" /> : <Bars3Icon className="h-6 w-6" />}
+                        {menuOpen ? <XMarkIcon aria-hidden="true" className="h-6 w-6" /> : <Bars3Icon aria-hidden="true" className="h-6 w-6" />}
                     </button>
                 </div>
 

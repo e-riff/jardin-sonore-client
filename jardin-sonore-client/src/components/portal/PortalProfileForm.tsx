@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import {useActionState, useEffect, useState} from "react";
 import {useFormStatus} from "react-dom";
 import {updatePortalProfileAction, type PortalProfileFormState} from "@/app/portail/actions";
@@ -8,6 +9,7 @@ import {usePortalToast} from "@/components/portal/PortalToastProvider";
 import {portalAvatarUrl} from "@/lib/portal/types";
 import type {Dictionary} from "@/i18n/types";
 import {usePortalAccount} from "@/components/portal/PortalAccountProvider";
+import {showLegalPage} from "@/lib/legal-publication";
 
 type AccountContent = Dictionary["portal"]["account"];
 
@@ -71,6 +73,7 @@ export default function PortalProfileForm({content}: {content: AccountContent}):
             <input className="mt-0.5 h-4 w-4 accent-primary" defaultChecked={account.newsletterSubscribed} name="newsletterSubscribed" type="checkbox" />
             <span><span className="block font-semibold">{content.newsletterTitle}</span><span className="mt-1 block text-on-surface-variant">{content.newsletterDescription}</span></span>
         </label>
+        {showLegalPage ? <p className="text-sm"><Link className="font-semibold text-primary underline underline-offset-4 hover:text-primary-container" href="/mentions-legales#confidentialite">{content.privacyLink}</Link></p> : null}
         <ProfileSubmitButton content={content} />
     </form>;
 }
