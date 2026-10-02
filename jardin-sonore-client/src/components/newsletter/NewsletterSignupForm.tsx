@@ -3,6 +3,7 @@
 import {type FormEvent, useId, useState} from "react";
 import AltchaWidget from "@/components/AltchaWidget";
 import {useTranslations} from "@/i18n/translations-provider";
+import {showLegalPage} from "@/lib/legal-publication";
 
 export default function NewsletterSignupForm(): React.JSX.Element {
     const content = useTranslations().newsletter.signup;
@@ -46,6 +47,9 @@ export default function NewsletterSignupForm(): React.JSX.Element {
                     {pending ? content.sending : content.submit}
                 </button>
             </form>
+            <p className="mt-3 text-xs leading-5 text-on-surface-variant">
+                {content.privacyNotice} {showLegalPage ? <a className="font-semibold text-primary-container underline underline-offset-2 hover:text-primary-container" href="/mentions-legales#confidentialite">{content.privacyLink}</a> : null}
+            </p>
         </>}
         <p role="status" aria-live="polite" className="mt-2 text-sm leading-6 text-on-surface-variant">
             {accepted ? content.accepted : error === "captcha" ? content.captchaError : error === "unavailable" ? content.error : ""}

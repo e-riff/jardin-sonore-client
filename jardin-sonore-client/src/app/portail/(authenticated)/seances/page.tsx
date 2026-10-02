@@ -1,3 +1,5 @@
+import type {Metadata} from "next";
+import fr from "@/i18n/dictionaries/fr";
 import {getPortalAccessToken, getPortalSession} from "@/lib/portal/session";
 import {getTranslations} from "@/i18n/server";
 import {PortalApiClient} from "@/lib/portal/api-client";
@@ -7,6 +9,8 @@ import {parsePortalListQuery} from "@/lib/portal/list-query";
 import {redirect} from "next/navigation";
 import {portalRoutes} from "@/lib/portal/routes";
 import {portalRequestOrUnavailable} from "@/lib/portal/request-or-unavailable";
+
+export const metadata: Metadata = {title: fr.portal.sessions.title};
 
 export default async function PortalSessionsPage({searchParams}: {searchParams: Promise<Record<string, string | string[] | undefined>>}): Promise<React.JSX.Element> {
     const [account, dictionary, token, rawSearchParams] = await Promise.all([getPortalSession(), getTranslations(), getPortalAccessToken(), searchParams]);

@@ -1,3 +1,4 @@
+import type {Metadata} from "next";
 import {JSX} from "react";
 import AboutSection from "@/components/sections/AboutSection";
 import CtaSection from "@/components/sections/CtaSection";
@@ -8,6 +9,10 @@ import PortalShowcaseSection from "@/components/sections/PortalShowcaseSection";
 import ServicesSection from "@/components/sections/ServicesSection";
 import StatsSection from "@/components/sections/StatsSection";
 import StructuredData from "@/components/StructuredData";
+
+export const metadata: Metadata = {
+    alternates: {canonical: "/"},
+};
 
 export default function Home(): JSX.Element {
     return (

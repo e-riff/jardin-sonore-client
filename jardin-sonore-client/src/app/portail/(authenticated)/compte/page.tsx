@@ -1,5 +1,9 @@
+import type {Metadata} from "next";
+import fr from "@/i18n/dictionaries/fr";
 import {getTranslations} from "@/i18n/server";
 import PortalProfileForm from "@/components/portal/PortalProfileForm";
+
+export const metadata: Metadata = {title: fr.portal.account.title};
 
 export default async function PortalAccountPage(): Promise<React.JSX.Element> {
     const dictionary = await getTranslations();

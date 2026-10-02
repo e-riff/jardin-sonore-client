@@ -4,6 +4,7 @@ import {FormEvent, JSX, useEffect, useRef, useState} from "react";
 import {PhoneIcon} from "@heroicons/react/24/outline";
 import AltchaWidget from "@/components/AltchaWidget";
 import {Dictionary} from "@/i18n/types";
+import {showLegalPage} from "@/lib/legal-publication";
 
 interface CtaContactPanelProps {
     content: Dictionary["cta"];
@@ -193,6 +194,7 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
                                 <input
                                     className="w-full rounded-lg border border-outline-variant/50 bg-surface px-4 py-3 font-sans text-base text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                                     name="name"
+                                    autoComplete="name"
                                     placeholder={content.form.fullNamePlaceholder}
                                     ref={firstFieldRef}
                                     required
@@ -205,6 +207,8 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
                                 <input
                                     className="w-full rounded-lg border border-outline-variant/50 bg-surface px-4 py-3 font-sans text-base text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                                     name="email"
+                                    autoComplete="email"
+                                    spellCheck={false}
                                     placeholder={content.form.emailPlaceholder}
                                     required
                                     type="email"
@@ -218,6 +222,7 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
                                 <input
                                     className="w-full rounded-lg border border-outline-variant/50 bg-surface px-4 py-3 font-sans text-base text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                                     name="phone"
+                                    autoComplete="tel"
                                     placeholder={content.form.phonePlaceholder}
                                     type="tel"
                                 />
@@ -228,6 +233,7 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
                                 <input
                                     className="w-full rounded-lg border border-outline-variant/50 bg-surface px-4 py-3 font-sans text-base text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                                     name="organization"
+                                    autoComplete="organization"
                                     placeholder={content.form.organizationPlaceholder}
                                     type="text"
                                 />
@@ -238,7 +244,8 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
                             <span>{content.form.cityLabel}</span>
                             <input
                                 className="w-full rounded-lg border border-outline-variant/50 bg-surface px-4 py-3 font-sans text-base text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                                name="city"
+                                    name="city"
+                                    autoComplete="address-level2"
                                 placeholder={content.form.cityPlaceholder}
                                 type="text"
                             />
@@ -256,6 +263,10 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
                         </label>
 
                         <AltchaWidget />
+
+                        <p className="mt-5 font-sans text-sm leading-6 text-on-surface-variant">
+                            {content.form.privacyNotice} {showLegalPage ? <a className="font-semibold text-primary underline underline-offset-2 hover:text-primary-container" href="/mentions-legales#confidentialite">{content.form.privacyLink}</a> : null}
+                        </p>
 
                         <div className="mt-6 flex flex-col items-center gap-3">
                             <button

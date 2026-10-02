@@ -8,6 +8,7 @@ import {getCurrentYear} from "@/lib/dates";
 import {LinkItem} from "@/types/content";
 import ShareButton from "@/components/navigation/ShareButton";
 import {useTranslations} from "@/i18n/translations-provider";
+import {showLegalPage} from "@/lib/legal-publication";
 
 export default function Footer(): JSX.Element {
     const dictionary = useTranslations();
@@ -23,7 +24,7 @@ export default function Footer(): JSX.Element {
 
                     <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-start lg:gap-8">
                         <div role="group" aria-labelledby="footer-social-title">
-                            <p className="mb-3 font-sans text-xs font-bold uppercase tracking-[0.18em] text-primary" id="footer-social-title">{content.socialTitle}</p>
+                            <p className="mb-3 font-sans text-xs font-bold uppercase tracking-[0.18em] text-primary-container" id="footer-social-title">{content.socialTitle}</p>
                             <div className="flex justify-center gap-3 lg:justify-start" aria-label={content.socialAriaLabel}>
                                 <a className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-primary/10 bg-background text-primary transition hover:bg-primary hover:text-on-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface-container-high"
                                    href="https://www.instagram.com/jardin.sonore/"
@@ -57,7 +58,7 @@ export default function Footer(): JSX.Element {
                         </div>
 
                         <div role="group" aria-labelledby="footer-share-title">
-                            <p className="mb-3 font-sans text-xs font-bold uppercase tracking-[0.18em] text-primary" id="footer-share-title">{content.shareTitle}</p>
+                            <p className="mb-3 font-sans text-xs font-bold uppercase tracking-[0.18em] text-primary-container" id="footer-share-title">{content.shareTitle}</p>
                             <ShareButton
                                 label={content.shareAriaLabel}
                                 copiedLabel={content.shareCopiedLabel}
@@ -68,10 +69,10 @@ export default function Footer(): JSX.Element {
                     </div>
 
                     <nav className="hidden lg:block" aria-label={content.ariaLabel}>
-                        <p className="mb-4 font-sans text-xs font-bold uppercase tracking-[0.18em] text-primary">{content.navigationTitle}</p>
+                        <p className="mb-4 font-sans text-xs font-bold uppercase tracking-[0.18em] text-primary-container">{content.navigationTitle}</p>
                         <div className="grid grid-cols-2 gap-x-8 gap-y-3">
                             {content.links.map((link: LinkItem) => (
-                                <a className="font-sans text-sm font-semibold text-on-surface-variant transition hover:text-primary" href={link.href} key={link.label}>
+                                <a className="font-sans text-sm font-semibold text-on-surface-variant transition hover:text-primary-container" href={link.href.startsWith("#") ? `/${link.href}` : link.href} key={link.label}>
                                     {link.label}
                                 </a>
                             ))}
@@ -83,6 +84,9 @@ export default function Footer(): JSX.Element {
                     <p className="text-sm leading-6 text-on-surface-variant/80">
                         © {getCurrentYear()} {content.copyrightHolder}. {content.copyrightDescription}
                     </p>
+                    {showLegalPage ? <a className="mt-2 inline-block rounded-sm font-sans text-sm font-semibold text-primary-container underline underline-offset-4 hover:text-primary-container focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/mentions-legales">
+                        {content.legalLink}
+                    </a> : null}
                 </div>
             </div>
         </footer>
