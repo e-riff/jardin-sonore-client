@@ -14,7 +14,7 @@ Mise à jour le 5 octobre 2026. Ce document est la **seule source de l'état cou
 
 ## Point de reprise — 5 octobre 2026
 
-**Les actions administrateur d'invitation/réinitialisation, les lots notifications/newsletter et la page légale sont livrés. Aucun n'est à recommencer.** Le rendu du courriel de disponibilité est considéré bon dans Gmail et Outlook selon le souvenir de l'utilisateur ; la date et le compte utilisés pour cette vérification ne sont pas consignés. La branche active est `main`, propre et synchronisée avec `origin/main` lors du contrôle du 5 octobre. Le prochain point sécurité est l'audit de la provenance de l'IP utilisée par le rate limiting du portail ; ne modifier le code que si le proxy permet de falsifier `x-forwarded-for`.
+**Les actions administrateur d'invitation/réinitialisation, les lots notifications/newsletter et la page légale sont livrés. Aucun n'est à recommencer.** Le rendu du courriel de disponibilité est considéré bon dans Gmail et Outlook selon le souvenir de l'utilisateur ; la date et le compte utilisés pour cette vérification ne sont pas consignés. Le contrôle de provenance de l'IP du portail est accepté en l'état par l'utilisateur le 5 octobre : sa vérification en production reste non concluante, sans correction applicative. Il n'est plus un chantier actif ; voir la réserve ci-dessous. La prochaine priorité est de compléter les informations et les durées de conservation de la page légale déjà publiée.
 
 ### Livraisons récentes
 
@@ -26,6 +26,7 @@ Mise à jour le 5 octobre 2026. Ce document est la **seule source de l'état cou
 ### Vérifications de livraison à garder en vue
 
 - Les informations restant à compléter sur la page légale figurent en P0 ci-dessous.
+- Sécurité du portail : les actions administrateur sont protégées et testées. L'audit de la provenance de l'IP utilisée pour limiter les tentatives a été tenté le 5 octobre, mais Tiger Protect a renvoyé HTTP 429 ; le compte cPanel ne donne pas accès à la configuration Apache globale ni aux journaux d'accès. **Accepté en l'état pour le moment, sans preuve que `x-forwarded-for` ne puisse pas être falsifié.** Reprendre uniquement si l'hébergeur fournit la configuration du proxy ou si une recette de production non bloquée devient possible ; corriger si l'usurpation est alors constatée. Détails dans le [plan dédié](docs/superpowers/plans/2026-09-29-portal-admin-actions-security.md).
 - Contrôler les journaux d'accès de l'hébergeur pour la confirmation newsletter si une vérification de production est reprise. Le jeton est placé dans le fragment du lien, puis envoyé dans le corps d'un POST à chemin constant afin de ne pas figurer dans l'URL de requête.
 
 La [conception des disponibilités](docs/superpowers/specs/2026-09-30-session-availability-notifications-design.md), le [plan de recette notifications](docs/superpowers/plans/2026-09-30-session-availability-notifications.md) et le [plan de recette newsletter](docs/superpowers/plans/2026-10-01-newsletter-footer-and-backoffice.md) gardent les détails d'exécution. Ils ne redéfinissent pas le prochain chantier.
@@ -34,7 +35,6 @@ La [conception des disponibilités](docs/superpowers/specs/2026-09-30-session-av
 
 | Chantier | Bénéfice attendu | Dépendances / critère de départ |
 | --- | --- | --- |
-| Vérifier la provenance de l'IP utilisée pour limiter les tentatives sur le portail. | Rendre la limitation fiable face aux en-têtes fournis par le visiteur. | Examiner la chaîne proxy → Next.js BFF → Symfony en production et tester `x-forwarded-for` ; corriger seulement si l'usurpation est possible. Suivre le [plan dédié](docs/superpowers/plans/2026-09-29-portal-admin-actions-security.md). |
 | Compléter les informations de la page légale déjà publiée. | Donner des informations fiables aux visiteurs et aux structures. | L’utilisateur ne souhaite pas afficher d’adresse, d’e-mail ni de téléphone ; documenter cet écart, fixer les durées de conservation et mettre en place la purge correspondante. Hébergeur o2switch identifié. |
 | Analyser Search Console et la fiche Google Business Profile, puis corriger les écarts constatés. | Comprendre les recherches et améliorer la découverte locale. | Accès aux deux outils ; relever requêtes, pages, indexation et cohérence des coordonnées/zone. |
 | Créer une page d'offre « ateliers crèches et EAJE » et expliquer concrètement le portail dans « En séance ». | Répondre aux questions des prospects et montrer les ressources offertes après intervention. | Décrire la zone habituelle, les déplacements possibles pour les séances spéciales et les modalités pratiques ; utiliser uniquement des exemples ou visuels autorisés du portail. |
