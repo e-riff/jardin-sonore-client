@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Application\Mailing\MessageHandler;
 
+use App\Application\Mailing\MailingCampaignSummarySenderInterface;
 use App\Application\Mailing\MailingDeliveryQueueInterface;
 use App\Application\Mailing\Message\SendMailingCampaignRecipientMessage;
 use App\Application\Mailing\MessageHandler\SendMailingCampaignRecipientMessageHandler;
@@ -12,6 +13,7 @@ use App\Application\Mailing\NewsletterRecipientEligibilityInterface;
 use App\Application\Mailing\NewsletterRendererInterface;
 use App\Application\Mailing\RecordNewsletterRecommendationUsages;
 use App\Application\Mailing\RenderedNewsletter;
+use App\Application\Mailing\SendMailingCampaignCompletionSummary;
 use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Model\Mailing\MailingCampaignStatus;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
@@ -156,6 +158,12 @@ final class SendMailingCampaignRecipientMessageHandlerTest extends TestCase
             $mailingCampaignRepository, $newsletterRenderer, $newsletterMailSender, $mailingDeliveryQueue,
             new RecordNewsletterRecommendationUsages($this->createStub(NewsletterRecommendationUsageRepositoryInterface::class)),
             new NullLogger(), $newsletterRecipientEligibility,
+            new SendMailingCampaignCompletionSummary(
+                $mailingCampaignRepository,
+                $mailingDeliveryQueue,
+                $this->createStub(MailingCampaignSummarySenderInterface::class),
+                new NullLogger(),
+            ),
         );
     }
 }

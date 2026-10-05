@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Infrastructure\Mailing;
 
+use App\Application\Mailing\MailingCampaignSummarySenderInterface;
 use App\Application\Mailing\Message\SendMailingCampaignRecipientMessage;
 use App\Application\Mailing\MessageHandler\SendMailingCampaignRecipientMessageHandler;
 use App\Application\Mailing\NewsletterMailSenderInterface;
 use App\Application\Mailing\NewsletterRecipientEligibilityInterface;
 use App\Application\Mailing\NewsletterRendererInterface;
 use App\Application\Mailing\RecordNewsletterRecommendationUsages;
+use App\Application\Mailing\SendMailingCampaignCompletionSummary;
 use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Model\Mailing\MailingCampaignStatus;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
@@ -139,6 +141,7 @@ final class NewsletterRecipientEligibilityTest extends KernelTestCase
     {
         $mailingCampaign = new MailingCampaign('Eligibility test', 'Subject', 'Title', 'Content', 'default', NewsletterAudienceFilter::empty(),
             status: MailingCampaignStatus::DELIVERY_SENDING, uuid: Uuid::fromString($this->campaignUuid));
+        $mailingDeliveryQueue = new DoctrineMailingDeliveryQueue($this->connection);
         $mailingCampaignRepository = $this->createStub(MailingCampaignRepositoryInterface::class);
         $mailingCampaignRepository->method('findByUuid')->willReturn($mailingCampaign);
         $newsletterRenderer = $this->createMock(NewsletterRendererInterface::class);
@@ -146,9 +149,15 @@ final class NewsletterRecipientEligibilityTest extends KernelTestCase
         $newsletterMailSender = $this->createMock(NewsletterMailSenderInterface::class);
         $newsletterMailSender->expects($this->never())->method('sendToRecipient');
         $handler = new SendMailingCampaignRecipientMessageHandler(
-            $mailingCampaignRepository, $newsletterRenderer, $newsletterMailSender, new DoctrineMailingDeliveryQueue($this->connection),
+            $mailingCampaignRepository, $newsletterRenderer, $newsletterMailSender, $mailingDeliveryQueue,
             new RecordNewsletterRecommendationUsages($this->createStub(NewsletterRecommendationUsageRepositoryInterface::class)),
             new NullLogger(), new DoctrineNewsletterRecipientEligibility($this->connection),
+            new SendMailingCampaignCompletionSummary(
+                $mailingCampaignRepository,
+                $mailingDeliveryQueue,
+                $this->createStub(MailingCampaignSummarySenderInterface::class),
+                new NullLogger(),
+            ),
         );
         $handler($message);
 

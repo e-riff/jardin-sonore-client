@@ -8,8 +8,10 @@ use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\MailingCampaignEntity;
 use App\Infrastructure\Doctrine\Mapper\MailingCampaignMapper;
+use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -56,6 +58,20 @@ final class MailingCampaignDoctrineRepository extends ServiceEntityRepository im
             mailingCampaignEntity: $mailingCampaignEntity instanceof MailingCampaignEntity ? $mailingCampaignEntity : null,
         ));
         $this->getEntityManager()->flush();
+    }
+
+    public function claimCompletionSummaryNotification(Uuid $uuid): bool
+    {
+        $affectedRows = $this->getEntityManager()->getConnection()->createQueryBuilder()
+            ->update('mailing_campaign')
+            ->set('summary_notification_claimed_at', ':claimedAt')
+            ->where('uuid = :uuid')
+            ->andWhere('summary_notification_claimed_at IS NULL')
+            ->setParameter('claimedAt', (new DateTimeImmutable())->format('Y-m-d H:i:s'))
+            ->setParameter('uuid', $uuid, UuidType::NAME)
+            ->executeStatement();
+
+        return 0 < $affectedRows;
     }
 
     public function delete(MailingCampaign $mailingCampaign): void

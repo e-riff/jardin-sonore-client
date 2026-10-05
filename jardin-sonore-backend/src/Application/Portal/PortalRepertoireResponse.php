@@ -17,8 +17,13 @@ final readonly class PortalRepertoireResponse
      *
      * @return array<string, mixed>
      */
-    public static function fromEntity(RepertoireItemEntity $itemEntity, array $organizationEntities, array $mediaEntities, bool $withDetails = false): array
-    {
+    public static function fromEntity(
+        RepertoireItemEntity $itemEntity,
+        array $organizationEntities,
+        array $mediaEntities,
+        bool $withDetails = false,
+        string $mediaBaseUrl = '',
+    ): array {
         $organizations = array_map(static fn (OrganizationEntity $organizationEntity): array => [
             'uuid' => $organizationEntity->getUuid()->toRfc4122(),
             'name' => $organizationEntity->getName(),
@@ -32,10 +37,19 @@ final readonly class PortalRepertoireResponse
         $media = array_map(static fn (MediaResourceEntity $mediaEntity): array => [
             'type' => $mediaEntity->getType()->value,
             'title' => $mediaEntity->getTitle(),
-            'url' => $mediaEntity->getPrimaryUrl(),
+            'url' => self::publicMediaUrl($mediaEntity->getPrimaryUrl(), 'resources', $mediaBaseUrl) ?? '',
+            'imageUrl' => null === $mediaEntity->getImageUrl() ? null : self::publicMediaUrl($mediaEntity->getImageUrl(), 'images', $mediaBaseUrl),
         ], $mediaEntities);
         $thumbnailUrl = null;
         foreach ($mediaEntities as $mediaEntity) {
+            if (null !== $mediaEntity->getImageUrl()) {
+                $thumbnailUrl = self::publicMediaUrl($mediaEntity->getImageUrl(), 'images', $mediaBaseUrl);
+
+                if (null !== $thumbnailUrl) {
+                    break;
+                }
+            }
+
             $videoId = self::youtubeVideoId($mediaEntity->getPrimaryUrl());
             if (null !== $videoId) {
                 $thumbnailUrl = "https://i.ytimg.com/vi/{$videoId}/hqdefault.jpg";
@@ -60,6 +74,31 @@ final readonly class PortalRepertoireResponse
             'notes' => $itemEntity->getNotes(),
             'media' => $media,
         ] : $response;
+    }
+
+    private static function publicMediaUrl(string $mediaUrl, string $localDirectory, string $mediaBaseUrl): ?string
+    {
+        $urlParts = parse_url($mediaUrl);
+
+        if (false === $urlParts) {
+            return null;
+        }
+
+        if ('' !== ($urlParts['scheme'] ?? '')) {
+            return in_array(strtolower($urlParts['scheme']), ['http', 'https'], true)
+                && isset($urlParts['host'])
+                && !isset($urlParts['user'])
+                && !isset($urlParts['pass']) ? $mediaUrl : null;
+        }
+
+        $path = ltrim($urlParts['path'] ?? '', '/');
+
+        if (1 !== preg_match('~^uploads/media/' . preg_quote($localDirectory, '~') . '/[a-z0-9._-]+$~i', $path)
+            || str_contains($path, '..')) {
+            return null;
+        }
+
+        return '' === $mediaBaseUrl ? '/' . $path : rtrim($mediaBaseUrl, '/') . '/' . $path;
     }
 
     private static function youtubeVideoId(string $url): ?string

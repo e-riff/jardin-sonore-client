@@ -27,3 +27,20 @@ password_reset:
   instructions: Le bouton ci-dessous vous permet d’en choisir un nouveau et de retrouver votre espace.
   action: Choisir un nouveau mot de passe
   notice: 'Ce lien est personnel et utilisable une seule fois. Si vous n’avez pas fait cette demande, ignorez ce message : votre mot de passe reste inchangé.'
+mailing_summary:
+  subject: 'Bilan de l’envoi : %campaign%'
+  intro: 'La campagne de mailing a terminé son traitement.'
+  campaign: 'Campagne'
+  email_subject: 'Objet du courriel'
+  result: 'Résultat'
+  total: 'Destinataires au total'
+  status:
+    sent: 'Envoyée'
+    failed: 'Terminée avec des erreurs'
+    stopped: 'Arrêtée'
+  count:
+    sent: 'Envoyés'
+    failed: 'En échec'
+    cancelled: 'Annulés (consentement ou retrait)'
+    pending: 'En attente'
+    processing: 'En cours'
