@@ -1,9 +1,8 @@
 # Notifications de séances et inscription à la newsletter
 
-Date : 30 septembre 2026.
-Statut de clôture au 30 septembre 2026 : notifications et parties 1–2 du lot newsletter déployées sous `deploy-availability-newsletter-20260930-01` (`afbcece`). Trois crons présents, deux nouvelles migrations appliquées par le script de déploiement. Reprise à la partie 3 newsletter (audiences), puis 4 (consentement avant SMTP) et 5 (backoffice). Inscription publique avec confirmation encore à planifier.
+**Conception historique.** Les mentions de « reprise » et de « prochaine étape » ci-dessous décrivent les arrêts du 30 septembre et du 1er octobre, pas l'état actuel. Consulter [ROADMAP.md](../../../ROADMAP.md) pour les livraisons et priorités ; la [conception des disponibilités](2026-09-30-session-availability-notifications-design.md) précise le déclenchement finalement retenu.
 
-Le point de reprise et les priorités sont dans [ROADMAP.md](../../../ROADMAP.md). Le [plan du lot 1](../plans/2026-09-30-session-first-publication-notifications.md) conserve les résultats de recette et les étapes historiques. Au 1er octobre, les parties 3–4 du [plan newsletter approuvé](../plans/2026-09-30-newsletter-subscriptions-and-audiences.md), incluant les comptes du portail et les abonnés libres confirmés, sont implémentées et vérifiées localement, préparées pour la livraison autorisée le 1er octobre sous le tag `deploy-newsletter-audiences-consent-20261001-01`. Prochaine étape : partie 5 (backoffice, gestion des abonnés libres demandée le 1er octobre et conservation de l'option dans les reconstructions) ; ensuite inscription publique dans le footer. La [conception de première disponibilité par structure](2026-09-30-session-availability-notifications-design.md) remplace les détails du déclenchement global de première publication conservés ci-dessous pour historique.
+Date : 30 septembre 2026. Les notifications et préférences ont été livrées sous `deploy-availability-newsletter-20260930-01`, les audiences et le contrôle du consentement sous `deploy-newsletter-audiences-consent-20261001-01`, puis la gestion des abonnés libres et l'inscription publique sous `deploy-newsletter-footer-20261001-01`. Les [plans notifications](../plans/2026-09-30-session-first-publication-notifications.md) et [newsletter](../plans/2026-09-30-newsletter-subscriptions-and-audiences.md) gardent les recettes de chaque étape.
 
 ## Objectif et périmètre
 
@@ -11,7 +10,7 @@ Prévenir les clients de la première publication d'une séance, permettre aux u
 
 Les notifications de séances et les campagnes newsletter ont des préférences, des déclencheurs et des traitements distincts. Les e-mails de service doivent présenter une identité Jardin Sonore cohérente et soignée, particulièrement la notification de nouvelle séance destinée aux clients.
 
-La page légale est reportée à la demande de l'utilisateur. Le cadrage ne modifie pas les règles de ciblage des campagnes existantes ni les données d'abonnement historiques.
+La page légale était hors du périmètre de ce cadrage ; elle a été publiée ensuite. Ce cadrage ne modifie pas les données d'abonnement historiques.
 
 ## Décisions convenues
 

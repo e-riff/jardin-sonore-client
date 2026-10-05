@@ -8,7 +8,7 @@
 ## Contexte
 
 - Repo local: `/home/eriff/Developpement/jardinsonore`.
-- Front Next.js dans `jardin-sonore-client/`.
+- Front Next.js dans `jardin-sonore-client/` et backend Symfony dans `jardin-sonore-backend/`.
 - Orchestration locale principale via Docker Compose depuis la racine.
 - Point d'entree local par defaut: `http://localhost:3000`.
 
@@ -25,7 +25,7 @@
 - `jardin-sonore-client/src/components/sections/`: sections composees de la page d'accueil.
 - `jardin-sonore-client/src/i18n/`: dictionnaires, types, provider de traduction.
 - `jardin-sonore-client/public/`: assets publics servis par Next.
-- Un futur backend doit rester dans ce repo, separe clairement du front, par exemple `jardin-sonore-api/` ou `backend/`.
+- `jardin-sonore-backend/` porte les données métier, le backoffice, le portail et les envois ; le front utilise des routes serveur pour communiquer avec lui.
 
 ## Front et contenu
 
@@ -96,6 +96,4 @@
 
 ## Suite a reprendre
 
-- Consulter d'abord [ROADMAP.md](ROADMAP.md), seule source des priorités et du point de reprise ; les plans datés conservent le détail d'exécution.
-- Au 30 septembre 2026 : notifications de première publication implémentées et vérifiées localement ; activation en production encore à faire. Prochain lot : abonnement newsletter des comptes du portail et des personnes sans structure, puis inscription publique avec confirmation depuis le footer.
-- Les finitions esthétiques des PDF restent un chantier ultérieur, sans modification du mécanisme fonctionnel de génération/téléchargement.
+- Consulter d'abord [ROADMAP.md](ROADMAP.md) : elle seule porte l'état courant, les priorités et le point de reprise. Ne pas recopier ici de date, de lot actif ou de statut de livraison ; les plans datés conservent le détail d'exécution historique.

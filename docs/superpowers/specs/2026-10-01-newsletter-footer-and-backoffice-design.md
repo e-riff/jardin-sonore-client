@@ -1,6 +1,6 @@
 # Newsletter : footer et gestion des abonnés dans E-mails
 
-Date : 1er octobre 2026. Statut : conception validée, implémentation et recette locale terminées ; non déployée.
+Date : 1er octobre 2026. Conception validée et livrée sous `deploy-newsletter-footer-20261001-01`. Cette conception conserve les décisions du lot ; état et priorités actuels : [ROADMAP.md](../../../ROADMAP.md).
 
 ## Demande et décisions
 

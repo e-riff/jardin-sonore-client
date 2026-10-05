@@ -57,8 +57,8 @@
 ### Bilan technique du 2026-09-25 — actions à planifier
 
 - Le portail Next.js, son impersonation et la publication des séances ont depuis été livrés en production ; les notes datées du 2026-09-18 ci-dessous restent l'historique de leur mise en pause antérieure.
-- Le [bilan backend et front](../docs/bilan-technique-2026-09-25.md) et son [plan de suites](../docs/superpowers/plans/2026-09-25-audit-remediation.md) sont la référence actuelle pour les travaux de consolidation.
-- Priorité sécurité : actions administrateur d'invitation/réinitialisation en POST avec CSRF ; provenance de l'IP de limitation du portail à vérifier.
+- Le bilan backend/front de septembre et son plan sont des archives ; [ROADMAP.md](../ROADMAP.md) est la seule référence pour les priorités actuelles.
+- Les actions administrateur d'invitation/réinitialisation en POST avec CSRF sont livrées dans `3f7b2ab` et ses tags backend du 29 septembre. Seule la provenance de l'IP de limitation du portail reste à vérifier selon la roadmap.
 - Ensuite : contrats du portail, cohérence du mot de passe et du profil, extraction ciblée des accès Doctrine et des responsabilités du contrôleur de séance.
 - Symfony 8.2 et les formulaires par attributs sur DTO seront réévalués après la sortie stable, d'abord sur un formulaire simple. Aucun refactor général de formulaires n'est décidé.
 - Côté produit, le même bilan classe la page légale et la présentation du portail sur la vitrine en premier, puis la page partenaires et l'accueil du portail. Les messages publics ou réservés aux structures demanderont un cadrage des destinataires, dates et droits d'édition avant toute évolution backend ; les actualités et archives de newsletters viennent après.

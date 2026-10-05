@@ -1,5 +1,7 @@
 # Newsletter Footer and Backoffice Implementation Plan
 
+**Archive de réalisation.** Le résultat du 1er octobre décrit la recette avant livraison. Le lot a ensuite été livré sous `deploy-newsletter-footer-20261001-01` et les deux tags de correction de présentation de la confirmation. Consulter [ROADMAP.md](../../../ROADMAP.md) pour l'état et les priorités actuels.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. Exécution dans cette session, méthode conservée du lot précédent.
 
 **Goal:** Permettre l'inscription newsletter publique avec confirmation, la gestion des abonnés dans E-mails et leur sélection dans les campagnes.

@@ -1,5 +1,7 @@
 # Abonnements et audiences newsletter — Implementation Plan
 
+**Archive de réalisation.** Les statuts intermédiaires et cases ouvertes ci-dessous retracent l'exécution du lot en septembre et octobre ; les parties 1 à 5 et l'inscription publique sont livrées. Consulter [ROADMAP.md](../../../ROADMAP.md) pour l'état et les priorités actuels.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task in this session. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Permettre aux comptes du portail de gérer leur consentement newsletter et aux campagnes de cibler les comptes éligibles ainsi que les abonnés libres, y compris les personnes sans structure, sans doublons.
