@@ -2,7 +2,7 @@
 
 **État au 30 septembre 2026 :** lot implémenté, committé et vérifié localement ; code et migrations déployés en production ; troisième cron installé par l’utilisateur et vérifié ; contrôle Gmail/Outlook encore à faire. Le déclenchement par première disponibilité de structure est décrit dans le plan du même jour. Les notes de parties ci-dessous conservent leur état historique à chaque arrêt ; le résultat de la partie 6 fait référence pour la recette finale. Les cases RED non réalisées restent ouvertes à titre de trace, sans constituer le prochain travail à reprendre.
 
-**Suite :** [ROADMAP.md](../../../ROADMAP.md) définit la priorité active : reprendre la partie 3 (audiences) du plan newsletter, dans le lot 2 du [cadrage](../specs/2026-09-30-session-notifications-newsletter-design.md), abonnement newsletter du portail et des personnes sans structure via le groupe libre, puis le lot 3 d'inscription publique avec confirmation depuis le footer.
+**Archive de réalisation.** Les étapes de reprise indiquées plus bas décrivent l'état du 30 septembre ; tous les lots newsletter cités ont depuis été livrés. Le 5 octobre, l'utilisateur a indiqué que le rendu du courriel de disponibilité est normalement bon dans Gmail et Outlook ; les notes ci-dessous gardent leur état historique. Consulter [ROADMAP.md](../../../ROADMAP.md) pour l'état et les priorités actuels.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task in this session. Steps use checkbox (`- [ ]`) syntax for tracking.
 

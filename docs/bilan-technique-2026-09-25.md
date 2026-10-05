@@ -1,6 +1,8 @@
 # Bilan technique backend et front — 25 septembre 2026
 
-Ce bilan est une revue ciblée du code actuel, pas un audit de sécurité exhaustif ni une demande de refonte générale. Les constats ci-dessous distinguent les défauts confirmés dans le code des points à vérifier en environnement. Les suites proposées sont suivies dans [le plan d'action](superpowers/plans/2026-09-25-audit-remediation.md).
+**Bilan daté.** Plusieurs constats ont depuis été traités, notamment la page légale et la présentation du portail. [ROADMAP.md](../ROADMAP.md) porte leur état actuel et le point de reprise ; le [plan d'action initial](superpowers/plans/2026-09-25-audit-remediation.md) conserve le détail des constats.
+
+Ce bilan est une revue ciblée du code au 25 septembre, pas un audit de sécurité exhaustif ni une demande de refonte générale. Les constats ci-dessous distinguent les défauts confirmés dans le code des points à vérifier en environnement.
 
 ## Symfony 8.2 et formulaires sur DTO
 

@@ -1,12 +1,11 @@
 # Suites du bilan technique backend et front
 
-**Source :** [bilan du 25 septembre 2026](../../bilan-technique-2026-09-25.md). Ce plan décrit des lots futurs ; aucune tâche n'est lancée par sa rédaction.
+**Plan historique.** Les cases ouvertes ci-dessous ne définissent plus l'ordre du travail. Consulter [ROADMAP.md](../../../ROADMAP.md) pour l'état actuel et les priorités ; ce plan conserve le détail du [bilan du 25 septembre 2026](../../bilan-technique-2026-09-25.md).
 
 ## 1. Actions administrateur et sécurité du portail
 
-- [ ] Convertir `sendInvitation` et `sendPasswordReset` en actions POST avec CSRF, puis remplacer leur retour basé sur `Referer` par une route interne.
-- [ ] Tester GET, POST sans jeton, POST avec jeton invalide et POST valide ; vérifier qu'aucun e-mail ni jeton n'est créé sur les requêtes refusées.
-- [ ] Examiner la configuration des proxies en production et tester la provenance de `x-forwarded-for` avant toute modification du rate limiting BFF/backend.
+- Les actions `sendInvitation` et `sendPasswordReset` sont sécurisées par POST, CSRF et redirection interne, avec tests fonctionnels ; elles sont livrées dans `3f7b2ab` sous les tags backend du 29 septembre. Ne pas les reprendre.
+- L'audit de la provenance de `x-forwarded-for` reste ouvert ; voir la [roadmap](../../../ROADMAP.md) et le [plan dédié](2026-09-29-portal-admin-actions-security.md).
 
 ## 2. Contrats et cohérence fonctionnelle
 
