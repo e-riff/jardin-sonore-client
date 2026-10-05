@@ -1,6 +1,6 @@
 # Portal Admin Actions Security Implementation Plan
 
-**État au 5 octobre 2026 :** la tâche 1 (POST, CSRF, état du compte, redirection interne) est implémentée et testée dans `3f7b2ab`, inclus dans les tags backend `deploy/backend-20260929-admin-people-management` et `deploy/backend-20260929-admin-people-edit-placement`. La tâche 2 seule reste ouverte : provenance de l'IP à travers le proxy en production. La tâche 3 clôturera cette vérification. Consulter [ROADMAP.md](../../../ROADMAP.md) pour le point de reprise courant.
+**État au 5 octobre 2026 :** la tâche 1 (POST, CSRF, état du compte, redirection interne) est implémentée et testée dans `3f7b2ab`, inclus dans les tags backend `deploy/backend-20260929-admin-people-management` et `deploy/backend-20260929-admin-people-edit-placement`. L'utilisateur accepte le chantier sécurité en l'état pour le moment. La tâche 2 reste techniquement non concluante faute d'accès à la configuration du proxy et à cause du blocage Tiger Protect ; elle n'est plus un travail actif. La tâche 3 reste conditionnée à une éventuelle reprise. Consulter [ROADMAP.md](../../../ROADMAP.md) pour le point de reprise courant.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -60,6 +60,8 @@
 - [ ] **Step 1: Inspect the deployed proxy chain read-only** and send a harmless request carrying a chosen `x-forwarded-for` value through the public endpoint. Determine what header Next.js receives and whether it can be forged; do not expose `PORTAL_BFF_SHARED_SECRET`.
 - [ ] **Step 2: If spoofing is possible, write a failing test** for the observed header shape, then change the BFF selection to use only the address established by the trusted proxy boundary. If that boundary cannot be established, report the limitation and do not claim a verified fix.
 - [ ] **Step 3: Run** the targeted client test plus `npm run lint` and `npm run build` from `jardin-sonore-client/` if client code changes; run `./bin/phpunit tests/Unit/Infrastructure/Security/PortalRateLimitKeyResolverTest.php` from `jardin-sonore-backend/` if the Symfony resolver changes.
+
+**Tentative du 5 octobre :** le `.htaccess` public envoie les requêtes à Passenger et ne contient pas de règle visible pour réécrire `X-Forwarded-For`. Le compte cPanel ne peut lire ni la configuration Apache globale ni les journaux d'accès. La soumission d'une demande de réinitialisation avec une IP fictive a reçu une page `HTTP 429 Slow down` de Tiger Protect ; cette réponse ne révèle pas l'en-tête reçu par Next et ne permet pas de conclure. Aucun changement applicatif n'a été fait. **Décision utilisateur : accepter en l'état pour le moment**, sans considérer la frontière IP vérifiée. Reprendre seulement avec une preuve de la configuration Apache globale fournie par l'hébergeur ou un test de production non bloqué par Tiger Protect.
 
 ### Task 3: Final verification
 
