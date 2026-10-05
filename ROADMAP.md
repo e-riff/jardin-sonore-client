@@ -10,18 +10,29 @@ Mise à jour le 5 octobre 2026. Ce document est la **seule source de l'état cou
 - Portail structures accessible avec comptes, séances, comptines, profil et impersonation ; le bandeau du portail et la stabilité du menu sont livrés.
 - Règle de mot de passe du portail centralisée. Le traitement d'une réussite partielle lors de l'édition du profil reste distinct et ouvert.
 - Notifications de première disponibilité par structure, préférences distinctes du profil, audiences annuaire/portail/abonnés libres, contrôle du consentement avant envoi, gestion des abonnés dans E-mails et inscription publique confirmée depuis le footer.
+- Récapitulatif de fin de mailing et corrections d'affichage des médias du répertoire dans le portail livrés en production le 5 octobre 2026 (`deploy-mailing-summary-media-20261005-01`).
 - Page « Mentions légales et confidentialité » publiée et reliée au footer, au sitemap et aux métadonnées. Les compléments sont reportés faute d'informations disponibles ; ne pas les relancer avant le 5 novembre 2026 et limiter ensuite le rappel à une fois par mois maximum.
 
 ## Point de reprise — 5 octobre 2026
 
-**Les actions administrateur d'invitation/réinitialisation, les lots notifications/newsletter et la page légale sont livrés. Aucun n'est à recommencer.** Le rendu du courriel de disponibilité est considéré bon dans Gmail et Outlook selon le souvenir de l'utilisateur ; la date et le compte utilisés pour cette vérification ne sont pas consignés. Le contrôle de provenance de l'IP du portail est accepté en l'état par l'utilisateur le 5 octobre : sa vérification en production reste non concluante, sans correction applicative. Il n'est plus un chantier actif ; voir la réserve ci-dessous. Le récap de fin de mailing est implémenté localement ; son activation attend la migration et le déploiement. Ensuite, prochaine étape : analyser Search Console et Google Business Profile. Les compléments de la page légale sont en attente d'informations ; rappel au plus mensuel, pas avant le 5 novembre.
+**Prochaine séance : réfléchir au contenu d'une page destinée aux responsables de crèches et structures petite enfance qui recherchent un musicien intervenant.** Avant de la construire, préciser les publics et âges, le déroulement et les formats des ateliers, la zone de déplacement, les preuves publiables et l'appel à l'action. Le positionnement doit parler d'une intervention professionnelle en structure, pas de cours de musique pour les familles.
+
+L'analyse initiale Search Console est faite à partir des exports du 5 octobre. Sur les trois derniers mois, le site a eu 30 clics et 395 impressions ; seule la page d'accueil apparaît dans l'export des pages. Les requêtes visibles pour « intervenant musical en crèche » (2 impressions, position moyenne 5,5) et « éveil musical crèche » (1 impression, position 20) ont un faible volume, mais correspondent à la cible prioritaire. Le tableau des requêtes n'inclut pas toutes les recherches, notamment les requêtes anonymisées.
+
+Le rapport d'indexation montrait une page non indexée : la capture Search Console identifie `http://jardin-sonore.fr/`, redirigée vers la version HTTPS canonique. Cette redirection est attendue ; le sitemap contient les URL HTTPS de l'accueil et des mentions légales. Aucun autre problème d'indexation n'est signalé dans l'export fourni.
+
+La fiche Google Business Profile reste à évaluer après la réflexion sur la page. Une boutique n'est pas nécessaire si l'activité va chez les clients : vérifier l'éligibilité comme activité de zone desservie, la zone réelle et le masquage de l'adresse. Les projets, témoignages et liens de partenaires restent des leviers complémentaires, après la page d'offre.
+
+L'alerte npm `GHSA-vfj7-8cjw-p6xm` est à surveiller : elle concerne `braces` dans la chaîne de dépendances d'`eslint-config-next` ; aucun correctif n'était publié au 5 octobre. Ne pas appliquer le downgrade majeur proposé par `npm audit fix --force`.
+
+Les actions administrateur d'invitation/réinitialisation, les lots notifications/newsletter et la page légale sont livrés. Le rendu du courriel de disponibilité est considéré bon dans Gmail et Outlook selon le souvenir de l'utilisateur ; la date et le compte utilisés n'ont pas été consignés. Le contrôle de provenance de l'IP du portail reste accepté en l'état par l'utilisateur, sans preuve que `x-forwarded-for` ne puisse pas être falsifié ; voir la réserve ci-dessous.
 
 ### Livraisons récentes
 
 - 30 septembre : première disponibilité et préférences newsletter, tag `deploy-availability-newsletter-20260930-01` ; migrations `Version20260930130613` et `Version20260930140509` appliquées en production, schéma et trois crons contrôlés lors de cette livraison.
-- 1er octobre : audiences et contrôle du consentement avant SMTP, tag `deploy-newsletter-audiences-consent-20261001-01` ; puis gestion des abonnés libres et inscription footer avec confirmation, tag `deploy-newsletter-footer-20261001-01`. Deux corrections de présentation de la confirmation ont suivi sous `deploy-newsletter-confirmation-layout-20261001-01` et `deploy-newsletter-confirmation-layout-20261001-02`. La migration `Version20261001101645` avait été validée en développement/test ; son état en production n'a pas été revérifié lors du contrôle du 5 octobre.
+- 1er octobre : audiences et contrôle du consentement avant SMTP, tag `deploy-newsletter-audiences-consent-20261001-01` ; puis gestion des abonnés libres et inscription footer avec confirmation, tag `deploy-newsletter-footer-20261001-01`. Deux corrections de présentation de la confirmation ont suivi sous `deploy-newsletter-confirmation-layout-20261001-01` et `deploy-newsletter-confirmation-layout-20261001-02`. La migration `Version20261001101645` et les migrations antérieures sont confirmées appliquées en production au 5 octobre, avant la migration `Version20261005170000`.
 - 2 octobre : page légale et contrôles SEO/accessibilité du front, commit `2b69a8b`, tag `deploy-legal-privacy-20261002-01`.
-- 5 octobre, contrôle de reprise : page légale et sitemap publics HTTP 200, route de confirmation HTTP 200 ; 311 tests backend / 1 706 assertions, 14 tests Node, lint et build front, style PHP, PHPStan, validations Symfony et schéma local réussis. Deux dépréciations et une notice PHPUnit déjà consignées. Selon le souvenir de l'utilisateur, le rendu du courriel de disponibilité est bon dans Gmail et Outlook ; les notes antérieures n'en précisent ni la date ni le compte utilisé. L'état de la migration newsletter en production reste à revérifier.
+- 5 octobre : récapitulatif de fin de mailing, libellés distinctifs pour les médias homonymes et affichage des PDF/images liés dans le portail ; commit `a68c479`, tag `deploy-mailing-summary-media-20261005-01`. Les 311 tests backend et 1 706 assertions passent (une notice PHPUnit) ; lint PHP/PHPStan et lint/build client réussis. Migration appliquée en production et base à jour ; site public vérifié HTTP 200.
 
 ### Vérifications de livraison à garder en vue
 
@@ -35,8 +46,8 @@ La [conception des disponibilités](docs/superpowers/specs/2026-09-30-session-av
 
 | Chantier | Bénéfice attendu | Dépendances / critère de départ |
 | --- | --- | --- |
-| Analyser Search Console et la fiche Google Business Profile, puis corriger les écarts constatés. | Comprendre les recherches et améliorer la découverte locale. | Après le récap de fin de mailing ; vérifier les accès aux deux outils, relever requêtes, pages, indexation et cohérence des coordonnées/zone. |
-| Créer une page d'offre « ateliers crèches et EAJE » et expliquer concrètement le portail dans « En séance ». | Répondre aux questions des prospects et montrer les ressources offertes après intervention. | Décrire la zone habituelle, les déplacements possibles pour les séances spéciales et les modalités pratiques ; utiliser uniquement des exemples ou visuels autorisés du portail. |
+| Concevoir puis créer une page d'offre « musicien intervenant en crèche et petite enfance ». | Attirer les responsables de structures qui cherchent un intervenant et faciliter les demandes de devis. | Réfléchir d'abord au contenu : types de structures et âges, objectifs pédagogiques, déroulement, formats et modalités, zone de déplacement, preuves autorisées et contact/devis. Une page principale avant d'envisager des pages géographiques. |
+| Évaluer et, si éligible, créer ou compléter la fiche Google Business Profile en activité de zone desservie. | Être trouvé localement par les structures et rendre visible la zone réellement couverte. | Confirmer les interventions en personne chez les clients, la zone habituelle et les informations publiques ; masquer l'adresse si les clients ne sont pas reçus sur place. |
 
 ## P1 — Suivi commercial dans le backoffice
 
@@ -77,7 +88,7 @@ Ces idées restent visibles sans être décidées pour le prochain lot.
 
 | Piste | Bénéfice attendu | Dépendances / critère de départ |
 | --- | --- | --- |
-| Page collaborations et projets, avec témoignages. | Rassurer les prospects par des exemples concrets. | Obtenir les accords pour noms, citations, logos et photos. |
+| Page collaborations et projets, avec témoignages et liens entrants de partenaires. | Rassurer les prospects et obtenir des visites de recommandation depuis les sites partenaires. | Après la page d'offre ; obtenir les accords pour noms, citations, logos et photos, et demander aux partenaires un lien vers la page pertinente. |
 | Actualités et sélection de newsletters publiables. | Proposer du contenu utile et durable sur la vitrine. | Sélection éditoriale explicite ; ne pas publier automatiquement les campagnes internes. |
 | Contenu de la vitrine administrable et messages publics temporaires. | Mettre à jour les informations sans intervention technique. | Cadrer droits d'édition, dates de publication/expiration et séparation des messages publics et réservés aux structures. |
 | Recherches réactives du backoffice. | Accélérer la navigation dans les catalogues. | Optimiser et mesurer d'abord les requêtes concernées. |
