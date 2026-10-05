@@ -21,14 +21,18 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * @extends AbstractType<RepertoireItemFormModel>
  */
 final class RepertoireItemType extends AbstractType
 {
-    public function __construct(private readonly MediaResourceRepositoryInterface $mediaResourceRepository, private readonly ThemeRepositoryInterface $themeRepository)
-    {
+    public function __construct(
+        private readonly MediaResourceRepositoryInterface $mediaResourceRepository,
+        private readonly ThemeRepositoryInterface $themeRepository,
+        private readonly TranslatorInterface $translator,
+    ) {
     }
 
     /**
@@ -37,16 +41,19 @@ final class RepertoireItemType extends AbstractType
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $mediaResources = $this->mediaResourceRepository->search(activeOnly: true);
+        $mediaLabelsByUuid = MediaResourceChoiceLabels::byUuid($mediaResources, $this->translator);
         $mediaChoices = [];
         $themeChoices = [];
         $mediaChoiceAttributes = [];
 
-        foreach ($this->mediaResourceRepository->search(activeOnly: true) as $mediaResource) {
+        foreach ($mediaResources as $mediaResource) {
             $mediaUuid = $mediaResource->getUuid()->toRfc4122();
-            $mediaChoices[$mediaResource->getTitle()] = $mediaUuid;
+            $mediaChoices[$mediaLabelsByUuid[$mediaUuid]] = $mediaUuid;
             $mediaChoiceAttributes[$mediaUuid] = [
                 'data-media-title' => $mediaResource->getTitle(),
-                'data-media-type' => $mediaResource->getType()->translationKey(),
+                'data-media-choice-label' => $mediaLabelsByUuid[$mediaUuid],
+                'data-media-type-label' => $this->translator->trans($mediaResource->getType()->translationKey(), [], 'sessions'),
                 'data-media-url' => $mediaResource->getPrimaryUrl(),
             ];
         }

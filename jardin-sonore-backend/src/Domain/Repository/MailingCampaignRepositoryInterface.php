@@ -18,5 +18,7 @@ interface MailingCampaignRepositoryInterface
 
     public function save(MailingCampaign $mailingCampaign): void;
 
+    public function claimCompletionSummaryNotification(Uuid $uuid): bool;
+
     public function delete(MailingCampaign $mailingCampaign): void;
 }

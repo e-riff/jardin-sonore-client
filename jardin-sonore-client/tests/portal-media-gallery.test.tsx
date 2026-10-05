@@ -5,7 +5,7 @@ import PortalMediaGallery from "../src/components/portal/PortalMediaGallery";
 import fr from "../src/i18n/dictionaries/fr";
 
 test("shows a YouTube preview before loading its player", () => {
-    const html = renderToStaticMarkup(<PortalMediaGallery content={fr.portal.repertoire} media={[{type: "video", title: "Une vidéo", url: "https://youtu.be/dQw4w9WgXcQ"}]} />);
+    const html = renderToStaticMarkup(<PortalMediaGallery content={fr.portal.repertoire} media={[{type: "video", title: "Une vidéo", url: "https://youtu.be/dQw4w9WgXcQ", imageUrl: null}]} />);
 
     assert.match(html, /hqdefault\.jpg/);
     assert.match(html, /aspect-video/);
@@ -14,8 +14,8 @@ test("shows a YouTube preview before loading its player", () => {
 
 test("uses the same media area for files and links and makes it actionable", () => {
     const html = renderToStaticMarkup(<PortalMediaGallery content={fr.portal.repertoire} media={[
-        {type: "link", title: "Partition", url: "https://example.test/partition.pdf"},
-        {type: "link", title: "Page externe", url: "https://example.test/page"},
+        {type: "link", title: "Partition", url: "https://example.test/partition.pdf", imageUrl: null},
+        {type: "link", title: "Page externe", url: "https://example.test/page", imageUrl: null},
     ]} />);
 
     assert.equal((html.match(/aspect-video/g) ?? []).length, 2);

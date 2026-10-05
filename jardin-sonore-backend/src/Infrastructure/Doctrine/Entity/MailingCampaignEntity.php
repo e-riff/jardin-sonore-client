@@ -52,6 +52,8 @@ class MailingCampaignEntity
 
     private ?DateTimeImmutable $lastTestSentAt = null;
 
+    private ?DateTimeImmutable $summaryNotificationClaimedAt = null;
+
     /**
      * @var Collection<int, MailingRecommendationEntity>
      */

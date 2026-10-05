@@ -9,6 +9,7 @@ use App\Infrastructure\Doctrine\Entity\RepertoireItemEntity;
 use App\Infrastructure\Doctrine\Entity\UserEntity;
 use App\Infrastructure\Doctrine\Repository\RepertoireItemDoctrineRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Uid\Uuid;
 
 final readonly class PortalRepertoireReader
@@ -17,6 +18,7 @@ final readonly class PortalRepertoireReader
         private PortalSessionReader $portalSessionReader,
         private RepertoireItemDoctrineRepository $repertoireItemDoctrineRepository,
         private EntityManagerInterface $entityManager,
+        private RequestStack $requestStack,
     ) {
     }
 
@@ -25,10 +27,12 @@ final readonly class PortalRepertoireReader
     {
         $organizationsBySourceUuid = $this->portalSessionReader->authorizedRepertoireOrganizations($userEntity, $criteria->organizationUuid);
         $page = $this->repertoireItemDoctrineRepository->paginatedPortalItems(array_keys($organizationsBySourceUuid), $criteria);
+        $mediaBaseUrl = $this->requestStack->getCurrentRequest()?->getSchemeAndHttpHost() ?? '';
         $items = array_map(fn (RepertoireItemEntity $itemEntity): array => PortalRepertoireResponse::fromEntity(
             $itemEntity,
             $organizationsBySourceUuid[$itemEntity->getUuid()->toRfc4122()],
             $this->mediaEntities($itemEntity),
+            mediaBaseUrl: $mediaBaseUrl,
         ), $page['items']);
 
         return ['items' => $items, 'total' => $page['total'], 'page' => $page['page'], 'pageSize' => $page['pageSize']];
@@ -57,11 +61,14 @@ final readonly class PortalRepertoireReader
             return null;
         }
 
+        $mediaBaseUrl = $this->requestStack->getCurrentRequest()?->getSchemeAndHttpHost() ?? '';
+
         return PortalRepertoireResponse::fromEntity(
             $itemEntity,
             $organizationsBySourceUuid[$itemEntity->getUuid()->toRfc4122()],
             $this->mediaEntities($itemEntity),
-            true,
+            withDetails: true,
+            mediaBaseUrl: $mediaBaseUrl,
         );
     }
 
@@ -75,17 +82,33 @@ final readonly class PortalRepertoireReader
             }
             $mediaEntity = $this->entityManager->getRepository(MediaResourceEntity::class)->findOneBy(['uuid' => Uuid::fromString($mediaUuid), 'active' => true]);
             $mediaUrl = $mediaEntity instanceof MediaResourceEntity ? $mediaEntity->getPrimaryUrl() : '';
-            $urlParts = parse_url($mediaUrl);
             if ($mediaEntity instanceof MediaResourceEntity
-                && false !== $urlParts
-                && in_array(strtolower($urlParts['scheme'] ?? ''), ['http', 'https'], true)
-                && isset($urlParts['host'])
-                && !isset($urlParts['user'])
-                && !isset($urlParts['pass'])) {
+                && self::isAllowedMediaUrl($mediaUrl, 'resources')) {
                 $mediaEntities[] = $mediaEntity;
             }
         }
 
         return $mediaEntities;
+    }
+
+    private static function isAllowedMediaUrl(string $mediaUrl, string $localDirectory): bool
+    {
+        $urlParts = parse_url($mediaUrl);
+
+        if (false === $urlParts) {
+            return false;
+        }
+
+        if ('' !== ($urlParts['scheme'] ?? '')) {
+            return in_array(strtolower($urlParts['scheme']), ['http', 'https'], true)
+                && isset($urlParts['host'])
+                && !isset($urlParts['user'])
+                && !isset($urlParts['pass']);
+        }
+
+        $path = ltrim($urlParts['path'] ?? '', '/');
+
+        return 1 === preg_match('~^uploads/media/' . preg_quote($localDirectory, '~') . '/[a-z0-9._-]+$~i', $path)
+            && !str_contains($path, '..');
     }
 }

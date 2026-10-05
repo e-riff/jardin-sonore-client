@@ -146,6 +146,13 @@ return static function (ClassMetadata $metadata): void {
         'nullable' => true,
     ]);
 
+    $metadata->mapField([
+        'fieldName' => 'summaryNotificationClaimedAt',
+        'columnName' => 'summary_notification_claimed_at',
+        'type' => Types::DATETIME_IMMUTABLE,
+        'nullable' => true,
+    ]);
+
     $metadata->mapOneToMany([
         'fieldName' => 'recommendations',
         'targetEntity' => MailingRecommendationEntity::class,

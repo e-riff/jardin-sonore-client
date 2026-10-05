@@ -27,7 +27,7 @@ export default class extends Controller {
         }
 
         const itemsHtml = selectedOptions.map((option) => {
-            const title = this.escapeHtml(option.dataset.mediaTitle ?? option.textContent?.trim() ?? '');
+            const title = this.escapeHtml(option.dataset.mediaChoiceLabel ?? option.dataset.mediaTitle ?? option.textContent?.trim() ?? '');
             const type = this.escapeHtml(option.dataset.mediaTypeLabel ?? '');
             const url = option.dataset.mediaUrl ?? '';
             const urlHtml = url === ''

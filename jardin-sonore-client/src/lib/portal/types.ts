@@ -80,7 +80,7 @@ export interface PortalRepertoireListResponse {
     availableThemes: PortalTheme[];
 }
 
-export interface PortalRepertoireMedia {type: "video" | "soundtrack" | "link"; title: string; url: string;}
+export interface PortalRepertoireMedia {type: "video" | "soundtrack" | "link"; title: string; url: string; imageUrl: string | null;}
 export interface PortalRepertoireBlock {kind: string; text?: string; gesture?: string;}
 export interface PortalRepertoireDetail extends PortalRepertoireSummary {
     source: string | null;

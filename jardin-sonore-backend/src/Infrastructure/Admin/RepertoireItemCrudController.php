@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Admin;
 
+use App\Application\Form\MediaResourceChoiceLabels;
 use App\Domain\Model\Session\RepertoireBlockKind;
 use App\Domain\Model\Session\RepertoireItemType;
 use App\Domain\Repository\MediaResourceRepositoryInterface;
@@ -166,9 +167,12 @@ final class RepertoireItemCrudController extends AbstractCrudController
     private function linkedMediaChoices(): array
     {
         $choices = [];
+        $mediaResources = $this->mediaResourceRepository->search(activeOnly: true);
+        $labelsByUuid = MediaResourceChoiceLabels::byUuid($mediaResources, $this->translator);
 
-        foreach ($this->mediaResourceRepository->search(activeOnly: true) as $mediaResource) {
-            $choices[$mediaResource->getTitle()] = $mediaResource->getUuid()->toRfc4122();
+        foreach ($mediaResources as $mediaResource) {
+            $mediaUuid = $mediaResource->getUuid()->toRfc4122();
+            $choices[$labelsByUuid[$mediaUuid]] = $mediaUuid;
         }
 
         return $choices;

@@ -10,11 +10,11 @@ Mise à jour le 5 octobre 2026. Ce document est la **seule source de l'état cou
 - Portail structures accessible avec comptes, séances, comptines, profil et impersonation ; le bandeau du portail et la stabilité du menu sont livrés.
 - Règle de mot de passe du portail centralisée. Le traitement d'une réussite partielle lors de l'édition du profil reste distinct et ouvert.
 - Notifications de première disponibilité par structure, préférences distinctes du profil, audiences annuaire/portail/abonnés libres, contrôle du consentement avant envoi, gestion des abonnés dans E-mails et inscription publique confirmée depuis le footer.
-- Page « Mentions légales et confidentialité » publiée et reliée au footer, au sitemap et aux métadonnées. Son contenu reste à compléter sur les points indiqués en P0.
+- Page « Mentions légales et confidentialité » publiée et reliée au footer, au sitemap et aux métadonnées. Les compléments sont reportés faute d'informations disponibles ; ne pas les relancer avant le 5 novembre 2026 et limiter ensuite le rappel à une fois par mois maximum.
 
 ## Point de reprise — 5 octobre 2026
 
-**Les actions administrateur d'invitation/réinitialisation, les lots notifications/newsletter et la page légale sont livrés. Aucun n'est à recommencer.** Le rendu du courriel de disponibilité est considéré bon dans Gmail et Outlook selon le souvenir de l'utilisateur ; la date et le compte utilisés pour cette vérification ne sont pas consignés. Le contrôle de provenance de l'IP du portail est accepté en l'état par l'utilisateur le 5 octobre : sa vérification en production reste non concluante, sans correction applicative. Il n'est plus un chantier actif ; voir la réserve ci-dessous. La prochaine priorité est de compléter les informations et les durées de conservation de la page légale déjà publiée.
+**Les actions administrateur d'invitation/réinitialisation, les lots notifications/newsletter et la page légale sont livrés. Aucun n'est à recommencer.** Le rendu du courriel de disponibilité est considéré bon dans Gmail et Outlook selon le souvenir de l'utilisateur ; la date et le compte utilisés pour cette vérification ne sont pas consignés. Le contrôle de provenance de l'IP du portail est accepté en l'état par l'utilisateur le 5 octobre : sa vérification en production reste non concluante, sans correction applicative. Il n'est plus un chantier actif ; voir la réserve ci-dessous. Le récap de fin de mailing est implémenté localement ; son activation attend la migration et le déploiement. Ensuite, prochaine étape : analyser Search Console et Google Business Profile. Les compléments de la page légale sont en attente d'informations ; rappel au plus mensuel, pas avant le 5 novembre.
 
 ### Livraisons récentes
 
@@ -25,7 +25,7 @@ Mise à jour le 5 octobre 2026. Ce document est la **seule source de l'état cou
 
 ### Vérifications de livraison à garder en vue
 
-- Les informations restant à compléter sur la page légale figurent en P0 ci-dessous.
+- Les compléments de la page légale sont différés faute d'informations ; ne pas les relancer avant le 5 novembre 2026, puis au plus une fois par mois.
 - Sécurité du portail : les actions administrateur sont protégées et testées. L'audit de la provenance de l'IP utilisée pour limiter les tentatives a été tenté le 5 octobre, mais Tiger Protect a renvoyé HTTP 429 ; le compte cPanel ne donne pas accès à la configuration Apache globale ni aux journaux d'accès. **Accepté en l'état pour le moment, sans preuve que `x-forwarded-for` ne puisse pas être falsifié.** Reprendre uniquement si l'hébergeur fournit la configuration du proxy ou si une recette de production non bloquée devient possible ; corriger si l'usurpation est alors constatée. Détails dans le [plan dédié](docs/superpowers/plans/2026-09-29-portal-admin-actions-security.md).
 - Contrôler les journaux d'accès de l'hébergeur pour la confirmation newsletter si une vérification de production est reprise. Le jeton est placé dans le fragment du lien, puis envoyé dans le corps d'un POST à chemin constant afin de ne pas figurer dans l'URL de requête.
 
@@ -35,8 +35,7 @@ La [conception des disponibilités](docs/superpowers/specs/2026-09-30-session-av
 
 | Chantier | Bénéfice attendu | Dépendances / critère de départ |
 | --- | --- | --- |
-| Compléter les informations de la page légale déjà publiée. | Donner des informations fiables aux visiteurs et aux structures. | L’utilisateur ne souhaite pas afficher d’adresse, d’e-mail ni de téléphone ; documenter cet écart, fixer les durées de conservation et mettre en place la purge correspondante. Hébergeur o2switch identifié. |
-| Analyser Search Console et la fiche Google Business Profile, puis corriger les écarts constatés. | Comprendre les recherches et améliorer la découverte locale. | Accès aux deux outils ; relever requêtes, pages, indexation et cohérence des coordonnées/zone. |
+| Analyser Search Console et la fiche Google Business Profile, puis corriger les écarts constatés. | Comprendre les recherches et améliorer la découverte locale. | Après le récap de fin de mailing ; vérifier les accès aux deux outils, relever requêtes, pages, indexation et cohérence des coordonnées/zone. |
 | Créer une page d'offre « ateliers crèches et EAJE » et expliquer concrètement le portail dans « En séance ». | Répondre aux questions des prospects et montrer les ressources offertes après intervention. | Décrire la zone habituelle, les déplacements possibles pour les séances spéciales et les modalités pratiques ; utiliser uniquement des exemples ou visuels autorisés du portail. |
 
 ## P1 — Suivi commercial dans le backoffice

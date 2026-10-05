@@ -10,6 +10,7 @@ use App\Application\Mailing\NewsletterMailSenderInterface;
 use App\Application\Mailing\NewsletterRecipientEligibilityInterface;
 use App\Application\Mailing\NewsletterRendererInterface;
 use App\Application\Mailing\RecordNewsletterRecommendationUsages;
+use App\Application\Mailing\SendMailingCampaignCompletionSummary;
 use App\Domain\Model\Mailing\MailingCampaignStatus;
 use App\Domain\Model\Mailing\NewsletterRecipient;
 use App\Domain\Model\ValueObject\EmailAddress;
@@ -33,6 +34,7 @@ final readonly class SendMailingCampaignRecipientMessageHandler
         private RecordNewsletterRecommendationUsages $recordNewsletterRecommendationUsages,
         private LoggerInterface $mailingDeliveryLogger,
         private NewsletterRecipientEligibilityInterface $newsletterRecipientEligibility,
+        private SendMailingCampaignCompletionSummary $sendMailingCampaignCompletionSummary,
     ) {
     }
 
@@ -102,6 +104,7 @@ final readonly class SendMailingCampaignRecipientMessageHandler
         }
 
         if (MailingCampaignStatus::DELIVERY_STOPPED === $mailingCampaign->getStatus()) {
+            ($this->sendMailingCampaignCompletionSummary)($mailingCampaign);
             $this->mailingDeliveryLogger->warning('Newsletter delivery remains stopped after current wave completion.', [
                 'campaign_uuid' => $mailingCampaign->getUuid()->toRfc4122(),
                 'campaign_title' => $mailingCampaign->getInternalTitle(),
@@ -114,6 +117,7 @@ final readonly class SendMailingCampaignRecipientMessageHandler
         if ($this->mailingDeliveryQueue->hasFailedRecipients($message->campaignUuid)) {
             $mailingCampaign->markDeliveryFailed();
             $this->mailingCampaignRepository->save($mailingCampaign);
+            ($this->sendMailingCampaignCompletionSummary)($mailingCampaign);
             $this->mailingDeliveryLogger->warning('Newsletter delivery completed with failures.', [
                 'campaign_uuid' => $mailingCampaign->getUuid()->toRfc4122(),
                 'campaign_title' => $mailingCampaign->getInternalTitle(),
@@ -126,6 +130,7 @@ final readonly class SendMailingCampaignRecipientMessageHandler
         $mailingCampaign->markDeliverySent();
         $this->mailingCampaignRepository->save($mailingCampaign);
         ($this->recordNewsletterRecommendationUsages)($mailingCampaign);
+        ($this->sendMailingCampaignCompletionSummary)($mailingCampaign);
         $this->mailingDeliveryLogger->info('Newsletter delivery fully sent.', [
             'campaign_uuid' => $mailingCampaign->getUuid()->toRfc4122(),
             'campaign_title' => $mailingCampaign->getInternalTitle(),
