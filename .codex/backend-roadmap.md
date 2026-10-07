@@ -2,6 +2,8 @@
 
 > **Archive technique.** Le pilotage actif, les priorités et les statuts à jour sont dans la [roadmap centrale](../ROADMAP.md). Les sections ci-dessous conservent les décisions et lots historiques du backend ; leurs mentions de « roadmap maître », « prochains lots » ou travaux futurs décrivent leur contexte d'origine et ne priment pas sur la roadmap centrale. Les anciens points sur le portail masqué, son bandeau, son menu et la règle de mot de passe sont notamment dépassés. Le détail historique d'exécution figure dans `.codex/backend-refacto-plan.md`.
 
+La livraison de la page vitrine `/eveil-musical-creche` du 7 octobre 2026 ne modifie pas le backend. Son statut est consigné dans la [roadmap centrale](../ROADMAP.md) ; ses composants et transitions sont recensés dans le [catalogue d'identité visuelle](../docs/identite-visuelle-vitrine.md).
+
 ## Etat Actuel
 
 - Backend Symfony operationnel dans `jardin-sonore-backend/`.
