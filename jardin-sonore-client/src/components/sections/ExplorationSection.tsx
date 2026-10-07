@@ -1,4 +1,5 @@
 import {JSX} from "react";
+import Link from "next/link";
 import ExplorationGallery from "@/components/sections/ExplorationGallery";
 import TestimonialsSection from "@/components/sections/TestimonialsSection";
 import {getTranslations} from "@/i18n/server";
@@ -23,7 +24,7 @@ export default async function ExplorationSection(): Promise<JSX.Element> {
                     <ExplorationGallery content={content} />
                 </div>
 
-                <div className="mt-14">
+                <div className="mt-14 scroll-mt-28" id="temoignages">
                     <div className="mb-5 border-l-4 border-primary/50 pl-5">
                         <p className="text-sm leading-6 text-on-surface-variant">
                             <span className="mr-2 font-sans font-bold uppercase tracking-[0.18em] text-primary">{content.testimonialsTitle}</span>
@@ -31,6 +32,9 @@ export default async function ExplorationSection(): Promise<JSX.Element> {
                         </p>
                     </div>
                     <TestimonialsSection />
+                </div>
+                <div className="mt-10 text-center">
+                    <Link className="font-sans text-sm font-bold text-primary underline underline-offset-4 hover:text-primary-container" href="/eveil-musical-creche">{content.offerLink}</Link>
                 </div>
             </div>
         </section>

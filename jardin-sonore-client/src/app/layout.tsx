@@ -36,7 +36,7 @@ export const metadata: Metadata = {
                 url: "/images/social/jardin-sonore-og.jpg",
                 width: 1200,
                 height: 630,
-                alt: "Atelier d'éveil musical Jardin Sonore pour la petite enfance",
+                alt: fr.metadata.socialImageAlt,
             },
         ],
     },
