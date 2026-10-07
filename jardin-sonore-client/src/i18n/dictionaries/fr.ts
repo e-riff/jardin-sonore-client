@@ -5,12 +5,18 @@ const fr = {
     accessibility: {
         skipToContent: "Aller au contenu principal",
     },
+    breadcrumbs: {
+        ariaLabel: "Fil d’Ariane",
+        home: "Accueil",
+        earlyChildhood: "Éveil musical en crèche",
+    },
     metadata: {
         titleDefault: "Éveil musical crèches & EAJE | Saint-Étienne · Lyon",
         titleTemplate: "%s | Jardin Sonore",
         description: "Ateliers d'éveil musical pour crèches et EAJE à Saint-Étienne, Lyon et dans le Pilat. 10 ans d'expérience, diplôme petite enfance, devis sur demande.",
         socialTitle: "Jardin Sonore - Éveil musical petite enfance",
         socialDescription: "Ateliers d'éveil musical autour des comptines, instruments, objets sonores et manipulations libres pour les tout-petits, en crèche, EAJE, festival ou atelier parents-enfants.",
+        socialImageAlt: "Atelier d’éveil musical avec un enfant autour d’un tambour",
     },
     legalPage: {
         eyebrow: "Informations du site",
@@ -120,6 +126,7 @@ const fr = {
         eyebrow: "En séance",
         title: "Photos et retours d'expérience",
         description: "Un aperçu des ateliers : des images prises en intervention et les mots des structures qui accueillent le Jardin Sonore.",
+        offerLink: "Découvrir les ateliers en crèche et petite enfance",
         photosTitle: "Photos d'ateliers",
         photosDescription: "Quelques moments pris sur le vif",
         testimonialsTitle: "Témoignages",
@@ -200,58 +207,66 @@ const fr = {
         description: "Avec le Jardin Sonore, chaque proposition s'adapte à votre lieu, à vos publics et à votre projet : crèches, fêtes de structures, festivals ou ateliers parents-enfants.",
         discoverCta: "Découvrir",
         closeModalLabel: "Fermer le détail de la prestation",
+        backModalLabel: "Retour",
         items: [
             {
+                slug: "creches-eaje",
                 title: "Crèches & EAJE",
-                description: "Ateliers réguliers ou ponctuels, adaptés aux plus jeunes dès 3 mois, autour de la manipulation libre, de l'écoute et de l'éveil sensoriel. Après chaque séance, un déroulé récapitulatif est fourni, accompagné d'idées simples pour poursuivre l'exploration en mon absence.",
+                description: "Ateliers réguliers ou ponctuels dès la naissance, autour de la manipulation libre, de l’écoute et de l’éveil sensoriel. Après chaque séance, l’équipe retrouve dans son portail le déroulé et des ressources pour prolonger l’exploration.",
                 tone: "primary",
                 imageSrc: "/images/intervention-creche.webp",
                 imageAlt: "Intervention d'éveil musical en crèche",
                 badge: "Structures",
                 modal: {
                     eyebrow: "Détails de la prestation",
-                    subtitle: "Des séances qui évoluent avec les enfants et la vie de votre structure.",
+                    subtitle: "Des séances qui évoluent avec les enfants et le groupe.",
                     body: [
-                        "Les interventions en crèche et en EAJE sont pensées comme un rendez-vous régulier plutôt qu'une animation isolée. Les séances peuvent progresser au fil des semaines, avec des rituels, des thèmes et des formats variés pour accompagner l'écoute, le geste, la voix et la manipulation libre.",
-                        "Chaque proposition s'adapte à l'âge des enfants, au rythme du groupe et au projet pédagogique de la structure.",
+                        "Les séances commencent généralement par un petit rituel musical, avant de laisser une large place à la manipulation. Instruments, objets sonores et matières sont accessibles : chacun peut écouter, essayer, répéter, détourner ou simplement observer.",
+                        "Je joue en direct et fais évoluer la proposition à partir de ce qui apparaît dans le groupe. D’une séance à l’autre, certains repères reviennent tandis que les chansons, les instruments et les univers se renouvellent.",
+                        "Après chaque atelier, l’équipe retrouve les ressources utilisées dans son portail en ligne, pour reprendre une comptine, retrouver une proposition et s’en emparer en autonomie avec les enfants.",
                     ],
                     practicalTitle: "En pratique",
                     points: [
                         {
-                            icon: "group",
-                            label: "15 participants maximum",
-                            text: "Un petit groupe pour garder une qualité d'écoute et de présence.",
+                            icon: "age",
+                            label: "Dès la naissance",
+                            text: "Des propositions adaptées aux tout-petits.",
                         },
                         {
-                            icon: "clock",
+                            icon: "participants",
+                            label: "12 à 15 enfants",
+                            text: "Un groupe suffisamment réduit pour laisser de la place à chacun.",
+                        },
+                        {
+                            icon: "duration",
+                            label: "≈ 40 min par séance",
+                            text: "Une durée indicative, ajustée selon l’âge et le groupe.",
+                        },
+                        {
+                            icon: "sessions",
                             label: "1 à 2 séances par matinée",
-                            text: "Un format pratique (30 minutes à 1h) pour accueillir plusieurs groupes dans de bonnes conditions.",
-                        },
-                        {
-                            icon: "path",
-                            label: "Parcours évolutif",
-                            text: "Des séances régulières avec des thèmes et approches qui se renouvellent.",
-                        },
-                        {
-                            icon: "clock",
-                            label: "Matériel fourni",
-                            text: "Instruments, objets sonores, supports adaptés aux tout-petits et récapitulatif final fourni.",
+                            text: "Pour accueillir un ou plusieurs groupes dans de bonnes conditions.",
                         },
                     ],
-                    resourcesTitle: "Ressource",
+                    resourcesTitle: "Voir une séance concrète",
                     resources: [
                         {
-                            label: "Exemple de déroulé : séance Brésil",
-                            description: "Un aperçu concret d'une séance thématique avec comptines, jeux de sons et manipulations.",
-                            href: "/documents/seance-bresil.pdf",
+                            label: "Exemple de séance : autour du dragon",
+                            description: "Comptines, jeux de doigts, instruments, manipulation et pistes pour poursuivre après l’atelier.",
+                            href: "/documents/seance-medievale-le-dragon.pdf",
                         },
                     ],
-                    ctaLabel: "Demander plus d'informations",
+                    detailPageLink: {
+                        href: "/eveil-musical-creche",
+                        label: "Découvrir les ateliers en crèche",
+                    },
+                    ctaLabel: "Demander plus d’informations",
                 },
             },
             {
+                slug: "jardin-sonore",
                 title: "Fêtes de structures et festivals",
-                description: "Présences longues (demi-journée, journée...) autour d'un thème précis ou pour une manifestation particulière : fête de fin d'année, festival petite enfance, temps fort associatif ou événement local.",
+                description: "Présences longues (demi-journée, journée…) autour d'un thème précis ou pour une manifestation particulière : fête de fin d'année, festival petite enfance, temps fort associatif ou événement local.",
                 tone: "tertiary",
                 imageSrc: "/images/galerie/rideaux-sonores.webp",
                 imageAlt: "Installation de rideaux sonores extérieurs",
@@ -298,6 +313,7 @@ const fr = {
                 },
             },
             {
+                slug: "parents-enfants",
                 title: "Parents-enfants",
                 description: "Des moments privilégiés de partage en famille pour renforcer le lien à travers la musique, les comptines, les instruments et l'exploration sonore libre.",
                 tone: "secondary",
@@ -333,6 +349,135 @@ const fr = {
                 },
             },
         ],
+    },
+    earlyChildhoodPage: {
+        metadata: {
+            title: "Éveil musical en crèche et petite enfance",
+            description: "Ateliers d’éveil musical dès la naissance en crèche, EAJE et relais petite enfance, dans le Forez, le Gier, le Pilat et le Lyonnais.",
+            serviceAreas: ["Forez", "Gier", "Pilat", "Saint-Étienne", "Saint-Chamond", "Rive-de-Gier", "Bourg-Argental", "Lyonnais", "Givors", "Lyon"],
+        },
+        hero: {
+            eyebrow: "Ateliers en crèche, EAJE et relais petite enfance",
+            title: "Faire de la musique un terrain d’exploration",
+            introduction: "Je prépare un environnement musical fait d’objets sonores, d’instruments et de matières très diverses. **Les enfants y entrent à leur manière** : ils écoutent, touchent, répètent, détournent et transforment ce qui les entoure.\n\n" +
+                "Je joue et compose en direct à partir de ce qui naît du groupe : un son, un geste, un silence, un rythme qui revient ou un jeu qui s’invente.",
+            primaryCta: "Parlons de votre projet",
+            secondaryCta: "Découvrir les ateliers",
+            imageAlt: "Des enfants et un adulte font onduler un grand tissu pendant une exploration collective",
+        },
+        workshops: {
+            eyebrow: "Le cœur de mon activité",
+            title: "Une séance pour manipuler les sons",
+            introduction: "Un petit rituel musical ouvre souvent la séance : une chanson, un jeu de doigts ou un geste connu qui donne au groupe un premier repère. Puis vient un temps ouvert, **où chacun peut choisir, essayer et recommencer**.\n\n" +
+                "Les objets et les instruments sont accessibles : les enfants peuvent les prendre, les écouter de près, les faire rouler, les frotter, les secouer, les frapper, les déplacer — ou simplement regarder ce que font les autres.\n\n" +
+                "Je joue et réagis à ce qui apparaît. **Il n’y a ni geste attendu ni activité à réussir** : la proposition donne un cadre et quelques repères, sans décider à l’avance de ce que chaque enfant doit en faire.",
+            points: [
+                {
+                    title: "Des repères, sans imposer un parcours",
+                    description: "Quelques moments communs structurent la séance, tout en laissant une large place aux choix et aux initiatives des enfants.",
+                },
+                {
+                    title: "Des professionnel·les dans le jeu",
+                    description: "L’équipe participe, joue et écoute elle aussi. Elle fait partie de la séance.",
+                },
+                {
+                    title: "Une proposition qui évolue avec le groupe",
+                    description: "Un son, un geste ou un intérêt partagé peut faire évoluer ce que j’avais préparé et ouvrir une nouvelle direction.",
+                },
+            ],
+            imageAlt: "Emeric anime une exploration musicale avec de jeunes enfants autour d’un tabla",
+        },
+        practice: {
+            eyebrow: "Quelques repères",
+            title: "Un cadre souple, pensé avec votre équipe",
+            description: "Ces repères correspondent au format que je propose le plus souvent pour des ateliers réguliers. **Ils ne constituent pas un cadre rigide** : durée, taille du groupe et organisation s’ajustent avec l’équipe à l’âge des enfants et à la réalité de la structure.",
+            details: [
+                {value: "0+", description: "dès la naissance", label: "Âge des enfants", icon: "age"},
+                {value: "12–15", description: "enfants par groupe", label: "Taille du groupe", icon: "participants"},
+                {value: "≈ 40 min", description: "par séance", label: "Durée", icon: "duration"},
+                {value: "1–2", description: "séances par matinée", label: "Rythme", icon: "sessions"},
+            ],
+            imageAlt: "Tambour sur cadre, feuilles d’automne et objets sonores disposés pour un atelier",
+            resourceTitle: "Un exemple de séance",
+            resourceDescription: "Découvrir le déroulé d’une séance autour du dragon, avec comptines, jeux de doigts et instruments.",
+            resourceLink: "Télécharger l’exemple de séance médiévale (PDF)",
+            resourceHref: "/documents/seance-medievale-le-dragon.pdf",
+        },
+        approach: {
+            eyebrow: "Mon approche",
+            title: "Écouter, toucher, essayer, recommencer",
+            description: "Je travaille beaucoup autour de **la manière dont un son apparaît et se transforme** : frotter, frapper, souffler, répéter, ralentir, faire durer… Un même objet ou un même instrument peut ouvrir des expériences très différentes selon le geste, l’écoute et ce qui se passe dans le groupe.\n\n" +
+                "Une séance peut partir d’une comptine, d’une matière, d’un imaginaire, d’un instrument ou d’un livre. Le son et la musique circulent ensuite entre **la voix, le corps, les objets et les instruments** : certains gestes, sons ou rythmes reviennent, se répondent et se transforment.\n\n" +
+                "J’aime proposer suffisamment de repères pour que les enfants puissent reconnaître et anticiper, tout en laissant assez d’espace pour qu’ils puissent surprendre la proposition.",
+            cocreation: {
+                eyebrow: "Une possibilité en plus",
+                title: "Préparer et animer une séance à deux",
+                description: "Je peux construire une séance ou une séquence avec un·e professionnel·le de l’équipe : choisir un thème, réunir comptines, objets et instruments, puis l’animer ensemble. **Une manière de transmettre ma démarche par la pratique** et de donner ensuite davantage d’autonomie à l’équipe.",
+                imageAlt: "Emeric joue de la lyre avec un enfant pendant la préparation d’une séance musicale",
+            },
+        },
+        evidence: {
+            eyebrow: "Objets, matières et instruments",
+            title: "Des instruments, mais pas seulement",
+            description: "Une calebasse peut être frappée, remplie, vidée ou devenir caisse de résonance. Un tube peut produire un souffle, un choc, rouler au sol ou devenir une baguette. Un tissu peut accompagner un geste, cacher un instrument ou rendre visible un mouvement.\n\n" +
+                "J’aime ces objets qui **ne disent pas immédiatement comment il faudrait les utiliser**. Ils côtoient instruments, petites percussions, matières textiles et objets de récupération pour multiplier les possibilités de jeu, de manipulation et d’écoute.",
+            supports: [],
+            photosLabel: "Photos de supports sonores utilisés en atelier",
+            photos: [
+                {src: "/images/ateliers/lyre-detail.webp", alt: "Détail des cordes et de la caisse d’une lyre"},
+                {src: "/images/ateliers/exploration-sonore-tambour.webp", alt: "Un tambour entouré de feuilles d’automne et d’objets sonores"},
+                {src: "/images/ateliers/bebe-mandoline.webp", alt: "Un bébé découvre les cordes d’une mandoline avec l’accompagnement d’un adulte"},
+            ],
+        },
+        portal: {
+            eyebrow: "Après les ateliers",
+            title: "Le portail prolonge les découvertes au quotidien",
+            description: "Après chaque séance, la structure retrouve en ligne les éléments utilisés pendant l’atelier. L’idée n’est pas de reproduire exactement ce qui s’est passé, mais de **retrouver des repères et permettre à l’équipe de s’en emparer en autonomie** : reprendre une comptine, retrouver un instrument, réinvestir une proposition ou en inventer une nouvelle avec les enfants.",
+            resources: [
+                "Les déroulés de séance, en ligne et en PDF",
+                "Les comptines, leurs médias, les instruments associés et les partitions partagées",
+                "Des pistes pour prolonger l’exploration dans la structure",
+            ],
+            cta: "Découvrir le portail structures",
+            accountCta: "Retrouver mon espace",
+            imageAlt: "Aperçu de l’espace en ligne destiné aux structures petite enfance",
+        },
+        testimonialsPrompt: {
+            quote: "Emeric a su créer un moment à la fois apaisant et joyeux, avec beaucoup de douceur dans son approche.",
+            attribution: "Crèche Les P’tits Matrus — Saint-Étienne",
+            link: "Voir tous les témoignages",
+        },
+        otherFormats: {
+            eyebrow: "Selon votre projet",
+            title: "D’autres formats pour faire vivre la musique",
+            description: "À côté des séances régulières, je propose aussi des temps plus ouverts ou ponctuels : jardins sonores, ateliers parents-enfants, fêtes, événements ou projets imaginés avec une structure.",
+            formats: [
+                {
+                    title: "Jardin sonore, fête ou festival",
+                    description: "Un grand espace d’exploration libre composé d’installations, d’instruments et d’objets sonores, à découvrir en famille ou avec les enfants de la structure.",
+                    href: "/?format=jardin-sonore#formats",
+                },
+                {
+                    title: "Atelier parents-enfants",
+                    description: "Un temps partagé entre adultes et enfants autour de l’écoute, des comptines, des instruments et de la manipulation sonore.",
+                    href: "/?format=parents-enfants#formats",
+                },
+                {
+                    title: "Une autre idée ?",
+                    description: "Éveil musical au réveil de la sieste, cabanes sonores, thématique particulière ou proposition construite autour de votre projet.",
+                    href: "/#contact",
+                },
+            ],
+            cardLink: "Découvrir ce format",
+            serviceArea: "J’interviens régulièrement dans le Forez, le Gier et le Pilat, notamment à Saint-Étienne, Saint-Chamond, Rive-de-Gier et Bourg-Argental. Des projets à Givors ou à Lyon peuvent aussi s’envisager selon les demandes.",
+        },
+        contact: {
+            eyebrow: "Votre projet",
+            title: "Imaginons un atelier pour votre structure",
+            description: "Parlez-moi de votre équipe, des enfants accueillis et de ce que vous aimeriez explorer. Nous verrons ensemble quelle forme donner au projet.",
+            quoteCta: "Parler de mon projet",
+            callCta: "M’appeler",
+        },
     },
     testimonials: {
         title: "Témoignages",
@@ -371,7 +516,7 @@ const fr = {
         quoteCta: "Demander des renseignements",
         callCta: "M'appeler",
         phone: {
-            loadingLabel: "Ouverture...",
+            loadingLabel: "Ouverture…",
         },
         form: {
             fullNameLabel: "Nom complet",
@@ -385,9 +530,9 @@ const fr = {
             cityLabel: "Ville",
             cityPlaceholder: "Votre ville",
             messageLabel: "Message",
-            messagePlaceholder: "Décrivez votre projet...",
+            messagePlaceholder: "Décrivez votre projet…",
             submitLabel: "Envoyer la demande",
-            submitSending: "Envoi en cours...",
+            submitSending: "Envoi en cours…",
             submitSuccess: "Votre demande a bien été envoyée.",
             submitError: "Impossible d'envoyer la demande pour le moment.",
             captchaError: "La vérification anti-robot a échoué. Merci de réessayer.",
@@ -437,6 +582,7 @@ const fr = {
         links: [
             {label: "Intervenant", href: "#intervenant-musical"},
             {label: "Formats", href: "#formats"},
+            {label: "Éveil musical en crèche", href: "/eveil-musical-creche"},
             {label: "Approche", href: "#approche"},
             {label: "En séance", href: "#en-seance"},
             {label: "Contact", href: "#contact"},

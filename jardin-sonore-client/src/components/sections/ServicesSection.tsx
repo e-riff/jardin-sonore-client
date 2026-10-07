@@ -14,7 +14,7 @@ export default async function ServicesSection(): Promise<JSX.Element> {
             <div className="mx-auto max-w-7xl">
                 <SectionHeading centered eyebrow={content.eyebrow} title={content.title} description={content.description} />
                 <div className="mx-auto mt-4 h-1.5 w-16 rounded-full bg-primary-container" />
-                <ServicesBrowser closeLabel={content.closeModalLabel} discoverCta={content.discoverCta} services={services} />
+                <ServicesBrowser backLabel={content.backModalLabel} closeLabel={content.closeModalLabel} discoverCta={content.discoverCta} services={services} />
             </div>
         </section>
     );

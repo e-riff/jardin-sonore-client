@@ -3,11 +3,11 @@
 import {FormEvent, JSX, useEffect, useRef, useState} from "react";
 import {PhoneIcon} from "@heroicons/react/24/outline";
 import AltchaWidget from "@/components/AltchaWidget";
-import {Dictionary} from "@/i18n/types";
 import {showLegalPage} from "@/lib/legal-publication";
+import type {CtaContent} from "@/types/content";
 
 interface CtaContactPanelProps {
-    content: Dictionary["cta"];
+    content: CtaContent;
 }
 
 interface PhonePayload {

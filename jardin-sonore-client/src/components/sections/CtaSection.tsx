@@ -1,10 +1,15 @@
 import {JSX} from "react";
 import CtaContactPanel from "@/components/CtaContactPanel";
 import {getTranslations} from "@/i18n/server";
+import type {CtaContent} from "@/types/content";
 
-export default async function CtaSection(): Promise<JSX.Element> {
+interface CtaSectionProps {
+    content?: Pick<CtaContent, "eyebrow" | "title" | "description" | "quoteCta" | "callCta">;
+}
+
+export default async function CtaSection({content: contentOverride}: CtaSectionProps = {}): Promise<JSX.Element> {
     const dictionary = await getTranslations();
-    const content = dictionary.cta;
+    const content: CtaContent = {...dictionary.cta, ...contentOverride};
 
     return (
         <section className="bg-surface-container-low px-6 py-lg sm:px-margin lg:py-16" id="contact">

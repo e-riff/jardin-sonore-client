@@ -1,4 +1,5 @@
 import {ComponentType, ReactNode, SVGProps} from "react";
+import type {Dictionary} from "@/i18n/types";
 
 export type IconComponent = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -10,6 +11,7 @@ export interface StatItem {
 }
 
 export interface ServiceItem {
+    slug: string;
     title: string;
     description: string;
     tone: "primary" | "secondary" | "tertiary";
@@ -20,7 +22,7 @@ export interface ServiceItem {
 }
 
 export interface ServiceModalPoint {
-    icon: "calendar" | "clock" | "document" | "group" | "music" | "path" | "sparkles" | "training";
+    icon: "age" | "calendar" | "clock" | "document" | "duration" | "group" | "music" | "participants" | "path" | "sessions" | "sparkles" | "training";
     label: string;
     text: string;
 }
@@ -39,6 +41,10 @@ export interface ServiceModalContent {
     points: readonly ServiceModalPoint[];
     resourcesTitle?: string;
     resources?: readonly ServiceModalResource[];
+    detailPageLink?: {
+        href: string;
+        label: string;
+    };
     ctaLabel: string;
 }
 
@@ -82,3 +88,7 @@ export interface LinkItem {
     label: string;
     href: string;
 }
+
+type CtaCopyKey = "eyebrow" | "title" | "description" | "quoteCta" | "callCta";
+
+export type CtaContent = Omit<Dictionary["cta"], CtaCopyKey> & Record<CtaCopyKey, string>;

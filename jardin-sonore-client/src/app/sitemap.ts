@@ -11,6 +11,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
             changeFrequency: "monthly",
             priority: 1,
         },
+        {
+            url: `${siteUrl}/eveil-musical-creche`,
+            changeFrequency: "monthly",
+            priority: 0.8,
+        },
         ...(showLegalPage ? [{
             url: `${siteUrl}/mentions-legales`,
             changeFrequency: "yearly",

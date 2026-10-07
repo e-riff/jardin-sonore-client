@@ -6,6 +6,7 @@ import {
     CalendarDaysIcon,
     ClockIcon,
     DocumentTextIcon,
+    FaceSmileIcon,
     MusicalNoteIcon,
     SparklesIcon,
     Squares2X2Icon,
@@ -13,16 +14,21 @@ import {
     XMarkIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
+import Link from "next/link";
 import {JSX, KeyboardEvent as ReactKeyboardEvent, useEffect, useId, useRef} from "react";
 import {IconComponent, ServiceItem, ServiceModalPoint} from "@/types/content";
 
 const pointIcons: Record<ServiceModalPoint["icon"], IconComponent> = {
+    age: FaceSmileIcon,
     calendar: CalendarDaysIcon,
     clock: ClockIcon,
     document: DocumentTextIcon,
+    duration: ClockIcon,
     group: UserGroupIcon,
     music: MusicalNoteIcon,
+    participants: UserGroupIcon,
     path: Squares2X2Icon,
+    sessions: CalendarDaysIcon,
     sparkles: SparklesIcon,
     training: AcademicCapIcon,
 };
@@ -51,10 +57,11 @@ const toneClasses: Record<ServiceItem["tone"], {accent: string; iconBg: string; 
 interface ServiceModalProps {
     service: ServiceItem;
     closeLabel: string;
+    backLabel: string;
     onClose: () => void;
 }
 
-export default function ServiceModal({service, closeLabel, onClose}: ServiceModalProps): JSX.Element {
+export default function ServiceModal({service, closeLabel, backLabel, onClose}: ServiceModalProps): JSX.Element {
     const modal = service.modal;
     const tone = toneClasses[service.tone];
     const titleId = useId();
@@ -79,9 +86,13 @@ export default function ServiceModal({service, closeLabel, onClose}: ServiceModa
         return () => {
             document.body.style.overflow = "";
             window.removeEventListener("keydown", onKeyDown);
-            previousActiveElement?.focus();
+            if (previousActiveElement && previousActiveElement !== document.body && previousActiveElement.isConnected) {
+                previousActiveElement.focus();
+            } else {
+                document.getElementById(`service-${service.slug}`)?.focus();
+            }
         };
-    }, [onClose]);
+    }, [onClose, service.slug]);
 
     const trapFocus = (event: ReactKeyboardEvent<HTMLDivElement>): void => {
         if (event.key !== "Tab") {
@@ -117,9 +128,9 @@ export default function ServiceModal({service, closeLabel, onClose}: ServiceModa
                 onClose();
             }
         }}>
-            <div className="flex h-dvh flex-col overflow-y-auto bg-background md:mx-auto md:h-[min(880px,calc(100dvh-4rem))] md:max-w-5xl md:rounded-2xl md:shadow-2xl">
+            <div className="flex h-dvh flex-col overflow-y-auto overscroll-contain bg-background md:mx-auto md:h-[min(880px,calc(100dvh-4rem))] md:max-w-5xl md:rounded-2xl md:shadow-2xl">
                 <div className="sticky top-0 z-10 flex items-center justify-between border-b border-outline-variant/20 bg-background/92 px-5 py-4 backdrop-blur-md md:px-8">
-                    <button aria-label={closeLabel} className="cursor-pointer rounded-full p-2 text-on-surface-variant transition hover:bg-surface-container-high hover:text-primary" ref={closeButtonRef} onClick={onClose} type="button">
+                    <button aria-label={closeLabel} className="cursor-pointer rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" ref={closeButtonRef} onClick={onClose} type="button">
                         <XMarkIcon className="h-7 w-7" aria-hidden="true" />
                     </button>
                     <span className={`font-sans text-xs font-bold uppercase tracking-[0.22em] ${tone.accent}`}>{modal.eyebrow}</span>
@@ -142,6 +153,7 @@ export default function ServiceModal({service, closeLabel, onClose}: ServiceModa
                             <div className="mt-6 space-y-4 font-sans text-base leading-8 text-on-surface-variant">
                                 {modal.body.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
                             </div>
+                            {modal.detailPageLink ? <Link className="mt-7 inline-flex min-h-12 items-center justify-center rounded-full border border-primary px-5 py-3 text-center font-sans text-sm font-bold text-primary transition-colors hover:bg-primary-fixed motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={modal.detailPageLink.href} onClick={onClose}>{modal.detailPageLink.label}</Link> : null}
                         </div>
 
                         <div>
@@ -192,8 +204,8 @@ export default function ServiceModal({service, closeLabel, onClose}: ServiceModa
                         <a className={`inline-flex min-h-14 flex-1 cursor-pointer items-center justify-center rounded-lg px-6 text-center font-sans text-sm font-bold uppercase tracking-[0.14em] transition ${tone.cta}`} href="#contact" onClick={onClose}>
                             {modal.ctaLabel}
                         </a>
-                        <button className="inline-flex min-h-14 flex-1 cursor-pointer items-center justify-center rounded-lg border border-outline px-6 font-sans text-sm font-bold uppercase tracking-[0.14em] text-on-surface-variant transition hover:border-primary hover:text-primary sm:flex-none" onClick={onClose} type="button">
-                            Retour
+                        <button className="inline-flex min-h-14 flex-1 cursor-pointer items-center justify-center rounded-lg border border-outline px-6 font-sans text-sm font-bold uppercase tracking-[0.14em] text-on-surface-variant transition-colors hover:border-primary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:flex-none" onClick={onClose} type="button">
+                            {backLabel}
                         </button>
                     </div>
                 </div>

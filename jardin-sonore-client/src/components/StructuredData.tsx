@@ -4,19 +4,7 @@ import {getSiteUrl} from "@/lib/site-url";
 
 const siteUrl = getSiteUrl();
 
-const areaServed = [
-    "Saint-Étienne",
-    "Lyon",
-    "Pilat",
-    "Forez",
-    "Giers",
-    "Grand Lyon",
-    "Roanne",
-    "Haute-Loire",
-    "Annonay",
-    "Condrieu",
-    "Vienne",
-].map((name) => ({
+const areaServed = fr.earlyChildhoodPage.metadata.serviceAreas.map((name) => ({
     "@type": "Place",
     name,
 }));

@@ -68,9 +68,9 @@ export default function Footer(): JSX.Element {
                         </div>
                     </div>
 
-                    <nav className="hidden lg:block" aria-label={content.ariaLabel}>
-                        <p className="mb-4 font-sans text-xs font-bold uppercase tracking-[0.18em] text-primary-container">{content.navigationTitle}</p>
-                        <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+                    <nav className="block" aria-label={content.ariaLabel}>
+                        <p className="sr-only mb-4 font-sans text-xs font-bold uppercase tracking-[0.18em] text-primary-container lg:not-sr-only">{content.navigationTitle}</p>
+                        <div className="grid grid-cols-2 gap-x-5 gap-y-3 text-center sm:grid-cols-3 lg:grid-cols-2 lg:text-left">
                             {content.links.map((link: LinkItem) => (
                                 <a className="font-sans text-sm font-semibold text-on-surface-variant transition hover:text-primary-container" href={link.href.startsWith("#") ? `/${link.href}` : link.href} key={link.label}>
                                     {link.label}
