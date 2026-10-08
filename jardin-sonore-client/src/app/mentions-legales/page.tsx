@@ -52,6 +52,8 @@ export default async function LegalPage(): Promise<JSX.Element> {
                 {content.hostAddress}<br />
                 <a className="font-semibold text-primary underline underline-offset-4 hover:text-primary-container" href="tel:+33444446040">{content.hostPhone}</a>
             </address>
+            <h3 className="mt-8 font-sans text-xl font-semibold text-on-surface">{content.visualCreditsTitle}</h3>
+            <p className="mt-3 leading-7 text-on-surface-variant">{content.faviconCreditText} <a className="font-semibold text-primary underline underline-offset-4 hover:text-primary-container" href={content.faviconCreditUrl}>{content.faviconCreditLink}</a>.</p>
         </section>
 
         <section aria-labelledby="confidentialite-title" className="mt-16 scroll-mt-24 border-t border-outline-variant pt-12" id="confidentialite">

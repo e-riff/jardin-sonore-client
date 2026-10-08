@@ -331,6 +331,7 @@ Validation :
 
 ## Points à garder en tête
 
+- 2026-10-08 : fiche Google Business Profile existante revue avec Emeric. Elle est configurée sans adresse publique, avec des zones desservies (dont Saint-Étienne, le Gier, le Pilat et Lyon), des horaires du lundi au vendredi de 8 h à 18 h, une photo d'atelier en couverture et un profil de réseau social ajouté. La catégorie principale « Artiste » est conservée faute de meilleure option trouvée dans Google. Le téléphone reste volontairement absent. La description observée cible les crèches et EAJE ; la correction de la virgule dans « Le Jardin Sonore, propose » reste à confirmer sur la fiche. Ce suivi SEO n'est plus le point de reprise du projet : voir la [ROADMAP.md](../ROADMAP.md).
 - Ne pas chercher à se positionner sur `jardin sonore` : la requête est dominée par le festival de Vitrolles.
 - Audience prioritaire : les responsables de crèches, EAJE et structures petite enfance qui cherchent un musicien intervenant.
 - Prioriser les formulations métier `musicien intervenant en crèche`, `intervenant musical petite enfance`, `éveil musical en crèche` et `ateliers d'éveil musical pour crèches` ; ne pas présenter l'offre comme des cours destinés aux familles.
@@ -340,4 +341,4 @@ Validation :
 
 ## Reprise du plan
 
-Ce document conserve les recommandations de l'audit initial et note la livraison de la page crèche/petite enfance. L'état et l'ordre de travail courants sont dans [ROADMAP.md](../ROADMAP.md) ; le prochain point SEO utile sera l'observation de l'indexation et des requêtes après publication, sans conclure à partir de l'export Search Console du 5 octobre.
+Ce document conserve les recommandations de l'audit initial et note la livraison de la page crèche/petite enfance ainsi que la revue de la fiche Google Business Profile. L'état et l'ordre de travail courants sont dans [ROADMAP.md](../ROADMAP.md) ; le prochain point SEO utile sera l'observation de l'indexation et des requêtes après publication, sans conclure à partir de l'export Search Console du 5 octobre.
