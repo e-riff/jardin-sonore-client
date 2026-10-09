@@ -1,0 +1,45 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'dashboard.heading'|trans({}, 'commercial') %}
+
+{% block internal_body %}
+    <section class="internal-hero">
+        <p class="internal-eyebrow">{{ 'dashboard.eyebrow'|trans({}, 'commercial') }}</p>
+        <h1>{{ 'dashboard.heading'|trans({}, 'commercial') }}</h1>
+        <div class="internal-heading-actions">
+            <a class="internal-button" href="{{ path('commercial_request_new') }}">{{ 'request.new'|trans({}, 'commercial') }}</a>
+            <a class="internal-button internal-button--secondary" href="{{ path('commercial_request_index') }}">{{ 'dashboard.all_requests'|trans({}, 'commercial') }}</a>
+        </div>
+    </section>
+    <div class="commercial-dashboard">
+        <section class="internal-card">
+            <h2>{{ 'dashboard.to_qualify'|trans({}, 'commercial') }} <span class="internal-badge internal-badge--primary">{{ requests|length }}</span></h2>
+            {% for commercialRequest in requests %}
+                {% set senderName = commercialRequest.senderName ?: 'request.unknown_sender'|trans({}, 'commercial') %}
+                <a class="commercial-dashboard-row" href="{{ path('commercial_request_show', {id: commercialRequest.id}) }}">
+                    <strong>{{ commercialRequest.organizationName ?: senderName }}</strong>
+                    <span>{{ commercialRequest.receivedAt|date('d/m/Y') }}</span>
+                </a>
+            {% else %}<p>{{ 'dashboard.none'|trans({}, 'commercial') }}</p>{% endfor %}
+        </section>
+        {% for group, heading in {overdue: 'dashboard.overdue', dueToday: 'dashboard.today', upcoming: 'dashboard.upcoming'} %}
+            <section class="internal-card">
+                <h2>{{ heading|trans({}, 'commercial') }} <span class="internal-badge internal-badge--secondary">{{ attribute(_context, group)|length }}</span></h2>
+                {% for action in attribute(_context, group) %}
+                    <a class="commercial-dashboard-row" href="{{ path('commercial_project_show', {id: action.project.id}) }}">
+                        <strong>{{ action.title }}</strong>
+                        <span>{{ action.project.organization.name }} · {{ action.dueOn|date('d/m/Y') }}</span>
+                    </a>
+                {% else %}<p>{{ 'dashboard.none'|trans({}, 'commercial') }}</p>{% endfor %}
+            </section>
+        {% endfor %}
+        <section class="internal-card">
+            <h2>{{ 'dashboard.without_action'|trans({}, 'commercial') }} <span class="internal-badge internal-badge--muted">{{ withoutAction|length }}</span></h2>
+            {% for project in withoutAction %}
+                <a class="commercial-dashboard-row" href="{{ path('commercial_project_show', {id: project.id}) }}">
+                    <strong>{{ project.title }}</strong><span>{{ project.organization.name }}</span>
+                </a>
+            {% else %}<p>{{ 'dashboard.none'|trans({}, 'commercial') }}</p>{% endfor %}
+        </section>
+    </div>
+{% endblock %}

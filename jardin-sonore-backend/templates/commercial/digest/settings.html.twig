@@ -1,0 +1,16 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'digest.heading'|trans({}, 'commercial') %}
+
+{% block internal_body %}
+    <section class="internal-hero">
+        <a href="{{ path('commercial_dashboard') }}">← {{ 'dashboard.heading'|trans({}, 'commercial') }}</a>
+        <h1>{{ 'digest.heading'|trans({}, 'commercial') }}</h1>
+        <p>{{ 'digest.description'|trans({}, 'commercial') }}</p>
+    </section>
+    <section class="internal-card internal-card--form">
+        {{ form_start(form, {attr: {class: 'internal-form'}}) }}
+            {{ form_widget(form) }}
+        {{ form_end(form) }}
+    </section>
+{% endblock %}

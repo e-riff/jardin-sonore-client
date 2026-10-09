@@ -17,6 +17,11 @@ internal:
     nav:
       toggle: "Menu"
       close: "Fermer le menu"
+      commercial_group: "Suivi clients"
+      commercial_dashboard: "À faire"
+      commercial_requests: "Demandes"
+      commercial_invoices: "Factures"
+      commercial_digest: "Courriel de gestion"
       newsletters_group: "Newsletters"
       sessions_group: "Séances"
       utility_group: "Général"
@@ -40,6 +45,10 @@ internal:
     heading: "Bienvenue dans l’atelier Jardin Sonore"
     description: "La racine du backend devient l’espace de travail métier. EasyAdmin reste disponible pour les corrections techniques dans le backoffice."
     modules_aria: "Modules internes"
+    commercial:
+      title: "Suivi clients"
+      description: "Qualifier les demandes, suivre les dossiers et les actions à faire."
+      action: "Ouvrir le suivi clients"
     mailing:
       title: "Newsletters"
       description: "Créer une campagne, préparer le contenu, gérer les recommandations réutilisables, cibler les destinataires et piloter l’envoi."

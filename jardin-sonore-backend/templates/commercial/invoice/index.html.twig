@@ -1,0 +1,31 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'invoice.heading'|trans({}, 'commercial') %}
+
+{% block internal_body %}
+    <section class="internal-hero">
+        <p class="internal-eyebrow">{{ 'dashboard.eyebrow'|trans({}, 'commercial') }}</p>
+        <h1>{{ 'invoice.heading'|trans({}, 'commercial') }}</h1>
+    </section>
+    <div class="commercial-request-list">
+        {% for invoice in invoices %}
+            <article class="internal-card" id="invoice-{{ invoice.id }}">
+                <p class="internal-eyebrow">{{ invoice.issuedOn|date('d/m/Y') }} · {{ invoice.paidOn ? 'invoice.status_paid'|trans({}, 'commercial') : 'invoice.status_unpaid'|trans({}, 'commercial') }}</p>
+                <h2>{{ invoice.reference }}</h2>
+                <p><a href="{{ path('commercial_project_show', {id: invoice.project.id}) }}">{{ invoice.project.title }} · {{ invoice.project.organization.name }}</a></p>
+                <strong>{{ (invoice.amountCents / 100)|number_format(2, ',', ' ') }} €</strong>
+                {% if invoice.paidOn %}
+                    <p>{{ 'invoice.paid_on'|trans({}, 'commercial') }} {{ invoice.paidOn|date('d/m/Y') }}</p>
+                {% else %}
+                    <form method="post" action="{{ path('commercial_invoice_pay', {id: invoice.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('commercial_invoice_pay_' ~ invoice.id) }}">
+                        <label>{{ 'invoice.paid_on'|trans({}, 'commercial') }} <input type="date" name="paidOn" value="{{ 'now'|date('Y-m-d') }}" required></label>
+                        <button class="internal-button" type="submit">{{ 'invoice.mark_paid'|trans({}, 'commercial') }}</button>
+                    </form>
+                {% endif %}
+            </article>
+        {% else %}
+            <p>{{ 'invoice.none'|trans({}, 'commercial') }}</p>
+        {% endfor %}
+    </div>
+{% endblock %}

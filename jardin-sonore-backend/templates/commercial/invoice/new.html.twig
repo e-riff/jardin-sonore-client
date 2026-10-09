@@ -1,0 +1,17 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'invoice.new'|trans({}, 'commercial') %}
+
+{% block internal_body %}
+    <section class="internal-hero">
+        <a href="{{ path('commercial_project_show', {id: project.id}) }}">← {{ project.title }}</a>
+        <h1>{{ 'invoice.new'|trans({}, 'commercial') }}</h1>
+        <p>{{ 'invoice.hint'|trans({}, 'commercial') }}</p>
+    </section>
+    <section class="internal-card internal-card--form">
+        {% if invoiceError %}<p role="alert">{{ invoiceError|trans({}, 'commercial') }}</p>{% endif %}
+        {{ form_start(form, {attr: {class: 'internal-form'}}) }}
+            {{ form_widget(form) }}
+        {{ form_end(form) }}
+    </section>
+{% endblock %}

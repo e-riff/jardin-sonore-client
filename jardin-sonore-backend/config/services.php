@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use App\Application\Commercial\CommercialContactMailSenderInterface;
+use App\Application\Commercial\CommercialDigestSenderInterface;
 use App\Application\Mailing\NewsletterConfirmationMailSenderInterface;
 use App\Application\Mailing\NewsletterRecipientEligibilityInterface;
 use App\Application\Portal\PortalAccountMailSenderInterface;
 use App\Application\Session\SessionDocumentGeneratorInterface;
 use App\Application\Session\SessionNotificationMailSenderInterface;
+use App\Infrastructure\Mailer\SymfonyCommercialContactSender;
+use App\Infrastructure\Mailer\SymfonyCommercialDigestSender;
 use App\Infrastructure\Mailer\SymfonyNewsletterConfirmationMailSender;
 use App\Infrastructure\Mailer\SymfonyPortalAccountMailSender;
 use App\Infrastructure\Mailer\SymfonySessionNotificationMailSender;
@@ -48,6 +52,12 @@ return App::config([
         ],
         SessionNotificationMailSenderInterface::class => [
             'alias' => SymfonySessionNotificationMailSender::class,
+        ],
+        CommercialContactMailSenderInterface::class => [
+            'alias' => SymfonyCommercialContactSender::class,
+        ],
+        CommercialDigestSenderInterface::class => [
+            'alias' => SymfonyCommercialDigestSender::class,
         ],
         NewsletterConfirmationMailSenderInterface::class => [
             'alias' => SymfonyNewsletterConfirmationMailSender::class,

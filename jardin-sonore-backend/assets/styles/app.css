@@ -572,6 +572,205 @@ button:disabled {
     max-width: none;
 }
 
+.commercial-request-list,
+.commercial-request-side {
+    display: grid;
+    gap: 16px;
+}
+
+.commercial-dashboard {
+    display: grid;
+    gap: 16px;
+    min-width: 0;
+}
+
+.commercial-dashboard-row {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+    border-top: 1px solid var(--color-outline-variant);
+    padding-top: 12px;
+    overflow-wrap: anywhere;
+}
+
+.commercial-dashboard-row span {
+    color: var(--color-on-surface-variant);
+    font-size: 0.9rem;
+}
+
+.commercial-request-list .internal-card {
+    gap: 8px;
+}
+
+.commercial-request-layout {
+    display: grid;
+    gap: 20px;
+    min-width: 0;
+}
+
+.commercial-request-layout > *,
+.commercial-request-side > * {
+    min-width: 0;
+}
+
+.commercial-request-layout .internal-card--form {
+    width: 100%;
+}
+
+.commercial-request-facts {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+}
+
+.commercial-request-facts div {
+    min-width: 0;
+}
+
+.commercial-request-facts dt {
+    color: var(--color-on-surface-variant);
+    font-size: 0.8rem;
+}
+
+.commercial-request-facts dd {
+    margin: 2px 0 0;
+    overflow-wrap: anywhere;
+}
+
+.commercial-request-message {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.commercial-form-step {
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+    margin: 0;
+    border: 0;
+    border-top: 1px solid var(--color-outline-variant);
+    padding: 18px 0 0;
+}
+
+.commercial-form-step legend {
+    color: var(--color-primary);
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.commercial-form-step p {
+    margin: 0;
+}
+
+.internal-form__choice-list {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+}
+
+.internal-form .internal-form__choice {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    border: 1px solid color-mix(in oklab, var(--color-outline-variant) 72%, white);
+    border-radius: 12px;
+    padding: 10px 14px;
+    background: color-mix(in oklab, var(--color-surface-container) 55%, white);
+    cursor: pointer;
+}
+
+.internal-form .internal-form__choice:has(input:checked) {
+    border-color: color-mix(in oklab, var(--color-primary) 48%, white);
+    background: color-mix(in oklab, var(--color-primary-fixed) 40%, white);
+}
+
+.internal-form .internal-form__choice-input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    accent-color: var(--color-primary);
+    flex: 0 0 18px;
+}
+
+.internal-form .internal-form__choice-label {
+    color: var(--color-on-background);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: normal;
+    line-height: 1.4;
+}
+
+.commercial-drive-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+}
+
+.commercial-contact {
+    border-top: 1px solid var(--color-outline-variant);
+    padding-top: 14px;
+    overflow-wrap: anywhere;
+}
+
+.commercial-contact p {
+    margin: 6px 0 10px;
+}
+
+.commercial-contact-links {
+    display: grid;
+    gap: 6px;
+    margin: 8px 0 14px;
+    overflow-wrap: anywhere;
+}
+
+.commercial-contact details,
+.commercial-request-side .internal-card > details {
+    margin: 10px 0;
+}
+
+.commercial-contact details > summary,
+.commercial-request-side .internal-card > details > summary {
+    cursor: pointer;
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.commercial-contact .internal-form,
+.commercial-request-side .internal-card > details .internal-form {
+    margin-top: 12px;
+}
+
+.commercial-contact form:not(.internal-form) {
+    margin: 8px 0;
+}
+
+.commercial-request-list .internal-card:target {
+    scroll-margin-top: 140px;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-primary) 18%, transparent);
+}
+
+@media (min-width: 900px) {
+    .commercial-dashboard {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: start;
+    }
+    .commercial-request-layout {
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+        align-items: start;
+    }
+
+    .commercial-request-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 .internal-badge {
     display: inline-flex;
     width: fit-content;
@@ -845,6 +1044,10 @@ button:disabled {
 .internal-form > div {
     display: grid;
     gap: 8px;
+}
+
+.internal-form [hidden] {
+    display: none;
 }
 
 .internal-form__checkbox-row {

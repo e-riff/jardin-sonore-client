@@ -1,4 +1,8 @@
 parameters:
+  app.commercial.drive_root_url: 'https://drive.google.com/drive/folders/1k1LeqBn1M2kApAxlEyCpEdbZpvD51Sfl'
+  app.commercial.drive_quotes_url: 'https://drive.google.com/drive/folders/1QaLCUp9EzKwbwpRv-jZ_GxuwweMZ5Cqk'
+  app.commercial.drive_signed_quotes_url: 'https://drive.google.com/drive/folders/1WO_Fh9yZBh0jR9ar9cn4eJghx0UZOiSx'
+  app.commercial.drive_invoices_url: 'https://drive.google.com/drive/folders/1V2fYMge2IfWACJs8pbc0KKHMQ31amSFO'
   app.mailing.home_latitude: '%env(default::MAILING_HOME_LATITUDE)%'
   app.mailing.home_longitude: '%env(default::MAILING_HOME_LONGITUDE)%'
   app.mailing.window_limit: '%env(int:MAILING_WINDOW_LIMIT)%'

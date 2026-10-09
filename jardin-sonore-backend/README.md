@@ -93,7 +93,21 @@ SMTP ne permet pas de garantir une livraison exactement une fois : si le serveur
 
 ## Distribution locale et préférence newsletter
 
-Le service Compose `session-notification-dispatcher` lance `app:sessions:dispatch-notifications --recover-after=30` toutes les 60 secondes. Il distribue uniquement les notifications ; le worker Messenger existant les envoie vers Mailpit en local. Suivre ses passages avec `docker compose logs --tail=30 session-notification-dispatcher`. La boucle continue au passage suivant si une distribution échoue. Aucun port HTTP supplémentaire n’est ouvert.
+Le service Compose `session-notification-dispatcher` lance `app:sessions:dispatch-notifications --recover-after=30`, `app:commercial:dispatch-contact-requests`, `app:commercial:create-invoice-reminders` et `app:commercial:dispatch-digest` toutes les 60 secondes. Les notifications de séances passent par le worker Messenger existant ; les demandes de contact et le récapitulatif personnel sont envoyés directement vers Mailpit en local. Suivre les passages avec `docker compose logs --tail=30 session-notification-dispatcher`. La boucle continue au passage suivant si une distribution échoue. Aucun port HTTP supplémentaire n’est ouvert.
+
+## Demandes de contact du site
+
+Après validation du formulaire et d’ALTCHA côté Next.js, `POST /api/commercial/contact-requests` reçoit la demande via le secret BFF serveur existant. La transaction crée la demande à qualifier et une livraison `commercial_contact_delivery` avant de répondre. Une reprise avec la même clé et le même contenu retrouve la demande ; une clé réutilisée avec un autre contenu est refusée. Le courriel de contact conserve l’adresse du visiteur en `Reply-To` et utilise `DEFAULT_CONTACT` comme destinataire côté Symfony : vérifier que cette valeur correspond au destinataire actuel du formulaire avant déploiement.
+
+La commande `app:commercial:dispatch-contact-requests` envoie au plus 100 courriels en attente par passage, avec `--dry-run` pour compter sans envoyer. Un échec SMTP reste enregistré et sera retenté au passage suivant. Les envois déjà marqués `sent` ne sont pas répétés. Comme pour les notifications de séances, un arrêt entre l’acceptation du mail par SMTP et l’écriture de l’état `sent` peut exceptionnellement produire un doublon.
+
+Le service Compose local lance cette commande toutes les minutes. **En production, aucun cron de contact n’est encore installé** : prévoir un cron cPanel dédié, protégé par `flock`, exécutant `php bin/console app:commercial:dispatch-contact-requests --env=prod --no-debug` à intervalle court lors de la livraison de ce lot. Vérifier sa présence et un envoi de test avant de basculer le formulaire public.
+
+## Suivi commercial local
+
+Le backoffice métier propose `/commercial` pour les demandes, dossiers, actions, devis et factures suivis manuellement. Les PDF et les courriels restent dans Drive et Gmail. Les raccourcis Drive se configurent dans `config/parameters.yaml.dist`. Les migrations `Version20261009074032` à `Version20261009084558` ont été appliquées uniquement aux bases locales de développement et de test ; elles ne sont pas encore déployées.
+
+`app:commercial:create-invoice-reminders` crée une action de relance unique à 30 jours de la date d’émission d’une facture impayée. `app:commercial:dispatch-digest` envoie le courriel personnel les jours ouvrés à l’heure réglée dans le backoffice, seulement si des éléments sont à suivre ; une livraison enregistrée comme envoyée n’est pas répétée le même jour. **Aucun cron de production pour ces commandes n’est encore installé.** Le distributeur local déjà lancé au moment d’un changement de script doit être redémarré pour lire sa nouvelle liste de commandes.
 
 Le profil expose `newsletterSubscribed`, calculé depuis le consentement du contact portant l’adresse actuelle du compte. Une lecture ne crée pas de contact. Un choix explicite crée ou réutilise le contact ; un retrait conserve le jeton et l’historique. Un contact inactif ne peut pas être réactivé depuis le profil. L’appartenance au groupe libre reste distincte, réservée aux inscriptions libres confirmées. Les contacts e-mail survivent désormais au retrait de leurs liens d’annuaire pour conserver ces informations. Le lien `/newsletter/unsubscribe/{token}` est accessible publiquement et ne modifie pas les notifications de séances.
 

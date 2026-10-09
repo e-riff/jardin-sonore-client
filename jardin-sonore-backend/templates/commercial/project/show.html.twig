@@ -1,0 +1,217 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = project.title %}
+
+{% block internal_body %}
+    <section class="internal-hero">
+        <a href="{{ path('commercial_request_index') }}">← {{ 'project.back'|trans({}, 'commercial') }}</a>
+        <p class="internal-eyebrow">{{ ('project.status.' ~ project.status)|trans({}, 'commercial') }}</p>
+        <h1>{{ project.title }}</h1>
+        <p>{{ project.organization.name }}</p>
+    </section>
+    <div class="commercial-request-layout">
+        <div class="commercial-request-side">
+            {% if driveLinks is defined %}
+                <section class="internal-card">
+                    <h2>{{ 'drive.heading'|trans({}, 'commercial') }}</h2>
+                    <div class="commercial-drive-links">
+                        <a href="{{ driveLinks.root }}" target="_blank" rel="noopener noreferrer">{{ 'drive.root'|trans({}, 'commercial') }} ↗</a>
+                        <a href="{{ driveLinks.quotes }}" target="_blank" rel="noopener noreferrer">{{ 'drive.quotes'|trans({}, 'commercial') }} ↗</a>
+                        <a href="{{ driveLinks.signedQuotes }}" target="_blank" rel="noopener noreferrer">{{ 'drive.signed_quotes'|trans({}, 'commercial') }} ↗</a>
+                        <a href="{{ driveLinks.invoices }}" target="_blank" rel="noopener noreferrer">{{ 'drive.invoices'|trans({}, 'commercial') }} ↗</a>
+                    </div>
+                </section>
+            {% endif %}
+            <section class="internal-card">
+                <h2>{{ 'project.organization'|trans({}, 'commercial') }}</h2>
+                <strong>{{ project.organization.name }}</strong>
+                <p>{{ project.organization.municipalitySummary }}</p>
+                <div class="commercial-contact-links">
+                    {% for phone in project.organization.contactDetails.phoneContacts %}<a href="tel:{{ phone.phoneNumber|replace({' ': '', '.': '', '-': ''}) }}">{{ phone.phoneNumber }}</a>{% endfor %}
+                    {% for email in project.organization.contactDetails.emailContacts %}<a href="mailto:{{ email.emailAddress }}">{{ email.emailAddress }}</a>{% endfor %}
+                </div>
+                <h2>{{ 'project.people'|trans({}, 'commercial') }}</h2>
+                {% for projectPerson in project.people %}
+                    <div class="commercial-contact">
+                        <strong>{{ projectPerson.person }}</strong>{% if project.primaryContact == projectPerson.person %} ★{% endif %}
+                        {% if not projectPerson.current %}<span class="internal-badge internal-badge--muted">{{ 'project.contact_former'|trans({}, 'commercial') }}</span>{% endif %}
+                        {% if projectPerson.person.role %}<p>{{ projectPerson.person.role }}</p>{% endif %}
+                        <div class="commercial-contact-links">
+                            {% for phone in projectPerson.person.contactDetails.phoneContacts %}<a href="tel:{{ phone.phoneNumber|replace({' ': '', '.': '', '-': ''}) }}">{{ phone.phoneNumber }}</a>{% endfor %}
+                            {% for email in projectPerson.person.contactDetails.emailContacts %}<a href="mailto:{{ email.emailAddress }}">{{ email.emailAddress }}</a>{% endfor %}
+                        </div>
+                        {% if projectPerson.current and projectPerson.person.active %}
+                            <details>
+                                <summary>{{ 'project.contact_edit'|trans({}, 'commercial') }}</summary>
+                                <form method="post" action="{{ path('commercial_project_contact_edit', {id: project.id, personId: projectPerson.person.id}) }}" class="internal-form">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_contact_' ~ project.id ~ '_' ~ projectPerson.person.id ~ '_edit') }}">
+                                    <label>{{ 'project.first_name'|trans({}, 'commercial') }} <input name="firstName" value="{{ projectPerson.person.firstName }}" required></label>
+                                    <label>{{ 'project.last_name'|trans({}, 'commercial') }} <input name="lastName" value="{{ projectPerson.person.lastName }}" required></label>
+                                    <label>{{ 'project.role'|trans({}, 'commercial') }} <input name="role" value="{{ projectPerson.person.role }}"></label>
+                                    <button class="internal-button internal-button--secondary" type="submit">{{ 'project.contact_save'|trans({}, 'commercial') }}</button>
+                                </form>
+                            </details>
+                            {% if project.primaryContact != projectPerson.person %}
+                                <form method="post" action="{{ path('commercial_project_contact_primary', {id: project.id, personId: projectPerson.person.id}) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_contact_' ~ project.id ~ '_' ~ projectPerson.person.id ~ '_primary') }}">
+                                    <button class="internal-button internal-button--secondary" type="submit">{{ 'project.contact_primary'|trans({}, 'commercial') }}</button>
+                                </form>
+                            {% endif %}
+                            <form method="post" action="{{ path('commercial_project_contact_former', {id: project.id, personId: projectPerson.person.id}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_contact_' ~ project.id ~ '_' ~ projectPerson.person.id ~ '_former') }}">
+                                <button class="internal-button internal-button--secondary" type="submit">{{ 'project.contact_mark_former'|trans({}, 'commercial') }}</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <p>{{ 'project.no_people'|trans({}, 'commercial') }}</p>
+                {% endfor %}
+                <details>
+                    <summary>{{ 'project.contact_link'|trans({}, 'commercial') }}</summary>
+                    <form method="post" action="{{ path('commercial_project_contact_link', {id: project.id}) }}" class="internal-form">
+                        <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_contact_' ~ project.id ~ '_link') }}">
+                        <label>{{ 'project.contact_person'|trans({}, 'commercial') }}
+                            <select name="personId" required>
+                                <option value="">{{ 'project.contact_select'|trans({}, 'commercial') }}</option>
+                                {% for person in project.organization.people %}
+                                    {% if person.active %}<option value="{{ person.id }}">{{ person }}{% if person.role %} — {{ person.role }}{% endif %}</option>{% endif %}
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <label><input type="checkbox" name="primary" value="1"> {{ 'project.contact_make_primary'|trans({}, 'commercial') }}</label>
+                        <button class="internal-button internal-button--secondary" type="submit">{{ 'project.contact_link_save'|trans({}, 'commercial') }}</button>
+                    </form>
+                </details>
+                <details>
+                    <summary>{{ 'project.contact_create'|trans({}, 'commercial') }}</summary>
+                    <form method="post" action="{{ path('commercial_project_contact_create', {id: project.id}) }}" class="internal-form">
+                        <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_contact_' ~ project.id ~ '_create') }}">
+                        <label>{{ 'project.first_name'|trans({}, 'commercial') }} <input name="firstName" required></label>
+                        <label>{{ 'project.last_name'|trans({}, 'commercial') }} <input name="lastName" required></label>
+                        <label>{{ 'project.role'|trans({}, 'commercial') }} <input name="role"></label>
+                        <label><input type="checkbox" name="primary" value="1"> {{ 'project.contact_make_primary'|trans({}, 'commercial') }}</label>
+                        <button class="internal-button internal-button--secondary" type="submit">{{ 'project.contact_create_save'|trans({}, 'commercial') }}</button>
+                    </form>
+                </details>
+                {% if project.request %}<a href="{{ path('commercial_request_show', {id: project.request.id}) }}">{{ 'project.original_request'|trans({}, 'commercial') }}</a>{% endif %}
+            </section>
+            <section class="internal-card">
+                <h2>{{ 'project.actions'|trans({}, 'commercial') }}</h2>
+                {% for action in project.actions %}
+                    {% if action.status == 'open' %}
+                        <details class="commercial-action">
+                            <summary><strong>{{ action.title }}</strong> · {{ action.dueOn|date('d/m/Y') }}</summary>
+                            {% if action.details %}<p>{{ action.details }}</p>{% endif %}
+                            <form method="post" action="{{ path('commercial_action_edit', {id: action.id}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ action.id ~ '_edit') }}">
+                                <label>{{ 'action.title'|trans({}, 'commercial') }} <input type="text" name="title" value="{{ action.title }}" required maxlength="255"></label>
+                                <label>{{ 'action.details'|trans({}, 'commercial') }} <textarea name="details">{{ action.details }}</textarea></label>
+                                <label>{{ 'action.due_on'|trans({}, 'commercial') }} <input type="date" name="dueOn" value="{{ action.dueOn|date('Y-m-d') }}" required></label>
+                                <label>{{ 'action.person'|trans({}, 'commercial') }}
+                                    <select name="personId">
+                                        <option value="">{{ 'action.no_person'|trans({}, 'commercial') }}</option>
+                                        {% for projectPerson in project.people %}
+                                            {% if projectPerson.current and projectPerson.person.active %}
+                                                <option value="{{ projectPerson.person.id }}" {% if action.person == projectPerson.person %}selected{% endif %}>{{ projectPerson.person }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </label>
+                                <button class="internal-button internal-button--secondary" type="submit">{{ 'action.edit'|trans({}, 'commercial') }}</button>
+                            </form>
+                            <form method="post" action="{{ path('commercial_action_change', {id: action.id, operation: 'complete'}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ action.id ~ '_complete') }}">
+                                <label>{{ 'action.note'|trans({}, 'commercial') }} <textarea name="note"></textarea></label>
+                                <button class="internal-button" type="submit">{{ 'action.complete'|trans({}, 'commercial') }}</button>
+                            </form>
+                            <form method="post" action="{{ path('commercial_action_change', {id: action.id, operation: 'postpone'}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ action.id ~ '_postpone') }}">
+                                <label>{{ 'action.due_on'|trans({}, 'commercial') }} <input type="date" name="dueOn" value="{{ action.dueOn|date('Y-m-d') }}" required></label>
+                                <button class="internal-button internal-button--secondary" type="submit">{{ 'action.postpone'|trans({}, 'commercial') }}</button>
+                            </form>
+                            <form method="post" action="{{ path('commercial_action_change', {id: action.id, operation: 'cancel'}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ action.id ~ '_cancel') }}">
+                                <button class="internal-button internal-button--secondary" type="submit">{{ 'action.cancel'|trans({}, 'commercial') }}</button>
+                            </form>
+                        </details>
+                    {% endif %}
+                {% else %}
+                    <p>{{ 'project.no_actions'|trans({}, 'commercial') }}</p>
+                {% endfor %}
+            </section>
+            <section class="internal-card">
+                <h2>{{ 'quote.heading'|trans({}, 'commercial') }}</h2>
+                {% for quote in project.quotes %}
+                    <div>
+                        <strong>{{ quote.reference }}</strong> · {{ (quote.amountCents / 100)|number_format(2, ',', ' ') }} €
+                        <p>{{ quote.filename }} · {{ quote.sentOn|date('d/m/Y') }}</p>
+                        {% if quote.replaces %}<p>{{ 'quote.replacement'|trans({}, 'commercial') }} {{ quote.replaces.reference }}</p>{% endif %}
+                        {% if quote.signedOn %}
+                            <span class="internal-badge internal-badge--primary">{{ 'quote.status_signed'|trans({}, 'commercial') }} · {{ quote.signedOn|date('d/m/Y') }}</span>
+                        {% else %}
+                            <span class="internal-badge internal-badge--muted">{{ 'quote.status_sent'|trans({}, 'commercial') }}</span>
+                            <form method="post" action="{{ path('commercial_quote_sign', {id: quote.id}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('commercial_quote_sign_' ~ quote.id) }}">
+                                <label>{{ 'quote.signed_on'|trans({}, 'commercial') }} <input type="date" name="signedOn" value="{{ 'now'|date('Y-m-d') }}" required></label>
+                                <button class="internal-button internal-button--secondary" type="submit">{{ 'quote.sign'|trans({}, 'commercial') }}</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <p>{{ 'quote.no_quotes'|trans({}, 'commercial') }}</p>
+                {% endfor %}
+                <a class="internal-button" href="{{ path('commercial_quote_new', {id: project.id}) }}">{{ 'quote.new'|trans({}, 'commercial') }}</a>
+            </section>
+            <section class="internal-card">
+                <h2>{{ 'invoice.heading'|trans({}, 'commercial') }}</h2>
+                {% for invoice in project.invoices %}
+                    <div>
+                        <strong>{{ invoice.reference }}</strong> · {{ (invoice.amountCents / 100)|number_format(2, ',', ' ') }} €
+                        <p>{{ invoice.issuedOn|date('d/m/Y') }} · {{ invoice.paidOn ? 'invoice.status_paid'|trans({}, 'commercial') : 'invoice.status_unpaid'|trans({}, 'commercial') }}</p>
+                        {% if invoice.paidOn is null %}<a href="{{ path('commercial_invoice_index') }}">{{ 'invoice.mark_paid'|trans({}, 'commercial') }}</a>{% endif %}
+                    </div>
+                {% else %}
+                    <p>{{ 'invoice.none'|trans({}, 'commercial') }}</p>
+                {% endfor %}
+                {% if project.status == 'confirmed' %}<a class="internal-button" href="{{ path('commercial_invoice_new', {id: project.id}) }}">{{ 'invoice.new'|trans({}, 'commercial') }}</a>{% endif %}
+            </section>
+        </div>
+        <div class="commercial-request-side">
+            <section class="internal-card internal-card--form">
+                <h2>{{ 'note.heading'|trans({}, 'commercial') }}</h2>
+                {% if noteError is defined %}<p role="alert">{{ noteError|trans({}, 'commercial') }}</p>{% endif %}
+                {{ form_start(noteForm, {action: path('commercial_project_note', {id: project.id}), attr: {
+                    class: 'internal-form',
+                    'data-controller': 'commercial-note-draft',
+                    'data-commercial-note-draft-project-id-value': project.id,
+                    'data-action': 'input->commercial-note-draft#save change->commercial-note-draft#save turbo:submit-end->commercial-note-draft#submitted',
+                }}) }}
+                    {{ form_widget(noteForm) }}
+                {{ form_end(noteForm) }}
+            </section>
+            <section class="internal-card">
+                <h2>{{ 'project.history'|trans({}, 'commercial') }}</h2>
+                {% for event in project.events|reverse %}
+                    <article>
+                        <p class="internal-eyebrow">{{ event.occurredAt|date('d/m/Y H:i') }} · {{ ('event.' ~ event.type)|trans({}, 'commercial') }}</p>
+                        {% if event.person %}<strong>{{ event.person }}</strong>{% endif %}
+                        {% if event.content %}<p>{{ event.content|nl2br }}</p>{% endif %}
+                    </article>
+                {% endfor %}
+            </section>
+            {% if project.status == 'discussion' %}
+                {% for status, label in {confirm: 'project.confirm', without_result: 'project.close_without_result'} %}
+                    <form method="post" action="{{ path('commercial_project_status', {id: project.id, status: status}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_status_' ~ project.id ~ '_' ~ status) }}">
+                        <button class="internal-button internal-button--secondary" type="submit">{{ label|trans({}, 'commercial') }}</button>
+                    </form>
+                {% endfor %}
+            {% elseif project.status == 'confirmed' %}
+                <form method="post" action="{{ path('commercial_project_status', {id: project.id, status: 'complete'}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_status_' ~ project.id ~ '_complete') }}">
+                    <button class="internal-button internal-button--secondary" type="submit">{{ 'project.complete'|trans({}, 'commercial') }}</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

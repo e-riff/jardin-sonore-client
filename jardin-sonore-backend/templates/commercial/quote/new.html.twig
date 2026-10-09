@@ -1,0 +1,17 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'quote.new'|trans({}, 'commercial') %}
+
+{% block internal_body %}
+    <section class="internal-hero">
+        <a href="{{ path('commercial_project_show', {id: project.id}) }}">← {{ project.title }}</a>
+        <h1>{{ 'quote.new'|trans({}, 'commercial') }}</h1>
+        <p>{{ 'quote.hint'|trans({}, 'commercial') }}</p>
+    </section>
+    <section class="internal-card internal-card--form">
+        {% if quoteError %}<p role="alert">{{ quoteError|trans({}, 'commercial') }}</p>{% endif %}
+        {{ form_start(form, {attr: {class: 'internal-form'}}) }}
+            {{ form_widget(form) }}
+        {{ form_end(form) }}
+    </section>
+{% endblock %}
