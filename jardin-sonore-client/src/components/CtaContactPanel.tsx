@@ -3,6 +3,7 @@
 import {FormEvent, JSX, useEffect, useRef, useState} from "react";
 import {PhoneIcon} from "@heroicons/react/24/outline";
 import AltchaWidget from "@/components/AltchaWidget";
+import {nextContactSubmission, type ContactSubmissionIdentity} from "@/lib/contact/submission-key";
 import {showLegalPage} from "@/lib/legal-publication";
 import type {CtaContent} from "@/types/content";
 
@@ -22,8 +23,10 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
     const [phoneLoading, setPhoneLoading] = useState<boolean>(false);
     const [submitState, setSubmitState] = useState<SubmitState>("idle");
     const [successVisible, setSuccessVisible] = useState<boolean>(false);
+    const [captchaVersion, setCaptchaVersion] = useState<number>(0);
     const formRef = useRef<HTMLDivElement>(null);
     const firstFieldRef = useRef<HTMLInputElement>(null);
+    const submissionIdentityRef = useRef<ContactSubmissionIdentity | null>(null);
 
     useEffect(() => {
         if (!formOpen) {
@@ -110,7 +113,20 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
 
         const form = event.currentTarget;
         const formData = new FormData(form);
-        const payload = Object.fromEntries(formData.entries());
+        const formValue = (field: string): string => {
+            const value = formData.get(field);
+            return typeof value === "string" ? value.trim() : "";
+        };
+        const fields = {
+            name: formValue("name"),
+            email: formValue("email"),
+            phone: formValue("phone"),
+            organization: formValue("organization"),
+            city: formValue("city"),
+            message: formValue("message"),
+        };
+        submissionIdentityRef.current = nextContactSubmission(submissionIdentityRef.current, fields);
+        const payload = {...Object.fromEntries(formData.entries()), submissionKey: submissionIdentityRef.current.key};
 
         try {
             const response = await fetch("/api/contact", {
@@ -121,6 +137,8 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
 
             if (response.ok) {
                 form.reset();
+                submissionIdentityRef.current = null;
+                setCaptchaVersion((version) => version + 1);
                 setSuccessVisible(true);
                 setSubmitState("success");
                 setFormOpen(false);
@@ -128,8 +146,10 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
             }
 
             setSubmitState(response.status === 403 ? "captcha" : "error");
+            setCaptchaVersion((version) => version + 1);
         } catch {
             setSubmitState("error");
+            setCaptchaVersion((version) => version + 1);
         }
     };
 
@@ -262,7 +282,7 @@ export default function CtaContactPanel({content}: CtaContactPanelProps): JSX.El
                             />
                         </label>
 
-                        <AltchaWidget />
+                        <AltchaWidget key={captchaVersion} />
 
                         <p className="mt-5 font-sans text-sm leading-6 text-on-surface-variant">
                             {content.form.privacyNotice} {showLegalPage ? <a className="font-semibold text-primary underline underline-offset-2 hover:text-primary-container" href="/mentions-legales#confidentialite">{content.form.privacyLink}</a> : null}

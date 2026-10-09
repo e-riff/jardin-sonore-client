@@ -1,0 +1,53 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'request.new_heading'|trans({}, 'commercial') %}
+
+{% block internal_body %}
+    <section class="internal-hero">
+        <a href="{{ path('commercial_request_index') }}">← {{ 'request.back'|trans({}, 'commercial') }}</a>
+        <h1>{{ 'request.new_heading'|trans({}, 'commercial') }}</h1>
+    </section>
+    <section class="internal-card internal-card--form">
+        {% if requestError %}<p role="alert">{{ requestError|trans({}, 'commercial') }}</p>{% endif %}
+        {{ form_start(form, {attr: {
+            class: 'internal-form',
+            'data-controller': 'commercial-request-contacts',
+            'data-action': 'change->commercial-request-contacts#personModeChanged',
+            'data-commercial-request-contacts-url-value': path('commercial_request_people'),
+            'data-commercial-request-contacts-loading-text-value': 'request.people_loading'|trans({}, 'commercial'),
+            'data-commercial-request-contacts-empty-text-value': 'request.people_empty'|trans({}, 'commercial'),
+            'data-commercial-request-contacts-error-text-value': 'request.people_error'|trans({}, 'commercial'),
+            'data-commercial-request-contacts-existing-mode-value': 'existing',
+            'data-commercial-request-contacts-new-mode-value': 'new',
+        }}) }}
+            <fieldset class="commercial-form-step">
+                <legend>{{ 'request.step_structure'|trans({}, 'commercial') }}</legend>
+                <p>{{ 'request.structure_hint'|trans({}, 'commercial') }}</p>
+                {{ form_row(form.organization) }}
+                {{ form_row(form.newOrganizationName) }}
+            </fieldset>
+            <fieldset class="commercial-form-step">
+                <legend>{{ 'request.step_person'|trans({}, 'commercial') }}</legend>
+                <p>{{ 'request.person_mode_hint'|trans({}, 'commercial') }}</p>
+                <div class="commercial-person-mode">{{ form_row(form.personMode) }}</div>
+                <div data-commercial-request-contacts-target="existingPerson">
+                    {{ form_row(form.person) }}
+                </div>
+                <div data-commercial-request-contacts-target="newPerson" hidden>
+                    <p>{{ 'request.new_person_hint'|trans({}, 'commercial') }}</p>
+                    {{ form_row(form.newPersonFirstName) }}
+                    {{ form_row(form.newPersonLastName) }}
+                    {{ form_row(form.newPersonRole) }}
+                </div>
+            </fieldset>
+            <fieldset class="commercial-form-step">
+                <legend>{{ 'request.step_message'|trans({}, 'commercial') }}</legend>
+                <p>{{ 'request.contact_details_hint'|trans({}, 'commercial') }}</p>
+                {{ form_row(form.emailAddress) }}
+                {{ form_row(form.phone) }}
+                {{ form_row(form.message) }}
+            </fieldset>
+            {{ form_row(form.submit) }}
+        {{ form_end(form) }}
+    </section>
+{% endblock %}

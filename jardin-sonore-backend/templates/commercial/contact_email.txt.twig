@@ -1,0 +1,10 @@
+Nouvelle demande de devis Jardin Sonore
+
+Nom: {{ request.senderName }}
+Email: {{ request.emailAddress }}
+Telephone: {{ request.phone ?: 'Non renseigne' }}
+Structure: {{ request.organizationName ?: 'Non renseignee' }}
+Ville: {{ request.city ?: 'Non renseignee' }}
+
+Message:
+{{ request.message }}

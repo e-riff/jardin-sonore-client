@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><title>{{ 'heading'|trans({'%date%': digest.localDate|date('d/m/Y')}, 'commercial_digest') }}</title></head>
+<body style="font-family: Arial, sans-serif; color: #312b2a; line-height: 1.5; max-width: 680px; margin: 0 auto; padding: 24px;">
+    <h1>{{ 'heading'|trans({'%date%': digest.localDate|date('d/m/Y')}, 'commercial_digest') }}</h1>
+    {% if digest.requests %}
+        <h2>{{ 'requests'|trans({}, 'commercial_digest') }}</h2>
+        <ul>{% for request in digest.requests %}<li><a href="{{ url('commercial_request_show', {id: request.id}) }}">{{ request.organizationName ?: request.senderName }}</a></li>{% endfor %}</ul>
+    {% endif %}
+    {% if digest.dueActions %}
+        <h2>{{ 'actions'|trans({}, 'commercial_digest') }}</h2>
+        <ul>{% for action in digest.dueActions %}<li><a href="{{ url('commercial_project_show', {id: action.project.id}) }}">{{ action.title }}</a> · {{ action.project.organization.name }} · {{ action.dueOn|date('d/m/Y') }}</li>{% endfor %}</ul>
+    {% endif %}
+    {% if digest.overdueInvoices %}
+        <h2>{{ 'invoices'|trans({}, 'commercial_digest') }}</h2>
+        <ul>{% for invoice in digest.overdueInvoices %}<li><a href="{{ url('commercial_invoice_index') }}#invoice-{{ invoice.id }}">{{ invoice.reference }}</a> · {{ invoice.project.organization.name }} · {{ (invoice.amountCents / 100)|number_format(2, ',', ' ') }} €</li>{% endfor %}</ul>
+    {% endif %}
+    {% if digest.withoutAction %}
+        <h2>{{ 'without_action'|trans({}, 'commercial_digest') }}</h2>
+        <ul>{% for project in digest.withoutAction %}<li><a href="{{ url('commercial_project_show', {id: project.id}) }}">{{ project.title }}</a> · {{ project.organization.name }}</li>{% endfor %}</ul>
+    {% endif %}
+    <p><a href="{{ url('commercial_dashboard') }}">{{ 'open_dashboard'|trans({}, 'commercial_digest') }}</a></p>
+</body>
+</html>

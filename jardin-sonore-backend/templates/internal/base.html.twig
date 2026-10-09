@@ -6,6 +6,35 @@
     {% set currentRoute = app.request.attributes.get('_route') ?? '' %}
     {% set navGroups = [
         {
+            key: 'commercial',
+            route: 'commercial_dashboard',
+            icon: '◌',
+            label: 'internal.base.nav.commercial_group'|trans({}, 'internal'),
+            active: currentRoute starts with 'commercial_',
+            links: [
+                {
+                    route: 'commercial_dashboard',
+                    label: 'internal.base.nav.commercial_dashboard'|trans({}, 'internal'),
+                    active: currentRoute == 'commercial_dashboard',
+                },
+                {
+                    route: 'commercial_request_index',
+                    label: 'internal.base.nav.commercial_requests'|trans({}, 'internal'),
+                    active: currentRoute starts with 'commercial_request_',
+                },
+                {
+                    route: 'commercial_invoice_index',
+                    label: 'internal.base.nav.commercial_invoices'|trans({}, 'internal'),
+                    active: currentRoute starts with 'commercial_invoice_',
+                },
+                {
+                    route: 'commercial_digest_settings',
+                    label: 'internal.base.nav.commercial_digest'|trans({}, 'internal'),
+                    active: currentRoute == 'commercial_digest_settings',
+                },
+            ],
+        },
+        {
             key: 'newsletters',
             route: 'mailing_index',
             icon: '✉',

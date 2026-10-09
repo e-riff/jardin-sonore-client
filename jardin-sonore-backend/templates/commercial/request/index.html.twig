@@ -1,0 +1,24 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'request.heading'|trans({}, 'commercial') %}
+
+{% block internal_body %}
+    <section class="internal-hero">
+        <p class="internal-eyebrow">{{ 'request.heading'|trans({}, 'commercial') }}</p>
+        <h1>{{ 'request.heading'|trans({}, 'commercial') }}</h1>
+        <a class="internal-button" href="{{ path('commercial_request_new') }}">{{ 'request.new'|trans({}, 'commercial') }}</a>
+    </section>
+    <section class="commercial-request-list" aria-label="{{ 'request.heading'|trans({}, 'commercial') }}">
+        {% for commercialRequest in requests %}
+            {% set senderName = commercialRequest.senderName ?: 'request.unknown_sender'|trans({}, 'commercial') %}
+            <article class="internal-card">
+                <p class="internal-eyebrow">{{ ('request.status.' ~ commercialRequest.status)|trans({}, 'commercial') }} · {{ commercialRequest.receivedAt|date('d/m/Y') }}</p>
+                <h2><a href="{{ path('commercial_request_show', {id: commercialRequest.id}) }}">{{ commercialRequest.organizationName ?: senderName }}</a></h2>
+                <p>{{ senderName }}{% if commercialRequest.city %} · {{ commercialRequest.city }}{% endif %}</p>
+                <p>{{ commercialRequest.message|slice(0, 180) }}{% if commercialRequest.message|length > 180 %}…{% endif %}</p>
+            </article>
+        {% else %}
+            <p>{{ 'request.no_requests'|trans({}, 'commercial') }}</p>
+        {% endfor %}
+    </section>
+{% endblock %}

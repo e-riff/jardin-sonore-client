@@ -1,0 +1,197 @@
+request:
+  heading: Demandes
+  new: Nouvelle demande
+  new_heading: Ajouter une demande
+  step_structure: 1. Structure
+  step_person: 2. Personne
+  step_message: 3. Demande
+  structure_hint: La structure choisie ou créée sera rattachée à la demande, sans ouvrir de dossier automatiquement.
+  person_mode_hint: Choisis une personne de cette structure, crée sa fiche, ou poursuis sans nom.
+  sender_name: Interlocuteur
+  unknown_sender: Interlocuteur non identifié
+  organization: Choisir une structure existante
+  select_organization: Rechercher une structure
+  new_organization: Ou créer une structure
+  person: Choisir une personne de cette structure
+  select_person: Choisir une personne après la structure
+  person_mode: Qui est à l’origine de la demande ?
+  person_mode_existing: Choisir une personne existante
+  person_mode_new: Créer une personne dans cette structure
+  person_mode_unknown: Personne pas encore identifiée
+  person_mode_invalid: Choisir comment identifier la personne.
+  choose_person_mode: Choisir une seule option pour la personne.
+  organization_inactive: Cette structure est inactive.
+  people_loading: Chargement des personnes…
+  people_empty: Aucune personne liée à cette structure
+  people_error: Impossible de charger les personnes
+  new_person_hint: La personne sera ajoutée à l’annuaire de cette structure.
+  new_person_first_name: Prénom
+  new_person_last_name: Nom
+  new_person_role: Fonction (facultative)
+  choose_organization: Choisir une structure existante ou en créer une, mais pas les deux.
+  choose_person: La personne choisie doit appartenir à la structure et être active.
+  person_incomplete: Pour créer une personne, indiquer son prénom et son nom.
+  contact_details_hint: E-mail et téléphone reçus lors du premier échange (facultatifs). Le message ou son résumé se note juste en dessous.
+  email: E-mail reçu
+  phone: Téléphone reçu
+  organization_name: Structure indiquée
+  city: Ville
+  message: Message ou résumé du premier échange
+  save: Enregistrer la demande
+  received: Reçue le
+  source: Origine
+  status:
+    to_qualify: À qualifier
+    qualified: Qualifiée
+    without_result: Sans suite
+  back: Retour aux demandes
+  close: Classer sans suite
+  no_requests: Aucune demande pour le moment.
+  related_projects: Dossiers liés
+  original: Demande initiale
+dashboard:
+  eyebrow: Suivi clients
+  heading: À faire
+  all_requests: Toutes les demandes
+  to_qualify: À qualifier
+  overdue: En retard
+  today: Aujourd’hui
+  upcoming: À venir
+  without_action: Sans prochaine action
+  none: Rien à signaler.
+qualification:
+  heading: Créer un dossier à partir de cette demande
+  organization_mode: Structure à rattacher
+  organization_mode_existing: Choisir une structure existante
+  organization_mode_new: Créer une nouvelle structure
+  organization: Choisir une structure existante
+  new_organization: Ou créer une nouvelle structure
+  person_first_name: Prénom du nouvel interlocuteur (facultatif)
+  person_last_name: Nom du nouvel interlocuteur (facultatif)
+  person_role: Fonction (facultatif)
+  linked_organization: Structure déjà rattachée :
+  linked_person: Interlocuteur déjà rattaché :
+  project_title: Nom du dossier
+  create: Créer le dossier
+  choose_one: Choisir une structure existante ou saisir un nouveau nom, mais pas les deux.
+  closed: Cette demande a été classée sans suite.
+  inactive: Cette structure est inactive.
+  person_incomplete: Indiquer le prénom et le nom pour créer l’interlocuteur.
+  hint_linked: La structure et l’interlocuteur déjà rattachés à la demande seront repris pour ce dossier.
+  hint_unlinked: Choisis ou crée la structure à rattacher. Les coordonnées reçues dans la demande ne modifient pas l’annuaire.
+  unavailable: Cette demande est classée sans suite et ne peut plus produire de dossier.
+project:
+  back: Retour aux demandes
+  organization: Structure
+  people: Interlocuteurs
+  history: Historique
+  actions: Actions à faire
+  no_actions: Aucune action ouverte.
+  no_people: Aucun interlocuteur rattaché.
+  contact_former: Ancien interlocuteur
+  contact_edit: Corriger la fiche
+  contact_save: Enregistrer les corrections
+  contact_primary: Choisir comme interlocuteur principal
+  contact_mark_former: Ne suit plus ce dossier
+  contact_link: Rattacher une personne de la structure
+  contact_person: Personne
+  contact_select: Choisir une personne
+  contact_make_primary: Interlocuteur principal
+  contact_link_save: Rattacher au dossier
+  contact_create: Créer une personne dans cette structure
+  contact_create_save: Créer et rattacher
+  first_name: Prénom
+  last_name: Nom
+  role: Fonction
+  status:
+    discussion: En discussion
+    confirmed: Confirmé
+    completed: Clos
+    without_result: Sans suite
+  confirm: Confirmer le dossier
+  close_without_result: Classer sans suite
+  complete: Clore le dossier
+  original_request: Voir la demande initiale
+note:
+  heading: Ajouter une note
+  content: Compte rendu
+  person: Interlocuteur
+  no_person: Aucun interlocuteur
+  next_action: Prochaine action (facultative)
+  due_on: À faire le
+  due_required: Indiquer une date pour la prochaine action.
+  save: Enregistrer la note
+event:
+  request_qualified: Demande qualifiée
+  note: Note
+  action_created: Action créée
+  action_completed: Action terminée
+  action_postponed: Action reportée
+  action_canceled: Action annulée
+  action_edited: Action modifiée
+  project_confirmed: Dossier confirmé
+  project_without_result: Dossier classé sans suite
+  project_completed: Dossier clos
+  contact_linked: Interlocuteur rattaché
+  contact_created: Interlocuteur créé
+  contact_edited: Fiche interlocuteur corrigée
+  contact_primary: Interlocuteur principal choisi
+  contact_former: Interlocuteur sorti du dossier
+action:
+  edit: Modifier l’action
+  title: Titre
+  details: Précisions
+  person: Interlocuteur
+  no_person: Aucun
+  postpone: Reporter
+  complete: Terminer
+  cancel: Annuler
+  note: Précision (facultative)
+  due_on: Nouvelle date
+quote:
+  heading: Devis
+  new: Enregistrer un devis envoyé
+  hint: Le devis reste sur Drive. Enregistre ici sa référence, son nom exact et son montant après l’envoi.
+  reference: Numéro du devis
+  filename: Nom du fichier sur Drive
+  amount: Montant en euros
+  sent_on: Date d’envoi
+  replaces: Remplace un devis
+  no_replacement: Aucun
+  followup: Ajouter une relance dans 7 jours
+  save: Enregistrer le devis envoyé
+  amount_invalid: Indiquer un montant valide, avec au plus deux décimales.
+  reference_exists: Ce numéro de devis est déjà enregistré.
+  signed_on: Signé le
+  sign: Marquer comme signé
+  no_quotes: Aucun devis enregistré.
+  status_sent: Envoyé
+  status_signed: Signé
+  replacement: Remplace le devis
+invoice:
+  heading: Factures
+  new: Ajouter une facture émise
+  hint: La facture est créée hors de ce backoffice. Enregistre ici sa référence, son montant et sa date d’émission.
+  reference: Numéro de facture
+  amount: Montant en euros
+  issued_on: Date d’émission
+  save: Enregistrer la facture
+  amount_invalid: Indiquer un montant valide, avec au plus deux décimales.
+  reference_exists: Ce numéro de facture est déjà enregistré.
+  paid_on: Payée le
+  mark_paid: Marquer comme payée
+  status_paid: Payée
+  status_unpaid: À encaisser
+  none: Aucune facture enregistrée.
+drive:
+  heading: Documents sur Drive
+  root: Dossier général
+  quotes: Devis
+  signed_quotes: Devis validés
+  invoices: Factures
+digest:
+  heading: Courriel de gestion
+  description: Un seul récapitulatif personnel les jours ouvrés où il y a quelque chose à suivre. L’heure est celle de Paris. La pause concerne seulement ce courriel.
+  enabled: Activer le courriel de gestion
+  send_time: Heure d’envoi
+  save: Enregistrer les réglages

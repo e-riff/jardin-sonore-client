@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Tests\Integration\Infrastructure\Mailer;
 
 use App\Application\Session\SessionNotificationMailView;
+use App\Infrastructure\Doctrine\Entity\CommercialRequestEntity;
 use App\Infrastructure\Doctrine\Entity\UserEntity;
+use App\Infrastructure\Mailer\SymfonyCommercialContactSender;
 use App\Infrastructure\Mailer\SymfonyPortalAccountMailSender;
 use App\Infrastructure\Mailer\SymfonySessionNotificationMailSender;
 use DateTimeImmutable;
@@ -29,6 +31,7 @@ final class ServiceEmailRenderingTest extends TestCase
         $this->translator = new Translator('fr');
         $this->translator->addLoader('yaml', new YamlFileLoader());
         $this->translator->addResource('yaml', "{$projectDirectory}/translations/service_email.fr.yaml", 'fr', 'service_email');
+        $this->translator->addResource('yaml', "{$projectDirectory}/translations/commercial_email.fr.yaml", 'fr', 'commercial_email');
         $this->twig = new Environment(new FilesystemLoader("{$projectDirectory}/templates"), ['strict_variables' => true, 'autoescape' => 'name']);
         $this->twig->addExtension(new TranslationExtension($this->translator));
     }
@@ -58,6 +61,23 @@ final class ServiceEmailRenderingTest extends TestCase
         }));
         $sender = new SymfonySessionNotificationMailSender($mailer, $this->twig, $this->translator, 'https://jardin-sonore.test/', 'bonjour@jardin-sonore.test', 'Jardin Sonore');
         $sender->send(new SessionNotificationMailView('client@portal.test', 'Camille <script>', 'Sons <script> & découvertes', new DateTimeImmutable('2026-09-30'), 'les-sons', ['Crèche <Lilas>'], true));
+    }
+
+    public function testContactEmailKeepsTheVisitorAsReplyToAndTheOriginalMessage(): void
+    {
+        $mailer = $this->createMock(MailerInterface::class);
+        $mailer->expects(self::once())->method('send')->with(self::callback(static function (Email $email): bool {
+            self::assertSame('CONTACT JARDIN SONORE - Demande de devis - Claire Martin', $email->getSubject());
+            self::assertSame('contact@jardin-sonore.test', $email->getTo()[0]->getAddress());
+            self::assertSame('claire@example.test', $email->getReplyTo()[0]->getAddress());
+            self::assertStringContainsString('Structure: Crèche des Lilas', (string) $email->getTextBody());
+            self::assertStringContainsString("Message:\nBonjour, je souhaite quatre séances.", (string) $email->getTextBody());
+
+            return true;
+        }));
+        $requestEntity = new CommercialRequestEntity('site', 'Claire Martin', 'claire@example.test', 'Bonjour, je souhaite quatre séances.', new DateTimeImmutable('2026-10-09'), 'Crèche des Lilas');
+
+        (new SymfonyCommercialContactSender($mailer, $this->twig, $this->translator, 'contact@jardin-sonore.test'))->send($requestEntity);
     }
 
     public function testSingleOrganizationNamesAreHiddenInBothFormats(): void

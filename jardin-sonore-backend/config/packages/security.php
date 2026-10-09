@@ -70,6 +70,7 @@ return App::config([
         ],
         'access_control' => [
             ['path' => '^/api/newsletter/', 'roles' => 'PUBLIC_ACCESS'],
+            ['path' => '^/api/commercial/contact-requests$', 'roles' => 'PUBLIC_ACCESS'],
             [
                 'path' => '^/newsletter/unsubscribe/[^/]+$',
                 'roles' => 'PUBLIC_ACCESS',

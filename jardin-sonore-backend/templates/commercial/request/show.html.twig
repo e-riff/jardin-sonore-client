@@ -1,0 +1,82 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set senderName = commercialRequest.senderName ?: 'request.unknown_sender'|trans({}, 'commercial') %}
+{% set title = commercialRequest.organizationName ?: senderName %}
+
+{% block internal_body %}
+    <section class="internal-hero">
+        <a href="{{ path('commercial_request_index') }}">← {{ 'request.back'|trans({}, 'commercial') }}</a>
+        <p class="internal-eyebrow">{{ ('request.status.' ~ commercialRequest.status)|trans({}, 'commercial') }} · {{ commercialRequest.receivedAt|date('d/m/Y') }}</p>
+        <h1>{{ commercialRequest.organizationName ?: senderName }}</h1>
+    </section>
+    <div class="commercial-request-layout">
+        <section class="internal-card">
+            <h2>{{ 'request.original'|trans({}, 'commercial') }}</h2>
+            <dl class="commercial-request-facts">
+                <div><dt>{{ 'request.sender_name'|trans({}, 'commercial') }}</dt><dd>{{ senderName }}</dd></div>
+                {% if commercialRequest.emailAddress %}<div><dt>{{ 'request.email'|trans({}, 'commercial') }}</dt><dd><a href="mailto:{{ commercialRequest.emailAddress }}">{{ commercialRequest.emailAddress }}</a></dd></div>{% endif %}
+                {% if commercialRequest.phone %}<div><dt>{{ 'request.phone'|trans({}, 'commercial') }}</dt><dd><a href="tel:{{ commercialRequest.phone|replace({' ': ''}) }}">{{ commercialRequest.phone }}</a></dd></div>{% endif %}
+                {% if commercialRequest.organization %}
+                    <div><dt>{{ 'request.organization_name'|trans({}, 'commercial') }}</dt><dd>{{ commercialRequest.organization.name }}</dd></div>
+                    {% if commercialRequest.organization.municipalitySummary != '—' %}<div><dt>{{ 'request.city'|trans({}, 'commercial') }}</dt><dd>{{ commercialRequest.organization.municipalitySummary }}</dd></div>{% endif %}
+                {% else %}
+                    {% if commercialRequest.organizationName %}<div><dt>{{ 'request.organization_name'|trans({}, 'commercial') }}</dt><dd>{{ commercialRequest.organizationName }}</dd></div>{% endif %}
+                    {% if commercialRequest.city %}<div><dt>{{ 'request.city'|trans({}, 'commercial') }}</dt><dd>{{ commercialRequest.city }}</dd></div>{% endif %}
+                {% endif %}
+            </dl>
+            <p class="commercial-request-message">{{ commercialRequest.message|nl2br }}</p>
+        </section>
+        <div class="commercial-request-side">
+            {% if commercialRequest.projects|length %}
+                <section class="internal-card">
+                    <h2>{{ 'request.related_projects'|trans({}, 'commercial') }}</h2>
+                    <ul>{% for project in commercialRequest.projects %}<li><a href="{{ path('commercial_project_show', {id: project.id}) }}">{{ project.title }}</a> · {{ project.organization.name }}</li>{% endfor %}</ul>
+                </section>
+            {% endif %}
+            {% if commercialRequest.status != constant('App\\Infrastructure\\Doctrine\\Entity\\CommercialRequestEntity::STATUS_WITHOUT_RESULT') %}
+                <section class="internal-card internal-card--form">
+                    <h2>{{ 'qualification.heading'|trans({}, 'commercial') }}</h2>
+                    <p>{{ (organizationLocked ? 'qualification.hint_linked' : 'qualification.hint_unlinked')|trans({}, 'commercial') }}</p>
+                    {% if qualificationError %}<p role="alert">{{ qualificationError|trans({}, 'commercial') }}</p>{% endif %}
+                    {% set formAttributes = {class: 'internal-form'} %}
+                    {% if not organizationLocked %}
+                        {% set formAttributes = formAttributes|merge({
+                            'data-controller': 'commercial-qualification',
+                            'data-action': 'change->commercial-qualification#update'
+                        }) %}
+                    {% endif %}
+                    {{ form_start(form, {attr: formAttributes}) }}
+                        {% if organizationLocked %}
+                            <p><strong>{{ 'qualification.linked_organization'|trans({}, 'commercial') }}</strong> {{ commercialRequest.organization.name }}{% if commercialRequest.organization.municipalitySummary != '—' %} — {{ commercialRequest.organization.municipalitySummary }}{% endif %}</p>
+                        {% else %}
+                            {{ form_row(form.organizationMode) }}
+                            <div data-commercial-qualification-target="existingOrganization">
+                                {{ form_row(form.organization) }}
+                            </div>
+                            <div data-commercial-qualification-target="newOrganization" hidden>
+                                {{ form_row(form.newOrganizationName) }}
+                            </div>
+                        {% endif %}
+                        {% if personLocked %}
+                            <p><strong>{{ 'qualification.linked_person'|trans({}, 'commercial') }}</strong> {{ commercialRequest.person }}{% if commercialRequest.person.role %} — {{ commercialRequest.person.role }}{% endif %}</p>
+                        {% else %}
+                            {{ form_row(form.newPersonFirstName) }}
+                            {{ form_row(form.newPersonLastName) }}
+                            {{ form_row(form.newPersonRole) }}
+                        {% endif %}
+                        {{ form_row(form.projectTitle) }}
+                        {{ form_row(form.submit) }}
+                    {{ form_end(form) }}
+                </section>
+            {% else %}
+                <p>{{ 'qualification.unavailable'|trans({}, 'commercial') }}</p>
+            {% endif %}
+            {% if commercialRequest.status == constant('App\\Infrastructure\\Doctrine\\Entity\\CommercialRequestEntity::STATUS_TO_QUALIFY') %}
+                <form method="post" action="{{ path('commercial_request_close', {id: commercialRequest.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('commercial_request_close_' ~ commercialRequest.id) }}">
+                    <button class="internal-button internal-button--secondary" type="submit">{{ 'request.close'|trans({}, 'commercial') }}</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

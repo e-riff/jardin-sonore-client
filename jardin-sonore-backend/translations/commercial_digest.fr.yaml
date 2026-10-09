@@ -1,0 +1,7 @@
+subject: 'Jardin Sonore — à faire le %date%'
+heading: 'Suivi clients — %date%'
+requests: 'Demandes à qualifier'
+actions: 'Actions dues ou en retard'
+invoices: 'Factures à relancer'
+without_action: 'Dossiers sans prochaine action'
+open_dashboard: 'Ouvrir le suivi clients'
