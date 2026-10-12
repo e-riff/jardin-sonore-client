@@ -5,6 +5,7 @@ export const portalRoutes = {
     repertoire: "/portail/comptines",
     account: "/portail/compte",
     passwordReset: "/portail/reinitialiser-mot-de-passe",
+    passwordChange: "/portail/changer-mot-de-passe",
     sessionInvalid: "/portail/session-invalide",
     definePassword: (token: string): string => `/portail/definir-mot-de-passe/${encodeURIComponent(token)}`,
     session: (slug: string): string => `/portail/seances/${encodeURIComponent(slug)}`,

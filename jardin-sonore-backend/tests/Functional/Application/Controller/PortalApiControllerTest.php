@@ -349,6 +349,56 @@ final class PortalApiControllerTest extends WebTestCase
         self::assertIsString($this->responseJson($client)['token'] ?? null);
     }
 
+    public function testAuthenticatedPasswordChangeRequiresTheCurrentPasswordAndRevokesOldSessions(): void
+    {
+        [$client, $userEntity] = $this->createActiveUserWithOrganization();
+        $firstToken = $this->login($client, $userEntity);
+        $secondToken = $this->login($client, $userEntity);
+        $path = '/api/portal/me/password';
+
+        $this->requestJson($client, 'PATCH', $path, [
+            'currentPassword' => 'Une phrase de passe solide',
+            'newPassword' => 'Une autre phrase Solide 2026',
+        ]);
+        self::assertResponseStatusCodeSame(401);
+
+        $this->requestJson($client, 'PATCH', $path, [
+            'currentPassword' => 'mot de passe incorrect',
+            'newPassword' => 'Une autre phrase Solide 2026',
+        ], ['HTTP_AUTHORIZATION' => "Bearer {$firstToken}"]);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame('invalid_current_password', $this->responseJson($client)['code'] ?? null);
+
+        $this->requestJson($client, 'PATCH', $path, [
+            'currentPassword' => 'Une phrase de passe solide',
+            'newPassword' => 'trop court',
+        ], ['HTTP_AUTHORIZATION' => "Bearer {$firstToken}"]);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame('invalid_new_password', $this->responseJson($client)['code'] ?? null);
+
+        $this->requestJson($client, 'PATCH', $path, [
+            'currentPassword' => 'Une phrase de passe solide',
+            'newPassword' => 'Une autre phrase Solide 2026',
+        ], ['HTTP_AUTHORIZATION' => "Bearer {$firstToken}"]);
+        self::assertResponseIsSuccessful();
+        $newToken = $this->responseJson($client)['token'] ?? null;
+        self::assertIsString($newToken);
+
+        foreach ([$firstToken, $secondToken] as $oldToken) {
+            $client->request('GET', '/api/portal/me', server: ['HTTP_AUTHORIZATION' => "Bearer {$oldToken}"]);
+            self::assertResponseStatusCodeSame(401);
+        }
+
+        $client->request('GET', '/api/portal/me', server: ['HTTP_AUTHORIZATION' => "Bearer {$newToken}"]);
+        self::assertResponseIsSuccessful();
+
+        $this->requestJson($client, 'POST', '/api/portal/auth/login', [
+            'email' => $userEntity->getEmail(),
+            'password' => 'Une phrase de passe solide',
+        ]);
+        self::assertResponseStatusCodeSame(401);
+    }
+
     public function testPrivateEndpointsRequireABearerSession(): void
     {
         $client = static::createClient();

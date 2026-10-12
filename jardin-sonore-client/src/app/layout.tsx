@@ -1,4 +1,4 @@
-import type {Metadata} from "next";
+import type {Metadata, Viewport} from "next";
 import {JSX, ReactNode} from "react";
 import Footer from "@/components/navigation/Footer";
 import Header from "@/components/navigation/Header";
@@ -15,6 +15,7 @@ const siteOrigin = new URL(siteUrl);
 const isProduction = process.env.NODE_ENV === "production";
 
 export const revalidate = 86400;
+export const viewport: Viewport = {themeColor: "#fdf8f5", colorScheme: "light"};
 
 export const metadata: Metadata = {
     metadataBase: siteOrigin,

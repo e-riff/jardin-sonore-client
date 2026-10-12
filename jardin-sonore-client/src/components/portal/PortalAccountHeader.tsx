@@ -74,7 +74,7 @@ export default function PortalAccountHeader({onLogout}: PortalAccountHeaderProps
                         <p className="truncate px-3 pt-2 text-xs font-semibold text-on-surface-variant">{accountDisplayName}</p>
                         <p className="truncate px-3 pb-2 text-xs text-on-surface-variant">{account.email}</p>
                         <Link aria-current={isProfileActive ? "page" : undefined} className={mobileNavigationLinkClassName(isProfileActive)} href="/portail/compte" onClick={closeAccountMenu}>{isProfileActive ? <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-primary" /> : null}{content.profileLink}</Link>
-                        <Link className="block rounded-md px-3 py-2 font-semibold text-primary hover:bg-primary/10" href="/portail/reinitialiser-mot-de-passe" onClick={closeAccountMenu}>{content.resetPassword}</Link>
+                        <Link className="block rounded-md px-3 py-2 font-semibold text-primary hover:bg-primary/10" href="/portail/changer-mot-de-passe" onClick={closeAccountMenu}>{content.changePassword}</Link>
                         <form action={onLogout} onSubmit={closeAccountMenu}><button className="w-full cursor-pointer rounded-md px-3 py-2 text-left font-semibold text-primary hover:bg-primary/10" type="submit">{content.logout}</button></form>
                     </div>
                     </details>
@@ -99,7 +99,7 @@ export default function PortalAccountHeader({onLogout}: PortalAccountHeaderProps
                     <p className="mt-0.5 truncate text-xs text-on-surface-variant">{account.email}</p>
                 </div>
                 <Link aria-current={isProfileActive ? "page" : undefined} className={mobileNavigationLinkClassName(isProfileActive)} href="/portail/compte" onClick={closeMobileMenu}>{isProfileActive ? <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-primary" /> : null}{content.profileLink}</Link>
-                <Link className="rounded-md px-3 py-2 font-semibold text-primary hover:bg-primary/10" href="/portail/reinitialiser-mot-de-passe" onClick={closeMobileMenu}>{content.resetPassword}</Link>
+                <Link className="rounded-md px-3 py-2 font-semibold text-primary hover:bg-primary/10" href="/portail/changer-mot-de-passe" onClick={closeMobileMenu}>{content.changePassword}</Link>
                 <form action={onLogout} onSubmit={closeMobileMenu}><button className="w-full cursor-pointer rounded-md px-3 py-2 text-left font-semibold text-primary hover:bg-primary/10" type="submit">{content.logout}</button></form>
             </div>
         </div>

@@ -102,6 +102,27 @@ test("authenticates profile updates", async () => {
     assert.equal(new Headers(requests[0].init?.headers).get("authorization"), "Bearer opaque-access-token");
 });
 
+test("changes a password only through the authenticated portal API", async () => {
+    const requests: Array<{input: string | URL | Request; init?: RequestInit}> = [];
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async (input, init): Promise<Response> => {
+        requests.push({input, init});
+        return Response.json({token: "replacement-session"});
+    };
+
+    try {
+        const result = await new PortalApiClient("opaque-access-token", "https://admin.example.test").changePassword({currentPassword: "ancien mot de passe", newPassword: "Nouveau mot de passe 2026"});
+        assert.equal(result.data?.token, "replacement-session");
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
+
+    assert.equal(requests[0].input, "https://admin.example.test/api/portal/me/password");
+    assert.equal(requests[0].init?.method, "PATCH");
+    assert.equal(requests[0].init?.body, '{"currentPassword":"ancien mot de passe","newPassword":"Nouveau mot de passe 2026"}');
+    assert.equal(new Headers(requests[0].init?.headers).get("authorization"), "Bearer opaque-access-token");
+});
+
 test("turns a sessions transport failure into the safe unavailable error", async () => {
     const originalFetch = globalThis.fetch;
     globalThis.fetch = async (): Promise<Response> => {
