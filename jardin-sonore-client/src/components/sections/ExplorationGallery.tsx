@@ -83,6 +83,10 @@ export default function ExplorationGallery({content}: ExplorationGalleryProps): 
 
         const offset = direction === "previous" ? -1 : 1;
         const targetIndex = (activeGroupIndex + offset + photoGroups.length) % photoGroups.length;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            setActiveGroupIndex(targetIndex);
+            return;
+        }
         setSlideTransition({direction, phase: "ready", targetIndex});
     };
 
