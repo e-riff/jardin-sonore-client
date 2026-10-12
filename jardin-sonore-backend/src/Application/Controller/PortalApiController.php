@@ -213,6 +213,34 @@ final class PortalApiController extends AbstractController
         return $this->me();
     }
 
+    #[Route('/me/password', methods: ['PATCH'])]
+    public function changePassword(Request $request): JsonResponse
+    {
+        $userEntity = $this->portalUser();
+        if (!$this->consumeLimiter($this->portalLoginLimiter, $request)) {
+            return new JsonResponse(['message' => 'Too many requests.'], Response::HTTP_TOO_MANY_REQUESTS);
+        }
+
+        $payload = $this->jsonPayload($request);
+        $currentPassword = $payload['currentPassword'] ?? null;
+        $newPassword = $payload['newPassword'] ?? null;
+        if (!is_string($currentPassword) || !$this->userPasswordHasher->isPasswordValid($userEntity, $currentPassword)) {
+            return new JsonResponse(['code' => 'invalid_current_password'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        if (!is_string($newPassword)
+            || 0 < $this->validator->validate($newPassword, new PortalPassword())->count()
+            || $this->userPasswordHasher->isPasswordValid($userEntity, $newPassword)) {
+            return new JsonResponse(['code' => 'invalid_new_password'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $userEntity->setPassword($this->userPasswordHasher->hashPassword($userEntity, $newPassword));
+        $this->entityManager->flush();
+        $this->portalSessionManager->revokeForUser($userEntity);
+
+        return new JsonResponse(['token' => $this->portalSessionManager->create($userEntity)->rawToken]);
+    }
+
     #[Route('/me/avatar', methods: ['POST'])]
     public function updateAvatar(Request $request, PortalAvatarStorageInterface $portalAvatarStorage): JsonResponse
     {

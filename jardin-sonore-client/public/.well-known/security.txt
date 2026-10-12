@@ -1,0 +1,4 @@
+Contact: https://jardin-sonore.fr/#contact
+Expires: 2027-10-12T00:00:00Z
+Preferred-Languages: fr
+Canonical: https://jardin-sonore.fr/.well-known/security.txt

@@ -3,7 +3,7 @@
 import {redirect} from "next/navigation";
 import {revalidatePath} from "next/cache";
 import {PortalApiClient} from "@/lib/portal/api-client";
-import {clearPortalSession, getPortalAccessToken, setPortalSession} from "@/lib/portal/session";
+import {clearPortalSession, getPortalAccessToken, isPortalImpersonation, setPortalSession} from "@/lib/portal/session";
 import {portalRoutes} from "@/lib/portal/routes";
 import {resolvePortalLoginDestination} from "@/lib/portal/login-destination";
 import type {PortalAccount} from "@/lib/portal/types";
@@ -74,6 +74,31 @@ export async function updatePortalProfileAction(_previousState: PortalProfileFor
 }
 
 export interface PortalPasswordFormState { status: "idle" | "error" | "unavailable"; }
+export interface PortalChangePasswordFormState { status: "idle" | "success" | "error"; reason?: "current" | "new" | "mismatch"; }
+
+export async function changePortalPasswordAction(_previousState: PortalChangePasswordFormState, formData: FormData): Promise<PortalChangePasswordFormState> {
+    const token = await getPortalAccessToken();
+    if (!token || await isPortalImpersonation()) return {status: "error"};
+
+    const currentPassword = formData.get("currentPassword");
+    const newPassword = formData.get("newPassword");
+    const confirmation = formData.get("confirmation");
+    if (typeof currentPassword !== "string" || typeof newPassword !== "string" || typeof confirmation !== "string") return {status: "error"};
+    if (newPassword !== confirmation) return {status: "error", reason: "mismatch"};
+
+    try {
+        const result = await (await PortalApiClient.fromCurrentRequest(token)).changePassword({currentPassword, newPassword});
+        if (!result.response.ok || !result.data?.token) {
+            const reason = result.data?.code === "invalid_current_password" ? "current" : result.data?.code === "invalid_new_password" ? "new" : undefined;
+            return {status: "error", reason};
+        }
+        await setPortalSession(result.data.token);
+        return {status: "success"};
+    } catch {
+        return {status: "error"};
+    }
+}
+
 export async function definePortalPasswordAction(_previousState: PortalPasswordFormState, formData: FormData): Promise<PortalPasswordFormState> {
     const token = formData.get("token"); const password = formData.get("password");
     try {

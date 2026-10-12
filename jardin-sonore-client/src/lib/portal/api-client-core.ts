@@ -109,6 +109,10 @@ export class PortalApiClient {
         return this.jsonRequest<PortalAccount>("/api/portal/me/profile", data, "PATCH", true);
     }
 
+    public async changePassword(data: {currentPassword: string; newPassword: string}): Promise<PortalApiResult<{token?: string; code?: string}>> {
+        return this.jsonRequest<{token?: string; code?: string}>("/api/portal/me/password", data, "PATCH", true);
+    }
+
     public async updateAvatar(avatar: File): Promise<PortalApiResult<PortalAccount>> {
         const formData = new FormData();
         formData.append("avatar", avatar);
