@@ -35,10 +35,16 @@ final class MailingCampaign implements UuidIdentifiableInterface
         private ?DateTimeImmutable $lastTestSentAt = null,
         private ?Uuid $appliedAudienceMaskUuid = null,
         private ?string $appliedAudienceMaskName = null,
+        private ?string $preheader = null,
+        /** @var list<array<string, mixed>>|null */
+        private ?array $introBlocks = null,
         ?Uuid $uuid = null,
     ) {
         $this->initializeUuid($uuid);
         $this->assertContentIsValid($internalTitle, $emailSubject, $publicTitle, $mainText, $templateKey);
+        self::assertIntroBlocksAreValid($introBlocks);
+        $this->preheader = $this->normalizeNullableString($preheader);
+        self::assertPreheaderIsValid($this->preheader);
         $this->subtitle = $this->normalizeNullableString($subtitle);
         $this->callToActionLabel = $this->normalizeNullableString($callToActionLabel);
         $this->callToActionUrl = $this->normalizeNullableString($callToActionUrl);
@@ -68,6 +74,17 @@ final class MailingCampaign implements UuidIdentifiableInterface
     public function getMainText(): string
     {
         return $this->mainText;
+    }
+
+    public function getPreheader(): ?string
+    {
+        return $this->preheader;
+    }
+
+    /** @return list<array<string, mixed>>|null */
+    public function getIntroBlocks(): ?array
+    {
+        return $this->introBlocks;
     }
 
     public function getSubtitle(): ?string
@@ -138,6 +155,7 @@ final class MailingCampaign implements UuidIdentifiableInterface
         return $this->appliedAudienceMaskName;
     }
 
+    /** @param list<array<string, mixed>>|null $introBlocks */
     public function updateContent(
         string $internalTitle,
         string $emailSubject,
@@ -148,9 +166,14 @@ final class MailingCampaign implements UuidIdentifiableInterface
         ?string $callToActionLabel,
         ?string $callToActionUrl,
         ?string $bannerImagePath,
+        ?string $preheader = null,
+        ?array $introBlocks = null,
     ): void {
         $this->assertEditable();
         $this->assertContentIsValid($internalTitle, $emailSubject, $publicTitle, $mainText, $templateKey);
+        self::assertIntroBlocksAreValid($introBlocks);
+        $preheader = $this->normalizeNullableString($preheader);
+        self::assertPreheaderIsValid($preheader);
         $subtitle = $this->normalizeNullableString($subtitle);
         $callToActionLabel = $this->normalizeNullableString($callToActionLabel);
         $callToActionUrl = $this->normalizeNullableString($callToActionUrl);
@@ -161,12 +184,73 @@ final class MailingCampaign implements UuidIdentifiableInterface
         $this->emailSubject = $emailSubject;
         $this->publicTitle = $publicTitle;
         $this->mainText = $mainText;
+        $this->preheader = $preheader;
+        $this->introBlocks = $introBlocks;
         $this->subtitle = $subtitle;
         $this->callToActionLabel = $callToActionLabel;
         $this->callToActionUrl = $callToActionUrl;
         $this->bannerImagePath = $bannerImagePath;
         $this->templateKey = $templateKey;
         $this->markAsUpdated();
+    }
+
+    /** @param list<array<string, mixed>>|null $introBlocks */
+    private static function assertIntroBlocksAreValid(?array $introBlocks): void
+    {
+        if (null === $introBlocks) {
+            return;
+        }
+
+        $hasParagraph = false;
+        $seenIds = [];
+
+        foreach ($introBlocks as $introBlock) {
+            $kind = $introBlock['kind'] ?? null;
+            $id = $introBlock['id'] ?? null;
+            $text = $introBlock['text'] ?? null;
+            $imagePath = $introBlock['imagePath'] ?? null;
+
+            if (!is_string($id) || 1 !== preg_match('/^[a-zA-Z0-9-]{1,64}$/', $id) || isset($seenIds[$id])
+                || !in_array($kind, ['paragraph', 'image', 'split'], true)) {
+                throw new InvalidArgumentException('Invalid mailing introduction block.');
+            }
+
+            $seenIds[$id] = true;
+
+            if (in_array($kind, ['paragraph', 'split'], true)) {
+                if (!is_string($text) || '' === trim(strip_tags($text))) {
+                    throw new InvalidArgumentException('Mailing introduction block requires text.');
+                }
+
+                $hasParagraph = true;
+            }
+
+            if (in_array($kind, ['image', 'split'], true)
+                && (!is_string($imagePath) || 1 !== preg_match('~^uploads/mailing/content/[a-z0-9._-]+$~i', $imagePath))) {
+                throw new InvalidArgumentException('Invalid mailing introduction image path.');
+            }
+
+            if (in_array($kind, ['image', 'split'], true)
+                && true !== ($introBlock['imageDecorative'] ?? false)
+                && (false === is_string($introBlock['imageAlt'] ?? null) || '' === trim($introBlock['imageAlt']))) {
+                throw new InvalidArgumentException('Mailing introduction image needs alternative text.');
+            }
+
+            if ('split' === $kind && !in_array($introBlock['imageSide'] ?? null, ['left', 'right'], true)) {
+                throw new InvalidArgumentException('Invalid mailing introduction image position.');
+            }
+        }
+
+        if (!$hasParagraph) {
+            throw new InvalidArgumentException('Mailing introduction requires a paragraph.');
+        }
+    }
+
+    private static function assertPreheaderIsValid(?string $preheader): void
+    {
+        if (null !== $preheader && 255 < mb_strlen($preheader)) {
+            throw new InvalidArgumentException('Mailing preheader is too long.');
+        }
     }
 
     /**

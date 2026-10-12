@@ -11,6 +11,7 @@ final readonly class RenderedNewsletter
         public string $html,
         public ?string $text = null,
         public ?string $bannerImagePath = null,
+        public ?string $preheader = null,
     ) {
     }
 }

@@ -12,6 +12,7 @@ use App\Application\Form\MailingTestType;
 use App\Application\Form\Model\CreateMailingCampaignFormModel;
 use App\Application\Form\Model\EditMailingCampaignFormModel;
 use App\Application\Form\Model\MailingAudienceMaskFormModel;
+use App\Application\Form\Model\MailingIntroBlockFormModel;
 use App\Application\Form\Model\MailingTestFormModel;
 use App\Application\Mailing\CreateMailingCampaign;
 use App\Application\Mailing\CreateMailingCampaignInput;
@@ -285,6 +286,11 @@ final class MailingController extends AbstractController
                 callToActionLabel: $formModel->callToActionLabel,
                 callToActionUrl: $formModel->callToActionUrl,
                 bannerImageFile: $formModel->bannerImageFile,
+                preheader: $formModel->preheader,
+                introBlocks: [] === $formModel->introBlocks ? null : array_map(
+                    static fn (MailingIntroBlockFormModel $block) => $block->toInput(),
+                    $formModel->introBlocks,
+                ),
             ));
 
             $this->addFlash('success', 'mailing.flash.created');
@@ -342,6 +348,11 @@ final class MailingController extends AbstractController
                 bannerImageFile: $formModel->bannerImageFile,
                 removeBannerImage: $formModel->removeBannerImage,
                 templateKey: $formModel->templateKey,
+                preheader: $formModel->preheader,
+                introBlocks: [] === $formModel->introBlocks ? null : array_map(
+                    static fn (MailingIntroBlockFormModel $block) => $block->toInput(),
+                    $formModel->introBlocks,
+                ),
             ));
 
             $this->addFlash('success', 'mailing.flash.updated');

@@ -19,6 +19,9 @@ final readonly class UpdateMailingCampaignInput
         public ?UploadedFile $bannerImageFile,
         public bool $removeBannerImage,
         public string $templateKey,
+        public ?string $preheader = null,
+        /** @var list<MailingIntroBlockInput>|null */
+        public ?array $introBlocks = null,
     ) {
     }
 }

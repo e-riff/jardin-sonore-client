@@ -44,6 +44,10 @@
                 <p>{{ renderedNewsletter.subject }}</p>
             </article>
             <article class="mailing-preview-meta__item">
+                <strong>{{ 'mailing.preview.meta.preheader'|trans({}, 'mailing') }}</strong>
+                <p>{{ renderedNewsletter.preheader }}</p>
+            </article>
+            <article class="mailing-preview-meta__item">
                 <strong>{{ 'mailing.preview.meta.template'|trans({}, 'mailing') }}</strong>
                 <p>{{ campaign.templateKey }}</p>
             </article>

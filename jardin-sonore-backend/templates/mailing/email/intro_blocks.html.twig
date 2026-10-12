@@ -1,0 +1,29 @@
+{% for block in blocks %}
+    {% if block.kind == 'paragraph' %}
+        <p style="margin:0 0 20px 0; color:#554240; font-size:16px; line-height:28px;">{{ block.textHtml|raw }}</p>
+    {% elseif block.kind == 'image' %}
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 20px 0;">
+            <tr>
+                <td align="center">
+                    <img src="{{ absolute_url(asset(block.imagePath)) }}" alt="{{ block.imageDecorative ? '' : block.imageAlt }}" width="544" style="display:block; width:100%; max-width:544px; height:auto; border:0;">
+                </td>
+            </tr>
+        </table>
+    {% elseif block.kind == 'split' %}
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 20px 0;">
+            <tr>
+                {% if block.imageSide == 'left' %}
+                    <td class="mailing-intro-split-cell" width="34%" valign="top" style="padding:0 16px 0 0; vertical-align:top;">
+                        <img src="{{ absolute_url(asset(block.imagePath)) }}" alt="{{ block.imageDecorative ? '' : block.imageAlt }}" width="170" style="display:block; width:100%; max-width:170px; height:auto; border:0;">
+                    </td>
+                {% endif %}
+                <td class="mailing-intro-split-cell" width="66%" valign="top" style="color:#554240; font-size:16px; line-height:28px; vertical-align:top;">{{ block.textHtml|raw }}</td>
+                {% if block.imageSide == 'right' %}
+                    <td class="mailing-intro-split-cell" width="34%" valign="top" style="padding:0 0 0 16px; vertical-align:top;">
+                        <img src="{{ absolute_url(asset(block.imagePath)) }}" alt="{{ block.imageDecorative ? '' : block.imageAlt }}" width="170" style="display:block; width:100%; max-width:170px; height:auto; border:0;">
+                    </td>
+                {% endif %}
+            </tr>
+        </table>
+    {% endif %}
+{% endfor %}

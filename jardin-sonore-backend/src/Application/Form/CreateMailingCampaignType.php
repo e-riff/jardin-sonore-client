@@ -6,6 +6,7 @@ namespace App\Application\Form;
 
 use App\Application\Form\Model\CreateMailingCampaignFormModel;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -34,6 +35,11 @@ final class CreateMailingCampaignType extends AbstractType
                 'label' => 'mailing.form.email_subject',
                 'help' => 'mailing.form.email_subject_help',
             ])
+            ->add('preheader', TextType::class, [
+                'label' => 'mailing.form.preheader',
+                'help' => 'mailing.form.preheader_help',
+                'required' => false,
+            ])
             ->add('publicTitle', TextType::class, [
                 'label' => 'mailing.form.public_title',
                 'help' => 'mailing.form.public_title_help',
@@ -42,9 +48,19 @@ final class CreateMailingCampaignType extends AbstractType
                 'label' => 'mailing.form.main_text',
                 'help' => 'mailing.form.main_text_help',
                 'help_html' => true,
+                'required' => false,
+                'empty_data' => '',
                 'attr' => [
                     'rows' => 8,
                 ],
+            ])
+            ->add('introBlocks', CollectionType::class, [
+                'entry_type' => MailingIntroBlockType::class,
+                'allow_add' => true,
+                'allow_delete' => true,
+                'by_reference' => false,
+                'prototype' => true,
+                'label' => false,
             ])
             ->add('subtitle', TextType::class, [
                 'label' => 'mailing.form.subtitle',
