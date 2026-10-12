@@ -19,6 +19,7 @@ use App\Infrastructure\Doctrine\Mapper\SessionSummaryMapper;
 use Doctrine\ORM\EntityManagerInterface;
 use InvalidArgumentException;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Uid\Uuid;
 use ValueError;
 
@@ -32,6 +33,7 @@ final readonly class PortalSessionReader
         private RepertoireItemRepositoryInterface $repertoireItemRepository,
         private MediaResourceRepositoryInterface $mediaResourceRepository,
         private InstrumentRepositoryInterface $instrumentRepository,
+        private RequestStack $requestStack,
     ) {
     }
 
@@ -186,13 +188,15 @@ final readonly class PortalSessionReader
     /** @return list<array<string, mixed>> */
     public function detailSequences(SessionSummaryEntity $sessionSummaryEntity): array
     {
+        $mediaBaseUrl = $this->requestStack->getCurrentRequest()?->getSchemeAndHttpHost() ?? '';
+
         try {
             $sessionSequences = $this->sessionSummaryMapper->toDomain($sessionSummaryEntity)->getSequences();
         } catch (InvalidArgumentException|ValueError) {
             return $sessionSummaryEntity->getSequences();
         }
 
-        return array_map(function (SessionSequence $sessionSequence): array {
+        return array_map(function (SessionSequence $sessionSequence) use ($mediaBaseUrl): array {
             $repertoireItem = null === $sessionSequence->sourceUuid
                 ? null
                 : $this->repertoireItemRepository->findByUuid($sessionSequence->sourceUuid);
@@ -211,8 +215,8 @@ final readonly class PortalSessionReader
                 'lyrics' => $sessionSequenceView->lyrics,
                 'gestures' => $sessionSequenceView->gestures,
                 'notes' => $sessionSequenceView->notes,
-                'media' => array_map(static fn (SessionSequenceMedia $media): array => $media->toArray(), $sessionSequenceView->media),
-                'documentMedia' => array_map(static fn (SessionSequenceMedia $media): array => $media->toArray(), $sessionSequenceView->documentMedia),
+                'media' => array_map(static fn (SessionSequenceMedia $media): array => self::portalMedia($media, $mediaBaseUrl), $sessionSequenceView->media),
+                'documentMedia' => array_map(static fn (SessionSequenceMedia $media): array => self::portalMedia($media, $mediaBaseUrl), $sessionSequenceView->documentMedia),
                 'showLyricsByDefault' => $sessionSequenceView->showLyricsByDefault,
                 'role' => $sessionSequenceView->role,
                 'instrumentUuids' => $sessionSequenceView->instrumentUuids,
@@ -227,6 +231,18 @@ final readonly class PortalSessionReader
                 ], $sessionSequenceView->contentBlocks),
             ];
         }, $sessionSequences);
+    }
+
+    /** @return array<string, scalar|null> */
+    private static function portalMedia(SessionSequenceMedia $media, string $mediaBaseUrl): array
+    {
+        $response = $media->toArray();
+        $response['url'] = PortalMediaUrl::publicUrl($media->url, 'resources', $mediaBaseUrl) ?? $media->url;
+        $response['imageUrl'] = null === $media->imageUrl
+            ? null
+            : PortalMediaUrl::publicUrl($media->imageUrl, 'images', $mediaBaseUrl) ?? $media->imageUrl;
+
+        return $response;
     }
 
     /** @return list<string> */

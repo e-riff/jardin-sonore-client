@@ -588,6 +588,35 @@ final class PortalApiControllerTest extends WebTestCase
         self::assertSame('https://www.youtube.com/watch?v=dQw4w9WgXcQ', $this->responseJson($client)['sequences'][0]['documentMedia'][0]['url']);
     }
 
+    public function testSessionDetailExposesBackendUrlsForUploadedMedia(): void
+    {
+        [$client, $userEntity, $organizationEntity] = $this->createActiveUserWithOrganization();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $mediaEntity = (new MediaResourceEntity())
+            ->setTitle('Partition')
+            ->setType(MediaResourceType::LINK)
+            ->setPrimaryUrl('uploads/media/resources/partition.pdf')
+            ->setImageUrl('uploads/media/images/partition.png');
+        $repertoireItemEntity = (new RepertoireItemEntity())
+            ->setTitle('Comptine avec partition')
+            ->setType(RepertoireItemType::NURSERY_RHYME)
+            ->setLinkedMediaUuids([$mediaEntity->getUuid()->toRfc4122()]);
+        $sessionSummaryEntity = $this->createSessionSummary('Séance avec partition', new DateTimeImmutable('2026-09-15'), [$organizationEntity])
+            ->setSequences([$this->repertoireSequence($repertoireItemEntity)]);
+        $entityManager->persist($mediaEntity);
+        $entityManager->persist($repertoireItemEntity);
+        $entityManager->persist($sessionSummaryEntity);
+        $entityManager->flush();
+        $token = $this->login($client, $userEntity);
+
+        $client->request('GET', '/api/portal/sessions/' . $sessionSummaryEntity->getSlug(), server: ['HTTP_AUTHORIZATION' => "Bearer {$token}"]);
+
+        self::assertResponseIsSuccessful();
+        $media = $this->responseJson($client)['sequences'][0]['documentMedia'][0];
+        self::assertSame('http://localhost/uploads/media/resources/partition.pdf', $media['url']);
+        self::assertSame('http://localhost/uploads/media/images/partition.png', $media['imageUrl']);
+    }
+
     public function testUnpublishedSessionAndItsExclusiveRepertoireItemAreHiddenFromPortal(): void
     {
         [$client, $userEntity, $organizationEntity] = $this->createActiveUserWithOrganization();
