@@ -12,6 +12,8 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 final class EditMailingCampaignFormModel
 {
+    use MailingIntroBlocksFormTrait;
+
     #[Assert\NotBlank]
     public string $internalTitle = '';
 
@@ -21,8 +23,10 @@ final class EditMailingCampaignFormModel
     #[Assert\NotBlank]
     public string $publicTitle = '';
 
-    #[Assert\NotBlank]
     public string $mainText = '';
+
+    #[Assert\Length(max: 255)]
+    public ?string $preheader = null;
 
     public ?string $subtitle = null;
 
@@ -53,6 +57,27 @@ final class EditMailingCampaignFormModel
         $formModel->emailSubject = $mailingCampaign->getEmailSubject();
         $formModel->publicTitle = $mailingCampaign->getPublicTitle();
         $formModel->mainText = $mailingCampaign->getMainText();
+        $formModel->preheader = $mailingCampaign->getPreheader();
+        $blocks = $mailingCampaign->getIntroBlocks();
+        if (null === $blocks) {
+            $paragraphs = preg_split('/\n{2,}/', str_replace(["\r\n", "\r"], "\n", trim($mailingCampaign->getMainText()))) ?: [];
+            $blocks = [];
+            foreach ($paragraphs as $index => $paragraph) {
+                $blocks[] = [
+                    'id' => "legacy-introduction-{$index}",
+                    'kind' => 'paragraph',
+                    'text' => str_replace("\n", '<br>', trim($paragraph)),
+                ];
+            }
+        }
+        $formModel->introBlocks = array_map(MailingIntroBlockFormModel::fromBlock(...), $blocks);
+        $imagePaths = [];
+        foreach ($blocks as $block) {
+            if (isset($block['id'], $block['imagePath']) && is_string($block['imagePath'])) {
+                $imagePaths[(string) $block['id']] = $block['imagePath'];
+            }
+        }
+        $formModel->setExistingIntroImagePaths($imagePaths);
         $formModel->subtitle = $mailingCampaign->getSubtitle();
         $formModel->callToActionLabel = $mailingCampaign->getCallToActionLabel();
         $formModel->callToActionUrl = $mailingCampaign->getCallToActionUrl();

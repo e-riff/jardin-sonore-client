@@ -61,6 +61,21 @@ return static function (ClassMetadata $metadata): void {
     ]);
 
     $metadata->mapField([
+        'fieldName' => 'preheader',
+        'columnName' => 'preheader',
+        'type' => Types::STRING,
+        'length' => 255,
+        'nullable' => true,
+    ]);
+
+    $metadata->mapField([
+        'fieldName' => 'introBlocks',
+        'columnName' => 'intro_blocks',
+        'type' => Types::JSON,
+        'nullable' => true,
+    ]);
+
+    $metadata->mapField([
         'fieldName' => 'subtitle',
         'columnName' => 'subtitle',
         'type' => Types::STRING,

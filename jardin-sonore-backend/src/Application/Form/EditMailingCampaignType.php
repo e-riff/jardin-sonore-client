@@ -8,6 +8,7 @@ use App\Application\Form\Model\EditMailingCampaignFormModel;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -40,6 +41,12 @@ final class EditMailingCampaignType extends AbstractType
                 'help' => 'mailing.form.email_subject_help',
                 'disabled' => $locked,
             ])
+            ->add('preheader', TextType::class, [
+                'label' => 'mailing.form.preheader',
+                'help' => 'mailing.form.preheader_help',
+                'required' => false,
+                'disabled' => $locked,
+            ])
             ->add('publicTitle', TextType::class, [
                 'label' => 'mailing.form.public_title',
                 'help' => 'mailing.form.public_title_help',
@@ -49,10 +56,22 @@ final class EditMailingCampaignType extends AbstractType
                 'label' => 'mailing.form.main_text',
                 'help' => 'mailing.form.main_text_help',
                 'help_html' => true,
+                'required' => false,
+                'empty_data' => '',
                 'disabled' => $locked,
                 'attr' => [
                     'rows' => 10,
                 ],
+            ])
+            ->add('introBlocks', CollectionType::class, [
+                'entry_type' => MailingIntroBlockType::class,
+                'entry_options' => ['locked' => $locked],
+                'allow_add' => !$locked,
+                'allow_delete' => !$locked,
+                'by_reference' => false,
+                'prototype' => !$locked,
+                'disabled' => $locked,
+                'label' => false,
             ])
             ->add('subtitle', TextType::class, [
                 'label' => 'mailing.form.subtitle',

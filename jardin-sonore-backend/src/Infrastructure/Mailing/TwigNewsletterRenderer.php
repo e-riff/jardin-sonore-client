@@ -21,6 +21,7 @@ final readonly class TwigNewsletterRenderer implements NewsletterRendererInterfa
         private Environment $twig,
         private UrlGeneratorInterface $urlGenerator,
         private NewsletterMainTextFormatter $newsletterMainTextFormatter,
+        private NewsletterRichTextFormatter $newsletterRichTextFormatter,
     ) {
     }
 
@@ -33,7 +34,14 @@ final readonly class TwigNewsletterRenderer implements NewsletterRendererInterfa
         ));
         $heroImagePath = $mailingCampaign->getBannerImagePath() ?? self::DEFAULT_BANNER_IMAGE_PATH;
         $formattedMainText = $this->newsletterMainTextFormatter->format($mailingCampaign->getMainText());
-        $preheader = $this->resolvePreheader($mailingCampaign, $formattedMainText->text);
+        $introBlocks = $this->formatIntroBlocks($mailingCampaign->getIntroBlocks());
+        $introText = null === $introBlocks
+            ? $formattedMainText->text
+            : implode("\n\n", array_values(array_filter(array_column($introBlocks, 'textPlain'))));
+        $preheader = $mailingCampaign->getPreheader()
+            ?? (null === $introBlocks
+                ? $this->resolvePreheader($mailingCampaign, $formattedMainText->text)
+                : $this->firstBlockPreheader($introBlocks));
 
         $unsubscribeUrl = $this->urlGenerator->generate('newsletter_unsubscribe', [
             'token' => self::UNSUBSCRIBE_TOKEN_PLACEHOLDER,
@@ -47,6 +55,8 @@ final readonly class TwigNewsletterRenderer implements NewsletterRendererInterfa
             'heroImagePath' => $heroImagePath,
             'mainTextHtml' => $formattedMainText->html,
             'mainTextText' => $formattedMainText->text,
+            'introBlocks' => $introBlocks,
+            'introText' => $introText,
         ];
 
         return new RenderedNewsletter(
@@ -54,7 +64,43 @@ final readonly class TwigNewsletterRenderer implements NewsletterRendererInterfa
             html: $this->twig->render($template, $context),
             text: $this->twig->render('mailing/email/default.txt.twig', $context),
             bannerImagePath: $heroImagePath,
+            preheader: $preheader,
         );
+    }
+
+    /**
+     * @param list<array<string, mixed>>|null $blocks
+     *
+     * @return list<array<string, mixed>>|null
+     */
+    private function formatIntroBlocks(?array $blocks): ?array
+    {
+        if (null === $blocks) {
+            return null;
+        }
+
+        return array_map(function (array $block): array {
+            $formattedText = $this->newsletterRichTextFormatter->format((string) ($block['text'] ?? ''));
+
+            return array_merge($block, [
+                'textHtml' => $formattedText->html,
+                'textPlain' => $formattedText->text,
+            ]);
+        }, $blocks);
+    }
+
+    /** @param list<array<string, mixed>> $blocks */
+    private function firstBlockPreheader(array $blocks): string
+    {
+        foreach ($blocks as $block) {
+            if (in_array($block['kind'], ['paragraph', 'split'], true)) {
+                $text = (string) $block['textPlain'];
+
+                return trim(preg_replace('/\s+/', ' ', $text) ?? $text);
+            }
+        }
+
+        return '';
     }
 
     private function resolveTemplate(string $templateKey): string

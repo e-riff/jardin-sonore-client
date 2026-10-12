@@ -4,7 +4,7 @@
 {{ campaign.subtitle }}
 
 {% endif %}
-{{ mainTextText }}
+{{ introBlocks is null ? mainTextText : introText }}
 
 {% if campaign.callToActionLabel and campaign.callToActionUrl %}
 

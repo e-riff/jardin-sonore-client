@@ -53,7 +53,12 @@ final readonly class LocalMailingBannerImageStorage implements MailingBannerImag
             return;
         }
 
-        $absolutePath = dirname($this->uploadDirectory) . '/' . $normalizedPath;
+        $filename = substr($normalizedPath, strlen($prefix));
+        if ('' === $filename || basename($filename) !== $filename) {
+            return;
+        }
+
+        $absolutePath = $this->uploadDirectory . '/' . $filename;
 
         if (is_file($absolutePath) && !unlink($absolutePath)) {
             throw new RuntimeException("Unable to delete mailing banner image {$absolutePath}.");

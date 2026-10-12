@@ -28,6 +28,8 @@ final readonly class MailingCampaignMapper
             emailSubject: $mailingCampaignEntity->getEmailSubject(),
             publicTitle: $mailingCampaignEntity->getPublicTitle(),
             mainText: $mailingCampaignEntity->getMainText(),
+            preheader: $mailingCampaignEntity->getPreheader(),
+            introBlocks: $mailingCampaignEntity->getIntroBlocks(),
             subtitle: $mailingCampaignEntity->getSubtitle(),
             callToActionLabel: $mailingCampaignEntity->getCallToActionLabel(),
             callToActionUrl: $mailingCampaignEntity->getCallToActionUrl(),
@@ -60,6 +62,8 @@ final readonly class MailingCampaignMapper
             ->setEmailSubject($mailingCampaign->getEmailSubject())
             ->setPublicTitle($mailingCampaign->getPublicTitle())
             ->setMainText($mailingCampaign->getMainText())
+            ->setPreheader($mailingCampaign->getPreheader())
+            ->setIntroBlocks($mailingCampaign->getIntroBlocks())
             ->setSubtitle($mailingCampaign->getSubtitle())
             ->setCallToActionLabel($mailingCampaign->getCallToActionLabel())
             ->setCallToActionUrl($mailingCampaign->getCallToActionUrl())

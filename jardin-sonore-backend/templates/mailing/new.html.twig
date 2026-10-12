@@ -17,9 +17,29 @@
         {{ form_start(form, { attr: { class: 'internal-form' } }) }}
             {{ form_row(form.internalTitle) }}
             {{ form_row(form.emailSubject) }}
+            {{ form_row(form.preheader) }}
             {{ form_row(form.publicTitle) }}
             {{ form_row(form.subtitle) }}
-            {{ form_row(form.mainText) }}
+            {{ form_widget(form.mainText, { attr: { hidden: 'hidden' } }) }}
+            {% set introPrototype %}{% include 'mailing/_intro_block_row.html.twig' with { blockForm: form.introBlocks.vars.prototype, locked: false } only %}{% endset %}
+            <section class="mailing-intro-editor" data-controller="mailing-intro" data-mailing-intro-link-prompt-value="{{ 'mailing.form.intro_link_prompt'|trans({}, 'mailing') }}" data-mailing-intro-link-invalid-value="{{ 'mailing.form.intro_link_invalid'|trans({}, 'mailing') }}">
+                <h2>{{ 'mailing.form.intro_heading'|trans({}, 'mailing') }}</h2>
+                <p>{{ 'mailing.form.intro_help'|trans({}, 'mailing') }}</p>
+                {{ form_errors(form.introBlocks) }}
+                <div data-mailing-intro-target="collection" data-prototype="{{ introPrototype|e('html_attr') }}">
+                    {% for blockForm in form.introBlocks %}
+                        {% include 'mailing/_intro_block_row.html.twig' with { blockForm: blockForm, locked: false } only %}
+                    {% endfor %}
+                </div>
+                <details class="mailing-intro-editor__add">
+                    <summary class="internal-button internal-button--secondary">{{ 'mailing.form.intro_add_block'|trans({}, 'mailing') }}</summary>
+                    <div class="mailing-intro-editor__add-options">
+                    <button type="button" class="internal-button internal-button--secondary" data-kind="paragraph" data-action="mailing-intro#add">{{ 'mailing.form.intro_add_paragraph'|trans({}, 'mailing') }}</button>
+                    <button type="button" class="internal-button internal-button--secondary" data-kind="image" data-action="mailing-intro#add">{{ 'mailing.form.intro_add_image'|trans({}, 'mailing') }}</button>
+                    <button type="button" class="internal-button internal-button--secondary" data-kind="split" data-action="mailing-intro#add">{{ 'mailing.form.intro_add_split'|trans({}, 'mailing') }}</button>
+                    </div>
+                </details>
+            </section>
             <div class="internal-form__grid">
                 {{ form_row(form.callToActionLabel) }}
                 {{ form_row(form.callToActionUrl) }}

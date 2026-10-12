@@ -11,6 +11,8 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 final class CreateMailingCampaignFormModel
 {
+    use MailingIntroBlocksFormTrait;
+
     #[Assert\NotBlank]
     public string $internalTitle = '';
 
@@ -20,8 +22,10 @@ final class CreateMailingCampaignFormModel
     #[Assert\NotBlank]
     public string $publicTitle = '';
 
-    #[Assert\NotBlank]
     public string $mainText = '';
+
+    #[Assert\Length(max: 255)]
+    public ?string $preheader = null;
 
     public ?string $subtitle = null;
 
@@ -37,6 +41,11 @@ final class CreateMailingCampaignFormModel
         maxSizeMessage: 'mailing.form.banner_image_invalid_size',
     )]
     public ?UploadedFile $bannerImageFile = null;
+
+    public function __construct()
+    {
+        $this->introBlocks = [new MailingIntroBlockFormModel()];
+    }
 
     #[Assert\Callback]
     public function validateCallToAction(ExecutionContextInterface $executionContext): void

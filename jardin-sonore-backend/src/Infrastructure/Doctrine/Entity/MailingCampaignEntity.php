@@ -25,6 +25,11 @@ class MailingCampaignEntity
 
     private string $mainText = '';
 
+    private ?string $preheader = null;
+
+    /** @var list<array<string, mixed>>|null */
+    private ?array $introBlocks = null;
+
     private ?string $subtitle = null;
 
     private ?string $callToActionLabel = null;
@@ -116,6 +121,32 @@ class MailingCampaignEntity
     public function setMainText(string $mainText): static
     {
         $this->mainText = $mainText;
+
+        return $this;
+    }
+
+    public function getPreheader(): ?string
+    {
+        return $this->preheader;
+    }
+
+    public function setPreheader(?string $preheader): static
+    {
+        $this->preheader = $preheader;
+
+        return $this;
+    }
+
+    /** @return list<array<string, mixed>>|null */
+    public function getIntroBlocks(): ?array
+    {
+        return $this->introBlocks;
+    }
+
+    /** @param list<array<string, mixed>>|null $introBlocks */
+    public function setIntroBlocks(?array $introBlocks): static
+    {
+        $this->introBlocks = $introBlocks;
 
         return $this;
     }

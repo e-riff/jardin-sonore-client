@@ -53,7 +53,7 @@ REMOTE_COMMANDS=(
   "set -euo pipefail"
   "cd '$CPANEL_BACKEND_PATH'"
   "if grep -q '^PORTAL_PUBLIC_URL=' .env.local; then sed -i 's|^PORTAL_PUBLIC_URL=.*|PORTAL_PUBLIC_URL=$CPANEL_PORTAL_PUBLIC_URL|' .env.local; else printf '%s\\n' 'PORTAL_PUBLIC_URL=$CPANEL_PORTAL_PUBLIC_URL' >> .env.local; fi"
-  "mkdir -p '$CPANEL_BACKEND_PATH/public/uploads/media/resources' '$CPANEL_BACKEND_PATH/public/uploads/media/images' '$CPANEL_BACKEND_PATH/public/uploads/session/recommendations' '$CPANEL_BACKEND_PATH/public/uploads/mailing/banners' '$CPANEL_BACKEND_PATH/public/uploads/mailing/recommendations'"
+  "mkdir -p '$CPANEL_BACKEND_PATH/public/uploads/media/resources' '$CPANEL_BACKEND_PATH/public/uploads/media/images' '$CPANEL_BACKEND_PATH/public/uploads/session/recommendations' '$CPANEL_BACKEND_PATH/public/uploads/mailing/banners' '$CPANEL_BACKEND_PATH/public/uploads/mailing/content' '$CPANEL_BACKEND_PATH/public/uploads/mailing/recommendations'"
   "chmod -R ug+rwX '$CPANEL_BACKEND_PATH/public/uploads'"
   'if [[ -d var/cache/prod ]]; then mv var/cache/prod "var/cache/prod.previous.$(date +%s)"; fi'
   "$CPANEL_COMPOSER_BIN install --no-dev --prefer-dist --no-interaction --optimize-autoloader"

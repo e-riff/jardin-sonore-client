@@ -1,0 +1,51 @@
+<div class="mailing-intro-block" data-mailing-intro-block-row>
+    {{ form_widget(blockForm.id) }}
+    <div class="mailing-intro-block__header">
+        <div class="mailing-intro-block__kind">
+            {{ form_label(blockForm.kind) }}
+            {{ form_widget(blockForm.kind, { attr: { 'data-action': 'change->mailing-intro#kindChanged' } }) }}
+            {{ form_errors(blockForm.kind) }}
+        </div>
+        {% if not locked %}
+            <div class="mailing-intro-block__actions">
+                <button type="button" class="mailing-intro-block__icon-button" data-action="mailing-intro#moveUp" aria-label="{{ 'mailing.form.intro_move_up'|trans({}, 'mailing') }}" title="{{ 'mailing.form.intro_move_up'|trans({}, 'mailing') }}">↑</button>
+                <button type="button" class="mailing-intro-block__icon-button" data-action="mailing-intro#moveDown" aria-label="{{ 'mailing.form.intro_move_down'|trans({}, 'mailing') }}" title="{{ 'mailing.form.intro_move_down'|trans({}, 'mailing') }}">↓</button>
+                <button type="button" class="mailing-intro-block__icon-button mailing-intro-block__icon-button--remove" data-action="mailing-intro#remove" aria-label="{{ 'mailing.form.intro_remove'|trans({}, 'mailing') }}" title="{{ 'mailing.form.intro_remove'|trans({}, 'mailing') }}">×</button>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="mailing-intro-block__text" data-mailing-intro-text-field>
+        {% if not locked %}
+            <div class="mailing-intro-block__view-switch" hidden data-mailing-intro-view-switch>
+                <button type="button" class="internal-button internal-button--secondary" data-action="mailing-intro#toggleHtml" data-html-label="{{ 'mailing.form.intro_edit_html'|trans({}, 'mailing') }}" data-visual-label="{{ 'mailing.form.intro_edit_visual'|trans({}, 'mailing') }}">{{ 'mailing.form.intro_edit_html'|trans({}, 'mailing') }}</button>
+                <span>{{ 'mailing.form.intro_html_help'|trans({}, 'mailing') }}</span>
+            </div>
+        {% endif %}
+        <div class="mailing-intro-block__editor" hidden data-mailing-intro-editor-wrap>
+            {% if not locked %}
+                <div class="mailing-intro-block__toolbar" role="toolbar" aria-label="{{ 'mailing.form.intro_toolbar'|trans({}, 'mailing') }}">
+                    <button type="button" data-command="bold" data-action="mousedown->mailing-intro#keepSelection click->mailing-intro#format" aria-label="{{ 'mailing.form.intro_bold'|trans({}, 'mailing') }}"><strong>G</strong></button>
+                    <button type="button" data-command="italic" data-action="mousedown->mailing-intro#keepSelection click->mailing-intro#format" aria-label="{{ 'mailing.form.intro_italic'|trans({}, 'mailing') }}"><em>I</em></button>
+                    <button type="button" data-command="link" data-action="mousedown->mailing-intro#keepSelection click->mailing-intro#format" aria-label="{{ 'mailing.form.intro_link'|trans({}, 'mailing') }}">{{ 'mailing.form.intro_link'|trans({}, 'mailing') }}</button>
+                    <button type="button" data-command="color" data-color="#A64D43" data-action="mousedown->mailing-intro#keepSelection click->mailing-intro#format" aria-label="{{ 'mailing.form.intro_color_terracotta'|trans({}, 'mailing') }}" style="color:#A64D43">●</button>
+                    <button type="button" data-command="color" data-color="#692019" data-action="mousedown->mailing-intro#keepSelection click->mailing-intro#format" aria-label="{{ 'mailing.form.intro_color_brown'|trans({}, 'mailing') }}" style="color:#692019">●</button>
+                    <button type="button" data-command="color" data-color="#47664B" data-action="mousedown->mailing-intro#keepSelection click->mailing-intro#format" aria-label="{{ 'mailing.form.intro_color_green'|trans({}, 'mailing') }}" style="color:#47664B">●</button>
+                    <button type="button" data-command="clear" data-action="mousedown->mailing-intro#keepSelection click->mailing-intro#format" aria-label="{{ 'mailing.form.intro_clear_format'|trans({}, 'mailing') }}">{{ 'mailing.form.intro_clear_format'|trans({}, 'mailing') }}</button>
+                </div>
+            {% endif %}
+            <div class="mailing-intro-block__editable" contenteditable="{{ locked ? 'false' : 'true' }}" role="textbox" aria-multiline="true" aria-label="{{ 'mailing.form.intro_text'|trans({}, 'mailing') }}" data-mailing-intro-editor data-action="input->mailing-intro#syncText paste->mailing-intro#pasteRichText keydown.enter->mailing-intro#insertLineBreak">{{ (blockForm.vars.data ? blockForm.vars.data.text : '')|mailing_intro_rich_text }}</div>
+        </div>
+        {{ form_row(blockForm.text, { attr: { 'data-mailing-intro-textarea': '', 'data-action': 'input->mailing-intro#sourceChanged' } }) }}
+    </div>
+
+    <div data-mailing-intro-image-field>
+        {% if blockForm.vars.data and blockForm.vars.data.imagePath %}
+            <img class="mailing-intro-block__preview" src="{{ asset(blockForm.vars.data.imagePath) }}" alt="">
+        {% endif %}
+        {{ form_row(blockForm.imageFile) }}
+        {{ form_row(blockForm.imageAlt) }}
+        {{ form_row(blockForm.imageDecorative) }}
+    </div>
+    <div data-mailing-intro-side-field>{{ form_row(blockForm.imageSide) }}</div>
+</div>

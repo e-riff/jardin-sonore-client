@@ -17,6 +17,9 @@ final readonly class CreateMailingCampaignInput
         public ?string $callToActionLabel,
         public ?string $callToActionUrl,
         public ?UploadedFile $bannerImageFile,
+        public ?string $preheader = null,
+        /** @var list<MailingIntroBlockInput>|null */
+        public ?array $introBlocks = null,
     ) {
     }
 }
