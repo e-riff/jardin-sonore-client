@@ -17,4 +17,6 @@ interface MailingAudienceMaskRepositoryInterface
     public function findAllOrderedByUpdatedAtDesc(): array;
 
     public function save(MailingAudienceMask $mailingAudienceMask): void;
+
+    public function remove(MailingAudienceMask $mailingAudienceMask): void;
 }

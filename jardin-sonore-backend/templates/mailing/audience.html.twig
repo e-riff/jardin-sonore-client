@@ -28,6 +28,12 @@
         </div>
     </section>
 
+    {{ component('MailingAudience', {
+        campaignUuid: campaign.uuid.toRfc4122,
+        locked: campaignLocked,
+        returnTo: returnTo ?: path('mailing_content', { uuid: campaign.uuid })
+    }) }}
+
     <details class="internal-card mailing-audience__mask-card">
         <summary class="mailing-audience__mask-summary">
             <div>
@@ -98,9 +104,4 @@
         </div>
     </details>
 
-    {{ component('MailingAudience', {
-        campaignUuid: campaign.uuid.toRfc4122,
-        locked: campaignLocked,
-        returnTo: returnTo ?: path('mailing_content', { uuid: campaign.uuid })
-    }) }}
 {% endblock %}

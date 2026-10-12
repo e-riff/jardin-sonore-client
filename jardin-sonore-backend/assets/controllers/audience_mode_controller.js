@@ -160,6 +160,26 @@ export default class extends Controller {
         this.dispatchFormInput(municipalitySelectElement);
     }
 
+    clearMunicipalities() {
+        const municipalitySelectElement = this.municipalitySelectElement();
+
+        if (!(municipalitySelectElement instanceof HTMLSelectElement)) {
+            return;
+        }
+
+        if ('tomselect' in municipalitySelectElement && municipalitySelectElement.tomselect) {
+            municipalitySelectElement.tomselect.clear(true);
+        } else {
+            Array.from(municipalitySelectElement.options).forEach((optionElement) => {
+                optionElement.selected = false;
+            });
+        }
+
+        this.setGeographicMode('municipalities');
+        this.updateState();
+        this.dispatchFormInput(municipalitySelectElement);
+    }
+
     clearRadiusFields() {
         const radiusKilometersElement = this.radiusKilometersElement();
 

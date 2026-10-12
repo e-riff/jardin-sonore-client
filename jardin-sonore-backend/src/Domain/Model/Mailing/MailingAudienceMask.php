@@ -58,6 +58,17 @@ final class MailingAudienceMask implements UuidIdentifiableInterface
         return $this->updatedAt;
     }
 
+    /**
+     * @param list<string> $materializedMunicipalityInseeCodes
+     */
+    public function update(string $name, NewsletterAudienceFilter $audienceFilter, array $materializedMunicipalityInseeCodes): void
+    {
+        $this->name = $this->normalizeName($name);
+        $this->audienceFilter = $audienceFilter;
+        $this->materializedMunicipalityInseeCodes = $this->normalizeMaterializedMunicipalityInseeCodes($materializedMunicipalityInseeCodes);
+        $this->updatedAt = new DateTimeImmutable();
+    }
+
     private function normalizeName(string $name): string
     {
         $name = trim($name);

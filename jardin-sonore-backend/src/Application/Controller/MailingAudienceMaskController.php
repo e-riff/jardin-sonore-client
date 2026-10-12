@@ -11,6 +11,7 @@ use App\Application\Form\Model\MailingAudienceMaskFormModel;
 use App\Application\Mailing\ApplyMailingAudienceMaskToCampaign;
 use App\Application\Mailing\CreateMailingAudienceMask;
 use App\Application\Mailing\CreateMailingAudienceMaskInput;
+use App\Application\Mailing\DeleteMailingAudienceMask;
 use App\Application\Mailing\GetMailingAudienceMask;
 use App\Application\Mailing\GetMailingCampaign;
 use App\Application\Mailing\ListMailingAudienceMasks;
@@ -107,6 +108,51 @@ final class MailingAudienceMaskController extends AbstractController
             'tableSort' => $tableSort,
             'audienceMaskDetails' => $audienceMaskDetails,
         ]);
+    }
+
+    #[Route('/new', name: 'new', methods: ['GET'])]
+    public function new(): Response
+    {
+        return $this->render('mailing/audience_mask/form.html.twig', [
+            'audienceMask' => null,
+        ]);
+    }
+
+    #[Route('/{maskUuid}/edit', name: 'edit', methods: ['GET'])]
+    public function edit(string $maskUuid, GetMailingAudienceMask $getMailingAudienceMask): Response
+    {
+        $audienceMask = Uuid::isValid($maskUuid) ? $getMailingAudienceMask(Uuid::fromString($maskUuid)) : null;
+
+        if (null === $audienceMask) {
+            throw $this->createNotFoundException();
+        }
+
+        return $this->render('mailing/audience_mask/form.html.twig', [
+            'audienceMask' => $audienceMask,
+        ]);
+    }
+
+    #[Route('/{maskUuid}/delete', name: 'delete', methods: ['POST'])]
+    public function delete(
+        string $maskUuid,
+        Request $request,
+        GetMailingAudienceMask $getMailingAudienceMask,
+        DeleteMailingAudienceMask $deleteMailingAudienceMask,
+    ): Response {
+        $audienceMask = Uuid::isValid($maskUuid) ? $getMailingAudienceMask(Uuid::fromString($maskUuid)) : null;
+
+        if (null === $audienceMask) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$this->isCsrfTokenValid('mailing_audience_mask_delete_' . $maskUuid, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $deleteMailingAudienceMask($audienceMask->getUuid());
+        $this->addFlash('success', 'mailing.flash.audience_mask_deleted');
+
+        return $this->redirectToRoute('mailing_audience_mask_index', status: Response::HTTP_SEE_OTHER);
     }
 
     #[Route('/from-campaign/{campaignUuid}', name: 'save_from_campaign', methods: ['POST'])]

@@ -13,6 +13,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 final class MailingAudienceFormModel
 {
+    public string $maskName = '';
+
     /**
      * @var list<OrganizationType>
      */

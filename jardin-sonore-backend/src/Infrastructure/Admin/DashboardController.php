@@ -99,7 +99,7 @@ final class DashboardController extends AbstractDashboardController
         yield MenuItem::linkTo(MunicipalityCrudController::class, 'admin.menu.municipalities', 'fa fa-city');
         yield MenuItem::section('admin.menu.newsletters');
         yield MenuItem::linkTo(MailingCampaignCrudController::class, 'admin.menu.mailing_campaigns', 'fa fa-paper-plane');
-        yield MenuItem::linkTo(MailingAudienceMaskCrudController::class, 'admin.menu.mailing_audience_masks', 'fa fa-layer-group');
+        yield MenuItem::linkToRoute('admin.menu.mailing_audience_masks', 'fa fa-layer-group', 'mailing_audience_mask_index');
         yield MenuItem::linkTo(NewsletterRecommendationCrudController::class, 'admin.menu.mailing_recommendations', 'fa fa-newspaper');
         yield MenuItem::linkTo(MailingDeliveryRecipientCrudController::class, 'admin.menu.mailing_delivery_recipients', 'fa fa-envelope-circle-check');
     }
