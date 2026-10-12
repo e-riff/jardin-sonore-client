@@ -6,6 +6,8 @@ namespace App\Application\Twig\Component;
 
 use App\Application\Form\MailingAudienceType;
 use App\Application\Form\Model\MailingAudienceFormModel;
+use App\Application\Mailing\CreateMailingAudienceMask;
+use App\Application\Mailing\CreateMailingAudienceMaskInput;
 use App\Application\Mailing\ExtendMailingCampaignAudience;
 use App\Application\Mailing\GetMailingAudienceMask;
 use App\Application\Mailing\GetMailingCampaign;
@@ -14,6 +16,7 @@ use App\Application\Mailing\NewsletterAudienceMapQueryInterface;
 use App\Application\Mailing\NewsletterAudienceMunicipalityMaterializerInterface;
 use App\Application\Mailing\NewsletterAudienceResolution;
 use App\Application\Mailing\NewsletterAudienceResolverInterface;
+use App\Application\Mailing\UpdateMailingAudienceMask;
 use App\Application\Mailing\UpdateMailingCampaignAudience;
 use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
@@ -70,6 +73,12 @@ final class MailingAudience
     #[LiveProp]
     public string $initialAudienceMaskUuid = '';
 
+    #[LiveProp]
+    public bool $maskMode = false;
+
+    #[LiveProp]
+    public string $maskUuid = '';
+
     private ?MailingCampaign $mailingCampaign = null;
 
     private ?NewsletterAudienceResolution $audienceResolution = null;
@@ -92,6 +101,8 @@ final class MailingAudience
         private readonly FormFactoryInterface $formFactory,
         private readonly GetMailingCampaign $getMailingCampaignQuery,
         private readonly GetMailingAudienceMask $getMailingAudienceMask,
+        private readonly CreateMailingAudienceMask $createMailingAudienceMask,
+        private readonly UpdateMailingAudienceMask $updateMailingAudienceMask,
         private readonly NewsletterAudienceResolverInterface $newsletterAudienceResolver,
         private readonly UpdateMailingCampaignAudience $updateMailingCampaignAudience,
         private readonly ExtendMailingCampaignAudience $extendMailingCampaignAudience,
@@ -125,6 +136,42 @@ final class MailingAudience
             $audienceFilter = $this->buildAudienceFilter($formModel);
         } catch (InvalidArgumentException) {
             $this->getForm()->addError(new FormError('mailing.audience.validation.invalid_configuration'));
+
+            return;
+        }
+
+        if ($this->maskMode) {
+            try {
+                if (!$audienceFilter->hasActiveCriteria()) {
+                    throw new InvalidArgumentException('Mailing audience mask cannot be empty.');
+                }
+
+                $materializedMunicipalityInseeCodes = $this->materializeCurrentMunicipalityInseeCodes($formModel);
+                if ('' === $this->maskUuid) {
+                    ($this->createMailingAudienceMask)(new CreateMailingAudienceMaskInput(
+                        $formModel->maskName,
+                        $audienceFilter,
+                        $materializedMunicipalityInseeCodes,
+                    ));
+                    $this->addFlashMessage('success', 'mailing.flash.audience_mask_created');
+                } else {
+                    ($this->updateMailingAudienceMask)(
+                        Uuid::fromString($this->maskUuid),
+                        $formModel->maskName,
+                        $audienceFilter,
+                        $materializedMunicipalityInseeCodes,
+                    );
+                    $this->addFlashMessage('success', 'mailing.flash.audience_mask_updated');
+                }
+            } catch (InvalidArgumentException) {
+                $this->getForm()->addError(new FormError('mailing.flash.audience_mask_create_failed'));
+
+                return;
+            }
+
+            $this->dispatchBrowserEvent('mailing:audience-saved', [
+                'url' => $this->urlGenerator->generate('mailing_audience_mask_index'),
+            ]);
 
             return;
         }
@@ -352,13 +399,10 @@ final class MailingAudience
     {
         return $this->formFactory->create(
             MailingAudienceType::class,
-            $this->extensionMode
-                ? $this->initialExtensionFormModel()
-                : MailingAudienceFormModel::fromAudienceFilter(
-                    $this->resolveMailingCampaign()->getAudienceFilter(),
-                ),
+            $this->initialFormModel(),
             [
-                'locked' => $this->locked || (!$this->extensionMode && !$this->resolveMailingCampaign()->isEditable()),
+                'locked' => $this->locked || (!$this->extensionMode && !$this->maskMode && !$this->resolveMailingCampaign()->isEditable()),
+                'mask_mode' => $this->maskMode,
             ],
         );
     }
@@ -437,11 +481,30 @@ final class MailingAudience
             return $formModel;
         }
 
+        return $this->initialFormModel();
+    }
+
+    private function initialFormModel(): MailingAudienceFormModel
+    {
+        if ($this->maskMode) {
+            if ('' === $this->maskUuid || !Uuid::isValid($this->maskUuid)) {
+                return new MailingAudienceFormModel();
+            }
+
+            $mailingAudienceMask = ($this->getMailingAudienceMask)(Uuid::fromString($this->maskUuid));
+            if (null === $mailingAudienceMask) {
+                throw new NotFoundHttpException();
+            }
+
+            $formModel = MailingAudienceFormModel::fromAudienceFilter($mailingAudienceMask->getAudienceFilter());
+            $formModel->maskName = $mailingAudienceMask->getName();
+
+            return $formModel;
+        }
+
         return $this->extensionMode
             ? $this->initialExtensionFormModel()
-            : MailingAudienceFormModel::fromAudienceFilter(
-                $this->resolveMailingCampaign()->getAudienceFilter(),
-            );
+            : MailingAudienceFormModel::fromAudienceFilter($this->resolveMailingCampaign()->getAudienceFilter());
     }
 
     private function initialExtensionFormModel(): MailingAudienceFormModel

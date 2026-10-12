@@ -21,11 +21,13 @@ use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @extends AbstractType<MailingAudienceFormModel>
@@ -83,6 +85,15 @@ final class MailingAudienceType extends AbstractType
             'max_results' => 50,
             'preload' => false,
         ];
+
+        if (true === $options['mask_mode']) {
+            $builder->add('maskName', TextType::class, [
+                'label' => 'mailing.audience.mask.form.name',
+                'required' => true,
+                'empty_data' => '',
+                'constraints' => [new Assert\NotBlank(), new Assert\Length(max: 255)],
+            ]);
+        }
 
         $builder
             ->add('includeFreeSubscribers', CheckboxType::class, [
@@ -192,6 +203,7 @@ final class MailingAudienceType extends AbstractType
         $resolver->setDefaults([
             'data_class' => MailingAudienceFormModel::class,
             'locked' => false,
+            'mask_mode' => false,
             'csrf_protection' => false,
             'translation_domain' => 'mailing',
         ]);

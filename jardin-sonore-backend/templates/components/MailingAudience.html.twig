@@ -114,6 +114,11 @@
 
             <div>
                 {{ form_row(form.municipalityInseeCodes) }}
+                {% if not locked %}
+                    <button type="button" class="internal-button internal-button--secondary internal-button--compact" data-action="audience-mode#clearMunicipalities">
+                        {{ 'mailing.audience.form.clear_municipalities'|trans({}, 'mailing') }}
+                    </button>
+                {% endif %}
             </div>
 
             <div>
@@ -188,6 +193,10 @@
 
             {{ form_row(form.organizationUuids) }}
 
+            {% if this.maskMode %}
+                {{ form_row(form.maskName) }}
+            {% endif %}
+
             <div hidden>
                 {{ form_widget(form.radiusOriginMunicipalityInseeCode) }}
                 {{ form_widget(form.radiusOriginCustomLatitude) }}
@@ -201,7 +210,7 @@
                         class="internal-button"
                         {{ stimulus_action('live', 'action', 'click', { action: 'save' }) }}
                     >
-                        {{ (is_extension_mode ? 'mailing.audience.extend.form.save' : 'mailing.audience.form.save')|trans({}, 'mailing') }}
+                        {{ (this.maskMode ? 'mailing.audience.mask.editor.save' : is_extension_mode ? 'mailing.audience.extend.form.save' : 'mailing.audience.form.save')|trans({}, 'mailing') }}
                     </button>
                 </div>
             {% endif %}

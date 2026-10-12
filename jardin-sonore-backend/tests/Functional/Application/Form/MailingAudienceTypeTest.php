@@ -45,4 +45,28 @@ final class MailingAudienceTypeTest extends KernelTestCase
         $form->submit(['includeFreeSubscribers' => '1'], false);
         self::assertFalse($formModel->toAudienceFilter()->includesFreeSubscribers());
     }
+
+    public function testMaskEditorIncludesNameAndAudienceCriteria(): void
+    {
+        self::bootKernel(['environment' => 'test']);
+        $formFactory = self::getContainer()->get(FormFactoryInterface::class);
+        $form = $formFactory->create(MailingAudienceType::class, new MailingAudienceFormModel(), ['mask_mode' => true]);
+
+        self::assertTrue($form->has('maskName'));
+        self::assertTrue($form->has('organizationTypes'));
+        self::assertTrue($form->has('municipalityInseeCodes'));
+    }
+
+    public function testEmptyMaskNameIsRejectedWithoutTypeError(): void
+    {
+        self::bootKernel(['environment' => 'test']);
+        $formFactory = self::getContainer()->get(FormFactoryInterface::class);
+        $formModel = new MailingAudienceFormModel();
+        $form = $formFactory->create(MailingAudienceType::class, $formModel, ['mask_mode' => true]);
+
+        $form->submit(['maskName' => ''], false);
+
+        self::assertSame('', $formModel->maskName);
+        self::assertFalse($form->isValid());
+    }
 }

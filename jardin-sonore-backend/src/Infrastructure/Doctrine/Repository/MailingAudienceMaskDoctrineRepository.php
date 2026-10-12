@@ -58,4 +58,16 @@ final class MailingAudienceMaskDoctrineRepository extends ServiceEntityRepositor
         ));
         $this->getEntityManager()->flush();
     }
+
+    public function remove(MailingAudienceMask $mailingAudienceMask): void
+    {
+        $mailingAudienceMaskEntity = $this->findOneBy(['uuid' => $mailingAudienceMask->getUuid()]);
+
+        if (!$mailingAudienceMaskEntity instanceof MailingAudienceMaskEntity) {
+            return;
+        }
+
+        $this->getEntityManager()->remove($mailingAudienceMaskEntity);
+        $this->getEntityManager()->flush();
+    }
 }

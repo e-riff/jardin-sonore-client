@@ -11,6 +11,7 @@
         </div>
 
         <div class="internal-heading-actions">
+            <a class="internal-button" href="{{ path('mailing_audience_mask_new') }}">{{ 'mailing.audience.mask.editor.create'|trans({}, 'mailing') }}</a>
             {% if campaign %}
                 <a class="internal-button" href="{{ path('mailing_audience', { uuid: campaign.uuid }) }}">
                     {{ 'mailing.audience.mask.back_to_campaign'|trans({}, 'mailing') }}
@@ -38,23 +39,32 @@
                             <th><twig:TableSortHeader label="{{ 'mailing.audience.mask.table.name'|trans({}, 'mailing') }}" :href="path('mailing_audience_mask_index', { campaign: campaign ? campaign.uuid : null, sort: 'name', direction: tableSort.nextDirectionFor('name') })" :active="tableSort.column == 'name'" :direction="tableSort.direction" /></th>
                             <th data-table-mobile="secondary"><twig:TableSortHeader label="{{ 'mailing.audience.mask.table.municipalities'|trans({}, 'mailing') }}" :href="path('mailing_audience_mask_index', { campaign: campaign ? campaign.uuid : null, sort: 'municipalityCount', direction: tableSort.nextDirectionFor('municipalityCount') })" :active="tableSort.column == 'municipalityCount'" :direction="tableSort.direction" /></th>
                             <th>Critères</th>
-                            {% if campaign %}<th>{{ 'mailing.audience.mask.table.actions'|trans({}, 'mailing') }}</th>{% endif %}
+                            <th>{{ 'mailing.audience.mask.table.actions'|trans({}, 'mailing') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for audienceMask in audienceMasks %}
-                            <tr>
+                            <tr class="internal-table__row--clickable" tabindex="0" data-controller="catalog-row" data-catalog-row-url-value="{{ path('mailing_audience_mask_edit', { maskUuid: audienceMask.uuid }) }}" data-action="click->catalog-row#navigate keydown->catalog-row#navigateFromKeyboard" aria-label="{{ 'mailing.audience.mask.editor.open'|trans({ name: audienceMask.name }, 'mailing') }}">
                                 <td data-table-mobile="primary" data-label="{{ 'mailing.audience.mask.table.name'|trans({}, 'mailing') }}"><strong>{{ audienceMask.name }}</strong></td>
                                 <td data-table-mobile="secondary" data-label="{{ 'mailing.audience.mask.table.municipalities'|trans({}, 'mailing') }}">{{ audienceMask.materializedMunicipalityInseeCodes|length }}</td>
                                 <td data-table-mobile="secondary" data-label="Critères">
                                     {% set details = audienceMaskDetails[audienceMask.uuid.toRfc4122] %}
-                                    <details>
+                                    <details data-catalog-row-ignore>
                                         <summary>{{ details.municipalities|length }} commune{{ details.municipalities|length > 1 ? 's' : '' }} · {{ details.criteria|length }} filtre{{ details.criteria|length > 1 ? 's' : '' }}</summary>
                                         {% if details.municipalities is not empty %}<p><strong>Communes</strong><br>{{ details.municipalities|join(', ') }}</p>{% endif %}
                                         {% if details.criteria is not empty %}<ul>{% for criterion in details.criteria %}<li>{{ criterion }}</li>{% endfor %}</ul>{% endif %}
                                     </details>
                                 </td>
-                                {% if campaign %}<td data-table-mobile="actions" data-label="{{ 'mailing.audience.mask.table.actions'|trans({}, 'mailing') }}">
+                                <td data-table-mobile="actions" data-label="{{ 'mailing.audience.mask.table.actions'|trans({}, 'mailing') }}">
+                                    {% include 'components/_catalog_actions.html.twig' with {
+                                        editUrl: path('mailing_audience_mask_edit', { maskUuid: audienceMask.uuid }),
+                                        deleteUrl: path('mailing_audience_mask_delete', { maskUuid: audienceMask.uuid }),
+                                        itemLabel: audienceMask.name,
+                                        token: csrf_token('mailing_audience_mask_delete_' ~ audienceMask.uuid.toRfc4122),
+                                        editLabel: 'mailing.audience.mask.editor.edit'|trans({}, 'mailing'),
+                                        deleteLabel: 'mailing.audience.mask.editor.delete'|trans({}, 'mailing')
+                                    } only %}
+                                    {% if campaign %}
                                         <form method="post" action="{{ path('mailing_audience_mask_apply_to_campaign', {
                                             maskUuid: audienceMask.uuid,
                                             campaignUuid: campaign.uuid
@@ -64,7 +74,8 @@
                                                 {{ 'mailing.audience.mask.apply'|trans({}, 'mailing') }}
                                             </button>
                                         </form>
-                                </td>{% endif %}
+                                    {% endif %}
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>

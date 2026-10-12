@@ -8,6 +8,7 @@ use App\Application\Form\Model\MailingAudienceFormModel;
 use App\Application\Mailing\ApplyMailingAudienceMaskToCampaign;
 use App\Application\Mailing\CreateMailingAudienceMask;
 use App\Application\Mailing\CreateMailingAudienceMaskInput;
+use App\Application\Mailing\DeleteMailingAudienceMask;
 use App\Application\Mailing\ExtendMailingCampaignAudience;
 use App\Application\Mailing\GetMailingAudienceMask;
 use App\Application\Mailing\GetMailingCampaign;
@@ -89,6 +90,22 @@ final class NewsletterAudienceCampaignFlowTest extends KernelTestCase
         self::assertCount(2, $addresses);
         self::assertContains($firstContact->getEmailAddress(), $addresses);
         self::assertContains($secondContact->getEmailAddress(), $addresses);
+    }
+
+    public function testDeletingMaskKeepsAppliedCampaignAudience(): void
+    {
+        $filter = new NewsletterAudienceFilter(includeFreeSubscribers: true);
+        $mask = (self::getContainer()->get(CreateMailingAudienceMask::class))(new CreateMailingAudienceMaskInput('Ancien masque', $filter));
+        $campaign = $this->campaign();
+        (self::getContainer()->get(ApplyMailingAudienceMaskToCampaign::class))($campaign, $mask);
+
+        (self::getContainer()->get(DeleteMailingAudienceMask::class))($mask->getUuid());
+
+        $savedCampaign = (self::getContainer()->get(GetMailingCampaign::class))($campaign->getUuid());
+        self::assertNull((self::getContainer()->get(GetMailingAudienceMask::class))($mask->getUuid()));
+        self::assertNotNull($savedCampaign);
+        self::assertSame('Ancien masque', $savedCampaign->getAppliedAudienceMaskName());
+        self::assertTrue($savedCampaign->getAudienceFilter()->includesFreeSubscribers());
     }
 
     private function addFreeContact(string $name): EmailContactEntity
