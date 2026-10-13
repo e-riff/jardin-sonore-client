@@ -5,13 +5,19 @@ declare(strict_types=1);
 namespace App\Application\Controller;
 
 use App\Application\Commercial\CommercialProjectWorkflow;
+use App\Application\Commercial\CreateCommercialProject;
 use App\Application\Form\CommercialNoteType;
+use App\Application\Form\CommercialProjectCreateType;
+use App\Application\Form\CommercialProjectOrganizationType;
 use App\Infrastructure\Doctrine\Entity\CommercialActionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
+use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\PersonEntity;
 use DateTimeImmutable;
+use DateTimeZone;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Clock\ClockInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,6 +26,81 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/commercial/projects', name: 'commercial_project_')]
 final class CommercialProjectController extends AbstractController
 {
+    #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
+    public function new(Request $request, EntityManagerInterface $entityManager, ClockInterface $clock, CreateCommercialProject $creator): Response
+    {
+        $postedData = $request->request->all('commercial_project_create');
+        $selectedOrganizationId = filter_var($postedData['organization'] ?? null, FILTER_VALIDATE_INT);
+        $selectedOrganizationEntity = false === $selectedOrganizationId ? null : $entityManager->find(OrganizationEntity::class, $selectedOrganizationId);
+        $people = $selectedOrganizationEntity instanceof OrganizationEntity
+            ? array_values(array_filter($selectedOrganizationEntity->getPeople()->toArray(), static fn (PersonEntity $personEntity): bool => $personEntity->isActive()))
+            : [];
+        $form = $this->createForm(CommercialProjectCreateType::class, [
+            'initialStatus' => CommercialProjectEntity::STATUS_DISCUSSION,
+            'addTask' => true,
+            'taskTitle' => 'Répondre',
+            'taskDueOn' => $clock->now()->setTimezone(new DateTimeZone('Europe/Paris'))->setTime(0, 0),
+        ], ['people' => $people]);
+        $form->handleRequest($request);
+        $error = null;
+        if ($form->isSubmitted() && $form->isValid()) {
+            /** @var array<string, mixed> $data */
+            $data = $form->getData();
+            $organizationEntity = $data['organization'] ?? null;
+            $newOrganizationName = trim((string) ($data['newOrganizationName'] ?? ''));
+            $personEntity = $data['person'] ?? null;
+            $newPersonFirstName = trim((string) ($data['newPersonFirstName'] ?? ''));
+            $newPersonLastName = trim((string) ($data['newPersonLastName'] ?? ''));
+            $newPersonRole = trim((string) ($data['newPersonRole'] ?? ''));
+            $addTask = true === ($data['addTask'] ?? false);
+            $taskTitle = trim((string) ($data['taskTitle'] ?? ''));
+            $taskDueOn = $data['taskDueOn'] ?? null;
+            if (($organizationEntity instanceof OrganizationEntity) === ('' !== $newOrganizationName)) {
+                $error = 'project.create.choose_organization';
+            } elseif ($organizationEntity instanceof OrganizationEntity && !$organizationEntity->isActive()) {
+                $error = 'project.create.organization_inactive';
+            } elseif (('' === $newPersonFirstName) !== ('' === $newPersonLastName) || ('' !== $newPersonRole && '' === $newPersonFirstName)) {
+                $error = 'project.create.person_incomplete';
+            } elseif ($personEntity instanceof PersonEntity && ($personEntity->getOrganization() !== $organizationEntity || !$personEntity->isActive())) {
+                $error = 'project.create.person_invalid';
+            } elseif ($personEntity instanceof PersonEntity && '' !== $newPersonFirstName) {
+                $error = 'project.create.person_conflict';
+            } elseif ('' !== $newPersonFirstName && !$organizationEntity instanceof OrganizationEntity && '' === $newOrganizationName) {
+                $error = 'project.create.choose_organization';
+            } elseif ($addTask && ('' === $taskTitle || !$taskDueOn instanceof DateTimeImmutable)) {
+                $error = 'project.create.task_incomplete';
+            } else {
+                if (!$organizationEntity instanceof OrganizationEntity) {
+                    $organizationEntity = (new OrganizationEntity())->setName($newOrganizationName);
+                    $entityManager->persist($organizationEntity);
+                }
+                if ('' !== $newPersonFirstName) {
+                    $personEntity = (new PersonEntity())->setFirstName($newPersonFirstName)->setLastName($newPersonLastName)->setRole('' === $newPersonRole ? null : $newPersonRole);
+                    $organizationEntity->addPerson($personEntity);
+                    $entityManager->persist($personEntity);
+                }
+                $projectEntity = $creator->manual(
+                    $organizationEntity,
+                    $personEntity instanceof PersonEntity ? $personEntity : null,
+                    (string) ($data['firstMessage'] ?? ''),
+                    $data['title'] ?? null,
+                    (string) ($data['initialStatus'] ?? ''),
+                    $addTask ? $taskTitle : null,
+                    $addTask && $taskDueOn instanceof DateTimeImmutable ? $taskDueOn : null,
+                );
+                $entityManager->persist($projectEntity);
+                $entityManager->flush();
+
+                return $this->redirectToRoute('commercial_project_show', ['id' => $projectEntity->getId()]);
+            }
+        }
+
+        return $this->render('commercial/project/new.html.twig', [
+            'form' => $form,
+            'creationError' => $error,
+        ], new Response(status: $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));
+    }
+
     #[Route('/{id}', name: 'show', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function show(
         int $id,
@@ -38,6 +119,7 @@ final class CommercialProjectController extends AbstractController
         return $this->render('commercial/project/show.html.twig', [
             'project' => $projectEntity,
             'noteForm' => $form,
+            'organizationForm' => null === $projectEntity->getOrganization() ? $this->createForm(CommercialProjectOrganizationType::class) : null,
             'driveLinks' => [
                 'root' => $driveRootUrl,
                 'quotes' => $driveQuotesUrl,
@@ -45,6 +127,36 @@ final class CommercialProjectController extends AbstractController
                 'invoices' => $driveInvoicesUrl,
             ],
         ]);
+    }
+
+    #[Route('/{id}/organization', name: 'organization', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function organization(int $id, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $projectEntity = $this->findProject($id, $entityManager);
+        if (null !== $projectEntity->getOrganization()) {
+            return new Response(status: Response::HTTP_CONFLICT);
+        }
+        $form = $this->createForm(CommercialProjectOrganizationType::class);
+        $form->handleRequest($request);
+        if (!$form->isSubmitted() || !$form->isValid()) {
+            return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        /** @var array<string, mixed> $data */
+        $data = $form->getData();
+        $organizationEntity = $data['organization'] ?? null;
+        $newOrganizationName = trim((string) ($data['newOrganizationName'] ?? ''));
+        if (($organizationEntity instanceof OrganizationEntity) === ('' !== $newOrganizationName) || ($organizationEntity instanceof OrganizationEntity && !$organizationEntity->isActive())) {
+            return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        if (!$organizationEntity instanceof OrganizationEntity) {
+            $organizationEntity = (new OrganizationEntity())->setName($newOrganizationName);
+            $entityManager->persist($organizationEntity);
+        }
+        $projectEntity->setOrganization($organizationEntity);
+        $projectEntity->recordEvent('organization_linked', new DateTimeImmutable(), $organizationEntity->getName());
+        $entityManager->flush();
+
+        return $this->redirectToRoute('commercial_project_show', ['id' => $id]);
     }
 
     #[Route('/{id}/notes', name: 'note', requirements: ['id' => '\d+'], methods: ['POST'])]

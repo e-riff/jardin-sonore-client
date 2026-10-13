@@ -28,7 +28,7 @@
                 {% for action in attribute(_context, group) %}
                     <a class="commercial-dashboard-row" href="{{ path('commercial_project_show', {id: action.project.id}) }}">
                         <strong>{{ action.title }}</strong>
-                        <span>{{ action.project.organization.name }} · {{ action.dueOn|date('d/m/Y') }}</span>
+                        <span>{{ action.project.organization ? action.project.organization.name : action.project.title }} · {{ action.dueOn|date('d/m/Y') }}</span>
                     </a>
                 {% else %}<p>{{ 'dashboard.none'|trans({}, 'commercial') }}</p>{% endfor %}
             </section>
@@ -37,7 +37,7 @@
             <h2>{{ 'dashboard.without_action'|trans({}, 'commercial') }} <span class="internal-badge internal-badge--muted">{{ withoutAction|length }}</span></h2>
             {% for project in withoutAction %}
                 <a class="commercial-dashboard-row" href="{{ path('commercial_project_show', {id: project.id}) }}">
-                    <strong>{{ project.title }}</strong><span>{{ project.organization.name }}</span>
+                    <strong>{{ project.title }}</strong>{% if project.organization %}<span>{{ project.organization.name }}</span>{% endif %}
                 </a>
             {% else %}<p>{{ 'dashboard.none'|trans({}, 'commercial') }}</p>{% endfor %}
         </section>

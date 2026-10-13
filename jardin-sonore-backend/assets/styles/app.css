@@ -702,6 +702,27 @@ button:disabled {
     margin: 0;
 }
 
+.commercial-create-task {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(140px, 0.6fr);
+    gap: 10px;
+    align-items: end;
+}
+
+.commercial-create-task[hidden] {
+    display: none;
+}
+
+.commercial-create-task > * {
+    min-width: 0;
+}
+
+@media (max-width: 480px) {
+    .commercial-create-task {
+        grid-template-columns: 1fr;
+    }
+}
+
 .internal-form__choice-list {
     display: grid;
     gap: 8px;

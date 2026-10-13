@@ -1,0 +1,52 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'project.create.heading'|trans({}, 'commercial') %}
+
+{% block internal_body %}
+    <section class="internal-hero">
+        <a class="internal-button internal-button--secondary" href="{{ path('commercial_dashboard') }}">← {{ 'project.create.back'|trans({}, 'commercial') }}</a>
+        <h1>{{ 'project.create.heading'|trans({}, 'commercial') }}</h1>
+    </section>
+    <section class="internal-card internal-card--form">
+        {% if creationError %}<p role="alert">{{ creationError|trans({}, 'commercial') }}</p>{% endif %}
+        {{ form_start(form, {attr: {
+            class: 'internal-form',
+            'data-controller': 'commercial-project-contacts',
+            'data-commercial-project-contacts-url-value': path('commercial_request_people'),
+            'data-commercial-project-contacts-loading-text-value': 'request.people_loading'|trans({}, 'commercial'),
+            'data-commercial-project-contacts-empty-text-value': 'request.people_empty'|trans({}, 'commercial'),
+            'data-commercial-project-contacts-error-text-value': 'request.people_error'|trans({}, 'commercial'),
+        }}) }}
+            <fieldset class="commercial-form-step">
+                <legend>{{ 'project.create.structure_step'|trans({}, 'commercial') }}</legend>
+                {{ form_row(form.organization) }}
+                {{ form_row(form.newOrganizationName) }}
+                {{ form_row(form.person) }}
+                <details>
+                    <summary>{{ 'project.create.add_person'|trans({}, 'commercial') }}</summary>
+                    {{ form_row(form.newPersonFirstName) }}
+                    {{ form_row(form.newPersonLastName) }}
+                    {{ form_row(form.newPersonRole) }}
+                </details>
+            </fieldset>
+            <fieldset class="commercial-form-step">
+                <legend>{{ 'project.create.first_step'|trans({}, 'commercial') }}</legend>
+                {{ form_row(form.firstMessage) }}
+                {{ form_row(form.initialStatus) }}
+            </fieldset>
+            <fieldset class="commercial-form-step">
+                <legend>{{ 'project.create.next_step'|trans({}, 'commercial') }}</legend>
+                {{ form_row(form.addTask) }}
+                <div class="commercial-create-task" data-commercial-project-contacts-target="taskFields">
+                    {{ form_row(form.taskTitle) }}
+                    {{ form_row(form.taskDueOn) }}
+                </div>
+            </fieldset>
+            <details>
+                <summary>{{ 'project.create.customize_title'|trans({}, 'commercial') }}</summary>
+                {{ form_row(form.title) }}
+            </details>
+            {{ form_row(form.submit) }}
+        {{ form_end(form) }}
+    </section>
+{% endblock %}

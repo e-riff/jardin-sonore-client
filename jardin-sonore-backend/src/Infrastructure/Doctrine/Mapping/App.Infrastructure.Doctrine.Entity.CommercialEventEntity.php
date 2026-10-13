@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Infrastructure\Doctrine\Entity\CommercialActionEntity;
+use App\Infrastructure\Doctrine\Entity\CommercialInvoiceEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
+use App\Infrastructure\Doctrine\Entity\CommercialQuoteEntity;
 use App\Infrastructure\Doctrine\Entity\PersonEntity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\ClassMetadata;
@@ -13,6 +16,9 @@ return static function (ClassMetadata $metadata): void {
         'indexes' => [
             'idx_commercial_event_project_occurred' => ['columns' => ['project_id', 'occurred_at']],
             'idx_commercial_event_person' => ['columns' => ['person_id']],
+            'idx_commercial_event_action' => ['columns' => ['action_id']],
+            'idx_commercial_event_quote' => ['columns' => ['quote_id']],
+            'idx_commercial_event_invoice' => ['columns' => ['invoice_id']],
         ],
     ]);
     $metadata->mapField(['fieldName' => 'id', 'type' => Types::INTEGER, 'id' => true]);
@@ -31,5 +37,20 @@ return static function (ClassMetadata $metadata): void {
         'fieldName' => 'person',
         'targetEntity' => PersonEntity::class,
         'joinColumns' => [['name' => 'person_id', 'referencedColumnName' => 'id', 'nullable' => true, 'onDelete' => 'RESTRICT']],
+    ]);
+    $metadata->mapManyToOne([
+        'fieldName' => 'action',
+        'targetEntity' => CommercialActionEntity::class,
+        'joinColumns' => [['name' => 'action_id', 'referencedColumnName' => 'id', 'nullable' => true, 'onDelete' => 'RESTRICT']],
+    ]);
+    $metadata->mapManyToOne([
+        'fieldName' => 'quote',
+        'targetEntity' => CommercialQuoteEntity::class,
+        'joinColumns' => [['name' => 'quote_id', 'referencedColumnName' => 'id', 'nullable' => true, 'onDelete' => 'RESTRICT']],
+    ]);
+    $metadata->mapManyToOne([
+        'fieldName' => 'invoice',
+        'targetEntity' => CommercialInvoiceEntity::class,
+        'joinColumns' => [['name' => 'invoice_id', 'referencedColumnName' => 'id', 'nullable' => true, 'onDelete' => 'RESTRICT']],
     ]);
 };

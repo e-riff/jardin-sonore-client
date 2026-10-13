@@ -6,9 +6,12 @@ namespace App\Tests\Functional\Application\Controller;
 
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
+use App\Infrastructure\Doctrine\Entity\CommercialRequestEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
+use App\Infrastructure\Doctrine\Entity\PersonEntity;
 use App\Kernel;
 use DateTimeImmutable;
+use DateTimeZone;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpKernel\KernelInterface;
@@ -19,6 +22,227 @@ final class CommercialProjectControllerTest extends WebTestCase
     protected static function createKernel(array $options = []): KernelInterface
     {
         return new Kernel($options['environment'] ?? 'test', $options['debug'] ?? true);
+    }
+
+    public function testManualCreationOpensDossierWithoutCreatingARequest(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(5));
+        $adminUserEntity = (new AdminUserEntity())->setEmail("project-new-{$suffix}@example.test")->setPassword('unused');
+        $organizationEntity = (new OrganizationEntity())->setName("Crèche {$suffix}");
+        $entityManager->persist($adminUserEntity);
+        $entityManager->persist($organizationEntity);
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+
+        $crawler = $client->request('GET', '/commercial/projects/new');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Nouveau dossier', (string) $client->getResponse()->getContent());
+        self::assertStringNotContainsString('commercial_project_create[emailAddress]', (string) $client->getResponse()->getContent());
+        self::assertStringNotContainsString('commercial_project_create[phone]', (string) $client->getResponse()->getContent());
+        $form = $crawler->selectButton('Créer le dossier')->form();
+        $requestCount = $entityManager->getRepository(CommercialRequestEntity::class)->count([]);
+        $client->request('POST', '/commercial/projects/new', [
+            'commercial_project_create' => [
+                '_token' => $form['commercial_project_create[_token]']->getValue(),
+                'organization' => (string) $organizationEntity->getId(),
+                'firstMessage' => 'Appel pour des ateliers au printemps',
+                'initialStatus' => 'confirmed',
+            ],
+        ]);
+        self::assertResponseRedirects();
+
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $entityManager->clear();
+        $savedProjectEntity = $entityManager->getRepository(CommercialProjectEntity::class)->findOneBy(['organization' => $organizationEntity->getId()], ['id' => 'DESC']);
+        self::assertInstanceOf(CommercialProjectEntity::class, $savedProjectEntity);
+        self::assertSame('confirmed', $savedProjectEntity->getStatus());
+        self::assertStringContainsString($organizationEntity->getName(), $savedProjectEntity->getTitle());
+        self::assertCount(0, $savedProjectEntity->getActions());
+        self::assertCount(1, $savedProjectEntity->getEvents());
+        self::assertSame('initial_message', $savedProjectEntity->getEvents()->first()->getType());
+        self::assertSame('Appel pour des ateliers au printemps', $savedProjectEntity->getEvents()->first()->getContent());
+        self::assertSame($requestCount, $entityManager->getRepository(CommercialRequestEntity::class)->count([]));
+    }
+
+    public function testManualCreationCanCreateOrganizationAndPersonWithSuggestedTask(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(5));
+        $adminUserEntity = (new AdminUserEntity())->setEmail("project-create-{$suffix}@example.test")->setPassword('unused');
+        $entityManager->persist($adminUserEntity);
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+
+        $crawler = $client->request('GET', '/commercial/projects/new');
+        $form = $crawler->selectButton('Créer le dossier')->form();
+        $client->request('POST', '/commercial/projects/new', [
+            'commercial_project_create' => [
+                '_token' => $form['commercial_project_create[_token]']->getValue(),
+                'newOrganizationName' => "Nouvelle crèche {$suffix}",
+                'newPersonFirstName' => 'Camille',
+                'newPersonLastName' => 'Martin',
+                'newPersonRole' => 'Direction',
+                'firstMessage' => 'Premier mail reçu',
+                'initialStatus' => 'discussion',
+                'addTask' => '1',
+                'taskTitle' => 'Répondre',
+                'taskDueOn' => '2026-10-16',
+            ],
+        ]);
+        self::assertResponseRedirects();
+
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $entityManager->clear();
+        $organizationEntity = $entityManager->getRepository(OrganizationEntity::class)->findOneBy(['name' => "Nouvelle crèche {$suffix}"]);
+        self::assertInstanceOf(OrganizationEntity::class, $organizationEntity);
+        $projectEntity = $entityManager->getRepository(CommercialProjectEntity::class)->findOneBy(['organization' => $organizationEntity->getId()]);
+        self::assertInstanceOf(CommercialProjectEntity::class, $projectEntity);
+        self::assertSame('Camille Martin', (string) $projectEntity->getPrimaryContact());
+        self::assertSame($organizationEntity->getId(), $projectEntity->getPrimaryContact()?->getOrganization()?->getId());
+        self::assertCount(1, $projectEntity->getActions());
+        self::assertSame('Répondre', $projectEntity->getActions()->first()->getTitle());
+        self::assertSame('2026-10-16', $projectEntity->getActions()->first()->getDueOn()->format('Y-m-d'));
+    }
+
+    public function testManualCreationCanSelectAnExistingPersonAndTodayAsTaskDate(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(5));
+        $adminUserEntity = (new AdminUserEntity())->setEmail("project-person-{$suffix}@example.test")->setPassword('unused');
+        $organizationEntity = (new OrganizationEntity())->setName("Crèche {$suffix}");
+        $personEntity = (new PersonEntity())->setFirstName('Camille')->setLastName('Martin');
+        $organizationEntity->addPerson($personEntity);
+        foreach ([$adminUserEntity, $organizationEntity, $personEntity] as $entity) {
+            $entityManager->persist($entity);
+        }
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+
+        $crawler = $client->request('GET', '/commercial/projects/new');
+        $form = $crawler->selectButton('Créer le dossier')->form();
+        $today = (new DateTimeImmutable('now', new DateTimeZone('Europe/Paris')))->format('Y-m-d');
+        self::assertSame($today, $form['commercial_project_create[taskDueOn]']->getValue());
+        $client->request('POST', '/commercial/projects/new', [
+            'commercial_project_create' => [
+                '_token' => $form['commercial_project_create[_token]']->getValue(),
+                'organization' => (string) $organizationEntity->getId(),
+                'person' => (string) $personEntity->getId(),
+                'firstMessage' => 'Message reçu',
+                'initialStatus' => 'discussion',
+                'addTask' => '1',
+                'taskTitle' => 'Répondre',
+                'taskDueOn' => $today,
+            ],
+        ]);
+        self::assertResponseRedirects();
+
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $entityManager->clear();
+        $projectEntity = $entityManager->getRepository(CommercialProjectEntity::class)->findOneBy(['organization' => $organizationEntity->getId()], ['id' => 'DESC']);
+        self::assertSame($personEntity->getId(), $projectEntity->getPrimaryContact()?->getId());
+        self::assertSame($today, $projectEntity->getActions()->first()->getDueOn()->format('Y-m-d'));
+    }
+
+    public function testManualCreationRejectsPersonFromAnotherOrganization(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(5));
+        $adminUserEntity = (new AdminUserEntity())->setEmail("project-invalid-{$suffix}@example.test")->setPassword('unused');
+        $organizationEntity = (new OrganizationEntity())->setName("Crèche {$suffix}");
+        $otherOrganizationEntity = (new OrganizationEntity())->setName("Mairie {$suffix}");
+        $otherPersonEntity = (new PersonEntity())->setFirstName('Autre')->setLastName('Contact');
+        $otherOrganizationEntity->addPerson($otherPersonEntity);
+        foreach ([$adminUserEntity, $organizationEntity, $otherOrganizationEntity, $otherPersonEntity] as $entity) {
+            $entityManager->persist($entity);
+        }
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+
+        $crawler = $client->request('GET', '/commercial/projects/new');
+        $form = $crawler->selectButton('Créer le dossier')->form();
+        $client->request('POST', '/commercial/projects/new', [
+            'commercial_project_create' => [
+                '_token' => $form['commercial_project_create[_token]']->getValue(),
+                'organization' => (string) $organizationEntity->getId(),
+                'person' => (string) $otherPersonEntity->getId(),
+                'firstMessage' => 'Premier échange',
+                'initialStatus' => 'discussion',
+            ],
+        ]);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame(0, $entityManager->getRepository(CommercialProjectEntity::class)->count(['organization' => $organizationEntity]));
+    }
+
+    public function testProvisionalDossierCanBeAttachedWithoutChangingOriginalRequest(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(5));
+        $adminUserEntity = (new AdminUserEntity())->setEmail("project-attach-{$suffix}@example.test")->setPassword('unused');
+        $organizationEntity = (new OrganizationEntity())->setName("Crèche {$suffix}");
+        $requestEntity = new CommercialRequestEntity('site', 'Camille', 'camille@example.test', 'Texte original', new DateTimeImmutable('2026-10-13 09:00:00'), 'Nom libre');
+        $projectEntity = new CommercialProjectEntity('Nom libre', null, $requestEntity, new DateTimeImmutable('2026-10-13 09:00:00'));
+        $requestEntity->addProject($projectEntity);
+        foreach ([$adminUserEntity, $organizationEntity, $requestEntity] as $entity) {
+            $entityManager->persist($entity);
+        }
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+
+        $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
+        self::assertResponseIsSuccessful();
+        $form = $crawler->selectButton('Rattacher la structure')->form();
+        $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/organization', [
+            'commercial_project_organization' => [
+                '_token' => $form['commercial_project_organization[_token]']->getValue(),
+                'organization' => (string) $organizationEntity->getId(),
+            ],
+        ]);
+        self::assertResponseRedirects();
+
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $entityManager->clear();
+        $savedProjectEntity = $entityManager->find(CommercialProjectEntity::class, $projectEntity->getId());
+        self::assertSame($organizationEntity->getId(), $savedProjectEntity->getOrganization()?->getId());
+        self::assertSame('Nom libre', $savedProjectEntity->getRequest()?->getOrganizationName());
+        self::assertSame('Texte original', $savedProjectEntity->getRequest()?->getMessage());
+        self::assertSame('camille@example.test', $savedProjectEntity->getRequest()?->getEmailAddress());
+    }
+
+    public function testProvisionalDossierCanCreateItsOrganization(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(5));
+        $adminUserEntity = (new AdminUserEntity())->setEmail("project-new-attach-{$suffix}@example.test")->setPassword('unused');
+        $requestEntity = new CommercialRequestEntity('site', 'Camille', 'camille@example.test', 'Message', new DateTimeImmutable('2026-10-13 09:00:00'), 'Nom brut');
+        $projectEntity = new CommercialProjectEntity('Nom brut', null, $requestEntity, new DateTimeImmutable('2026-10-13 09:00:00'));
+        $requestEntity->addProject($projectEntity);
+        $entityManager->persist($adminUserEntity);
+        $entityManager->persist($requestEntity);
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+
+        $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
+        $form = $crawler->selectButton('Rattacher la structure')->form();
+        $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/organization', [
+            'commercial_project_organization' => [
+                '_token' => $form['commercial_project_organization[_token]']->getValue(),
+                'newOrganizationName' => "Crèche créée {$suffix}",
+            ],
+        ]);
+        self::assertResponseRedirects();
+
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $entityManager->clear();
+        $savedProjectEntity = $entityManager->find(CommercialProjectEntity::class, $projectEntity->getId());
+        self::assertSame("Crèche créée {$suffix}", $savedProjectEntity->getOrganization()?->getName());
+        self::assertSame('Nom brut', $savedProjectEntity->getRequest()?->getOrganizationName());
     }
 
     public function testNoteCanCreateOptionalNextActionWithoutClosingProject(): void

@@ -12,7 +12,7 @@
             <article class="internal-card" id="invoice-{{ invoice.id }}">
                 <p class="internal-eyebrow">{{ invoice.issuedOn|date('d/m/Y') }} · {{ invoice.paidOn ? 'invoice.status_paid'|trans({}, 'commercial') : 'invoice.status_unpaid'|trans({}, 'commercial') }}</p>
                 <h2>{{ invoice.reference }}</h2>
-                <p><a href="{{ path('commercial_project_show', {id: invoice.project.id}) }}">{{ invoice.project.title }} · {{ invoice.project.organization.name }}</a></p>
+                <p><a href="{{ path('commercial_project_show', {id: invoice.project.id}) }}">{{ invoice.project.title }}{% if invoice.project.organization %} · {{ invoice.project.organization.name }}{% endif %}</a></p>
                 <strong>{{ (invoice.amountCents / 100)|number_format(2, ',', ' ') }} €</strong>
                 {% if invoice.paidOn %}
                     <p>{{ 'invoice.paid_on'|trans({}, 'commercial') }} {{ invoice.paidOn|date('d/m/Y') }}</p>

@@ -30,7 +30,7 @@
             {% if commercialRequest.projects|length %}
                 <section class="internal-card">
                     <h2>{{ 'request.related_projects'|trans({}, 'commercial') }}</h2>
-                    <ul>{% for project in commercialRequest.projects %}<li><a href="{{ path('commercial_project_show', {id: project.id}) }}">{{ project.title }}</a> · {{ project.organization.name }}</li>{% endfor %}</ul>
+                    <ul>{% for project in commercialRequest.projects %}<li><a href="{{ path('commercial_project_show', {id: project.id}) }}">{{ project.title }}</a>{% if project.organization %} · {{ project.organization.name }}{% endif %}</li>{% endfor %}</ul>
                 </section>
             {% endif %}
             {% if commercialRequest.status != constant('App\\Infrastructure\\Doctrine\\Entity\\CommercialRequestEntity::STATUS_WITHOUT_RESULT') %}
