@@ -28,6 +28,12 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/commercial/projects', name: 'commercial_project_')]
 final class CommercialProjectController extends AbstractController
 {
+    #[Route('', name: 'index', methods: ['GET'])]
+    public function index(): Response
+    {
+        return $this->render('commercial/project/index.html.twig');
+    }
+
     #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager, ClockInterface $clock, CreateCommercialProject $creator): Response
     {

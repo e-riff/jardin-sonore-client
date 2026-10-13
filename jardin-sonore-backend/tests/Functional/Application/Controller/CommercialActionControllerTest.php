@@ -44,13 +44,13 @@ final class CommercialActionControllerTest extends WebTestCase
         $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
         self::assertResponseIsSuccessful();
         $token = $crawler->filterXPath('//form[contains(@action, "/postpone")]/input[@name="_token"]')->attr('value');
-        $client->request('POST', '/commercial/actions/' . $actionEntity->getId() . '/postpone', ['_token' => $token, 'dueOn' => '2026-10-19']);
-        self::assertResponseRedirects();
+        $client->request('POST', '/commercial/actions/' . $actionEntity->getId() . '/postpone', ['_token' => $token, 'dueOn' => '2026-10-19', 'returnTo' => 'index']);
+        self::assertResponseRedirects('/commercial/projects');
 
         $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
         $token = $crawler->filterXPath('//form[contains(@action, "/complete")]/input[@name="_token"]')->attr('value');
-        $client->request('POST', '/commercial/actions/' . $actionEntity->getId() . '/complete', ['_token' => $token, 'title' => 'Appeler la direction', 'note' => 'Réponse reçue']);
-        self::assertResponseRedirects();
+        $client->request('POST', '/commercial/actions/' . $actionEntity->getId() . '/complete', ['_token' => $token, 'title' => 'Appeler la direction', 'note' => 'Réponse reçue', 'returnTo' => 'dashboard']);
+        self::assertResponseRedirects('/commercial');
 
         $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
         $correctionToken = $crawler->filterXPath('//form[contains(@action, "/completed/edit")]/input[@name="_token"]')->attr('value');

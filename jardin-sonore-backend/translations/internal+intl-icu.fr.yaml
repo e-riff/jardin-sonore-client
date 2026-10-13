@@ -19,6 +19,7 @@ internal:
       close: "Fermer le menu"
       commercial_group: "Suivi clients"
       commercial_dashboard: "À faire"
+      commercial_projects: "Dossiers"
       commercial_requests: "Demandes"
       commercial_invoices: "Factures"
       commercial_digest: "Courriel de gestion"
