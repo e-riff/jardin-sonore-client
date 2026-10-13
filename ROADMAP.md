@@ -21,9 +21,9 @@ Le suivi commercial V1 est déployé en production depuis `deploy-commercial-fol
 
 La refonte du suivi clients est cadrée dans la [conception dossier d'abord](docs/superpowers/specs/2026-10-13-suivi-clients-dossier-first-design.md) et le [plan d'exécution](docs/superpowers/plans/2026-10-13-suivi-clients-dossier-first.md). **Un dossier porte le suivi dès le premier contact**, qu'il soit créé manuellement ou depuis le site. La demande reçue est conservée comme source brute du premier élément du fil ; les tâches « À faire » restent distinctes du fil des faits. Une structure est nécessaire à la création manuelle, tandis qu'une entrée du site attend son rattachement explicite.
 
-Sur la branche `feat/suivi-commercial-v1`, les parties 1 à 3 sont codées et commitées localement (`51730ec`, `8ae7448`) : modèle et reprise des demandes historiques, création directe ou rattachement d'un dossier, puis création idempotente du dossier et de la tâche « Répondre » depuis le formulaire public. La nouvelle migration a été jouée **uniquement sur la base locale de test** ; ces changements ne sont pas déployés. Les 400 tests backend passent avec une notice PHPUnit, ainsi que PHPStan et le contrôle de style. `docs/audits/` reste hors de ces commits.
+Sur la branche `feat/suivi-commercial-v1`, les parties 1 à 4 sont codées et commitées localement (`51730ec`, `8ae7448`, `5718a16`) : modèle et reprise des demandes historiques, création directe ou rattachement d'un dossier, création idempotente depuis le formulaire public, puis tâches et fil séparés avec corrections et changement manuel du statut. La nouvelle migration a été jouée **uniquement sur la base locale de test** ; ces changements ne sont pas déployés. Les 410 tests backend passent avec une notice PHPUnit, ainsi que PHPStan et le contrôle de style.
 
-**Prochain point de reprise : partie 4 du plan**, séparer l'ajout d'une tâche de l'ajout au fil, rendre les éléments modifiables et permettre le changement manuel du statut sans inventer de faits. Ensuite viennent les devis et factures, les index par dossier, puis l'harmonisation visuelle et mobile du backoffice. La recette authentifiée sur téléphone reste à faire après l'assemblage des écrans.
+**Prochain point de reprise : partie 5 du plan**, suivre les devis refusés et les corrections de références ou montants, puis les factures. Ensuite viennent les index par dossier et l'harmonisation visuelle et mobile du backoffice. La recette authentifiée sur téléphone reste à faire après l'assemblage des écrans.
 
 ### Historique du 8 octobre — avant le suivi commercial
 
@@ -64,8 +64,8 @@ La [conception des disponibilités](docs/superpowers/specs/2026-09-30-session-av
 | --- | --- | --- |
 | Modèle compatible avec les anciennes demandes, création manuelle et rattachement des dossiers provisoires. | Codé et commité ; migration exécutée sur la base de test. | Un seul dossier suivi, avec structure liée dès la création manuelle. |
 | Contact du site. | Codé et commité. | Un dossier provisoire et une tâche « Répondre » créés une seule fois, sans structure inventée ni doublon à la relance. |
-| Tâches, fil et statuts. | **À reprendre maintenant : partie 4 du plan.** | Commandes distinctes, corrections traçables et changement manuel du statut. |
-| Devis, factures et documents. | À faire : partie 5. | États et références courts, événements fiables dans le fil et accès aux documents sans masquer le dossier. |
+| Tâches, fil et statuts. | Codé et commité. | Commandes distinctes, correction des notes et tâches terminées, changement manuel du statut avec garde sur les factures impayées. |
+| Devis, factures et documents. | **À reprendre maintenant : partie 5 du plan.** | États et références courts, événements fiables dans le fil et accès aux documents sans masquer le dossier. |
 | Accueil et index. | À faire : partie 6. | Listes regroupées par dossier, urgences visibles, tri immédiat, sections repliables et lignes ouvrables au clic. |
 | Détail du dossier et cohérence du backoffice. | À faire : parties 7 et 8. | Contacts et liens accessibles sur téléphone, tâche et fil lisibles, boutons de retour et tableaux harmonisés. |
 
