@@ -23,7 +23,7 @@ final class CommercialDashboardControllerTest extends WebTestCase
         return new Kernel($options['environment'] ?? 'test', $options['debug'] ?? true);
     }
 
-    public function testDashboardNeedsLoginAndDisplaysRequestsActionsAndProjectsWithoutAction(): void
+    public function testDashboardNeedsLoginAndGroupsProjectsByTheirNextTask(): void
     {
         $client = static::createClient();
         $client->request('GET', '/commercial');
@@ -51,7 +51,32 @@ final class CommercialDashboardControllerTest extends WebTestCase
         self::assertStringContainsString("Relancer {$suffix}", $content);
         self::assertStringContainsString("Dossier sans action {$suffix}", $content);
         self::assertStringContainsString("Dossier provisoire {$suffix}", $content);
+        self::assertStringContainsString('Dossiers urgents', $content);
+        self::assertStringContainsString('/commercial/projects/' . $projectWithActionEntity->getId(), $content);
+        self::assertStringNotContainsString('/commercial/requests/' . $requestEntity->getId() . '"', $content);
+        self::assertSame(1, substr_count($content, 'data-project-id="' . $projectWithActionEntity->getId() . '"'));
         self::assertSame(CommercialRequestEntity::STATUS_TO_QUALIFY, $requestEntity->getStatus());
         self::assertSame(CommercialActionEntity::STATUS_OPEN, $projectWithActionEntity->getActions()->first()->getStatus());
+    }
+
+    public function testProjectIndexRequiresLoginAndRendersInstantFilters(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/commercial/projects');
+        self::assertResponseRedirects('/login');
+
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(5));
+        $adminUserEntity = (new AdminUserEntity())->setEmail("project-index-{$suffix}@example.test")->setPassword('unused');
+        $entityManager->persist($adminUserEntity);
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+
+        $client->request('GET', '/commercial/projects');
+        self::assertResponseIsSuccessful();
+        $content = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('data-model="debounce(300)|query"', $content);
+        self::assertStringContainsString('data-model="on(change)|status"', $content);
+        self::assertStringContainsString('data-model="on(change)|sort"', $content);
     }
 }

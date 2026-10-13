@@ -82,6 +82,35 @@ qualification:
   unavailable: Cette demande est classée sans suite et ne peut plus produire de dossier.
 project:
   back: Retour aux demandes
+  list:
+    heading: Dossiers
+    intro: Un dossier rassemble les échanges, les tâches et les documents d’une structure.
+    all_dossiers: Tous les dossiers
+    back_to_today: Retour au suivi
+    search: Rechercher
+    search_placeholder: Structure, dossier ou tâche
+    status: État
+    active: Ouverts
+    all: Tous
+    sort: Trier par
+    sort_urgency: Échéance
+    sort_recent: Plus récents
+    sort_name: Structure
+    priority: Dossiers urgents
+    upcoming: À venir
+    without_task: Sans tâche prévue
+    closed: Dossiers clos
+    dossier: Dossier
+    next_task: Prochaine tâche
+    due_on: Échéance
+    actions: Actions
+    no_task: Aucune tâche
+    new: Nouveau
+    provisional: Structure à rattacher
+    one_day: +1 jour
+    two_days: +2 jours
+    one_week: +1 semaine
+    other_date: Autre date
   create:
     heading: Nouveau dossier
     back: Retour au suivi clients

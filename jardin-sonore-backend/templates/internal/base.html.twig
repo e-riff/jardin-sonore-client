@@ -18,9 +18,9 @@
                     active: currentRoute == 'commercial_dashboard',
                 },
                 {
-                    route: 'commercial_request_index',
-                    label: 'internal.base.nav.commercial_requests'|trans({}, 'internal'),
-                    active: currentRoute starts with 'commercial_request_',
+                    route: 'commercial_project_index',
+                    label: 'internal.base.nav.commercial_projects'|trans({}, 'internal'),
+                    active: currentRoute starts with 'commercial_project_' or currentRoute starts with 'commercial_request_',
                 },
                 {
                     route: 'commercial_invoice_index',

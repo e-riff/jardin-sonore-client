@@ -114,6 +114,10 @@ final class CommercialActionController extends AbstractController
         }
         $entityManager->flush();
 
-        return $this->redirectToRoute('commercial_project_show', ['id' => $actionEntity->getProject()->getId()]);
+        return match ($request->request->getString('returnTo')) {
+            'dashboard' => $this->redirectToRoute('commercial_dashboard'),
+            'index' => $this->redirectToRoute('commercial_project_index'),
+            default => $this->redirectToRoute('commercial_project_show', ['id' => $actionEntity->getProject()->getId()]),
+        };
     }
 }
