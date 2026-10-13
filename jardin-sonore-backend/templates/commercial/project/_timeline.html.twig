@@ -1,0 +1,42 @@
+<section class="commercial-dossier__timeline" aria-labelledby="commercial-timeline-heading">
+    <div class="commercial-dossier__section-heading"><h2 id="commercial-timeline-heading">{{ 'project.history'|trans({}, 'commercial') }}</h2></div>
+    <div class="commercial-timeline">
+        {% for event in project.events|reverse %}
+            {% set icon = event.type starts with 'action_' ? 'check' : (event.type starts with 'quote_' ? 'quote' : (event.type starts with 'invoice_' ? 'invoice' : (event.type starts with 'contact_' ? 'phone' : 'note'))) %}
+            <article class="commercial-timeline__item commercial-timeline__item--{{ icon }}" {% if event.content %}data-controller="commercial-timeline" data-commercial-timeline-expanded-value="{{ loop.first ? 'true' : 'false' }}" data-commercial-timeline-more-label-value="{{ 'event.show_more'|trans({}, 'commercial') }}" data-commercial-timeline-less-label-value="{{ 'event.show_less'|trans({}, 'commercial') }}"{% endif %}>
+                <span class="commercial-timeline__marker" aria-hidden="true"></span>
+                <span class="commercial-timeline__watermark">{% include 'commercial/project/_icon.html.twig' with {name: icon} only %}</span>
+                <div class="commercial-timeline__heading">
+                    <div><time datetime="{{ event.occurredAt|date('c') }}">{{ event.occurredAt|date('d/m/Y') }} <span>· {{ event.occurredAt|date('H:i') }}</span></time><h3>{{ ('event.' ~ event.type)|trans({}, 'commercial') }}</h3></div>
+                    {% if event.type == 'action_completed' and event.action %}
+                        <details class="commercial-timeline__edit">
+                            <summary class="commercial-dossier__icon-action" title="{{ 'event.edit'|trans({}, 'commercial') }}" aria-label="{{ 'event.edit'|trans({}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</summary>
+                            <form method="post" action="{{ path('commercial_action_completed_edit', {id: event.action.id}) }}" class="internal-form">
+                                <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ event.action.id ~ '_completed_edit') }}">
+                                <label>{{ 'action.completed_title'|trans({}, 'commercial') }} <input name="title" value="{{ event.action.title }}" maxlength="255" required></label>
+                                <label>{{ 'action.note'|trans({}, 'commercial') }} <textarea name="note" maxlength="10000">{{ event.content }}</textarea></label>
+                                <button class="internal-button internal-button--secondary" type="submit">{{ 'event.save'|trans({}, 'commercial') }}</button>
+                            </form>
+                        </details>
+                    {% elseif event.type in ['note', 'initial_message'] and event.action is null and event.quote is null and event.invoice is null %}
+                        <details class="commercial-timeline__edit">
+                            <summary class="commercial-dossier__icon-action" title="{{ 'event.edit'|trans({}, 'commercial') }}" aria-label="{{ 'event.edit'|trans({}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</summary>
+                            <form method="post" action="{{ path('commercial_project_event_edit', {id: project.id, eventId: event.id}) }}" class="internal-form">
+                                <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_' ~ project.id ~ '_event_' ~ event.id ~ '_edit') }}">
+                                <label>{{ 'note.content'|trans({}, 'commercial') }} <textarea name="content" maxlength="10000" required>{{ event.content }}</textarea></label>
+                                <button class="internal-button internal-button--secondary" type="submit">{{ 'event.save'|trans({}, 'commercial') }}</button>
+                            </form>
+                        </details>
+                    {% endif %}
+                </div>
+                {% if event.type == 'action_completed' %}<strong class="commercial-timeline__subject">{{ event.action ? event.action.title : event.metadata.action_title|default('') }}</strong>{% endif %}
+                {% if event.person %}<span class="commercial-dossier__muted">{{ event.person }}</span>{% endif %}
+                {% if event.content %}
+                    <p class="commercial-timeline__excerpt" data-commercial-timeline-target="excerpt">{{ event.content }}</p>
+                    <button type="button" class="commercial-timeline__toggle" data-commercial-timeline-target="toggle" data-action="commercial-timeline#toggle" hidden>{{ 'event.show_more'|trans({}, 'commercial') }}</button>
+                {% endif %}
+                {% if event.type == 'project_status_changed' %}<p class="commercial-timeline__status-change">{{ ('project.status.' ~ event.metadata.old_status)|trans({}, 'commercial') }} → {{ ('project.status.' ~ event.metadata.new_status)|trans({}, 'commercial') }}</p>{% endif %}
+            </article>
+        {% else %}<p class="commercial-dossier__muted">{{ 'event.none'|trans({}, 'commercial') }}</p>{% endfor %}
+    </div>
+</section>

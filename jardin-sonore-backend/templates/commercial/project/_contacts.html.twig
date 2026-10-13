@@ -1,0 +1,90 @@
+<section class="commercial-dossier__contacts" aria-labelledby="commercial-contacts-heading">
+    <div class="commercial-dossier__section-heading">
+        <h2 id="commercial-contacts-heading">{{ 'project.contact_heading'|trans({}, 'commercial') }}</h2>
+    </div>
+    {% if project.organization %}
+        <div class="commercial-dossier__organization">
+            <div>
+                <span class="commercial-dossier__label">{{ 'project.organization'|trans({}, 'commercial') }}</span>
+                <strong>{{ project.organization.name }}</strong>
+                {% if project.organization.municipalitySummary and project.organization.municipalitySummary != '—' %}<span class="commercial-dossier__muted">{{ project.organization.municipalitySummary }}</span>{% endif %}
+            </div>
+            <div class="commercial-dossier__channels">
+                {% for phone in project.organization.contactDetails.phoneContacts %}
+                    <span class="commercial-dossier__channel"><span class="commercial-contact-value">{{ phone.phoneNumber }}</span><a href="tel:{{ phone.phoneNumber|replace({' ': '', '.': '', '-': ''}) }}" aria-label="{{ 'project.call_number'|trans({number: phone.phoneNumber}, 'commercial') }}" title="{{ 'project.call_number'|trans({number: phone.phoneNumber}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'phone'} only %}</a></span>
+                {% endfor %}
+                {% for email in project.organization.contactDetails.emailContacts %}
+                    <span class="commercial-dossier__channel"><span class="commercial-contact-value">{{ email.emailAddress }}</span><a href="mailto:{{ email.emailAddress }}" aria-label="{{ 'project.write_address'|trans({address: email.emailAddress}, 'commercial') }}" title="{{ 'project.write_address'|trans({address: email.emailAddress}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'mail'} only %}</a></span>
+                {% endfor %}
+            </div>
+        </div>
+        <details class="commercial-dossier__people" data-controller="commercial-contacts">
+            <summary>{{ 'project.people'|trans({}, 'commercial') }} <span class="commercial-dossier__count">{{ project.people|length }}</span>{% if project.primaryContact %}<span class="commercial-dossier__summary-person">{{ project.primaryContact }}</span>{% endif %}</summary>
+            {% for projectPerson in project.people %}
+                <div class="commercial-dossier__person">
+                    <div class="commercial-dossier__person-heading"><strong>{{ projectPerson.person }}</strong>{% if project.primaryContact == projectPerson.person %}<span class="commercial-dossier__primary" title="{{ 'project.primary_contact'|trans({}, 'commercial') }}">{{ 'project.primary_contact'|trans({}, 'commercial') }}</span>{% endif %}{% if not projectPerson.current %}<span class="internal-badge internal-badge--muted">{{ 'project.contact_former'|trans({}, 'commercial') }}</span>{% endif %}</div>
+                    {% if projectPerson.person.role %}<span class="commercial-dossier__muted">{{ projectPerson.person.role }}</span>{% endif %}
+                    <div class="commercial-dossier__channels">
+                        {% for phone in projectPerson.person.contactDetails.phoneContacts %}
+                            <span class="commercial-dossier__channel"><span class="commercial-contact-value">{{ phone.phoneNumber }}</span><a href="tel:{{ phone.phoneNumber|replace({' ': '', '.': '', '-': ''}) }}" aria-label="{{ 'project.call_number'|trans({number: phone.phoneNumber}, 'commercial') }}" title="{{ 'project.call_number'|trans({number: phone.phoneNumber}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'phone'} only %}</a></span>
+                        {% endfor %}
+                        {% for email in projectPerson.person.contactDetails.emailContacts %}
+                            <span class="commercial-dossier__channel"><span class="commercial-contact-value">{{ email.emailAddress }}</span><a href="mailto:{{ email.emailAddress }}" aria-label="{{ 'project.write_address'|trans({address: email.emailAddress}, 'commercial') }}" title="{{ 'project.write_address'|trans({address: email.emailAddress}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'mail'} only %}</a></span>
+                        {% endfor %}
+                    </div>
+                    {% if projectPerson.current and projectPerson.person.active %}
+                        <div class="commercial-dossier__subactions">
+                            <details><summary>{{ 'project.contact_edit'|trans({}, 'commercial') }}</summary>
+                                <form method="post" action="{{ path('commercial_project_contact_edit', {id: project.id, personId: projectPerson.person.id}) }}" class="internal-form">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_contact_' ~ project.id ~ '_' ~ projectPerson.person.id ~ '_edit') }}">
+                                    <label>{{ 'project.first_name'|trans({}, 'commercial') }} <input name="firstName" value="{{ projectPerson.person.firstName }}" required></label>
+                                    <label>{{ 'project.last_name'|trans({}, 'commercial') }} <input name="lastName" value="{{ projectPerson.person.lastName }}" required></label>
+                                    <label>{{ 'project.role'|trans({}, 'commercial') }} <input name="role" value="{{ projectPerson.person.role }}"></label>
+                                    <button class="internal-button internal-button--secondary" type="submit">{{ 'project.contact_save'|trans({}, 'commercial') }}</button>
+                                </form>
+                            </details>
+                            {% if project.primaryContact != projectPerson.person %}<form method="post" action="{{ path('commercial_project_contact_primary', {id: project.id, personId: projectPerson.person.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('commercial_project_contact_' ~ project.id ~ '_' ~ projectPerson.person.id ~ '_primary') }}"><button type="submit">{{ 'project.contact_primary'|trans({}, 'commercial') }}</button></form>{% endif %}
+                            <form method="post" action="{{ path('commercial_project_contact_former', {id: project.id, personId: projectPerson.person.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('commercial_project_contact_' ~ project.id ~ '_' ~ projectPerson.person.id ~ '_former') }}"><button type="submit">{{ 'project.contact_mark_former'|trans({}, 'commercial') }}</button></form>
+                        </div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <p class="commercial-dossier__muted">{{ 'project.no_people'|trans({}, 'commercial') }}</p>
+            {% endfor %}
+            <div class="commercial-dossier__subactions">
+                <details><summary>{{ 'project.contact_link'|trans({}, 'commercial') }}</summary>
+                    <form method="post" action="{{ path('commercial_project_contact_link', {id: project.id}) }}" class="internal-form">
+                        <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_contact_' ~ project.id ~ '_link') }}">
+                        <label>{{ 'project.contact_person'|trans({}, 'commercial') }}<select name="personId" required><option value="">{{ 'project.contact_select'|trans({}, 'commercial') }}</option>{% for person in project.organization.people %}{% if person.active %}<option value="{{ person.id }}">{{ person }}{% if person.role %} — {{ person.role }}{% endif %}</option>{% endif %}{% endfor %}</select></label>
+                        <label><input type="checkbox" name="primary" value="1"> {{ 'project.contact_make_primary'|trans({}, 'commercial') }}</label>
+                        <button class="internal-button internal-button--secondary" type="submit">{{ 'project.contact_link_save'|trans({}, 'commercial') }}</button>
+                    </form>
+                </details>
+                <details><summary>{{ 'project.contact_create'|trans({}, 'commercial') }}</summary>
+                    <form method="post" action="{{ path('commercial_project_contact_create', {id: project.id}) }}" class="internal-form">
+                        <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_contact_' ~ project.id ~ '_create') }}">
+                        <label>{{ 'project.first_name'|trans({}, 'commercial') }} <input name="firstName" required></label>
+                        <label>{{ 'project.last_name'|trans({}, 'commercial') }} <input name="lastName" required></label>
+                        <label>{{ 'project.role'|trans({}, 'commercial') }} <input name="role"></label>
+                        <label><input type="checkbox" name="primary" value="1"> {{ 'project.contact_make_primary'|trans({}, 'commercial') }}</label>
+                        <button class="internal-button internal-button--secondary" type="submit">{{ 'project.contact_create_save'|trans({}, 'commercial') }}</button>
+                    </form>
+                </details>
+            </div>
+        </details>
+    {% else %}
+        <div class="commercial-dossier__organization commercial-dossier__organization--provisional">
+            <div><strong>{{ project.request ? (project.request.organizationName ?: project.request.senderName) : project.title }}</strong><span class="commercial-dossier__muted">{{ 'project.create.provisional_hint'|trans({}, 'commercial') }}</span></div>
+            {% if project.request %}<div class="commercial-dossier__channels">
+                {% if project.request.phone %}<span class="commercial-dossier__channel"><span class="commercial-contact-value">{{ project.request.phone }}</span><a href="tel:{{ project.request.phone|replace({' ': '', '.': '', '-': ''}) }}" aria-label="{{ 'project.call_number'|trans({number: project.request.phone}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'phone'} only %}</a></span>{% endif %}
+                {% if project.request.emailAddress %}<span class="commercial-dossier__channel"><span class="commercial-contact-value">{{ project.request.emailAddress }}</span><a href="mailto:{{ project.request.emailAddress }}" aria-label="{{ 'project.write_address'|trans({address: project.request.emailAddress}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'mail'} only %}</a></span>{% endif %}
+            </div>{% endif %}
+        </div>
+        {{ form_start(organizationForm, {action: path('commercial_project_organization', {id: project.id}), attr: {class: 'internal-form commercial-dossier__attach'}}) }}
+            {{ form_row(organizationForm.organization) }}
+            {{ form_row(organizationForm.newOrganizationName) }}
+            {{ form_row(organizationForm.submit) }}
+        {{ form_end(organizationForm) }}
+    {% endif %}
+    {% if project.request %}<a class="commercial-dossier__source" href="{{ path('commercial_request_show', {id: project.request.id}) }}">{{ 'project.original_request'|trans({}, 'commercial') }}</a>{% endif %}
+</section>

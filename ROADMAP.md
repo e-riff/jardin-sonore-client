@@ -23,7 +23,7 @@ La refonte du suivi clients est cadrée dans la [conception dossier d'abord](doc
 
 Sur la branche `feat/suivi-commercial-v1`, les parties 1 à 4 sont codées et commitées localement (`51730ec`, `8ae7448`, `5718a16`) : modèle et reprise des demandes historiques, création directe ou rattachement d'un dossier, création idempotente depuis le formulaire public, puis tâches et fil séparés avec corrections et changement manuel du statut. La migration du suivi clients est appliquée sur les bases locales de test **et de développement** ; ces changements ne sont pas déployés. La migration indépendante de normalisation de l'annuaire reste en attente sur la base de développement.
 
-La refonte visuelle a été avancée avant la partie 5 à la demande de l'utilisateur. L'accueil et l'index affichent désormais une ligne par dossier, des groupes repliables, la prochaine tâche, des actions rapides et des filtres LiveComponent ; la navigation pointe vers les dossiers. Les tests backend, PHPStan, le style et la compilation des assets passent. **Prochain point de reprise : poursuivre la fiche dossier mobile et ses contacts, documents et fil**, puis harmoniser les boutons de retour, reprendre le courriel groupé par dossier et la partie 5 (devis refusés, corrections et factures). La recette authentifiée sur téléphone reste à faire après l'assemblage des écrans.
+La refonte visuelle a été avancée avant la partie 5 à la demande de l'utilisateur. L'accueil et l'index affichent désormais une ligne par dossier, des groupes repliables, la prochaine tâche, des actions rapides et des filtres LiveComponent ; la navigation pointe vers les dossiers. La fiche dossier est remaniée pour le mobile : coordonnées de la structure visibles, personnes et documents repliables, commandes d'ajout distinctes, tâches datées et fil chronologique avec dernière entrée ouverte. **Prochain point de reprise : harmoniser les boutons de retour et les tableaux du backoffice**, puis reprendre le courriel groupé par dossier et la partie 5 (devis refusés, corrections et factures). La recette authentifiée sur téléphone reste à faire après l'assemblage des écrans.
 
 ### Historique du 8 octobre — avant le suivi commercial
 
@@ -62,12 +62,12 @@ La [conception des disponibilités](docs/superpowers/specs/2026-09-30-session-av
 
 | Étape | État local | Résultat attendu |
 | --- | --- | --- |
-| Modèle compatible avec les anciennes demandes, création manuelle et rattachement des dossiers provisoires. | Codé et commité ; migration exécutée sur la base de test. | Un seul dossier suivi, avec structure liée dès la création manuelle. |
+| Modèle compatible avec les anciennes demandes, création manuelle et rattachement des dossiers provisoires. | Codé et commité ; migration exécutée sur les bases locales de test et de développement. | Un seul dossier suivi, avec structure liée dès la création manuelle. |
 | Contact du site. | Codé et commité. | Un dossier provisoire et une tâche « Répondre » créés une seule fois, sans structure inventée ni doublon à la relance. |
 | Tâches, fil et statuts. | Codé et commité. | Commandes distinctes, correction des notes et tâches terminées, changement manuel du statut avec garde sur les factures impayées. |
 | Devis, factures et documents. | **À reprendre maintenant : partie 5 du plan.** | États et références courts, événements fiables dans le fil et accès aux documents sans masquer le dossier. |
-| Accueil et index. | À faire : partie 6. | Listes regroupées par dossier, urgences visibles, tri immédiat, sections repliables et lignes ouvrables au clic. |
-| Détail du dossier et cohérence du backoffice. | À faire : parties 7 et 8. | Contacts et liens accessibles sur téléphone, tâche et fil lisibles, boutons de retour et tableaux harmonisés. |
+| Accueil et index. | Codé et commité : partie 6. | Listes regroupées par dossier, urgences visibles, tri immédiat, sections repliables et lignes ouvrables au clic. |
+| Détail du dossier et cohérence du backoffice. | Fiche dossier codée : partie 7 ; harmonisation à faire : partie 8. | Contacts et liens accessibles sur téléphone, tâche et fil lisibles, puis boutons de retour et tableaux harmonisés. |
 
 L'archivage des dossiers fermés reste à définir après usage réel ; il devra préserver l'historique et alléger les listes principales. Le [guide des deux parcours](docs/suivi-clients-parcours-concrets-2026-10-12.md) conserve les situations qui ont lancé cette refonte ; les décisions courantes sont dans la conception du 13 octobre.
 

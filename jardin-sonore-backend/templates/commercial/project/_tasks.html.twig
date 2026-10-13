@@ -1,0 +1,56 @@
+{% set openActions = project.actions|filter(action => action.status == 'open') %}
+<section class="commercial-dossier__tasks" aria-labelledby="commercial-tasks-heading">
+    <div class="commercial-dossier__section-heading"><h2 id="commercial-tasks-heading">{{ 'project.actions'|trans({}, 'commercial') }}</h2><span class="commercial-dossier__count">{{ openActions|length }}</span></div>
+    {% for action in openActions %}
+        <article class="commercial-dossier__task">
+            <span class="commercial-dossier__task-icon">{% include 'commercial/project/_icon.html.twig' with {name: 'bell'} only %}</span>
+            <div class="commercial-dossier__task-main">
+                <strong>{{ action.title }}</strong>
+                {% if action.details %}<p>{{ action.details }}</p>{% endif %}
+                {% if action.person %}<span class="commercial-dossier__muted">{{ action.person }}</span>{% endif %}
+            </div>
+            <time datetime="{{ action.dueOn|date('Y-m-d') }}">{{ action.dueOn|date('d/m/Y') }}</time>
+            <div class="commercial-dossier__task-actions">
+                <details class="commercial-dossier__task-menu">
+                    <summary class="internal-button internal-button--secondary internal-button--compact">{% include 'commercial/project/_icon.html.twig' with {name: 'check'} only %} {{ 'action.complete'|trans({}, 'commercial') }}</summary>
+                    <form method="post" action="{{ path('commercial_action_change', {id: action.id, operation: 'complete'}) }}" class="internal-form">
+                        <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ action.id ~ '_complete') }}">
+                        <label>{{ 'action.completed_title'|trans({}, 'commercial') }} <input name="title" value="{{ action.title }}" maxlength="255" required></label>
+                        <label>{{ 'action.note'|trans({}, 'commercial') }} <textarea name="note"></textarea></label>
+                        <button class="internal-button" type="submit">{{ 'action.complete'|trans({}, 'commercial') }}</button>
+                    </form>
+                </details>
+                <details class="commercial-dossier__task-menu commercial-dossier__task-menu--postpone">
+                    <summary class="internal-button internal-button--secondary internal-button--compact">{{ 'action.postpone'|trans({}, 'commercial') }}</summary>
+                    <div class="commercial-dossier__postpone-options">
+                        {% set postponeBase = action.dueOn|date('Y-m-d') > 'now'|date('Y-m-d') ? action.dueOn : date('now') %}
+                        {% for days, label in {1: 'project.list.one_day', 2: 'project.list.two_days', 7: 'project.list.one_week'} %}
+                            <form method="post" action="{{ path('commercial_action_change', {id: action.id, operation: 'postpone'}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ action.id ~ '_postpone') }}">
+                                <input type="hidden" name="dueOn" value="{{ postponeBase|date_modify('+' ~ days ~ ' days')|date('Y-m-d') }}">
+                                <button type="submit">{{ label|trans({}, 'commercial') }}</button>
+                            </form>
+                        {% endfor %}
+                        <form method="post" action="{{ path('commercial_action_change', {id: action.id, operation: 'postpone'}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ action.id ~ '_postpone') }}">
+                            <label>{{ 'project.list.other_date'|trans({}, 'commercial') }} <input type="date" name="dueOn" value="{{ action.dueOn|date('Y-m-d') }}" required></label>
+                            <button type="submit">{{ 'action.postpone'|trans({}, 'commercial') }}</button>
+                        </form>
+                    </div>
+                </details>
+                <details class="commercial-dossier__task-menu commercial-dossier__task-menu--edit">
+                    <summary class="commercial-dossier__icon-action" aria-label="{{ 'action.edit'|trans({}, 'commercial') }}" title="{{ 'action.edit'|trans({}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</summary>
+                    <form method="post" action="{{ path('commercial_action_edit', {id: action.id}) }}" class="internal-form">
+                        <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ action.id ~ '_edit') }}">
+                        <label>{{ 'action.title'|trans({}, 'commercial') }} <input type="text" name="title" value="{{ action.title }}" required maxlength="255"></label>
+                        <label>{{ 'action.details'|trans({}, 'commercial') }} <textarea name="details">{{ action.details }}</textarea></label>
+                        <label>{{ 'action.due_on'|trans({}, 'commercial') }} <input type="date" name="dueOn" value="{{ action.dueOn|date('Y-m-d') }}" required></label>
+                        <label>{{ 'action.person'|trans({}, 'commercial') }}<select name="personId"><option value="">{{ 'action.no_person'|trans({}, 'commercial') }}</option>{% for projectPerson in project.people %}{% if projectPerson.current and projectPerson.person.active %}<option value="{{ projectPerson.person.id }}" {% if action.person == projectPerson.person %}selected{% endif %}>{{ projectPerson.person }}</option>{% endif %}{% endfor %}</select></label>
+                        <button class="internal-button internal-button--secondary" type="submit">{{ 'action.edit'|trans({}, 'commercial') }}</button>
+                    </form>
+                    <form method="post" action="{{ path('commercial_action_change', {id: action.id, operation: 'cancel'}) }}"><input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ action.id ~ '_cancel') }}"><button class="internal-button internal-button--secondary internal-button--compact" type="submit">{{ 'action.cancel'|trans({}, 'commercial') }}</button></form>
+                </details>
+            </div>
+        </article>
+    {% else %}<p class="commercial-dossier__muted">{{ 'project.no_actions'|trans({}, 'commercial') }}</p>{% endfor %}
+</section>
