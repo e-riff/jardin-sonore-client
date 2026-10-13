@@ -6,10 +6,17 @@ namespace App\Infrastructure\Doctrine\Entity;
 
 use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
 use DateTimeImmutable;
+use DomainException;
 
 class CommercialEventEntity
 {
     use IdentifiableTrait;
+
+    private ?CommercialActionEntity $action = null;
+
+    private ?CommercialQuoteEntity $quote = null;
+
+    private ?CommercialInvoiceEntity $invoice = null;
 
     /** @param array<string, string> $metadata */
     public function __construct(
@@ -51,5 +58,44 @@ class CommercialEventEntity
     public function getPerson(): ?PersonEntity
     {
         return $this->person;
+    }
+
+    public function getAction(): ?CommercialActionEntity
+    {
+        return $this->action;
+    }
+
+    public function getQuote(): ?CommercialQuoteEntity
+    {
+        return $this->quote;
+    }
+
+    public function getInvoice(): ?CommercialInvoiceEntity
+    {
+        return $this->invoice;
+    }
+
+    public function linkAction(CommercialActionEntity $actionEntity): void
+    {
+        if ($actionEntity->getProject() !== $this->project) {
+            throw new DomainException('An event action must belong to the same project.');
+        }
+        $this->action = $actionEntity;
+    }
+
+    public function linkQuote(CommercialQuoteEntity $quoteEntity): void
+    {
+        if ($quoteEntity->getProject() !== $this->project) {
+            throw new DomainException('An event quote must belong to the same project.');
+        }
+        $this->quote = $quoteEntity;
+    }
+
+    public function linkInvoice(CommercialInvoiceEntity $invoiceEntity): void
+    {
+        if ($invoiceEntity->getProject() !== $this->project) {
+            throw new DomainException('An event invoice must belong to the same project.');
+        }
+        $this->invoice = $invoiceEntity;
     }
 }

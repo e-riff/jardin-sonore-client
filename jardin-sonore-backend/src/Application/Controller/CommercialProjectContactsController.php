@@ -22,8 +22,12 @@ final class CommercialProjectContactsController extends AbstractController
     {
         $this->validateToken("commercial_project_contact_{$id}_link", $request);
         $projectEntity = $this->findProject($id, $entityManager);
+        $organizationEntity = $projectEntity->getOrganization();
+        if (null === $organizationEntity) {
+            return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
         $personEntity = $entityManager->find(PersonEntity::class, $request->request->getInt('personId'));
-        if (!$personEntity instanceof PersonEntity || !$personEntity->isActive() || $personEntity->getOrganization() !== $projectEntity->getOrganization()) {
+        if (!$personEntity instanceof PersonEntity || !$personEntity->isActive() || $personEntity->getOrganization() !== $organizationEntity) {
             throw $this->createNotFoundException();
         }
 
@@ -47,6 +51,10 @@ final class CommercialProjectContactsController extends AbstractController
     {
         $this->validateToken("commercial_project_contact_{$id}_create", $request);
         $projectEntity = $this->findProject($id, $entityManager);
+        $organizationEntity = $projectEntity->getOrganization();
+        if (null === $organizationEntity) {
+            return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
         $firstName = trim($request->request->getString('firstName'));
         $lastName = trim($request->request->getString('lastName'));
         if ('' === $firstName || '' === $lastName) {
@@ -54,7 +62,7 @@ final class CommercialProjectContactsController extends AbstractController
         }
 
         $personEntity = (new PersonEntity())->setFirstName($firstName)->setLastName($lastName)->setRole(self::optional($request->request->getString('role')));
-        $projectEntity->getOrganization()->addPerson($personEntity);
+        $organizationEntity->addPerson($personEntity);
         $entityManager->persist($personEntity);
         $projectEntity->addPerson(new CommercialProjectPersonEntity($projectEntity, $personEntity, new DateTimeImmutable()));
         if ($request->request->getBoolean('primary')) {

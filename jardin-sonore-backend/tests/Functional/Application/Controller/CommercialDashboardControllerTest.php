@@ -35,9 +35,10 @@ final class CommercialDashboardControllerTest extends WebTestCase
         $organizationEntity = (new OrganizationEntity())->setName("Crèche {$suffix}");
         $requestEntity = new CommercialRequestEntity('manual', "Demande {$suffix}", '', 'Premier contact', new DateTimeImmutable());
         $projectEntity = new CommercialProjectEntity("Dossier sans action {$suffix}", $organizationEntity, null, new DateTimeImmutable());
+        $provisionalProjectEntity = new CommercialProjectEntity("Dossier provisoire {$suffix}", null, $requestEntity, new DateTimeImmutable());
         $projectWithActionEntity = new CommercialProjectEntity("Dossier à rappeler {$suffix}", $organizationEntity, null, new DateTimeImmutable());
         $projectWithActionEntity->addAction(new CommercialActionEntity($projectWithActionEntity, "Relancer {$suffix}", new DateTimeImmutable('yesterday')));
-        foreach ([$adminUserEntity, $organizationEntity, $requestEntity, $projectEntity, $projectWithActionEntity] as $entity) {
+        foreach ([$adminUserEntity, $organizationEntity, $requestEntity, $projectEntity, $provisionalProjectEntity, $projectWithActionEntity] as $entity) {
             $entityManager->persist($entity);
         }
         $entityManager->flush();
@@ -49,6 +50,7 @@ final class CommercialDashboardControllerTest extends WebTestCase
         self::assertStringContainsString("Demande {$suffix}", $content);
         self::assertStringContainsString("Relancer {$suffix}", $content);
         self::assertStringContainsString("Dossier sans action {$suffix}", $content);
+        self::assertStringContainsString("Dossier provisoire {$suffix}", $content);
         self::assertSame(CommercialRequestEntity::STATUS_TO_QUALIFY, $requestEntity->getStatus());
         self::assertSame(CommercialActionEntity::STATUS_OPEN, $projectWithActionEntity->getActions()->first()->getStatus());
     }

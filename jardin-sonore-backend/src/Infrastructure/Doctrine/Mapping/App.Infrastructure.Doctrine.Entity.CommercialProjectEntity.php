@@ -31,7 +31,7 @@ return static function (ClassMetadata $metadata): void {
     $metadata->mapManyToOne([
         'fieldName' => 'organization',
         'targetEntity' => OrganizationEntity::class,
-        'joinColumns' => [['name' => 'organization_id', 'referencedColumnName' => 'id', 'nullable' => false, 'onDelete' => 'RESTRICT']],
+        'joinColumns' => [['name' => 'organization_id', 'referencedColumnName' => 'id', 'nullable' => true, 'onDelete' => 'RESTRICT']],
     ]);
     $metadata->mapManyToOne([
         'fieldName' => 'request',

@@ -41,7 +41,7 @@ class CommercialProjectEntity
 
     public function __construct(
         private string $title,
-        private OrganizationEntity $organization,
+        private ?OrganizationEntity $organization,
         private ?CommercialRequestEntity $request,
         private DateTimeImmutable $createdAt,
     ) {
@@ -57,9 +57,19 @@ class CommercialProjectEntity
         return $this->title;
     }
 
-    public function getOrganization(): OrganizationEntity
+    public function getOrganization(): ?OrganizationEntity
     {
         return $this->organization;
+    }
+
+    public function setOrganization(OrganizationEntity $organizationEntity): void
+    {
+        $this->organization = $organizationEntity;
+    }
+
+    public function setTitle(string $title): void
+    {
+        $this->title = $title;
     }
 
     public function getRequest(): ?CommercialRequestEntity

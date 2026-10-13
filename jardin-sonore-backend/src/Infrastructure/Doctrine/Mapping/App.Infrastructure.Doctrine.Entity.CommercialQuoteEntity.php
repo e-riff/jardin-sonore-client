@@ -20,6 +20,7 @@ return static function (ClassMetadata $metadata): void {
     $metadata->mapField(['fieldName' => 'amountCents', 'columnName' => 'amount_cents', 'type' => Types::INTEGER]);
     $metadata->mapField(['fieldName' => 'sentOn', 'columnName' => 'sent_on', 'type' => Types::DATE_IMMUTABLE]);
     $metadata->mapField(['fieldName' => 'signedOn', 'columnName' => 'signed_on', 'type' => Types::DATE_IMMUTABLE, 'nullable' => true]);
+    $metadata->mapField(['fieldName' => 'refusedOn', 'columnName' => 'refused_on', 'type' => Types::DATE_IMMUTABLE, 'nullable' => true]);
     $metadata->mapManyToOne([
         'fieldName' => 'project',
         'targetEntity' => CommercialProjectEntity::class,

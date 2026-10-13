@@ -13,6 +13,8 @@ class CommercialQuoteEntity
 
     private ?DateTimeImmutable $signedOn = null;
 
+    private ?DateTimeImmutable $refusedOn = null;
+
     public function __construct(
         private CommercialProjectEntity $project,
         private string $reference,
@@ -53,6 +55,11 @@ class CommercialQuoteEntity
         return $this->signedOn;
     }
 
+    public function getRefusedOn(): ?DateTimeImmutable
+    {
+        return $this->refusedOn;
+    }
+
     public function getReplaces(): ?self
     {
         return $this->replaces;
@@ -61,5 +68,10 @@ class CommercialQuoteEntity
     public function markSigned(DateTimeImmutable $signedOn): void
     {
         $this->signedOn = $signedOn;
+    }
+
+    public function markRefused(DateTimeImmutable $refusedOn): void
+    {
+        $this->refusedOn = $refusedOn;
     }
 }

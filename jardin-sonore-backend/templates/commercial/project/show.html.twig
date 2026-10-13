@@ -7,7 +7,7 @@
         <a href="{{ path('commercial_request_index') }}">← {{ 'project.back'|trans({}, 'commercial') }}</a>
         <p class="internal-eyebrow">{{ ('project.status.' ~ project.status)|trans({}, 'commercial') }}</p>
         <h1>{{ project.title }}</h1>
-        <p>{{ project.organization.name }}</p>
+        <p>{{ project.organization ? project.organization.name : (project.request ? project.request.organizationName : '') }}</p>
     </section>
     <div class="commercial-request-layout">
         <div class="commercial-request-side">
@@ -24,6 +24,7 @@
             {% endif %}
             <section class="internal-card">
                 <h2>{{ 'project.organization'|trans({}, 'commercial') }}</h2>
+                {% if project.organization %}
                 <strong>{{ project.organization.name }}</strong>
                 <p>{{ project.organization.municipalitySummary }}</p>
                 <div class="commercial-contact-links">
@@ -93,6 +94,19 @@
                         <button class="internal-button internal-button--secondary" type="submit">{{ 'project.contact_create_save'|trans({}, 'commercial') }}</button>
                     </form>
                 </details>
+                {% else %}
+                    <p>{{ 'project.create.provisional_hint'|trans({}, 'commercial') }}</p>
+                    {% if project.request %}
+                        <p>{{ project.request.organizationName ?: project.request.senderName }} · {{ project.request.emailAddress }}</p>
+                        {% if project.request.phone %}<p>{{ project.request.phone }}</p>{% endif %}
+                        <p>{{ project.request.message|nl2br }}</p>
+                    {% endif %}
+                    {{ form_start(organizationForm, {action: path('commercial_project_organization', {id: project.id}), attr: {class: 'internal-form'}}) }}
+                        {{ form_row(organizationForm.organization) }}
+                        {{ form_row(organizationForm.newOrganizationName) }}
+                        {{ form_row(organizationForm.submit) }}
+                    {{ form_end(organizationForm) }}
+                {% endif %}
                 {% if project.request %}<a href="{{ path('commercial_request_show', {id: project.request.id}) }}">{{ 'project.original_request'|trans({}, 'commercial') }}</a>{% endif %}
             </section>
             <section class="internal-card">

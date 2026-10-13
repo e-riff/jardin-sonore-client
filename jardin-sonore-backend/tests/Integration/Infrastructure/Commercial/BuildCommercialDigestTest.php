@@ -51,6 +51,7 @@ final class BuildCommercialDigestTest extends KernelTestCase
         $organizationEntity = (new OrganizationEntity())->setName('Structure digest');
         $requestEntity = new CommercialRequestEntity('manual', 'Contact digest', '', 'Nouvelle demande', new DateTimeImmutable('2026-10-09'));
         $projectWithoutActionEntity = new CommercialProjectEntity('Sans action', $organizationEntity, null, new DateTimeImmutable('2026-10-09'));
+        $provisionalProjectEntity = new CommercialProjectEntity('Sans structure liée', null, $requestEntity, new DateTimeImmutable('2026-10-09'));
         $projectWithInvoiceEntity = new CommercialProjectEntity('Avec facture', $organizationEntity, null, new DateTimeImmutable('2026-10-09'));
         $projectWithInvoiceEntity->setStatus(CommercialProjectEntity::STATUS_CONFIRMED);
         $invoiceEntity = new CommercialInvoiceEntity($projectWithInvoiceEntity, 'DIG-' . bin2hex(random_bytes(5)), 10000, new DateTimeImmutable('2026-09-01'));
@@ -58,7 +59,7 @@ final class BuildCommercialDigestTest extends KernelTestCase
         $invoiceEntity->setReminderAction($reminderActionEntity);
         $projectWithInvoiceEntity->addInvoice($invoiceEntity);
         $projectWithInvoiceEntity->addAction($reminderActionEntity);
-        foreach ([$organizationEntity, $requestEntity, $projectWithoutActionEntity, $projectWithInvoiceEntity] as $entity) {
+        foreach ([$organizationEntity, $requestEntity, $projectWithoutActionEntity, $provisionalProjectEntity, $projectWithInvoiceEntity] as $entity) {
             $entityManager->persist($entity);
         }
         $entityManager->flush();
@@ -67,6 +68,7 @@ final class BuildCommercialDigestTest extends KernelTestCase
         $mondayDigest = $builder->forDate(new DateTimeImmutable('2026-10-12'));
         self::assertContains($requestEntity, $mondayDigest->requests);
         self::assertContains($projectWithoutActionEntity, $mondayDigest->withoutAction);
+        self::assertContains($provisionalProjectEntity, $mondayDigest->withoutAction);
         self::assertContains($invoiceEntity, $mondayDigest->overdueInvoices);
         self::assertNotContains($reminderActionEntity, $mondayDigest->dueActions);
 
@@ -76,6 +78,8 @@ final class BuildCommercialDigestTest extends KernelTestCase
         self::assertStringContainsString('/commercial/requests/' . $requestEntity->getId(), $html);
         self::assertStringContainsString('/commercial/requests/' . $requestEntity->getId(), $text);
         self::assertStringNotContainsString('Relancer facture', $html);
+        self::assertStringContainsString('Sans structure liée', $html);
+        self::assertStringContainsString('Sans structure liée', $text);
 
         $tuesdayDigest = $builder->forDate(new DateTimeImmutable('2026-10-13'));
         self::assertSame([], $tuesdayDigest->withoutAction);

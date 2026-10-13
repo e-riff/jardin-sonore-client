@@ -5,15 +5,15 @@
 {% endfor %}
 {% endif %}
 {% if digest.dueActions %}{{ 'actions'|trans({}, 'commercial_digest') }}
-{% for action in digest.dueActions %}- {{ action.title }} ({{ action.dueOn|date('d/m/Y') }}) — {{ action.project.organization.name }} — {{ url('commercial_project_show', {id: action.project.id}) }}
+{% for action in digest.dueActions %}- {{ action.title }} ({{ action.dueOn|date('d/m/Y') }}) — {{ action.project.organization ? action.project.organization.name : action.project.title }} — {{ url('commercial_project_show', {id: action.project.id}) }}
 {% endfor %}
 {% endif %}
 {% if digest.overdueInvoices %}{{ 'invoices'|trans({}, 'commercial_digest') }}
-{% for invoice in digest.overdueInvoices %}- {{ invoice.reference }} — {{ invoice.project.organization.name }} — {{ (invoice.amountCents / 100)|number_format(2, ',', ' ') }} € — {{ url('commercial_invoice_index') }}#invoice-{{ invoice.id }}
+{% for invoice in digest.overdueInvoices %}- {{ invoice.reference }} — {{ invoice.project.organization ? invoice.project.organization.name : invoice.project.title }} — {{ (invoice.amountCents / 100)|number_format(2, ',', ' ') }} € — {{ url('commercial_invoice_index') }}#invoice-{{ invoice.id }}
 {% endfor %}
 {% endif %}
 {% if digest.withoutAction %}{{ 'without_action'|trans({}, 'commercial_digest') }}
-{% for project in digest.withoutAction %}- {{ project.title }} — {{ project.organization.name }} — {{ url('commercial_project_show', {id: project.id}) }}
+{% for project in digest.withoutAction %}- {{ project.title }}{% if project.organization %} — {{ project.organization.name }}{% endif %} — {{ url('commercial_project_show', {id: project.id}) }}
 {% endfor %}
 {% endif %}
 {{ 'open_dashboard'|trans({}, 'commercial_digest') }} : {{ url('commercial_dashboard') }}

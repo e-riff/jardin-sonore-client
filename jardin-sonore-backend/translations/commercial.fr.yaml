@@ -82,6 +82,37 @@ qualification:
   unavailable: Cette demande est classée sans suite et ne peut plus produire de dossier.
 project:
   back: Retour aux demandes
+  create:
+    heading: Nouveau dossier
+    back: Retour au suivi clients
+    structure_step: Structure et personne
+    organization: Structure existante
+    organization_placeholder: Rechercher une structure
+    new_organization: Ou créer une structure
+    person: Personne (facultatif)
+    person_placeholder: Choisir une personne de la structure
+    add_person: Créer une personne (facultatif)
+    person_first_name: Prénom
+    person_last_name: Nom
+    person_role: Fonction (facultatif)
+    first_step: Premier échange
+    first_message: Message reçu ou résumé
+    initial_status: État du dossier
+    next_step: Prochaine étape
+    add_task: Ajouter une tâche
+    task_title: À faire
+    task_due_on: Quand ?
+    customize_title: Donner un titre au dossier (facultatif)
+    title: Titre du dossier
+    save: Créer le dossier
+    attach: Rattacher la structure
+    provisional_hint: Structure à rattacher. Les coordonnées reçues restent conservées telles quelles.
+    choose_organization: Choisir une structure existante ou en créer une, mais pas les deux.
+    organization_inactive: Cette structure est inactive.
+    person_incomplete: Indiquer le prénom et le nom pour créer la personne.
+    person_invalid: La personne choisie doit appartenir à cette structure et être active.
+    person_conflict: Choisir une personne existante ou en créer une, mais pas les deux.
+    task_incomplete: Indiquer un libellé et une date pour la tâche.
   organization: Structure
   people: Interlocuteurs
   history: Historique
@@ -122,6 +153,8 @@ note:
   due_required: Indiquer une date pour la prochaine action.
   save: Enregistrer la note
 event:
+  initial_message: Premier message reçu
+  organization_linked: Structure rattachée
   request_qualified: Demande qualifiée
   note: Note
   action_created: Action créée
