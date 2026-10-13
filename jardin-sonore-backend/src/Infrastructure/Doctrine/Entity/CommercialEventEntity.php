@@ -75,6 +75,13 @@ class CommercialEventEntity
         return $this->invoice;
     }
 
+    /** @param array<string, string> $metadata */
+    public function revise(?string $content, array $metadata): void
+    {
+        $this->content = $content;
+        $this->metadata = $metadata;
+    }
+
     public function linkAction(CommercialActionEntity $actionEntity): void
     {
         if ($actionEntity->getProject() !== $this->project) {

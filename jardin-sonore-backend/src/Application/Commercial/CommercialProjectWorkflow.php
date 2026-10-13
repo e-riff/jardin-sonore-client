@@ -55,12 +55,13 @@ final readonly class CommercialProjectWorkflow
         if (CommercialProjectEntity::STATUS_DISCUSSION !== $projectEntity->getStatus()) {
             throw new DomainException('Only a project in discussion can be closed without result.');
         }
+        $this->assertNoUnpaidInvoices($projectEntity);
 
         $now = $this->clock->now();
         foreach ($projectEntity->getActions() as $actionEntity) {
             if (CommercialActionEntity::STATUS_OPEN === $actionEntity->getStatus()) {
                 $actionEntity->resolve(CommercialActionEntity::STATUS_CANCELED, $now);
-                $projectEntity->recordEvent('action_canceled', $now, $actionEntity->getTitle());
+                $projectEntity->recordEvent('action_canceled', $now, $actionEntity->getTitle())->linkAction($actionEntity);
             }
         }
         $projectEntity->setStatus(CommercialProjectEntity::STATUS_WITHOUT_RESULT, $now);
@@ -77,14 +78,58 @@ final readonly class CommercialProjectWorkflow
                 throw new DomainException('The project still has an open action.');
             }
         }
+        $this->assertNoUnpaidInvoices($projectEntity);
+
+        $now = $this->clock->now();
+        $projectEntity->setStatus(CommercialProjectEntity::STATUS_COMPLETED, $now);
+        $projectEntity->recordEvent('project_completed', $now);
+    }
+
+    public function changeStatusManually(CommercialProjectEntity $projectEntity, string $status): void
+    {
+        if (!in_array($status, [CommercialProjectEntity::STATUS_DISCUSSION, CommercialProjectEntity::STATUS_CONFIRMED, CommercialProjectEntity::STATUS_COMPLETED, CommercialProjectEntity::STATUS_WITHOUT_RESULT], true)) {
+            throw new DomainException('Unknown project status.');
+        }
+        $previousStatus = $projectEntity->getStatus();
+        if ($previousStatus === $status) {
+            return;
+        }
+        if (CommercialProjectEntity::STATUS_COMPLETED === $status) {
+            $this->complete($projectEntity);
+
+            return;
+        }
+        if (CommercialProjectEntity::STATUS_CONFIRMED === $status && CommercialProjectEntity::STATUS_DISCUSSION === $previousStatus) {
+            $this->confirm($projectEntity);
+
+            return;
+        }
+        if (CommercialProjectEntity::STATUS_WITHOUT_RESULT === $status && CommercialProjectEntity::STATUS_DISCUSSION === $previousStatus) {
+            $this->closeWithoutResult($projectEntity);
+
+            return;
+        }
+
+        $now = $this->clock->now();
+        if (CommercialProjectEntity::STATUS_WITHOUT_RESULT === $status) {
+            $this->assertNoUnpaidInvoices($projectEntity);
+            foreach ($projectEntity->getActions() as $actionEntity) {
+                if (CommercialActionEntity::STATUS_OPEN === $actionEntity->getStatus()) {
+                    $actionEntity->resolve(CommercialActionEntity::STATUS_CANCELED, $now);
+                    $projectEntity->recordEvent('action_canceled', $now, $actionEntity->getTitle())->linkAction($actionEntity);
+                }
+            }
+        }
+        $projectEntity->setStatus($status, in_array($status, [CommercialProjectEntity::STATUS_WITHOUT_RESULT, CommercialProjectEntity::STATUS_COMPLETED], true) ? $now : null);
+        $projectEntity->recordEvent('project_status_changed', $now, null, ['old_status' => $previousStatus, 'new_status' => $status]);
+    }
+
+    private function assertNoUnpaidInvoices(CommercialProjectEntity $projectEntity): void
+    {
         foreach ($projectEntity->getInvoices() as $invoiceEntity) {
             if (null === $invoiceEntity->getPaidOn()) {
                 throw new DomainException('The project still has an unpaid invoice.');
             }
         }
-
-        $now = $this->clock->now();
-        $projectEntity->setStatus(CommercialProjectEntity::STATUS_COMPLETED, $now);
-        $projectEntity->recordEvent('project_completed', $now);
     }
 }

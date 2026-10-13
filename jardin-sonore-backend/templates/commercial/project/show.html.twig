@@ -111,6 +111,20 @@
             </section>
             <section class="internal-card">
                 <h2>{{ 'project.actions'|trans({}, 'commercial') }}</h2>
+                {% if project.status in ['discussion', 'confirmed'] %}<details>
+                    <summary class="internal-button internal-button--secondary">{{ 'project.add_action'|trans({}, 'commercial') }}</summary>
+                    <form method="post" action="{{ path('commercial_project_action_create', {id: project.id}) }}" class="internal-form">
+                        <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_' ~ project.id ~ '_action_create') }}">
+                        <label>{{ 'action.title'|trans({}, 'commercial') }} <input name="title" maxlength="255" required></label>
+                        <label>{{ 'action.due_on'|trans({}, 'commercial') }} <input type="date" name="dueOn" value="{{ 'now'|date('Y-m-d') }}" required></label>
+                        {% if project.people is not empty %}<label>{{ 'action.person'|trans({}, 'commercial') }}
+                            <select name="personId"><option value="">{{ 'action.no_person'|trans({}, 'commercial') }}</option>
+                                {% for projectPerson in project.people %}{% if projectPerson.current and projectPerson.person.active %}<option value="{{ projectPerson.person.id }}">{{ projectPerson.person }}</option>{% endif %}{% endfor %}
+                            </select>
+                        </label>{% endif %}
+                        <button class="internal-button" type="submit">{{ 'project.add_action_save'|trans({}, 'commercial') }}</button>
+                    </form>
+                </details>{% endif %}
                 {% for action in project.actions %}
                     {% if action.status == 'open' %}
                         <details class="commercial-action">
@@ -135,6 +149,7 @@
                             </form>
                             <form method="post" action="{{ path('commercial_action_change', {id: action.id, operation: 'complete'}) }}">
                                 <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ action.id ~ '_complete') }}">
+                                <label>{{ 'action.completed_title'|trans({}, 'commercial') }} <input name="title" value="{{ action.title }}" maxlength="255" required></label>
                                 <label>{{ 'action.note'|trans({}, 'commercial') }} <textarea name="note"></textarea></label>
                                 <button class="internal-button" type="submit">{{ 'action.complete'|trans({}, 'commercial') }}</button>
                             </form>
@@ -205,27 +220,64 @@
             </section>
             <section class="internal-card">
                 <h2>{{ 'project.history'|trans({}, 'commercial') }}</h2>
+                <details>
+                    <summary class="internal-button internal-button--secondary">{{ 'project.add_event'|trans({}, 'commercial') }}</summary>
+                    <form method="post" action="{{ path('commercial_project_event_create', {id: project.id}) }}" class="internal-form">
+                        <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_' ~ project.id ~ '_event_create') }}">
+                        <label>{{ 'note.content'|trans({}, 'commercial') }} <textarea name="content" maxlength="10000" required></textarea></label>
+                        {% if project.people is not empty %}<label>{{ 'note.person'|trans({}, 'commercial') }}
+                            <select name="personId"><option value="">{{ 'note.no_person'|trans({}, 'commercial') }}</option>
+                                {% for projectPerson in project.people %}{% if projectPerson.current and projectPerson.person.active %}<option value="{{ projectPerson.person.id }}">{{ projectPerson.person }}</option>{% endif %}{% endfor %}
+                            </select>
+                        </label>{% endif %}
+                        <button class="internal-button" type="submit">{{ 'project.add_event_save'|trans({}, 'commercial') }}</button>
+                    </form>
+                </details>
                 {% for event in project.events|reverse %}
                     <article>
                         <p class="internal-eyebrow">{{ event.occurredAt|date('d/m/Y H:i') }} · {{ ('event.' ~ event.type)|trans({}, 'commercial') }}</p>
+                        {% if event.type == 'action_completed' %}<strong>{{ event.action ? event.action.title : event.metadata.action_title|default('') }}</strong>{% endif %}
                         {% if event.person %}<strong>{{ event.person }}</strong>{% endif %}
                         {% if event.content %}<p>{{ event.content|nl2br }}</p>{% endif %}
+                        {% if event.type == 'project_status_changed' %}<p>{{ ('project.status.' ~ event.metadata.old_status)|trans({}, 'commercial') }} → {{ ('project.status.' ~ event.metadata.new_status)|trans({}, 'commercial') }}</p>{% endif %}
+                        {% if event.type == 'action_completed' and event.action %}
+                            <details>
+                                <summary>{{ 'event.edit'|trans({}, 'commercial') }}</summary>
+                                <form method="post" action="{{ path('commercial_action_completed_edit', {id: event.action.id}) }}" class="internal-form">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ event.action.id ~ '_completed_edit') }}">
+                                    <label>{{ 'action.completed_title'|trans({}, 'commercial') }} <input name="title" value="{{ event.action.title }}" maxlength="255" required></label>
+                                    <label>{{ 'action.note'|trans({}, 'commercial') }} <textarea name="note" maxlength="10000">{{ event.content }}</textarea></label>
+                                    <button class="internal-button internal-button--secondary" type="submit">{{ 'event.save'|trans({}, 'commercial') }}</button>
+                                </form>
+                            </details>
+                        {% endif %}
+                        {% if event.type in ['note', 'initial_message'] and event.action is null and event.quote is null and event.invoice is null %}
+                            <details>
+                                <summary>{{ 'event.edit'|trans({}, 'commercial') }}</summary>
+                                <form method="post" action="{{ path('commercial_project_event_edit', {id: project.id, eventId: event.id}) }}" class="internal-form">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_' ~ project.id ~ '_event_' ~ event.id ~ '_edit') }}">
+                                    <label>{{ 'note.content'|trans({}, 'commercial') }} <textarea name="content" maxlength="10000" required>{{ event.content }}</textarea></label>
+                                    <button class="internal-button internal-button--secondary" type="submit">{{ 'event.save'|trans({}, 'commercial') }}</button>
+                                </form>
+                            </details>
+                        {% endif %}
                     </article>
                 {% endfor %}
             </section>
-            {% if project.status == 'discussion' %}
-                {% for status, label in {confirm: 'project.confirm', without_result: 'project.close_without_result'} %}
-                    <form method="post" action="{{ path('commercial_project_status', {id: project.id, status: status}) }}">
-                        <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_status_' ~ project.id ~ '_' ~ status) }}">
-                        <button class="internal-button internal-button--secondary" type="submit">{{ label|trans({}, 'commercial') }}</button>
-                    </form>
-                {% endfor %}
-            {% elseif project.status == 'confirmed' %}
-                <form method="post" action="{{ path('commercial_project_status', {id: project.id, status: 'complete'}) }}">
-                    <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_status_' ~ project.id ~ '_complete') }}">
-                    <button class="internal-button internal-button--secondary" type="submit">{{ 'project.complete'|trans({}, 'commercial') }}</button>
+            <section class="internal-card">
+                <h2>{{ 'project.change_status'|trans({}, 'commercial') }}</h2>
+                <form method="post" action="{{ path('commercial_project_status_manual', {id: project.id}) }}" class="internal-form">
+                    <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_status_' ~ project.id ~ '_manual') }}">
+                    <label>{{ 'project.status_label'|trans({}, 'commercial') }}
+                        <select name="status">
+                            {% for status in ['discussion', 'confirmed', 'completed', 'without_result'] %}
+                                <option value="{{ status }}" {% if project.status == status %}selected{% endif %}>{{ ('project.status.' ~ status)|trans({}, 'commercial') }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <button class="internal-button internal-button--secondary" type="submit">{{ 'project.change_status_save'|trans({}, 'commercial') }}</button>
                 </form>
-            {% endif %}
+            </section>
         </div>
     </div>
 {% endblock %}

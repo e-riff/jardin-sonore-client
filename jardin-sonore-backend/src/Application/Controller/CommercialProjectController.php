@@ -10,12 +10,14 @@ use App\Application\Form\CommercialNoteType;
 use App\Application\Form\CommercialProjectCreateType;
 use App\Application\Form\CommercialProjectOrganizationType;
 use App\Infrastructure\Doctrine\Entity\CommercialActionEntity;
+use App\Infrastructure\Doctrine\Entity\CommercialEventEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\PersonEntity;
 use DateTimeImmutable;
 use DateTimeZone;
 use Doctrine\ORM\EntityManagerInterface;
+use DomainException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Clock\ClockInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -166,7 +168,11 @@ final class CommercialProjectController extends AbstractController
         $form = $this->createForm(CommercialNoteType::class, null, ['people' => $this->currentPeople($projectEntity)]);
         $form->handleRequest($request);
         if (!$form->isSubmitted() || !$form->isValid()) {
-            return $this->render('commercial/project/show.html.twig', ['project' => $projectEntity, 'noteForm' => $form], new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY));
+            return $this->render('commercial/project/show.html.twig', [
+                'project' => $projectEntity,
+                'noteForm' => $form,
+                'organizationForm' => null === $projectEntity->getOrganization() ? $this->createForm(CommercialProjectOrganizationType::class) : null,
+            ], new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY));
         }
 
         /** @var array<string, mixed> $data */
@@ -180,13 +186,98 @@ final class CommercialProjectController extends AbstractController
                 'project' => $projectEntity,
                 'noteForm' => $form,
                 'noteError' => 'note.due_required',
+                'organizationForm' => null === $projectEntity->getOrganization() ? $this->createForm(CommercialProjectOrganizationType::class) : null,
             ], new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY));
         }
 
         $projectEntity->recordEvent('note', new DateTimeImmutable(), $content, [], $personEntity instanceof PersonEntity ? $personEntity : null);
         if ('' !== $actionTitle) {
-            $projectEntity->addAction(new CommercialActionEntity($projectEntity, $actionTitle, $dueOn, null, $personEntity instanceof PersonEntity ? $personEntity : null));
-            $projectEntity->recordEvent('action_created', new DateTimeImmutable(), $actionTitle);
+            $actionEntity = new CommercialActionEntity($projectEntity, $actionTitle, $dueOn, null, $personEntity instanceof PersonEntity ? $personEntity : null);
+            $projectEntity->addAction($actionEntity);
+            $projectEntity->recordEvent('action_created', new DateTimeImmutable(), $actionTitle)->linkAction($actionEntity);
+        }
+        $entityManager->flush();
+
+        return $this->redirectToRoute('commercial_project_show', ['id' => $id]);
+    }
+
+    #[Route('/{id}/actions', name: 'action_create', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function createAction(int $id, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        if (!$this->isCsrfTokenValid("commercial_project_{$id}_action_create", $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+        $projectEntity = $this->findProject($id, $entityManager);
+        $title = trim($request->request->getString('title'));
+        $dueOnRaw = $request->request->getString('dueOn');
+        $dueOn = DateTimeImmutable::createFromFormat('!Y-m-d', $dueOnRaw);
+        $personId = $request->request->getInt('personId');
+        $personEntity = 0 < $personId ? $entityManager->find(PersonEntity::class, $personId) : null;
+        if (in_array($projectEntity->getStatus(), [CommercialProjectEntity::STATUS_COMPLETED, CommercialProjectEntity::STATUS_WITHOUT_RESULT], true)
+            || '' === $title || 255 < mb_strlen($title) || !$dueOn instanceof DateTimeImmutable || $dueOn->format('Y-m-d') !== $dueOnRaw
+            || (0 < $personId && (!$personEntity instanceof PersonEntity || !in_array($personEntity, $this->currentPeople($projectEntity), true)))) {
+            return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        $projectEntity->addAction(new CommercialActionEntity($projectEntity, $title, $dueOn, null, $personEntity instanceof PersonEntity ? $personEntity : null));
+        $entityManager->flush();
+
+        return $this->redirectToRoute('commercial_project_show', ['id' => $id]);
+    }
+
+    #[Route('/{id}/events', name: 'event_create', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function createEvent(int $id, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        if (!$this->isCsrfTokenValid("commercial_project_{$id}_event_create", $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+        $projectEntity = $this->findProject($id, $entityManager);
+        $content = trim($request->request->getString('content'));
+        $personId = $request->request->getInt('personId');
+        $personEntity = 0 < $personId ? $entityManager->find(PersonEntity::class, $personId) : null;
+        if ('' === $content || 10000 < mb_strlen($content)
+            || (0 < $personId && (!$personEntity instanceof PersonEntity || !in_array($personEntity, $this->currentPeople($projectEntity), true)))) {
+            return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        $projectEntity->recordEvent('note', new DateTimeImmutable(), $content, [], $personEntity instanceof PersonEntity ? $personEntity : null);
+        $entityManager->flush();
+
+        return $this->redirectToRoute('commercial_project_show', ['id' => $id]);
+    }
+
+    #[Route('/{id}/events/{eventId}/edit', name: 'event_edit', requirements: ['id' => '\d+', 'eventId' => '\d+'], methods: ['POST'])]
+    public function editEvent(int $id, int $eventId, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        if (!$this->isCsrfTokenValid("commercial_project_{$id}_event_{$eventId}_edit", $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+        $projectEntity = $this->findProject($id, $entityManager);
+        $eventEntity = $entityManager->find(CommercialEventEntity::class, $eventId);
+        if (!$eventEntity instanceof CommercialEventEntity || $eventEntity->getProject() !== $projectEntity) {
+            throw $this->createNotFoundException();
+        }
+        $content = trim($request->request->getString('content'));
+        if (!in_array($eventEntity->getType(), ['note', 'initial_message'], true)
+            || null !== $eventEntity->getAction() || null !== $eventEntity->getQuote() || null !== $eventEntity->getInvoice()
+            || '' === $content || 10000 < mb_strlen($content)) {
+            return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        $eventEntity->revise($content, $eventEntity->getMetadata());
+        $entityManager->flush();
+
+        return $this->redirectToRoute('commercial_project_show', ['id' => $id]);
+    }
+
+    #[Route('/{id}/status', name: 'status_manual', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function manualStatus(int $id, Request $request, EntityManagerInterface $entityManager, CommercialProjectWorkflow $workflow): Response
+    {
+        if (!$this->isCsrfTokenValid("commercial_project_status_{$id}_manual", $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+        $projectEntity = $this->findProject($id, $entityManager);
+        try {
+            $workflow->changeStatusManually($projectEntity, $request->request->getString('status'));
+        } catch (DomainException) {
+            return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
         $entityManager->flush();
 

@@ -9,6 +9,7 @@ use App\Infrastructure\Doctrine\Entity\CommercialActionEntity;
 use App\Infrastructure\Doctrine\Entity\PersonEntity;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use DomainException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,6 +18,30 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/commercial/actions', name: 'commercial_action_')]
 final class CommercialActionController extends AbstractController
 {
+    #[Route('/{id}/completed/edit', name: 'completed_edit', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function editCompleted(int $id, Request $request, EntityManagerInterface $entityManager, CommercialActionWorkflow $workflow): Response
+    {
+        if (!$this->isCsrfTokenValid("commercial_action_{$id}_completed_edit", $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+        $actionEntity = $entityManager->find(CommercialActionEntity::class, $id);
+        if (!$actionEntity instanceof CommercialActionEntity) {
+            throw $this->createNotFoundException();
+        }
+        $note = trim($request->request->getString('note'));
+        if (10000 < mb_strlen($note)) {
+            return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        try {
+            $workflow->reviseCompleted($actionEntity, $request->request->getString('title'), '' === $note ? null : $note);
+        } catch (DomainException) {
+            return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        $entityManager->flush();
+
+        return $this->redirectToRoute('commercial_project_show', ['id' => $actionEntity->getProject()->getId()]);
+    }
+
     #[Route('/{id}/edit', name: 'edit', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function edit(int $id, Request $request, EntityManagerInterface $entityManager, CommercialActionWorkflow $workflow): Response
     {
@@ -66,17 +91,26 @@ final class CommercialActionController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        if ('complete' === $operation) {
-            $note = trim($request->request->getString('note'));
-            $workflow->complete($actionEntity, '' === $note ? null : $note);
-        } elseif ('cancel' === $operation) {
-            $workflow->cancel($actionEntity);
-        } else {
-            $dueOn = DateTimeImmutable::createFromFormat('!Y-m-d', $request->request->getString('dueOn'));
-            if (!$dueOn instanceof DateTimeImmutable) {
-                return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+        try {
+            if ('complete' === $operation) {
+                $note = trim($request->request->getString('note'));
+                $title = trim($request->request->getString('title', $actionEntity->getTitle()));
+                if ('' === $title || 255 < mb_strlen($title) || 10000 < mb_strlen($note)) {
+                    return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+                }
+                $workflow->complete($actionEntity, '' === $note ? null : $note, $title);
+            } elseif ('cancel' === $operation) {
+                $workflow->cancel($actionEntity);
+            } else {
+                $dueOnRaw = $request->request->getString('dueOn');
+                $dueOn = DateTimeImmutable::createFromFormat('!Y-m-d', $dueOnRaw);
+                if (!$dueOn instanceof DateTimeImmutable || $dueOn->format('Y-m-d') !== $dueOnRaw) {
+                    return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+                }
+                $workflow->postpone($actionEntity, $dueOn);
             }
-            $workflow->postpone($actionEntity, $dueOn);
+        } catch (DomainException) {
+            return new Response(status: Response::HTTP_CONFLICT);
         }
         $entityManager->flush();
 

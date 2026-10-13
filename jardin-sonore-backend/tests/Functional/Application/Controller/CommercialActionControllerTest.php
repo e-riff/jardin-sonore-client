@@ -49,8 +49,16 @@ final class CommercialActionControllerTest extends WebTestCase
 
         $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
         $token = $crawler->filterXPath('//form[contains(@action, "/complete")]/input[@name="_token"]')->attr('value');
-        $client->request('POST', '/commercial/actions/' . $actionEntity->getId() . '/complete', ['_token' => $token, 'note' => 'Réponse reçue']);
+        $client->request('POST', '/commercial/actions/' . $actionEntity->getId() . '/complete', ['_token' => $token, 'title' => 'Appeler la direction', 'note' => 'Réponse reçue']);
         self::assertResponseRedirects();
+
+        $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
+        $correctionToken = $crawler->filterXPath('//form[contains(@action, "/completed/edit")]/input[@name="_token"]')->attr('value');
+        $client->request('POST', '/commercial/actions/' . $actionEntity->getId() . '/completed/edit', ['_token' => $correctionToken, 'title' => 'Échange avec la direction', 'note' => 'Compte rendu corrigé']);
+        self::assertResponseRedirects();
+
+        $client->request('POST', '/commercial/actions/' . $actionEntity->getId() . '/complete', ['_token' => $token, 'note' => 'Doublon']);
+        self::assertResponseStatusCodeSame(409);
 
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
         $entityManager->clear();
@@ -58,7 +66,9 @@ final class CommercialActionControllerTest extends WebTestCase
         self::assertInstanceOf(CommercialActionEntity::class, $savedActionEntity);
         self::assertSame('2026-10-19', $savedActionEntity->getDueOn()->format('Y-m-d'));
         self::assertSame(CommercialActionEntity::STATUS_DONE, $savedActionEntity->getStatus());
+        self::assertSame('Échange avec la direction', $savedActionEntity->getTitle());
         self::assertCount(2, $savedActionEntity->getProject()->getEvents());
+        self::assertSame('Compte rendu corrigé', $savedActionEntity->getProject()->getEvents()->last()->getContent());
     }
 
     public function testOpenActionCanBeEditedWithoutLosingItsHistory(): void

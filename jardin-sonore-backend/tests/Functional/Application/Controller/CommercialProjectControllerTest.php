@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Tests\Functional\Application\Controller;
 
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
+use App\Infrastructure\Doctrine\Entity\CommercialActionEntity;
+use App\Infrastructure\Doctrine\Entity\CommercialEventEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialRequestEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
@@ -276,5 +278,122 @@ final class CommercialProjectControllerTest extends WebTestCase
         self::assertCount(1, $savedProjectEntity->getActions());
         self::assertSame('Envoyer les dates', $savedProjectEntity->getActions()->first()->getTitle());
         self::assertSame('Appel avec la direction', $savedProjectEntity->getEvents()->filter(static fn ($eventEntity): bool => 'note' === $eventEntity->getType())->first()->getContent());
+    }
+
+    public function testTaskAndTimelineEntryCanBeCreatedSeparately(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(5));
+        $adminUserEntity = (new AdminUserEntity())->setEmail("project-quick-{$suffix}@example.test")->setPassword('unused');
+        $organizationEntity = (new OrganizationEntity())->setName("Crèche {$suffix}");
+        $projectEntity = new CommercialProjectEntity('Ateliers', $organizationEntity, null, new DateTimeImmutable());
+        foreach ([$adminUserEntity, $organizationEntity, $projectEntity] as $entity) {
+            $entityManager->persist($entity);
+        }
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+
+        $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
+        $taskToken = $crawler->filterXPath('//form[contains(@action, "/actions")]/input[@name="_token"]')->attr('value');
+        $eventToken = $crawler->filterXPath('//form[contains(@action, "/events") and not(contains(@action, "/edit"))]/input[@name="_token"]')->attr('value');
+        $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/actions', ['_token' => $taskToken, 'title' => 'Envoyer le devis', 'dueOn' => '2026-10-16']);
+        self::assertResponseRedirects();
+        $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/events', ['_token' => $eventToken, 'content' => 'Appel avec la direction']);
+        self::assertResponseRedirects();
+
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $entityManager->clear();
+        $savedProjectEntity = $entityManager->find(CommercialProjectEntity::class, $projectEntity->getId());
+        self::assertCount(1, $savedProjectEntity->getActions());
+        self::assertSame('Envoyer le devis', $savedProjectEntity->getActions()->first()->getTitle());
+        self::assertCount(1, $savedProjectEntity->getEvents()->filter(static fn ($eventEntity): bool => 'note' === $eventEntity->getType()));
+        self::assertSame('Appel avec la direction', $savedProjectEntity->getEvents()->last()->getContent());
+    }
+
+    public function testTimelineCorrectionKeepsItsDateAndRejectsAutomaticEvents(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(5));
+        $adminUserEntity = (new AdminUserEntity())->setEmail("project-event-{$suffix}@example.test")->setPassword('unused');
+        $organizationEntity = (new OrganizationEntity())->setName("Crèche {$suffix}");
+        $projectEntity = new CommercialProjectEntity('Ateliers', $organizationEntity, null, new DateTimeImmutable());
+        $occurredAt = new DateTimeImmutable('2026-10-09 10:00:00');
+        $noteEntity = $projectEntity->recordEvent('note', $occurredAt, 'Ancienne saisie');
+        $automaticEventEntity = $projectEntity->recordEvent('project_confirmed', $occurredAt);
+        foreach ([$adminUserEntity, $organizationEntity, $projectEntity] as $entity) {
+            $entityManager->persist($entity);
+        }
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+
+        $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
+        $token = $crawler->filterXPath('//form[contains(@action, "/events/' . $noteEntity->getId() . '/edit")]/input[@name="_token"]')->attr('value');
+        self::assertCount(0, $crawler->filterXPath('//form[contains(@action, "/events/' . $automaticEventEntity->getId() . '/edit")]'));
+        $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/events/' . $noteEntity->getId() . '/edit', ['_token' => $token, 'content' => 'Saisie corrigée']);
+        self::assertResponseRedirects();
+        $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/events/' . $automaticEventEntity->getId() . '/edit', ['_token' => 'invalid', 'content' => 'Autre']);
+        self::assertResponseStatusCodeSame(403);
+
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $entityManager->clear();
+        $savedNoteEntity = $entityManager->find(CommercialEventEntity::class, $noteEntity->getId());
+        self::assertSame('Saisie corrigée', $savedNoteEntity->getContent());
+        self::assertSame($occurredAt->format('Y-m-d H:i:s'), $savedNoteEntity->getOccurredAt()->format('Y-m-d H:i:s'));
+    }
+
+    public function testManualStatusCanBeChangedAndReopened(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(5));
+        $adminUserEntity = (new AdminUserEntity())->setEmail("project-status-{$suffix}@example.test")->setPassword('unused');
+        $organizationEntity = (new OrganizationEntity())->setName("Crèche {$suffix}");
+        $projectEntity = new CommercialProjectEntity('Ateliers', $organizationEntity, null, new DateTimeImmutable());
+        $actionEntity = new CommercialActionEntity($projectEntity, 'Relancer', new DateTimeImmutable('2026-10-16'));
+        $projectEntity->addAction($actionEntity);
+        foreach ([$adminUserEntity, $organizationEntity, $projectEntity] as $entity) {
+            $entityManager->persist($entity);
+        }
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+
+        $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
+        $token = $crawler->filterXPath('//form[contains(@action, "/status") and not(contains(@action, "/status/"))]/input[@name="_token"]')->attr('value');
+        $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/status', ['_token' => $token, 'status' => 'without_result']);
+        self::assertResponseRedirects();
+        $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/status', ['_token' => $token, 'status' => 'discussion']);
+        self::assertResponseRedirects();
+
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $entityManager->clear();
+        $savedProjectEntity = $entityManager->find(CommercialProjectEntity::class, $projectEntity->getId());
+        self::assertSame(CommercialProjectEntity::STATUS_DISCUSSION, $savedProjectEntity->getStatus());
+        self::assertSame(CommercialActionEntity::STATUS_CANCELED, $savedProjectEntity->getActions()->first()->getStatus());
+    }
+
+    public function testInvalidNoteOnProvisionalDossierReturnsValidationResponse(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(5));
+        $adminUserEntity = (new AdminUserEntity())->setEmail("project-provisional-note-{$suffix}@example.test")->setPassword('unused');
+        $requestEntity = new CommercialRequestEntity('site', 'Camille', 'camille@example.test', 'Demande initiale', new DateTimeImmutable());
+        $projectEntity = new CommercialProjectEntity('Dossier provisoire', null, $requestEntity, new DateTimeImmutable());
+        $requestEntity->addProject($projectEntity);
+        $entityManager->persist($adminUserEntity);
+        $entityManager->persist($requestEntity);
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+
+        $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
+        $form = $crawler->selectButton('Enregistrer la note')->form();
+        $form['commercial_note[content]'] = 'Échange noté';
+        $form['commercial_note[nextActionTitle]'] = 'Relancer';
+        $form['commercial_note[nextActionDueOn]'] = '';
+        $client->submit($form);
+
+        self::assertResponseStatusCodeSame(422);
     }
 }
