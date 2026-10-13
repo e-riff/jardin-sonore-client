@@ -16,13 +16,42 @@ final readonly class CommercialActionWorkflow
     {
     }
 
-    public function complete(CommercialActionEntity $actionEntity, ?string $note): void
+    public function complete(CommercialActionEntity $actionEntity, ?string $note, ?string $correctedTitle = null): void
     {
         $this->assertOpen($actionEntity);
 
+        if (null !== $correctedTitle) {
+            $correctedTitle = trim($correctedTitle);
+            if ('' === $correctedTitle || 255 < mb_strlen($correctedTitle)) {
+                throw new DomainException('A completed action needs a valid title.');
+            }
+            $actionEntity->revise($correctedTitle, $actionEntity->getDueOn(), $actionEntity->getDetails(), $actionEntity->getPerson());
+        }
+
         $now = $this->clock->now();
         $actionEntity->resolve(CommercialActionEntity::STATUS_DONE, $now);
-        $actionEntity->getProject()->recordEvent('action_completed', $now, $note, ['action_title' => $actionEntity->getTitle()], $actionEntity->getPerson());
+        $actionEntity->getProject()->recordEvent('action_completed', $now, $note, ['action_title' => $actionEntity->getTitle()], $actionEntity->getPerson())->linkAction($actionEntity);
+    }
+
+    public function reviseCompleted(CommercialActionEntity $actionEntity, string $title, ?string $note): void
+    {
+        if (CommercialActionEntity::STATUS_DONE !== $actionEntity->getStatus()) {
+            throw new DomainException('Only a completed action can be corrected.');
+        }
+        $title = trim($title);
+        if ('' === $title || 255 < mb_strlen($title)) {
+            throw new DomainException('A completed action needs a valid title.');
+        }
+        foreach ($actionEntity->getProject()->getEvents() as $eventEntity) {
+            if ('action_completed' === $eventEntity->getType() && $eventEntity->getAction() === $actionEntity) {
+                $actionEntity->revise($title, $actionEntity->getDueOn(), $actionEntity->getDetails(), $actionEntity->getPerson());
+                $eventEntity->revise($note, [...$eventEntity->getMetadata(), 'action_title' => $title]);
+
+                return;
+            }
+        }
+
+        throw new DomainException('The completed action has no linked timeline entry.');
     }
 
     public function postpone(CommercialActionEntity $actionEntity, DateTimeImmutable $dueOn): void
@@ -38,7 +67,7 @@ final readonly class CommercialActionWorkflow
         $actionEntity->getProject()->recordEvent('action_postponed', $this->clock->now(), null, [
             'old_due_on' => $oldDueOn->format('Y-m-d'),
             'new_due_on' => $dueOn->format('Y-m-d'),
-        ]);
+        ])->linkAction($actionEntity);
     }
 
     public function cancel(CommercialActionEntity $actionEntity): void
@@ -47,7 +76,7 @@ final readonly class CommercialActionWorkflow
 
         $now = $this->clock->now();
         $actionEntity->resolve(CommercialActionEntity::STATUS_CANCELED, $now);
-        $actionEntity->getProject()->recordEvent('action_canceled', $now, $actionEntity->getTitle());
+        $actionEntity->getProject()->recordEvent('action_canceled', $now, $actionEntity->getTitle())->linkAction($actionEntity);
     }
 
     public function revise(CommercialActionEntity $actionEntity, string $title, DateTimeImmutable $dueOn, ?string $details, ?PersonEntity $personEntity): void
@@ -64,7 +93,7 @@ final readonly class CommercialActionWorkflow
             'old_title' => $oldTitle,
             'old_due_on' => $oldDueOn->format('Y-m-d'),
             'new_due_on' => $dueOn->format('Y-m-d'),
-        ], $personEntity);
+        ], $personEntity)->linkAction($actionEntity);
     }
 
     private function assertOpen(CommercialActionEntity $actionEntity): void

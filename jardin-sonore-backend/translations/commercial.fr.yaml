@@ -117,6 +117,13 @@ project:
   people: Interlocuteurs
   history: Historique
   actions: Actions à faire
+  add_action: + Ajouter une tâche
+  add_action_save: Ajouter la tâche
+  add_event: + Ajouter au fil
+  add_event_save: Ajouter au fil
+  change_status: État du dossier
+  status_label: État
+  change_status_save: Changer l’état
   no_actions: Aucune action ouverte.
   no_people: Aucun interlocuteur rattaché.
   contact_former: Ancien interlocuteur
@@ -153,6 +160,9 @@ note:
   due_required: Indiquer une date pour la prochaine action.
   save: Enregistrer la note
 event:
+  edit: Corriger
+  save: Enregistrer la correction
+  project_status_changed: État du dossier modifié
   initial_message: Premier message reçu
   organization_linked: Structure rattachée
   request_qualified: Demande qualifiée
@@ -171,6 +181,7 @@ event:
   contact_primary: Interlocuteur principal choisi
   contact_former: Interlocuteur sorti du dossier
 action:
+  completed_title: Titre de la tâche terminée
   edit: Modifier l’action
   title: Titre
   details: Précisions
