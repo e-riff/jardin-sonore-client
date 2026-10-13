@@ -67,6 +67,10 @@ final class CommercialContactApiControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(202);
         $firstResponse = json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
         self::assertIsInt($firstResponse['requestId'] ?? null);
+        $project = $this->connection->fetchAssociative('SELECT id, organization_id FROM commercial_project WHERE request_id = ?', [$firstResponse['requestId']]);
+        self::assertIsArray($project);
+        self::assertNull($project['organization_id']);
+        self::assertSame('Répondre', $this->connection->fetchOne('SELECT title FROM commercial_action WHERE project_id = ?', [(int) $project['id']]));
 
         $this->client->jsonRequest('POST', '/api/commercial/contact-requests', $payload, $server);
         self::assertResponseStatusCodeSame(202);
@@ -76,5 +80,7 @@ final class CommercialContactApiControllerTest extends WebTestCase
         $this->client->jsonRequest('POST', '/api/commercial/contact-requests', [...$payload, 'message' => 'Autre demande'], $server);
         self::assertResponseStatusCodeSame(409);
         self::assertSame(1, (int) $this->connection->fetchOne('SELECT COUNT(*) FROM commercial_request WHERE submission_key = ?', [$submissionKey]));
+        self::assertSame(1, (int) $this->connection->fetchOne('SELECT COUNT(*) FROM commercial_project WHERE request_id = ?', [$firstResponse['requestId']]));
+        self::assertSame(1, (int) $this->connection->fetchOne('SELECT COUNT(*) FROM commercial_action WHERE project_id = ?', [(int) $project['id']]));
     }
 }
