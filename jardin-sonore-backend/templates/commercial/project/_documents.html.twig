@@ -1,0 +1,52 @@
+<details class="commercial-dossier__documents" id="commercial-documents">
+    <summary>
+        {% include 'commercial/project/_icon.html.twig' with {name: 'folder'} only %}
+        <span>{{ 'project.documents_heading'|trans({}, 'commercial') }}</span>
+        {% if project.quotes|length + project.invoices|length > 0 %}<span class="commercial-dossier__count">{{ project.quotes|length + project.invoices|length }}</span>{% endif %}
+    </summary>
+    <div class="commercial-dossier__documents-content">
+        {% if driveLinks is defined %}
+            <p class="commercial-dossier__external-hint">{{ 'drive.external_hint'|trans({}, 'commercial') }}</p>
+            <div class="commercial-drive-links">
+                {% for link in [
+                    ['root', 'drive.root', 'folder'],
+                    ['quotes', 'drive.quotes', 'quote'],
+                    ['signedQuotes', 'drive.signed_quotes', 'signed'],
+                    ['invoices', 'drive.invoices', 'invoice']
+                ] %}
+                    <a href="{{ attribute(driveLinks, link[0]) }}" target="_blank" rel="noopener noreferrer">{% include 'commercial/project/_icon.html.twig' with {name: link[2]} only %}<span>{{ link[1]|trans({}, 'commercial') }}</span></a>
+                {% endfor %}
+            </div>
+        {% endif %}
+        <div class="commercial-dossier__document-groups">
+            <section aria-labelledby="commercial-quotes-heading">
+                <div class="commercial-dossier__document-heading"><h3 id="commercial-quotes-heading">{{ 'quote.heading'|trans({}, 'commercial') }}</h3><a href="{{ path('commercial_quote_new', {id: project.id}) }}">{{ 'quote.new'|trans({}, 'commercial') }}</a></div>
+                {% for quote in project.quotes %}
+                    <article class="commercial-dossier__document">
+                        {% include 'commercial/project/_icon.html.twig' with {name: quote.signedOn ? 'signed' : 'quote'} only %}
+                        <div><strong>{{ quote.reference }}</strong><span>{{ quote.filename }} · {{ (quote.amountCents / 100)|number_format(2, ',', ' ') }} € · {{ quote.sentOn|date('d/m/Y') }}</span>
+                            {% if quote.replaces %}<span>{{ 'quote.replacement'|trans({}, 'commercial') }} {{ quote.replaces.reference }}</span>{% endif %}
+                            <span class="commercial-dossier__document-state">{{ (quote.signedOn ? 'quote.status_signed' : 'quote.status_sent')|trans({}, 'commercial') }}{% if quote.signedOn %} · {{ quote.signedOn|date('d/m/Y') }}{% endif %}</span>
+                            {% if not quote.signedOn %}<details class="commercial-dossier__document-action"><summary>{% include 'commercial/project/_icon.html.twig' with {name: 'check'} only %} {{ 'quote.sign'|trans({}, 'commercial') }}</summary>
+                                <form method="post" action="{{ path('commercial_quote_sign', {id: quote.id}) }}" class="internal-form">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('commercial_quote_sign_' ~ quote.id) }}">
+                                    <label>{{ 'quote.signed_on'|trans({}, 'commercial') }} <input type="date" name="signedOn" value="{{ 'now'|date('Y-m-d') }}" required></label>
+                                    <button class="internal-button internal-button--secondary" type="submit">{{ 'quote.sign'|trans({}, 'commercial') }}</button>
+                                </form>
+                            </details>{% endif %}
+                        </div>
+                    </article>
+                {% else %}<p class="commercial-dossier__muted">{{ 'quote.no_quotes'|trans({}, 'commercial') }}</p>{% endfor %}
+            </section>
+            <section aria-labelledby="commercial-invoices-heading">
+                <div class="commercial-dossier__document-heading"><h3 id="commercial-invoices-heading">{{ 'invoice.heading'|trans({}, 'commercial') }}</h3>{% if project.status == 'confirmed' %}<a href="{{ path('commercial_invoice_new', {id: project.id}) }}">{{ 'invoice.new'|trans({}, 'commercial') }}</a>{% endif %}</div>
+                {% for invoice in project.invoices %}
+                    <article class="commercial-dossier__document">
+                        {% include 'commercial/project/_icon.html.twig' with {name: 'invoice'} only %}
+                        <div><strong>{{ invoice.reference }}</strong><span>{{ (invoice.amountCents / 100)|number_format(2, ',', ' ') }} € · {{ invoice.issuedOn|date('d/m/Y') }}</span><span class="commercial-dossier__document-state">{{ (invoice.paidOn ? 'invoice.status_paid' : 'invoice.status_unpaid')|trans({}, 'commercial') }}</span>{% if invoice.paidOn is null %}<a href="{{ path('commercial_invoice_index') }}">{{ 'invoice.mark_paid'|trans({}, 'commercial') }}</a>{% endif %}</div>
+                    </article>
+                {% else %}<p class="commercial-dossier__muted">{{ 'invoice.none'|trans({}, 'commercial') }}</p>{% endfor %}
+            </section>
+        </div>
+    </div>
+</details>

@@ -8,9 +8,12 @@ use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialActionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialEventEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
+use App\Infrastructure\Doctrine\Entity\CommercialProjectPersonEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialRequestEntity;
+use App\Infrastructure\Doctrine\Entity\EmailContactLinkEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\PersonEntity;
+use App\Infrastructure\Doctrine\Entity\PhoneContactLinkEntity;
 use App\Kernel;
 use DateTimeImmutable;
 use DateTimeZone;
@@ -24,6 +27,45 @@ final class CommercialProjectControllerTest extends WebTestCase
     protected static function createKernel(array $options = []): KernelInterface
     {
         return new Kernel($options['environment'] ?? 'test', $options['debug'] ?? true);
+    }
+
+    public function testDossierShowsContactsTasksDocumentsAndNewestTimelineEntry(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(5));
+        $adminUserEntity = (new AdminUserEntity())->setEmail("project-layout-{$suffix}@example.test")->setPassword('unused');
+        $organizationEntity = (new OrganizationEntity())->setName("Crèche {$suffix}");
+        $organizationEntity->getContactDetails()?->addPhoneContactLink((new PhoneContactLinkEntity())->setPhoneNumber('0612345678'));
+        $organizationEntity->getContactDetails()?->addEmailContactLink((new EmailContactLinkEntity())->setEmailAddress("direction-{$suffix}@example.test"));
+        $personEntity = (new PersonEntity())->setFirstName('Camille')->setLastName('Martin');
+        $personEntity->getContactDetails()?->addPhoneContactLink((new PhoneContactLinkEntity())->setPhoneNumber('0678901234'));
+        $organizationEntity->addPerson($personEntity);
+        $projectEntity = new CommercialProjectEntity('Ateliers du printemps', $organizationEntity, null, new DateTimeImmutable('2026-10-10'));
+        $projectEntity->addPerson(new CommercialProjectPersonEntity($projectEntity, $personEntity, new DateTimeImmutable('2026-10-10')));
+        $projectEntity->setPrimaryContact($personEntity);
+        $projectEntity->addAction(new CommercialActionEntity($projectEntity, 'Envoyer le programme', new DateTimeImmutable('2026-10-15')));
+        $projectEntity->recordEvent('initial_message', new DateTimeImmutable('2026-10-10 09:00:00'), 'Premier message');
+        $projectEntity->recordEvent('note', new DateTimeImmutable('2026-10-13 10:00:00'), str_repeat('Compte rendu détaillé. ', 18));
+        foreach ([$adminUserEntity, $organizationEntity, $personEntity, $projectEntity] as $entity) {
+            $entityManager->persist($entity);
+        }
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+
+        $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $crawler->filterXPath('//section[contains(@class, "commercial-dossier__contacts")]//span[contains(@class, "commercial-contact-value") and contains(text(), "+33612345678")]/following-sibling::a[@href="tel:+33612345678"]'));
+        self::assertCount(1, $crawler->filterXPath('//section[contains(@class, "commercial-dossier__contacts")]//span[contains(@class, "commercial-contact-value") and contains(text(), "+33678901234")]/following-sibling::a[@href="tel:+33678901234"]'));
+        self::assertCount(1, $crawler->filterXPath('//a[@href="mailto:direction-' . $suffix . '@example.test"]'));
+        self::assertCount(1, $crawler->filterXPath('//details[contains(@class, "commercial-dossier__documents") and not(@open)]'));
+        self::assertCount(1, $crawler->filterXPath('//*[contains(@class, "commercial-dossier__task")]//time[@datetime="2026-10-15"]'));
+        self::assertCount(4, $crawler->filterXPath('//*[contains(@class, "commercial-dossier__task")]//form[contains(@action, "/postpone")]'));
+        $timelineItems = $crawler->filterXPath('//*[contains(@class, "commercial-timeline__item")]');
+        self::assertCount(2, $timelineItems);
+        self::assertStringContainsString('Compte rendu détaillé', $timelineItems->first()->text());
+        self::assertSame('true', $timelineItems->first()->attr('data-commercial-timeline-expanded-value'));
+        self::assertCount(2, $crawler->filterXPath('//*[contains(@class, "commercial-timeline__item")]//*[contains(@class, "commercial-timeline__edit")]'));
     }
 
     public function testManualCreationOpensDossierWithoutCreatingARequest(): void
