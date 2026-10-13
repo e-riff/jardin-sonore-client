@@ -126,6 +126,8 @@ Le modèle et la reprise restent dans `Infrastructure/Doctrine/Entity`, `Infrast
 
 ### Task 7: Fiche dossier mobile first, contacts, documents et chronologie
 
+**État au 13 octobre 2026 :** première implémentation commitée sous `a732e0a`, tests et contrôles techniques réussis. La validation visuelle reste ouverte : l'utilisateur trouve le rendu moins convaincant que la proposition approuvée. Reprendre la comparaison avec les maquettes et captures avant de cocher cette tâche ou de commencer l'harmonisation de la tâche 8. Vérifier notamment la densité de la fiche, les contacts, la visibilité des tâches et la lecture du fil sur mobile et ordinateur. La recette authentifiée sur téléphone n'a pas encore été faite.
+
 **Files:**
 - Modify: `jardin-sonore-backend/templates/commercial/project/show.html.twig`, `jardin-sonore-backend/assets/styles/app.css`, `jardin-sonore-backend/translations/commercial.fr.yaml`
 - Create: `jardin-sonore-backend/assets/controllers/commercial_timeline_controller.js` only if native `<details>` cannot meet the two-line disclosure and default-open behavior
