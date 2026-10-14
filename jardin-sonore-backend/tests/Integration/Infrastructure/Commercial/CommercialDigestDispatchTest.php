@@ -10,6 +10,7 @@ use App\Application\Commercial\CommercialDigestSenderInterface;
 use App\Application\Commercial\DispatchCommercialDigest;
 use App\Infrastructure\Doctrine\Entity\CommercialDigestDeliveryEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialDigestSettingsEntity;
+use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialRequestEntity;
 use App\Kernel;
 use DateTimeImmutable;
@@ -55,7 +56,9 @@ final class CommercialDigestDispatchTest extends KernelTestCase
         $settingsEntity->setEnabled(true);
         $settingsEntity->setSendTime('08:00');
         $requestEntity = new CommercialRequestEntity('manual', 'Digest test', '', 'Suivi', new DateTimeImmutable());
+        $projectEntity = new CommercialProjectEntity('Dossier digest', null, $requestEntity, new DateTimeImmutable());
         $entityManager->persist($requestEntity);
+        $entityManager->persist($projectEntity);
         $entityManager->flush();
 
         $sender = new class implements CommercialDigestSenderInterface {
@@ -89,7 +92,9 @@ final class CommercialDigestDispatchTest extends KernelTestCase
         self::assertInstanceOf(CommercialDigestSettingsEntity::class, $settingsEntity);
         $settingsEntity->setEnabled(true);
         $settingsEntity->setSendTime('08:00');
-        $entityManager->persist(new CommercialRequestEntity('manual', 'Suivi', '', 'À rappeler', new DateTimeImmutable()));
+        $requestEntity = new CommercialRequestEntity('manual', 'Suivi', '', 'À rappeler', new DateTimeImmutable());
+        $entityManager->persist($requestEntity);
+        $entityManager->persist(new CommercialProjectEntity('Dossier à rappeler', null, $requestEntity, new DateTimeImmutable()));
         $entityManager->flush();
 
         $sender = new class implements CommercialDigestSenderInterface {

@@ -1,9 +1,5 @@
 {{ 'heading'|trans({'%date%': digest.localDate|date('d/m/Y')}, 'commercial_digest') }}
 
-{% if digest.requests %}{{ 'requests'|trans({}, 'commercial_digest') }}
-{% for request in digest.requests %}- {{ request.organizationName ?: request.senderName }} — {{ url('commercial_request_show', {id: request.id}) }}
-{% endfor %}
-{% endif %}
 {% if digest.dueActions %}{{ 'actions'|trans({}, 'commercial_digest') }}
 {% for action in digest.dueActions %}- {{ action.title }} ({{ action.dueOn|date('d/m/Y') }}) — {{ action.project.organization ? action.project.organization.name : action.project.title }} — {{ url('commercial_project_show', {id: action.project.id}) }}
 {% endfor %}
