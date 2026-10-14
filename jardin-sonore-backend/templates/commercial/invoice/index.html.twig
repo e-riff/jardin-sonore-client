@@ -3,6 +3,7 @@
 {% set title = 'invoice.heading'|trans({}, 'commercial') %}
 
 {% block internal_body %}
+    {% include 'components/_internal_back_button.html.twig' with { href: path('commercial_project_index'), label: 'project.back'|trans({}, 'commercial') } only %}
     <section class="internal-hero">
         <p class="internal-eyebrow">{{ 'dashboard.eyebrow'|trans({}, 'commercial') }}</p>
         <h1>{{ 'invoice.heading'|trans({}, 'commercial') }}</h1>

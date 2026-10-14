@@ -3,6 +3,7 @@
 {% set title = (audienceMask ? 'mailing.audience.mask.editor.edit_title' : 'mailing.audience.mask.editor.new_title')|trans({}, 'mailing') %}
 
 {% block internal_body %}
+    {% include 'components/_internal_back_button.html.twig' with { href: path('mailing_audience_mask_index'), label: 'mailing.audience.mask.editor.back'|trans({}, 'mailing') } only %}
     <section class="internal-page-heading">
         <div>
             <p class="internal-eyebrow">{{ 'mailing.audience.mask.catalog_eyebrow'|trans({}, 'mailing') }}</p>
@@ -10,7 +11,7 @@
             <p>{{ 'mailing.audience.mask.editor.description'|trans({}, 'mailing') }}</p>
         </div>
         <div class="internal-heading-actions">
-            <a class="internal-button internal-button--secondary" href="{{ path('mailing_audience_mask_index') }}">{{ 'mailing.audience.mask.editor.back'|trans({}, 'mailing') }}</a>
+
             {% if audienceMask %}
                 <button type="button" class="internal-button internal-button--danger" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('mailing_audience_mask_delete', { maskUuid: audienceMask.uuid }) }}" data-confirmation-dialog-item-value="{{ audienceMask.name }}" data-confirmation-dialog-token-value="{{ csrf_token('mailing_audience_mask_delete_' ~ audienceMask.uuid.toRfc4122) }}">{{ 'mailing.audience.mask.editor.delete'|trans({}, 'mailing') }}</button>
             {% endif %}

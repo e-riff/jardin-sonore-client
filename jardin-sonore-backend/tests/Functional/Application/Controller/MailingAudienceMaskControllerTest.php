@@ -39,6 +39,14 @@ final class MailingAudienceMaskControllerTest extends WebTestCase
         self::assertStringContainsString('/mailing/audience-masks/new', (string) $client->getResponse()->getContent());
         self::assertStringContainsString('/mailing/audience-masks/' . $mailingAudienceMask->getUuid()->toRfc4122() . '/edit', (string) $client->getResponse()->getContent());
 
+        $client->request('GET', '/mailing/audience-masks?query=aucun-resultat-possible');
+        self::assertResponseIsSuccessful();
+        self::assertStringNotContainsString('/mailing/audience-masks/' . $mailingAudienceMask->getUuid()->toRfc4122() . '/edit', (string) $client->getResponse()->getContent());
+
+        $client->request('GET', '/mailing/audience-masks?query=recette');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('/mailing/audience-masks/' . $mailingAudienceMask->getUuid()->toRfc4122() . '/edit', (string) $client->getResponse()->getContent());
+
         $client->request('GET', '/mailing/audience-masks/new');
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('Types d’établissement', (string) $client->getResponse()->getContent());

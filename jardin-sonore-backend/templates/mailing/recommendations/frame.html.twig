@@ -112,25 +112,22 @@
                 {% endfor %}
             </div>
 
-            <div class="mailing-catalog-picker">
+            <div class="mailing-catalog-picker" data-controller="auto-filter">
                 <div>
                     <p class="internal-eyebrow">{{ 'mailing.content.recommendations.catalog_eyebrow'|trans({}, 'mailing') }}</p>
                     <h2>{{ 'mailing.content.recommendations.catalog_title'|trans({}, 'mailing') }}</h2>
                 </div>
 
                 {% if campaign.editable %}
-                    <form class="internal-search" method="get" action="{{ path('mailing_campaign_recommendation_index', { campaignUuid: campaign.uuid }) }}">
+                    <form class="internal-search" method="get" action="{{ path('mailing_campaign_recommendation_index', { campaignUuid: campaign.uuid }) }}" data-auto-filter-target="form" data-action="input->auto-filter#schedule submit->auto-filter#submit">
                         <label for="recommendation-query">{{ 'mailing.content.recommendations.search'|trans({}, 'mailing') }}</label>
                         <div>
                             <input id="recommendation-query" name="query" value="{{ query }}">
-                            <button class="internal-button internal-button--secondary" type="submit">
-                                {{ 'mailing.content.recommendations.search_submit'|trans({}, 'mailing') }}
-                            </button>
                         </div>
                     </form>
                 {% endif %}
 
-                <div class="mailing-catalog-grid mailing-catalog-grid--picker">
+                <div class="mailing-catalog-grid mailing-catalog-grid--picker" data-auto-filter-target="results" aria-live="polite">
                     {% for recommendation in availableRecommendations %}
                         <article class="mailing-catalog-card{{ recommendation.imagePath ? ' mailing-catalog-card--with-image' : '' }}">
                             {% if recommendation.imagePath %}

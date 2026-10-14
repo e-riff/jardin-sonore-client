@@ -3,6 +3,7 @@
 {% set title = 'mailing.audience.extend.title'|trans({ campaign: campaign.internalTitle }, 'mailing') %}
 
 {% block internal_body %}
+    {% include 'components/_internal_back_button.html.twig' with { href: path('mailing_audience', { uuid: campaign.uuid, returnTo: returnTo ?: path('mailing_index') }), label: 'mailing.audience.extend.back_to_audience'|trans({}, 'mailing') } only %}
     <section class="internal-page-heading">
         <div>
             <p class="internal-eyebrow">{{ 'mailing.audience.extend.eyebrow'|trans({}, 'mailing') }}</p>
@@ -11,12 +12,7 @@
         </div>
 
         <div class="internal-heading-actions">
-            <a class="internal-button internal-button--secondary" href="{{ path('mailing_audience', {
-                uuid: campaign.uuid,
-                returnTo: returnTo ?: path('mailing_index')
-            }) }}">
-                {{ 'mailing.audience.extend.back_to_audience'|trans({}, 'mailing') }}
-            </a>
+
             <a class="internal-button internal-button--secondary" href="{{ returnTo ?: path('mailing_index') }}">
                 {{ 'mailing.audience.extend.back'|trans({}, 'mailing') }}
             </a>

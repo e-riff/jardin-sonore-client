@@ -3,6 +3,7 @@
 {% set title = 'invoice.new'|trans({}, 'commercial') %}
 
 {% block internal_body %}
+    {% include 'components/_internal_back_button.html.twig' with { href: path('commercial_project_show', {id: project.id}), label: project.title } only %}
     <section class="internal-hero">
         <a href="{{ path('commercial_project_show', {id: project.id}) }}">← {{ project.title }}</a>
         <h1>{{ 'invoice.new'|trans({}, 'commercial') }}</h1>
@@ -11,7 +12,10 @@
     <section class="internal-card internal-card--form">
         {% if invoiceError %}<p role="alert">{{ invoiceError|trans({}, 'commercial') }}</p>{% endif %}
         {{ form_start(form, {attr: {class: 'internal-form'}}) }}
-            {{ form_widget(form) }}
+            {{ form_row(form.reference) }}
+            {{ form_row(form.amount) }}
+            {{ form_row(form.issuedOn) }}
+            <div class="internal-form__actions">{{ form_widget(form.submit) }}</div>
         {{ form_end(form) }}
     </section>
 {% endblock %}

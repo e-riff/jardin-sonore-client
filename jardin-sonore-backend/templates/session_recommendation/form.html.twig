@@ -3,13 +3,13 @@
 {% set title = item ? 'sessions.recommendation.edit.title'|trans({ title: item.title }, 'sessions') : 'sessions.recommendation.new.title'|trans({}, 'sessions') %}
 
 {% block internal_body %}
+    {% include 'components/_internal_back_button.html.twig' with { href: path('session_recommendation_index'), label: 'sessions.recommendation.form.back'|trans({}, 'sessions') } only %}
     <section class="internal-page-heading">
         <div>
             <p class="internal-eyebrow">{{ (item ? 'sessions.recommendation.edit.eyebrow' : 'sessions.recommendation.new.eyebrow')|trans({}, 'sessions') }}</p>
             <h1>{{ item ? item.title : 'sessions.recommendation.new.heading'|trans({}, 'sessions') }}</h1>
             <p>{{ (item ? 'sessions.recommendation.edit.description' : 'sessions.recommendation.new.description')|trans({}, 'sessions') }}</p>
         </div>
-        <a class="internal-button internal-button--secondary" href="{{ path('session_recommendation_index') }}">{{ 'sessions.recommendation.form.back'|trans({}, 'sessions') }}</a>
     </section>
     <section class="internal-card internal-card--form">
         {% if hasErrors %}<div class="internal-alert internal-alert--error">{{ 'sessions.recommendation.form.error_notice'|trans({}, 'sessions') }}</div>{% endif %}
@@ -36,7 +36,7 @@
             {% endif %}
             {{ form_row(form.imageFile) }}
             {{ form_row(form.active) }}
-            {{ form_row(form.submit) }}
+            <div class="internal-form__actions">{{ form_widget(form.submit) }}</div>
         {{ form_end(form) }}
     </section>
 {% endblock %}

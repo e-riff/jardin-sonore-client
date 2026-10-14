@@ -15,8 +15,8 @@
         </a>
     </section>
 
-    <section class="internal-card">
-        <form class="internal-search" method="get">
+    <section class="internal-card" data-controller="auto-filter">
+        <form class="internal-search" method="get" data-auto-filter-target="form" data-action="input->auto-filter#schedule change->auto-filter#change submit->auto-filter#submit">
             <label for="catalog-query">{{ 'mailing.catalog.index.search'|trans({}, 'mailing') }}</label>
             <div>
                 <input id="catalog-query" name="query" value="{{ query }}">
@@ -25,86 +25,85 @@
                     <option value="inactive" {% if availability == 'inactive' %}selected{% endif %}>{{ 'mailing.catalog.index.unavailable_only'|trans({}, 'mailing') }}</option>
                     <option value="all" {% if availability == 'all' %}selected{% endif %}>{{ 'mailing.catalog.index.all'|trans({}, 'mailing') }}</option>
                 </select>
-                <button class="internal-button internal-button--secondary" type="submit">
-                    {{ 'mailing.catalog.index.search_submit'|trans({}, 'mailing') }}
-                </button>
             </div>
         </form>
 
-        {% if recommendations is empty %}
-            <p class="internal-empty-state">{{ 'mailing.catalog.index.empty'|trans({}, 'mailing') }}</p>
-        {% else %}
-            <div class="internal-table-wrapper">
-                <twig:TableMobileSort label="Trier les recommandations" :selected="tableSort.column" :options="[
-                    { value: 'title', label: 'Titre', href: path('mailing_recommendation_catalog_index', { query: query, availability: availability, sort: 'title', direction: tableSort.nextDirectionFor('title') }) },
-                    { value: 'tag', label: 'Tag', href: path('mailing_recommendation_catalog_index', { query: query, availability: availability, sort: 'tag', direction: tableSort.nextDirectionFor('tag') }) },
-                    { value: 'lastUsedAt', label: 'Dernière utilisation', href: path('mailing_recommendation_catalog_index', { query: query, availability: availability, sort: 'lastUsedAt', direction: tableSort.nextDirectionFor('lastUsedAt') }) }
-                ]" />
-                <table class="internal-table internal-table--compact-mobile">
-                    <thead>
-                    <tr>
-                        <th data-table-mobile="hidden">{{ 'mailing.catalog.index.table.visual'|trans({}, 'mailing') }}</th>
-                        <th><twig:TableSortHeader label="{{ 'mailing.catalog.index.table.title'|trans({}, 'mailing') }}" :href="path('mailing_recommendation_catalog_index', { query: query, availability: availability, sort: 'title', direction: tableSort.nextDirectionFor('title') })" :active="tableSort.column == 'title'" :direction="tableSort.direction" /></th>
-                        <th data-table-mobile="secondary"><twig:TableSortHeader label="Tag" :href="path('mailing_recommendation_catalog_index', { query: query, availability: availability, sort: 'tag', direction: tableSort.nextDirectionFor('tag') })" :active="tableSort.column == 'tag'" :direction="tableSort.direction" /></th>
-                        <th data-table-mobile="secondary"><twig:TableSortHeader label="{{ 'mailing.catalog.index.table.usages'|trans({}, 'mailing') }}" :href="path('mailing_recommendation_catalog_index', { query: query, availability: availability, sort: 'lastUsedAt', direction: tableSort.nextDirectionFor('lastUsedAt') })" :active="tableSort.column == 'lastUsedAt'" :direction="tableSort.direction" /></th>
-                        <th>{{ 'mailing.catalog.index.table.actions'|trans({}, 'mailing') }}</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for recommendation in recommendations %}
-                        <tr data-table-availability="{{ recommendation.active ? 'active' : 'inactive' }}">
-                            <td data-table-mobile="hidden" data-label="{{ 'mailing.catalog.index.table.visual'|trans({}, 'mailing') }}">
-                                {% if recommendation.imagePath %}
-                                    {% if recommendation.url %}
-                                        <a class="mailing-catalog-table__media" href="{{ recommendation.url }}" target="_blank" rel="noopener noreferrer">
-                                            <img src="{{ asset(recommendation.imagePath) }}" alt="">
-                                        </a>
-                                    {% else %}
-                                        <div class="mailing-catalog-table__media">
-                                            <img src="{{ asset(recommendation.imagePath) }}" alt="">
-                                        </div>
-                                    {% endif %}
-                                {% else %}
-                                    <span class="internal-table-note">—</span>
-                                {% endif %}
-                            </td>
-                            <td data-table-mobile="primary" data-label="{{ 'mailing.catalog.index.table.title'|trans({}, 'mailing') }}">
-                                {% if recommendation.tag %}
-                                    <p class="mailing-catalog-card__tag">{{ recommendation.tag }}</p>
-                                {% endif %}
-                                <span class="internal-table__availability-dot{{ recommendation.active ? '' : ' internal-table__availability-dot--inactive' }}"></span><strong>{{ recommendation.title }}</strong>
-                                <span class="internal-table-note">{{ recommendation.text }}</span>
-                            </td>
-                            <td data-table-mobile="secondary" data-label="Tag">{{ recommendation.tag ?? '—' }}</td>
-                            <td data-table-mobile="secondary" data-label="{{ 'mailing.catalog.index.table.usages'|trans({}, 'mailing') }}">
-                                {% if recommendation.usages is empty %}
-                                    <span class="internal-table-note">{{ 'mailing.catalog.index.never_used'|trans({}, 'mailing') }}</span>
-                                {% else %}
-                                    <details>
-                                        <summary>{{ recommendation.usages|first.sentAt|date('d/m/Y H:i') }}</summary>
-                                        <ul>
-                                            {% for usage in recommendation.usages %}
-                                                <li><a href="{{ path('mailing_content', { uuid: usage.campaignUuid }) }}">{{ usage.sentAt|date('d/m/Y H:i') }} · {{ usage.campaignTitle }}</a></li>
-                                            {% endfor %}
-                                        </ul>
-                                    </details>
-                                {% endif %}
-                            </td>
-                            <td data-table-mobile="actions" data-label="{{ 'mailing.catalog.index.table.actions'|trans({}, 'mailing') }}">
-                                {% include 'components/_catalog_actions.html.twig' with {
-                                    editUrl: path('mailing_recommendation_catalog_edit', { uuid: recommendation.uuid }),
-                                    deleteUrl: path('mailing_recommendation_catalog_delete', { uuid: recommendation.uuid }),
-                                    itemLabel: recommendation.title,
-                                    token: csrf_token('mailing_recommendation_delete_' ~ recommendation.uuid),
-                                    editLabel: 'mailing.catalog.index.edit'|trans({}, 'mailing'),
-                                    deleteLabel: 'mailing.catalog.index.delete'|trans({}, 'mailing')
-                                } only %}
-                            </td>
+        <div data-auto-filter-target="results" aria-live="polite">
+            {% if recommendations is empty %}
+                <p class="internal-empty-state">{{ 'mailing.catalog.index.empty'|trans({}, 'mailing') }}</p>
+            {% else %}
+                <div class="internal-table-wrapper">
+                    <twig:TableMobileSort label="Trier les recommandations" :selected="tableSort.column" :options="[
+                        { value: 'title', label: 'Titre', href: path('mailing_recommendation_catalog_index', { query: query, availability: availability, sort: 'title', direction: tableSort.nextDirectionFor('title') }) },
+                        { value: 'tag', label: 'Tag', href: path('mailing_recommendation_catalog_index', { query: query, availability: availability, sort: 'tag', direction: tableSort.nextDirectionFor('tag') }) },
+                        { value: 'lastUsedAt', label: 'Dernière utilisation', href: path('mailing_recommendation_catalog_index', { query: query, availability: availability, sort: 'lastUsedAt', direction: tableSort.nextDirectionFor('lastUsedAt') }) }
+                    ]" />
+                    <table class="internal-table internal-table--compact-mobile">
+                        <thead>
+                        <tr>
+                            <th data-table-mobile="hidden">{{ 'mailing.catalog.index.table.visual'|trans({}, 'mailing') }}</th>
+                            <th><twig:TableSortHeader label="{{ 'mailing.catalog.index.table.title'|trans({}, 'mailing') }}" :href="path('mailing_recommendation_catalog_index', { query: query, availability: availability, sort: 'title', direction: tableSort.nextDirectionFor('title') })" :active="tableSort.column == 'title'" :direction="tableSort.direction" /></th>
+                            <th data-table-mobile="secondary"><twig:TableSortHeader label="Tag" :href="path('mailing_recommendation_catalog_index', { query: query, availability: availability, sort: 'tag', direction: tableSort.nextDirectionFor('tag') })" :active="tableSort.column == 'tag'" :direction="tableSort.direction" /></th>
+                            <th data-table-mobile="secondary"><twig:TableSortHeader label="{{ 'mailing.catalog.index.table.usages'|trans({}, 'mailing') }}" :href="path('mailing_recommendation_catalog_index', { query: query, availability: availability, sort: 'lastUsedAt', direction: tableSort.nextDirectionFor('lastUsedAt') })" :active="tableSort.column == 'lastUsedAt'" :direction="tableSort.direction" /></th>
+                            <th>{{ 'mailing.catalog.index.table.actions'|trans({}, 'mailing') }}</th>
                         </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% endif %}
+                        </thead>
+                        <tbody>
+                        {% for recommendation in recommendations %}
+                            <tr data-table-availability="{{ recommendation.active ? 'active' : 'inactive' }}">
+                                <td data-table-mobile="hidden" data-label="{{ 'mailing.catalog.index.table.visual'|trans({}, 'mailing') }}">
+                                    {% if recommendation.imagePath %}
+                                        {% if recommendation.url %}
+                                            <a class="mailing-catalog-table__media" href="{{ recommendation.url }}" target="_blank" rel="noopener noreferrer">
+                                                <img src="{{ asset(recommendation.imagePath) }}" alt="">
+                                            </a>
+                                        {% else %}
+                                            <div class="mailing-catalog-table__media">
+                                                <img src="{{ asset(recommendation.imagePath) }}" alt="">
+                                            </div>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="internal-table-note">—</span>
+                                    {% endif %}
+                                </td>
+                                <td data-table-mobile="primary" data-label="{{ 'mailing.catalog.index.table.title'|trans({}, 'mailing') }}">
+                                    {% if recommendation.tag %}
+                                        <p class="mailing-catalog-card__tag">{{ recommendation.tag }}</p>
+                                    {% endif %}
+                                    <span class="internal-table__availability-dot{{ recommendation.active ? '' : ' internal-table__availability-dot--inactive' }}"></span><strong>{{ recommendation.title }}</strong>
+                                    <span class="internal-table-note">{{ recommendation.text }}</span>
+                                </td>
+                                <td data-table-mobile="secondary" data-label="Tag">{{ recommendation.tag ?? '—' }}</td>
+                                <td data-table-mobile="secondary" data-label="{{ 'mailing.catalog.index.table.usages'|trans({}, 'mailing') }}">
+                                    {% if recommendation.usages is empty %}
+                                        <span class="internal-table-note">{{ 'mailing.catalog.index.never_used'|trans({}, 'mailing') }}</span>
+                                    {% else %}
+                                        <details>
+                                            <summary>{{ recommendation.usages|first.sentAt|date('d/m/Y H:i') }}</summary>
+                                            <ul>
+                                                {% for usage in recommendation.usages %}
+                                                    <li><a href="{{ path('mailing_content', { uuid: usage.campaignUuid }) }}">{{ usage.sentAt|date('d/m/Y H:i') }} · {{ usage.campaignTitle }}</a></li>
+                                                {% endfor %}
+                                            </ul>
+                                        </details>
+                                    {% endif %}
+                                </td>
+                                <td data-table-mobile="actions" data-label="{{ 'mailing.catalog.index.table.actions'|trans({}, 'mailing') }}">
+                                    {% include 'components/_catalog_actions.html.twig' with {
+                                        editUrl: path('mailing_recommendation_catalog_edit', { uuid: recommendation.uuid }),
+                                        deleteUrl: path('mailing_recommendation_catalog_delete', { uuid: recommendation.uuid }),
+                                        itemLabel: recommendation.title,
+                                        token: csrf_token('mailing_recommendation_delete_' ~ recommendation.uuid),
+                                        editLabel: 'mailing.catalog.index.edit'|trans({}, 'mailing'),
+                                        deleteLabel: 'mailing.catalog.index.delete'|trans({}, 'mailing')
+                                    } only %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
     </section>
 {% endblock %}
