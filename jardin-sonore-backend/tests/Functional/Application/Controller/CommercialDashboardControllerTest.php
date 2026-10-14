@@ -45,6 +45,8 @@ final class CommercialDashboardControllerTest extends WebTestCase
         $client->loginUser($adminUserEntity);
 
         $client->request('GET', '/commercial');
+        self::assertResponseRedirects('/commercial/projects');
+        $crawler = $client->followRedirect();
         self::assertResponseIsSuccessful();
         $content = (string) $client->getResponse()->getContent();
         self::assertStringContainsString("Demande {$suffix}", $content);
@@ -55,6 +57,9 @@ final class CommercialDashboardControllerTest extends WebTestCase
         self::assertStringContainsString('/commercial/projects/' . $projectWithActionEntity->getId(), $content);
         self::assertStringNotContainsString('/commercial/requests/' . $requestEntity->getId() . '"', $content);
         self::assertSame(1, substr_count($content, 'data-project-id="' . $projectWithActionEntity->getId() . '"'));
+        self::assertCount(0, $crawler->filterXPath('//nav[contains(@class, "internal-subnav")]//a[@href="/commercial"]'));
+        self::assertCount(1, $crawler->filterXPath('//nav[contains(@class, "internal-subnav")]//a[@href="/commercial/projects"]'));
+        self::assertStringContainsString('<option value="completed"', $content);
         self::assertSame(CommercialRequestEntity::STATUS_TO_QUALIFY, $requestEntity->getStatus());
         self::assertSame(CommercialActionEntity::STATUS_OPEN, $projectWithActionEntity->getActions()->first()->getStatus());
     }

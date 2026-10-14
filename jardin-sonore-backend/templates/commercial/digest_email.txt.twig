@@ -16,4 +16,4 @@
 {% for project in digest.withoutAction %}- {{ project.title }}{% if project.organization %} — {{ project.organization.name }}{% endif %} — {{ url('commercial_project_show', {id: project.id}) }}
 {% endfor %}
 {% endif %}
-{{ 'open_dashboard'|trans({}, 'commercial_digest') }} : {{ url('commercial_dashboard') }}
+{{ 'open_dashboard'|trans({}, 'commercial_digest') }} : {{ url('commercial_project_index') }}
