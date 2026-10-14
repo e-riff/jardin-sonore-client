@@ -1,16 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
 
 :root {
-    --color-background: #fdf8f5;
+    --color-background: #faf9f6;
     --color-on-background: #1c1b1a;
-    --color-surface: #fdf8f5;
-    --color-surface-container: #f2edea;
+    --color-surface: #fffdfb;
+    --color-surface-container: #f3f2ee;
     --color-surface-container-lowest: #ffffff;
     --color-on-surface-variant: #554240;
-    --color-outline-variant: #dbc1bd;
+    --color-outline-variant: #d9d4cc;
     --color-primary: #be4f41;
     --color-primary-container: #a84335;
-    --color-primary-fixed: #ffd9d2;
+    --color-primary-fixed: #f6e9e4;
     --color-on-primary: #ffffff;
     --color-secondary: #47664b;
     --color-secondary-container: #c6e9c7;
@@ -137,9 +137,7 @@ button:disabled {
 
 .internal-shell {
     min-height: 100vh;
-    background:
-        radial-gradient(circle at top right, rgb(255 218 213 / 0.45), transparent 28%),
-        linear-gradient(180deg, color-mix(in oklab, var(--color-surface) 92%, white), var(--color-background));
+    background: var(--color-background);
 }
 
 .internal-header {
@@ -147,7 +145,7 @@ button:disabled {
     top: 0;
     z-index: 30;
     border-bottom: 1px solid color-mix(in oklab, var(--color-outline-variant) 72%, white);
-    background: rgb(253 248 245 / 0.88);
+    background: rgb(255 253 251 / 0.94);
     backdrop-filter: blur(18px);
 }
 
@@ -698,7 +696,7 @@ button:disabled {
 }
 
 .commercial-project-group--priority {
-    border-color: color-mix(in oklab, var(--color-primary) 32%, var(--color-outline-variant));
+    border-color: color-mix(in oklab, var(--color-secondary) 35%, var(--color-outline-variant));
 }
 
 .commercial-project-group > summary {
@@ -716,8 +714,8 @@ button:disabled {
 
 .commercial-project-group > summary:hover,
 .commercial-project-group > summary:focus-visible {
-    color: var(--color-primary);
-    background: color-mix(in oklab, var(--color-primary-fixed) 20%, white);
+    color: var(--color-secondary);
+    background: color-mix(in oklab, var(--color-secondary-container) 24%, white);
 }
 
 .commercial-project-group > summary .internal-badge {
@@ -813,7 +811,7 @@ button:disabled {
     border-radius: 8px;
     padding: 9px 10px;
     background: transparent;
-    color: var(--color-primary);
+    color: var(--color-secondary);
     cursor: pointer;
     font: inherit;
     text-align: left;
@@ -821,7 +819,12 @@ button:disabled {
 
 .commercial-project-row__postpone-options button:hover,
 .commercial-project-row__postpone-options button:focus-visible {
-    background: var(--color-primary-fixed);
+    background: color-mix(in oklab, var(--color-secondary-container) 42%, white);
+}
+
+.commercial-project-table tbody tr:hover td,
+.commercial-project-table tbody tr:focus-visible td {
+    background: color-mix(in oklab, var(--color-secondary-container) 24%, white);
 }
 
 .commercial-project-row__postpone-options label {
@@ -1844,16 +1847,16 @@ button:disabled {
 }
 
 .internal-button--secondary {
-    border-color: color-mix(in oklab, var(--color-outline-variant) 65%, white);
-    background: color-mix(in oklab, var(--color-surface-container) 85%, white);
-    color: var(--color-primary);
+    border-color: var(--color-outline-variant);
+    background: var(--color-surface-container-lowest);
+    color: var(--color-secondary);
     box-shadow: none;
 }
 
 .internal-button--secondary:hover,
 .internal-button--secondary:focus-visible {
-    background: color-mix(in oklab, var(--color-primary-fixed) 45%, white);
-    color: var(--color-primary);
+    background: color-mix(in oklab, var(--color-secondary-container) 38%, white);
+    color: var(--color-secondary);
 }
 
 .internal-button--danger {
@@ -4515,6 +4518,11 @@ a.session-composer-overlay__item {
         flex-wrap: wrap;
         border-top: 1px solid var(--color-outline-variant);
         padding: 8px 0;
+    }
+
+    .commercial-project-table tbody tr:hover,
+    .commercial-project-table tbody tr:focus-visible {
+        background: color-mix(in oklab, var(--color-secondary-container) 24%, white);
     }
 
     .commercial-project-table td[data-table-mobile="primary"] {
