@@ -342,10 +342,13 @@ final class CommercialProjectControllerTest extends WebTestCase
 
         $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
         $taskToken = $crawler->filterXPath('//form[contains(@action, "/actions")]/input[@name="_token"]')->attr('value');
-        $eventToken = $crawler->filterXPath('//form[contains(@action, "/events") and not(contains(@action, "/edit"))]/input[@name="_token"]')->attr('value');
         $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/actions', ['_token' => $taskToken, 'title' => 'Envoyer le devis', 'dueOn' => '2026-10-16']);
         self::assertResponseRedirects();
-        $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/events', ['_token' => $eventToken, 'content' => 'Appel avec la direction']);
+        $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
+        $eventForm = $crawler->selectButton('Enregistrer la note')->form();
+        $eventForm['commercial_note[content]'] = 'Appel avec la direction';
+        $eventForm['commercial_note[nextActionTitle]'] = '';
+        $client->submit($eventForm);
         self::assertResponseRedirects();
 
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
