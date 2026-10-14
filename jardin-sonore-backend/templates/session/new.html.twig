@@ -19,8 +19,6 @@
 
         {% include 'session/_summary_form.html.twig' with {
             form: form,
-            backPath: path('session_index'),
-            backLabel: 'sessions.summary.new.back'|trans({}, 'sessions'),
         } only %}
     </section>
 {% endblock %}

@@ -55,11 +55,12 @@ final class CommercialProjectControllerTest extends WebTestCase
 
         $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
         self::assertResponseIsSuccessful();
-        self::assertCount(1, $crawler->filterXPath('//section[contains(@class, "commercial-dossier__contacts")]//span[contains(@class, "commercial-contact-value") and contains(text(), "+33612345678")]/following-sibling::a[@href="tel:+33612345678"]'));
-        self::assertCount(1, $crawler->filterXPath('//section[contains(@class, "commercial-dossier__contacts")]//span[contains(@class, "commercial-contact-value") and contains(text(), "+33678901234")]/following-sibling::a[@href="tel:+33678901234"]'));
+        self::assertCount(1, $crawler->filterXPath('//details[contains(@class, "commercial-dossier__contacts")]//span[contains(@class, "commercial-contact-value") and contains(text(), "+33612345678")]/following-sibling::a[@href="tel:+33612345678"]'));
+        self::assertCount(1, $crawler->filterXPath('//details[contains(@class, "commercial-dossier__contacts")]//span[contains(@class, "commercial-contact-value") and contains(text(), "+33678901234")]/following-sibling::a[@href="tel:+33678901234"]'));
         self::assertCount(1, $crawler->filterXPath('//a[@href="mailto:direction-' . $suffix . '@example.test"]'));
         self::assertCount(1, $crawler->filterXPath('//details[contains(@class, "commercial-dossier__contact-tools") and not(@open)]'));
         self::assertCount(1, $crawler->filterXPath('//details[contains(@class, "commercial-dossier__documents") and not(@open)]'));
+        self::assertCount(1, $crawler->filterXPath('//details[contains(@class, "commercial-dossier__contacts") and @data-controller="responsive-details" and not(@open)]'));
         self::assertCount(1, $crawler->filterXPath('//*[contains(@class, "commercial-dossier__task")]//time[@datetime="2026-10-15"]'));
         self::assertCount(4, $crawler->filterXPath('//*[contains(@class, "commercial-dossier__task")]//form[contains(@action, "/postpone")]'));
         $timelineItems = $crawler->filterXPath('//*[contains(@class, "commercial-timeline__item")]');

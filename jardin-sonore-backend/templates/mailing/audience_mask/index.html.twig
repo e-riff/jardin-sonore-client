@@ -51,11 +51,9 @@
                                     <td data-table-mobile="secondary" data-label="{{ 'mailing.audience.mask.table.municipalities'|trans({}, 'mailing') }}">{{ audienceMask.materializedMunicipalityInseeCodes|length }}</td>
                                     <td data-table-mobile="secondary" data-label="Critères">
                                         {% set details = audienceMaskDetails[audienceMask.uuid.toRfc4122] %}
-                                        <details data-catalog-row-ignore>
-                                            <summary>{{ details.municipalities|length }} commune{{ details.municipalities|length > 1 ? 's' : '' }} · {{ details.criteria|length }} filtre{{ details.criteria|length > 1 ? 's' : '' }}</summary>
-                                            {% if details.municipalities is not empty %}<p><strong>Communes</strong><br>{{ details.municipalities|join(', ') }}</p>{% endif %}
-                                            {% if details.criteria is not empty %}<ul>{% for criterion in details.criteria %}<li>{{ criterion }}</li>{% endfor %}</ul>{% endif %}
-                                        </details>
+                                        <span>{{ details.municipalities|length }} commune{{ details.municipalities|length > 1 ? 's' : '' }} · {{ details.criteria|length }} filtre{{ details.criteria|length > 1 ? 's' : '' }}</span>
+                                        {% if details.municipalities is not empty %}<p><strong>Communes</strong><br>{{ details.municipalities|join(', ') }}</p>{% endif %}
+                                        {% if details.criteria is not empty %}<ul>{% for criterion in details.criteria %}<li>{{ criterion }}</li>{% endfor %}</ul>{% endif %}
                                     </td>
                                     <td data-table-mobile="actions" data-label="{{ 'mailing.audience.mask.table.actions'|trans({}, 'mailing') }}">
                                         {% include 'components/_catalog_actions.html.twig' with {

@@ -55,6 +55,7 @@ final class CommercialDashboardControllerTest extends WebTestCase
         self::assertStringContainsString("Dossier provisoire {$suffix}", $content);
         self::assertStringContainsString('Dossiers urgents', $content);
         self::assertStringContainsString('/commercial/projects/' . $projectWithActionEntity->getId(), $content);
+        self::assertCount(1, $crawler->filterXPath('//details[contains(@class, "commercial-project-group--without_task")][@open]'));
         self::assertStringNotContainsString('/commercial/requests/' . $requestEntity->getId() . '"', $content);
         self::assertSame(1, substr_count($content, 'data-project-id="' . $projectWithActionEntity->getId() . '"'));
         self::assertCount(0, $crawler->filterXPath('//nav[contains(@class, "internal-subnav")]//a[@href="/commercial"]'));
@@ -62,6 +63,10 @@ final class CommercialDashboardControllerTest extends WebTestCase
         self::assertStringContainsString('<option value="completed"', $content);
         self::assertSame(CommercialRequestEntity::STATUS_TO_QUALIFY, $requestEntity->getStatus());
         self::assertSame(CommercialActionEntity::STATUS_OPEN, $projectWithActionEntity->getActions()->first()->getStatus());
+
+        $emptyCrawler = $client->request('GET', "/commercial/projects?query=aucun-dossier-{$suffix}");
+        self::assertResponseIsSuccessful();
+        self::assertCount(0, $emptyCrawler->filterXPath('//details[contains(@class, "commercial-project-group")][@open]'));
     }
 
     public function testProjectIndexRequiresLoginAndRendersInstantFilters(): void

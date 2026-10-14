@@ -28,7 +28,7 @@
         {{ form_row(form.generalNotes) }}
     </details>
 
-    <div
+    {% if form.recommendationUuids is defined %}<div
         data-controller="ordered-choice"
         data-ordered-choice-move-up-label-value="{{ 'sessions.summary.form.recommendations_move_up'|trans({}, 'sessions') }}"
         data-ordered-choice-move-down-label-value="{{ 'sessions.summary.form.recommendations_move_down'|trans({}, 'sessions') }}"
@@ -49,12 +49,9 @@
         <ul class="ordered-choice__list" data-ordered-choice-target="list"></ul>
         <p class="internal-form-help">{{ 'sessions.summary.form.recommendations_order_help'|trans({}, 'sessions') }}</p>
         {{ form_errors(form.recommendationUuids) }}
-    </div>
+    </div>{% endif %}
 
     <div class="internal-form__actions">
-        {% if backPath is defined %}
-            <a class="internal-button internal-button--secondary internal-form__back-action" href="{{ backPath }}">{{ backLabel }}</a>
-        {% endif %}
         {{ form_widget(form.submit) }}
     </div>
 {{ form_end(form) }}

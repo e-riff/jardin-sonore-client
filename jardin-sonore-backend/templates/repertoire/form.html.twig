@@ -10,6 +10,9 @@
             <h1>{{ item ? item.title : 'sessions.repertoire.new.heading'|trans({}, 'sessions') }}</h1>
             <p>{{ (item ? 'sessions.repertoire.edit.description' : 'sessions.repertoire.new.description')|trans({}, 'sessions') }}</p>
         </div>
+        {% if item %}<div class="internal-heading-actions">
+            <button type="button" class="internal-button internal-button--danger" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('repertoire_delete', { uuid: item.uuid.toRfc4122 }) }}" data-confirmation-dialog-item-value="{{ item.title }}" data-confirmation-dialog-token-value="{{ csrf_token('repertoire_delete_' ~ item.uuid.toRfc4122) }}">{{ 'sessions.repertoire.table.delete'|trans({}, 'sessions') }}</button>
+        </div>{% endif %}
     </section>
     <section class="internal-card">
         {% if hasErrors %}<div class="internal-alert internal-alert--error">{{ 'sessions.repertoire.form.error_notice'|trans({}, 'sessions') }}</div>{% endif %}
@@ -145,10 +148,6 @@
 
             <div class="internal-form__actions">
                 {{ form_widget(form.submit) }}
-                <a class="internal-button internal-button--secondary" href="{{ path('repertoire_index') }}">{{ 'sessions.repertoire.form.back'|trans({}, 'sessions') }}</a>
-                {% if item %}
-                    <button type="button" class="internal-button internal-button--danger" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('repertoire_delete', { uuid: item.uuid.toRfc4122 }) }}" data-confirmation-dialog-item-value="{{ item.title }}" data-confirmation-dialog-token-value="{{ csrf_token('repertoire_delete_' ~ item.uuid.toRfc4122) }}">{{ 'sessions.repertoire.table.delete'|trans({}, 'sessions') }}</button>
-                {% endif %}
             </div>
         {{ form_end(form) }}
     </section>

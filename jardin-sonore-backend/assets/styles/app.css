@@ -689,14 +689,27 @@ button:disabled {
 }
 
 .commercial-project-group {
+    --group-accent: var(--color-on-surface-variant);
+    --group-tint: var(--color-surface-container-lowest);
     min-width: 0;
-    border: 1px solid var(--color-outline-variant);
+    border: 1px solid color-mix(in oklab, var(--group-accent) 22%, var(--color-outline-variant));
     border-radius: 20px;
     background: var(--color-surface-container-lowest);
 }
 
 .commercial-project-group--priority {
-    border-color: color-mix(in oklab, var(--color-secondary) 35%, var(--color-outline-variant));
+    --group-accent: var(--color-primary-container);
+    --group-tint: #fff8f5;
+}
+
+.commercial-project-group--upcoming {
+    --group-accent: var(--color-secondary);
+    --group-tint: #f8fbf7;
+}
+
+.commercial-project-group--without_task {
+    --group-accent: #896a32;
+    --group-tint: #fffdf6;
 }
 
 .commercial-project-group > summary {
@@ -709,13 +722,37 @@ button:disabled {
     font-family: var(--font-sans);
     font-size: 1rem;
     font-weight: 700;
-    list-style-position: inside;
+    list-style: none;
+    background: var(--group-tint);
+}
+
+.commercial-project-group > summary::-webkit-details-marker {
+    display: none;
+}
+
+.commercial-project-group__icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex: none;
+    color: var(--group-accent);
+}
+
+.commercial-project-group__chevron {
+    margin-left: auto;
+    color: var(--group-accent);
+    font-size: 1.35rem;
+    line-height: 1;
+    transition: transform 180ms ease;
+}
+
+.commercial-project-group[open] .commercial-project-group__chevron {
+    transform: rotate(180deg);
 }
 
 .commercial-project-group > summary:hover,
 .commercial-project-group > summary:focus-visible {
-    color: var(--color-secondary);
-    background: color-mix(in oklab, var(--color-secondary-container) 24%, white);
+    color: var(--group-accent);
+    background: color-mix(in oklab, var(--group-accent) 9%, white);
 }
 
 .commercial-project-group > summary .internal-badge {
@@ -900,7 +937,6 @@ button:disabled {
     height: 6px;
 }
 
-.commercial-dossier__contacts,
 .commercial-dossier__tasks,
 .commercial-dossier__timeline {
     min-width: 0;
@@ -911,19 +947,23 @@ button:disabled {
 }
 
 .commercial-dossier__contacts {
+    min-width: 0;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 14px;
+    background: color-mix(in oklab, var(--color-primary-container) 20%, white);
+}
+
+.commercial-dossier__contacts-content {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 10px 24px;
-    padding: 16px 20px;
+    border-top: 1px solid var(--color-outline-variant);
+    padding: 16px 20px 18px;
+    background: var(--color-surface-container-lowest);
 }
 
-.commercial-dossier__contacts .commercial-dossier__section-heading,
 .commercial-dossier__contacts .commercial-dossier__source {
     grid-column: 1 / -1;
-}
-
-.commercial-dossier__contacts .commercial-dossier__section-heading {
-    margin-bottom: 2px;
 }
 
 .commercial-dossier__section-heading {
@@ -1133,6 +1173,7 @@ button:disabled {
     background: color-mix(in oklab, var(--color-surface-container) 45%, white);
 }
 
+.commercial-dossier__contacts > summary,
 .commercial-dossier__documents > summary {
     display: flex;
     align-items: center;
@@ -1141,18 +1182,45 @@ button:disabled {
     padding: 12px 16px;
     color: var(--color-on-background);
     font-weight: 700;
-    list-style-position: inside;
+    list-style: none;
 }
 
+.commercial-dossier__contacts > summary::-webkit-details-marker,
+.commercial-dossier__documents > summary::-webkit-details-marker {
+    display: none;
+}
+
+.commercial-dossier__contacts > summary:hover,
+.commercial-dossier__contacts > summary:focus-visible,
 .commercial-dossier__documents > summary:hover,
 .commercial-dossier__documents > summary:focus-visible {
     background: color-mix(in oklab, var(--color-secondary-container) 28%, white);
+}
+
+.commercial-dossier__contacts > summary .commercial-icon:first-child {
+    width: 21px;
+    height: 21px;
+    color: var(--color-primary);
 }
 
 .commercial-dossier__documents > summary .commercial-icon {
     color: var(--color-secondary);
     width: 21px;
     height: 21px;
+}
+
+.commercial-dossier__contacts > summary .commercial-icon:last-child,
+.commercial-dossier__documents > summary .commercial-icon:last-child {
+    width: 17px;
+    height: 17px;
+    margin-left: auto;
+    color: var(--color-on-surface-variant);
+    transition: transform 160ms ease;
+}
+
+.commercial-dossier__contacts[open] > summary .commercial-icon:last-child,
+.commercial-dossier__documents[open] > summary .commercial-icon:last-child {
+    transform: rotate(180deg);
 }
 
 .commercial-dossier__documents-content {
@@ -1261,6 +1329,22 @@ button:disabled {
     align-items: flex-start;
 }
 
+.commercial-dossier__create-task {
+    border-color: color-mix(in oklab, var(--color-primary) 35%, var(--color-outline-variant));
+    color: var(--color-primary);
+}
+
+.commercial-dossier__create-event {
+    border-color: color-mix(in oklab, var(--color-secondary) 35%, var(--color-outline-variant));
+    color: var(--color-secondary);
+}
+
+.commercial-dossier__create-hint {
+    margin: 0 0 12px;
+    color: var(--color-on-surface-variant);
+    font-size: 0.84rem;
+}
+
 .commercial-dossier__create > summary {
     list-style: none;
 }
@@ -1289,14 +1373,6 @@ button:disabled {
     border-radius: 14px;
     padding: 16px;
     background: var(--color-surface-container-lowest);
-}
-
-.commercial-dossier__create--advanced > summary {
-    cursor: pointer;
-    padding: 9px 4px;
-    color: var(--color-secondary);
-    font-size: 0.78rem;
-    font-weight: 700;
 }
 
 .commercial-dossier__task {
@@ -4628,18 +4704,14 @@ a.session-composer-overlay__item {
         margin-bottom: 16px;
     }
 
-    .commercial-dossier__contacts,
     .commercial-dossier__tasks,
     .commercial-dossier__timeline {
         padding: 14px;
     }
 
-    .commercial-dossier__contacts {
+    .commercial-dossier__contacts-content {
         display: block;
-    }
-
-    .commercial-dossier__contacts .commercial-dossier__section-heading {
-        margin-bottom: 12px;
+        padding: 14px;
     }
 
     .commercial-dossier__people {

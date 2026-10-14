@@ -200,7 +200,7 @@ final class SessionSummaryController extends AbstractController
                 }
             }
         }
-        $form = $this->createForm(SessionSummaryFormType::class, $formModel, ['allow_publication' => true]);
+        $form = $this->createForm(SessionSummaryFormType::class, $formModel, ['allow_publication' => true, 'allow_recommendations' => false]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
