@@ -21,6 +21,9 @@ Document vivant — 14 octobre 2026. Il décrit les règles de l’interface Sym
 - Concevoir d’abord la largeur du téléphone : contrôles empilés, aucun défilement horizontal de page, liens `tel:` et `mailto:` accessibles, actions de ligne séparées et assez grandes pour le toucher.
 - Un tableau peut devenir une liste de lignes compactes sur mobile ; garder le libellé principal, l’état, l’échéance et les actions. Les colonnes secondaires peuvent passer en texte de second niveau.
 - Dans un dossier, « À faire » décrit les tâches encore ouvertes ; « Fil du dossier » décrit les faits dans l’ordre chronologique inverse. L’élément le plus récent est ouvert par défaut ; les textes longs se déplient individuellement. Les documents restent retrouvables sans repousser le fil sous une grande carte.
+- Sur la fiche dossier, « Contacts » et « Documents et suivi » sont deux blocs repliables signalés par une icône et un chevron. Les contacts sont ouverts par défaut sur ordinateur et repliés sur téléphone ; les actions pour ajouter une tâche ou un échange viennent ensuite, juste avant les listes qu’elles alimentent.
+- Sur l’index des dossiers, les groupes « Urgents », « À venir » et « Sans tâche prévue » s’ouvrent s’ils contiennent des dossiers ; un groupe vide reste fermé. Une icône propre à chaque groupe et une très légère teinte d’en-tête aident à les distinguer sans colorer tout le tableau.
+- Dans les formulaires d’édition, le retour reste au-dessus du titre, l’enregistrement reste à la fin du formulaire et la suppression se place dans les actions de l’en-tête.
 
 ## État d’application
 

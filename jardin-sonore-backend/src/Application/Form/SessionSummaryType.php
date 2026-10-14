@@ -42,11 +42,7 @@ final class SessionSummaryType extends AbstractType
         foreach ($this->instrumentRepository->findAllOrderedByName() as $instrument) {
             $instrumentChoices[$instrument->getName()] = $instrument->getUuid()->toRfc4122();
         }
-        $recommendationChoices = [];
         $themeChoices = [];
-        foreach ($this->sessionRecommendationRepository->search(activeOnly: true) as $sessionRecommendation) {
-            $recommendationChoices[$sessionRecommendation->getTitle()] = $sessionRecommendation->getUuid()->toRfc4122();
-        }
         foreach ($this->themeRepository->findAllOrderedByLabel() as $theme) {
             $themeChoices[$theme->getLabel()] = $theme->getUuid()->toRfc4122();
         }
@@ -86,20 +82,28 @@ final class SessionSummaryType extends AbstractType
                 'label' => 'sessions.summary.form.private_notes',
                 'required' => false,
                 'attr' => ['rows' => 5],
-            ])
-            ->add('recommendationUuids', ChoiceType::class, [
-                'label' => 'sessions.summary.form.recommendations',
-                'required' => false,
-                'multiple' => true,
-                'choices' => $recommendationChoices,
-            ])
-            ->add('recommendationOrder', HiddenType::class, [
-                'empty_data' => '',
-            ])
-            ->add('submit', SubmitType::class, [
-                'label' => 'sessions.summary.form.submit',
-                'attr' => ['class' => 'internal-button'],
             ]);
+
+        if ($options['allow_recommendations']) {
+            $recommendationChoices = [];
+            foreach ($this->sessionRecommendationRepository->search(activeOnly: true) as $sessionRecommendation) {
+                $recommendationChoices[$sessionRecommendation->getTitle()] = $sessionRecommendation->getUuid()->toRfc4122();
+            }
+
+            $builder
+                ->add('recommendationUuids', ChoiceType::class, [
+                    'label' => 'sessions.summary.form.recommendations',
+                    'required' => false,
+                    'multiple' => true,
+                    'choices' => $recommendationChoices,
+                ])
+                ->add('recommendationOrder', HiddenType::class, ['empty_data' => '']);
+        }
+
+        $builder->add('submit', SubmitType::class, [
+            'label' => 'sessions.summary.form.submit',
+            'attr' => ['class' => 'internal-button'],
+        ]);
 
         if ($options['allow_publication']) {
             $builder->add('published', CheckboxType::class, [
@@ -115,6 +119,7 @@ final class SessionSummaryType extends AbstractType
             'data_class' => SessionSummaryFormModel::class,
             'translation_domain' => 'sessions',
             'allow_publication' => false,
+            'allow_recommendations' => true,
         ]);
     }
 }

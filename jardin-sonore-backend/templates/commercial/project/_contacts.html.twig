@@ -1,7 +1,11 @@
-<section class="commercial-dossier__contacts" aria-labelledby="commercial-contacts-heading">
-    <div class="commercial-dossier__section-heading">
-        <h2 id="commercial-contacts-heading">{{ 'project.contact_heading'|trans({}, 'commercial') }}</h2>
-    </div>
+<details class="commercial-dossier__contacts" id="commercial-contacts" data-controller="responsive-details">
+    <summary>
+        {% include 'commercial/project/_icon.html.twig' with {name: 'people'} only %}
+        <span id="commercial-contacts-heading">{{ 'project.contact_heading'|trans({}, 'commercial') }}</span>
+        {% if project.people|length > 0 %}<span class="commercial-dossier__count">{{ project.people|length }}</span>{% endif %}
+        {% include 'commercial/project/_icon.html.twig' with {name: 'chevron'} only %}
+    </summary>
+    <div class="commercial-dossier__contacts-content">
     {% if project.organization %}
         <div class="commercial-dossier__organization">
             <div>
@@ -93,4 +97,5 @@
         {{ form_end(organizationForm) }}
     {% endif %}
     {% if project.request %}<a class="commercial-dossier__source" href="{{ path('commercial_request_show', {id: project.request.id}) }}">{{ 'project.original_request'|trans({}, 'commercial') }}</a>{% endif %}
-</section>
+    </div>
+</details>

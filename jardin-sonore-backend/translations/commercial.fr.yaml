@@ -88,7 +88,7 @@ project:
   call_number: 'Appeler le {number}'
   write_address: 'Écrire à {address}'
   documents_heading: Documents et suivi
-  add_note_with_task: Noter un échange et sa prochaine tâche
+  add_event_hint: Tu peux aussi prévoir la prochaine tâche ; laisse son intitulé vide si tu veux seulement noter l’échange.
   list:
     heading: Dossiers
     intro: Un dossier rassemble les échanges, les tâches et les documents d’une structure.
@@ -153,9 +153,9 @@ project:
   people: Interlocuteurs
   history: Fil du dossier
   actions: À faire
-  add_action: + Ajouter une tâche
+  add_action: Ajouter une tâche
   add_action_save: Ajouter la tâche
-  add_event: + Ajouter au fil
+  add_event: Ajouter au fil
   add_event_save: Ajouter au fil
   change_status: État du dossier
   status_label: État

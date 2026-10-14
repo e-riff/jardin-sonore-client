@@ -26,8 +26,18 @@
     {% for bucket, label in {priority: 'project.list.priority', upcoming: 'project.list.upcoming', without_task: 'project.list.without_task', closed: 'project.list.closed'} %}
         {% set rows = attribute(sections, bucket) %}
         {% if bucket != 'closed' or status in ['all', 'completed', 'without_result'] %}
-            <details class="commercial-project-group commercial-project-group--{{ bucket }}" {% if bucket in ['priority', 'upcoming'] or (bucket == 'closed' and status in ['completed', 'without_result']) %}open{% endif %}>
-                <summary><span>{{ label|trans({}, 'commercial') }}</span><span class="internal-badge internal-badge--muted">{{ rows|length }}</span></summary>
+            <details class="commercial-project-group commercial-project-group--{{ bucket }}" {% if rows is not empty and (bucket != 'closed' or status in ['completed', 'without_result']) %}open{% endif %}>
+                <summary>
+                    <svg class="commercial-project-group__icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        {% if bucket == 'priority' %}<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+                        {% elseif bucket == 'upcoming' %}<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/>
+                        {% elseif bucket == 'without_task' %}<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 9h8M8 13h8M8 17h4"/>
+                        {% else %}<rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v11h14V9M10 13h4"/>{% endif %}
+                    </svg>
+                    <span>{{ label|trans({}, 'commercial') }}</span>
+                    <span class="internal-badge internal-badge--muted">{{ rows|length }}</span>
+                    <span class="commercial-project-group__chevron" aria-hidden="true">⌄</span>
+                </summary>
                 {% if rows is empty %}
                     <p class="internal-empty-state">{{ 'dashboard.none'|trans({}, 'commercial') }}</p>
                 {% else %}
