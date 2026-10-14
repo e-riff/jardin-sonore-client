@@ -3,8 +3,9 @@
 {% set title = project.title %}
 
 {% block internal_body %}
+    {% include 'components/_internal_back_button.html.twig' with { href: path('commercial_project_index'), label: 'project.back'|trans({}, 'commercial') } only %}
     <section class="internal-hero commercial-dossier__hero">
-        <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('commercial_project_index') }}">← {{ 'project.back'|trans({}, 'commercial') }}</a>
+
         <div class="commercial-dossier__meta"><span>{{ 'project.opened_on'|trans({}, 'commercial') }} {{ project.createdAt|date('d/m/Y') }}</span><span class="internal-badge {{ project.status == 'confirmed' ? 'internal-badge--primary' : 'internal-badge--muted' }}">{{ ('project.status.' ~ project.status)|trans({}, 'commercial') }}</span></div>
         <h1>{{ project.title }}</h1>
     </section>

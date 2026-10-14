@@ -51,7 +51,11 @@ final class MailingAudienceMaskController extends AbstractController
             'name',
             'asc',
         );
-        $audienceMasks = $listMailingAudienceMasks();
+        $query = trim(mb_substr($request->query->getString('query'), 0, 120));
+        $audienceMasks = array_values(array_filter(
+            $listMailingAudienceMasks(),
+            static fn ($audienceMask): bool => '' === $query || false !== mb_stripos($audienceMask->getName(), $query),
+        ));
         usort($audienceMasks, static function ($left, $right) use ($tableSort): int {
             $leftValue = 'municipalityCount' === $tableSort->column
                 ? count($left->getMaterializedMunicipalityInseeCodes())
@@ -107,6 +111,7 @@ final class MailingAudienceMaskController extends AbstractController
             'audienceMasks' => $audienceMasks,
             'tableSort' => $tableSort,
             'audienceMaskDetails' => $audienceMaskDetails,
+            'query' => $query,
         ]);
     }
 

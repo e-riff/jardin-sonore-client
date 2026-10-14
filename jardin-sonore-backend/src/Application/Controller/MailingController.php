@@ -21,6 +21,7 @@ use App\Application\Mailing\GetMailingAudienceMask;
 use App\Application\Mailing\GetMailingCampaign;
 use App\Application\Mailing\ListMailingAudienceMasks;
 use App\Application\Mailing\ListMailingCampaigns;
+use App\Application\Mailing\MailingCampaignSummary;
 use App\Application\Mailing\NewsletterAudienceMapQueryInterface;
 use App\Application\Mailing\NewsletterAudienceMunicipalityMaterializerInterface;
 use App\Application\Mailing\NewsletterAudienceOptionsQueryInterface;
@@ -31,6 +32,7 @@ use App\Application\Mailing\SendMailingCampaignTest;
 use App\Application\Mailing\StopMailingCampaignDelivery;
 use App\Application\Mailing\UpdateMailingCampaign;
 use App\Application\Mailing\UpdateMailingCampaignInput;
+use App\Domain\Model\Mailing\MailingCampaignStatus;
 use App\Domain\Model\Mailing\MailingRecommendation;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Domain\Model\Mailing\NewsletterAudienceRadiusOrigin;
@@ -50,6 +52,8 @@ final class MailingController extends AbstractController
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(Request $request, ListMailingCampaigns $listMailingCampaigns): Response
     {
+        $query = trim(mb_substr($request->query->getString('query'), 0, 120));
+        $statusFilter = $request->query->getString('status');
         $tableSort = TableSort::fromQuery(
             $request->query->getString('sort'),
             $request->query->getString('direction'),
@@ -58,6 +62,13 @@ final class MailingController extends AbstractController
             'desc',
         );
         $campaigns = $listMailingCampaigns();
+        $campaigns = array_values(array_filter($campaigns, static function (MailingCampaignSummary $campaignSummary) use ($query, $statusFilter): bool {
+            $matchesQuery = '' === $query
+                || false !== mb_stripos($campaignSummary->internalTitle, $query)
+                || false !== mb_stripos($campaignSummary->emailSubject, $query);
+
+            return $matchesQuery && ('' === $statusFilter || $campaignSummary->status->value === $statusFilter);
+        }));
         usort($campaigns, static function ($left, $right) use ($tableSort): int {
             $leftValue = match ($tableSort->column) {
                 'emailSubject' => $left->emailSubject,
@@ -78,6 +89,9 @@ final class MailingController extends AbstractController
         return $this->render('mailing/index.html.twig', [
             'campaigns' => $campaigns,
             'tableSort' => $tableSort,
+            'query' => $query,
+            'statusFilter' => $statusFilter,
+            'statuses' => MailingCampaignStatus::cases(),
         ]);
     }
 

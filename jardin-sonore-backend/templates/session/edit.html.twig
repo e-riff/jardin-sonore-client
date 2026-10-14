@@ -5,6 +5,7 @@
 {% block head %}<meta name="turbo-cache-control" content="no-cache">{% endblock %}
 
 {% block internal_body %}
+    {% include 'components/_internal_back_button.html.twig' with { href: path('session_index'), label: 'sessions.summary.edit.back'|trans({}, 'sessions') } only %}
     <section class="internal-page-heading">
         <div>
             <p class="internal-eyebrow">{{ 'sessions.summary.edit.eyebrow'|trans({}, 'sessions') }}</p>

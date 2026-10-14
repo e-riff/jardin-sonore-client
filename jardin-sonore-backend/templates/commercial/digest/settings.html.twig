@@ -3,6 +3,7 @@
 {% set title = 'digest.heading'|trans({}, 'commercial') %}
 
 {% block internal_body %}
+    {% include 'components/_internal_back_button.html.twig' with { href: path('commercial_project_index'), label: 'project.list.heading'|trans({}, 'commercial') } only %}
     <section class="internal-hero">
         <a href="{{ path('commercial_project_index') }}">← {{ 'project.list.heading'|trans({}, 'commercial') }}</a>
         <h1>{{ 'digest.heading'|trans({}, 'commercial') }}</h1>
@@ -10,7 +11,9 @@
     </section>
     <section class="internal-card internal-card--form">
         {{ form_start(form, {attr: {class: 'internal-form'}}) }}
-            {{ form_widget(form) }}
+            {{ form_row(form.enabled) }}
+            {{ form_row(form.sendTime) }}
+            <div class="internal-form__actions">{{ form_widget(form.submit) }}</div>
         {{ form_end(form) }}
     </section>
 {% endblock %}

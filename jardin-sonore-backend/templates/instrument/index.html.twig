@@ -3,6 +3,7 @@
 {% set title = 'catalog.instrument.index.title'|trans({}, 'catalog') %}
 
 {% block internal_body %}
+    {% include 'components/_internal_back_button.html.twig' with { href: path('admin'), label: 'catalog.instrument.index.backoffice'|trans({}, 'catalog') } only %}
     <section class="internal-page-heading">
         <div>
             <p class="internal-eyebrow">{{ 'catalog.instrument.index.eyebrow'|trans({}, 'catalog') }}</p>
@@ -11,9 +12,6 @@
         </div>
 
         <div class="internal-heading-actions">
-            <a class="internal-button internal-button--secondary" href="{{ path('admin') }}">
-                {{ 'catalog.instrument.index.backoffice'|trans({}, 'catalog') }}
-            </a>
             <a class="internal-button" href="{{ path('instrument_new') }}">
                 {{ 'catalog.instrument.index.create'|trans({}, 'catalog') }}
             </a>

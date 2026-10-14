@@ -1,9 +1,9 @@
 {% extends 'internal/base.html.twig' %}
 {% set title = 'subscriber.title'|trans({}, 'newsletter') %}
 {% block internal_body %}
+    {% include 'components/_internal_back_button.html.twig' with { href: emailsUrl, label: 'subscriber.back'|trans({}, 'newsletter') } only %}
     <section class="internal-page-heading">
         <div><p class="internal-eyebrow">{{ 'subscriber.eyebrow'|trans({}, 'newsletter') }}</p><h1>{{ title }}</h1><p>{{ 'subscriber.description'|trans({}, 'newsletter') }}</p></div>
-        <div class="internal-heading-actions"><a class="internal-button internal-button--secondary" href="{{ emailsUrl }}">{{ 'subscriber.back'|trans({}, 'newsletter') }}</a></div>
     </section>
     <section class="internal-card">
         {% if emailContact %}

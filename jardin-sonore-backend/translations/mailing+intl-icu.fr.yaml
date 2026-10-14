@@ -8,6 +8,10 @@ mailing:
     invalid_recipients: "Adresses invalides"
     empty: "Aucune campagne newsletter n’a encore été créée."
     empty_action: "Créer le premier brouillon"
+    empty_filtered: "Aucune campagne ne correspond à cette recherche."
+    search: "Rechercher une campagne"
+    filter_status: "Statut"
+    all_statuses: "Tous les statuts"
     list:
       title: "Campagnes"
     table:
@@ -298,6 +302,8 @@ mailing:
       available_title: "Masques disponibles"
       open_catalog: "Ouvrir la bibliothèque"
       empty: "Aucun masque d’audience n’est encore enregistré."
+      empty_filtered: "Aucun masque ne correspond à cette recherche."
+      search: "Rechercher un masque"
       apply: "Appliquer"
       apply_help: "Ouvrez une campagne pour appliquer ce masque."
       back_to_campaign: "Retour à la campagne"

@@ -3,6 +3,7 @@
 {% set title = 'catalog.instrument.new.title'|trans({}, 'catalog') %}
 
 {% block internal_body %}
+    {% include 'components/_internal_back_button.html.twig' with { href: path('instrument_index'), label: 'catalog.instrument.form.back'|trans({}, 'catalog') } only %}
     <section class="internal-page-heading">
         <div>
             <p class="internal-eyebrow">{{ 'catalog.instrument.new.eyebrow'|trans({}, 'catalog') }}</p>

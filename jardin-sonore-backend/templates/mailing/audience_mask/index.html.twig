@@ -3,6 +3,11 @@
 {% set title = 'mailing.audience.mask.catalog_title'|trans({}, 'mailing') %}
 
 {% block internal_body %}
+    {% if campaign %}
+        {% include 'components/_internal_back_button.html.twig' with { href: path('mailing_audience', { uuid: campaign.uuid }), label: 'mailing.audience.mask.back_to_campaign'|trans({}, 'mailing') } only %}
+    {% else %}
+        {% include 'components/_internal_back_button.html.twig' with { href: path('mailing_index'), label: 'mailing.audience.mask.back_to_mailing'|trans({}, 'mailing') } only %}
+    {% endif %}
     <section class="internal-page-heading">
         <div>
             <p class="internal-eyebrow">{{ 'mailing.audience.mask.catalog_eyebrow'|trans({}, 'mailing') }}</p>
@@ -12,75 +17,73 @@
 
         <div class="internal-heading-actions">
             <a class="internal-button" href="{{ path('mailing_audience_mask_new') }}">{{ 'mailing.audience.mask.editor.create'|trans({}, 'mailing') }}</a>
-            {% if campaign %}
-                <a class="internal-button" href="{{ path('mailing_audience', { uuid: campaign.uuid }) }}">
-                    {{ 'mailing.audience.mask.back_to_campaign'|trans({}, 'mailing') }}
-                </a>
-            {% else %}
-                <a class="internal-button internal-button--secondary" href="{{ path('mailing_index') }}">
-                    {{ 'mailing.audience.mask.back_to_mailing'|trans({}, 'mailing') }}
-                </a>
-            {% endif %}
         </div>
     </section>
 
-    <section class="internal-card">
-        {% if audienceMasks is empty %}
-            <p>{{ 'mailing.audience.mask.empty'|trans({}, 'mailing') }}</p>
-        {% else %}
-            <div class="internal-table-wrapper">
-                <twig:TableMobileSort label="Trier les masques" :selected="tableSort.column" :options="[
-                    { value: 'name', label: 'Nom', href: path('mailing_audience_mask_index', { campaign: campaign ? campaign.uuid : null, sort: 'name', direction: tableSort.nextDirectionFor('name') }) },
-                    { value: 'municipalityCount', label: 'Communes', href: path('mailing_audience_mask_index', { campaign: campaign ? campaign.uuid : null, sort: 'municipalityCount', direction: tableSort.nextDirectionFor('municipalityCount') }) }
-                ]" />
-                <table class="internal-table internal-table--compact-mobile">
-                    <thead>
-                        <tr>
-                            <th><twig:TableSortHeader label="{{ 'mailing.audience.mask.table.name'|trans({}, 'mailing') }}" :href="path('mailing_audience_mask_index', { campaign: campaign ? campaign.uuid : null, sort: 'name', direction: tableSort.nextDirectionFor('name') })" :active="tableSort.column == 'name'" :direction="tableSort.direction" /></th>
-                            <th data-table-mobile="secondary"><twig:TableSortHeader label="{{ 'mailing.audience.mask.table.municipalities'|trans({}, 'mailing') }}" :href="path('mailing_audience_mask_index', { campaign: campaign ? campaign.uuid : null, sort: 'municipalityCount', direction: tableSort.nextDirectionFor('municipalityCount') })" :active="tableSort.column == 'municipalityCount'" :direction="tableSort.direction" /></th>
-                            <th>Critères</th>
-                            <th>{{ 'mailing.audience.mask.table.actions'|trans({}, 'mailing') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for audienceMask in audienceMasks %}
-                            <tr class="internal-table__row--clickable" tabindex="0" data-controller="catalog-row" data-catalog-row-url-value="{{ path('mailing_audience_mask_edit', { maskUuid: audienceMask.uuid }) }}" data-action="click->catalog-row#navigate keydown->catalog-row#navigateFromKeyboard" aria-label="{{ 'mailing.audience.mask.editor.open'|trans({ name: audienceMask.name }, 'mailing') }}">
-                                <td data-table-mobile="primary" data-label="{{ 'mailing.audience.mask.table.name'|trans({}, 'mailing') }}"><strong>{{ audienceMask.name }}</strong></td>
-                                <td data-table-mobile="secondary" data-label="{{ 'mailing.audience.mask.table.municipalities'|trans({}, 'mailing') }}">{{ audienceMask.materializedMunicipalityInseeCodes|length }}</td>
-                                <td data-table-mobile="secondary" data-label="Critères">
-                                    {% set details = audienceMaskDetails[audienceMask.uuid.toRfc4122] %}
-                                    <details data-catalog-row-ignore>
-                                        <summary>{{ details.municipalities|length }} commune{{ details.municipalities|length > 1 ? 's' : '' }} · {{ details.criteria|length }} filtre{{ details.criteria|length > 1 ? 's' : '' }}</summary>
-                                        {% if details.municipalities is not empty %}<p><strong>Communes</strong><br>{{ details.municipalities|join(', ') }}</p>{% endif %}
-                                        {% if details.criteria is not empty %}<ul>{% for criterion in details.criteria %}<li>{{ criterion }}</li>{% endfor %}</ul>{% endif %}
-                                    </details>
-                                </td>
-                                <td data-table-mobile="actions" data-label="{{ 'mailing.audience.mask.table.actions'|trans({}, 'mailing') }}">
-                                    {% include 'components/_catalog_actions.html.twig' with {
-                                        editUrl: path('mailing_audience_mask_edit', { maskUuid: audienceMask.uuid }),
-                                        deleteUrl: path('mailing_audience_mask_delete', { maskUuid: audienceMask.uuid }),
-                                        itemLabel: audienceMask.name,
-                                        token: csrf_token('mailing_audience_mask_delete_' ~ audienceMask.uuid.toRfc4122),
-                                        editLabel: 'mailing.audience.mask.editor.edit'|trans({}, 'mailing'),
-                                        deleteLabel: 'mailing.audience.mask.editor.delete'|trans({}, 'mailing')
-                                    } only %}
-                                    {% if campaign %}
-                                        <form method="post" action="{{ path('mailing_audience_mask_apply_to_campaign', {
-                                            maskUuid: audienceMask.uuid,
-                                            campaignUuid: campaign.uuid
-                                        }) }}">
-                                            <input type="hidden" name="_token" value="{{ csrf_token('mailing_apply_audience_mask_' ~ audienceMask.uuid.toRfc4122 ~ '_' ~ campaign.uuid.toRfc4122) }}">
-                                            <button class="internal-button internal-button--secondary internal-button--compact" type="submit" {% if not campaign.editable %}disabled{% endif %}>
-                                                {{ 'mailing.audience.mask.apply'|trans({}, 'mailing') }}
-                                            </button>
-                                        </form>
-                                    {% endif %}
-                                </td>
+    <section class="internal-card" data-controller="auto-filter">
+        <form class="internal-search" method="get" data-auto-filter-target="form" data-action="input->auto-filter#schedule submit->auto-filter#submit">
+            {% if campaign %}<input type="hidden" name="campaign" value="{{ campaign.uuid }}">{% endif %}
+            <label for="audience-mask-query">{{ 'mailing.audience.mask.search'|trans({}, 'mailing') }}</label>
+            <input id="audience-mask-query" name="query" value="{{ query }}" type="search" autocomplete="off">
+        </form>
+        <div data-auto-filter-target="results" aria-live="polite">
+            {% if audienceMasks is empty %}
+                <p>{{ (query ? 'mailing.audience.mask.empty_filtered' : 'mailing.audience.mask.empty')|trans({}, 'mailing') }}</p>
+            {% else %}
+                <div class="internal-table-wrapper">
+                    <twig:TableMobileSort label="Trier les masques" :selected="tableSort.column" :options="[
+                        { value: 'name', label: 'Nom', href: path('mailing_audience_mask_index', { campaign: campaign ? campaign.uuid : null, query: query, sort: 'name', direction: tableSort.nextDirectionFor('name') }) },
+                        { value: 'municipalityCount', label: 'Communes', href: path('mailing_audience_mask_index', { campaign: campaign ? campaign.uuid : null, query: query, sort: 'municipalityCount', direction: tableSort.nextDirectionFor('municipalityCount') }) }
+                    ]" />
+                    <table class="internal-table internal-table--compact-mobile">
+                        <thead>
+                            <tr>
+                                <th><twig:TableSortHeader label="{{ 'mailing.audience.mask.table.name'|trans({}, 'mailing') }}" :href="path('mailing_audience_mask_index', { campaign: campaign ? campaign.uuid : null, query: query, sort: 'name', direction: tableSort.nextDirectionFor('name') })" :active="tableSort.column == 'name'" :direction="tableSort.direction" /></th>
+                                <th data-table-mobile="secondary"><twig:TableSortHeader label="{{ 'mailing.audience.mask.table.municipalities'|trans({}, 'mailing') }}" :href="path('mailing_audience_mask_index', { campaign: campaign ? campaign.uuid : null, query: query, sort: 'municipalityCount', direction: tableSort.nextDirectionFor('municipalityCount') })" :active="tableSort.column == 'municipalityCount'" :direction="tableSort.direction" /></th>
+                                <th>Critères</th>
+                                <th>{{ 'mailing.audience.mask.table.actions'|trans({}, 'mailing') }}</th>
                             </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% endif %}
+                        </thead>
+                        <tbody>
+                            {% for audienceMask in audienceMasks %}
+                                <tr class="internal-table__row--clickable" tabindex="0" data-controller="catalog-row" data-catalog-row-url-value="{{ path('mailing_audience_mask_edit', { maskUuid: audienceMask.uuid }) }}" data-action="click->catalog-row#navigate keydown->catalog-row#navigateFromKeyboard" aria-label="{{ 'mailing.audience.mask.editor.open'|trans({ name: audienceMask.name }, 'mailing') }}">
+                                    <td data-table-mobile="primary" data-label="{{ 'mailing.audience.mask.table.name'|trans({}, 'mailing') }}"><strong>{{ audienceMask.name }}</strong></td>
+                                    <td data-table-mobile="secondary" data-label="{{ 'mailing.audience.mask.table.municipalities'|trans({}, 'mailing') }}">{{ audienceMask.materializedMunicipalityInseeCodes|length }}</td>
+                                    <td data-table-mobile="secondary" data-label="Critères">
+                                        {% set details = audienceMaskDetails[audienceMask.uuid.toRfc4122] %}
+                                        <details data-catalog-row-ignore>
+                                            <summary>{{ details.municipalities|length }} commune{{ details.municipalities|length > 1 ? 's' : '' }} · {{ details.criteria|length }} filtre{{ details.criteria|length > 1 ? 's' : '' }}</summary>
+                                            {% if details.municipalities is not empty %}<p><strong>Communes</strong><br>{{ details.municipalities|join(', ') }}</p>{% endif %}
+                                            {% if details.criteria is not empty %}<ul>{% for criterion in details.criteria %}<li>{{ criterion }}</li>{% endfor %}</ul>{% endif %}
+                                        </details>
+                                    </td>
+                                    <td data-table-mobile="actions" data-label="{{ 'mailing.audience.mask.table.actions'|trans({}, 'mailing') }}">
+                                        {% include 'components/_catalog_actions.html.twig' with {
+                                            editUrl: path('mailing_audience_mask_edit', { maskUuid: audienceMask.uuid }),
+                                            deleteUrl: path('mailing_audience_mask_delete', { maskUuid: audienceMask.uuid }),
+                                            itemLabel: audienceMask.name,
+                                            token: csrf_token('mailing_audience_mask_delete_' ~ audienceMask.uuid.toRfc4122),
+                                            editLabel: 'mailing.audience.mask.editor.edit'|trans({}, 'mailing'),
+                                            deleteLabel: 'mailing.audience.mask.editor.delete'|trans({}, 'mailing')
+                                        } only %}
+                                        {% if campaign %}
+                                            <form method="post" action="{{ path('mailing_audience_mask_apply_to_campaign', {
+                                                maskUuid: audienceMask.uuid,
+                                                campaignUuid: campaign.uuid
+                                            }) }}">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('mailing_apply_audience_mask_' ~ audienceMask.uuid.toRfc4122 ~ '_' ~ campaign.uuid.toRfc4122) }}">
+                                                <button class="internal-button internal-button--secondary internal-button--compact" type="submit" {% if not campaign.editable %}disabled{% endif %}>
+                                                    {{ 'mailing.audience.mask.apply'|trans({}, 'mailing') }}
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
     </section>
 {% endblock %}

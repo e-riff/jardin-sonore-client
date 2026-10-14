@@ -3,16 +3,13 @@
 {% set title = 'mailing.invalid_recipient.title'|trans({}, 'mailing') %}
 
 {% block internal_body %}
+    {% include 'components/_internal_back_button.html.twig' with { href: path('mailing_index'), label: 'mailing.invalid_recipient.back'|trans({}, 'mailing') } only %}
     <section class="internal-page-heading">
         <div>
             <p class="internal-eyebrow">{{ 'mailing.invalid_recipient.eyebrow'|trans({}, 'mailing') }}</p>
             <h1>{{ 'mailing.invalid_recipient.heading'|trans({}, 'mailing') }}</h1>
             <p>{{ 'mailing.invalid_recipient.description'|trans({}, 'mailing') }}</p>
         </div>
-
-        <a class="internal-button internal-button--secondary" href="{{ path('mailing_index') }}">
-            {{ 'mailing.invalid_recipient.back'|trans({}, 'mailing') }}
-        </a>
     </section>
 
     <section class="internal-card">
