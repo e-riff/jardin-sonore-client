@@ -27,14 +27,25 @@
                         {% include 'commercial/project/_icon.html.twig' with {name: quote.signedOn ? 'signed' : 'quote'} only %}
                         <div><strong>{{ quote.reference }}</strong><span>{{ quote.filename }} · {{ (quote.amountCents / 100)|number_format(2, ',', ' ') }} € · {{ quote.sentOn|date('d/m/Y') }}</span>
                             {% if quote.replaces %}<span>{{ 'quote.replacement'|trans({}, 'commercial') }} {{ quote.replaces.reference }}</span>{% endif %}
-                            <span class="commercial-dossier__document-state">{{ (quote.signedOn ? 'quote.status_signed' : 'quote.status_sent')|trans({}, 'commercial') }}{% if quote.signedOn %} · {{ quote.signedOn|date('d/m/Y') }}{% endif %}</span>
-                            {% if not quote.signedOn %}<details class="commercial-dossier__document-action"><summary>{% include 'commercial/project/_icon.html.twig' with {name: 'check'} only %} {{ 'quote.sign'|trans({}, 'commercial') }}</summary>
-                                <form method="post" action="{{ path('commercial_quote_sign', {id: quote.id}) }}" class="internal-form">
-                                    <input type="hidden" name="_token" value="{{ csrf_token('commercial_quote_sign_' ~ quote.id) }}">
-                                    <label>{{ 'quote.signed_on'|trans({}, 'commercial') }} <input type="date" name="signedOn" value="{{ 'now'|date('Y-m-d') }}" required></label>
-                                    <button class="internal-button internal-button--secondary" type="submit">{{ 'quote.sign'|trans({}, 'commercial') }}</button>
-                                </form>
-                            </details>{% endif %}
+                            {% set quoteStatus = quote.signedOn ? 'signed' : (quote.refusedOn ? 'refused' : 'sent') %}
+                            {% set quoteStatusDate = quote.signedOn ?: quote.refusedOn %}
+                            <span class="commercial-dossier__document-state{{ quote.refusedOn ? ' commercial-dossier__document-state--refused' : '' }}">{{ ('quote.status_' ~ quoteStatus)|trans({}, 'commercial') }}{% if quoteStatusDate %} · {{ quoteStatusDate|date('d/m/Y') }}{% endif %}</span>
+                            {% if not quote.signedOn and not quote.refusedOn %}<div class="commercial-dossier__quote-actions">
+                                <details class="commercial-dossier__document-action commercial-dossier__document-action--sign"><summary>{% include 'commercial/project/_icon.html.twig' with {name: 'check'} only %}<span>{{ 'quote.sign'|trans({}, 'commercial') }}</span></summary>
+                                    <form method="post" action="{{ path('commercial_quote_sign', {id: quote.id}) }}" class="internal-form">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('commercial_quote_sign_' ~ quote.id) }}">
+                                        <label>{{ 'quote.signed_on'|trans({}, 'commercial') }} <input type="date" name="signedOn" value="{{ 'now'|date('Y-m-d') }}" required></label>
+                                        <button class="internal-button internal-button--secondary" type="submit">{{ 'quote.sign'|trans({}, 'commercial') }}</button>
+                                    </form>
+                                </details>
+                                <details class="commercial-dossier__document-action commercial-dossier__document-action--refuse"><summary>{% include 'commercial/project/_icon.html.twig' with {name: 'close'} only %}<span>{{ 'quote.refuse'|trans({}, 'commercial') }}</span></summary>
+                                    <form method="post" action="{{ path('commercial_quote_refuse', {id: quote.id}) }}" class="internal-form">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('commercial_quote_refuse_' ~ quote.id) }}">
+                                        <label>{{ 'quote.refused_on'|trans({}, 'commercial') }} <input type="date" name="refusedOn" value="{{ 'now'|date('Y-m-d') }}" required></label>
+                                        <button class="internal-button internal-button--danger" type="submit">{{ 'quote.refuse'|trans({}, 'commercial') }}</button>
+                                    </form>
+                                </details>
+                            </div>{% endif %}
                         </div>
                     </article>
                 {% else %}<p class="commercial-dossier__muted">{{ 'quote.no_quotes'|trans({}, 'commercial') }}</p>{% endfor %}

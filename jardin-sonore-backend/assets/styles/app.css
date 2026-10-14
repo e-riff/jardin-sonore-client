@@ -1280,8 +1280,7 @@ button:disabled {
 }
 
 .commercial-dossier__document-heading a,
-.commercial-dossier__document a,
-.commercial-dossier__document-action summary {
+.commercial-dossier__document a {
     color: var(--color-secondary);
     font-size: 0.78rem;
     font-weight: 700;
@@ -1314,8 +1313,74 @@ button:disabled {
     font-weight: 700;
 }
 
+.commercial-dossier__document-state--refused {
+    color: #9e2f24;
+}
+
+.commercial-dossier__quote-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.commercial-dossier__document-action {
+    position: relative;
+}
+
 .commercial-dossier__document-action summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 7px 12px;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 999px;
+    background: var(--color-surface-container-lowest);
+    color: var(--color-secondary);
     cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 700;
+    list-style: none;
+}
+
+.commercial-dossier__document-action summary::-webkit-details-marker {
+    display: none;
+}
+
+.commercial-dossier__document-action summary .commercial-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.commercial-dossier__document-action--sign summary {
+    border-color: color-mix(in oklab, var(--color-secondary) 35%, white);
+    color: var(--color-secondary);
+}
+
+.commercial-dossier__document-action--refuse summary {
+    border-color: color-mix(in oklab, #9e2f24 38%, white);
+    color: #9e2f24;
+}
+
+.commercial-dossier__document-action summary:hover,
+.commercial-dossier__document-action summary:focus-visible {
+    background: var(--color-secondary-container);
+}
+
+.commercial-dossier__document-action--refuse summary:hover,
+.commercial-dossier__document-action--refuse summary:focus-visible {
+    background: #f9e9e6;
+}
+
+.commercial-dossier__document-action .internal-form {
+    min-width: min(280px, calc(100vw - 56px));
+    padding: 12px;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 12px;
+    background: var(--color-surface-container-lowest);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 10%);
+    z-index: 3;
 }
 
 .commercial-dossier__document-action .internal-form {
@@ -1561,20 +1626,6 @@ button:disabled {
 .commercial-timeline__item:first-child .commercial-timeline__marker {
     background: var(--color-secondary);
     border-color: var(--color-secondary);
-}
-
-.commercial-timeline__watermark {
-    position: absolute;
-    top: 2px;
-    right: 5px;
-    color: var(--color-primary);
-    opacity: 0.11;
-    pointer-events: none;
-}
-
-.commercial-timeline__watermark .commercial-icon {
-    width: 44px;
-    height: 44px;
 }
 
 .commercial-timeline__heading {
@@ -4756,16 +4807,6 @@ a.session-composer-overlay__item {
 
     .commercial-timeline__marker {
         left: -25px;
-    }
-
-    .commercial-timeline__watermark {
-        top: 23px;
-        right: 2px;
-    }
-
-    .commercial-timeline__watermark .commercial-icon {
-        width: 34px;
-        height: 34px;
     }
 
     .commercial-timeline__edit > form {

@@ -221,6 +221,9 @@ event:
   contact_edited: Fiche interlocuteur corrigée
   contact_primary: Interlocuteur principal choisi
   contact_former: Interlocuteur sorti du dossier
+  quote_sent: Devis envoyé
+  quote_signed: Devis signé
+  quote_refused: Devis refusé
 action:
   completed_title: Titre de la tâche terminée
   edit: Modifier l’action
@@ -248,10 +251,13 @@ quote:
   amount_invalid: Indiquer un montant valide, avec au plus deux décimales.
   reference_exists: Ce numéro de devis est déjà enregistré.
   signed_on: Signé le
+  refused_on: Refusé le
   sign: Marquer comme signé
+  refuse: Marquer comme refusé
   no_quotes: Aucun devis enregistré.
   status_sent: Envoyé
   status_signed: Signé
+  status_refused: Refusé
   replacement: Remplace le devis
 invoice:
   heading: Factures

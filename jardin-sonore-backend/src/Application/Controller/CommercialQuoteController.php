@@ -88,4 +88,24 @@ final class CommercialQuoteController extends AbstractController
 
         return $this->redirectToRoute('commercial_project_show', ['id' => $quoteEntity->getProject()->getId()]);
     }
+
+    #[Route('/commercial/quotes/{id}/refuse', name: 'commercial_quote_refuse', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    public function refuse(int $id, Request $request, EntityManagerInterface $entityManager, RecordCommercialQuote $recorder): Response
+    {
+        if (!$this->isCsrfTokenValid("commercial_quote_refuse_{$id}", $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+        $quoteEntity = $entityManager->find(CommercialQuoteEntity::class, $id);
+        if (!$quoteEntity instanceof CommercialQuoteEntity) {
+            throw $this->createNotFoundException();
+        }
+        $refusedOn = DateTimeImmutable::createFromFormat('!Y-m-d', $request->request->getString('refusedOn'));
+        if (!$refusedOn instanceof DateTimeImmutable) {
+            return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        $recorder->markRefused($quoteEntity, $refusedOn);
+        $entityManager->flush();
+
+        return $this->redirectToRoute('commercial_project_show', ['id' => $quoteEntity->getProject()->getId()]);
+    }
 }

@@ -44,6 +44,9 @@ final readonly class RecordCommercialQuote
         if (null !== $quoteEntity->getSignedOn()) {
             return;
         }
+        if (null !== $quoteEntity->getRefusedOn()) {
+            throw new DomainException('A refused quote cannot be signed.');
+        }
         $projectEntity = $quoteEntity->getProject();
         if (CommercialProjectEntity::STATUS_DISCUSSION === $projectEntity->getStatus()) {
             $this->projectWorkflow->confirm($projectEntity);
@@ -52,6 +55,21 @@ final readonly class RecordCommercialQuote
             throw new DomainException('A quote from a closed project cannot be signed.');
         }
         $quoteEntity->markSigned($signedOn);
-        $projectEntity->recordEvent('quote_signed', $this->clock->now(), $quoteEntity->getReference());
+        $eventEntity = $projectEntity->recordEvent('quote_signed', $this->clock->now(), $quoteEntity->getReference());
+        $eventEntity->linkQuote($quoteEntity);
+    }
+
+    public function markRefused(CommercialQuoteEntity $quoteEntity, DateTimeImmutable $refusedOn): void
+    {
+        if (null !== $quoteEntity->getRefusedOn()) {
+            return;
+        }
+        if (null !== $quoteEntity->getSignedOn()) {
+            throw new DomainException('A signed quote cannot be refused.');
+        }
+
+        $quoteEntity->markRefused($refusedOn);
+        $eventEntity = $quoteEntity->getProject()->recordEvent('quote_refused', $this->clock->now(), $quoteEntity->getReference());
+        $eventEntity->linkQuote($quoteEntity);
     }
 }
