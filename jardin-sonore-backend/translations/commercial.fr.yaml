@@ -151,8 +151,8 @@ project:
     task_incomplete: Indiquer un libellé et une date pour la tâche.
   organization: Structure
   people: Interlocuteurs
-  history: Historique
-  actions: Actions à faire
+  history: Fil du dossier
+  actions: À faire
   add_action: + Ajouter une tâche
   add_action_save: Ajouter la tâche
   add_event: + Ajouter au fil
@@ -160,10 +160,12 @@ project:
   change_status: État du dossier
   status_label: État
   change_status_save: Changer l’état
-  no_actions: Aucune action ouverte.
+  no_actions: Aucune tâche à faire.
   no_people: Aucun interlocuteur rattaché.
   contact_former: Ancien interlocuteur
   contact_edit: Corriger la fiche
+  contact_manage: Gérer cet interlocuteur
+  contact_add: Ajouter ou rattacher un interlocuteur
   contact_save: Enregistrer les corrections
   contact_primary: Choisir comme interlocuteur principal
   contact_mark_former: Ne suit plus ce dossier

@@ -846,7 +846,7 @@ button:disabled {
 }
 
 .internal-main:has(.commercial-dossier__hero) {
-    padding-top: 32px;
+    padding-top: 24px;
 }
 
 .commercial-icon {
@@ -864,15 +864,15 @@ button:disabled {
 }
 
 .commercial-dossier__hero {
-    margin-bottom: 22px;
+    margin-bottom: 14px;
 }
 
 .commercial-dossier__hero > .internal-button {
-    margin-bottom: 20px;
+    margin-bottom: 12px;
 }
 
 .commercial-dossier__hero h1 {
-    font-size: clamp(2rem, 3vw, 2.6rem);
+    font-size: clamp(1.9rem, 2.8vw, 2.35rem);
     overflow-wrap: anywhere;
 }
 
@@ -910,6 +910,22 @@ button:disabled {
     background: var(--color-surface-container-lowest);
 }
 
+.commercial-dossier__contacts {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px 24px;
+    padding: 16px 20px;
+}
+
+.commercial-dossier__contacts .commercial-dossier__section-heading,
+.commercial-dossier__contacts .commercial-dossier__source {
+    grid-column: 1 / -1;
+}
+
+.commercial-dossier__contacts .commercial-dossier__section-heading {
+    margin-bottom: 2px;
+}
+
 .commercial-dossier__section-heading {
     display: flex;
     align-items: center;
@@ -940,8 +956,8 @@ button:disabled {
 
 .commercial-dossier__organization {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
-    gap: 12px 24px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
     align-items: start;
 }
 
@@ -1000,25 +1016,25 @@ button:disabled {
     width: 26px;
     height: 26px;
     border-radius: 8px;
-    color: var(--color-primary);
+    color: var(--color-secondary);
 }
 
 .commercial-dossier__channel a:hover,
 .commercial-dossier__channel a:focus-visible {
-    background: var(--color-primary-fixed);
+    background: color-mix(in oklab, var(--color-secondary-container) 38%, white);
 }
 
 .commercial-dossier__people {
-    margin-top: 14px;
-    border-top: 1px solid var(--color-outline-variant);
-    padding-top: 12px;
+    margin: 0;
+    border-left: 1px solid var(--color-outline-variant);
+    padding-left: 22px;
 }
 
 .commercial-dossier__people > summary,
 .commercial-dossier__status > summary {
     width: fit-content;
     cursor: pointer;
-    color: var(--color-primary);
+    color: var(--color-secondary);
     font-size: 0.86rem;
     font-weight: 700;
 }
@@ -1034,11 +1050,11 @@ button:disabled {
 }
 
 .commercial-dossier__person {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
-    gap: 3px 24px;
-    border-top: 1px solid color-mix(in oklab, var(--color-outline-variant) 55%, white);
-    margin-top: 12px;
-    padding-top: 12px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 5px;
+    border-top: 1px solid color-mix(in oklab, var(--color-outline-variant) 60%, white);
+    margin-top: 8px;
+    padding-top: 8px;
 }
 
 .commercial-dossier__person-heading {
@@ -1049,14 +1065,28 @@ button:disabled {
 }
 
 .commercial-dossier__primary {
-    color: var(--color-primary);
+    color: var(--color-secondary);
     font-size: 0.7rem;
     font-weight: 700;
 }
 
 .commercial-dossier__person .commercial-dossier__channels {
-    grid-column: 2;
-    grid-row: 1 / span 2;
+    grid-column: 1;
+    grid-row: auto;
+}
+
+.commercial-dossier__person-actions,
+.commercial-dossier__contact-tools {
+    margin-top: 6px;
+    font-size: 0.78rem;
+}
+
+.commercial-dossier__person-actions > summary,
+.commercial-dossier__contact-tools > summary {
+    width: fit-content;
+    color: var(--color-secondary);
+    cursor: pointer;
+    font-weight: 700;
 }
 
 .commercial-dossier__subactions {
@@ -1078,7 +1108,7 @@ button:disabled {
     border: 0;
     padding: 0;
     background: transparent;
-    color: var(--color-primary);
+    color: var(--color-secondary);
     font: inherit;
     font-weight: 700;
     text-decoration: none;
@@ -1116,11 +1146,11 @@ button:disabled {
 
 .commercial-dossier__documents > summary:hover,
 .commercial-dossier__documents > summary:focus-visible {
-    background: var(--color-primary-fixed);
+    background: color-mix(in oklab, var(--color-secondary-container) 28%, white);
 }
 
 .commercial-dossier__documents > summary .commercial-icon {
-    color: var(--color-primary);
+    color: var(--color-secondary);
     width: 21px;
     height: 21px;
 }
@@ -1149,7 +1179,7 @@ button:disabled {
     border-radius: 9px;
     padding: 8px 10px;
     background: var(--color-surface-container-lowest);
-    color: var(--color-primary);
+    color: var(--color-secondary);
     font-size: 0.78rem;
     font-weight: 700;
     text-decoration: none;
@@ -1157,7 +1187,7 @@ button:disabled {
 
 .commercial-drive-links a:hover,
 .commercial-drive-links a:focus-visible {
-    background: var(--color-primary-fixed);
+    background: color-mix(in oklab, var(--color-secondary-container) 38%, white);
 }
 
 .commercial-dossier__document-groups {
@@ -1184,7 +1214,7 @@ button:disabled {
 .commercial-dossier__document-heading a,
 .commercial-dossier__document a,
 .commercial-dossier__document-action summary {
-    color: var(--color-primary);
+    color: var(--color-secondary);
     font-size: 0.78rem;
     font-weight: 700;
     text-decoration: none;
@@ -1198,7 +1228,7 @@ button:disabled {
 }
 
 .commercial-dossier__document > .commercial-icon {
-    color: var(--color-primary);
+    color: var(--color-secondary);
     width: 22px;
     height: 22px;
 }
@@ -1212,7 +1242,7 @@ button:disabled {
 }
 
 .commercial-dossier__document-state {
-    color: var(--color-primary);
+    color: var(--color-on-surface-variant);
     font-weight: 700;
 }
 
@@ -1264,7 +1294,7 @@ button:disabled {
 .commercial-dossier__create--advanced > summary {
     cursor: pointer;
     padding: 9px 4px;
-    color: var(--color-primary);
+    color: var(--color-secondary);
     font-size: 0.78rem;
     font-weight: 700;
 }
@@ -1313,10 +1343,14 @@ button:disabled {
 }
 
 .commercial-dossier__task > time {
-    color: var(--color-primary);
+    color: var(--color-secondary);
     font-size: 0.83rem;
     font-weight: 700;
     white-space: nowrap;
+}
+
+.commercial-dossier__task > time.is-urgent {
+    color: var(--color-primary);
 }
 
 .commercial-dossier__task-actions {
@@ -1375,7 +1409,7 @@ button:disabled {
     border-radius: 7px;
     padding: 8px;
     background: transparent;
-    color: var(--color-primary);
+    color: var(--color-secondary);
     cursor: pointer;
     font: inherit;
     text-align: left;
@@ -1383,7 +1417,7 @@ button:disabled {
 
 .commercial-dossier__postpone-options button:hover,
 .commercial-dossier__postpone-options button:focus-visible {
-    background: var(--color-primary-fixed);
+    background: color-mix(in oklab, var(--color-secondary-container) 38%, white);
 }
 
 .commercial-dossier__postpone-options label {
@@ -1411,13 +1445,13 @@ button:disabled {
     border: 1px solid var(--color-outline-variant);
     border-radius: 8px;
     background: var(--color-surface-container-lowest);
-    color: var(--color-primary);
+    color: var(--color-secondary);
     cursor: pointer;
 }
 
 .commercial-dossier__icon-action:hover,
 .commercial-dossier__icon-action:focus-visible {
-    background: var(--color-primary-fixed);
+    background: color-mix(in oklab, var(--color-secondary-container) 38%, white);
 }
 
 .commercial-dossier__timeline {
@@ -1520,7 +1554,7 @@ button:disabled {
     margin: 2px 0 0;
     padding: 0;
     background: transparent;
-    color: var(--color-primary);
+    color: var(--color-secondary);
     cursor: pointer;
     font: inherit;
     font-size: 0.78rem;
@@ -4568,6 +4602,22 @@ a.session-composer-overlay__item {
     .commercial-dossier__tasks,
     .commercial-dossier__timeline {
         padding: 14px;
+    }
+
+    .commercial-dossier__contacts {
+        display: block;
+    }
+
+    .commercial-dossier__contacts .commercial-dossier__section-heading {
+        margin-bottom: 12px;
+    }
+
+    .commercial-dossier__people {
+        margin-top: 12px;
+        border-top: 1px solid var(--color-outline-variant);
+        border-left: 0;
+        padding-top: 12px;
+        padding-left: 0;
     }
 
     .commercial-dossier__organization,

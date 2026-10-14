@@ -33,7 +33,9 @@
                         {% endfor %}
                     </div>
                     {% if projectPerson.current and projectPerson.person.active %}
-                        <div class="commercial-dossier__subactions">
+                        <details class="commercial-dossier__person-actions">
+                            <summary>{{ 'project.contact_manage'|trans({}, 'commercial') }}</summary>
+                            <div class="commercial-dossier__subactions">
                             <details><summary>{{ 'project.contact_edit'|trans({}, 'commercial') }}</summary>
                                 <form method="post" action="{{ path('commercial_project_contact_edit', {id: project.id, personId: projectPerson.person.id}) }}" class="internal-form">
                                     <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_contact_' ~ project.id ~ '_' ~ projectPerson.person.id ~ '_edit') }}">
@@ -45,13 +47,16 @@
                             </details>
                             {% if project.primaryContact != projectPerson.person %}<form method="post" action="{{ path('commercial_project_contact_primary', {id: project.id, personId: projectPerson.person.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('commercial_project_contact_' ~ project.id ~ '_' ~ projectPerson.person.id ~ '_primary') }}"><button type="submit">{{ 'project.contact_primary'|trans({}, 'commercial') }}</button></form>{% endif %}
                             <form method="post" action="{{ path('commercial_project_contact_former', {id: project.id, personId: projectPerson.person.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('commercial_project_contact_' ~ project.id ~ '_' ~ projectPerson.person.id ~ '_former') }}"><button type="submit">{{ 'project.contact_mark_former'|trans({}, 'commercial') }}</button></form>
-                        </div>
+                            </div>
+                        </details>
                     {% endif %}
                 </div>
             {% else %}
                 <p class="commercial-dossier__muted">{{ 'project.no_people'|trans({}, 'commercial') }}</p>
             {% endfor %}
-            <div class="commercial-dossier__subactions">
+            <details class="commercial-dossier__contact-tools">
+                <summary>{{ 'project.contact_add'|trans({}, 'commercial') }}</summary>
+                <div class="commercial-dossier__subactions">
                 <details><summary>{{ 'project.contact_link'|trans({}, 'commercial') }}</summary>
                     <form method="post" action="{{ path('commercial_project_contact_link', {id: project.id}) }}" class="internal-form">
                         <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_contact_' ~ project.id ~ '_link') }}">
@@ -70,7 +75,8 @@
                         <button class="internal-button internal-button--secondary" type="submit">{{ 'project.contact_create_save'|trans({}, 'commercial') }}</button>
                     </form>
                 </details>
-            </div>
+                </div>
+            </details>
         </details>
     {% else %}
         <div class="commercial-dossier__organization commercial-dossier__organization--provisional">
