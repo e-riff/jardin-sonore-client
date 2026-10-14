@@ -45,7 +45,7 @@ final class BuildCommercialDigestTest extends KernelTestCase
         parent::tearDown();
     }
 
-    public function testMondayIncludesRequestsAndProjectsWithoutActionButNoDuplicateInvoiceReminder(): void
+    public function testMondayLinksDossiersOnceAndExcludesDuplicateInvoiceReminder(): void
     {
         $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         $organizationEntity = (new OrganizationEntity())->setName('Structure digest');
@@ -66,7 +66,6 @@ final class BuildCommercialDigestTest extends KernelTestCase
 
         $builder = new BuildCommercialDigest($entityManager);
         $mondayDigest = $builder->forDate(new DateTimeImmutable('2026-10-12'));
-        self::assertContains($requestEntity, $mondayDigest->requests);
         self::assertContains($projectWithoutActionEntity, $mondayDigest->withoutAction);
         self::assertContains($provisionalProjectEntity, $mondayDigest->withoutAction);
         self::assertContains($invoiceEntity, $mondayDigest->overdueInvoices);
@@ -75,8 +74,10 @@ final class BuildCommercialDigestTest extends KernelTestCase
         $twig = self::getContainer()->get(Environment::class);
         $html = $twig->render('commercial/digest_email.html.twig', ['digest' => $mondayDigest]);
         $text = $twig->render('commercial/digest_email.txt.twig', ['digest' => $mondayDigest]);
-        self::assertStringContainsString('/commercial/requests/' . $requestEntity->getId(), $html);
-        self::assertStringContainsString('/commercial/requests/' . $requestEntity->getId(), $text);
+        self::assertStringNotContainsString('/commercial/requests/' . $requestEntity->getId(), $html);
+        self::assertStringNotContainsString('/commercial/requests/' . $requestEntity->getId(), $text);
+        self::assertSame(1, substr_count($html, '/commercial/projects/' . $provisionalProjectEntity->getId()));
+        self::assertSame(1, substr_count($text, '/commercial/projects/' . $provisionalProjectEntity->getId()));
         self::assertStringNotContainsString('Relancer facture', $html);
         self::assertStringContainsString('Sans structure liée', $html);
         self::assertStringContainsString('Sans structure liée', $text);

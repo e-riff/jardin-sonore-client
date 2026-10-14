@@ -7,7 +7,6 @@ namespace App\Application\Commercial;
 use App\Infrastructure\Doctrine\Entity\CommercialActionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialInvoiceEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
-use App\Infrastructure\Doctrine\Entity\CommercialRequestEntity;
 use DateTimeImmutable;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManagerInterface;
@@ -20,10 +19,6 @@ final readonly class BuildCommercialDigest
 
     public function forDate(DateTimeImmutable $localDate): CommercialDigest
     {
-        $requests = $this->entityManager->getRepository(CommercialRequestEntity::class)->findBy(
-            ['status' => CommercialRequestEntity::STATUS_TO_QUALIFY],
-            ['receivedAt' => 'ASC'],
-        );
         $actionQueryBuilder = $this->entityManager->getRepository(CommercialActionEntity::class)->createQueryBuilder('action');
         $actions = $actionQueryBuilder
             ->andWhere($actionQueryBuilder->expr()->eq('action.status', ':status'))
@@ -72,6 +67,6 @@ final readonly class BuildCommercialDigest
             }
         }
 
-        return new CommercialDigest($localDate, $requests, $dueActions, $overdueInvoices, $withoutAction);
+        return new CommercialDigest($localDate, $dueActions, $overdueInvoices, $withoutAction);
     }
 }
