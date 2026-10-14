@@ -9,7 +9,7 @@
                 {% if action.details %}<p>{{ action.details }}</p>{% endif %}
                 {% if action.person %}<span class="commercial-dossier__muted">{{ action.person }}</span>{% endif %}
             </div>
-            <time datetime="{{ action.dueOn|date('Y-m-d') }}">{{ action.dueOn|date('d/m/Y') }}</time>
+            <time class="{{ action.dueOn|date('Y-m-d') <= 'now'|date('Y-m-d') ? 'is-urgent' : '' }}" datetime="{{ action.dueOn|date('Y-m-d') }}">{{ action.dueOn|date('d/m/Y') }}</time>
             <div class="commercial-dossier__task-actions">
                 <details class="commercial-dossier__task-menu">
                     <summary class="internal-button internal-button--secondary internal-button--compact">{% include 'commercial/project/_icon.html.twig' with {name: 'check'} only %} {{ 'action.complete'|trans({}, 'commercial') }}</summary>

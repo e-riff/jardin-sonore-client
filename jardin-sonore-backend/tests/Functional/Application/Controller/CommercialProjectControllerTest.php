@@ -58,6 +58,7 @@ final class CommercialProjectControllerTest extends WebTestCase
         self::assertCount(1, $crawler->filterXPath('//section[contains(@class, "commercial-dossier__contacts")]//span[contains(@class, "commercial-contact-value") and contains(text(), "+33612345678")]/following-sibling::a[@href="tel:+33612345678"]'));
         self::assertCount(1, $crawler->filterXPath('//section[contains(@class, "commercial-dossier__contacts")]//span[contains(@class, "commercial-contact-value") and contains(text(), "+33678901234")]/following-sibling::a[@href="tel:+33678901234"]'));
         self::assertCount(1, $crawler->filterXPath('//a[@href="mailto:direction-' . $suffix . '@example.test"]'));
+        self::assertCount(1, $crawler->filterXPath('//details[contains(@class, "commercial-dossier__contact-tools") and not(@open)]'));
         self::assertCount(1, $crawler->filterXPath('//details[contains(@class, "commercial-dossier__documents") and not(@open)]'));
         self::assertCount(1, $crawler->filterXPath('//*[contains(@class, "commercial-dossier__task")]//time[@datetime="2026-10-15"]'));
         self::assertCount(4, $crawler->filterXPath('//*[contains(@class, "commercial-dossier__task")]//form[contains(@action, "/postpone")]'));
@@ -229,7 +230,7 @@ final class CommercialProjectControllerTest extends WebTestCase
         $suffix = bin2hex(random_bytes(5));
         $adminUserEntity = (new AdminUserEntity())->setEmail("project-attach-{$suffix}@example.test")->setPassword('unused');
         $organizationEntity = (new OrganizationEntity())->setName("Crèche {$suffix}");
-        $requestEntity = new CommercialRequestEntity('site', 'Camille', 'camille@example.test', 'Texte original', new DateTimeImmutable('2026-10-13 09:00:00'), 'Nom libre');
+        $requestEntity = new CommercialRequestEntity('site', 'Camille', 'camille@example.test', 'Texte original', new DateTimeImmutable('2026-10-13 09:00:00'), 'Nom libre', null, '+33612345678');
         $projectEntity = new CommercialProjectEntity('Nom libre', null, $requestEntity, new DateTimeImmutable('2026-10-13 09:00:00'));
         $requestEntity->addProject($projectEntity);
         foreach ([$adminUserEntity, $organizationEntity, $requestEntity] as $entity) {
@@ -240,6 +241,8 @@ final class CommercialProjectControllerTest extends WebTestCase
 
         $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
         self::assertResponseIsSuccessful();
+        self::assertCount(1, $crawler->filterXPath('//span[contains(@class, "commercial-contact-value") and contains(text(), "+33612345678")]/following-sibling::a[@href="tel:+33612345678"]'));
+        self::assertCount(1, $crawler->filterXPath('//a[@href="mailto:camille@example.test"]'));
         $form = $crawler->selectButton('Rattacher la structure')->form();
         $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/organization', [
             'commercial_project_organization' => [
