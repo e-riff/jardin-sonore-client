@@ -13,6 +13,6 @@ final class CommercialDashboardController extends AbstractController
     #[Route('/commercial', name: 'commercial_dashboard', methods: ['GET'])]
     public function index(): Response
     {
-        return $this->render('commercial/dashboard.html.twig');
+        return $this->redirectToRoute('commercial_project_index');
     }
 }

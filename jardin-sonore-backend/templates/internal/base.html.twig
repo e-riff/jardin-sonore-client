@@ -7,20 +7,15 @@
     {% set navGroups = [
         {
             key: 'commercial',
-            route: 'commercial_dashboard',
+            route: 'commercial_project_index',
             icon: '◌',
             label: 'internal.base.nav.commercial_group'|trans({}, 'internal'),
             active: currentRoute starts with 'commercial_',
             links: [
                 {
-                    route: 'commercial_dashboard',
-                    label: 'internal.base.nav.commercial_dashboard'|trans({}, 'internal'),
-                    active: currentRoute == 'commercial_dashboard',
-                },
-                {
                     route: 'commercial_project_index',
                     label: 'internal.base.nav.commercial_projects'|trans({}, 'internal'),
-                    active: currentRoute starts with 'commercial_project_' or currentRoute starts with 'commercial_request_',
+                    active: currentRoute == 'commercial_dashboard' or currentRoute starts with 'commercial_project_' or currentRoute starts with 'commercial_request_',
                 },
                 {
                     route: 'commercial_invoice_index',

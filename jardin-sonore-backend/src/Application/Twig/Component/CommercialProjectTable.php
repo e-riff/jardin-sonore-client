@@ -17,9 +17,6 @@ final class CommercialProjectTable
 {
     use DefaultActionTrait;
 
-    #[LiveProp]
-    public string $mode = 'dashboard';
-
     #[LiveProp(writable: true, url: true)]
     public string $query = '';
 

@@ -19,6 +19,6 @@
         <h2>{{ 'without_action'|trans({}, 'commercial_digest') }}</h2>
         <ul>{% for project in digest.withoutAction %}<li><a href="{{ url('commercial_project_show', {id: project.id}) }}">{{ project.title }}</a>{% if project.organization %} · {{ project.organization.name }}{% endif %}</li>{% endfor %}</ul>
     {% endif %}
-    <p><a href="{{ url('commercial_dashboard') }}">{{ 'open_dashboard'|trans({}, 'commercial_digest') }}</a></p>
+    <p><a href="{{ url('commercial_project_index') }}">{{ 'open_dashboard'|trans({}, 'commercial_digest') }}</a></p>
 </body>
 </html>

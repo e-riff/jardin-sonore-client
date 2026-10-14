@@ -58,7 +58,7 @@
                                             <div class="commercial-project-row__actions">
                                                 <form method="post" action="{{ path('commercial_action_change', {id: row.nextActionId, operation: 'complete'}) }}">
                                                     <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ row.nextActionId ~ '_complete') }}">
-                                                    <input type="hidden" name="returnTo" value="{{ mode }}">
+                                                    <input type="hidden" name="returnTo" value="index">
                                                     <button class="internal-button internal-button--secondary internal-button--compact" type="submit" title="{{ 'action.complete'|trans({}, 'commercial') }}"><span aria-hidden="true">✓</span> {{ 'action.complete'|trans({}, 'commercial') }}</button>
                                                 </form>
                                                 <details class="commercial-project-row__postpone">
@@ -67,14 +67,14 @@
                                                         {% for days, label in {1: 'project.list.one_day', 2: 'project.list.two_days', 7: 'project.list.one_week'} %}
                                                             <form method="post" action="{{ path('commercial_action_change', {id: row.nextActionId, operation: 'postpone'}) }}">
                                                                 <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ row.nextActionId ~ '_postpone') }}">
-                                                                <input type="hidden" name="returnTo" value="{{ mode }}">
+                                                                <input type="hidden" name="returnTo" value="index">
                                                                 <input type="hidden" name="dueOn" value="{{ row.postponeDate(days) }}">
                                                                 <button type="submit">{{ label|trans({}, 'commercial') }}</button>
                                                             </form>
                                                         {% endfor %}
                                                         <form method="post" action="{{ path('commercial_action_change', {id: row.nextActionId, operation: 'postpone'}) }}">
                                                             <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ row.nextActionId ~ '_postpone') }}">
-                                                            <input type="hidden" name="returnTo" value="{{ mode }}">
+                                                            <input type="hidden" name="returnTo" value="index">
                                                             <label>{{ 'project.list.other_date'|trans({}, 'commercial') }} <input type="date" name="dueOn" required></label>
                                                             <button type="submit">{{ 'action.postpone'|trans({}, 'commercial') }}</button>
                                                         </form>

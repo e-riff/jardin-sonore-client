@@ -50,7 +50,7 @@ final class CommercialActionControllerTest extends WebTestCase
         $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
         $token = $crawler->filterXPath('//form[contains(@action, "/complete")]/input[@name="_token"]')->attr('value');
         $client->request('POST', '/commercial/actions/' . $actionEntity->getId() . '/complete', ['_token' => $token, 'title' => 'Appeler la direction', 'note' => 'Réponse reçue', 'returnTo' => 'dashboard']);
-        self::assertResponseRedirects('/commercial');
+        self::assertResponseRedirects('/commercial/projects');
 
         $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
         $correctionToken = $crawler->filterXPath('//form[contains(@action, "/completed/edit")]/input[@name="_token"]')->attr('value');
