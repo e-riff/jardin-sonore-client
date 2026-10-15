@@ -5,7 +5,7 @@
         {% for event in visibleEvents|reverse %}
             {% set icon = event.type starts with 'action_' ? 'check' : (event.type starts with 'quote_' ? 'quote' : (event.type starts with 'invoice_' ? 'invoice' : (event.type starts with 'contact_' ? 'phone' : 'note'))) %}
             {% set eventLabel = ('event.' ~ event.type)|trans({}, 'commercial') %}
-            <article class="commercial-timeline__item commercial-timeline__item--{{ icon }}" {% if event.content %}data-controller="commercial-timeline" data-commercial-timeline-expanded-value="{{ loop.first ? 'true' : 'false' }}" data-commercial-timeline-more-label-value="{{ 'event.show_more'|trans({}, 'commercial') }}" data-commercial-timeline-less-label-value="{{ 'event.show_less'|trans({}, 'commercial') }}"{% endif %}>
+            <article class="commercial-timeline__item commercial-timeline__item--{{ icon }}{{ event.type == 'action_completed' ? ' commercial-timeline__item--completed' : '' }}" {% if event.content %}data-controller="commercial-timeline" data-commercial-timeline-expanded-value="{{ loop.first ? 'true' : 'false' }}" data-commercial-timeline-more-label-value="{{ 'event.show_more'|trans({}, 'commercial') }}" data-commercial-timeline-less-label-value="{{ 'event.show_less'|trans({}, 'commercial') }}"{% endif %}>
                 <span class="commercial-timeline__marker" aria-hidden="true"></span>
                 <div class="commercial-timeline__heading">
                     <div><time datetime="{{ event.occurredAt|date('c') }}">{{ event.occurredAt|date('d/m/Y') }} <span>· {{ event.occurredAt|date('H:i') }}</span></time><h3>{{ eventLabel }}</h3></div>
