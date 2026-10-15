@@ -2,7 +2,6 @@
     <summary>
         {% include 'commercial/project/_icon.html.twig' with {name: 'people'} only %}
         <span id="commercial-contacts-heading">{{ 'project.contact_heading'|trans({}, 'commercial') }}</span>
-        {% if project.people|length > 0 %}<span class="commercial-dossier__count">{{ project.people|length }}</span>{% endif %}
         {% include 'commercial/project/_icon.html.twig' with {name: 'chevron'} only %}
     </summary>
     <div class="commercial-dossier__contacts-content">

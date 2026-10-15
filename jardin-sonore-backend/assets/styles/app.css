@@ -927,13 +927,95 @@ button:disabled {
     margin-bottom: 14px;
 }
 
-.commercial-dossier__hero > .internal-button {
+.commercial-dossier__hero-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
     margin-bottom: 12px;
+}
+
+.commercial-dossier__hero-meta .commercial-dossier__meta {
+    margin-bottom: 0;
+}
+
+.commercial-dossier__hero-meta > .internal-button {
+    flex: 0 0 auto;
+    margin: 0;
 }
 
 .commercial-dossier__hero h1 {
     font-size: clamp(1.9rem, 2.8vw, 2.35rem);
     overflow-wrap: anywhere;
+}
+
+.commercial-dossier__title-edit {
+    min-width: 0;
+}
+
+.commercial-dossier__title-edit > summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: fit-content;
+    max-width: 100%;
+    cursor: pointer;
+    list-style: none;
+}
+
+.commercial-dossier__title-edit > summary::-webkit-details-marker {
+    display: none;
+}
+
+.commercial-dossier__title-edit h1 {
+    min-width: 0;
+}
+
+.commercial-dossier__title-edit-icon {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    color: var(--color-primary);
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 8px;
+    background: var(--color-surface-container);
+    opacity: 0;
+    transition: opacity 120ms ease;
+}
+
+.commercial-dossier__title-edit-icon .commercial-icon {
+    width: 17px;
+    height: 17px;
+}
+
+.commercial-dossier__title-edit > summary:hover .commercial-dossier__title-edit-icon,
+.commercial-dossier__title-edit > summary:focus-visible .commercial-dossier__title-edit-icon,
+.commercial-dossier__title-edit[open] .commercial-dossier__title-edit-icon {
+    opacity: 1;
+}
+
+.commercial-dossier__title-edit > summary:focus-visible {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 3px;
+}
+
+.commercial-dossier__title-form {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.commercial-dossier__title-form label {
+    flex-basis: 100%;
+}
+
+.commercial-dossier__title-form input {
+    flex: 1 1 240px;
+    min-width: 0;
 }
 
 .commercial-dossier__meta {
@@ -973,7 +1055,7 @@ button:disabled {
     min-width: 0;
     border: 1px solid var(--color-outline-variant);
     border-radius: 14px;
-    background: color-mix(in oklab, var(--color-primary-container) 20%, white);
+    background: color-mix(in oklab, var(--color-surface-container) 45%, white);
 }
 
 .commercial-dossier__contacts-content {
@@ -1102,6 +1184,13 @@ button:disabled {
     font-weight: 700;
 }
 
+.commercial-dossier__people > summary {
+    color: var(--color-on-surface-variant);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
 .commercial-dossier__people .commercial-dossier__count {
     margin-left: 4px;
 }
@@ -1109,7 +1198,10 @@ button:disabled {
 .commercial-dossier__summary-person {
     margin-left: 8px;
     color: var(--color-on-surface-variant);
+    font-size: 0.86rem;
     font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
 }
 
 .commercial-dossier__person {
@@ -1206,6 +1298,18 @@ button:disabled {
     color: var(--color-on-background);
     font-weight: 700;
     list-style: none;
+    background: var(--color-surface-container);
+    transition: background-color 140ms ease;
+}
+
+.commercial-dossier__contacts:not([open]) > summary,
+.commercial-dossier__documents:not([open]) > summary {
+    border-radius: 13px;
+}
+
+.commercial-dossier__contacts[open] > summary,
+.commercial-dossier__documents[open] > summary {
+    border-radius: 13px 13px 0 0;
 }
 
 .commercial-dossier__contacts > summary::-webkit-details-marker,
@@ -1217,13 +1321,13 @@ button:disabled {
 .commercial-dossier__contacts > summary:focus-visible,
 .commercial-dossier__documents > summary:hover,
 .commercial-dossier__documents > summary:focus-visible {
-    background: color-mix(in oklab, var(--color-secondary-container) 28%, white);
+    background: color-mix(in oklab, var(--color-surface-container) 86%, var(--color-on-background));
 }
 
 .commercial-dossier__contacts > summary .commercial-icon:first-child {
     width: 21px;
     height: 21px;
-    color: var(--color-primary);
+    color: var(--color-secondary);
 }
 
 .commercial-dossier__documents > summary .commercial-icon {
@@ -4889,8 +4993,18 @@ a.session-composer-overlay__item {
         margin-bottom: 16px;
     }
 
-    .commercial-dossier__hero > .internal-button {
-        margin-bottom: 16px;
+    .commercial-dossier__hero-meta {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .commercial-dossier__hero-meta > .internal-button {
+        width: auto;
+        margin: 0;
+    }
+
+    .commercial-dossier__title-edit-icon {
+        opacity: 1;
     }
 
     .commercial-dossier__tasks,
