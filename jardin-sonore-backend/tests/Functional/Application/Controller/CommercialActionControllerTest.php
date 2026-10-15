@@ -54,7 +54,7 @@ final class CommercialActionControllerTest extends WebTestCase
 
         $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
         $correctionToken = $crawler->filterXPath('//form[contains(@action, "/completed/edit")]/input[@name="_token"]')->attr('value');
-        $client->request('POST', '/commercial/actions/' . $actionEntity->getId() . '/completed/edit', ['_token' => $correctionToken, 'title' => 'Échange avec la direction', 'note' => 'Compte rendu corrigé']);
+        $client->request('POST', '/commercial/actions/' . $actionEntity->getId() . '/completed/edit', ['_token' => $correctionToken, 'title' => 'Échange avec la direction', 'note' => 'Compte rendu corrigé', 'occurredOn' => '2026-10-10']);
         self::assertResponseRedirects();
 
         $client->request('POST', '/commercial/actions/' . $actionEntity->getId() . '/complete', ['_token' => $token, 'note' => 'Doublon']);
@@ -68,7 +68,10 @@ final class CommercialActionControllerTest extends WebTestCase
         self::assertSame(CommercialActionEntity::STATUS_DONE, $savedActionEntity->getStatus());
         self::assertSame('Échange avec la direction', $savedActionEntity->getTitle());
         self::assertCount(2, $savedActionEntity->getProject()->getEvents());
-        self::assertSame('Compte rendu corrigé', $savedActionEntity->getProject()->getEvents()->last()->getContent());
+        $completedEvents = $savedActionEntity->getProject()->getEvents()->filter(static fn ($eventEntity): bool => 'action_completed' === $eventEntity->getType());
+        self::assertCount(1, $completedEvents);
+        self::assertSame('Compte rendu corrigé', $completedEvents->first()->getContent());
+        self::assertSame('2026-10-10', $completedEvents->first()->getOccurredAt()->format('Y-m-d'));
     }
 
     public function testOpenActionCanBeEditedWithoutLosingItsHistory(): void

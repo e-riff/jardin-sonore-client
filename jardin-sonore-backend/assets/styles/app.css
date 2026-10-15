@@ -2071,6 +2071,38 @@ button:disabled {
     font-size: 0.78rem;
 }
 
+.commercial-task-action--complete {
+    min-width: 40px;
+    min-height: 40px;
+    border-color: #b9dbc1;
+    padding: 0;
+    background: #e4f3e7;
+    color: #2f6f44;
+    box-shadow: none;
+}
+
+.commercial-task-action--complete:hover,
+.commercial-task-action--complete:focus-visible {
+    border-color: #2f6f44;
+    background: #2f6f44;
+    color: #ffffff;
+}
+
+.commercial-task-action--postpone {
+    gap: 6px;
+    border-color: #e7c38c;
+    background: #fff2dc;
+    color: #80500c;
+    box-shadow: none;
+}
+
+.commercial-task-action--postpone:hover,
+.commercial-task-action--postpone:focus-visible {
+    border-color: #b97820;
+    background: #f7dfb5;
+    color: #704108;
+}
+
 .internal-button:disabled,
 .internal-button[aria-disabled="true"] {
     cursor: not-allowed;

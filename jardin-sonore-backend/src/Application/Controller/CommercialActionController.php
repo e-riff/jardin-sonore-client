@@ -29,11 +29,15 @@ final class CommercialActionController extends AbstractController
             throw $this->createNotFoundException();
         }
         $note = trim($request->request->getString('note'));
-        if (10000 < mb_strlen($note)) {
+        $occurredOnRaw = $request->request->getString('occurredOn');
+        $occurredOn = DateTimeImmutable::createFromFormat('!Y-m-d', $occurredOnRaw);
+        if (10000 < mb_strlen($note)
+            || !$occurredOn instanceof DateTimeImmutable
+            || $occurredOn->format('Y-m-d') !== $occurredOnRaw) {
             return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
         try {
-            $workflow->reviseCompleted($actionEntity, $request->request->getString('title'), '' === $note ? null : $note);
+            $workflow->reviseCompleted($actionEntity, $request->request->getString('title'), '' === $note ? null : $note, $occurredOn);
         } catch (DomainException) {
             return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
         }

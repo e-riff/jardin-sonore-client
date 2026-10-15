@@ -360,7 +360,7 @@ final class CommercialProjectControllerTest extends WebTestCase
         self::assertSame('Appel avec la direction', $savedProjectEntity->getEvents()->last()->getContent());
     }
 
-    public function testTimelineCorrectionKeepsItsDateAndRejectsAutomaticEvents(): void
+    public function testTimelineCorrectionChangesItsDateAndRejectsAutomaticEvents(): void
     {
         $client = static::createClient();
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
@@ -379,8 +379,9 @@ final class CommercialProjectControllerTest extends WebTestCase
 
         $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
         $token = $crawler->filterXPath('//form[contains(@action, "/events/' . $noteEntity->getId() . '/edit")]/input[@name="_token"]')->attr('value');
+        self::assertSame('2026-10-09', $crawler->filterXPath('//form[contains(@action, "/events/' . $noteEntity->getId() . '/edit")]//input[@name="occurredOn"]')->attr('value'));
         self::assertCount(0, $crawler->filterXPath('//form[contains(@action, "/events/' . $automaticEventEntity->getId() . '/edit")]'));
-        $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/events/' . $noteEntity->getId() . '/edit', ['_token' => $token, 'content' => 'Saisie corrigée']);
+        $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/events/' . $noteEntity->getId() . '/edit', ['_token' => $token, 'content' => 'Saisie corrigée', 'occurredOn' => '2026-09-30']);
         self::assertResponseRedirects();
         $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/events/' . $automaticEventEntity->getId() . '/edit', ['_token' => 'invalid', 'content' => 'Autre']);
         self::assertResponseStatusCodeSame(403);
@@ -389,7 +390,7 @@ final class CommercialProjectControllerTest extends WebTestCase
         $entityManager->clear();
         $savedNoteEntity = $entityManager->find(CommercialEventEntity::class, $noteEntity->getId());
         self::assertSame('Saisie corrigée', $savedNoteEntity->getContent());
-        self::assertSame($occurredAt->format('Y-m-d H:i:s'), $savedNoteEntity->getOccurredAt()->format('Y-m-d H:i:s'));
+        self::assertSame('2026-09-30 10:00:00', $savedNoteEntity->getOccurredAt()->format('Y-m-d H:i:s'));
     }
 
     public function testManualStatusCanBeChangedAndReopened(): void

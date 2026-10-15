@@ -76,10 +76,15 @@ class CommercialEventEntity
     }
 
     /** @param array<string, string> $metadata */
-    public function revise(?string $content, array $metadata): void
+    public function revise(?string $content, array $metadata, DateTimeImmutable $occurredOn): void
     {
         $this->content = $content;
         $this->metadata = $metadata;
+        $this->occurredAt = $this->occurredAt->setDate(
+            (int) $occurredOn->format('Y'),
+            (int) $occurredOn->format('m'),
+            (int) $occurredOn->format('d'),
+        );
     }
 
     public function linkAction(CommercialActionEntity $actionEntity): void

@@ -33,7 +33,7 @@ final readonly class CommercialActionWorkflow
         $actionEntity->getProject()->recordEvent('action_completed', $now, $note, ['action_title' => $actionEntity->getTitle()], $actionEntity->getPerson())->linkAction($actionEntity);
     }
 
-    public function reviseCompleted(CommercialActionEntity $actionEntity, string $title, ?string $note): void
+    public function reviseCompleted(CommercialActionEntity $actionEntity, string $title, ?string $note, ?DateTimeImmutable $occurredOn = null): void
     {
         if (CommercialActionEntity::STATUS_DONE !== $actionEntity->getStatus()) {
             throw new DomainException('Only a completed action can be corrected.');
@@ -45,7 +45,7 @@ final readonly class CommercialActionWorkflow
         foreach ($actionEntity->getProject()->getEvents() as $eventEntity) {
             if ('action_completed' === $eventEntity->getType() && $eventEntity->getAction() === $actionEntity) {
                 $actionEntity->revise($title, $actionEntity->getDueOn(), $actionEntity->getDetails(), $actionEntity->getPerson());
-                $eventEntity->revise($note, [...$eventEntity->getMetadata(), 'action_title' => $title]);
+                $eventEntity->revise($note, [...$eventEntity->getMetadata(), 'action_title' => $title], $occurredOn ?? $eventEntity->getOccurredAt());
 
                 return;
             }

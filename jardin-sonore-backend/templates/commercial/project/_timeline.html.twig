@@ -13,6 +13,7 @@
                             <form method="post" action="{{ path('commercial_action_completed_edit', {id: event.action.id}) }}" class="internal-form">
                                 <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ event.action.id ~ '_completed_edit') }}">
                                 <label>{{ 'action.completed_title'|trans({}, 'commercial') }} <input name="title" value="{{ event.action.title }}" maxlength="255" required></label>
+                                <label>{{ 'event.date'|trans({}, 'commercial') }} <input type="date" name="occurredOn" value="{{ event.occurredAt|date('Y-m-d') }}" required></label>
                                 <label>{{ 'action.note'|trans({}, 'commercial') }} <textarea name="note" maxlength="10000">{{ event.content }}</textarea></label>
                                 <button class="internal-button internal-button--secondary" type="submit">{{ 'event.save'|trans({}, 'commercial') }}</button>
                             </form>
@@ -23,6 +24,7 @@
                             <form method="post" action="{{ path('commercial_project_event_edit', {id: project.id, eventId: event.id}) }}" class="internal-form">
                                 <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_' ~ project.id ~ '_event_' ~ event.id ~ '_edit') }}">
                                 <label>{{ 'note.content'|trans({}, 'commercial') }} <textarea name="content" maxlength="10000" required>{{ event.content }}</textarea></label>
+                                <label>{{ 'event.date'|trans({}, 'commercial') }} <input type="date" name="occurredOn" value="{{ event.occurredAt|date('Y-m-d') }}" required></label>
                                 <button class="internal-button internal-button--secondary" type="submit">{{ 'event.save'|trans({}, 'commercial') }}</button>
                             </form>
                         </details>
