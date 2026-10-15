@@ -10,6 +10,12 @@
 
 **Références métier :** [ROADMAP.md](../../../ROADMAP.md) et [notes agenda](../../suivi-commercial-cadrage-en-cours.md#agenda-et-interventions). Le suivi des devis reste manuel pour ce lot.
 
+## Repérage initial du code — 15 octobre 2026
+
+- Aucune intégration Google Calendar/OAuth ni dépendance Google API n'a été trouvée dans le backend ; seules les URL de dossiers Drive sont configurées. L'adaptateur Calendar et son autorisation seront donc nouveaux.
+- `CommercialEventEntity` conserve le fil d'événements horodatés du dossier et n'est pas le modèle des séances à venir ; garder une entité d'intervention distincte évite de mélanger ces deux usages.
+- Le digest commercial et son cron existent déjà. Le lot mail pourra étendre `BuildCommercialDigest` et ses templates en conservant le mécanisme d'envoi et son horaire ouvré.
+
 ## Contraintes communes
 
 - Une séance Google n'entre dans le suivi qu'après rattachement explicite à un dossier. Les événements professionnels non liés restent utilisables pour les conflits, sans devenir facturables.
