@@ -199,6 +199,8 @@ note:
   save: Enregistrer la note
 event:
   edit: Corriger
+  delete: Supprimer cet élément du fil
+  delete_item: "l’événement « %type% » du %date%"
   date: Date dans le fil
   show_more: Voir la suite
   show_less: Voir moins
@@ -235,6 +237,8 @@ action:
   postpone: Reporter
   complete: Terminer
   cancel: Annuler
+  cancel_task: Annuler la tâche
+  cancel_confirm: La tâche sera retirée des rappels actifs. Son annulation restera visible dans le fil du dossier.
   note: Précision (facultative)
   due_on: Nouvelle date
 quote:

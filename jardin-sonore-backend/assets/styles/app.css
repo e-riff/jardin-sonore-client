@@ -1494,6 +1494,11 @@ button:disabled {
     margin-top: 8px;
 }
 
+.commercial-dossier__task:has(.commercial-dossier__task-menu[open]) {
+    position: relative;
+    z-index: 7;
+}
+
 .commercial-dossier__task-icon {
     display: inline-flex;
     align-items: center;
@@ -1576,8 +1581,15 @@ button:disabled {
     margin-bottom: 0;
 }
 
-.commercial-dossier__task-menu--edit > form:last-child {
-    margin-top: 8px;
+.commercial-dossier__task-menu--cancel .internal-form {
+    gap: 12px;
+}
+
+.commercial-dossier__task-menu--cancel .internal-form p {
+    margin: 0;
+    color: var(--color-on-surface-variant);
+    font-size: 0.82rem;
+    line-height: 1.45;
 }
 
 .commercial-dossier__postpone-options {
@@ -1640,6 +1652,15 @@ button:disabled {
     background: color-mix(in oklab, var(--color-secondary-container) 38%, white);
 }
 
+.commercial-dossier__icon-action--danger {
+    color: var(--color-primary-container);
+}
+
+.commercial-dossier__icon-action--danger:hover,
+.commercial-dossier__icon-action--danger:focus-visible {
+    background: var(--color-primary-fixed);
+}
+
 .commercial-dossier__timeline {
     padding-bottom: 12px;
 }
@@ -1684,6 +1705,12 @@ button:disabled {
     align-items: flex-start;
     justify-content: space-between;
     gap: 12px;
+}
+
+.commercial-timeline__actions {
+    display: flex;
+    flex: none;
+    gap: 6px;
 }
 
 .commercial-timeline__heading time {

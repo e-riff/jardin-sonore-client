@@ -276,6 +276,24 @@ final class CommercialProjectController extends AbstractController
         return $this->redirectToRoute('commercial_project_show', ['id' => $id]);
     }
 
+    #[Route('/{id}/events/{eventId}/delete', name: 'event_delete', requirements: ['id' => '\d+', 'eventId' => '\d+'], methods: ['POST'])]
+    public function deleteEvent(int $id, int $eventId, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        if (!$this->isCsrfTokenValid("commercial_project_{$id}_event_{$eventId}_delete", $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+        $projectEntity = $this->findProject($id, $entityManager);
+        $eventEntity = $entityManager->find(CommercialEventEntity::class, $eventId);
+        if (!$eventEntity instanceof CommercialEventEntity || $eventEntity->getProject() !== $projectEntity) {
+            throw $this->createNotFoundException();
+        }
+
+        $entityManager->remove($eventEntity);
+        $entityManager->flush();
+
+        return $this->redirectToRoute('commercial_project_show', ['id' => $id]);
+    }
+
     #[Route('/{id}/status', name: 'status_manual', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function manualStatus(int $id, Request $request, EntityManagerInterface $entityManager, CommercialProjectWorkflow $workflow): Response
     {

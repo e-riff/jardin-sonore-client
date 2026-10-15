@@ -48,7 +48,14 @@
                         <label>{{ 'action.person'|trans({}, 'commercial') }}<select name="personId"><option value="">{{ 'action.no_person'|trans({}, 'commercial') }}</option>{% for projectPerson in project.people %}{% if projectPerson.current and projectPerson.person.active %}<option value="{{ projectPerson.person.id }}" {% if action.person == projectPerson.person %}selected{% endif %}>{{ projectPerson.person }}</option>{% endif %}{% endfor %}</select></label>
                         <button class="internal-button internal-button--secondary" type="submit">{{ 'action.edit'|trans({}, 'commercial') }}</button>
                     </form>
-                    <form method="post" action="{{ path('commercial_action_change', {id: action.id, operation: 'cancel'}) }}"><input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ action.id ~ '_cancel') }}"><button class="internal-button internal-button--secondary internal-button--compact" type="submit">{{ 'action.cancel'|trans({}, 'commercial') }}</button></form>
+                </details>
+                <details class="commercial-dossier__task-menu commercial-dossier__task-menu--cancel">
+                    <summary class="commercial-dossier__icon-action commercial-dossier__icon-action--danger" aria-label="{{ 'action.cancel_task'|trans({}, 'commercial') }}" title="{{ 'action.cancel_task'|trans({}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'close'} only %}</summary>
+                    <form method="post" action="{{ path('commercial_action_change', {id: action.id, operation: 'cancel'}) }}" class="internal-form">
+                        <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ action.id ~ '_cancel') }}">
+                        <p>{{ 'action.cancel_confirm'|trans({}, 'commercial') }}</p>
+                        <button class="internal-button internal-button--danger" type="submit">{{ 'action.cancel_task'|trans({}, 'commercial') }}</button>
+                    </form>
                 </details>
             </div>
         </article>
