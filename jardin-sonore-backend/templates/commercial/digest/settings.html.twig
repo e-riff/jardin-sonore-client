@@ -5,7 +5,6 @@
 {% block internal_body %}
     {% include 'components/_internal_back_button.html.twig' with { href: path('commercial_project_index'), label: 'project.list.heading'|trans({}, 'commercial') } only %}
     <section class="internal-hero">
-        <a href="{{ path('commercial_project_index') }}">← {{ 'project.list.heading'|trans({}, 'commercial') }}</a>
         <h1>{{ 'digest.heading'|trans({}, 'commercial') }}</h1>
         <p>{{ 'digest.description'|trans({}, 'commercial') }}</p>
     </section>
