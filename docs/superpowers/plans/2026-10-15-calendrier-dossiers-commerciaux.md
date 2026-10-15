@@ -1,6 +1,6 @@
 # Calendrier des dossiers commerciaux — plan d'implémentation
 
-> **Pour l'exécution :** suivre les étapes dans l'ordre, avec une vérification ciblée à chaque lot. Ce plan est préparatoire ; aucune connexion Google n'est encore configurée.
+> **Pour l'exécution :** suivre les étapes dans l'ordre, avec une vérification ciblée à chaque lot. Ce plan est préparatoire ; aucune connexion Google n'est encore configurée. Le relire après validation de la [spécification](../specs/2026-10-15-calendrier-dossiers-commerciaux-design.md), notamment pour l'association facture/mois de prestations et les dates alternatives.
 
 **Objectif :** voir et modifier les interventions depuis un dossier, recevoir un aperçu bref de cette semaine et de la suivante chaque matin ouvré, et obtenir une action de facturation après la dernière intervention du mois.
 
