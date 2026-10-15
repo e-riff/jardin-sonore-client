@@ -716,6 +716,7 @@ button:disabled {
     display: flex;
     align-items: center;
     gap: 10px;
+    border-radius: 19px 19px 0 0;
     padding: 16px 20px;
     cursor: pointer;
     color: var(--color-on-background);
@@ -724,6 +725,10 @@ button:disabled {
     font-weight: 700;
     list-style: none;
     background: var(--group-tint);
+}
+
+.commercial-project-group:not([open]) > summary {
+    border-radius: 19px;
 }
 
 .commercial-project-group > summary::-webkit-details-marker {
@@ -765,7 +770,7 @@ button:disabled {
 }
 
 .commercial-project-group .internal-empty-state {
-    margin: 0 14px 14px;
+    margin: 12px 14px 14px;
     padding: 14px;
 }
 
@@ -773,6 +778,27 @@ button:disabled {
     margin: 0 14px 14px;
     border-radius: 14px;
     overflow: visible;
+}
+
+.commercial-project-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.commercial-project-table th:first-child {
+    border-top-left-radius: 13px;
+}
+
+.commercial-project-table th:last-child {
+    border-top-right-radius: 13px;
+}
+
+.commercial-project-table tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 13px;
+}
+
+.commercial-project-table tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 13px;
 }
 
 .commercial-project-table td:first-child strong {
