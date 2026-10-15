@@ -18,11 +18,6 @@
                     active: currentRoute == 'commercial_dashboard' or currentRoute starts with 'commercial_project_' or currentRoute starts with 'commercial_request_',
                 },
                 {
-                    route: 'commercial_invoice_index',
-                    label: 'internal.base.nav.commercial_invoices'|trans({}, 'internal'),
-                    active: currentRoute starts with 'commercial_invoice_',
-                },
-                {
                     route: 'commercial_digest_settings',
                     label: 'internal.base.nav.commercial_digest'|trans({}, 'internal'),
                     active: currentRoute == 'commercial_digest_settings',

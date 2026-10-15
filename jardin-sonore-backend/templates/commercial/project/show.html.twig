@@ -7,7 +7,21 @@
     <section class="internal-hero commercial-dossier__hero">
 
         <div class="commercial-dossier__meta"><span>{{ 'project.opened_on'|trans({}, 'commercial') }} {{ project.createdAt|date('d/m/Y') }}</span><span class="internal-badge {{ project.status == 'confirmed' ? 'internal-badge--primary' : 'internal-badge--muted' }}">{{ ('project.status.' ~ project.status)|trans({}, 'commercial') }}</span></div>
-        <h1>{{ project.title }}</h1>
+        <div class="commercial-dossier__title-row">
+            <h1>{{ project.title }}</h1>
+            <details class="commercial-dossier__title-edit">
+                <summary title="{{ 'project.edit_title'|trans({}, 'commercial') }}" aria-label="{{ 'project.edit_title'|trans({}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</summary>
+                <form method="post" action="{{ path('commercial_project_title_edit', {id: project.id}) }}" class="commercial-dossier__title-form">
+                    <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_' ~ project.id ~ '_title_edit') }}">
+                    <label for="commercial-project-title">{{ 'project.title_label'|trans({}, 'commercial') }}</label>
+                    <input id="commercial-project-title" name="title" value="{{ project.title }}" maxlength="255" required>
+                    <button class="internal-button internal-button--secondary" type="submit">{{ 'project.save_title'|trans({}, 'commercial') }}</button>
+                </form>
+            </details>
+        </div>
+        {% if project.request is null and project.quotes is empty and project.invoices is empty %}
+            <button type="button" class="commercial-dossier__delete" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('commercial_project_delete', {id: project.id}) }}" data-confirmation-dialog-item-value="{{ 'project.delete_item'|trans({'%title%': project.title}, 'commercial') }}" data-confirmation-dialog-token-value="{{ csrf_token('commercial_project_' ~ project.id ~ '_delete') }}">{{ 'project.delete'|trans({}, 'commercial') }}</button>
+        {% endif %}
     </section>
     <div class="commercial-dossier" data-controller="commercial-popovers">
         {% include 'commercial/project/_contacts.html.twig' %}

@@ -936,6 +936,77 @@ button:disabled {
     overflow-wrap: anywhere;
 }
 
+.commercial-dossier__title-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.commercial-dossier__title-edit {
+    flex: 0 0 auto;
+}
+
+.commercial-dossier__title-edit summary {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    color: var(--color-primary);
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 8px;
+    opacity: .55;
+    list-style: none;
+}
+
+.commercial-dossier__title-edit summary::-webkit-details-marker {
+    display: none;
+}
+
+.commercial-dossier__title-row:hover summary,
+.commercial-dossier__title-edit summary:focus-visible,
+.commercial-dossier__title-edit[open] summary {
+    opacity: 1;
+}
+
+.commercial-dossier__title-edit[open] {
+    flex: 1 1 auto;
+}
+
+.commercial-dossier__title-row:has(.commercial-dossier__title-edit[open]) h1 {
+    display: none;
+}
+
+.commercial-dossier__title-form {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.commercial-dossier__title-form label {
+    flex-basis: 100%;
+}
+
+.commercial-dossier__title-form input {
+    flex: 1 1 240px;
+    min-width: 0;
+}
+
+.commercial-dossier__delete {
+    margin-top: 12px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #b91c1c;
+    cursor: pointer;
+    font: inherit;
+    font-size: .82rem;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
 .commercial-dossier__meta {
     display: flex;
     align-items: center;
@@ -973,7 +1044,7 @@ button:disabled {
     min-width: 0;
     border: 1px solid var(--color-outline-variant);
     border-radius: 14px;
-    background: color-mix(in oklab, var(--color-primary-container) 20%, white);
+    background: color-mix(in oklab, var(--color-surface-container) 45%, white);
 }
 
 .commercial-dossier__contacts-content {
@@ -1102,6 +1173,13 @@ button:disabled {
     font-weight: 700;
 }
 
+.commercial-dossier__people > summary {
+    color: var(--color-on-surface-variant);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
 .commercial-dossier__people .commercial-dossier__count {
     margin-left: 4px;
 }
@@ -1109,7 +1187,10 @@ button:disabled {
 .commercial-dossier__summary-person {
     margin-left: 8px;
     color: var(--color-on-surface-variant);
+    font-size: 0.86rem;
     font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
 }
 
 .commercial-dossier__person {
@@ -1223,7 +1304,7 @@ button:disabled {
 .commercial-dossier__contacts > summary .commercial-icon:first-child {
     width: 21px;
     height: 21px;
-    color: var(--color-primary);
+    color: var(--color-secondary);
 }
 
 .commercial-dossier__documents > summary .commercial-icon {

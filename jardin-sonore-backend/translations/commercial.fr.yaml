@@ -82,6 +82,11 @@ qualification:
   unavailable: Cette demande est classée sans suite et ne peut plus produire de dossier.
 project:
   back: Retour aux dossiers
+  edit_title: Modifier le titre du dossier
+  title_label: Titre du dossier
+  save_title: Enregistrer le titre
+  delete: Supprimer ce dossier
+  delete_item: "le dossier « %title% » et son suivi"
   opened_on: Ouvert le
   contact_heading: Contacts
   primary_contact: Principal

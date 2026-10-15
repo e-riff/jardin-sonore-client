@@ -7,7 +7,7 @@
         <label class="internal-search__field internal-search__field--compact">
             <span>{{ 'project.list.status'|trans({}, 'commercial') }}</span>
             <select data-model="on(change)|status">
-                {% for value, label in {active: 'project.list.active', discussion: 'project.status.discussion', confirmed: 'project.status.confirmed', completed: 'project.status.completed', without_result: 'project.status.without_result', all: 'project.list.all'} %}
+                {% for value, label in {active: 'project.list.active', closed: 'project.list.closed', discussion: 'project.status.discussion', confirmed: 'project.status.confirmed', completed: 'project.status.completed', without_result: 'project.status.without_result', all: 'project.list.all'} %}
                     <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label|trans({}, 'commercial') }}</option>
                 {% endfor %}
             </select>
@@ -25,8 +25,8 @@
     {% set sections = this.sections %}
     {% for bucket, label in {priority: 'project.list.priority', upcoming: 'project.list.upcoming', without_task: 'project.list.without_task', closed: 'project.list.closed'} %}
         {% set rows = attribute(sections, bucket) %}
-        {% if bucket != 'closed' or status in ['all', 'completed', 'without_result'] %}
-            <details class="commercial-project-group commercial-project-group--{{ bucket }}" {% if rows is not empty and (bucket != 'closed' or status in ['completed', 'without_result']) %}open{% endif %}>
+        {% if (bucket == 'closed' and status in ['all', 'closed', 'completed', 'without_result']) or (bucket != 'closed' and status not in ['closed', 'completed', 'without_result']) %}
+            <details class="commercial-project-group commercial-project-group--{{ bucket }}" {% if rows is not empty and (bucket != 'closed' or status != 'all') %}open{% endif %}>
                 <summary>
                     <svg class="commercial-project-group__icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                         {% if bucket == 'priority' %}<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>

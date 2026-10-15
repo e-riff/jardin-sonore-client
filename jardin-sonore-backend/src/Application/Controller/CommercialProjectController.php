@@ -6,6 +6,7 @@ namespace App\Application\Controller;
 
 use App\Application\Commercial\CommercialProjectWorkflow;
 use App\Application\Commercial\CreateCommercialProject;
+use App\Application\Commercial\DeleteCommercialProject;
 use App\Application\Form\CommercialNoteType;
 use App\Application\Form\CommercialProjectCreateType;
 use App\Application\Form\CommercialProjectOrganizationType;
@@ -135,6 +136,41 @@ final class CommercialProjectController extends AbstractController
                 'invoices' => $driveInvoicesUrl,
             ],
         ]);
+    }
+
+    #[Route('/{id}/title', name: 'title_edit', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    public function editTitle(int $id, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        if (!$this->isCsrfTokenValid("commercial_project_{$id}_title_edit", $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $title = trim($request->request->getString('title'));
+        if ('' === $title || 255 < mb_strlen($title)) {
+            return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $projectEntity = $this->findProject($id, $entityManager);
+        $projectEntity->setTitle($title);
+        $entityManager->flush();
+
+        return $this->redirectToRoute('commercial_project_show', ['id' => $id]);
+    }
+
+    #[Route('/{id}/delete', name: 'delete', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    public function delete(int $id, Request $request, EntityManagerInterface $entityManager, DeleteCommercialProject $projectDeleter): Response
+    {
+        if (!$this->isCsrfTokenValid("commercial_project_{$id}_delete", $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $projectEntity = $this->findProject($id, $entityManager);
+        if (!$projectDeleter->canDelete($projectEntity)) {
+            return new Response(status: Response::HTTP_CONFLICT);
+        }
+        $projectDeleter->delete($projectEntity);
+
+        return $this->redirectToRoute('commercial_project_index');
     }
 
     #[Route('/{id}/organization', name: 'organization', requirements: ['id' => '\d+'], methods: ['POST'])]

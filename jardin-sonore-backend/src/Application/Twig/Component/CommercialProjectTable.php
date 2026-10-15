@@ -53,6 +53,7 @@ final class CommercialProjectTable
     {
         return match ($this->status) {
             'active' => 'closed' !== $row->bucket,
+            'closed' => 'closed' === $row->bucket,
             'all' => true,
             'discussion', 'confirmed', 'completed', 'without_result' => $row->status === $this->status,
             default => false,
