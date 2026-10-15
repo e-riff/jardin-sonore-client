@@ -20,6 +20,8 @@ Le propriétaire du compte Google autorise le backend à accéder au calendrier 
 
 Les pages et mutations du calendrier exigent les mêmes droits que le dossier commercial. Les formulaires de mutation suivent la protection CSRF existante. Une connexion absente ou expirée est visible sur la fiche ; elle empêche création et modification depuis le backoffice jusqu'à reconnexion. Le MCP Mistral envisagé plus tard n'intervient pas dans cette autorisation.
 
+Les identifiants OAuth, la clé de chiffrement et les autres valeurs sensibles restent dans la configuration locale du serveur, jamais dans Git. Au déploiement, vérifier explicitement la présence des nouvelles variables sur cPanel et leurs droits d'accès avant d'activer la connexion Google. Le script de déploiement exclut les fichiers .env.local du transfert : leur contenu ne se propage pas automatiquement depuis le poste de développement.
+
 ## Parcours dans le dossier
 
 1. **Rattacher une séance existante.** Rechercher les événements du calendrier sur une période choisie, voir titre, dates et lieu, puis choisir explicitement un événement et le dossier. Un événement déjà lié à un autre dossier est signalé et ne peut pas être lié deux fois.
