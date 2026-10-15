@@ -1686,6 +1686,30 @@ button:disabled {
     overflow-wrap: anywhere;
 }
 
+.commercial-timeline__item--completed {
+    margin-bottom: 18px;
+    border: 1px solid color-mix(in oklab, var(--color-secondary) 25%, white);
+    border-left: 3px solid var(--color-secondary);
+    border-radius: 12px;
+    padding: 12px 44px 14px 14px;
+    background: color-mix(in oklab, var(--color-secondary-container) 22%, white);
+}
+
+.commercial-timeline__item--completed .commercial-timeline__marker {
+    top: 16px;
+    border-color: var(--color-secondary);
+    background: var(--color-secondary);
+}
+
+.commercial-timeline__item--completed .commercial-timeline__heading time,
+.commercial-timeline__item--completed .commercial-timeline__heading h3 {
+    color: var(--color-secondary);
+}
+
+.commercial-timeline__item--completed .commercial-timeline__excerpt {
+    color: var(--color-on-background);
+}
+
 .commercial-timeline__item:has(.commercial-timeline__edit[open]) {
     z-index: 3;
 }
@@ -4917,6 +4941,10 @@ a.session-composer-overlay__item {
     .commercial-timeline__item {
         margin-left: 18px;
         padding-right: 0;
+    }
+
+    .commercial-timeline__item--completed {
+        padding-right: 12px;
     }
 
     .commercial-timeline__marker {
