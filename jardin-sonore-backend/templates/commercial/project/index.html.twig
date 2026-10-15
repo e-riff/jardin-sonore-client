@@ -9,6 +9,7 @@
         <p>{{ 'project.list.intro'|trans({}, 'commercial') }}</p>
         <div class="internal-heading-actions">
             <a class="internal-button" href="{{ path('commercial_project_new') }}">{{ 'project.create.heading'|trans({}, 'commercial') }}</a>
+            <a class="internal-button internal-button--secondary" href="{{ path('commercial_project_index', {status: 'closed'}) }}">{{ 'project.list.closed'|trans({}, 'commercial') }}</a>
         </div>
     </section>
     <twig:CommercialProjectTable />
