@@ -1,6 +1,6 @@
 # Enquête — assistant conversationnel pour Gmail et le suivi client
 
-**Date de vérification : 15 octobre 2026**  
+**Date de vérification : 15 octobre 2026**
 **Contexte :** pouvoir demander dans un chat de parcourir les nouveaux mails, proposer leur rattachement à un dossier Jardin Sonore, préparer une réponse et mettre à jour le suivi commercial, avec validation avant toute écriture.
 
 ## Résumé
