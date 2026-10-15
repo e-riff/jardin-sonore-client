@@ -1576,6 +1576,12 @@ button:disabled {
     box-shadow: 0 12px 28px rgb(48 32 26 / 0.18);
 }
 
+.commercial-dossier__task-menu > .internal-form label {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 0;
+}
+
 .commercial-dossier__task-menu--edit > form:last-child {
     margin-top: 8px;
 }
