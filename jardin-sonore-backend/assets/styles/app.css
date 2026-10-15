@@ -778,13 +778,16 @@ button:disabled {
     margin: 0;
     border: 0;
     border-top: 1px solid var(--color-outline-variant);
-    border-radius: 0;
+    border-radius: 0 0 19px 19px;
+    padding-bottom: 1px;
+    background: var(--color-surface-container-lowest);
     overflow: visible;
 }
 
 .commercial-project-table {
     border-collapse: separate;
     border-spacing: 0;
+    border-radius: 0 0 19px 19px;
 }
 
 .commercial-project-table tbody tr:last-child td:first-child {
@@ -1247,6 +1250,11 @@ button:disabled {
     border-top: 1px solid var(--color-outline-variant);
     padding: 14px 16px 18px;
     background: var(--color-surface-container-lowest);
+}
+
+.commercial-dossier__contacts-content,
+.commercial-dossier__documents-content {
+    border-radius: 0 0 13px 13px;
 }
 
 .commercial-dossier__external-hint {

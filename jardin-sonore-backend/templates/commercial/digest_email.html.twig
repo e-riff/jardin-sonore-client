@@ -1,20 +1,61 @@
 <!doctype html>
 <html lang="fr">
-<head><meta charset="utf-8"><title>{{ 'heading'|trans({'%date%': digest.localDate|date('d/m/Y')}, 'commercial_digest') }}</title></head>
-<body style="font-family: Arial, sans-serif; color: #312b2a; line-height: 1.5; max-width: 680px; margin: 0 auto; padding: 24px;">
-    <h1>{{ 'heading'|trans({'%date%': digest.localDate|date('d/m/Y')}, 'commercial_digest') }}</h1>
-    {% if digest.dueActions %}
-        <h2>{{ 'actions'|trans({}, 'commercial_digest') }}</h2>
-        <ul>{% for action in digest.dueActions %}<li><a href="{{ url('commercial_project_show', {id: action.project.id}) }}">{{ action.title }}</a> · {{ action.project.organization ? action.project.organization.name : action.project.title }} · {{ action.dueOn|date('d/m/Y') }}</li>{% endfor %}</ul>
-    {% endif %}
-    {% if digest.overdueInvoices %}
-        <h2>{{ 'invoices'|trans({}, 'commercial_digest') }}</h2>
-        <ul>{% for invoice in digest.overdueInvoices %}<li><a href="{{ url('commercial_invoice_index') }}#invoice-{{ invoice.id }}">{{ invoice.reference }}</a> · {{ invoice.project.organization ? invoice.project.organization.name : invoice.project.title }} · {{ (invoice.amountCents / 100)|number_format(2, ',', ' ') }} €</li>{% endfor %}</ul>
-    {% endif %}
-    {% if digest.withoutAction %}
-        <h2>{{ 'without_action'|trans({}, 'commercial_digest') }}</h2>
-        <ul>{% for project in digest.withoutAction %}<li><a href="{{ url('commercial_project_show', {id: project.id}) }}">{{ project.title }}</a>{% if project.organization %} · {{ project.organization.name }}{% endif %}</li>{% endfor %}</ul>
-    {% endif %}
-    <p><a href="{{ url('commercial_project_index') }}">{{ 'open_dashboard'|trans({}, 'commercial_digest') }}</a></p>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ 'heading'|trans({'%date%': digest.localDate|date('d/m/Y')}, 'commercial_digest') }}</title>
+</head>
+<body style="margin:0; padding:0; background:#f3ede9; color:#34372f; font-family:Arial,sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f3ede9;">
+        <tr><td align="center" style="padding:24px 12px;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px; background:#fffdfa; border:1px solid #e5dcd3;">
+                <tr><td style="padding:25px 26px 22px; border-bottom:1px solid #e5dcd3;">
+                    <p style="margin:0 0 8px; color:#47664b; font-family:Georgia,serif; font-size:25px; line-height:30px;">{{ 'common.brand'|trans({}, 'service_email') }}</p>
+                    <h1 style="margin:0; color:#34372f; font-size:20px; line-height:27px;">{{ 'heading'|trans({'%date%': digest.localDate|date('d/m/Y')}, 'commercial_digest') }}</h1>
+                </td></tr>
+                <tr><td style="padding:24px 26px 4px;">
+                    {% if digest.dueActions %}
+                        <h2 style="margin:0 0 11px; color:#a64d43; font-size:16px; line-height:23px;">{{ 'actions'|trans({}, 'commercial_digest') }}</h2>
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:24px; border-top:1px solid #e5dcd3;">
+                            {% for action in digest.dueActions %}
+                                <tr><td style="padding:12px 0; border-bottom:1px solid #e5dcd3; font-size:14px; line-height:21px;">
+                                    <a href="{{ url('commercial_project_show', {id: action.project.id}) }}" style="color:#47664b; font-weight:bold; text-decoration:underline;">{{ action.title }}</a>
+                                    <span style="color:#70655a;"> · {{ action.project.organization ? action.project.organization.name : action.project.title }}</span><br>
+                                    <span style="color:#a64d43; font-size:12px; font-weight:bold;">{{ action.dueOn|date('d/m/Y') }}</span>
+                                </td></tr>
+                            {% endfor %}
+                        </table>
+                    {% endif %}
+                    {% if digest.overdueInvoices %}
+                        <h2 style="margin:0 0 11px; color:#896a32; font-size:16px; line-height:23px;">{{ 'invoices'|trans({}, 'commercial_digest') }}</h2>
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:24px; border-top:1px solid #e5dcd3;">
+                            {% for invoice in digest.overdueInvoices %}
+                                <tr><td style="padding:12px 0; border-bottom:1px solid #e5dcd3; font-size:14px; line-height:21px;">
+                                    <a href="{{ url('commercial_invoice_index') }}#invoice-{{ invoice.id }}" style="color:#47664b; font-weight:bold; text-decoration:underline;">{{ invoice.reference }}</a>
+                                    <span style="color:#70655a;"> · {{ invoice.project.organization ? invoice.project.organization.name : invoice.project.title }}</span><br>
+                                    <span style="color:#896a32; font-size:12px; font-weight:bold;">{{ (invoice.amountCents / 100)|number_format(2, ',', ' ') }} €</span>
+                                </td></tr>
+                            {% endfor %}
+                        </table>
+                    {% endif %}
+                    {% if digest.withoutAction %}
+                        <h2 style="margin:0 0 11px; color:#47664b; font-size:16px; line-height:23px;">{{ 'without_action'|trans({}, 'commercial_digest') }}</h2>
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:24px; border-top:1px solid #e5dcd3;">
+                            {% for project in digest.withoutAction %}
+                                <tr><td style="padding:12px 0; border-bottom:1px solid #e5dcd3; font-size:14px; line-height:21px;">
+                                    <a href="{{ url('commercial_project_show', {id: project.id}) }}" style="color:#47664b; font-weight:bold; text-decoration:underline;">{{ project.title }}</a>{% if project.organization %}<span style="color:#70655a;"> · {{ project.organization.name }}</span>{% endif %}
+                                </td></tr>
+                            {% endfor %}
+                        </table>
+                    {% endif %}
+                </td></tr>
+                <tr><td style="padding:0 26px 27px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td style="background:#47664b; border-radius:7px; padding:12px 17px;">
+                        <a href="{{ url('commercial_project_index') }}" style="display:inline-block; color:#fff; font-size:14px; font-weight:bold; text-decoration:none;">{{ 'open_dashboard'|trans({}, 'commercial_digest') }}</a>
+                    </td></tr></table>
+                </td></tr>
+            </table>
+        </td></tr>
+    </table>
 </body>
 </html>

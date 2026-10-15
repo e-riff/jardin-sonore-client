@@ -1,7 +1,8 @@
 <section class="commercial-dossier__timeline" aria-labelledby="commercial-timeline-heading">
     <div class="commercial-dossier__section-heading"><h2 id="commercial-timeline-heading">{{ 'project.history'|trans({}, 'commercial') }}</h2></div>
     <div class="commercial-timeline">
-        {% for event in project.events|reverse %}
+        {% set visibleEvents = project.events|filter(event => not (event.type starts with 'action_') or (event.type == 'action_completed' and event.content|default('')|trim != '')) %}
+        {% for event in visibleEvents|reverse %}
             {% set icon = event.type starts with 'action_' ? 'check' : (event.type starts with 'quote_' ? 'quote' : (event.type starts with 'invoice_' ? 'invoice' : (event.type starts with 'contact_' ? 'phone' : 'note'))) %}
             {% set eventLabel = ('event.' ~ event.type)|trans({}, 'commercial') %}
             <article class="commercial-timeline__item commercial-timeline__item--{{ icon }}" {% if event.content %}data-controller="commercial-timeline" data-commercial-timeline-expanded-value="{{ loop.first ? 'true' : 'false' }}" data-commercial-timeline-more-label-value="{{ 'event.show_more'|trans({}, 'commercial') }}" data-commercial-timeline-less-label-value="{{ 'event.show_less'|trans({}, 'commercial') }}"{% endif %}>
