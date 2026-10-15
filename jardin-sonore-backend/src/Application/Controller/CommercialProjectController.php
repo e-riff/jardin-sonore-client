@@ -165,9 +165,6 @@ final class CommercialProjectController extends AbstractController
         }
 
         $projectEntity = $this->findProject($id, $entityManager);
-        if (!$projectDeleter->canDelete($projectEntity)) {
-            return new Response(status: Response::HTTP_CONFLICT);
-        }
         $projectDeleter->delete($projectEntity);
 
         return $this->redirectToRoute('commercial_project_index');

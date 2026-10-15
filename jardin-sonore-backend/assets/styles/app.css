@@ -942,6 +942,10 @@ button:disabled {
     gap: 8px;
 }
 
+.commercial-dossier__title-row h1 {
+    min-width: 0;
+}
+
 .commercial-dossier__title-edit {
     flex: 0 0 auto;
 }
@@ -955,7 +959,8 @@ button:disabled {
     color: var(--color-primary);
     border: 1px solid var(--color-outline-variant);
     border-radius: 8px;
-    opacity: .55;
+    opacity: 1;
+    background: var(--color-surface-container);
     list-style: none;
 }
 
@@ -1287,6 +1292,18 @@ button:disabled {
     color: var(--color-on-background);
     font-weight: 700;
     list-style: none;
+    background: var(--color-surface-container);
+    transition: background-color 140ms ease;
+}
+
+.commercial-dossier__contacts:not([open]) > summary,
+.commercial-dossier__documents:not([open]) > summary {
+    border-radius: 13px;
+}
+
+.commercial-dossier__contacts[open] > summary,
+.commercial-dossier__documents[open] > summary {
+    border-radius: 13px 13px 0 0;
 }
 
 .commercial-dossier__contacts > summary::-webkit-details-marker,
@@ -1298,7 +1315,7 @@ button:disabled {
 .commercial-dossier__contacts > summary:focus-visible,
 .commercial-dossier__documents > summary:hover,
 .commercial-dossier__documents > summary:focus-visible {
-    background: color-mix(in oklab, var(--color-secondary-container) 28%, white);
+    background: color-mix(in oklab, var(--color-surface-container) 86%, var(--color-on-background));
 }
 
 .commercial-dossier__contacts > summary .commercial-icon:first-child {

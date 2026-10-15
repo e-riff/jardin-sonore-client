@@ -65,6 +65,11 @@ class CommercialQuoteEntity
         return $this->replaces;
     }
 
+    public function setReplaces(?self $quoteEntity): void
+    {
+        $this->replaces = $quoteEntity;
+    }
+
     public function markSigned(DateTimeImmutable $signedOn): void
     {
         $this->signedOn = $signedOn;
