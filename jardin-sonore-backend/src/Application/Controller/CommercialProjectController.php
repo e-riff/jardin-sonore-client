@@ -262,12 +262,15 @@ final class CommercialProjectController extends AbstractController
             throw $this->createNotFoundException();
         }
         $content = trim($request->request->getString('content'));
+        $occurredOnRaw = $request->request->getString('occurredOn');
+        $occurredOn = DateTimeImmutable::createFromFormat('!Y-m-d', $occurredOnRaw);
         if (!in_array($eventEntity->getType(), ['note', 'initial_message'], true)
             || null !== $eventEntity->getAction() || null !== $eventEntity->getQuote() || null !== $eventEntity->getInvoice()
-            || '' === $content || 10000 < mb_strlen($content)) {
+            || '' === $content || 10000 < mb_strlen($content)
+            || !$occurredOn instanceof DateTimeImmutable || $occurredOn->format('Y-m-d') !== $occurredOnRaw) {
             return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
-        $eventEntity->revise($content, $eventEntity->getMetadata());
+        $eventEntity->revise($content, $eventEntity->getMetadata(), $occurredOn);
         $entityManager->flush();
 
         return $this->redirectToRoute('commercial_project_show', ['id' => $id]);

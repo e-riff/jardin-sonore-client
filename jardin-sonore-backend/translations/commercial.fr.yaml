@@ -199,6 +199,7 @@ note:
   save: Enregistrer la note
 event:
   edit: Corriger
+  date: Date dans le fil
   show_more: Voir plus
   show_less: Voir moins
   none: Aucun élément dans le fil.

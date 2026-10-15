@@ -69,10 +69,10 @@
                                                 <form method="post" action="{{ path('commercial_action_change', {id: row.nextActionId, operation: 'complete'}) }}">
                                                     <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ row.nextActionId ~ '_complete') }}">
                                                     <input type="hidden" name="returnTo" value="index">
-                                                    <button class="internal-button internal-button--secondary internal-button--compact" type="submit" title="{{ 'action.complete'|trans({}, 'commercial') }}"><span aria-hidden="true">✓</span> {{ 'action.complete'|trans({}, 'commercial') }}</button>
+                                                    <button class="internal-button internal-button--compact commercial-task-action--complete" type="submit" aria-label="{{ 'action.complete'|trans({}, 'commercial') }}" title="{{ 'action.complete'|trans({}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'check'} only %}</button>
                                                 </form>
                                                 <details class="commercial-project-row__postpone">
-                                                    <summary class="internal-button internal-button--secondary internal-button--compact">{{ 'action.postpone'|trans({}, 'commercial') }}</summary>
+                                                    <summary class="internal-button internal-button--compact commercial-task-action--postpone">{% include 'commercial/project/_icon.html.twig' with {name: 'alarm'} only %} {{ 'action.postpone'|trans({}, 'commercial') }}</summary>
                                                     <div class="commercial-project-row__postpone-options">
                                                         {% for days, label in {1: 'project.list.one_day', 2: 'project.list.two_days', 7: 'project.list.one_week'} %}
                                                             <form method="post" action="{{ path('commercial_action_change', {id: row.nextActionId, operation: 'postpone'}) }}">

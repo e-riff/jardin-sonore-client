@@ -12,7 +12,7 @@
             <time class="{{ action.dueOn|date('Y-m-d') <= 'now'|date('Y-m-d') ? 'is-urgent' : '' }}" datetime="{{ action.dueOn|date('Y-m-d') }}">{{ action.dueOn|date('d/m/Y') }}</time>
             <div class="commercial-dossier__task-actions">
                 <details class="commercial-dossier__task-menu">
-                    <summary class="internal-button internal-button--secondary internal-button--compact">{% include 'commercial/project/_icon.html.twig' with {name: 'check'} only %} {{ 'action.complete'|trans({}, 'commercial') }}</summary>
+                    <summary class="internal-button internal-button--compact commercial-task-action--complete" aria-label="{{ 'action.complete'|trans({}, 'commercial') }}" title="{{ 'action.complete'|trans({}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'check'} only %}</summary>
                     <form method="post" action="{{ path('commercial_action_change', {id: action.id, operation: 'complete'}) }}" class="internal-form">
                         <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ action.id ~ '_complete') }}">
                         <label>{{ 'action.completed_title'|trans({}, 'commercial') }} <input name="title" value="{{ action.title }}" maxlength="255" required></label>
@@ -21,7 +21,7 @@
                     </form>
                 </details>
                 <details class="commercial-dossier__task-menu commercial-dossier__task-menu--postpone">
-                    <summary class="internal-button internal-button--secondary internal-button--compact">{{ 'action.postpone'|trans({}, 'commercial') }}</summary>
+                    <summary class="internal-button internal-button--compact commercial-task-action--postpone">{% include 'commercial/project/_icon.html.twig' with {name: 'alarm'} only %} {{ 'action.postpone'|trans({}, 'commercial') }}</summary>
                     <div class="commercial-dossier__postpone-options">
                         {% set postponeBase = action.dueOn|date('Y-m-d') > 'now'|date('Y-m-d') ? action.dueOn : date('now') %}
                         {% for days, label in {1: 'project.list.one_day', 2: 'project.list.two_days', 7: 'project.list.one_week'} %}
