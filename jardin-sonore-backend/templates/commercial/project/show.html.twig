@@ -9,7 +9,7 @@
         <div class="commercial-dossier__meta"><span>{{ 'project.opened_on'|trans({}, 'commercial') }} {{ project.createdAt|date('d/m/Y') }}</span><span class="internal-badge {{ project.status == 'confirmed' ? 'internal-badge--primary' : 'internal-badge--muted' }}">{{ ('project.status.' ~ project.status)|trans({}, 'commercial') }}</span></div>
         <h1>{{ project.title }}</h1>
     </section>
-    <div class="commercial-dossier">
+    <div class="commercial-dossier" data-controller="commercial-popovers">
         {% include 'commercial/project/_contacts.html.twig' %}
         {% include 'commercial/project/_documents.html.twig' %}
         {% include 'commercial/project/_create_controls.html.twig' %}
