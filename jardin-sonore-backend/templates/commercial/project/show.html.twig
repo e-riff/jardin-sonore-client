@@ -19,9 +19,7 @@
                 </form>
             </details>
         </div>
-        {% if project.request is null and project.quotes is empty and project.invoices is empty %}
-            <button type="button" class="commercial-dossier__delete" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('commercial_project_delete', {id: project.id}) }}" data-confirmation-dialog-item-value="{{ 'project.delete_item'|trans({'%title%': project.title}, 'commercial') }}" data-confirmation-dialog-token-value="{{ csrf_token('commercial_project_' ~ project.id ~ '_delete') }}">{{ 'project.delete'|trans({}, 'commercial') }}</button>
-        {% endif %}
+        <button type="button" class="commercial-dossier__delete" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('commercial_project_delete', {id: project.id}) }}" data-confirmation-dialog-item-value="{{ 'project.delete_item'|trans({'%title%': project.title}, 'commercial') }}" data-confirmation-dialog-token-value="{{ csrf_token('commercial_project_' ~ project.id ~ '_delete') }}">{{ 'project.delete'|trans({}, 'commercial') }}</button>
     </section>
     <div class="commercial-dossier" data-controller="commercial-popovers">
         {% include 'commercial/project/_contacts.html.twig' %}

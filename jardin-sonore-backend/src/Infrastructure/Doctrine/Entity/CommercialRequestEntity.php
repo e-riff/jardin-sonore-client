@@ -130,6 +130,14 @@ class CommercialRequestEntity
         $this->status = self::STATUS_QUALIFIED;
     }
 
+    public function removeProject(CommercialProjectEntity $projectEntity): void
+    {
+        $this->projects->removeElement($projectEntity);
+        if ($this->projects->isEmpty() && self::STATUS_QUALIFIED === $this->status) {
+            $this->status = self::STATUS_TO_QUALIFY;
+        }
+    }
+
     public function closeWithoutResult(): void
     {
         if (!$this->projects->isEmpty()) {
