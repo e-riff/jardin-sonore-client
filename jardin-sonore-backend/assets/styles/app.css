@@ -1280,11 +1280,30 @@ button:disabled {
 }
 
 .commercial-dossier__document-heading a,
-.commercial-dossier__document a {
+.commercial-dossier__document a,
+.commercial-timeline__toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: fit-content;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 8px;
+    padding: 5px 9px;
+    background: var(--color-surface-container-lowest);
     color: var(--color-secondary);
-    font-size: 0.78rem;
-    font-weight: 700;
+    font: 700 0.78rem/1.3 var(--font-sans);
     text-decoration: none;
+}
+
+.commercial-dossier__document-heading a:hover,
+.commercial-dossier__document-heading a:focus-visible,
+.commercial-dossier__document a:hover,
+.commercial-dossier__document a:focus-visible,
+.commercial-timeline__toggle:hover,
+.commercial-timeline__toggle:focus-visible {
+    border-color: color-mix(in oklab, var(--color-secondary) 30%, var(--color-outline-variant));
+    background: color-mix(in oklab, var(--color-secondary-container) 38%, white);
 }
 
 .commercial-dossier__document {
@@ -1677,15 +1696,13 @@ button:disabled {
 }
 
 .commercial-timeline__toggle {
-    border: 0;
-    margin: 2px 0 0;
-    padding: 0;
-    background: transparent;
-    color: var(--color-secondary);
-    cursor: pointer;
-    font: inherit;
-    font-size: 0.78rem;
-    font-weight: 700;
+    margin: 4px 0 0;
+}
+
+.commercial-timeline__toggle[aria-expanded="false"]::before {
+    content: '…';
+    font-size: 1rem;
+    line-height: 1;
 }
 
 .commercial-timeline__toggle[hidden] {

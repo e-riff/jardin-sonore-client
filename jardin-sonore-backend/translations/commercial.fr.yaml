@@ -200,7 +200,7 @@ note:
 event:
   edit: Corriger
   date: Date dans le fil
-  show_more: Voir plus
+  show_more: Voir la suite
   show_less: Voir moins
   none: Aucun élément dans le fil.
   save: Enregistrer la correction
