@@ -1,6 +1,6 @@
 # Roadmap Jardin Sonore
 
-Mise à jour le 14 octobre 2026. Ce document est la **seule source de l'état courant, des priorités et du point de reprise**. `AGENTS.md` et `.codex/jardin-sonore-guidelines.md` décrivent la méthode de travail ; les plans, conceptions et bilans datés gardent le détail technique et l'état constaté à leur date. Ne pas reprendre leurs anciennes listes de tâches sans vérifier cette page. L'ordre général est : **visibilité et nouvelles demandes**, puis **gain de temps dans le backoffice**. Les priorités indiquent un ordre de travail, pas un engagement de livraison simultanée.
+Mise à jour le 15 octobre 2026. Ce document est la **seule source de l'état courant, des priorités et du point de reprise**. `AGENTS.md` et `.codex/jardin-sonore-guidelines.md` décrivent la méthode de travail ; les plans, conceptions et bilans datés gardent le détail technique et l'état constaté à leur date. Ne pas reprendre leurs anciennes listes de tâches sans vérifier cette page. L'ordre général est : **visibilité et nouvelles demandes**, puis **gain de temps dans le backoffice**. Les priorités indiquent un ordre de travail, pas un engagement de livraison simultanée.
 
 ## Livré — hors travaux futurs
 
@@ -15,7 +15,7 @@ Mise à jour le 14 octobre 2026. Ce document est la **seule source de l'état co
 - Page d'offre `/eveil-musical-creche` publiée avec la fiche « Crèches & EAJE » actualisée sur l'accueil, le PDF d'exemple, les photos WebP, le fil d'Ariane, les données structurées et le sitemap (`deploy-eveil-musical-creche-20261007-01`).
 - Fiche Google Business Profile existante évaluée et complétée comme activité de zone desservie le 8 octobre : adresse publique masquée, zones et horaires renseignés, photo de couverture choisie et profil de réseau social ajouté. La catégorie « Artiste » est conservée faute de meilleure catégorie proposée. Le favicon Flaticon est crédité sur la page de mentions légales dans la livraison du 8 octobre.
 
-## Point de reprise — 14 octobre 2026
+## Point de reprise — 15 octobre 2026
 
 Le suivi commercial et l'harmonisation du backoffice sont déployés sous `deploy-suivi-clients-backoffice-20261014-01` (`fb71830`), fusionnés dans `main`. La livraison comprend l'index Dossiers unique, la fiche dossier réorganisée, les tâches et le fil, les mises à jour du rapport du matin, les contrôles d'index, ainsi que l'harmonisation des formulaires de catalogue. La production compte 63 migrations exécutées, aucune en attente, et le schéma Doctrine est synchronisé. La migration `Version20261013132221` a été appliquée ; la reprise a créé un dossier historique et son second passage n'en a créé aucun. Les pages publiques répondent en HTTP 200 et l'index backoffice renvoie à l'authentification (HTTP 302). Les 416 tests backend et 2 274 assertions passent (une notice PHPUnit). Le client n'a pas été redéployé : il n'avait aucune différence depuis le tag du 12 octobre déjà présent en production.
 
@@ -25,7 +25,23 @@ La refonte du suivi clients est cadrée dans la [conception dossier d'abord](doc
 
 La refonte a été développée sur `feat/suivi-commercial-v1`, puis fusionnée en fast-forward dans `main` à `fb71830`. Le modèle dossier, la création depuis le site, les tâches, le fil, les états, l'index unique et l'interface revue sont maintenant en production. La migration indépendante de normalisation de l'annuaire reste en attente sur la base locale de développement ; elle n'était pas incluse dans cette livraison.
 
-La refonte visuelle a été avancée avant la partie 5 à la demande de l'utilisateur. Les groupes de l'index Dossiers distinguent les urgences, les échéances à venir et les dossiers sans tâche. Le rapport personnel du matin renvoie aux dossiers sans l'ancienne rubrique de demandes. Sur la fiche, Contacts et Documents/Suivi sont repliables, avec un état initial adapté à la largeur d’écran ; les ajouts de tâches et d’échanges viennent avant les listes. Les formulaires concernés gardent le retour au-dessus du titre et regroupent la suppression dans l’en-tête. **La recette visuelle authentifiée sur téléphone et ordinateur reste à compléter**, en particulier pour confirmer le comportement des nouveaux volets repliables en conditions réelles. Le lot devis refusés, corrections et factures suit ce chantier.
+La refonte visuelle a été avancée avant la partie 5 à la demande de l'utilisateur. Les groupes de l'index Dossiers distinguent les urgences, les échéances à venir et les dossiers sans tâche. Le rapport personnel du matin renvoie aux dossiers sans l'ancienne rubrique de demandes. Sur la fiche, Contacts et Documents/Suivi sont repliables, avec un état initial adapté à la largeur d’écran ; les ajouts de tâches et d’échanges viennent avant les listes. Les formulaires concernés gardent le retour au-dessus du titre et regroupent la suppression dans l’en-tête. **La recette visuelle authentifiée sur téléphone et ordinateur reste à compléter**, en particulier pour confirmer le comportement des nouveaux volets repliables en conditions réelles.
+
+Le 14 octobre, les libellés d'événements de devis et les décisions « signé/refusé » ont été corrigés et déployés (`deploy-commercial-quote-decisions-20261014-01`, commit `44e986c`). Le remplacement d'un devis ne bloque pas le refus de la version précédente.
+
+Le 15 octobre, le mail quotidien de suivi a reçu une mise en forme plus lisible, les coins des tableaux et volets Contacts/Documents ont été corrigés, et le fil masque les événements automatiques de tâches sauf leur conclusion avec précision. Ces changements sont en production (`deploy-commercial-completion-highlight-20261015-01`, commit `10d023f`).
+
+### Assistant Mistral pour le suivi client — décision prise, essais à faire
+
+Le choix est acté : prendre un compte Mistral et essayer **Vibe Work avec Gmail et Drive**, puis créer un connecteur MCP personnalisé relié au backend Jardin Sonore pour rechercher et mettre à jour les dossiers. Le compte et l'offre exacts restent à confirmer ; vérifier que l'ajout d'un MCP personnalisé est bien disponible avant de commencer son développement. Voir le [rapport comparatif](docs/enquete-assistant-gmail-suivi-client-2026-10-15.md).
+
+Après ouverture du compte, tester la recherche et le résumé de mails et de documents Drive sur quelques cas réels. Vérifier les fonctions Gmail, les autorisations demandées et l'accès au MCP personnalisé dans l'offre choisie. Concevoir le MCP en lecture seule d'abord, puis ajouter seulement des actions métier limitées : rattacher ou créer un dossier, ajouter une note au fil et créer un rappel. Toute écriture doit être confirmée explicitement.
+
+Mistral propose aussi des tâches planifiées (préversion) qui peuvent utiliser les connecteurs de Work, notamment Gmail et Drive. À explorer pour un récapitulatif périodique en **lecture seule**. Une tâche qui écrit pendant une exécution sans surveillance exige de préautoriser l'action (`Always allow`) ; éviter cela pour les mises à jour commerciales et préférer les propositions à relire dans le chat.
+
+Le prochain chantier de gain de temps à cadrer est l'intégration du calendrier dans le dossier. L'utilisateur veut voir et modifier les dates des séances depuis le dossier, recevoir dans le mail ouvré un aperçu succinct des séances de cette semaine et de la suivante, puis un rappel de préparation de facture après la dernière séance du mois pour le dossier. Google Calendar reste la source des dates et heures ; les événements sont rattachés explicitement au dossier et les changements sont synchronisés dans les deux sens. Le fil peut être replié pour laisser la place aux séances et rappels. Pas de vue agenda complète demandée à ce stade. Le [plan initial](docs/superpowers/plans/2026-10-15-calendrier-dossiers-commerciaux.md) détaille les lots et les vérifications préalables.
+
+La génération des devis depuis le classeur existant est reportée : ChatGPT et son connecteur conviennent actuellement pour préparer les devis. Le backoffice conserve leur suivi manuel. La recette visuelle authentifiée mobile et desktop reste ouverte.
 
 ### Historique du 8 octobre — avant le suivi commercial
 
@@ -67,7 +83,7 @@ La [conception des disponibilités](docs/superpowers/specs/2026-09-30-session-av
 | Modèle compatible avec les anciennes demandes, création manuelle et rattachement des dossiers provisoires. | Déployé ; migration appliquée et reprise historique exécutée sans doublon. | Un seul dossier suivi, avec structure liée dès la création manuelle. |
 | Contact du site. | Déployé. | Un dossier provisoire et une tâche « Répondre » créés une seule fois, sans structure inventée ni doublon à la relance. |
 | Tâches, fil et statuts. | Déployé. | Commandes distinctes, correction des notes et tâches terminées, changement manuel du statut avec garde sur les factures impayées. |
-| Devis, factures et documents. | Suivi manuel déployé ; automatisations et générateur restent à cadrer. | États et références courts, événements fiables dans le fil et accès aux documents sans masquer le dossier. |
+| Devis, factures et documents. | Suivi manuel déployé ; décisions signé/refusé livrées le 14 octobre ; automatisations et générateur restent à cadrer. | États et références courts, événements fiables dans le fil et accès aux documents sans masquer le dossier. |
 | Page Dossiers unique. | Déployée ; la recette visuelle authentifiée reste ouverte. | Priorités, recherche, filtres et dossiers clos sur une seule page, sans « À faire » séparé. |
 | Détail du dossier et cohérence du backoffice. | Déployés ; recette sur téléphone et ordinateur à compléter. | Confirmer les volets, liens de contact, actions et cohérence des formulaires dans l'usage réel. |
 
@@ -75,14 +91,14 @@ L'archivage des dossiers fermés reste à définir après usage réel ; il devra
 
 Gmail reste le lieu des échanges avec les clients ; le backoffice porte les dossiers, les échéances et les documents.
 
-## P2 — Devis, interventions et facturation suivie
+## P2 — Calendrier, interventions, devis et facturation suivie
 
 | Chantier | Bénéfice attendu | Dépendances / critère de départ |
 | --- | --- | --- |
-| Concevoir les devis dans le backoffice à partir du XLS existant ; suivre leur envoi et importer le PDF signé. | Préparer les propositions au même endroit que les dossiers et conserver la preuve d'acceptation. | **Examiner le XLS avant de détailler le générateur**, ses calculs, modèles et variantes ; rattacher chaque devis à un projet. |
-| Gérer les visites dans le backoffice et synchroniser leurs dates vers Google Calendar. | Disposer d'un calendrier cohérent pour les interventions prévues. | Définir la source de vérité, la gestion des modifications/annulations et l'autorisation Google. |
-| Faire apparaître une visite passée dans « à facturer » sous forme d'action annulable ; rappeler la facture mensuelle après la dernière visite prévue de l'établissement. | Préparer une facture regroupée sans oublier une intervention ni facturer automatiquement. | Suivre les visites réalisées et le regroupement par établissement et par mois ; tenir compte des visites ajoutées ou déplacées. |
+| Intégrer les séances de Google Calendar à chaque dossier, avec consultation et modification des dates depuis le dossier. | Retrouver le calendrier du projet au même endroit que ses contacts et son suivi. | Google Calendar reste la référence pour date/heure ; synchroniser dans les deux sens, rattacher explicitement les événements existants et garder la trace des annulations. Le fil devient repliable. |
+| Montrer dans le mail ouvré un aperçu succinct des séances de cette semaine et de la suivante ; créer le rappel de préparation de facture après la dernière séance du mois du dossier. | Anticiper les interventions et ne pas oublier la facturation mensuelle. | Une seule action de préparation par dossier et par mois ; tenir compte des séances déplacées, ajoutées ou annulées et signaler une synchronisation incertaine. |
 | Enregistrer la référence et l'état de la facture émise par la plateforme déjà choisie. | Retrouver le suivi de facturation depuis le dossier. | Définir les statuts utiles et leur mise à jour depuis la plateforme, manuelle d'abord si nécessaire. |
+| Concevoir éventuellement les devis dans le backoffice à partir du XLS et suivre leur envoi. | Centraliser la préparation et le suivi documentaire si le besoin évolue. | Reporté : ChatGPT et son connecteur conviennent actuellement pour préparer les devis. Examiner le classeur et ses calculs avant de cadrer un générateur. |
 
 ### Facturation électronique — échéance distincte
 
