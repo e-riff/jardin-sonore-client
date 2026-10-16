@@ -37,7 +37,7 @@ final class CommercialCalendarInboxController extends AbstractController
         #[Autowire('%app.commercial.calendar_id%')] string $calendarId,
     ): Response {
         if (null === $oauthClient->connection()) {
-            $this->addFlash('error', 'calendar.connection.required');
+            $this->addFlash('error', ['message' => 'calendar.connection.required', 'domain' => 'commercial']);
 
             return $this->redirectToRoute('commercial_calendar_settings');
         }
@@ -101,7 +101,7 @@ final class CommercialCalendarInboxController extends AbstractController
             throw $this->createAccessDeniedException();
         }
         if (null === $oauthClient->connection()) {
-            $this->addFlash('error', 'calendar.connection.required');
+            $this->addFlash('error', ['message' => 'calendar.connection.required', 'domain' => 'commercial']);
 
             return $this->redirectToRoute('commercial_calendar_settings');
         }
@@ -110,7 +110,7 @@ final class CommercialCalendarInboxController extends AbstractController
         $projectId = filter_var($request->request->get('project_id'), FILTER_VALIDATE_INT);
         $status = $request->request->getString('status');
         if ([] === $eventIds || false === $projectId || !in_array($status, [CommercialInterventionEntity::STATUS_OPTION, CommercialInterventionEntity::STATUS_CONFIRMED], true)) {
-            $this->addFlash('error', 'calendar.attach.invalid_selection');
+            $this->addFlash('error', ['message' => 'calendar.unlinked.invalid_selection', 'domain' => 'commercial']);
 
             return $this->redirectToUnlinked($request);
         }
@@ -125,7 +125,7 @@ final class CommercialCalendarInboxController extends AbstractController
         try {
             $candidateEvents = $calendarGateway->eventsBetween($startsAt, $endsAt);
         } catch (GoogleCalendarApiException) {
-            $this->addFlash('error', 'calendar.inbox.load_error');
+            $this->addFlash('error', ['message' => 'calendar.unlinked.load_error', 'domain' => 'commercial']);
 
             return $this->redirectToUnlinked($request);
         }
@@ -137,13 +137,13 @@ final class CommercialCalendarInboxController extends AbstractController
         foreach ($eventIds as $eventId) {
             $candidateEvent = $candidatesById[$eventId] ?? null;
             if (null === $candidateEvent || $candidateEvent->allDay) {
-                $this->addFlash('error', 'calendar.attach.invalid_selection');
+                $this->addFlash('error', ['message' => 'calendar.unlinked.invalid_selection', 'domain' => 'commercial']);
 
                 return $this->redirectToUnlinked($request);
             }
             $existingEntity = $entityManager->getRepository(CommercialInterventionEntity::class)->findOneBy(['calendarId' => $calendarId, 'googleEventId' => $eventId]);
             if ($existingEntity instanceof CommercialInterventionEntity && null !== $existingEntity->getProject()) {
-                $this->addFlash('error', 'calendar.attach.already_linked');
+                $this->addFlash('error', ['message' => 'calendar.unlinked.already_linked', 'domain' => 'commercial']);
 
                 return $this->redirectToUnlinked($request);
             }
@@ -174,7 +174,7 @@ final class CommercialCalendarInboxController extends AbstractController
             $entityManager->persist($interventionEntity);
         }
         $entityManager->flush();
-        $this->addFlash('success', 'calendar.attach.success');
+        $this->addFlash('success', ['message' => 'calendar.unlinked.success', 'domain' => 'commercial']);
 
         return $this->redirectToRoute('commercial_project_show', ['id' => $projectEntity->getId()]);
     }

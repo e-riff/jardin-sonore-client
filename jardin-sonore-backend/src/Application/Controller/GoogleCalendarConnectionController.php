@@ -35,7 +35,7 @@ final class GoogleCalendarConnectionController extends AbstractController
 
             return $this->redirect($oauthClient->authorizationUrl($state));
         } catch (GoogleCalendarOAuthException) {
-            $this->addFlash('error', 'calendar.connection.configuration_missing');
+            $this->addFlash('error', ['message' => 'calendar.connection.configuration_missing', 'domain' => 'commercial']);
 
             return $this->redirectToRoute('commercial_calendar_settings');
         }
@@ -53,16 +53,16 @@ final class GoogleCalendarConnectionController extends AbstractController
         }
 
         if ($request->query->has('error')) {
-            $this->addFlash('error', 'calendar.connection.denied');
+            $this->addFlash('error', ['message' => 'calendar.connection.denied', 'domain' => 'commercial']);
 
             return $this->redirectToRoute('commercial_calendar_settings');
         }
 
         try {
             $oauthClient->connectWithCode($request->query->getString('code'));
-            $this->addFlash('success', 'calendar.connection.connected');
+            $this->addFlash('success', ['message' => 'calendar.connection.connected', 'domain' => 'commercial']);
         } catch (GoogleCalendarOAuthException) {
-            $this->addFlash('error', 'calendar.connection.failed');
+            $this->addFlash('error', ['message' => 'calendar.connection.failed', 'domain' => 'commercial']);
         }
 
         return $this->redirectToRoute('commercial_calendar_settings');
@@ -73,7 +73,10 @@ final class GoogleCalendarConnectionController extends AbstractController
     {
         $this->validateToken('commercial_calendar_disconnect', $request);
         $revoked = $oauthClient->disconnect();
-        $this->addFlash($revoked ? 'success' : 'warning', $revoked ? 'calendar.connection.disconnected' : 'calendar.connection.local_disconnected');
+        $this->addFlash($revoked ? 'success' : 'warning', [
+            'message' => $revoked ? 'calendar.connection.disconnected' : 'calendar.connection.local_disconnected',
+            'domain' => 'commercial',
+        ]);
 
         return $this->redirectToRoute('commercial_calendar_settings');
     }

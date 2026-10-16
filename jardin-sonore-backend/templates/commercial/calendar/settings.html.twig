@@ -20,7 +20,7 @@
             </form>
         {% elseif configured %}
             <p>{{ 'calendar.connection.not_connected'|trans({}, 'commercial') }}</p>
-            <form method="post" action="{{ path('commercial_calendar_connect') }}">
+            <form method="post" action="{{ path('commercial_calendar_connect') }}" data-turbo="false">
                 <input type="hidden" name="_token" value="{{ csrf_token('commercial_calendar_connect') }}">
                 <button class="internal-button" type="submit">{{ 'calendar.connection.connect'|trans({}, 'commercial') }}</button>
             </form>

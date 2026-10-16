@@ -18,6 +18,11 @@
                     active: currentRoute == 'commercial_dashboard' or currentRoute starts with 'commercial_project_' or currentRoute starts with 'commercial_request_',
                 },
                 {
+                    route: 'commercial_calendar_unlinked',
+                    label: 'internal.base.nav.commercial_calendar'|trans({}, 'internal'),
+                    active: currentRoute starts with 'commercial_calendar_',
+                },
+                {
                     route: 'commercial_digest_settings',
                     label: 'internal.base.nav.commercial_digest'|trans({}, 'internal'),
                     active: currentRoute == 'commercial_digest_settings',
