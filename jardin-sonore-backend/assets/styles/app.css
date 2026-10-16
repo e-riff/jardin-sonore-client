@@ -1101,7 +1101,7 @@ button:disabled {
     font-size: 1.28rem;
 }
 
-.commercial-dossier__section-heading > .commercial-dossier__create {
+.commercial-dossier__section-heading > .commercial-dossier__create-controls {
     margin-left: auto;
 }
 
@@ -1567,36 +1567,6 @@ button:disabled {
     font-size: 0.84rem;
 }
 
-.commercial-dossier__create > summary {
-    list-style: none;
-}
-
-.commercial-dossier__create > summary::-webkit-details-marker {
-    display: none;
-}
-
-.commercial-dossier__create > summary .commercial-icon {
-    width: 15px;
-    height: 15px;
-}
-
-.commercial-dossier__create[open] {
-    flex-basis: 100%;
-}
-
-.commercial-dossier__create > .internal-form,
-.commercial-dossier__create > p {
-    margin: 10px 0 0;
-}
-
-.commercial-dossier__create > .internal-form {
-    max-width: 780px;
-    border: 1px solid var(--color-outline-variant);
-    border-radius: 14px;
-    padding: 16px;
-    background: var(--color-surface-container-lowest);
-}
-
 .commercial-dossier__task {
     display: grid;
     grid-template-columns: 30px minmax(0, 1fr) auto auto;
@@ -1808,19 +1778,6 @@ button:disabled {
     z-index: 2;
 }
 
-.commercial-dossier__timeline-header .commercial-dossier__create[open] > .internal-form {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    z-index: 10;
-    width: min(780px, calc(100vw - 48px));
-}
-
-.commercial-dossier__timeline-header > .commercial-dossier__create-controls .commercial-dossier__create[open] {
-    flex-basis: auto;
-    position: relative;
-}
-
 .commercial-timeline {
     margin-left: 10px;
     border-left: 2px solid color-mix(in oklab, var(--color-primary) 30%, var(--color-outline-variant));
@@ -1908,6 +1865,31 @@ button:disabled {
     margin: 4px 0 3px;
     color: var(--color-on-background);
     font-size: 0.91rem;
+}
+
+.commercial-timeline__event-icon {
+    display: inline-flex;
+    width: 1.15em;
+    height: 1.15em;
+    margin-right: 6px;
+    vertical-align: -0.2em;
+}
+
+.commercial-timeline__event-icon .commercial-icon {
+    width: 100%;
+    height: 100%;
+}
+
+.commercial-timeline__item--quote-sent .commercial-timeline__event-icon {
+    color: var(--color-primary);
+}
+
+.commercial-timeline__item--quote-signed .commercial-timeline__event-icon {
+    color: var(--color-secondary);
+}
+
+.commercial-timeline__item--quote-refused .commercial-timeline__event-icon {
+    color: var(--color-error, #b3261e);
 }
 
 .commercial-timeline__subject {
@@ -3251,6 +3233,73 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
     backdrop-filter: blur(3px);
 }
 
+.internal-form-dialog {
+    width: min(calc(100% - 32px), 640px);
+    max-height: min(90dvh, 820px);
+    overflow-y: auto;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 22px;
+    padding: 0;
+    background: var(--color-surface-container-lowest);
+    color: var(--color-on-surface);
+    box-shadow: 0 24px 80px rgb(48 32 26 / 0.28);
+}
+
+.internal-form-dialog::backdrop {
+    background: rgb(38 27 22 / 0.48);
+    backdrop-filter: blur(3px);
+}
+
+.internal-form-dialog__panel {
+    display: grid;
+    position: relative;
+    gap: 16px;
+    padding: clamp(20px, 5vw, 30px);
+}
+
+.internal-form-dialog__panel h2,
+.internal-form-dialog__panel p {
+    margin: 0;
+}
+
+.internal-form-dialog__panel h2 {
+    padding-right: 38px;
+    overflow-wrap: anywhere;
+}
+
+.internal-form-dialog__close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    display: inline-grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-primary);
+    font: inherit;
+    font-size: 1.7rem;
+    line-height: 1;
+}
+
+.internal-form-dialog__close:hover,
+.internal-form-dialog__close:focus-visible {
+    background: color-mix(in oklab, var(--color-primary-fixed) 55%, white);
+}
+
+.internal-form-dialog__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.internal-form-dialog__actions .internal-button {
+    width: auto;
+}
+
 .commercial-intervention-dialog__panel {
     display: grid;
     position: relative;
@@ -3427,6 +3476,11 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
 .internal-form > div {
     display: grid;
     gap: 8px;
+}
+
+.internal-form div:has(> label + input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), > label + textarea, > label + select) {
+    display: grid;
+    gap: 10px;
 }
 
 .internal-form [hidden] {

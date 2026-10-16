@@ -144,9 +144,9 @@ final class CommercialWorkflowTest extends TestCase
         $occurredAt = new DateTimeImmutable('2026-10-09 11:00:00');
         $eventEntity = $projectEntity->recordEvent('note', $occurredAt, 'Erreur de saisie');
 
-        $eventEntity->revise('Compte rendu corrigé', []);
+        $eventEntity->revise('Compte rendu corrigé', [], $occurredAt);
 
-        self::assertSame($occurredAt, $eventEntity->getOccurredAt());
+        self::assertEquals($occurredAt, $eventEntity->getOccurredAt());
         self::assertSame('Compte rendu corrigé', $eventEntity->getContent());
     }
 
@@ -165,7 +165,7 @@ final class CommercialWorkflowTest extends TestCase
         self::assertSame('Appel avec Camille', $actionEntity->getTitle());
         self::assertSame('Appel avec Camille', $eventEntity->getMetadata()['action_title']);
         self::assertSame('Compte rendu corrigé', $eventEntity->getContent());
-        self::assertSame($occurredAt, $eventEntity->getOccurredAt());
+        self::assertEquals($occurredAt, $eventEntity->getOccurredAt());
         self::assertCount(1, $projectEntity->getEvents()->filter(static fn ($candidateEventEntity): bool => 'action_completed' === $candidateEventEntity->getType()));
     }
 

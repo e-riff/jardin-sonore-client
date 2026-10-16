@@ -91,13 +91,13 @@ final class CommercialActionControllerTest extends WebTestCase
         $client->loginUser($adminUserEntity);
 
         $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
-        $token = $crawler->filterXPath('//form[contains(@action, "/edit")]/input[@name="_token"]')->attr('value');
-        $client->request('POST', '/commercial/actions/' . $actionEntity->getId() . '/edit', [
-            '_token' => $token,
-            'title' => 'Appeler la direction',
-            'details' => 'Proposer trois dates',
-            'dueOn' => '2026-10-16',
-        ]);
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('commercial-action-edit-' . $actionEntity->getId(), (string) $client->getResponse()->getContent());
+        $editForm = $crawler->filterXPath('//form[@action="/commercial/actions/' . $actionEntity->getId() . '/edit"]')->form();
+        $editForm['title'] = 'Appeler la direction';
+        $editForm['details'] = 'Proposer trois dates';
+        $editForm['dueOn'] = '2026-10-16';
+        $client->submit($editForm);
         self::assertResponseRedirects();
 
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);

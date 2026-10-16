@@ -258,7 +258,11 @@ final class CommercialProjectController extends AbstractController
         $title = trim($request->request->getString('title'));
         $dueOnRaw = $request->request->getString('dueOn');
         $dueOn = DateTimeImmutable::createFromFormat('!Y-m-d', $dueOnRaw);
-        $personId = $request->request->getInt('personId');
+        $personIdRaw = $request->request->getString('personId');
+        if ('' !== $personIdRaw && !ctype_digit($personIdRaw)) {
+            return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        $personId = '' === $personIdRaw ? 0 : (int) $personIdRaw;
         $personEntity = 0 < $personId ? $entityManager->find(PersonEntity::class, $personId) : null;
         if (in_array($projectEntity->getStatus(), [CommercialProjectEntity::STATUS_COMPLETED, CommercialProjectEntity::STATUS_WITHOUT_RESULT], true)
             || '' === $title || 255 < mb_strlen($title) || !$dueOn instanceof DateTimeImmutable || $dueOn->format('Y-m-d') !== $dueOnRaw
