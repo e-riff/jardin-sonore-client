@@ -1,0 +1,80 @@
+body.ea-index-OrganizationEntity table.datagrid {
+    width: 100%;
+    max-width: 100%;
+    table-layout: fixed;
+}
+
+body.ea-index-OrganizationEntity .datagrid thead th:nth-child(1),
+body.ea-index-OrganizationEntity .datagrid tbody td:nth-child(1) {
+    width: 3%;
+}
+
+body.ea-index-OrganizationEntity .datagrid thead th:nth-child(2),
+body.ea-index-OrganizationEntity .datagrid tbody td:nth-child(2) {
+    width: 7%;
+}
+
+body.ea-index-OrganizationEntity .datagrid thead th:nth-child(3),
+body.ea-index-OrganizationEntity .datagrid tbody td:nth-child(3) {
+    width: 11%;
+}
+
+body.ea-index-OrganizationEntity .datagrid thead th:nth-child(4),
+body.ea-index-OrganizationEntity .datagrid tbody td:nth-child(4) {
+    width: 9%;
+}
+
+body.ea-index-OrganizationEntity .datagrid thead th:nth-child(5),
+body.ea-index-OrganizationEntity .datagrid tbody td:nth-child(5) {
+    width: 7%;
+}
+
+body.ea-index-OrganizationEntity .datagrid thead th:nth-child(6),
+body.ea-index-OrganizationEntity .datagrid tbody td:nth-child(6) {
+    width: 8%;
+}
+
+body.ea-index-OrganizationEntity .datagrid thead th:nth-child(7),
+body.ea-index-OrganizationEntity .datagrid tbody td:nth-child(7) {
+    width: 4%;
+}
+
+body.ea-index-OrganizationEntity .datagrid thead th:nth-child(8),
+body.ea-index-OrganizationEntity .datagrid tbody td:nth-child(8) {
+    width: 15%;
+}
+
+body.ea-index-OrganizationEntity .datagrid thead th:nth-child(9),
+body.ea-index-OrganizationEntity .datagrid tbody td:nth-child(9) {
+    width: 8%;
+}
+
+body.ea-index-OrganizationEntity .datagrid thead th:nth-child(10),
+body.ea-index-OrganizationEntity .datagrid tbody td:nth-child(10) {
+    width: 9%;
+}
+
+body.ea-index-OrganizationEntity .datagrid thead th:nth-child(11),
+body.ea-index-OrganizationEntity .datagrid tbody td:nth-child(11) {
+    width: 7%;
+}
+
+body.ea-index-OrganizationEntity .datagrid thead th:nth-child(12),
+body.ea-index-OrganizationEntity .datagrid tbody td:nth-child(12) {
+    width: 5%;
+}
+
+body.ea-index-OrganizationEntity .datagrid thead th:nth-child(13),
+body.ea-index-OrganizationEntity .datagrid tbody td:nth-child(13) {
+    width: 7%;
+}
+
+body.ea-index-OrganizationEntity .datagrid thead a,
+body.ea-index-OrganizationEntity .datagrid thead span:not(.icon) {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+body.ea-index-OrganizationEntity .datagrid tbody td {
+    overflow-wrap: anywhere;
+}
