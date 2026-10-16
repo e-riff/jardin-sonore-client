@@ -406,18 +406,24 @@ final class CommercialProjectControllerTest extends WebTestCase
         $client->loginUser($adminUserEntity);
 
         $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
+        self::assertCount(1, $crawler->filterXPath('//dialog[contains(@class, "commercial-timeline__edit-dialog")]'));
         $token = $crawler->filterXPath('//form[contains(@action, "/events/' . $noteEntity->getId() . '/edit")]/input[@name="_token"]')->attr('value');
         self::assertSame('2026-10-09', $crawler->filterXPath('//form[contains(@action, "/events/' . $noteEntity->getId() . '/edit")]//input[@name="occurredOn"]')->attr('value'));
         self::assertCount(0, $crawler->filterXPath('//form[contains(@action, "/events/' . $automaticEventEntity->getId() . '/edit")]'));
-        $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/events/' . $noteEntity->getId() . '/edit', ['_token' => $token, 'content' => 'Saisie corrigée', 'occurredOn' => '2026-09-30']);
+        $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/events/' . $noteEntity->getId() . '/edit', ['_token' => $token, 'content' => 'Saisie <strong>corrigée</strong> et <em>validée</em> <span style="color:#47664B">en vert</span><script>alert(1)</script>', 'occurredOn' => '2026-09-30']);
         self::assertResponseRedirects();
+        $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
+        self::assertCount(1, $crawler->filterXPath('//div[contains(@class, "commercial-timeline__excerpt")]//strong[text()="corrigée"]'));
+        self::assertCount(1, $crawler->filterXPath('//div[contains(@class, "commercial-timeline__excerpt")]//em[text()="validée"]'));
+        self::assertCount(1, $crawler->filterXPath('//div[contains(@class, "commercial-timeline__excerpt")]//span[@style="color:#47664B;"][text()="en vert"]'));
+        self::assertCount(0, $crawler->filterXPath('//div[contains(@class, "commercial-timeline__excerpt")]//script'));
         $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/events/' . $automaticEventEntity->getId() . '/edit', ['_token' => 'invalid', 'content' => 'Autre']);
         self::assertResponseStatusCodeSame(403);
 
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
         $entityManager->clear();
         $savedNoteEntity = $entityManager->find(CommercialEventEntity::class, $noteEntity->getId());
-        self::assertSame('Saisie corrigée', $savedNoteEntity->getContent());
+        self::assertSame('Saisie <strong>corrigée</strong> et <em>validée</em> <span style="color:#47664B">en vert</span><script>alert(1)</script>', $savedNoteEntity->getContent());
         self::assertSame('2026-09-30 10:00:00', $savedNoteEntity->getOccurredAt()->format('Y-m-d H:i:s'));
     }
 

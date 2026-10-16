@@ -34,7 +34,7 @@ final readonly class RecordCommercialQuote
 
         $quoteEntity = new CommercialQuoteEntity($projectEntity, $reference, $filename, $amountCents, $sentOn, $replaces);
         $projectEntity->addQuote($quoteEntity);
-        $eventEntity = $projectEntity->recordEvent('quote_sent', $this->clock->now(), $reference);
+        $eventEntity = $projectEntity->recordEvent('quote_sent', $this->atDate($sentOn), $reference);
         $eventEntity->linkQuote($quoteEntity);
 
         return $quoteEntity;
@@ -56,7 +56,7 @@ final readonly class RecordCommercialQuote
             throw new DomainException('A quote from a closed project cannot be signed.');
         }
         $quoteEntity->markSigned($signedOn);
-        $eventEntity = $projectEntity->recordEvent('quote_signed', $this->clock->now(), $quoteEntity->getReference());
+        $eventEntity = $projectEntity->recordEvent('quote_signed', $this->atDate($signedOn), $quoteEntity->getReference());
         $eventEntity->linkQuote($quoteEntity);
     }
 
@@ -70,7 +70,18 @@ final readonly class RecordCommercialQuote
         }
 
         $quoteEntity->markRefused($refusedOn);
-        $eventEntity = $quoteEntity->getProject()->recordEvent('quote_refused', $this->clock->now(), $quoteEntity->getReference());
+        $eventEntity = $quoteEntity->getProject()->recordEvent('quote_refused', $this->atDate($refusedOn), $quoteEntity->getReference());
         $eventEntity->linkQuote($quoteEntity);
+    }
+
+    private function atDate(DateTimeImmutable $date): DateTimeImmutable
+    {
+        $now = $this->clock->now();
+
+        return $now->setDate(
+            (int) $date->format('Y'),
+            (int) $date->format('m'),
+            (int) $date->format('d'),
+        );
     }
 }

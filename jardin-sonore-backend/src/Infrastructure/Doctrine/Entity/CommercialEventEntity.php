@@ -44,6 +44,26 @@ class CommercialEventEntity
         return $this->occurredAt;
     }
 
+    public function getTimelineDate(): DateTimeImmutable
+    {
+        $quoteDate = match ($this->type) {
+            'quote_sent' => $this->quote?->getSentOn(),
+            'quote_signed' => $this->quote?->getSignedOn(),
+            'quote_refused' => $this->quote?->getRefusedOn(),
+            default => null,
+        };
+
+        if (null === $quoteDate) {
+            return $this->occurredAt;
+        }
+
+        return $this->occurredAt->setDate(
+            (int) $quoteDate->format('Y'),
+            (int) $quoteDate->format('m'),
+            (int) $quoteDate->format('d'),
+        );
+    }
+
     public function getContent(): ?string
     {
         return $this->content;

@@ -1599,6 +1599,67 @@ button:disabled {
     font-size: 0.84rem;
 }
 
+.commercial-note-editor {
+    display: grid;
+    gap: 8px;
+}
+
+.commercial-note-editor__toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.commercial-note-editor__toolbar button {
+    display: inline-grid;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 8px;
+    background: white;
+    color: var(--color-on-surface);
+    font: inherit;
+}
+
+.commercial-note-editor__toolbar button:hover,
+.commercial-note-editor__toolbar button:focus-visible {
+    border-color: var(--color-secondary);
+    background: color-mix(in oklab, var(--color-secondary) 8%, white);
+}
+
+.commercial-note-editor__separator {
+    width: 1px;
+    height: 22px;
+    margin: 0 3px;
+    background: var(--color-outline-variant);
+}
+
+.commercial-note-editor__toolbar .commercial-note-editor__color span {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: var(--note-format-color);
+}
+
+.commercial-note-editor__surface {
+    min-height: 150px;
+    max-height: min(42vh, 420px);
+    overflow-y: auto;
+    padding: 12px 14px;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 12px;
+    background: var(--color-surface-container-lowest);
+    line-height: 1.55;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.commercial-note-editor__surface:focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--color-primary) 48%, transparent);
+    outline-offset: 2px;
+}
+
 .commercial-dossier__task {
     display: grid;
     grid-template-columns: 30px minmax(0, 1fr) auto auto;
@@ -1978,6 +2039,18 @@ button:disabled {
     font-size: 0.85rem;
     line-height: 1.5;
     white-space: pre-line;
+}
+
+.commercial-timeline__excerpt > p {
+    margin: 0 0 0.75em;
+}
+
+.commercial-timeline__excerpt > p:last-child {
+    margin-bottom: 0;
+}
+
+.commercial-timeline__edit-dialog {
+    width: min(calc(100% - 32px), 760px);
 }
 
 .commercial-timeline__excerpt.is-clamped {

@@ -205,6 +205,12 @@ note:
   due_on: Échéance du rappel
   due_required: Indiquer une date pour la prochaine action.
   save: Enregistrer la note
+  formatting: Mise en forme du compte rendu
+  bold: Gras
+  italic: Italique
+  color_terracotta: Texte terracotta
+  color_brown: Texte brun
+  color_green: Texte vert
 event:
   edit: Corriger
   delete: Supprimer cet élément du fil

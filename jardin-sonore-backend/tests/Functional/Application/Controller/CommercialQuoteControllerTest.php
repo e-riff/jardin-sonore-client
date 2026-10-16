@@ -52,6 +52,7 @@ final class CommercialQuoteControllerTest extends WebTestCase
         self::assertSame(31050, $quoteEntity->getAmountCents());
         $sentEventEntity = $quoteEntity->getProject()->getEvents()->filter(static fn ($eventEntity): bool => 'quote_sent' === $eventEntity->getType())->first();
         self::assertSame($quoteEntity, $sentEventEntity->getQuote());
+        self::assertSame('2026-10-09', $sentEventEntity->getOccurredAt()->format('Y-m-d'));
 
         $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
         $token = $crawler->filterXPath('//form[contains(@action, "/quotes/")]/input[@name="_token"]')->attr('value');
@@ -62,6 +63,8 @@ final class CommercialQuoteControllerTest extends WebTestCase
         $savedQuoteEntity = $entityManager->find(CommercialQuoteEntity::class, $quoteEntity->getId());
         self::assertInstanceOf(CommercialQuoteEntity::class, $savedQuoteEntity);
         self::assertSame('2026-10-10', $savedQuoteEntity->getSignedOn()?->format('Y-m-d'));
+        $signedEventEntity = $savedQuoteEntity->getProject()->getEvents()->filter(static fn ($eventEntity): bool => 'quote_signed' === $eventEntity->getType())->first();
+        self::assertSame('2026-10-10', $signedEventEntity->getOccurredAt()->format('Y-m-d'));
         self::assertSame(CommercialProjectEntity::STATUS_CONFIRMED, $savedQuoteEntity->getProject()->getStatus());
     }
 
@@ -97,6 +100,8 @@ final class CommercialQuoteControllerTest extends WebTestCase
         $savedQuoteEntity = $entityManager->find(CommercialQuoteEntity::class, $quoteEntity->getId());
         self::assertInstanceOf(CommercialQuoteEntity::class, $savedQuoteEntity);
         self::assertSame('2026-10-14', $savedQuoteEntity->getRefusedOn()?->format('Y-m-d'));
+        $refusedEventEntity = $savedQuoteEntity->getProject()->getEvents()->filter(static fn ($eventEntity): bool => 'quote_refused' === $eventEntity->getType())->first();
+        self::assertSame('2026-10-14', $refusedEventEntity->getOccurredAt()->format('Y-m-d'));
     }
 
     public function testSignedQuoteCanBeDeletedWithItsTimelineEvents(): void
@@ -113,7 +118,7 @@ final class CommercialQuoteControllerTest extends WebTestCase
         $projectEntity->addQuote($quoteEntity);
         $projectEntity->addQuote($replacementQuoteEntity);
         $sentEventEntity = $projectEntity->recordEvent('quote_sent', new DateTimeImmutable('2026-10-10'), $quoteEntity->getReference());
-        $signedEventEntity = $projectEntity->recordEvent('quote_signed', new DateTimeImmutable('2026-10-11'), $quoteEntity->getReference());
+        $signedEventEntity = $projectEntity->recordEvent('quote_signed', new DateTimeImmutable('2026-10-16 15:58:00'), $quoteEntity->getReference());
         $signedEventEntity->linkQuote($quoteEntity);
         foreach ([$adminUserEntity, $organizationEntity, $projectEntity, $quoteEntity, $replacementQuoteEntity, $sentEventEntity, $signedEventEntity] as $entity) {
             $entityManager->persist($entity);
@@ -123,6 +128,7 @@ final class CommercialQuoteControllerTest extends WebTestCase
 
         $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
         self::assertResponseIsSuccessful();
+        self::assertSame('11/10/2026', trim($crawler->filterXPath('//article[contains(@class, "commercial-timeline__item--quote-signed")]//time')->text()));
         $token = $crawler->filterXPath(sprintf('//button[contains(@class, "commercial-dossier__quote-delete") and @data-confirmation-dialog-action-value="/commercial/quotes/%d/delete"]', $quoteEntity->getId()))->attr('data-confirmation-dialog-token-value');
 
         $client->request('POST', '/commercial/quotes/' . $quoteEntity->getId() . '/delete', ['_token' => $token]);
