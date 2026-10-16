@@ -276,6 +276,7 @@ invoice:
   reference: Numéro de facture
   amount: Montant en euros
   issued_on: Date d’émission
+  service_month: Mois des prestations
   save: Enregistrer la facture
   amount_invalid: Indiquer un montant valide, avec au plus deux décimales.
   reference_exists: Ce numéro de facture est déjà enregistré.
@@ -297,3 +298,71 @@ digest:
   enabled: Activer le courriel de gestion
   send_time: Heure d’envoi
   save: Enregistrer les réglages
+calendar:
+  status:
+    option: Option
+    confirmed: Confirmée
+  settings:
+    heading: Calendrier professionnel
+    description: Connecte le calendrier Google utilisé pour les séances commerciales.
+  connection:
+    account: Compte connecté
+    last_success: Dernier accès réussi
+    not_connected: Aucun compte Google Calendar n’est connecté.
+    connect: Connecter Google Calendar
+    disconnect: Déconnecter Google Calendar
+    connected: Google Calendar est connecté.
+    disconnected: Google Calendar est déconnecté.
+    local_disconnected: La connexion a été supprimée du backoffice, mais Google n’a pas confirmé la révocation du jeton.
+    denied: L’autorisation Google a été refusée.
+    failed: La connexion Google a échoué. Vérifie la configuration et réessaie.
+    configuration_missing: La connexion Google Calendar n’est pas configurée sur le serveur.
+    required: Connecte Google Calendar avant de gérer les séances.
+  unlinked:
+    heading: Séances à rattacher
+    description: Choisis une période puis rattache les séances Google au dossier correspondant. Les groupes aident à repérer les récurrences et titres identiques ; chaque date reste sélectionnable séparément.
+    from: Du
+    to: Au
+    search: Afficher les séances
+    load_error: Impossible de lire Google Calendar. Les dernières données des dossiers restent disponibles.
+    empty: Aucune séance non rattachée sur cette période.
+    group_count: '%count% occurrences proposées ensemble'
+    choose_sessions: Séances à rattacher
+    all_day: Une heure de début et de fin doit être définie dans Google avant de rattacher cette séance.
+    project: Dossier
+    choose_project: Choisir un dossier
+    status: État dans le dossier
+    attach: Rattacher au dossier
+    invalid_selection: Choisis au moins une séance horodatée, un dossier et un état valide.
+    already_linked: Une des séances a déjà été rattachée. Actualise la liste avant de réessayer.
+    success: Les séances sélectionnées ont été rattachées au dossier.
+    title: Intitulé
+    starts_at: Début
+    ends_at: Fin
+    location: Lieu de la séance
+  sessions:
+    heading: Séances et dates
+    empty: Aucune séance n’est encore rattachée à ce dossier.
+    organization_address: Adresse de la structure
+    upcoming: à venir
+    add: Ajouter
+    sync_warning: La synchronisation avec Google est à vérifier.
+    detach: Détacher du dossier
+    attach_more: Rattacher des séances existantes
+    create: Créer une séance dans Google Calendar
+    create_intro: Cette séance sera ajoutée à Google Calendar et rattachée automatiquement au dossier « %project% ».
+    date_heading: Quand a lieu la séance ?
+    date_help: Choisis les horaires réels. Ils seront enregistrés dans le fuseau Europe/Paris.
+    created: La séance a été créée dans Google Calendar et rattachée au dossier.
+    save: Enregistrer la séance
+    edit: Modifier la séance
+    updated: La séance et ses horaires ont été mis à jour dans Google Calendar.
+    invalid_data: Vérifie le titre, les dates et les horaires de la séance.
+    save_error: La séance n’a pas pu être enregistrée dans Google Calendar.
+    cancel: Annuler la séance
+    canceled: La séance a été annulée dans Google Calendar et conservée dans l’historique du dossier.
+    canceled_note: 'Séance annulée : %title%.'
+    canceled_by_google_note: 'Séance annulée dans Google Calendar : %title%.'
+    confirm: Confirmer la séance
+    confirmed_note: 'Séance confirmée : %title%.'
+    conflict: La séance a changé dans Google Calendar. Les dernières données ont été chargées ; vérifie-les avant de réessayer.

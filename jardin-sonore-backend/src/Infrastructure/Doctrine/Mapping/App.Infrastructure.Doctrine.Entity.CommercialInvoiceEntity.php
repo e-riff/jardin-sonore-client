@@ -21,6 +21,7 @@ return static function (ClassMetadata $metadata): void {
     $metadata->mapField(['fieldName' => 'reference', 'type' => Types::STRING, 'length' => 64]);
     $metadata->mapField(['fieldName' => 'amountCents', 'columnName' => 'amount_cents', 'type' => Types::INTEGER]);
     $metadata->mapField(['fieldName' => 'issuedOn', 'columnName' => 'issued_on', 'type' => Types::DATE_IMMUTABLE]);
+    $metadata->mapField(['fieldName' => 'serviceMonth', 'columnName' => 'service_month', 'type' => Types::DATE_IMMUTABLE]);
     $metadata->mapField(['fieldName' => 'paidOn', 'columnName' => 'paid_on', 'type' => Types::DATE_IMMUTABLE, 'nullable' => true]);
     $metadata->mapManyToOne([
         'fieldName' => 'project',

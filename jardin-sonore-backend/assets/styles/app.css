@@ -953,18 +953,14 @@ button:disabled {
     min-width: 0;
 }
 
-.commercial-dossier__title-edit > summary {
+.commercial-dossier__title-display {
     display: flex;
     align-items: center;
     gap: 10px;
     width: fit-content;
     max-width: 100%;
     cursor: pointer;
-    list-style: none;
-}
-
-.commercial-dossier__title-edit > summary::-webkit-details-marker {
-    display: none;
+    border-radius: 5px;
 }
 
 .commercial-dossier__title-edit h1 {
@@ -990,23 +986,44 @@ button:disabled {
     height: 17px;
 }
 
-.commercial-dossier__title-edit > summary:hover .commercial-dossier__title-edit-icon,
-.commercial-dossier__title-edit > summary:focus-visible .commercial-dossier__title-edit-icon,
-.commercial-dossier__title-edit[open] .commercial-dossier__title-edit-icon {
+.commercial-dossier__title-display:hover .commercial-dossier__title-edit-icon,
+.commercial-dossier__title-display:focus-visible .commercial-dossier__title-edit-icon {
     opacity: 1;
 }
 
-.commercial-dossier__title-edit > summary:focus-visible {
+.commercial-dossier__title-display:focus-visible {
     outline: 2px solid var(--color-secondary);
     outline-offset: 3px;
 }
 
 .commercial-dossier__title-form {
-    display: flex;
-    align-items: flex-end;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 8px;
+    width: fit-content;
+    max-width: 100%;
+}
+
+.commercial-dossier__title-form[hidden],
+.commercial-dossier__title-display[hidden] {
+    display: none;
+}
+
+.commercial-dossier__title-form input {
+    width: min(100%, 720px);
+    border: 0;
+    border-bottom: 2px solid var(--color-secondary);
+    border-radius: 0;
+    padding: 0 0 4px;
+    background: transparent;
+    color: var(--color-primary);
+    font: inherit;
+    font-family: var(--font-serif);
+    font-size: clamp(1.9rem, 2.8vw, 2.35rem);
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.commercial-dossier__title-form input:focus-visible {
+    outline: 0;
+    box-shadow: none;
 }
 
 .commercial-dossier__title-form label {
@@ -1042,8 +1059,7 @@ button:disabled {
     height: 6px;
 }
 
-.commercial-dossier__tasks,
-.commercial-dossier__timeline {
+.commercial-dossier__tasks {
     min-width: 0;
     border: 1px solid color-mix(in oklab, var(--color-outline-variant) 72%, white);
     border-radius: 18px;
@@ -1083,6 +1099,10 @@ button:disabled {
     color: var(--color-on-background);
     font-family: var(--font-serif);
     font-size: 1.28rem;
+}
+
+.commercial-dossier__section-heading > .commercial-dossier__create {
+    margin-left: auto;
 }
 
 .commercial-dossier__count {
@@ -1175,8 +1195,7 @@ button:disabled {
     padding-left: 22px;
 }
 
-.commercial-dossier__people > summary,
-.commercial-dossier__status > summary {
+.commercial-dossier__people > summary {
     width: fit-content;
     cursor: pointer;
     color: var(--color-secondary);
@@ -1290,11 +1309,12 @@ button:disabled {
 
 .commercial-dossier__contacts > summary,
 .commercial-dossier__documents > summary {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 9px;
     cursor: pointer;
-    padding: 12px 16px;
+    padding: 12px 40px 12px 16px;
     color: var(--color-on-background);
     font-weight: 700;
     list-style: none;
@@ -1334,20 +1354,6 @@ button:disabled {
     color: var(--color-secondary);
     width: 21px;
     height: 21px;
-}
-
-.commercial-dossier__contacts > summary .commercial-icon:last-child,
-.commercial-dossier__documents > summary .commercial-icon:last-child {
-    width: 17px;
-    height: 17px;
-    margin-left: auto;
-    color: var(--color-on-surface-variant);
-    transition: transform 160ms ease;
-}
-
-.commercial-dossier__contacts[open] > summary .commercial-icon:last-child,
-.commercial-dossier__documents[open] > summary .commercial-icon:last-child {
-    transform: rotate(180deg);
 }
 
 .commercial-dossier__documents-content {
@@ -1774,7 +1780,45 @@ button:disabled {
 }
 
 .commercial-dossier__timeline {
-    padding-bottom: 12px;
+    min-width: 0;
+}
+
+.commercial-dossier__timeline-header {
+    min-width: 0;
+    position: relative;
+    border: 1px solid color-mix(in oklab, var(--color-outline-variant) 72%, white);
+    border-radius: 14px;
+    background: var(--color-surface-container-lowest);
+}
+
+.commercial-dossier__timeline > summary > #commercial-timeline-heading {
+    font-family: var(--font-serif);
+    font-size: 1.15rem;
+}
+
+.commercial-dossier__timeline-content {
+    border-top: 1px solid var(--color-outline-variant);
+    padding: 14px 16px 10px;
+}
+
+.commercial-dossier__timeline-header > .commercial-dossier__create-controls {
+    position: absolute;
+    top: 5px;
+    right: 46px;
+    z-index: 2;
+}
+
+.commercial-dossier__timeline-header .commercial-dossier__create[open] > .internal-form {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 10;
+    width: min(780px, calc(100vw - 48px));
+}
+
+.commercial-dossier__timeline-header > .commercial-dossier__create-controls .commercial-dossier__create[open] {
+    flex-basis: auto;
+    position: relative;
 }
 
 .commercial-timeline {
@@ -1786,7 +1830,7 @@ button:disabled {
     position: relative;
     min-width: 0;
     margin-left: 22px;
-    padding: 0 44px 22px 0;
+    padding: 0 0 22px;
     overflow-wrap: anywhere;
 }
 
@@ -1795,7 +1839,7 @@ button:disabled {
     border: 1px solid color-mix(in oklab, var(--color-secondary) 25%, white);
     border-left: 3px solid var(--color-secondary);
     border-radius: 12px;
-    padding: 12px 44px 14px 14px;
+    padding: 12px 14px 14px;
     background: color-mix(in oklab, var(--color-secondary-container) 22%, white);
 }
 
@@ -1930,13 +1974,368 @@ button:disabled {
 }
 
 .commercial-dossier__status {
-    border-top: 1px solid var(--color-outline-variant);
-    padding: 12px 4px 0;
+    position: relative;
+    z-index: 20;
+}
+
+.commercial-dossier__status > summary {
+    cursor: pointer;
+    list-style: none;
+}
+
+.commercial-dossier__status > summary::-webkit-details-marker {
+    display: none;
+}
+
+.commercial-dossier__status > summary:hover,
+.commercial-dossier__status > summary:focus-visible {
+    box-shadow: 0 0 0 2px var(--color-secondary);
+}
+
+.commercial-dossier__status-chevron {
+    width: 6px;
+    height: 6px;
+    margin-left: 2px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg) translateY(-2px);
+}
+
+.commercial-dossier__status[open] .commercial-dossier__status-chevron {
+    transform: rotate(225deg) translate(-1px, -1px);
 }
 
 .commercial-dossier__status .internal-form {
-    max-width: 400px;
-    margin-top: 12px;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: min(260px, calc(100vw - 48px));
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 12px;
+    padding: 14px;
+    background: var(--color-surface-container-lowest);
+    box-shadow: 0 12px 28px rgb(48 32 26 / 0.18);
+    letter-spacing: normal;
+    text-transform: none;
+}
+
+.commercial-dossier__interventions {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 14px;
+    background: color-mix(in oklab, var(--color-surface-container) 45%, white);
+}
+
+.commercial-dossier__interventions-shell {
+    position: relative;
+    min-width: 0;
+}
+
+.commercial-dossier__interventions > summary,
+.commercial-dossier__timeline > summary {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    cursor: pointer;
+    padding: 12px 40px 12px 16px;
+    color: var(--color-on-background);
+    font-weight: 700;
+    list-style: none;
+    background: var(--color-surface-container);
+    transition: background-color 140ms ease;
+}
+
+.commercial-dossier__interventions > summary {
+    padding-right: 150px;
+}
+
+.commercial-dossier__timeline > summary {
+    padding-right: 180px;
+}
+
+.commercial-dossier__interventions > summary::-webkit-details-marker,
+.commercial-dossier__timeline > summary::-webkit-details-marker {
+    display: none;
+}
+
+.commercial-dossier__interventions > summary:hover,
+.commercial-dossier__interventions > summary:focus-visible,
+.commercial-dossier__timeline > summary:hover,
+.commercial-dossier__timeline > summary:focus-visible {
+    background: color-mix(in oklab, var(--color-surface-container) 86%, var(--color-on-background));
+}
+
+.commercial-dossier__interventions:not([open]) > summary,
+.commercial-dossier__timeline:not([open]) > summary {
+    border-radius: 13px;
+}
+
+.commercial-dossier__interventions[open] > summary,
+.commercial-dossier__timeline[open] > summary {
+    border-radius: 13px 13px 0 0;
+}
+
+.commercial-dossier__interventions > summary .commercial-icon:first-child,
+.commercial-dossier__timeline > summary .commercial-icon:first-child {
+    width: 21px;
+    height: 21px;
+    color: var(--color-secondary);
+}
+
+.commercial-dossier__disclosure-chevron {
+    position: absolute;
+    top: 50%;
+    right: 18px;
+    width: 9px;
+    height: 9px;
+    border-right: 1.6px solid currentColor;
+    border-bottom: 1.6px solid currentColor;
+    color: var(--color-on-surface-variant);
+    transform: translateY(-70%) rotate(45deg);
+    transition: transform 160ms ease;
+}
+
+.commercial-dossier__contacts[open] > summary .commercial-dossier__disclosure-chevron,
+.commercial-dossier__documents[open] > summary .commercial-dossier__disclosure-chevron,
+.commercial-dossier__interventions[open] > summary .commercial-dossier__disclosure-chevron,
+.commercial-dossier__timeline[open] > summary .commercial-dossier__disclosure-chevron {
+    transform: translateY(-30%) rotate(225deg);
+}
+
+.commercial-dossier__interventions-content {
+    display: grid;
+    gap: 14px;
+    border-top: 1px solid var(--color-outline-variant);
+    border-radius: 0 0 13px 13px;
+    padding: 14px 16px 18px;
+    background: var(--color-surface-container-lowest);
+}
+
+.commercial-dossier__intervention-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.commercial-dossier__intervention-menu {
+    position: absolute;
+    z-index: 5;
+    top: 5px;
+    right: 46px;
+}
+
+.commercial-dossier__intervention-menu > summary {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    list-style: none;
+}
+
+.commercial-dossier__intervention-menu > summary::-webkit-details-marker {
+    display: none;
+}
+
+.commercial-dossier__intervention-menu .commercial-icon {
+    width: 15px;
+    height: 15px;
+}
+
+.commercial-dossier__intervention-menu-options {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    display: grid;
+    min-width: 240px;
+    overflow: hidden;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 10px;
+    background: var(--color-surface-container-lowest);
+    box-shadow: 0 10px 24px rgb(48 32 26 / 0.16);
+}
+
+.commercial-dossier__intervention-menu-options a {
+    padding: 10px 12px;
+    color: var(--color-on-background);
+    text-decoration: none;
+}
+
+.commercial-dossier__intervention-menu-options a:hover,
+.commercial-dossier__intervention-menu-options a:focus-visible {
+    background: var(--color-surface-container);
+}
+
+.commercial-dossier__intervention-actions .commercial-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.commercial-session-create-hero {
+    width: min(100%, 840px);
+    max-width: 840px;
+    margin-inline: auto;
+}
+
+.commercial-session-create-card {
+    width: min(100%, 840px);
+    max-width: 840px;
+    margin-inline: auto;
+    padding: clamp(20px, 4vw, 34px);
+}
+
+.commercial-session-create-card__heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.commercial-session-create-card__icon {
+    display: grid;
+    width: 52px;
+    height: 52px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 16px;
+    background: color-mix(in oklab, var(--color-secondary-container) 78%, white);
+    color: var(--color-secondary);
+}
+
+.commercial-session-create-card__icon .commercial-icon {
+    width: 25px;
+    height: 25px;
+}
+
+.commercial-session-create-card__heading h2 {
+    margin: 0 0 5px;
+    font-family: var(--font-serif);
+    font-size: 1.35rem;
+}
+
+.commercial-session-create-card__heading p {
+    margin: 0;
+    color: var(--color-on-surface-variant);
+    line-height: 1.55;
+}
+
+.commercial-session-create-form {
+    max-width: none;
+}
+
+.commercial-session-create-form__dates {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.commercial-session-create-form__dates label > span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.commercial-session-create-form__dates .commercial-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--color-secondary);
+}
+
+.commercial-session-create-form__location-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+}
+
+.commercial-session-create-form__location-suggestions > span {
+    color: var(--color-on-surface-variant);
+}
+
+.commercial-session-create-form__location-suggestions button {
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 999px;
+    padding: 6px 10px;
+    background: var(--color-surface-container-lowest);
+    color: var(--color-secondary);
+    cursor: pointer;
+    font: 700 0.8rem/1.3 var(--font-sans);
+    text-align: left;
+}
+
+.commercial-session-create-form__location-suggestions button:hover,
+.commercial-session-create-form__location-suggestions button:focus-visible {
+    background: var(--color-secondary-container);
+}
+
+.commercial-session-create-link {
+    justify-self: start;
+}
+
+.commercial-session-create-link .commercial-icon,
+.commercial-session-create-form__actions .commercial-icon {
+    width: 17px;
+    height: 17px;
+    vertical-align: -3px;
+}
+
+.commercial-session-create-form__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+form.internal-form > .commercial-session-create-form__actions {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+form.internal-form > .commercial-session-create-form__actions > .internal-button {
+    width: auto;
+}
+
+.commercial-dossier__intervention-list {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.commercial-dossier__intervention-list li {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid var(--color-outline-variant);
+    padding: 0 0 12px;
+}
+
+@media (max-width: 640px) {
+    .commercial-session-create-form__dates {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 20px;
+    }
+
+    form.internal-form > .commercial-session-create-form__actions {
+        justify-content: flex-end;
+    }
+
+    form.internal-form > .commercial-session-create-form__actions > .internal-button {
+        flex: 0 1 auto;
+        justify-content: center;
+    }
+
+    .commercial-dossier__intervention-list li {
+        flex-direction: column;
+    }
 }
 
 .commercial-request-list .internal-card {
@@ -2028,6 +2427,20 @@ button:disabled {
     display: grid;
     gap: 8px;
     margin: 0;
+    padding: 0;
+}
+
+.commercial-calendar-groups {
+    display: grid;
+    gap: 20px;
+}
+
+.commercial-calendar-group__events {
+    display: grid;
+    gap: 10px;
+    min-width: 0;
+    margin: 0;
+    border: 0;
     padding: 0;
 }
 
@@ -2196,6 +2609,7 @@ button:disabled {
     width: fit-content;
     align-items: center;
     justify-content: center;
+    gap: 8px;
     cursor: pointer;
     border: 1px solid transparent;
     border-radius: 999px;
@@ -2486,8 +2900,9 @@ button:disabled {
 }
 
 .internal-form label {
-    display: block;
-    margin-bottom: 8px;
+    display: grid;
+    gap: 8px;
+    margin: 0;
     color: var(--color-on-surface-variant);
     font-family: var(--font-sans);
     font-size: 0.84rem;
@@ -5007,8 +5422,7 @@ a.session-composer-overlay__item {
         opacity: 1;
     }
 
-    .commercial-dossier__tasks,
-    .commercial-dossier__timeline {
+    .commercial-dossier__tasks {
         padding: 14px;
     }
 

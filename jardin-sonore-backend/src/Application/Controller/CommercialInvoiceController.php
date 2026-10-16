@@ -33,7 +33,10 @@ final class CommercialInvoiceController extends AbstractController
         if (!$projectEntity instanceof CommercialProjectEntity || CommercialProjectEntity::STATUS_CONFIRMED !== $projectEntity->getStatus()) {
             throw $this->createNotFoundException();
         }
-        $form = $this->createForm(CommercialInvoiceType::class, ['issuedOn' => new DateTimeImmutable('today')]);
+        $form = $this->createForm(CommercialInvoiceType::class, [
+            'issuedOn' => new DateTimeImmutable('today'),
+            'serviceMonth' => new DateTimeImmutable('first day of this month'),
+        ]);
         $form->handleRequest($request);
         $error = null;
         if ($form->isSubmitted() && $form->isValid()) {
@@ -47,7 +50,7 @@ final class CommercialInvoiceController extends AbstractController
             } elseif ($existingInvoiceEntity instanceof CommercialInvoiceEntity) {
                 $error = 'invoice.reference_exists';
             } else {
-                $recorder->issue($projectEntity, $reference, $amountCents, $data['issuedOn']);
+                $recorder->issue($projectEntity, $reference, $amountCents, $data['issuedOn'], $data['serviceMonth']);
                 $entityManager->flush();
 
                 return $this->redirectToRoute('commercial_project_show', ['id' => $id]);

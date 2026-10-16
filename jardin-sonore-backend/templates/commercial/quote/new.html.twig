@@ -5,7 +5,6 @@
 {% block internal_body %}
     {% include 'components/_internal_back_button.html.twig' with { href: path('commercial_project_show', {id: project.id}), label: project.title } only %}
     <section class="internal-hero">
-        <a href="{{ path('commercial_project_show', {id: project.id}) }}">← {{ project.title }}</a>
         <h1>{{ 'quote.new'|trans({}, 'commercial') }}</h1>
         <p>{{ 'quote.hint'|trans({}, 'commercial') }}</p>
     </section>

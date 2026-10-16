@@ -20,6 +20,7 @@ final class CommercialInvoiceType extends AbstractType
             ->add('reference', TextType::class, ['label' => 'invoice.reference'])
             ->add('amount', TextType::class, ['label' => 'invoice.amount'])
             ->add('issuedOn', DateType::class, ['label' => 'invoice.issued_on', 'widget' => 'single_text', 'input' => 'datetime_immutable'])
+            ->add('serviceMonth', DateType::class, ['label' => 'invoice.service_month', 'widget' => 'single_text', 'input' => 'datetime_immutable'])
             ->add('submit', SubmitType::class, ['label' => 'invoice.save', 'attr' => ['class' => 'internal-button']]);
     }
 

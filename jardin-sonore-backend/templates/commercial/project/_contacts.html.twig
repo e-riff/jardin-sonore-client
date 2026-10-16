@@ -2,7 +2,7 @@
     <summary>
         {% include 'commercial/project/_icon.html.twig' with {name: 'people'} only %}
         <span id="commercial-contacts-heading">{{ 'project.contact_heading'|trans({}, 'commercial') }}</span>
-        {% include 'commercial/project/_icon.html.twig' with {name: 'chevron'} only %}
+        <span class="commercial-dossier__disclosure-chevron" aria-hidden="true"></span>
     </summary>
     <div class="commercial-dossier__contacts-content">
     {% if project.organization %}
@@ -95,6 +95,5 @@
             {{ form_row(organizationForm.submit) }}
         {{ form_end(organizationForm) }}
     {% endif %}
-    {% if project.request %}<a class="commercial-dossier__source" href="{{ path('commercial_request_show', {id: project.request.id}) }}">{{ 'project.original_request'|trans({}, 'commercial') }}</a>{% endif %}
     </div>
 </details>

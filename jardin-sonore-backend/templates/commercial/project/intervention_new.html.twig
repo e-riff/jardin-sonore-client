@@ -1,0 +1,70 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'calendar.sessions.create'|trans({}, 'commercial') %}
+
+{% block internal_body %}
+    {% set organizationAddresses = [] %}
+    {% if project.organization and project.organization.contactDetails %}
+        {% for addressContact in project.organization.contactDetails.addressContacts %}
+            {% if addressContact.active %}
+                {% set municipality = addressContact.municipality %}
+                {% set street = addressContact.address|default('')|trim %}
+                {% set postalCode = (addressContact.postalCode ?: (municipality ? municipality.postalCode : ''))|default('')|trim %}
+                {% set city = (addressContact.city ?: (municipality ? municipality.name : ''))|default('')|trim %}
+                {% set locality = [postalCode, city]|filter(part => part != '')|join(' ') %}
+                {% set address = [street, locality]|filter(part => part != '')|join(', ') %}
+                {% if address != '' and address not in organizationAddresses %}{% set organizationAddresses = organizationAddresses|merge([address]) %}{% endif %}
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+    {% include 'components/_internal_back_button.html.twig' with { href: path('commercial_project_show', {id: project.id}), label: project.title } only %}
+    <section class="internal-hero commercial-session-create-hero">
+        <h1>{{ 'calendar.sessions.create'|trans({}, 'commercial') }}</h1>
+        <p>{{ 'calendar.sessions.create_intro'|trans({'%project%': project.title}, 'commercial') }}</p>
+    </section>
+    <section class="internal-card commercial-session-create-card">
+        <div class="commercial-session-create-card__heading">
+            <span class="commercial-session-create-card__icon">{% include 'commercial/project/_icon.html.twig' with {name: 'calendar'} only %}</span>
+            <div>
+                <h2>{{ 'calendar.sessions.date_heading'|trans({}, 'commercial') }}</h2>
+                <p>{{ 'calendar.sessions.date_help'|trans({}, 'commercial') }}</p>
+            </div>
+        </div>
+        <form method="post" action="{{ path('commercial_intervention_create', {projectId: project.id}) }}" class="internal-form commercial-session-create-form">
+            <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_' ~ project.id ~ '_intervention_create') }}">
+            <input type="hidden" name="request_id" value="{{ calendarCreateRequestId }}">
+            <label for="commercial-session-title">{{ 'calendar.unlinked.title'|trans({}, 'commercial') }}<input id="commercial-session-title" name="title" maxlength="255" required autofocus></label>
+            <div class="commercial-session-create-form__dates">
+                <label for="commercial-session-start">
+                    <span>{% include 'commercial/project/_icon.html.twig' with {name: 'calendar'} only %} {{ 'calendar.unlinked.starts_at'|trans({}, 'commercial') }}</span>
+                    <input id="commercial-session-start" type="datetime-local" name="starts_at" required>
+                </label>
+                <label for="commercial-session-end">
+                    <span>{% include 'commercial/project/_icon.html.twig' with {name: 'calendar'} only %} {{ 'calendar.unlinked.ends_at'|trans({}, 'commercial') }}</span>
+                    <input id="commercial-session-end" type="datetime-local" name="ends_at" required>
+                </label>
+            </div>
+            <div class="commercial-session-create-form__location" data-controller="commercial-session-location">
+                <label for="commercial-session-location">{{ 'calendar.unlinked.location'|trans({}, 'commercial') }}<input id="commercial-session-location" name="location" autocomplete="off" data-commercial-session-location-target="input"></label>
+                {% if organizationAddresses is not empty %}
+                    <div class="commercial-session-create-form__location-suggestions">
+                        <span>{{ 'calendar.sessions.organization_address'|trans({}, 'commercial') }}</span>
+                        {% for address in organizationAddresses %}
+                            <button type="button" data-action="click->commercial-session-location#choose" data-commercial-session-location-address-param="{{ address }}">{{ address }}</button>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <label for="commercial-session-status">{{ 'calendar.unlinked.status'|trans({}, 'commercial') }}
+                <select id="commercial-session-status" name="status" required>
+                    <option value="option">{{ 'calendar.status.option'|trans({}, 'commercial') }}</option>
+                    <option value="confirmed">{{ 'calendar.status.confirmed'|trans({}, 'commercial') }}</option>
+                </select>
+            </label>
+            <div class="commercial-session-create-form__actions">
+                <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('commercial_project_show', {id: project.id}) }}">{{ 'action.cancel'|trans({}, 'commercial') }}</a>
+                <button class="internal-button internal-button--compact" type="submit">{% include 'commercial/project/_icon.html.twig' with {name: 'plus'} only %} {{ 'calendar.sessions.create'|trans({}, 'commercial') }}</button>
+            </div>
+        </form>
+    </section>
+{% endblock %}

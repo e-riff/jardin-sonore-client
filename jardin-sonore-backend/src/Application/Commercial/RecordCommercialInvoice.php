@@ -19,7 +19,7 @@ final readonly class RecordCommercialInvoice
     ) {
     }
 
-    public function issue(CommercialProjectEntity $projectEntity, string $reference, int $amountCents, DateTimeImmutable $issuedOn): CommercialInvoiceEntity
+    public function issue(CommercialProjectEntity $projectEntity, string $reference, int $amountCents, DateTimeImmutable $issuedOn, ?DateTimeImmutable $serviceMonth = null): CommercialInvoiceEntity
     {
         $reference = trim($reference);
         if ('' === $reference || 0 > $amountCents) {
@@ -29,7 +29,7 @@ final readonly class RecordCommercialInvoice
             throw new DomainException('Only a confirmed project can receive an invoice.');
         }
 
-        $invoiceEntity = new CommercialInvoiceEntity($projectEntity, $reference, $amountCents, $issuedOn);
+        $invoiceEntity = new CommercialInvoiceEntity($projectEntity, $reference, $amountCents, $issuedOn, $serviceMonth);
         $projectEntity->addInvoice($invoiceEntity);
         $projectEntity->recordEvent('invoice_issued', $this->clock->now(), $reference);
         $this->createReminderIfOverdue($invoiceEntity);

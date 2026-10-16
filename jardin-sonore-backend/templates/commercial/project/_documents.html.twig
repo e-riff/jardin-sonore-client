@@ -3,7 +3,7 @@
         {% include 'commercial/project/_icon.html.twig' with {name: 'folder'} only %}
         <span>{{ 'project.documents_heading'|trans({}, 'commercial') }}</span>
         {% if project.quotes|length + project.invoices|length > 0 %}<span class="commercial-dossier__count">{{ project.quotes|length + project.invoices|length }}</span>{% endif %}
-        {% include 'commercial/project/_icon.html.twig' with {name: 'chevron'} only %}
+        <span class="commercial-dossier__disclosure-chevron" aria-hidden="true"></span>
     </summary>
     <div class="commercial-dossier__documents-content">
         {% if driveLinks is defined %}

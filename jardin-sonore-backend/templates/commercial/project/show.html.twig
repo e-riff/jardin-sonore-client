@@ -4,44 +4,44 @@
 
 {% block internal_body %}
     {% include 'components/_internal_back_button.html.twig' with { href: path('commercial_project_index'), label: 'project.back'|trans({}, 'commercial') } only %}
-    <section class="internal-hero commercial-dossier__hero">
+    <section class="internal-hero commercial-dossier__hero" data-controller="commercial-popovers">
 
         <div class="commercial-dossier__hero-meta">
-            <div class="commercial-dossier__meta"><span>{{ 'project.opened_on'|trans({}, 'commercial') }} {{ project.createdAt|date('d/m/Y') }}</span><span class="internal-badge {{ project.status == 'confirmed' ? 'internal-badge--primary' : 'internal-badge--muted' }}">{{ ('project.status.' ~ project.status)|trans({}, 'commercial') }}</span></div>
+            <div class="commercial-dossier__meta">
+                <span>{{ 'project.opened_on'|trans({}, 'commercial') }} {{ project.createdAt|date('d/m/Y') }}</span>
+                <details class="commercial-dossier__status">
+                    <summary class="internal-badge {{ project.status == 'confirmed' ? 'internal-badge--primary' : 'internal-badge--muted' }}" aria-label="{{ 'project.change_status'|trans({}, 'commercial') }} : {{ ('project.status.' ~ project.status)|trans({}, 'commercial') }}">
+                        <span>{{ ('project.status.' ~ project.status)|trans({}, 'commercial') }}</span>
+                        <span class="commercial-dossier__status-chevron" aria-hidden="true"></span>
+                    </summary>
+                    <form method="post" action="{{ path('commercial_project_status_manual', {id: project.id}) }}" class="internal-form">
+                        <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_status_' ~ project.id ~ '_manual') }}">
+                        <label>{{ 'project.status_label'|trans({}, 'commercial') }}
+                            <select name="status">
+                                {% for status in ['discussion', 'confirmed', 'completed', 'without_result'] %}
+                                    <option value="{{ status }}" {% if project.status == status %}selected{% endif %}>{{ ('project.status.' ~ status)|trans({}, 'commercial') }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <button class="internal-button internal-button--secondary" type="submit">{{ 'project.change_status_save'|trans({}, 'commercial') }}</button>
+                    </form>
+                </details>
+            </div>
             <button type="button" class="internal-button internal-button--danger" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('commercial_project_delete', {id: project.id}) }}" data-confirmation-dialog-item-value="{{ 'project.delete_item'|trans({'%title%': project.title}, 'commercial') }}" data-confirmation-dialog-token-value="{{ csrf_token('commercial_project_' ~ project.id ~ '_delete') }}">{{ 'project.delete'|trans({}, 'commercial') }}</button>
         </div>
-        <details class="commercial-dossier__title-edit">
-            <summary title="{{ 'project.edit_title'|trans({}, 'commercial') }}" aria-label="{{ 'project.edit_title'|trans({}, 'commercial') }}">
-                <h1>{{ project.title }}</h1>
-                <span class="commercial-dossier__title-edit-icon">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</span>
-            </summary>
-            <form method="post" action="{{ path('commercial_project_title_edit', {id: project.id}) }}" class="commercial-dossier__title-form">
+        <div class="commercial-dossier__title-edit" data-controller="commercial-title-edit">
+            <h1 class="commercial-dossier__title-display" data-commercial-title-edit-target="display" data-action="click->commercial-title-edit#edit keydown.enter->commercial-title-edit#edit keydown.space->commercial-title-edit#edit" tabindex="0" role="button" aria-label="{{ 'project.edit_title'|trans({}, 'commercial') }}">{{ project.title }}<span class="commercial-dossier__title-edit-icon">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</span></h1>
+            <form method="post" action="{{ path('commercial_project_title_edit', {id: project.id}) }}" class="commercial-dossier__title-form" data-commercial-title-edit-target="form" hidden>
                 <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_' ~ project.id ~ '_title_edit') }}">
-                <label for="commercial-project-title">{{ 'project.title_label'|trans({}, 'commercial') }}</label>
-                <input id="commercial-project-title" name="title" value="{{ project.title }}" maxlength="255" required>
-                <button class="internal-button internal-button--secondary" type="submit">{{ 'project.save_title'|trans({}, 'commercial') }}</button>
+                <input id="commercial-project-title" name="title" value="{{ project.title }}" maxlength="255" required aria-label="{{ 'project.title_label'|trans({}, 'commercial') }}" data-commercial-title-edit-target="input" data-action="blur->commercial-title-edit#save keydown.esc->commercial-title-edit#cancel">
             </form>
-        </details>
+        </div>
     </section>
     <div class="commercial-dossier" data-controller="commercial-popovers">
         {% include 'commercial/project/_contacts.html.twig' %}
-        {% include 'commercial/project/_documents.html.twig' %}
-        {% include 'commercial/project/_create_controls.html.twig' %}
         {% include 'commercial/project/_tasks.html.twig' %}
         {% include 'commercial/project/_timeline.html.twig' %}
-        <details class="commercial-dossier__status">
-            <summary>{{ 'project.change_status'|trans({}, 'commercial') }}</summary>
-            <form method="post" action="{{ path('commercial_project_status_manual', {id: project.id}) }}" class="internal-form">
-                <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_status_' ~ project.id ~ '_manual') }}">
-                <label>{{ 'project.status_label'|trans({}, 'commercial') }}
-                    <select name="status">
-                        {% for status in ['discussion', 'confirmed', 'completed', 'without_result'] %}
-                            <option value="{{ status }}" {% if project.status == status %}selected{% endif %}>{{ ('project.status.' ~ status)|trans({}, 'commercial') }}</option>
-                        {% endfor %}
-                    </select>
-                </label>
-                <button class="internal-button internal-button--secondary" type="submit">{{ 'project.change_status_save'|trans({}, 'commercial') }}</button>
-            </form>
-        </details>
+        {% include 'commercial/project/_interventions.html.twig' %}
+        {% include 'commercial/project/_documents.html.twig' %}
     </div>
 {% endblock %}

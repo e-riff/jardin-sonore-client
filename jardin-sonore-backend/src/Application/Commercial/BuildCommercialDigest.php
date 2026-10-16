@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Application\Commercial;
 
 use App\Infrastructure\Doctrine\Entity\CommercialActionEntity;
+use App\Infrastructure\Doctrine\Entity\CommercialInterventionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialInvoiceEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use DateTimeImmutable;
+use DateTimeZone;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -67,6 +69,30 @@ final readonly class BuildCommercialDigest
             }
         }
 
-        return new CommercialDigest($localDate, $dueActions, $overdueInvoices, $withoutAction);
+        $timeZone = new DateTimeZone('Europe/Paris');
+        $localDateParis = new DateTimeImmutable($localDate->format('Y-m-d'), $timeZone);
+        $firstNextWeek = $localDateParis->modify('monday this week')->modify('+7 days');
+        $endOfNextWeek = $firstNextWeek->modify('+7 days');
+        $interventionQueryBuilder = $this->entityManager->getRepository(CommercialInterventionEntity::class)->createQueryBuilder('intervention');
+        $upcomingInterventions = $interventionQueryBuilder
+            ->addSelect('project')
+            ->innerJoin('intervention.project', 'project')
+            ->andWhere($interventionQueryBuilder->expr()->gte('intervention.startsAt', ':from'))
+            ->andWhere($interventionQueryBuilder->expr()->lt('intervention.startsAt', ':until'))
+            ->andWhere($interventionQueryBuilder->expr()->neq('intervention.status', ':canceled'))
+            ->setParameter('from', $localDateParis)
+            ->setParameter('until', $endOfNextWeek)
+            ->setParameter('canceled', CommercialInterventionEntity::STATUS_CANCELED)
+            ->orderBy('intervention.startsAt', 'ASC')
+            ->getQuery()->getResult();
+        $calendarSyncWarning = false;
+        foreach ($upcomingInterventions as $interventionEntity) {
+            if (null !== $interventionEntity->getSyncError()) {
+                $calendarSyncWarning = true;
+                break;
+            }
+        }
+
+        return new CommercialDigest($localDate, $dueActions, $overdueInvoices, $withoutAction, $upcomingInterventions, $calendarSyncWarning);
     }
 }

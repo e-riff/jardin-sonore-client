@@ -7,11 +7,13 @@ namespace App\Application\Controller;
 use App\Application\Commercial\CommercialProjectWorkflow;
 use App\Application\Commercial\CreateCommercialProject;
 use App\Application\Commercial\DeleteCommercialProject;
+use App\Application\Commercial\RefreshCommercialInterventions;
 use App\Application\Form\CommercialNoteType;
 use App\Application\Form\CommercialProjectCreateType;
 use App\Application\Form\CommercialProjectOrganizationType;
 use App\Infrastructure\Doctrine\Entity\CommercialActionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialEventEntity;
+use App\Infrastructure\Doctrine\Entity\CommercialInterventionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\PersonEntity;
@@ -114,12 +116,15 @@ final class CommercialProjectController extends AbstractController
     public function show(
         int $id,
         EntityManagerInterface $entityManager,
+        RefreshCommercialInterventions $interventionRefresher,
         #[Autowire('%app.commercial.drive_root_url%')] string $driveRootUrl,
         #[Autowire('%app.commercial.drive_quotes_url%')] string $driveQuotesUrl,
         #[Autowire('%app.commercial.drive_signed_quotes_url%')] string $driveSignedQuotesUrl,
         #[Autowire('%app.commercial.drive_invoices_url%')] string $driveInvoicesUrl,
     ): Response {
         $projectEntity = $this->findProject($id, $entityManager);
+        $interventionRefresher->run($id);
+        $interventions = $entityManager->getRepository(CommercialInterventionEntity::class)->findBy(['project' => $projectEntity], ['startsAt' => 'ASC']);
         $form = $this->createForm(CommercialNoteType::class, [
             'person' => $projectEntity->getPrimaryContact(),
             'nextActionDueOn' => new DateTimeImmutable('+7 days'),
@@ -127,6 +132,7 @@ final class CommercialProjectController extends AbstractController
 
         return $this->render('commercial/project/show.html.twig', [
             'project' => $projectEntity,
+            'interventions' => $interventions,
             'noteForm' => $form,
             'organizationForm' => null === $projectEntity->getOrganization() ? $this->createForm(CommercialProjectOrganizationType::class) : null,
             'driveLinks' => [
@@ -209,6 +215,7 @@ final class CommercialProjectController extends AbstractController
         if (!$form->isSubmitted() || !$form->isValid()) {
             return $this->render('commercial/project/show.html.twig', [
                 'project' => $projectEntity,
+                'interventions' => $entityManager->getRepository(CommercialInterventionEntity::class)->findBy(['project' => $projectEntity], ['startsAt' => 'ASC']),
                 'noteForm' => $form,
                 'organizationForm' => null === $projectEntity->getOrganization() ? $this->createForm(CommercialProjectOrganizationType::class) : null,
             ], new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY));
@@ -223,6 +230,7 @@ final class CommercialProjectController extends AbstractController
         if ('' !== $actionTitle && !$dueOn instanceof DateTimeImmutable) {
             return $this->render('commercial/project/show.html.twig', [
                 'project' => $projectEntity,
+                'interventions' => $entityManager->getRepository(CommercialInterventionEntity::class)->findBy(['project' => $projectEntity], ['startsAt' => 'ASC']),
                 'noteForm' => $form,
                 'noteError' => 'note.due_required',
                 'organizationForm' => null === $projectEntity->getOrganization() ? $this->createForm(CommercialProjectOrganizationType::class) : null,
