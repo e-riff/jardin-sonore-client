@@ -36,11 +36,11 @@
         <div class="commercial-calendar-planner__toolbar">
             <nav class="commercial-calendar-planner__views" aria-label="{{ 'calendar.planner.view_label'|trans({}, 'commercial') }}">
                 {% for candidateView in ['month', 'week', 'year'] %}
-                    <a href="{{ path('commercial_calendar_index', {view: candidateView, date: candidateView == 'year' ? academicYearStart|date('Y-m-d') : anchorDate|date('Y-m-d')}) }}" class="{{ view == candidateView ? 'is-active' : '' }}"{% if view == candidateView %} aria-current="page"{% endif %}>{{ ('calendar.planner.views.' ~ candidateView)|trans({}, 'commercial') }}</a>
+                    <a href="{{ path('commercial_calendar_index', {view: candidateView, date: candidateView == 'year' ? academicYearStart|date('Y-m-d') : anchorDate|date('Y-m-d'), summaryFrom: summaryFrom|date('Y-m-d'), summaryTo: summaryTo|date('Y-m-d')}) }}" class="{{ view == candidateView ? 'is-active' : '' }}"{% if view == candidateView %} aria-current="page"{% endif %}>{{ ('calendar.planner.views.' ~ candidateView)|trans({}, 'commercial') }}</a>
                 {% endfor %}
             </nav>
             <div class="commercial-calendar-planner__navigation">
-                <a href="{{ path('commercial_calendar_index', {view: view, date: previousDate}) }}" aria-label="{{ 'calendar.planner.previous'|trans({}, 'commercial') }}">‹</a>
+                <a href="{{ path('commercial_calendar_index', {view: view, date: previousDate, summaryFrom: summaryFrom|date('Y-m-d'), summaryTo: summaryTo|date('Y-m-d')}) }}" aria-label="{{ 'calendar.planner.previous'|trans({}, 'commercial') }}">‹</a>
                 <strong>
                     {% if view == 'year' %}
                         {{ academicYearStart|date('Y') }}–{{ academicYearStart|date_modify('+1 year')|date('Y') }}
@@ -50,16 +50,41 @@
                         {{ ('calendar.planner.months.' ~ months[0].date|date('n'))|trans({}, 'commercial') }} {{ months[0].date|date('Y') }}
                     {% endif %}
                 </strong>
-                <a href="{{ path('commercial_calendar_index', {view: view, date: nextDate}) }}" aria-label="{{ 'calendar.planner.next'|trans({}, 'commercial') }}">›</a>
-                <a class="commercial-calendar-planner__today" href="{{ path('commercial_calendar_index', {view: view, date: today}) }}">{{ 'calendar.planner.today'|trans({}, 'commercial') }}</a>
+                <a href="{{ path('commercial_calendar_index', {view: view, date: nextDate, summaryFrom: summaryFrom|date('Y-m-d'), summaryTo: summaryTo|date('Y-m-d')}) }}" aria-label="{{ 'calendar.planner.next'|trans({}, 'commercial') }}">›</a>
+                <a class="commercial-calendar-planner__today" href="{{ path('commercial_calendar_index', {view: view, date: today, summaryFrom: summaryFrom|date('Y-m-d'), summaryTo: summaryTo|date('Y-m-d')}) }}">{{ 'calendar.planner.today'|trans({}, 'commercial') }}</a>
             </div>
         </div>
+
+        <section class="commercial-calendar-summary" aria-labelledby="commercial-calendar-summary-title">
+            <div class="commercial-calendar-summary__main">
+                <div>
+                    <h2 id="commercial-calendar-summary-title">{{ 'calendar.planner.summary'|trans({}, 'commercial') }}</h2>
+                    <p>{{ 'calendar.planner.summary_period'|trans({'%from%': summaryFrom|date('d/m/Y'), '%to%': summaryTo|date('d/m/Y')}, 'commercial') }}</p>
+                </div>
+                <strong class="commercial-calendar-summary__total">{{ summary.total }}</strong>
+            </div>
+            <ul class="commercial-calendar-summary__details">
+                <li><strong>{{ summary.confirmed }}</strong> {{ 'calendar.planner.summary_confirmed'|trans({}, 'commercial') }}</li>
+                <li><strong>{{ summary.option }}</strong> {{ 'calendar.planner.summary_options'|trans({}, 'commercial') }}</li>
+                <li><strong>{{ summary.unlinked }}</strong> {{ 'calendar.planner.summary_unlinked'|trans({}, 'commercial') }}</li>
+            </ul>
+            <details class="commercial-calendar-summary__edit">
+                <summary>{{ 'calendar.planner.summary_change_period'|trans({}, 'commercial') }}</summary>
+                <form method="get" action="{{ path('commercial_calendar_index') }}" class="internal-form">
+                    <input type="hidden" name="view" value="{{ view }}">
+                    <input type="hidden" name="date" value="{{ anchorDate|date('Y-m-d') }}">
+                    <label>{{ 'calendar.planner.summary_from'|trans({}, 'commercial') }} <input type="date" name="summaryFrom" value="{{ summaryFrom|date('Y-m-d') }}" required></label>
+                    <label>{{ 'calendar.planner.summary_to'|trans({}, 'commercial') }} <input type="date" name="summaryTo" value="{{ summaryTo|date('Y-m-d') }}" required></label>
+                    <button type="submit" class="internal-button internal-button--secondary">{{ 'calendar.planner.summary_apply'|trans({}, 'commercial') }}</button>
+                </form>
+            </details>
+        </section>
 
         {% if view == 'year' %}
             <div class="commercial-calendar-planner__year">
                 {% for month in months %}
                     <section class="commercial-calendar-planner__mini-month">
-                        <a href="{{ path('commercial_calendar_index', {view: 'month', date: month.date|date('Y-m-d')}) }}">
+                        <a href="{{ path('commercial_calendar_index', {view: 'month', date: month.date|date('Y-m-d'), summaryFrom: summaryFrom|date('Y-m-d'), summaryTo: summaryTo|date('Y-m-d')}) }}">
                             {{ ('calendar.planner.months.' ~ month.date|date('n'))|trans({}, 'commercial') }}
                         </a>
                         <div class="commercial-calendar-planner__weekdays" aria-hidden="true">
@@ -68,7 +93,7 @@
                         {% for week in month.weeks %}
                             <div class="commercial-calendar-planner__mini-week">
                                 {% for day in week %}
-                                    <a href="{{ path('commercial_calendar_index', {view: 'month', date: day.date|date('Y-m-d')}) }}" class="{{ day.inMonth ? '' : 'is-outside' }}{% if day.events is not empty %} has-events{% endif %}" aria-label="{{ day.date|date('d/m/Y') }}{% if day.events is not empty %}, {{ day.events|length }} {{ 'calendar.planner.events'|trans({}, 'commercial') }}{% endif %}">{{ day.date|date('j') }}</a>
+                                    <a href="{{ path('commercial_calendar_index', {view: 'month', date: day.date|date('Y-m-d'), summaryFrom: summaryFrom|date('Y-m-d'), summaryTo: summaryTo|date('Y-m-d')}) }}" class="{{ day.inMonth ? '' : 'is-outside' }}{% if day.events is not empty %} has-events{% endif %}" aria-label="{{ day.date|date('d/m/Y') }}{% if day.events is not empty %}, {{ day.events|length }} {{ 'calendar.planner.events'|trans({}, 'commercial') }}{% endif %}">{{ day.date|date('j') }}</a>
                                 {% endfor %}
                             </div>
                         {% endfor %}

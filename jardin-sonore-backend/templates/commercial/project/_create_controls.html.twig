@@ -12,7 +12,16 @@
             'data-action': 'input->commercial-note-draft#save change->commercial-note-draft#save turbo:submit-end->commercial-note-draft#submitted',
         }}) }}
             <p class="commercial-dossier__create-hint">{{ 'project.add_event_hint'|trans({}, 'commercial') }}</p>
-            {{ form_widget(noteForm) }}
+            {{ form_row(noteForm.content) }}
+            {{ form_row(noteForm.occurredOn) }}
+            {{ form_row(noteForm.person) }}
+            <fieldset class="commercial-note-reminder">
+                <legend>{{ 'note.reminder_heading'|trans({}, 'commercial') }}</legend>
+                <p>{{ 'note.reminder_hint'|trans({}, 'commercial') }}</p>
+                {{ form_row(noteForm.nextActionTitle) }}
+                {{ form_row(noteForm.nextActionDueOn) }}
+            </fieldset>
+            {{ form_row(noteForm.submit) }}
         {{ form_end(noteForm) }}
         </div>
     </dialog>

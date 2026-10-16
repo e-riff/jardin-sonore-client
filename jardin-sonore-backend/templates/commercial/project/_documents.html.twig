@@ -23,7 +23,7 @@
             <section aria-labelledby="commercial-quotes-heading">
                 <div class="commercial-dossier__document-heading"><h3 id="commercial-quotes-heading">{{ 'quote.heading'|trans({}, 'commercial') }}</h3><a href="{{ path('commercial_quote_new', {id: project.id}) }}">{{ 'quote.new'|trans({}, 'commercial') }}</a></div>
                 {% for quote in project.quotes %}
-                    <article class="commercial-dossier__document">
+                    <article class="commercial-dossier__document commercial-dossier__document--quote">
                         {% include 'commercial/project/_icon.html.twig' with {name: quote.signedOn ? 'signed' : 'quote'} only %}
                         <div><strong>{{ quote.reference }}</strong><span>{{ quote.filename }} · {{ (quote.amountCents / 100)|number_format(2, ',', ' ') }} € · {{ quote.sentOn|date('d/m/Y') }}</span>
                             {% if quote.replaces %}<span>{{ 'quote.replacement'|trans({}, 'commercial') }} {{ quote.replaces.reference }}</span>{% endif %}
@@ -47,6 +47,7 @@
                                 </details>
                             </div>{% endif %}
                         </div>
+                        <button type="button" class="commercial-dossier__icon-action commercial-dossier__icon-action--danger commercial-dossier__quote-delete" title="{{ 'quote.delete'|trans({}, 'commercial') }}" aria-label="{{ 'quote.delete'|trans({}, 'commercial') }}" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('commercial_quote_delete', {id: quote.id}) }}" data-confirmation-dialog-item-value="{{ 'quote.delete_item'|trans({'%reference%': quote.reference}, 'commercial') }}" data-confirmation-dialog-token-value="{{ csrf_token('commercial_quote_delete_' ~ quote.id) }}">{% include 'commercial/project/_icon.html.twig' with {name: 'close'} only %}</button>
                     </article>
                 {% else %}<p class="commercial-dossier__muted">{{ 'quote.no_quotes'|trans({}, 'commercial') }}</p>{% endfor %}
             </section>

@@ -42,13 +42,19 @@ final class CommercialCalendarController extends AbstractController
 
         $timeZone = new DateTimeZone(self::TIME_ZONE);
         $now = $clock->now()->setTimezone($timeZone);
-        $anchorDate = $this->dateFromQuery($request, $now, $timeZone);
+        $anchorDate = $this->dateFromQuery($request, 'date', $now, $timeZone);
         $view = $request->query->getString('view', 'month');
         if (!in_array($view, ['month', 'week', 'year'], true)) {
             $view = 'month';
         }
 
         $academicYearStart = $this->academicYearStart($anchorDate);
+        $summaryFrom = $this->dateFromQuery($request, 'summaryFrom', $academicYearStart, $timeZone);
+        $summaryTo = $this->dateFromQuery($request, 'summaryTo', $academicYearStart->modify('+1 year'), $timeZone);
+        if ($summaryFrom >= $summaryTo) {
+            $summaryFrom = $academicYearStart;
+            $summaryTo = $academicYearStart->modify('+1 year');
+        }
         if ('year' === $view) {
             $rangeStart = $academicYearStart;
             $rangeEnd = $academicYearStart->modify('+1 year');
@@ -63,9 +69,11 @@ final class CommercialCalendarController extends AbstractController
             $rangeEnd = $rangeStart->modify('+' . $cellCount . ' days');
         }
 
+        $queryStart = $rangeStart < $summaryFrom ? $rangeStart : $summaryFrom;
+        $queryEnd = $rangeEnd > $summaryTo ? $rangeEnd : $summaryTo;
         $calendarError = false;
         try {
-            $events = $calendarGateway->eventsBetween($rangeStart, $rangeEnd);
+            $events = $calendarGateway->eventsBetween($queryStart, $queryEnd);
         } catch (GoogleCalendarApiException) {
             $events = [];
             $calendarError = true;
@@ -83,13 +91,26 @@ final class CommercialCalendarController extends AbstractController
 
         $eventsByDay = [];
         $unlinkedCount = 0;
+        $summary = ['total' => 0, 'confirmed' => 0, 'option' => 0, 'unlinked' => 0];
         foreach ($events as $event) {
             $intervention = $interventionsByEventId[$event->id] ?? null;
             $project = $intervention?->getProject();
-            if (null === $project && !$event->allDay) {
+            $eventStartsAt = $event->startsAt->setTimezone($timeZone);
+            $isScheduledSession = !$event->allDay && CommercialInterventionEntity::STATUS_CANCELED !== $intervention?->getStatus();
+            if (null === $project && !$event->allDay && $eventStartsAt >= $rangeStart && $eventStartsAt < $rangeEnd) {
                 ++$unlinkedCount;
             }
-            $dayKey = $event->startsAt->setTimezone($timeZone)->format('Y-m-d');
+            if ($isScheduledSession && $eventStartsAt >= $summaryFrom && $eventStartsAt < $summaryTo) {
+                ++$summary['total'];
+                if (null === $project) {
+                    ++$summary['unlinked'];
+                } elseif (CommercialInterventionEntity::STATUS_OPTION === $intervention->getStatus()) {
+                    ++$summary['option'];
+                } else {
+                    ++$summary['confirmed'];
+                }
+            }
+            $dayKey = $eventStartsAt->format('Y-m-d');
             $eventsByDay[$dayKey][] = [
                 'event' => $event,
                 'project' => $project,
@@ -124,6 +145,9 @@ final class CommercialCalendarController extends AbstractController
             'calendarDays' => $calendarDays,
             'months' => $months,
             'unlinkedCount' => $unlinkedCount,
+            'summary' => $summary,
+            'summaryFrom' => $summaryFrom,
+            'summaryTo' => $summaryTo,
             'calendarError' => $calendarError,
             'previousDate' => $this->navigateDate($view, $anchorDate, $academicYearStart, -1)->format('Y-m-d'),
             'nextDate' => $this->navigateDate($view, $anchorDate, $academicYearStart, 1)->format('Y-m-d'),
@@ -131,9 +155,9 @@ final class CommercialCalendarController extends AbstractController
         ]);
     }
 
-    private function dateFromQuery(Request $request, DateTimeImmutable $fallback, DateTimeZone $timeZone): DateTimeImmutable
+    private function dateFromQuery(Request $request, string $key, DateTimeImmutable $fallback, DateTimeZone $timeZone): DateTimeImmutable
     {
-        $value = $request->query->getString('date', $fallback->format('Y-m-d'));
+        $value = $request->query->getString($key, $fallback->format('Y-m-d'));
         $date = DateTimeImmutable::createFromFormat('!Y-m-d', $value, $timeZone);
 
         return false !== $date && $date->format('Y-m-d') === $value ? $date : $fallback->setTime(0, 0);

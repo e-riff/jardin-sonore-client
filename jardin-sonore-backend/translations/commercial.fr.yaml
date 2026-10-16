@@ -196,10 +196,13 @@ project:
 note:
   heading: Ajouter une note
   content: Compte rendu
+  occurred_on: Date dans le fil
   person: Interlocuteur
   no_person: Aucun interlocuteur
-  next_action: Prochaine action (facultative)
-  due_on: À faire le
+  reminder_heading: Ajouter aussi un rappel (facultatif)
+  reminder_hint: Le rappel associe une action à une échéance.
+  next_action: Action à réaliser
+  due_on: Échéance du rappel
   due_required: Indiquer une date pour la prochaine action.
   save: Enregistrer la note
 event:
@@ -265,6 +268,8 @@ quote:
   sign: Marquer comme signé
   refuse: Marquer comme refusé
   no_quotes: Aucun devis enregistré.
+  delete: Supprimer ce devis
+  delete_item: 'le devis « %reference% » et ses événements associés dans le fil'
   status_sent: Envoyé
   status_signed: Signé
   status_refused: Refusé
@@ -311,6 +316,15 @@ calendar:
     previous: Période précédente
     next: Période suivante
     today: Aujourd’hui
+    summary: Séances sur la période
+    summary_period: 'Du %from% au %to% (date de fin exclue)'
+    summary_confirmed: confirmées
+    summary_options: en option
+    summary_unlinked: à rattacher
+    summary_change_period: Modifier la période
+    summary_from: Du
+    summary_to: Jusqu’au (exclu)
+    summary_apply: Mettre à jour
     load_error: Impossible de lire Google Calendar. Réessaie après avoir vérifié la connexion.
     unlinked: À rattacher à un dossier
     events: séances
