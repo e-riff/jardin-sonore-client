@@ -81,6 +81,7 @@ final class CommercialCalendarInboxController extends AbstractController
 
         return $this->render('commercial/calendar/unlinked.html.twig', [
             'groups' => $eventGrouper->group($unlinkedEvents),
+            'pendingCount' => count(array_filter($unlinkedEvents, static fn ($event): bool => !$event->allDay)),
             'projects' => $projectEntities,
             'from' => $startsAt->format('Y-m-d'),
             'to' => $endsAt->format('Y-m-d'),

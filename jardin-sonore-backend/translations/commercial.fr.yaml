@@ -305,6 +305,7 @@ calendar:
   settings:
     heading: Calendrier professionnel
     description: Connecte le calendrier Google utilisé pour les séances commerciales.
+    manage_connection: Gérer la connexion Google
   connection:
     account: Compte connecté
     last_success: Dernier accès réussi
@@ -320,7 +321,10 @@ calendar:
     required: Connecte Google Calendar avant de gérer les séances.
   unlinked:
     heading: Séances à rattacher
-    description: Choisis une période puis rattache les séances Google au dossier correspondant. Les groupes aident à repérer les récurrences et titres identiques ; chaque date reste sélectionnable séparément.
+    pending_count: '%count% à rattacher'
+    description: Coche les séances concernées, choisis leur dossier puis rattache-les. Les récurrences et les titres identiques sont regroupés pour faciliter la sélection.
+    period: 'Période affichée : %from% – %to%'
+    moved_from: 'Déplacée du %date%'
     from: Du
     to: Au
     search: Afficher les séances
