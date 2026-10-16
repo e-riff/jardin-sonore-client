@@ -2285,7 +2285,7 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
 
 .commercial-dossier__intervention-list {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
     gap: 10px;
     margin: 0;
     padding: 0;
@@ -2339,6 +2339,13 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
     font-family: var(--font-sans);
     font-size: 0.91rem;
     font-weight: 700;
+}
+
+.commercial-dossier__intervention-time {
+    color: var(--color-on-surface-variant);
+    font-family: var(--font-sans);
+    font-size: 0.84rem;
+    font-variant-numeric: tabular-nums;
 }
 
 .commercial-dossier__intervention-title,
@@ -2495,6 +2502,31 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
 .commercial-calendar-planner {
     gap: 18px;
     padding: clamp(16px, 2.5vw, 28px);
+}
+
+.internal-main:has(.commercial-calendar-page-heading) {
+    padding-top: 32px;
+}
+
+.internal-main:has(.commercial-calendar-page-heading) > .internal-back-button {
+    margin-bottom: 10px;
+}
+
+.commercial-calendar-settings-button {
+    width: 42px;
+    min-height: 42px;
+    padding: 9px;
+}
+
+.commercial-calendar-settings-button svg {
+    width: 18px;
+    height: 18px;
+}
+
+.commercial-calendar-attach-button {
+    gap: 7px;
+    padding: 9px 14px;
+    font-size: 0.8rem;
 }
 
 .commercial-calendar-planner__toolbar {
@@ -2722,6 +2754,10 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
 }
 
 @media (max-width: 640px) {
+    .internal-main:has(.commercial-calendar-page-heading) {
+        padding-top: 18px;
+    }
+
     .commercial-calendar-planner__toolbar {
         align-items: flex-start;
         flex-direction: column;
@@ -2729,6 +2765,69 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
 
     .commercial-calendar-planner__year {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .commercial-calendar-planner__grid {
+        overflow: visible;
+    }
+
+    .commercial-calendar-planner__grid > .commercial-calendar-planner__weekdays {
+        display: none;
+    }
+
+    .commercial-calendar-planner__week {
+        display: contents;
+        min-width: 0;
+        border: 0;
+    }
+
+    .commercial-calendar-planner__day {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr);
+        align-items: start;
+        min-height: 0;
+        gap: 8px;
+        margin-bottom: 6px;
+        border: 1px solid var(--color-outline-variant);
+        border-radius: 10px;
+        padding: 8px;
+    }
+
+    .commercial-calendar-planner__day.is-outside {
+        display: none;
+    }
+
+    .commercial-calendar-planner__grid:not(.commercial-calendar-planner__grid--week) .commercial-calendar-planner__day:not(:has(.commercial-calendar-planner__event)) {
+        display: none;
+    }
+
+    .commercial-calendar-planner__day-number {
+        padding-top: 4px;
+    }
+
+    .commercial-calendar-planner__events {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+        min-width: 0;
+    }
+
+    .commercial-calendar-planner__event {
+        grid-template-columns: max-content minmax(0, 1fr);
+        font-size: 0.76rem;
+    }
+
+    .internal-page-heading.commercial-calendar-page-heading {
+        gap: 12px;
+        padding-bottom: 18px;
+        margin-bottom: 22px;
+    }
+
+    .commercial-calendar-page-heading .internal-heading-actions {
+        justify-content: flex-start;
+        gap: 8px;
+    }
+
+    .commercial-calendar-group__form .internal-form__choice-list {
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 
@@ -2810,7 +2909,7 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
 }
 
 .commercial-calendar-group__form .internal-form__choice-list {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
 }
 
 .commercial-calendar-group__form .internal-form__choice-label {

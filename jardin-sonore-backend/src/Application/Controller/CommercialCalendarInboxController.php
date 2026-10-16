@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace App\Application\Controller;
 
+use App\Application\Commercial\CalendarEventDraft;
 use App\Application\Commercial\CommercialCalendarGateway;
+use App\Application\Commercial\CommercialInterventionTitle;
 use App\Application\Commercial\GroupCalendarEvents;
 use App\Infrastructure\Doctrine\Entity\CommercialInterventionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use App\Infrastructure\Google\GoogleCalendarApiException;
+use App\Infrastructure\Google\GoogleCalendarConflictException;
 use App\Infrastructure\Google\GoogleCalendarOAuthClient;
+use App\Infrastructure\Google\GoogleCalendarOAuthException;
 use DateTimeImmutable;
 use DateTimeZone;
 use Doctrine\ORM\EntityManagerInterface;
@@ -135,6 +139,7 @@ final class CommercialCalendarInboxController extends AbstractController
             $candidatesById[$candidateEvent->id] = $candidateEvent;
         }
 
+        $eventsToAttach = [];
         foreach ($eventIds as $eventId) {
             $candidateEvent = $candidatesById[$eventId] ?? null;
             if (null === $candidateEvent || $candidateEvent->allDay) {
@@ -148,36 +153,53 @@ final class CommercialCalendarInboxController extends AbstractController
 
                 return $this->redirectToUnlinked($request);
             }
+            $eventsToAttach[] = [$candidateEvent, $existingEntity];
+        }
 
-            $interventionEntity = $existingEntity instanceof CommercialInterventionEntity
-                ? $existingEntity
-                : new CommercialInterventionEntity(
-                    $projectEntity,
-                    $calendarId,
-                    $candidateEvent->id,
-                    $candidateEvent->title,
-                    $candidateEvent->startsAt,
-                    $candidateEvent->endsAt,
-                    $candidateEvent->timeZone,
-                    $candidateEvent->location,
-                    $candidateEvent->etag,
-                    $clock->now(),
-                    $candidateEvent->recurringEventId,
-                    $candidateEvent->originalStartsAt,
+        try {
+            foreach ($eventsToAttach as [$candidateEvent, $existingEntity]) {
+                $eventTitle = CommercialInterventionTitle::forOption($candidateEvent->title, CommercialInterventionEntity::STATUS_OPTION === $status);
+                $eventForStatus = $eventTitle === $candidateEvent->title ? $candidateEvent : $calendarGateway->updateEvent(
+                    $candidateEvent,
+                    new CalendarEventDraft($eventTitle, $candidateEvent->startsAt, $candidateEvent->endsAt, $candidateEvent->timeZone, $candidateEvent->location),
                 );
-            if ($existingEntity instanceof CommercialInterventionEntity) {
-                $interventionEntity->refreshFromGoogle($candidateEvent->title, $candidateEvent->startsAt, $candidateEvent->endsAt, $candidateEvent->timeZone, $candidateEvent->location, $candidateEvent->etag, $clock->now());
-                $interventionEntity->assignTo($projectEntity);
+                $cleanTitle = CommercialInterventionTitle::withoutOptionMarker($eventForStatus->title);
+                $interventionEntity = $existingEntity instanceof CommercialInterventionEntity
+                    ? $existingEntity
+                    : new CommercialInterventionEntity(
+                        $projectEntity,
+                        $calendarId,
+                        $eventForStatus->id,
+                        $cleanTitle,
+                        $eventForStatus->startsAt,
+                        $eventForStatus->endsAt,
+                        $eventForStatus->timeZone,
+                        $eventForStatus->location,
+                        $eventForStatus->etag,
+                        $clock->now(),
+                        $eventForStatus->recurringEventId,
+                        $eventForStatus->originalStartsAt,
+                    );
+                if ($existingEntity instanceof CommercialInterventionEntity) {
+                    $interventionEntity->refreshFromGoogle($cleanTitle, $eventForStatus->startsAt, $eventForStatus->endsAt, $eventForStatus->timeZone, $eventForStatus->location, $eventForStatus->etag, $clock->now());
+                    $interventionEntity->assignTo($projectEntity);
+                }
+                $interventionEntity->setStatus($status);
+                $entityManager->persist($interventionEntity);
             }
-            if (CommercialInterventionEntity::STATUS_CONFIRMED === $status) {
-                $interventionEntity->confirm();
-            }
-            $entityManager->persist($interventionEntity);
+        } catch (GoogleCalendarConflictException) {
+            $this->addFlash('warning', ['message' => 'calendar.sessions.conflict', 'domain' => 'commercial']);
+
+            return $this->redirectToUnlinked($request);
+        } catch (GoogleCalendarApiException|GoogleCalendarOAuthException) {
+            $this->addFlash('error', ['message' => 'calendar.sessions.sync_warning', 'domain' => 'commercial']);
+
+            return $this->redirectToUnlinked($request);
         }
         $entityManager->flush();
         $this->addFlash('success', ['message' => 'calendar.unlinked.success', 'domain' => 'commercial']);
 
-        return $this->redirectToRoute('commercial_project_show', ['id' => $projectEntity->getId()]);
+        return $this->redirectToUnlinked($request);
     }
 
     private function dateFromQuery(Request $request, string $key, string $default, bool $endOfDay): DateTimeImmutable

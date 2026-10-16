@@ -412,5 +412,6 @@ calendar:
     canceled_note: 'Séance annulée : %title%.'
     canceled_by_google_note: 'Séance annulée dans Google Calendar : %title%.'
     confirm: Confirmer la séance
+    confirmed: La séance a été confirmée dans Google Calendar.
     confirmed_note: 'Séance confirmée : %title%.'
     conflict: La séance a changé dans Google Calendar. Les dernières données ont été chargées ; vérifie-les avant de réessayer.

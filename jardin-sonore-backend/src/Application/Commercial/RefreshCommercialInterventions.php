@@ -51,7 +51,7 @@ final readonly class RefreshCommercialInterventions
                     );
                 } else {
                     $interventionEntity->refreshFromGoogle(
-                        $googleEvent->title,
+                        CommercialInterventionTitle::withoutOptionMarker($googleEvent->title),
                         $googleEvent->startsAt,
                         $googleEvent->endsAt,
                         $googleEvent->timeZone,

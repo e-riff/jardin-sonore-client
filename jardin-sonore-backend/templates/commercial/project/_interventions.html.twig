@@ -1,7 +1,10 @@
 {% set upcomingInterventions = interventions|filter(intervention => intervention.startsAt > date() and intervention.status != 'canceled') %}
-{% set optionInterventions = upcomingInterventions|filter(intervention => intervention.status == 'option') %}
-{% set confirmedInterventions = upcomingInterventions|filter(intervention => intervention.status == 'confirmed') %}
 {% set pastInterventions = interventions|filter(intervention => intervention.status == 'canceled' or intervention.startsAt <= date())|reverse %}
+{% set upcomingByMonth = {} %}
+{% for intervention in upcomingInterventions %}
+    {% set monthKey = intervention.startsAt|date('Y-m') %}
+    {% set upcomingByMonth = upcomingByMonth|merge({(monthKey): (upcomingByMonth[monthKey]|default([]))|merge([intervention])}) %}
+{% endfor %}
 <div class="commercial-dossier__interventions-shell">
 <details class="commercial-dossier__interventions" name="commercial-project-details" {% if project.status == 'confirmed' %}open{% endif %}>
     <summary>
@@ -14,26 +17,16 @@
     {% if interventions is empty %}
         <p>{{ 'calendar.sessions.empty'|trans({}, 'commercial') }}</p>
     {% else %}
-        {% if optionInterventions is not empty %}
-            <section class="commercial-dossier__intervention-section commercial-dossier__intervention-section--options">
-                <h3>{{ 'calendar.sessions.options_heading'|trans({}, 'commercial') }} <span class="commercial-dossier__count">{{ optionInterventions|length }}</span></h3>
+        {% for monthInterventions in upcomingByMonth %}
+            <section class="commercial-dossier__intervention-section commercial-dossier__intervention-month">
+                <h3>{{ ('calendar.planner.months.' ~ monthInterventions[0].startsAt|date('n'))|trans({}, 'commercial') }} {{ monthInterventions[0].startsAt|date('Y') }}</h3>
                 <ul class="commercial-dossier__intervention-list">
-                    {% for intervention in optionInterventions %}
+                    {% for intervention in monthInterventions %}
                         {% include 'commercial/project/_intervention_card.html.twig' with {intervention: intervention, project: project, isPast: false} only %}
                     {% endfor %}
                 </ul>
             </section>
-        {% endif %}
-        {% if confirmedInterventions is not empty %}
-            <section class="commercial-dossier__intervention-section">
-                {% if optionInterventions is not empty %}<h3>{{ 'calendar.sessions.upcoming_heading'|trans({}, 'commercial') }}</h3>{% endif %}
-                <ul class="commercial-dossier__intervention-list">
-                    {% for intervention in confirmedInterventions %}
-                        {% include 'commercial/project/_intervention_card.html.twig' with {intervention: intervention, project: project, isPast: false} only %}
-                    {% endfor %}
-                </ul>
-            </section>
-        {% endif %}
+        {% endfor %}
         {% if pastInterventions is not empty %}
             <section class="commercial-dossier__intervention-section commercial-dossier__past-interventions">
                 <h3>{{ 'calendar.sessions.past_heading'|trans({}, 'commercial') }} <span class="commercial-dossier__count">{{ pastInterventions|length }}</span></h3>

@@ -7,6 +7,7 @@ namespace App\Tests\Functional\Application\Controller;
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialActionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialEventEntity;
+use App\Infrastructure\Doctrine\Entity\CommercialInterventionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectPersonEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialRequestEntity;
@@ -50,7 +51,11 @@ final class CommercialProjectControllerTest extends WebTestCase
         $projectEntity->recordEvent('quote_signed', new DateTimeImmutable('2026-10-12 09:00:00'), 'DEV-2026-001');
         $projectEntity->recordEvent('quote_refused', new DateTimeImmutable('2026-10-12 10:00:00'), 'DEV-2026-002');
         $projectEntity->recordEvent('note', new DateTimeImmutable('2026-10-13 10:00:00'), str_repeat('Compte rendu détaillé. ', 18));
-        foreach ([$adminUserEntity, $organizationEntity, $personEntity, $projectEntity] as $entity) {
+        $novemberInterventionEntity = new CommercialInterventionEntity($projectEntity, 'calendar', "event-november-{$suffix}", 'Atelier de novembre', new DateTimeImmutable('2026-11-03 09:00:00'), new DateTimeImmutable('2026-11-03 11:00:00'), 'Europe/Paris', null, '', new DateTimeImmutable('2026-10-13'));
+        $novemberInterventionEntity->confirm();
+        $decemberInterventionEntity = new CommercialInterventionEntity($projectEntity, 'calendar', "event-december-{$suffix}", 'Atelier de décembre', new DateTimeImmutable('2026-12-14 14:00:00'), new DateTimeImmutable('2026-12-14 16:00:00'), 'Europe/Paris', null, '', new DateTimeImmutable('2026-10-13'));
+        $decemberInterventionEntity->confirm();
+        foreach ([$adminUserEntity, $organizationEntity, $personEntity, $projectEntity, $novemberInterventionEntity, $decemberInterventionEntity] as $entity) {
             $entityManager->persist($entity);
         }
         $entityManager->flush();
@@ -74,6 +79,10 @@ final class CommercialProjectControllerTest extends WebTestCase
         self::assertCount(1, $crawler->filterXPath('//*[contains(@class, "commercial-timeline__item--quote-signed")]//*[contains(@class, "commercial-timeline__event-icon--signed")]'));
         self::assertCount(1, $crawler->filterXPath('//*[contains(@class, "commercial-timeline__item--quote-refused")]//*[contains(@class, "commercial-timeline__event-icon--close")]'));
         self::assertCount(2, $crawler->filterXPath('//*[contains(@class, "commercial-timeline__item")]//*[contains(@class, "commercial-timeline__edit")]'));
+        $interventionMonths = $crawler->filterXPath('//*[contains(concat(" ", normalize-space(@class), " "), " commercial-dossier__intervention-month ")]');
+        self::assertCount(2, $interventionMonths);
+        self::assertStringContainsString('novembre 2026', $interventionMonths->first()->text());
+        self::assertStringContainsString('3 novembre 2026', $crawler->filterXPath('//*[contains(concat(" ", normalize-space(@class), " "), " commercial-dossier__intervention-date ")]')->first()->text());
     }
 
     public function testManualCreationOpensDossierWithoutCreatingARequest(): void

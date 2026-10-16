@@ -4,7 +4,7 @@
 
 {% block internal_body %}
     {% include 'components/_internal_back_button.html.twig' with { href: path('commercial_calendar_index'), label: 'calendar.settings.heading'|trans({}, 'commercial') } only %}
-    <section class="internal-page-heading">
+    <section class="internal-page-heading commercial-calendar-page-heading">
         <div>
             <div class="commercial-calendar-inbox__heading">
                 <h1>{{ 'calendar.unlinked.heading'|trans({}, 'commercial') }}</h1>

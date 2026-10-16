@@ -127,6 +127,17 @@ class CommercialInterventionEntity
     public function confirm(): void
     {
         $this->status = self::STATUS_CONFIRMED;
+        $this->canceledAt = null;
+    }
+
+    public function setStatus(string $status): void
+    {
+        if (!in_array($status, [self::STATUS_OPTION, self::STATUS_CONFIRMED], true)) {
+            throw new DomainException('An attached intervention must be an option or confirmed.');
+        }
+
+        $this->status = $status;
+        $this->canceledAt = null;
     }
 
     public function cancel(DateTimeImmutable $now): void

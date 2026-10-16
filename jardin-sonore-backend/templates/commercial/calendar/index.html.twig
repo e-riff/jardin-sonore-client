@@ -13,14 +13,17 @@
 
 {% block internal_body %}
     {% include 'components/_internal_back_button.html.twig' with { href: path('commercial_project_index'), label: 'project.back'|trans({}, 'commercial') } only %}
-    <section class="internal-page-heading">
+    <section class="internal-page-heading commercial-calendar-page-heading">
         <div>
             <h1>{{ 'calendar.planner.heading'|trans({}, 'commercial') }}</h1>
             <p>{{ 'calendar.planner.description'|trans({}, 'commercial') }}</p>
         </div>
         <div class="internal-heading-actions">
-            <a class="internal-button internal-button--secondary" href="{{ path('commercial_calendar_settings') }}">{{ 'calendar.settings.manage_connection'|trans({}, 'commercial') }}</a>
-            <a class="internal-button" href="{{ path('commercial_calendar_unlinked') }}">
+            <a class="internal-button internal-button--secondary internal-button--compact commercial-calendar-settings-button" href="{{ path('commercial_calendar_settings') }}" aria-label="{{ 'calendar.settings.manage_connection'|trans({}, 'commercial') }}" title="{{ 'calendar.settings.manage_connection'|trans({}, 'commercial') }}">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.7 1l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.7-1l-1.7.7-1.4-2.4L5.3 15a8 8 0 0 1 0-2l-1.4-1.1 1.4-2.4 1.7.7a8 8 0 0 1 1.7-1L9 7.4h2.8l.3 1.8a8 8 0 0 1 1.7 1l1.7-.7 1.4 2.4-1.4 1.1a8 8 0 0 1 0 2Z"/></svg>
+            </a>
+            <a class="internal-button internal-button--compact commercial-calendar-attach-button" href="{{ path('commercial_calendar_unlinked') }}">
+                {% include 'commercial/project/_icon.html.twig' with {name: 'calendar'} only %}
                 {{ 'calendar.planner.attach_sessions'|trans({}, 'commercial') }}
                 {% if unlinkedCount > 0 %}<span class="internal-badge internal-badge--warning">{{ unlinkedCount }}</span>{% endif %}
             </a>

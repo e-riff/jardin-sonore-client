@@ -7,6 +7,7 @@ namespace App\Application\Controller;
 use App\Application\Commercial\CalendarEventDraft;
 use App\Application\Commercial\CalendarEventOccurrence;
 use App\Application\Commercial\CommercialCalendarGateway;
+use App\Application\Commercial\CommercialInterventionTitle;
 use App\Infrastructure\Doctrine\Entity\CommercialInterventionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use App\Infrastructure\Google\GoogleCalendarApiException;
@@ -48,15 +49,36 @@ final class CommercialInterventionController extends AbstractController
         int $id,
         Request $request,
         EntityManagerInterface $entityManager,
+        CommercialCalendarGateway $calendarGateway,
         ClockInterface $clock,
         TranslatorInterface $translator,
     ): Response {
         $this->validateToken("commercial_intervention_{$id}_confirm", $request);
         $interventionEntity = $this->findIntervention($projectId, $id, $entityManager);
-        $now = $clock->now();
-        $interventionEntity->confirm();
-        $interventionEntity->getProject()?->recordEvent('note', $now, $translator->trans('calendar.sessions.confirmed_note', ['%title%' => $interventionEntity->getTitle()], 'commercial'));
-        $entityManager->flush();
+        try {
+            $currentEvent = $this->eventSnapshot($interventionEntity);
+            $confirmedDraft = new CalendarEventDraft(
+                CommercialInterventionTitle::forOption($interventionEntity->getTitle(), false),
+                $interventionEntity->getStartsAt(),
+                $interventionEntity->getEndsAt(),
+                $interventionEntity->getTimeZone(),
+                $interventionEntity->getLocation(),
+            );
+            $updatedEvent = $confirmedDraft->title === $currentEvent->title ? $currentEvent : $calendarGateway->updateEvent($currentEvent, $confirmedDraft);
+            $this->refreshIntervention($interventionEntity, $updatedEvent, $clock->now());
+            $interventionEntity->confirm();
+            $interventionEntity->getProject()?->recordEvent('note', $clock->now(), $translator->trans('calendar.sessions.confirmed_note', ['%title%' => $interventionEntity->getTitle()], 'commercial'));
+            $entityManager->flush();
+            $this->addFlash('success', ['message' => 'calendar.sessions.confirmed', 'domain' => 'commercial']);
+        } catch (GoogleCalendarConflictException) {
+            $interventionEntity->markSyncFailed('google_version_conflict');
+            $entityManager->flush();
+            $this->addFlash('warning', ['message' => 'calendar.sessions.conflict', 'domain' => 'commercial']);
+        } catch (GoogleCalendarApiException|GoogleCalendarOAuthException) {
+            $interventionEntity->markSyncFailed('google_sync_failed');
+            $entityManager->flush();
+            $this->addFlash('error', ['message' => 'calendar.sessions.sync_warning', 'domain' => 'commercial']);
+        }
 
         return $this->redirectToRoute('commercial_project_show', ['id' => $projectId]);
     }
@@ -87,7 +109,7 @@ final class CommercialInterventionController extends AbstractController
                 throw new GoogleCalendarOAuthException('Google Calendar is not connected.');
             }
 
-            $googleEvent = $calendarGateway->createEvent($draft, $request->request->getString('request_id'));
+            $googleEvent = $calendarGateway->createEvent($this->draftForStatus($draft, CommercialInterventionEntity::STATUS_OPTION === $status), $request->request->getString('request_id'));
             $interventionEntity = $this->newIntervention($projectEntity, $calendarId, $googleEvent, $clock->now());
             if (CommercialInterventionEntity::STATUS_CONFIRMED === $status) {
                 $interventionEntity->confirm();
@@ -116,7 +138,7 @@ final class CommercialInterventionController extends AbstractController
         $interventionEntity = $this->findIntervention($projectId, $id, $entityManager);
 
         try {
-            $draft = $this->draftFromRequest($request);
+            $draft = $this->draftForStatus($this->draftFromRequest($request), CommercialInterventionEntity::STATUS_OPTION === $interventionEntity->getStatus());
             $currentEvent = $this->eventSnapshot($interventionEntity);
             $updatedEvent = $calendarGateway->updateEvent($currentEvent, $draft);
             $this->refreshIntervention($interventionEntity, $updatedEvent, $clock->now());
@@ -235,7 +257,7 @@ final class CommercialInterventionController extends AbstractController
     {
         return new CalendarEventOccurrence(
             $interventionEntity->getGoogleEventId(),
-            $interventionEntity->getTitle(),
+            CommercialInterventionTitle::forOption($interventionEntity->getTitle(), CommercialInterventionEntity::STATUS_OPTION === $interventionEntity->getStatus()),
             $interventionEntity->getStartsAt(),
             $interventionEntity->getEndsAt(),
             $interventionEntity->getLocation(),
@@ -253,7 +275,7 @@ final class CommercialInterventionController extends AbstractController
             $projectEntity,
             $calendarId,
             $event->id,
-            $event->title,
+            CommercialInterventionTitle::withoutOptionMarker($event->title),
             $event->startsAt,
             $event->endsAt,
             $event->timeZone,
@@ -267,7 +289,18 @@ final class CommercialInterventionController extends AbstractController
 
     private function refreshIntervention(CommercialInterventionEntity $interventionEntity, CalendarEventOccurrence $event, DateTimeImmutable $syncedAt): void
     {
-        $interventionEntity->refreshFromGoogle($event->title, $event->startsAt, $event->endsAt, $event->timeZone, $event->location, $event->etag, $syncedAt);
+        $interventionEntity->refreshFromGoogle(CommercialInterventionTitle::withoutOptionMarker($event->title), $event->startsAt, $event->endsAt, $event->timeZone, $event->location, $event->etag, $syncedAt);
+    }
+
+    private function draftForStatus(CalendarEventDraft $draft, bool $isOption): CalendarEventDraft
+    {
+        return new CalendarEventDraft(
+            CommercialInterventionTitle::forOption($draft->title, $isOption),
+            $draft->startsAt,
+            $draft->endsAt,
+            $draft->timeZone,
+            $draft->location,
+        );
     }
 
     private function validateToken(string $tokenId, Request $request): void
