@@ -38,6 +38,15 @@
 - Ajouter `'use client';` seulement quand necessaire.
 - Respecter TypeScript strict, imports absolus `@/...`, composants React fonctionnels et Tailwind utilitaire.
 
+## Repères de design du backoffice
+
+- Utiliser un bouton principal pour l’action principale d’une zone et un bouton secondaire pour les actions courantes. Garder les actions répétées compactes.
+- Placer les actions destructives dans le détail de l’élément et demander une confirmation pour annuler ou supprimer.
+- Utiliser une fenêtre en surimpression native (`dialog`) pour modifier un élément avec plusieurs champs ou afficher ses actions. Elle se ferme avec Échap, un bouton de fermeture ou un clic sur le fond.
+- Réserver les menus contextuels (`popover`) aux choix courts liés à un bouton, et les dépliants (`details/summary`) au contenu secondaire ou consulté ponctuellement. Leur chevron reste aligné à droite ; les menus se ferment au clic extérieur et avec Échap.
+- Utiliser les icônes SVG existantes du backoffice ; donner un nom accessible aux commandes avec icône seule. Ne pas dépendre de la couleur seule pour distinguer un état.
+- Une ligne ou carte cliquable doit ouvrir un détail clairement annoncé, avoir un état de survol et un état de focus clavier, et passer à une colonne sur mobile.
+
 ## PHP et Symfony
 
 - Toujours ajouter `declare(strict_types=1);` dans les nouveaux fichiers PHP, sauf fichier de configuration ou convention projet contraire.

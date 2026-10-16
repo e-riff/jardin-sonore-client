@@ -2303,19 +2303,94 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
 
 .commercial-dossier__intervention-list {
     display: grid;
-    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
     margin: 0;
     padding: 0;
     list-style: none;
 }
 
 .commercial-dossier__intervention-list li {
+    min-width: 0;
+}
+
+.commercial-dossier__intervention-trigger {
+    display: grid;
+    grid-template-columns: max-content auto;
+    justify-content: start;
+    align-content: start;
+    gap: 5px 10px;
+    width: 100%;
+    min-height: 92px;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 14px;
+    padding: 14px;
+    background: var(--color-surface-container-lowest);
+    color: var(--color-on-background);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 140ms ease, background-color 140ms ease, transform 140ms ease;
+}
+
+.commercial-dossier__intervention-trigger:hover,
+.commercial-dossier__intervention-trigger:focus-visible {
+    border-color: color-mix(in oklab, var(--color-secondary) 58%, white);
+    background: color-mix(in oklab, var(--color-surface-container) 48%, white);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.commercial-dossier__intervention-item--option .commercial-dossier__intervention-trigger {
+    border-color: #e7c38c;
+    background: #fffaf1;
+}
+
+.commercial-dossier__intervention-item--past .commercial-dossier__intervention-trigger {
+    border-color: color-mix(in oklab, var(--color-outline-variant) 70%, white);
+    background: var(--color-surface-container);
+    color: var(--color-on-surface-variant);
+    opacity: 0.72;
+}
+
+.commercial-dossier__intervention-date {
+    font-family: var(--font-sans);
+    font-size: 0.91rem;
+    font-weight: 700;
+}
+
+.commercial-dossier__intervention-title,
+.commercial-dossier__intervention-trigger small {
+    grid-column: 1 / -1;
+    overflow-wrap: anywhere;
+}
+
+.commercial-dossier__intervention-trigger small {
+    color: var(--color-on-surface-variant);
+}
+
+.commercial-dossier__intervention-section {
+    display: grid;
+    gap: 10px;
+}
+
+.commercial-dossier__intervention-section h3 {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-    border-bottom: 1px solid var(--color-outline-variant);
-    padding: 0 0 12px;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    color: var(--color-on-surface-variant);
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+}
+
+.commercial-dossier__intervention-section--options h3 {
+    color: #80500c;
+}
+
+.commercial-dossier__past-interventions {
+    border-top: 1px solid var(--color-outline-variant);
+    padding-top: 12px;
 }
 
 @media (max-width: 640px) {
@@ -2333,8 +2408,8 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
         justify-content: center;
     }
 
-    .commercial-dossier__intervention-list li {
-        flex-direction: column;
+    .commercial-dossier__intervention-list {
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 
@@ -2473,13 +2548,17 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
 }
 
 .commercial-calendar-inbox__filters {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: grid;
+    grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) auto;
     align-items: end;
-    margin-top: 16px;
+    gap: 10px;
+    max-width: 760px;
+    margin-top: 12px;
 }
 
 .commercial-calendar-inbox__filters > button {
     justify-self: start;
+    white-space: nowrap;
 }
 
 .commercial-calendar-group {
@@ -2533,20 +2612,74 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
 }
 
 @media (max-width: 680px) {
-    .commercial-calendar-inbox__filters,
     .commercial-calendar-group__form .internal-form__choice-list,
     .commercial-calendar-group__fields {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .commercial-calendar-inbox__filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .commercial-calendar-inbox__filters > button {
+        grid-column: 1 / -1;
+    }
+
+    .commercial-intervention-dialog__panel {
+        padding: 22px;
+    }
+
+    .commercial-intervention-dialog__dates {
         grid-template-columns: minmax(0, 1fr);
     }
 }
 
 .commercial-calendar-group__events {
     display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: 10px;
     min-width: 0;
     margin: 0;
     border: 0;
     padding: 0;
+}
+
+.commercial-calendar-group__events > legend {
+    grid-column: 1;
+    margin: 0;
+    padding: 0;
+    color: var(--color-on-surface-variant);
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.commercial-calendar-group__selection-heading {
+    display: flex;
+    justify-content: flex-end;
+    grid-column: 2;
+}
+
+.commercial-calendar-group__events > .internal-form__choice-list {
+    grid-column: 1 / -1;
+}
+
+.commercial-calendar-group__select-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--color-secondary);
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.commercial-calendar-group__select-all input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--color-secondary);
 }
 
 .internal-form .internal-form__choice {
@@ -2852,6 +2985,66 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
 .internal-confirmation-dialog::backdrop {
     background: rgb(38 27 22 / 0.48);
     backdrop-filter: blur(3px);
+}
+
+.commercial-intervention-dialog {
+    width: min(100% - 32px, 680px);
+    max-height: min(90dvh, 820px);
+    overflow-y: auto;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 22px;
+    padding: 0;
+    background: var(--color-surface-container-lowest);
+    color: var(--color-on-surface);
+    box-shadow: 0 24px 80px rgb(48 32 26 / 0.28);
+}
+
+.commercial-intervention-dialog::backdrop {
+    background: rgb(38 27 22 / 0.48);
+    backdrop-filter: blur(3px);
+}
+
+.commercial-intervention-dialog__panel {
+    display: grid;
+    position: relative;
+    gap: 14px;
+    padding: 28px;
+}
+
+.commercial-intervention-dialog__panel h2,
+.commercial-intervention-dialog__panel p {
+    margin: 0;
+}
+
+.commercial-intervention-dialog__panel h2 {
+    padding-right: 38px;
+    overflow-wrap: anywhere;
+}
+
+.commercial-intervention-dialog__date {
+    color: var(--color-on-surface-variant);
+}
+
+.commercial-intervention-dialog__dates {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.commercial-intervention-dialog__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-top: 1px solid var(--color-outline-variant);
+    padding-top: 14px;
+}
+
+.commercial-intervention-dialog__actions form {
+    margin: 0;
+}
+
+.commercial-intervention-dialog__actions .internal-button {
+    min-height: 40px;
 }
 
 .internal-confirmation-dialog__panel {

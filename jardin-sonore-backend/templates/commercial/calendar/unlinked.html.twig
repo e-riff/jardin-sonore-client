@@ -42,12 +42,17 @@
                         <input type="hidden" name="_token" value="{{ csrf_token('commercial_calendar_attach') }}">
                         <input type="hidden" name="from" value="{{ from }}">
                         <input type="hidden" name="to" value="{{ (to|date_modify('-1 day'))|date('Y-m-d') }}">
-                        <fieldset class="commercial-calendar-group__events">
+                        <fieldset class="commercial-calendar-group__events" data-controller="calendar-group-selection">
                             <legend>{{ 'calendar.unlinked.choose_sessions'|trans({}, 'commercial') }}</legend>
+                            {% if group|length >= 5 %}
+                                <div class="commercial-calendar-group__selection-heading">
+                                    <label class="commercial-calendar-group__select-all"><input type="checkbox" data-calendar-group-selection-target="all" data-action="change->calendar-group-selection#toggleAll">{{ 'calendar.unlinked.select_all'|trans({}, 'commercial') }}</label>
+                                </div>
+                            {% endif %}
                             <div class="internal-form__choice-list">
                             {% for event in group %}
                                 <label class="internal-form__choice{{ event.allDay ? ' commercial-calendar-group__event--all-day' : '' }}">
-                                    <input class="internal-form__choice-input" type="checkbox" name="event_ids[]" value="{{ event.id }}"{% if event.allDay %} disabled{% endif %}>
+                                    <input class="internal-form__choice-input" type="checkbox" name="event_ids[]" value="{{ event.id }}" data-calendar-group-selection-target="item" data-action="change->calendar-group-selection#updateAll"{% if event.allDay %} disabled{% endif %}>
                                     <span class="internal-form__choice-label">
                                         <strong>{% if event.allDay %}{{ event.startsAt|date('d/m/Y', 'Europe/Paris') }}{% else %}{{ event.startsAt|date('d/m/Y H:i', 'Europe/Paris') }}–{{ event.endsAt|date('H:i', 'Europe/Paris') }}{% endif %}</strong>
                                         <span>{{ event.title }}</span>

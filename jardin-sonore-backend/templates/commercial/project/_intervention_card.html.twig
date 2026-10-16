@@ -1,0 +1,43 @@
+<li class="commercial-dossier__intervention-item{{ isPast ? ' commercial-dossier__intervention-item--past' : '' }}{{ intervention.status == 'option' ? ' commercial-dossier__intervention-item--option' : '' }}" data-controller="commercial-intervention-dialog">
+    <button type="button" class="commercial-dossier__intervention-trigger" aria-haspopup="dialog" aria-controls="commercial-intervention-{{ intervention.id }}" {{ stimulus_action('commercial-intervention-dialog', 'open') }}>
+        <span class="commercial-dossier__intervention-date">{{ intervention.startsAt|date('d/m/Y H:i', intervention.timeZone) }}–{{ intervention.endsAt|date('H:i', intervention.timeZone) }}</span>
+        {% if intervention.status == 'option' %}<span class="internal-badge internal-badge--warning">{{ 'calendar.status.option'|trans({}, 'commercial') }}</span>{% endif %}
+        {% if intervention.status == 'canceled' %}<span class="internal-badge internal-badge--muted">{{ 'calendar.status.canceled'|trans({}, 'commercial') }}</span>{% endif %}
+        <span class="commercial-dossier__intervention-title">{{ intervention.title }}</span>
+        {% if intervention.location %}<small>{{ intervention.location }}</small>{% endif %}
+    </button>
+    <dialog id="commercial-intervention-{{ intervention.id }}" class="commercial-intervention-dialog" aria-labelledby="commercial-intervention-title-{{ intervention.id }}" {{ stimulus_target('commercial-intervention-dialog', 'dialog') }} {{ stimulus_action('commercial-intervention-dialog', 'close', 'cancel') }} {{ stimulus_action('commercial-intervention-dialog', 'closeOnBackdrop', 'click') }}>
+        <div class="commercial-intervention-dialog__panel">
+            <button type="button" class="internal-confirmation-dialog__close" aria-label="{{ 'calendar.sessions.close_dialog'|trans({}, 'commercial') }}" title="{{ 'calendar.sessions.close_dialog'|trans({}, 'commercial') }}" {{ stimulus_action('commercial-intervention-dialog', 'close') }}>×</button>
+            <p class="internal-eyebrow">{{ 'calendar.sessions.dialog_eyebrow'|trans({}, 'commercial') }}</p>
+            <h2 id="commercial-intervention-title-{{ intervention.id }}">{{ intervention.title }}</h2>
+            <p class="commercial-intervention-dialog__date">{{ intervention.startsAt|date('d/m/Y H:i', intervention.timeZone) }}–{{ intervention.endsAt|date('H:i', intervention.timeZone) }}</p>
+            {% if intervention.syncError %}<p class="internal-alert" role="status">{{ 'calendar.sessions.sync_warning'|trans({}, 'commercial') }}</p>{% endif %}
+            <form method="post" action="{{ path('commercial_intervention_edit', {projectId: project.id, id: intervention.id}) }}" class="internal-form commercial-intervention-dialog__form">
+                <input type="hidden" name="_token" value="{{ csrf_token('commercial_intervention_' ~ intervention.id ~ '_edit') }}">
+                <label>{{ 'calendar.unlinked.title'|trans({}, 'commercial') }}<input name="title" value="{{ intervention.title }}" maxlength="255" required></label>
+                <div class="commercial-intervention-dialog__dates">
+                    <label>{{ 'calendar.unlinked.starts_at'|trans({}, 'commercial') }}<input type="datetime-local" name="starts_at" value="{{ intervention.startsAt|date('Y-m-d\\TH:i', intervention.timeZone) }}" required></label>
+                    <label>{{ 'calendar.unlinked.ends_at'|trans({}, 'commercial') }}<input type="datetime-local" name="ends_at" value="{{ intervention.endsAt|date('Y-m-d\\TH:i', intervention.timeZone) }}" required></label>
+                </div>
+                <label>{{ 'calendar.unlinked.location'|trans({}, 'commercial') }}<input name="location" value="{{ intervention.location }}"></label>
+                <button class="internal-button" type="submit">{{ 'calendar.sessions.save'|trans({}, 'commercial') }}</button>
+            </form>
+            <div class="commercial-intervention-dialog__actions">
+                {% if intervention.status == 'option' %}
+                    <form method="post" action="{{ path('commercial_intervention_confirm', {projectId: project.id, id: intervention.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('commercial_intervention_' ~ intervention.id ~ '_confirm') }}">
+                        <button class="internal-button internal-button--secondary" type="submit">{{ 'calendar.sessions.confirm'|trans({}, 'commercial') }}</button>
+                    </form>
+                {% endif %}
+                <form method="post" action="{{ path('commercial_intervention_detach', {projectId: project.id, id: intervention.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('commercial_intervention_' ~ intervention.id ~ '_detach') }}">
+                    <button type="submit" class="internal-button internal-button--secondary">{{ 'calendar.sessions.detach'|trans({}, 'commercial') }}</button>
+                </form>
+                {% if intervention.status != 'canceled' %}
+                    <button type="button" class="internal-button internal-button--danger" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('commercial_intervention_cancel', {projectId: project.id, id: intervention.id}) }}" data-confirmation-dialog-item-value="{{ intervention.title }}" data-confirmation-dialog-token-value="{{ csrf_token('commercial_intervention_' ~ intervention.id ~ '_cancel') }}">{{ 'calendar.sessions.cancel'|trans({}, 'commercial') }}</button>
+                {% endif %}
+            </div>
+        </div>
+    </dialog>
+</li>
