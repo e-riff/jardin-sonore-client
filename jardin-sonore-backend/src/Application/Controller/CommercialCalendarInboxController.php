@@ -42,11 +42,10 @@ final class CommercialCalendarInboxController extends AbstractController
             return $this->redirectToRoute('commercial_calendar_settings');
         }
 
-        $defaultStart = $clock->now()->setTimezone(new DateTimeZone(self::TIME_ZONE))->modify('-30 days')->format('Y-m-d');
-        $defaultEnd = $clock->now()->setTimezone(new DateTimeZone(self::TIME_ZONE))->modify('+90 days')->format('Y-m-d');
+        [$defaultStart, $defaultEnd] = $this->defaultSchoolYearPeriod($clock);
         $startsAt = $this->dateFromQuery($request, 'from', $defaultStart, false);
         $endsAt = $this->dateFromQuery($request, 'to', $defaultEnd, true);
-        if ($endsAt <= $startsAt || 180 < $startsAt->diff($endsAt)->days) {
+        if ($endsAt <= $startsAt || 367 < $startsAt->diff($endsAt)->days) {
             return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
@@ -121,8 +120,9 @@ final class CommercialCalendarInboxController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        $startsAt = $this->dateFromQuery($request, 'from', $clock->now()->setTimezone(new DateTimeZone(self::TIME_ZONE))->modify('-30 days')->format('Y-m-d'), false);
-        $endsAt = $this->dateFromQuery($request, 'to', $clock->now()->setTimezone(new DateTimeZone(self::TIME_ZONE))->modify('+90 days')->format('Y-m-d'), true);
+        [$defaultStart, $defaultEnd] = $this->defaultSchoolYearPeriod($clock);
+        $startsAt = $this->dateFromQuery($request, 'from', $defaultStart, false);
+        $endsAt = $this->dateFromQuery($request, 'to', $defaultEnd, true);
         try {
             $candidateEvents = $calendarGateway->eventsBetween($startsAt, $endsAt);
         } catch (GoogleCalendarApiException) {
@@ -198,5 +198,19 @@ final class CommercialCalendarInboxController extends AbstractController
             'from' => $request->request->getString('from'),
             'to' => $request->request->getString('to'),
         ]);
+    }
+
+    /**
+     * @return array{string, string}
+     */
+    private function defaultSchoolYearPeriod(ClockInterface $clock): array
+    {
+        $today = $clock->now()->setTimezone(new DateTimeZone(self::TIME_ZONE));
+        $year = (int) $today->format('Y');
+        if (9 > (int) $today->format('n')) {
+            --$year;
+        }
+
+        return [sprintf('%04d-09-01', $year), sprintf('%04d-09-01', $year + 1)];
     }
 }

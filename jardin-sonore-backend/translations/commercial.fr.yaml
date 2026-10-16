@@ -299,6 +299,43 @@ digest:
   send_time: Heure d’envoi
   save: Enregistrer les réglages
 calendar:
+  planner:
+    heading: Calendrier professionnel
+    description: Toutes les séances du calendrier Google, rattachées ou à rattacher à un dossier.
+    attach_sessions: Séances à rattacher
+    view_label: Afficher le calendrier par
+    views:
+      month: Mois
+      week: Semaine
+      year: Année scolaire
+    previous: Période précédente
+    next: Période suivante
+    today: Aujourd’hui
+    load_error: Impossible de lire Google Calendar. Réessaie après avoir vérifié la connexion.
+    unlinked: À rattacher à un dossier
+    events: séances
+    more: autres
+    weekdays:
+      monday: Lun
+      tuesday: Mar
+      wednesday: Mer
+      thursday: Jeu
+      friday: Ven
+      saturday: Sam
+      sunday: Dim
+    months:
+      '1': janvier
+      '2': février
+      '3': mars
+      '4': avril
+      '5': mai
+      '6': juin
+      '7': juillet
+      '8': août
+      '9': septembre
+      '10': octobre
+      '11': novembre
+      '12': décembre
   status:
     option: Option
     confirmed: Confirmée

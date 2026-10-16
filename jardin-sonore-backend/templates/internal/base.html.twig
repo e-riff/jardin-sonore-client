@@ -18,9 +18,14 @@
                     active: currentRoute == 'commercial_dashboard' or currentRoute starts with 'commercial_project_' or currentRoute starts with 'commercial_request_',
                 },
                 {
-                    route: 'commercial_calendar_unlinked',
+                    route: 'commercial_calendar_index',
                     label: 'internal.base.nav.commercial_calendar'|trans({}, 'internal'),
-                    active: currentRoute starts with 'commercial_calendar_',
+                    active: currentRoute == 'commercial_calendar_index' or currentRoute == 'commercial_calendar_settings',
+                },
+                {
+                    route: 'commercial_calendar_unlinked',
+                    label: 'calendar.unlinked.heading'|trans({}, 'commercial'),
+                    active: currentRoute == 'commercial_calendar_unlinked',
                 },
                 {
                     route: 'commercial_digest_settings',
