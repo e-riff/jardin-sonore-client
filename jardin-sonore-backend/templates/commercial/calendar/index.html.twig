@@ -1,0 +1,98 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'calendar.planner.heading'|trans({}, 'commercial') %}
+{% set weekdays = [
+    'calendar.planner.weekdays.monday'|trans({}, 'commercial'),
+    'calendar.planner.weekdays.tuesday'|trans({}, 'commercial'),
+    'calendar.planner.weekdays.wednesday'|trans({}, 'commercial'),
+    'calendar.planner.weekdays.thursday'|trans({}, 'commercial'),
+    'calendar.planner.weekdays.friday'|trans({}, 'commercial'),
+    'calendar.planner.weekdays.saturday'|trans({}, 'commercial'),
+    'calendar.planner.weekdays.sunday'|trans({}, 'commercial')
+] %}
+
+{% block internal_body %}
+    {% include 'components/_internal_back_button.html.twig' with { href: path('commercial_project_index'), label: 'project.back'|trans({}, 'commercial') } only %}
+    <section class="internal-page-heading">
+        <div>
+            <h1>{{ 'calendar.planner.heading'|trans({}, 'commercial') }}</h1>
+            <p>{{ 'calendar.planner.description'|trans({}, 'commercial') }}</p>
+        </div>
+        <div class="internal-heading-actions">
+            <a class="internal-button internal-button--secondary" href="{{ path('commercial_calendar_settings') }}">{{ 'calendar.settings.manage_connection'|trans({}, 'commercial') }}</a>
+            <a class="internal-button" href="{{ path('commercial_calendar_unlinked') }}">
+                {{ 'calendar.planner.attach_sessions'|trans({}, 'commercial') }}
+                {% if unlinkedCount > 0 %}<span class="internal-badge internal-badge--warning">{{ unlinkedCount }}</span>{% endif %}
+            </a>
+        </div>
+    </section>
+
+    {% if calendarError %}<p class="internal-alert" role="alert">{{ 'calendar.planner.load_error'|trans({}, 'commercial') }}</p>{% endif %}
+
+    <section class="internal-card commercial-calendar-planner" aria-label="{{ 'calendar.planner.heading'|trans({}, 'commercial') }}">
+        <div class="commercial-calendar-planner__toolbar">
+            <nav class="commercial-calendar-planner__views" aria-label="{{ 'calendar.planner.view_label'|trans({}, 'commercial') }}">
+                {% for candidateView in ['month', 'week', 'year'] %}
+                    <a href="{{ path('commercial_calendar_index', {view: candidateView, date: candidateView == 'year' ? academicYearStart|date('Y-m-d') : anchorDate|date('Y-m-d')}) }}" class="{{ view == candidateView ? 'is-active' : '' }}"{% if view == candidateView %} aria-current="page"{% endif %}>{{ ('calendar.planner.views.' ~ candidateView)|trans({}, 'commercial') }}</a>
+                {% endfor %}
+            </nav>
+            <div class="commercial-calendar-planner__navigation">
+                <a href="{{ path('commercial_calendar_index', {view: view, date: previousDate}) }}" aria-label="{{ 'calendar.planner.previous'|trans({}, 'commercial') }}">‹</a>
+                <strong>
+                    {% if view == 'year' %}
+                        {{ academicYearStart|date('Y') }}–{{ academicYearStart|date_modify('+1 year')|date('Y') }}
+                    {% elseif view == 'week' %}
+                        {{ calendarDays[0].date|date('d/m/Y') }} – {{ calendarDays[6].date|date('d/m/Y') }}
+                    {% else %}
+                        {{ ('calendar.planner.months.' ~ months[0].date|date('n'))|trans({}, 'commercial') }} {{ months[0].date|date('Y') }}
+                    {% endif %}
+                </strong>
+                <a href="{{ path('commercial_calendar_index', {view: view, date: nextDate}) }}" aria-label="{{ 'calendar.planner.next'|trans({}, 'commercial') }}">›</a>
+                <a class="commercial-calendar-planner__today" href="{{ path('commercial_calendar_index', {view: view, date: today}) }}">{{ 'calendar.planner.today'|trans({}, 'commercial') }}</a>
+            </div>
+        </div>
+
+        {% if view == 'year' %}
+            <div class="commercial-calendar-planner__year">
+                {% for month in months %}
+                    <section class="commercial-calendar-planner__mini-month">
+                        <a href="{{ path('commercial_calendar_index', {view: 'month', date: month.date|date('Y-m-d')}) }}">
+                            {{ ('calendar.planner.months.' ~ month.date|date('n'))|trans({}, 'commercial') }}
+                        </a>
+                        <div class="commercial-calendar-planner__weekdays" aria-hidden="true">
+                            {% for weekday in weekdays %}<span>{{ weekday|first }}</span>{% endfor %}
+                        </div>
+                        {% for week in month.weeks %}
+                            <div class="commercial-calendar-planner__mini-week">
+                                {% for day in week %}
+                                    <a href="{{ path('commercial_calendar_index', {view: 'month', date: day.date|date('Y-m-d')}) }}" class="{{ day.inMonth ? '' : 'is-outside' }}{% if day.events is not empty %} has-events{% endif %}" aria-label="{{ day.date|date('d/m/Y') }}{% if day.events is not empty %}, {{ day.events|length }} {{ 'calendar.planner.events'|trans({}, 'commercial') }}{% endif %}">{{ day.date|date('j') }}</a>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </section>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="commercial-calendar-planner__grid {{ view == 'week' ? 'commercial-calendar-planner__grid--week' : '' }}">
+                <div class="commercial-calendar-planner__weekdays" aria-hidden="true">
+                    {% for weekday in weekdays %}<span>{{ weekday }}</span>{% endfor %}
+                </div>
+                {% if view == 'week' %}
+                    <div class="commercial-calendar-planner__week">
+                        {% for day in calendarDays %}
+                            {% include 'commercial/calendar/_planner_day.html.twig' with {day: day} only %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {% for week in months[0].weeks %}
+                        <div class="commercial-calendar-planner__week">
+                            {% for day in week %}
+                                {% include 'commercial/calendar/_planner_day.html.twig' with {day: day} only %}
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}

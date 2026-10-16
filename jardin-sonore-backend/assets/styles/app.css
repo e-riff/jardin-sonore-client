@@ -2510,6 +2510,252 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
     gap: 20px;
 }
 
+.commercial-calendar-planner {
+    gap: 18px;
+    padding: clamp(16px, 2.5vw, 28px);
+}
+
+.commercial-calendar-planner__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.commercial-calendar-planner__views,
+.commercial-calendar-planner__navigation {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.commercial-calendar-planner__views a,
+.commercial-calendar-planner__navigation a {
+    display: inline-flex;
+    min-height: 38px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 999px;
+    padding: 6px 12px;
+    color: var(--color-secondary);
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.commercial-calendar-planner__views a.is-active {
+    border-color: var(--color-secondary);
+    background: var(--color-secondary);
+    color: white;
+}
+
+.commercial-calendar-planner__navigation {
+    gap: 8px;
+}
+
+.commercial-calendar-planner__navigation > a[aria-label] {
+    width: 38px;
+    padding: 0;
+    font-size: 1.25rem;
+}
+
+.commercial-calendar-planner__navigation strong {
+    min-width: 150px;
+    color: var(--color-primary);
+    text-align: center;
+}
+
+.commercial-calendar-planner__grid {
+    overflow-x: auto;
+}
+
+.commercial-calendar-planner__weekdays,
+.commercial-calendar-planner__week {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.commercial-calendar-planner__weekdays {
+    color: var(--color-on-surface-variant);
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.commercial-calendar-planner__weekdays > span {
+    padding: 8px 4px;
+}
+
+.commercial-calendar-planner__week {
+    min-width: 840px;
+    border-top: 1px solid var(--color-outline-variant);
+    border-left: 1px solid var(--color-outline-variant);
+}
+
+.commercial-calendar-planner__day {
+    display: flex;
+    min-width: 0;
+    min-height: 132px;
+    flex-direction: column;
+    gap: 7px;
+    border-right: 1px solid var(--color-outline-variant);
+    border-bottom: 1px solid var(--color-outline-variant);
+    padding: 8px;
+    background: var(--color-surface-container-lowest);
+}
+
+.commercial-calendar-planner__day.is-outside {
+    background: color-mix(in oklab, var(--color-surface-container) 55%, white);
+}
+
+.commercial-calendar-planner__day-number {
+    width: fit-content;
+    color: var(--color-on-surface-variant);
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.commercial-calendar-planner__events {
+    display: grid;
+    align-content: start;
+    gap: 4px;
+}
+
+.commercial-calendar-planner__event {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 3px 6px;
+    overflow: hidden;
+    border-left: 3px solid #5d8063;
+    border-radius: 4px;
+    padding: 4px 5px;
+    background: #edf4ed;
+    color: #334d36;
+    font-family: var(--font-sans);
+    font-size: 0.71rem;
+    line-height: 1.25;
+    text-decoration: none;
+}
+
+.commercial-calendar-planner__event:hover,
+.commercial-calendar-planner__event:focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--color-secondary) 48%, white);
+    outline-offset: 1px;
+}
+
+.commercial-calendar-planner__event--unlinked {
+    border-left-color: var(--color-primary);
+    background: #fbefeb;
+    color: #7e382e;
+}
+
+.commercial-calendar-planner__event.is-option {
+    border-left-color: #b97820;
+    background: #fff2dc;
+    color: #704108;
+}
+
+.commercial-calendar-planner__event time {
+    font-weight: 700;
+}
+
+.commercial-calendar-planner__event span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.commercial-calendar-planner__more {
+    color: var(--color-on-surface-variant);
+    font-family: var(--font-sans);
+    font-size: 0.7rem;
+}
+
+.commercial-calendar-planner__year {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.commercial-calendar-planner__mini-month {
+    min-width: 0;
+}
+
+.commercial-calendar-planner__mini-month > a {
+    display: inline-block;
+    margin-bottom: 5px;
+    color: var(--color-primary);
+    font-family: var(--font-serif);
+    font-size: 1.05rem;
+    text-decoration: none;
+    text-transform: capitalize;
+}
+
+.commercial-calendar-planner__mini-month .commercial-calendar-planner__weekdays {
+    font-size: 0.63rem;
+}
+
+.commercial-calendar-planner__mini-week {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    text-align: center;
+}
+
+.commercial-calendar-planner__mini-week a {
+    position: relative;
+    padding: 3px 1px;
+    color: var(--color-on-background);
+    font-family: var(--font-sans);
+    font-size: 0.68rem;
+    text-decoration: none;
+}
+
+.commercial-calendar-planner__mini-week a.is-outside {
+    color: color-mix(in oklab, var(--color-on-surface-variant) 38%, white);
+}
+
+.commercial-calendar-planner__mini-week a.has-events::after {
+    position: absolute;
+    right: 50%;
+    bottom: 0;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    content: '';
+    transform: translateX(50%);
+}
+
+@media (max-width: 900px) {
+    .commercial-calendar-planner__year {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .commercial-calendar-planner__toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .commercial-calendar-planner__year {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 420px) {
+    .commercial-calendar-planner__year {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
 .commercial-calendar-inbox {
     margin-bottom: 28px;
 }
@@ -2522,10 +2768,9 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
     gap: 10px 16px;
 }
 
-.commercial-calendar-inbox__heading h2 {
+.commercial-calendar-inbox__heading h1 {
     margin: 0;
     color: var(--color-on-background);
-    font-size: 1.45rem;
 }
 
 .commercial-calendar-inbox > p {
@@ -2562,7 +2807,8 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
 }
 
 .commercial-calendar-group {
-    max-width: 980px;
+    width: 100%;
+    max-width: none;
 }
 
 .commercial-calendar-group__heading h2 {
@@ -2577,11 +2823,12 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
 }
 
 .commercial-calendar-group__form {
+    width: 100%;
     max-width: none;
 }
 
 .commercial-calendar-group__form .internal-form__choice-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
 }
 
 .commercial-calendar-group__form .internal-form__choice-label {

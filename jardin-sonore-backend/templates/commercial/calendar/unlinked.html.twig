@@ -1,21 +1,22 @@
 {% extends 'internal/base.html.twig' %}
 
-{% set title = 'calendar.settings.heading'|trans({}, 'commercial') %}
+{% set title = 'calendar.unlinked.heading'|trans({}, 'commercial') %}
 
 {% block internal_body %}
-    {% include 'components/_internal_back_button.html.twig' with { href: path('commercial_project_index'), label: 'project.back'|trans({}, 'commercial') } only %}
+    {% include 'components/_internal_back_button.html.twig' with { href: path('commercial_calendar_index'), label: 'calendar.settings.heading'|trans({}, 'commercial') } only %}
     <section class="internal-page-heading">
-        <div><h1>{{ 'calendar.settings.heading'|trans({}, 'commercial') }}</h1></div>
+        <div>
+            <div class="commercial-calendar-inbox__heading">
+                <h1>{{ 'calendar.unlinked.heading'|trans({}, 'commercial') }}</h1>
+                {% if not calendarError %}<span class="internal-badge {{ pendingCount|default(0) > 0 ? 'internal-badge--warning' : 'internal-badge--muted' }}">{{ 'calendar.unlinked.pending_count'|trans({'%count%': pendingCount|default(0)}, 'commercial') }}</span>{% endif %}
+            </div>
+            <p>{{ 'calendar.unlinked.description'|trans({}, 'commercial') }}</p>
+        </div>
         <div class="internal-heading-actions">
-            <a class="internal-button internal-button--secondary" href="{{ path('commercial_calendar_settings') }}">{{ 'calendar.settings.manage_connection'|trans({}, 'commercial') }}</a>
+            <a class="internal-button internal-button--secondary" href="{{ path('commercial_calendar_index') }}">{{ 'calendar.settings.heading'|trans({}, 'commercial') }}</a>
         </div>
     </section>
     <section class="commercial-calendar-inbox">
-        <div class="commercial-calendar-inbox__heading">
-            <h2>{{ 'calendar.unlinked.heading'|trans({}, 'commercial') }}</h2>
-            {% if not calendarError %}<span class="internal-badge {{ pendingCount|default(0) > 0 ? 'internal-badge--warning' : 'internal-badge--muted' }}">{{ 'calendar.unlinked.pending_count'|trans({'%count%': pendingCount|default(0)}, 'commercial') }}</span>{% endif %}
-        </div>
-        <p>{{ 'calendar.unlinked.description'|trans({}, 'commercial') }}</p>
         <details class="commercial-calendar-inbox__period">
             <summary>{{ 'calendar.unlinked.period'|trans({'%from%': from|date('d/m/Y'), '%to%': (to|date_modify('-1 day'))|date('d/m/Y')}, 'commercial') }}</summary>
             <form method="get" action="{{ path('commercial_calendar_unlinked') }}" class="internal-form commercial-calendar-inbox__filters">

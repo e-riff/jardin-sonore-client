@@ -1,0 +1,17 @@
+<div class="commercial-calendar-planner__day{{ day.inMonth is defined and not day.inMonth ? ' is-outside' : '' }}">
+    <a class="commercial-calendar-planner__day-number" href="{{ path('commercial_calendar_index', {view: 'month', date: day.date|date('Y-m-d')}) }}">{{ day.date|date('j') }}</a>
+    <div class="commercial-calendar-planner__events">
+        {% for item in day.events|slice(0, 3) %}
+            {% set event = item.event %}
+            {% if item.project %}
+                <a class="commercial-calendar-planner__event commercial-calendar-planner__event--linked{{ item.status == 'option' ? ' is-option' : '' }}" href="{{ path('commercial_project_show', {id: item.project.id}) }}" title="{{ event.title }} · {{ item.project.title }}">
+            {% else %}
+                <a class="commercial-calendar-planner__event commercial-calendar-planner__event--unlinked" href="{{ path('commercial_calendar_unlinked', {from: event.startsAt|date('Y-m-d', 'Europe/Paris'), to: event.startsAt|date('Y-m-d', 'Europe/Paris')}) }}" title="{{ event.title }} · {{ 'calendar.planner.unlinked'|trans({}, 'commercial') }}">
+            {% endif %}
+                {% if not event.allDay %}<time>{{ event.startsAt|date('H:i', 'Europe/Paris') }}</time>{% endif %}
+                <span>{{ event.title }}</span>
+            </a>
+        {% endfor %}
+        {% if day.events|length > 3 %}<span class="commercial-calendar-planner__more">+{{ day.events|length - 3 }} {{ 'calendar.planner.more'|trans({}, 'commercial') }}</span>{% endif %}
+    </div>
+</div>
