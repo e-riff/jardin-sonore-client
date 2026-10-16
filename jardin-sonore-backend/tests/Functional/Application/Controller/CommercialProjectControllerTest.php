@@ -395,11 +395,13 @@ final class CommercialProjectControllerTest extends WebTestCase
         $suffix = bin2hex(random_bytes(5));
         $adminUserEntity = (new AdminUserEntity())->setEmail("project-event-{$suffix}@example.test")->setPassword('unused');
         $organizationEntity = (new OrganizationEntity())->setName("Crèche {$suffix}");
+        $personEntity = (new PersonEntity())->setFirstName('Anaïs')->setLastName('Thioillère');
+        $organizationEntity->addPerson($personEntity);
         $projectEntity = new CommercialProjectEntity('Ateliers', $organizationEntity, null, new DateTimeImmutable());
         $occurredAt = new DateTimeImmutable('2026-10-09 10:00:00');
-        $noteEntity = $projectEntity->recordEvent('note', $occurredAt, 'Ancienne saisie');
+        $noteEntity = $projectEntity->recordEvent('note', $occurredAt, "Ancienne saisie\n\nretour suivant", [], $personEntity);
         $automaticEventEntity = $projectEntity->recordEvent('project_confirmed', $occurredAt);
-        foreach ([$adminUserEntity, $organizationEntity, $projectEntity] as $entity) {
+        foreach ([$adminUserEntity, $organizationEntity, $personEntity, $projectEntity] as $entity) {
             $entityManager->persist($entity);
         }
         $entityManager->flush();
@@ -407,6 +409,10 @@ final class CommercialProjectControllerTest extends WebTestCase
 
         $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
         self::assertCount(1, $crawler->filterXPath('//dialog[contains(@class, "commercial-timeline__edit-dialog")]'));
+        self::assertCount(2, $crawler->filterXPath('//dialog//button[@aria-label="Effacer la mise en forme"]'));
+        self::assertCount(1, $crawler->filterXPath('//article[contains(@class, "commercial-timeline__item")]//div[contains(@class, "commercial-timeline__event-meta")]//time/following-sibling::h3[text()="Note"]'));
+        self::assertSame('Anaïs Thioillère', trim($crawler->filterXPath('//span[contains(@class, "commercial-timeline__person")]')->text()));
+        self::assertStringContainsString('Ancienne saisie<br>' . "\n" . 'retour suivant', (string) $client->getResponse()->getContent());
         $token = $crawler->filterXPath('//form[contains(@action, "/events/' . $noteEntity->getId() . '/edit")]/input[@name="_token"]')->attr('value');
         self::assertSame('2026-10-09', $crawler->filterXPath('//form[contains(@action, "/events/' . $noteEntity->getId() . '/edit")]//input[@name="occurredOn"]')->attr('value'));
         self::assertCount(0, $crawler->filterXPath('//form[contains(@action, "/events/' . $automaticEventEntity->getId() . '/edit")]'));

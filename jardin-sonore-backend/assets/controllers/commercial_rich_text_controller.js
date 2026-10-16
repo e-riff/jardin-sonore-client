@@ -13,6 +13,7 @@ export default class extends Controller {
     };
 
     connect() {
+        this.inputTarget.value = this.inputTarget.value.replace(/\r\n?/g, '\n').replace(/\n{2,}/g, '\n');
         this.editorTarget.replaceChildren(this.sanitize(this.inputTarget.value));
         this.editorTarget.hidden = false;
         this.inputTarget.hidden = true;
@@ -58,6 +59,56 @@ export default class extends Controller {
         selection.addRange(range);
         this.sync();
         this.editorTarget.focus();
+    }
+
+    clearFormatting(event) {
+        const selection = window.getSelection();
+        if (!selection || !selection.rangeCount || selection.isCollapsed) {
+            return;
+        }
+
+        const range = selection.getRangeAt(0).cloneRange();
+        if (!this.editorTarget.contains(range.commonAncestorContainer)) {
+            return;
+        }
+
+        const selectedContent = range.extractContents();
+        const plainContent = document.createDocumentFragment();
+        [...selectedContent.childNodes].forEach((node) => this.appendUnformattedNode(node, plainContent));
+        const insertedNodes = [...plainContent.childNodes];
+        range.insertNode(plainContent);
+        if (insertedNodes.length > 0) {
+            range.setStartAfter(insertedNodes[insertedNodes.length - 1]);
+        }
+        range.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        this.sync();
+        this.editorTarget.focus();
+    }
+
+    appendUnformattedNode(node, parent) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            parent.append(document.createTextNode(node.textContent));
+            return;
+        }
+        if (node.nodeType !== Node.ELEMENT_NODE) {
+            return;
+        }
+
+        const tag = node.tagName.toLowerCase();
+        if (tag === 'br') {
+            parent.append(document.createElement('br'));
+            return;
+        }
+        if (['div', 'p', 'li', 'blockquote'].includes(tag)) {
+            const block = document.createElement(tag);
+            parent.append(block);
+            node.childNodes.forEach((child) => this.appendUnformattedNode(child, block));
+            return;
+        }
+
+        node.childNodes.forEach((child) => this.appendUnformattedNode(child, parent));
     }
 
     paste(event) {
@@ -108,7 +159,7 @@ export default class extends Controller {
 
         const isBlock = ['div', 'p', 'li', 'blockquote'].includes(tag);
         if (isBlock && parent.hasChildNodes() && parent.lastChild.nodeName !== 'BR') {
-            parent.append(document.createElement('br'), document.createElement('br'));
+            parent.append(document.createElement('br'));
         }
 
         let destination = parent;
@@ -167,7 +218,7 @@ export default class extends Controller {
                 return color ? `<span style="color:${color};">${content}</span>` : content;
             }
             if (['div', 'p', 'li', 'blockquote'].includes(tag)) {
-                return `${content}\n\n`;
+                return `${content}\n`;
             }
 
             return content;

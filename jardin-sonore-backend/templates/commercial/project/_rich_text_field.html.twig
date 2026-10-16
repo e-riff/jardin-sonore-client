@@ -17,6 +17,8 @@
         {% for color, colorLabel in {'#A64D43': 'note.color_terracotta', '#692019': 'note.color_brown', '#47664B': 'note.color_green'} %}
             <button type="button" class="commercial-note-editor__color" style="--note-format-color: {{ color }}" data-command="color" data-color="{{ color }}" data-action="mousedown->commercial-rich-text#keepSelection click->commercial-rich-text#format" aria-label="{{ colorLabel|trans({}, 'commercial') }}" title="{{ colorLabel|trans({}, 'commercial') }}"><span aria-hidden="true"></span></button>
         {% endfor %}
+        <span class="commercial-note-editor__separator" aria-hidden="true"></span>
+        <button type="button" data-action="mousedown->commercial-rich-text#keepSelection click->commercial-rich-text#clearFormatting" aria-label="{{ 'note.clear_formatting'|trans({}, 'commercial') }}" title="{{ 'note.clear_formatting'|trans({}, 'commercial') }}"><span aria-hidden="true">Tx</span></button>
     </div>
     <div id="{{ id }}" class="commercial-note-editor__surface" contenteditable="true" role="textbox" aria-multiline="true" aria-labelledby="{{ id }}-label" data-commercial-rich-text-target="editor" data-action="input->commercial-rich-text#sync paste->commercial-rich-text#paste"></div>
 </div>

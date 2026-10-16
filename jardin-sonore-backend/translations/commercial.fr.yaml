@@ -110,6 +110,9 @@ project:
     sort_name: Structure
     priority: Dossiers urgents
     upcoming: À venir
+    this_week: Cette semaine
+    next_week: Semaine prochaine
+    later: Plus tard
     without_task: Sans tâche prévue
     closed: Dossiers clos
     dossier: Dossier
@@ -208,6 +211,7 @@ note:
   formatting: Mise en forme du compte rendu
   bold: Gras
   italic: Italique
+  clear_formatting: Effacer la mise en forme
   color_terracotta: Texte terracotta
   color_brown: Texte brun
   color_green: Texte vert

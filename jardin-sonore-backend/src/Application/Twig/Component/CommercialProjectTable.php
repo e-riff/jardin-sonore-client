@@ -30,19 +30,44 @@ final class CommercialProjectTable
     {
     }
 
-    /** @return array<string, list<CommercialProjectRow>> */
+    /** @return array{priority: list<CommercialProjectRow>, upcoming: list<CommercialProjectRow>, upcoming_periods: array{this_week: list<CommercialProjectRow>, next_week: list<CommercialProjectRow>, later: list<CommercialProjectRow>}, without_task: list<CommercialProjectRow>, closed: list<CommercialProjectRow>} */
     public function getSections(): array
     {
         $localDate = $this->clock->now()->setTimezone(new DateTimeZone('Europe/Paris'))->setTime(0, 0);
-        $sections = ['priority' => [], 'upcoming' => [], 'without_task' => [], 'closed' => []];
+        $sections = [
+            'priority' => [],
+            'upcoming' => [],
+            'upcoming_periods' => ['this_week' => [], 'next_week' => [], 'later' => []],
+            'without_task' => [],
+            'closed' => [],
+        ];
         $query = mb_strtolower(trim($this->query));
         foreach ($this->queue->forDate($localDate, 'active' !== $this->status) as $row) {
-            if (!$this->matchesStatus($row) || ('' !== $query && !str_contains(mb_strtolower("{$row->title} {$row->organizationLabel} {$row->nextActionTitle}"), $query))) {
+            if (!$this->matchesStatus($row) || ('' !== $query && !str_contains(mb_strtolower("{$row->title} {$row->organizationLabel} {$row->organizationLocation} {$row->nextActionTitle}"), $query))) {
                 continue;
             }
             $sections[$row->bucket][] = $row;
         }
-        foreach ($sections as &$rows) {
+        foreach (['priority', 'upcoming', 'without_task', 'closed'] as $bucket) {
+            $rows = $sections[$bucket];
+            usort($rows, fn (CommercialProjectRow $left, CommercialProjectRow $right): int => $this->compare($left, $right));
+            $sections[$bucket] = $rows;
+        }
+
+        $nextWeekStart = $localDate->modify('monday next week');
+        $nextWeekEnd = $nextWeekStart->modify('sunday this week');
+        $nextWeekStartDate = $nextWeekStart->format('Y-m-d');
+        $nextWeekEndDate = $nextWeekEnd->format('Y-m-d');
+        foreach ($sections['upcoming'] as $row) {
+            $dueDate = $row->nextDueOn?->format('Y-m-d');
+            $period = match (true) {
+                $dueDate < $nextWeekStartDate => 'this_week',
+                $dueDate <= $nextWeekEndDate => 'next_week',
+                default => 'later',
+            };
+            $sections['upcoming_periods'][$period][] = $row;
+        }
+        foreach ($sections['upcoming_periods'] as &$rows) {
             usort($rows, fn (CommercialProjectRow $left, CommercialProjectRow $right): int => $this->compare($left, $right));
         }
 
