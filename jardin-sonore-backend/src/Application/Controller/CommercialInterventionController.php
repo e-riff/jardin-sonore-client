@@ -94,9 +94,9 @@ final class CommercialInterventionController extends AbstractController
             }
             $entityManager->persist($interventionEntity);
             $entityManager->flush();
-            $this->addFlash('success', 'calendar.sessions.created');
+            $this->addFlash('success', ['message' => 'calendar.sessions.created', 'domain' => 'commercial']);
         } catch (DomainException|GoogleCalendarApiException|GoogleCalendarOAuthException) {
-            $this->addFlash('error', 'calendar.sessions.save_error');
+            $this->addFlash('error', ['message' => 'calendar.sessions.save_error', 'domain' => 'commercial']);
         }
 
         return $this->redirectToRoute('commercial_project_show', ['id' => $projectId]);
@@ -121,24 +121,24 @@ final class CommercialInterventionController extends AbstractController
             $updatedEvent = $calendarGateway->updateEvent($currentEvent, $draft);
             $this->refreshIntervention($interventionEntity, $updatedEvent, $clock->now());
             $entityManager->flush();
-            $this->addFlash('success', 'calendar.sessions.updated');
+            $this->addFlash('success', ['message' => 'calendar.sessions.updated', 'domain' => 'commercial']);
         } catch (GoogleCalendarConflictException) {
             try {
                 $latestEvent = $calendarGateway->event($interventionEntity->getGoogleEventId());
                 $this->refreshIntervention($interventionEntity, $latestEvent, $clock->now());
                 $entityManager->flush();
-                $this->addFlash('warning', 'calendar.sessions.conflict');
+                $this->addFlash('warning', ['message' => 'calendar.sessions.conflict', 'domain' => 'commercial']);
             } catch (GoogleCalendarApiException|GoogleCalendarOAuthException) {
                 $interventionEntity->markSyncFailed('google_version_conflict');
                 $entityManager->flush();
-                $this->addFlash('error', 'calendar.sessions.sync_warning');
+                $this->addFlash('error', ['message' => 'calendar.sessions.sync_warning', 'domain' => 'commercial']);
             }
         } catch (DomainException) {
-            $this->addFlash('error', 'calendar.sessions.invalid_data');
+            $this->addFlash('error', ['message' => 'calendar.sessions.invalid_data', 'domain' => 'commercial']);
         } catch (GoogleCalendarApiException|GoogleCalendarOAuthException) {
             $interventionEntity->markSyncFailed('google_sync_failed');
             $entityManager->flush();
-            $this->addFlash('error', 'calendar.sessions.sync_warning');
+            $this->addFlash('error', ['message' => 'calendar.sessions.sync_warning', 'domain' => 'commercial']);
         }
 
         return $this->redirectToRoute('commercial_project_show', ['id' => $projectId]);
@@ -163,15 +163,15 @@ final class CommercialInterventionController extends AbstractController
             $interventionEntity->cancel($now);
             $interventionEntity->getProject()?->recordEvent('note', $now, $translator->trans('calendar.sessions.canceled_note', ['%title%' => $interventionEntity->getTitle()], 'commercial'));
             $entityManager->flush();
-            $this->addFlash('success', 'calendar.sessions.canceled');
+            $this->addFlash('success', ['message' => 'calendar.sessions.canceled', 'domain' => 'commercial']);
         } catch (GoogleCalendarConflictException) {
             $interventionEntity->markSyncFailed('google_version_conflict');
             $entityManager->flush();
-            $this->addFlash('error', 'calendar.sessions.conflict');
+            $this->addFlash('error', ['message' => 'calendar.sessions.conflict', 'domain' => 'commercial']);
         } catch (GoogleCalendarApiException|GoogleCalendarOAuthException) {
             $interventionEntity->markSyncFailed('google_sync_failed');
             $entityManager->flush();
-            $this->addFlash('error', 'calendar.sessions.sync_warning');
+            $this->addFlash('error', ['message' => 'calendar.sessions.sync_warning', 'domain' => 'commercial']);
         }
 
         return $this->redirectToRoute('commercial_project_show', ['id' => $projectId]);
