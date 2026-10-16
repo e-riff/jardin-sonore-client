@@ -110,18 +110,24 @@ final class CommercialProjectQueueTest extends KernelTestCase
     public function testUpcomingProjectsAreGroupedByCalendarWeekAndShowTheirLocation(): void
     {
         $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(5));
         $projects = [];
         foreach ([
             'Cette semaine' => '2026-10-17',
             'Lundi prochain' => '2026-10-19',
             'Dimanche prochain' => '2026-10-25',
             'Après la semaine prochaine' => '2026-10-26',
+            'Dossier confirmé' => '2026-10-20',
         ] as $title => $dueOn) {
             $organizationEntity = (new OrganizationEntity())->setName("Structure {$title}");
-            $projectEntity = new CommercialProjectEntity($title, $organizationEntity, null, new DateTimeImmutable('2026-10-10'));
+            $projectEntity = new CommercialProjectEntity("{$title} {$suffix}", $organizationEntity, null, new DateTimeImmutable('2026-10-10'));
             $projectEntity->addAction(new CommercialActionEntity($projectEntity, 'Rappeler', new DateTimeImmutable($dueOn)));
             if ('Lundi prochain' === $title) {
                 $organizationEntity->getContactDetails()?->addAddressContact((new AddressContactEntity())->setPostalCode('42000')->setCity('Saint-Étienne'));
+            }
+            if ('Dossier confirmé' === $title) {
+                $projectEntity->setStatus(CommercialProjectEntity::STATUS_CONFIRMED);
+                $projectEntity->recordEvent('note', new DateTimeImmutable('2026-10-15 14:30:00'), 'Échange confirmé.');
             }
             $entityManager->persist($organizationEntity);
             $entityManager->persist($projectEntity);
@@ -133,6 +139,7 @@ final class CommercialProjectQueueTest extends KernelTestCase
             new CommercialProjectQueue($entityManager),
             new MockClock(new DateTimeImmutable('2026-10-16 12:00:00')),
         );
+        $table->query = $suffix;
         $sections = $table->getSections();
 
         self::assertSame(
@@ -146,6 +153,14 @@ final class CommercialProjectQueueTest extends KernelTestCase
         self::assertSame(
             [$projects['Après la semaine prochaine']->getId()],
             array_map(static fn ($row): int => $row->id, $sections['upcoming_periods']['later']),
+        );
+        self::assertSame(
+            [$projects['Dossier confirmé']->getId()],
+            array_map(static fn ($row): int => $row->id, $sections['confirmed']),
+        );
+        self::assertSame(
+            '2026-10-15',
+            array_values(array_filter($sections['confirmed'], static fn ($row): bool => $projects['Dossier confirmé']->getId() === $row->id))[0]->lastEventAt?->format('Y-m-d'),
         );
         self::assertSame('42000 — Saint-Étienne', array_values(array_filter(
             $sections['upcoming'],

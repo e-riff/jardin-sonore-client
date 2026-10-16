@@ -30,7 +30,7 @@ final class CommercialProjectTable
     {
     }
 
-    /** @return array{priority: list<CommercialProjectRow>, upcoming: list<CommercialProjectRow>, upcoming_periods: array{this_week: list<CommercialProjectRow>, next_week: list<CommercialProjectRow>, later: list<CommercialProjectRow>}, without_task: list<CommercialProjectRow>, closed: list<CommercialProjectRow>} */
+    /** @return array{priority: list<CommercialProjectRow>, upcoming: list<CommercialProjectRow>, upcoming_periods: array{this_week: list<CommercialProjectRow>, next_week: list<CommercialProjectRow>, later: list<CommercialProjectRow>}, without_task: list<CommercialProjectRow>, confirmed: list<CommercialProjectRow>, closed: list<CommercialProjectRow>} */
     public function getSections(): array
     {
         $localDate = $this->clock->now()->setTimezone(new DateTimeZone('Europe/Paris'))->setTime(0, 0);
@@ -39,6 +39,7 @@ final class CommercialProjectTable
             'upcoming' => [],
             'upcoming_periods' => ['this_week' => [], 'next_week' => [], 'later' => []],
             'without_task' => [],
+            'confirmed' => [],
             'closed' => [],
         ];
         $query = mb_strtolower(trim($this->query));
@@ -48,7 +49,7 @@ final class CommercialProjectTable
             }
             $sections[$row->bucket][] = $row;
         }
-        foreach (['priority', 'upcoming', 'without_task', 'closed'] as $bucket) {
+        foreach (['priority', 'upcoming', 'without_task', 'confirmed', 'closed'] as $bucket) {
             $rows = $sections[$bucket];
             usort($rows, fn (CommercialProjectRow $left, CommercialProjectRow $right): int => $this->compare($left, $right));
             $sections[$bucket] = $rows;
@@ -92,6 +93,12 @@ final class CommercialProjectTable
         }
         if ('recent' === $this->sort || 'without_task' === $left->bucket || 'closed' === $left->bucket) {
             return $right->createdAt <=> $left->createdAt ?: $right->id <=> $left->id;
+        }
+        if ('confirmed' === $left->bucket) {
+            $leftActivity = $left->lastEventAt ?? $left->createdAt;
+            $rightActivity = $right->lastEventAt ?? $right->createdAt;
+
+            return $leftActivity <=> $rightActivity ?: $left->id <=> $right->id;
         }
 
         return ($left->nextDueOn?->format('Y-m-d') ?? '') <=> ($right->nextDueOn?->format('Y-m-d') ?? '') ?: $left->id <=> $right->id;

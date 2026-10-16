@@ -114,10 +114,13 @@ project:
     next_week: Semaine prochaine
     later: Plus tard
     without_task: Sans tâche prévue
+    confirmed: Dossiers confirmés
     closed: Dossiers clos
     dossier: Dossier
+    state: État
     next_task: Prochaine tâche
     due_on: Échéance
+    last_activity: Dernier élément du fil
     actions: Actions
     no_task: Aucune tâche
     new: Nouveau

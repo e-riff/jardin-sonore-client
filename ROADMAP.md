@@ -61,6 +61,7 @@ Les actions administrateur d'invitation/réinitialisation, les lots notification
 
 ### Livraisons récentes
 
+- 16 octobre : finition de l'index des dossiers et du fil commercial (`deploy-backend-20261016-07`). Les lignes d'index sont compactes, montrent l'état et la date du dernier élément du fil ; les dossiers confirmés ont leur propre groupe, les dossiers sans tâche restent à confirmer, et les séances à venir sont regroupées par semaine civile. Les actions directes de tâche ont été retirées de l'index pour ouvrir le dossier avant modification. Le fil affiche le type après la date, l'interlocuteur avec une icône et les notes avec des retours à la ligne compacts ; la mise en forme des notes peut être effacée sur une sélection. Aucun changement de schéma ni migration. Suite : recette visuelle authentifiée sur ordinateur et mobile, puis retouches selon l'usage.
 - 8 octobre : revue de la fiche Google Business Profile et crédit Freepik/Flaticon ajouté à la page de mentions légales ; aucun changement backend ni migration.
 - 7 octobre : page d'offre crèche/petite enfance, mise à jour de la fiche de l'accueil et navigation vers les formats ; commit `af29dc7`, tag `deploy-eveil-musical-creche-20261007-01`. Lint et build client réussis ; accueil, page, sitemap et PDF vérifiés en HTTP 200 sur le site public. Aucun changement backend ni migration.
 - 30 septembre : première disponibilité et préférences newsletter, tag `deploy-availability-newsletter-20260930-01` ; migrations `Version20260930130613` et `Version20260930140509` appliquées en production, schéma et trois crons contrôlés lors de cette livraison.
@@ -84,10 +85,12 @@ La [conception des disponibilités](docs/superpowers/specs/2026-09-30-session-av
 | Contact du site. | Déployé. | Un dossier provisoire et une tâche « Répondre » créés une seule fois, sans structure inventée ni doublon à la relance. |
 | Tâches, fil et statuts. | Déployé. | Commandes distinctes, correction des notes et tâches terminées, changement manuel du statut avec garde sur les factures impayées. |
 | Devis, factures et documents. | Suivi manuel déployé ; décisions signé/refusé livrées le 14 octobre ; automatisations et générateur restent à cadrer. | États et références courts, événements fiables dans le fil et accès aux documents sans masquer le dossier. |
-| Page Dossiers unique. | Déployée ; la recette visuelle authentifiée reste ouverte. | Priorités, recherche, filtres et dossiers clos sur une seule page, sans « À faire » séparé. |
+| Page Dossiers unique. | Déployée ; lignes compactées, état et dernière activité visibles, groupes distincts pour les dossiers confirmés et ceux sans tâche, périodes à venir organisées par semaine. Les actions rapides de tâches ont été retirées de l'index. La recette visuelle authentifiée reste ouverte. | Priorités, recherche, filtres et dossiers clos sur une seule page, sans « À faire » séparé. Confirmer la lisibilité des tableaux sur ordinateur et mobile et recueillir les retours d'usage. |
 | Détail du dossier et cohérence du backoffice. | Déployés ; recette sur téléphone et ordinateur à compléter. | Confirmer les volets, liens de contact, actions et cohérence des formulaires dans l'usage réel. |
 
 L'archivage des dossiers fermés reste à définir après usage réel ; il devra préserver l'historique et alléger les listes principales. Le [guide des deux parcours](docs/suivi-clients-parcours-concrets-2026-10-12.md) conserve les situations qui ont lancé cette refonte ; les décisions courantes sont dans la conception du 13 octobre.
+
+**Prochaine reprise :** ouvrir les index Dossiers et le calendrier professionnel sur ordinateur et téléphone, vérifier les colonnes « État » et « Dernier élément du fil », les groupes « Sans tâche prévue » / « Dossiers confirmés » et les sous-groupes de semaine ; noter les ajustements visuels ou de tri selon les dossiers réellement suivis.
 
 Gmail reste le lieu des échanges avec les clients ; le backoffice porte les dossiers, les échéances et les documents.
 
