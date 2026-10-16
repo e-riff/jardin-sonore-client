@@ -1,17 +1,29 @@
 {% extends 'internal/base.html.twig' %}
 
-{% set title = 'calendar.unlinked.heading'|trans({}, 'commercial') %}
+{% set title = 'calendar.settings.heading'|trans({}, 'commercial') %}
 
 {% block internal_body %}
     {% include 'components/_internal_back_button.html.twig' with { href: path('commercial_project_index'), label: 'project.back'|trans({}, 'commercial') } only %}
-    <section class="internal-hero">
-        <h1>{{ 'calendar.unlinked.heading'|trans({}, 'commercial') }}</h1>
+    <section class="internal-page-heading">
+        <div><h1>{{ 'calendar.settings.heading'|trans({}, 'commercial') }}</h1></div>
+        <div class="internal-heading-actions">
+            <a class="internal-button internal-button--secondary" href="{{ path('commercial_calendar_settings') }}">{{ 'calendar.settings.manage_connection'|trans({}, 'commercial') }}</a>
+        </div>
+    </section>
+    <section class="commercial-calendar-inbox">
+        <div class="commercial-calendar-inbox__heading">
+            <h2>{{ 'calendar.unlinked.heading'|trans({}, 'commercial') }}</h2>
+            {% if not calendarError %}<span class="internal-badge {{ pendingCount|default(0) > 0 ? 'internal-badge--warning' : 'internal-badge--muted' }}">{{ 'calendar.unlinked.pending_count'|trans({'%count%': pendingCount|default(0)}, 'commercial') }}</span>{% endif %}
+        </div>
         <p>{{ 'calendar.unlinked.description'|trans({}, 'commercial') }}</p>
-        <form method="get" action="{{ path('commercial_calendar_unlinked') }}" class="internal-form">
-            <label>{{ 'calendar.unlinked.from'|trans({}, 'commercial') }} <input type="date" name="from" value="{{ from }}" required></label>
-            <label>{{ 'calendar.unlinked.to'|trans({}, 'commercial') }} <input type="date" name="to" value="{{ (to|date_modify('-1 day'))|date('Y-m-d') }}" required></label>
-            <button class="internal-button internal-button--secondary" type="submit">{{ 'calendar.unlinked.search'|trans({}, 'commercial') }}</button>
-        </form>
+        <details class="commercial-calendar-inbox__period">
+            <summary>{{ 'calendar.unlinked.period'|trans({'%from%': from|date('d/m/Y'), '%to%': (to|date_modify('-1 day'))|date('d/m/Y')}, 'commercial') }}</summary>
+            <form method="get" action="{{ path('commercial_calendar_unlinked') }}" class="internal-form commercial-calendar-inbox__filters">
+                <label>{{ 'calendar.unlinked.from'|trans({}, 'commercial') }} <input type="date" name="from" value="{{ from }}" required></label>
+                <label>{{ 'calendar.unlinked.to'|trans({}, 'commercial') }} <input type="date" name="to" value="{{ (to|date_modify('-1 day'))|date('Y-m-d') }}" required></label>
+                <button class="internal-button internal-button--secondary" type="submit">{{ 'calendar.unlinked.search'|trans({}, 'commercial') }}</button>
+            </form>
+        </details>
     </section>
 
     {% if calendarError %}
@@ -21,10 +33,12 @@
     {% else %}
         <div class="commercial-calendar-groups">
             {% for group in groups %}
-                <section class="internal-card">
-                    <h2>{{ group[0].title }}</h2>
-                    {% if group|length > 1 %}<p>{{ 'calendar.unlinked.group_count'|trans({'%count%': group|length}, 'commercial') }}</p>{% endif %}
-                    <form method="post" action="{{ path('commercial_calendar_attach') }}" class="internal-form">
+                <section class="internal-card commercial-calendar-group">
+                    <div class="commercial-calendar-group__heading">
+                        <h2>{{ group[0].title }}</h2>
+                        {% if group|length > 1 %}<span class="commercial-calendar-group__count">{{ 'calendar.unlinked.group_count'|trans({'%count%': group|length}, 'commercial') }}</span>{% endif %}
+                    </div>
+                    <form method="post" action="{{ path('commercial_calendar_attach') }}" class="internal-form commercial-calendar-group__form">
                         <input type="hidden" name="_token" value="{{ csrf_token('commercial_calendar_attach') }}">
                         <input type="hidden" name="from" value="{{ from }}">
                         <input type="hidden" name="to" value="{{ (to|date_modify('-1 day'))|date('Y-m-d') }}">
@@ -32,33 +46,36 @@
                             <legend>{{ 'calendar.unlinked.choose_sessions'|trans({}, 'commercial') }}</legend>
                             <div class="internal-form__choice-list">
                             {% for event in group %}
-                                <label class="internal-form__choice">
+                                <label class="internal-form__choice{{ event.allDay ? ' commercial-calendar-group__event--all-day' : '' }}">
                                     <input class="internal-form__choice-input" type="checkbox" name="event_ids[]" value="{{ event.id }}"{% if event.allDay %} disabled{% endif %}>
                                     <span class="internal-form__choice-label">
                                         <strong>{% if event.allDay %}{{ event.startsAt|date('d/m/Y', 'Europe/Paris') }}{% else %}{{ event.startsAt|date('d/m/Y H:i', 'Europe/Paris') }}–{{ event.endsAt|date('H:i', 'Europe/Paris') }}{% endif %}</strong>
-                                        {% if event.title != group[0].title %} · {{ event.title }}{% endif %}
-                                        {% if event.location %}<br>{{ event.location }}{% endif %}
-                                        {% if event.allDay %}<br><small>{{ 'calendar.unlinked.all_day'|trans({}, 'commercial') }}</small>{% endif %}
+                                        <span>{{ event.title }}</span>
+                                        {% if event.location %}<small>{{ event.location }}</small>{% endif %}
+                                        {% if event.originalStartsAt and event.originalStartsAt|date('Y-m-d H:i', 'Europe/Paris') != event.startsAt|date('Y-m-d H:i', 'Europe/Paris') %}<small>{{ 'calendar.unlinked.moved_from'|trans({'%date%': event.originalStartsAt|date('d/m/Y H:i', 'Europe/Paris')}, 'commercial') }}</small>{% endif %}
+                                        {% if event.allDay %}<small>{{ 'calendar.unlinked.all_day'|trans({}, 'commercial') }}</small>{% endif %}
                                     </span>
                                 </label>
                             {% endfor %}
                             </div>
                         </fieldset>
-                        <label>{{ 'calendar.unlinked.project'|trans({}, 'commercial') }}
-                            <select name="project_id" required>
-                                <option value="">{{ 'calendar.unlinked.choose_project'|trans({}, 'commercial') }}</option>
-                                {% for project in projects %}
-                                    <option value="{{ project.id }}">{{ project.title }}{% if project.organization %} · {{ project.organization.name }}{% endif %}</option>
-                                {% endfor %}
-                            </select>
-                        </label>
-                        <label>{{ 'calendar.unlinked.status'|trans({}, 'commercial') }}
-                            <select name="status" required>
-                                <option value="option">{{ 'calendar.status.option'|trans({}, 'commercial') }}</option>
-                                <option value="confirmed">{{ 'calendar.status.confirmed'|trans({}, 'commercial') }}</option>
-                            </select>
-                        </label>
-                        <button class="internal-button" type="submit">{{ 'calendar.unlinked.attach'|trans({}, 'commercial') }}</button>
+                        <div class="commercial-calendar-group__fields">
+                            <label>{{ 'calendar.unlinked.project'|trans({}, 'commercial') }}
+                                <select name="project_id" required>
+                                    <option value="">{{ 'calendar.unlinked.choose_project'|trans({}, 'commercial') }}</option>
+                                    {% for project in projects %}
+                                        <option value="{{ project.id }}">{{ project.title }}{% if project.organization %} · {{ project.organization.name }}{% endif %}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+                            <label>{{ 'calendar.unlinked.status'|trans({}, 'commercial') }}
+                                <select name="status" required>
+                                    <option value="option">{{ 'calendar.status.option'|trans({}, 'commercial') }}</option>
+                                    <option value="confirmed">{{ 'calendar.status.confirmed'|trans({}, 'commercial') }}</option>
+                                </select>
+                            </label>
+                        </div>
+                        <div class="commercial-calendar-group__actions"><button class="internal-button" type="submit">{{ 'calendar.unlinked.attach'|trans({}, 'commercial') }}</button></div>
                     </form>
                 </section>
             {% endfor %}

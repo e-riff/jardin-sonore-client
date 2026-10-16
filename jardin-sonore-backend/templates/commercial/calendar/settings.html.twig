@@ -14,6 +14,7 @@
             {% if connection.lastSuccessAt %}
                 <p>{{ 'calendar.connection.last_success'|trans({}, 'commercial') }}: {{ connection.lastSuccessAt|date('d/m/Y H:i', 'Europe/Paris') }}</p>
             {% endif %}
+            <a class="internal-button" href="{{ path('commercial_calendar_unlinked') }}">{{ 'calendar.unlinked.heading'|trans({}, 'commercial') }}</a>
             <form method="post" action="{{ path('commercial_calendar_disconnect') }}">
                 <input type="hidden" name="_token" value="{{ csrf_token('commercial_calendar_disconnect') }}">
                 <button class="internal-button internal-button--secondary" type="submit">{{ 'calendar.connection.disconnect'|trans({}, 'commercial') }}</button>

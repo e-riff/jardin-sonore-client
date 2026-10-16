@@ -2435,6 +2435,111 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
     gap: 20px;
 }
 
+.commercial-calendar-inbox {
+    margin-bottom: 28px;
+}
+
+.commercial-calendar-inbox__heading,
+.commercial-calendar-group__heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+}
+
+.commercial-calendar-inbox__heading h2 {
+    margin: 0;
+    color: var(--color-on-background);
+    font-size: 1.45rem;
+}
+
+.commercial-calendar-inbox > p {
+    max-width: 760px;
+    color: var(--color-on-surface-variant);
+    line-height: 1.55;
+}
+
+.commercial-calendar-inbox__period {
+    width: fit-content;
+    max-width: 100%;
+}
+
+.commercial-calendar-inbox__period > summary {
+    color: var(--color-secondary);
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-size: 0.87rem;
+    font-weight: 700;
+}
+
+.commercial-calendar-inbox__filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+    margin-top: 16px;
+}
+
+.commercial-calendar-inbox__filters > button {
+    justify-self: start;
+}
+
+.commercial-calendar-group {
+    max-width: 980px;
+}
+
+.commercial-calendar-group__heading h2 {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.commercial-calendar-group__count {
+    color: var(--color-on-surface-variant);
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+}
+
+.commercial-calendar-group__form {
+    max-width: none;
+}
+
+.commercial-calendar-group__form .internal-form__choice-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.commercial-calendar-group__form .internal-form__choice-label {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+    overflow-wrap: anywhere;
+}
+
+.commercial-calendar-group__form .internal-form__choice-label small {
+    color: var(--color-on-surface-variant);
+}
+
+.commercial-calendar-group__event--all-day {
+    cursor: default;
+    opacity: 0.72;
+}
+
+.commercial-calendar-group__fields {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: 16px;
+}
+
+.commercial-calendar-group__actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+@media (max-width: 680px) {
+    .commercial-calendar-inbox__filters,
+    .commercial-calendar-group__form .internal-form__choice-list,
+    .commercial-calendar-group__fields {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
 .commercial-calendar-group__events {
     display: grid;
     gap: 10px;
