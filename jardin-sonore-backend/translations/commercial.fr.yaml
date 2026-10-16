@@ -302,6 +302,7 @@ calendar:
   status:
     option: Option
     confirmed: Confirmée
+    canceled: Annulée
   settings:
     heading: Calendrier professionnel
     description: Connecte le calendrier Google utilisé pour les séances commerciales.
@@ -332,6 +333,7 @@ calendar:
     empty: Aucune séance non rattachée sur cette période.
     group_count: '%count% occurrences proposées ensemble'
     choose_sessions: Séances à rattacher
+    select_all: Tout sélectionner
     all_day: Une heure de début et de fin doit être définie dans Google avant de rattacher cette séance.
     project: Dossier
     choose_project: Choisir un dossier
@@ -349,6 +351,11 @@ calendar:
     empty: Aucune séance n’est encore rattachée à ce dossier.
     organization_address: Adresse de la structure
     upcoming: à venir
+    options_heading: Séances en option
+    upcoming_heading: Séances confirmées
+    past_heading: Séances passées et annulées
+    dialog_eyebrow: Détail de la séance
+    close_dialog: Fermer le détail de la séance
     add: Ajouter
     sync_warning: La synchronisation avec Google est à vérifier.
     detach: Détacher du dossier

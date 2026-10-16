@@ -1,4 +1,7 @@
 {% set upcomingInterventions = interventions|filter(intervention => intervention.startsAt > date() and intervention.status != 'canceled') %}
+{% set optionInterventions = upcomingInterventions|filter(intervention => intervention.status == 'option') %}
+{% set confirmedInterventions = upcomingInterventions|filter(intervention => intervention.status == 'confirmed') %}
+{% set pastInterventions = interventions|filter(intervention => intervention.status == 'canceled' or intervention.startsAt <= date())|reverse %}
 <div class="commercial-dossier__interventions-shell">
 <details class="commercial-dossier__interventions" name="commercial-project-details" {% if project.status == 'confirmed' %}open{% endif %}>
     <summary>
@@ -11,41 +14,36 @@
     {% if interventions is empty %}
         <p>{{ 'calendar.sessions.empty'|trans({}, 'commercial') }}</p>
     {% else %}
-        <ul class="commercial-dossier__intervention-list">
-            {% for intervention in interventions %}
-                <li>
-                    <div>
-                        <strong>{{ intervention.startsAt|date('d/m/Y H:i', intervention.timeZone) }}–{{ intervention.endsAt|date('H:i', intervention.timeZone) }}</strong>
-                        <span class="internal-badge {{ intervention.status == 'confirmed' ? 'internal-badge--primary' : 'internal-badge--muted' }}">{{ ('calendar.status.' ~ intervention.status)|trans({}, 'commercial') }}</span>
-                        <div>{{ intervention.title }}</div>
-                        {% if intervention.location %}<small>{{ intervention.location }}</small>{% endif %}
-                        {% if intervention.syncError %}<p role="status">{{ 'calendar.sessions.sync_warning'|trans({}, 'commercial') }}</p>{% endif %}
-                        {% if intervention.status == 'option' %}
-                            <form method="post" action="{{ path('commercial_intervention_confirm', {projectId: project.id, id: intervention.id}) }}">
-                                <input type="hidden" name="_token" value="{{ csrf_token('commercial_intervention_' ~ intervention.id ~ '_confirm') }}">
-                                <button class="internal-button internal-button--secondary" type="submit">{{ 'calendar.sessions.confirm'|trans({}, 'commercial') }}</button>
-                            </form>
-                        {% endif %}
-                        <details>
-                            <summary>{{ 'calendar.sessions.edit'|trans({}, 'commercial') }}</summary>
-                            <form method="post" action="{{ path('commercial_intervention_edit', {projectId: project.id, id: intervention.id}) }}" class="internal-form">
-                                <input type="hidden" name="_token" value="{{ csrf_token('commercial_intervention_' ~ intervention.id ~ '_edit') }}">
-                                <label>{{ 'calendar.unlinked.title'|trans({}, 'commercial') }}<input name="title" value="{{ intervention.title }}" maxlength="255" required></label>
-                                <label>{{ 'calendar.unlinked.starts_at'|trans({}, 'commercial') }}<input type="datetime-local" name="starts_at" value="{{ intervention.startsAt|date('Y-m-d\\TH:i', intervention.timeZone) }}" required></label>
-                                <label>{{ 'calendar.unlinked.ends_at'|trans({}, 'commercial') }}<input type="datetime-local" name="ends_at" value="{{ intervention.endsAt|date('Y-m-d\\TH:i', intervention.timeZone) }}" required></label>
-                                <label>{{ 'calendar.unlinked.location'|trans({}, 'commercial') }}<input name="location" value="{{ intervention.location }}"></label>
-                                <button class="internal-button internal-button--secondary" type="submit">{{ 'calendar.sessions.save'|trans({}, 'commercial') }}</button>
-                            </form>
-                        </details>
-                    </div>
-                    <form method="post" action="{{ path('commercial_intervention_detach', {projectId: project.id, id: intervention.id}) }}">
-                        <input type="hidden" name="_token" value="{{ csrf_token('commercial_intervention_' ~ intervention.id ~ '_detach') }}">
-                        <button type="submit" class="internal-button internal-button--secondary">{{ 'calendar.sessions.detach'|trans({}, 'commercial') }}</button>
-                    </form>
-                    <button type="button" class="internal-button internal-button--danger" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('commercial_intervention_cancel', {projectId: project.id, id: intervention.id}) }}" data-confirmation-dialog-item-value="{{ intervention.title }}" data-confirmation-dialog-token-value="{{ csrf_token('commercial_intervention_' ~ intervention.id ~ '_cancel') }}">{{ 'calendar.sessions.cancel'|trans({}, 'commercial') }}</button>
-                </li>
-            {% endfor %}
-        </ul>
+        {% if optionInterventions is not empty %}
+            <section class="commercial-dossier__intervention-section commercial-dossier__intervention-section--options">
+                <h3>{{ 'calendar.sessions.options_heading'|trans({}, 'commercial') }} <span class="commercial-dossier__count">{{ optionInterventions|length }}</span></h3>
+                <ul class="commercial-dossier__intervention-list">
+                    {% for intervention in optionInterventions %}
+                        {% include 'commercial/project/_intervention_card.html.twig' with {intervention: intervention, project: project, isPast: false} only %}
+                    {% endfor %}
+                </ul>
+            </section>
+        {% endif %}
+        {% if confirmedInterventions is not empty %}
+            <section class="commercial-dossier__intervention-section">
+                {% if optionInterventions is not empty %}<h3>{{ 'calendar.sessions.upcoming_heading'|trans({}, 'commercial') }}</h3>{% endif %}
+                <ul class="commercial-dossier__intervention-list">
+                    {% for intervention in confirmedInterventions %}
+                        {% include 'commercial/project/_intervention_card.html.twig' with {intervention: intervention, project: project, isPast: false} only %}
+                    {% endfor %}
+                </ul>
+            </section>
+        {% endif %}
+        {% if pastInterventions is not empty %}
+            <section class="commercial-dossier__intervention-section commercial-dossier__past-interventions">
+                <h3>{{ 'calendar.sessions.past_heading'|trans({}, 'commercial') }} <span class="commercial-dossier__count">{{ pastInterventions|length }}</span></h3>
+                <ul class="commercial-dossier__intervention-list">
+                    {% for intervention in pastInterventions %}
+                        {% include 'commercial/project/_intervention_card.html.twig' with {intervention: intervention, project: project, isPast: true} only %}
+                    {% endfor %}
+                </ul>
+            </section>
+        {% endif %}
     {% endif %}
     </div>
 </details>
