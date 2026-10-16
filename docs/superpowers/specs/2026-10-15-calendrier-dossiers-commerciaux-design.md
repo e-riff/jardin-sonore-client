@@ -1,6 +1,6 @@
 # Calendrier dans les dossiers commerciaux — spécification
 
-Date : 15 octobre 2026. État : conception à relire avant le code. La [roadmap](../../../ROADMAP.md) porte la priorité courante ; le [plan initial](../plans/2026-10-15-calendrier-dossiers-commerciaux.md) décrit les lots envisagés.
+Date : 15 octobre 2026, complétée le 16 octobre après examen du calendrier réel et validation du parcours de rattachement. La [roadmap](../../../ROADMAP.md) porte la priorité courante ; le [plan d'implémentation](../plans/2026-10-15-calendrier-dossiers-commerciaux.md) décrit les lots.
 
 ## Intention et résultat attendu
 
@@ -24,10 +24,12 @@ Les identifiants OAuth, la clé de chiffrement et les autres valeurs sensibles r
 
 ## Parcours dans le dossier
 
-1. **Rattacher une séance existante.** Rechercher les événements du calendrier sur une période choisie, voir titre, dates et lieu, puis choisir explicitement un événement et le dossier. Un événement déjà lié à un autre dossier est signalé et ne peut pas être lié deux fois.
-2. **Créer une séance.** Saisir titre, début, fin, lieu réel et état « option » ou « confirmée ». La création Google réussit avant que le dossier affiche la séance comme enregistrée. L'événement créé depuis le dossier est lié automatiquement.
+La fiche place Contacts, « À faire », Fil du dossier, « Séances et dates », puis Documents et suivi dans cet ordre. Le fil s'ouvre par défaut pendant une discussion ; les séances s'ouvrent lorsque le dossier est confirmé. Les volets Fil et Séances ne s'ouvrent qu'un à la fois. Les commandes d'ajout se trouvent dans l'en-tête de leur bloc, avec des chevrons alignés à droite. L'état se modifie depuis le badge de l'en-tête du dossier.
+
+1. **Rattacher des séances créées dans Google.** Un écran présente les événements non liés sur une période choisie, avec titre, dates et lieu. Il regroupe visuellement les occurrences d'une même série et suggère les titres identiques, y compris après déplacement des dates. L'utilisateur sélectionne les séances du groupe et leur dossier ; le titre identique ne provoque jamais un rattachement automatique. Une séance ne peut appartenir qu'à un dossier à la fois. Chaque lien peut ensuite être retiré ou affecté à un autre dossier sans modifier l'événement Google.
+2. **Créer une séance.** Saisir titre, début, fin, lieu réel et état « option » ou « confirmée ». Lorsque la structure possède une adresse, le formulaire la propose en un clic tout en laissant le lieu librement modifiable. La création Google réussit avant que le dossier affiche la séance comme enregistrée. L'événement créé depuis le dossier est lié automatiquement.
 3. **Modifier une séance.** Corriger début, fin, titre ou lieu depuis le dossier. Le changement part immédiatement vers Google, puis la version locale est rafraîchie. Une modification dans Google est récupérée à l'ouverture du dossier et par le rafraîchissement périodique.
-4. **Confirmer ou annuler.** La confirmation est une commande explicite du backoffice ; le retrait des « ??? » dans Google ne la déclenche pas. Annuler depuis le dossier demande confirmation et supprime l'événement Google, ou seulement l'occurrence concernée. La séance annulée reste visible dans l'historique du dossier et ne compte plus dans les prévisions ni dans la facturation. Retirer seulement le lien au dossier conserve l'événement Google et arrête son suivi commercial.
+4. **Confirmer ou annuler.** La confirmation est une commande explicite du backoffice ; le retrait des « ??? » dans Google ne la déclenche pas. La confirmation dans le dossier laisse le titre Google tel quel, même s'il commence par « ??? ». Annuler depuis le dossier demande confirmation et supprime l'événement Google, ou seulement l'occurrence concernée. La séance annulée reste visible dans l'historique du dossier et ne compte plus dans les prévisions ni dans la facturation. Retirer seulement le lien au dossier conserve l'événement Google et arrête son suivi commercial.
 5. **Dates alternatives.** Plusieurs séances peuvent toutes avoir lieu, ou représenter des options pour une même prestation. Dans le second cas, l'utilisateur peut les regrouper comme alternatives ; confirmer l'une propose de libérer les autres, sans suppression silencieuse.
 
 Le lieu de la séance est saisi pour l'intervention réelle et peut différer de l'adresse de la structure. Une séance suivie doit avoir un début et une fin horodatés ; un événement Google « journée entière » peut être repéré dans la recherche, mais demande une heure avant rattachement comme intervention.
@@ -38,7 +40,7 @@ Une intervention distincte du fil conserve le dossier, l'identifiant du calendri
 
 Le fil du dossier enregistre les faits utiles, notamment une annulation et une précision rédigée par l'utilisateur. Chaque création ou rafraîchissement technique de séance n'ajoute pas une ligne au fil. Le dossier fermé conserve ses séances liées ; sa clôture reste manuelle. La suppression d'un dossier retire les liens et données du backoffice après confirmation, sans supprimer les événements Google.
 
-L'état « option » ou « confirmée » appartient au backoffice. Le titre Google peut en donner un repère visuel, mais aucune convention d'abréviations (??? / IPE / JS) n'est figée avant examen d'événements réels. Une édition du titre dans Google ne change pas l'état métier.
+L'état « option » ou « confirmée » appartient au backoffice. Les événements réels montrent que Google marque « confirmed » même ceux dont le titre commence par « ??? » ; ce statut Google ne renseigne donc pas l'état métier. Le titre Google reste indépendant de la confirmation dans le dossier. Une édition du titre dans Google ne change pas l'état métier.
 
 ## Synchronisation et incidents
 
@@ -50,7 +52,7 @@ Une occurrence récurrente est liée et modifiée individuellement, sans modifie
 
 ## Présentation de la fiche
 
-Sous les contacts et près des tâches, un bloc « Séances et dates » montre d'abord les séances à venir, puis les dates passées consultables. Chaque ligne affiche date, heure, lieu et état, avec un accès clair à la correction ; les options sont visuellement distinctes. Les commandes sont des boutons explicites avec icônes compréhensibles et libellés accessibles. La dernière synchronisation et son éventuelle erreur sont visibles près des dates. Le fil devient repliable par défaut lorsqu'une séance est liée, tout en restant ouvrable.
+Sous le fil, un bloc « Séances et dates » affiche le nombre de séances à venir dans son en-tête, puis les dates consultables dans le volet. Chaque ligne affiche date, heure, lieu et état, avec un accès clair à la correction ; les options sont visuellement distinctes. Une seule commande d'ajout dans l'en-tête propose la création ou le rattachement. La dernière synchronisation et son éventuelle erreur sont visibles près des dates.
 
 Un dossier sans séance affiche une invitation courte à créer ou rattacher un événement. La fiche reste utilisable sur téléphone ; aucune vue agenda globale ni manipulation par glisser-déposer n'est requise pour ce lot.
 
@@ -83,6 +85,6 @@ La conception sera prête à implémenter lorsque les situations suivantes ont u
 
 ## Vérifications avant implémentation
 
-Confirmer l'identifiant exact du calendrier, le compte Google propriétaire et l'URL de retour OAuth de production. Examiner quelques événements anonymisés : séance simple, option « ??? », occurrence récurrente, date déplacée, lieu distinct de la structure et éventuel événement « journée entière ». Vérifier le mode de publication OAuth, les scopes disponibles pour ce compte et l'extension de chiffrement en production. Ces informations affinent la convention de titre, le traitement des occurrences et le périmètre des conflits avec les autres calendriers ; aucun secret ne doit être placé dans le dépôt.
+L'examen du calendrier connecté a confirmé son identifiant, le compte propriétaire, des options « ??? », des occurrences récurrentes déplacées, des lieux absents et des événements « journée entière ». Les occurrences sont proposées individuellement dans les groupes ; la série entière n'est jamais liée d'un seul geste implicite. Il reste à confirmer l'URL de retour OAuth de production, le mode de publication OAuth, les scopes disponibles et l'extension de chiffrement en production. Aucun secret ne doit être placé dans le dépôt.
 
 Références techniques officielles : [autorisations Calendar](https://developers.google.com/workspace/calendar/api/auth), [OAuth web](https://developers.google.com/identity/protocols/oauth2/web-server), [événements](https://developers.google.com/workspace/calendar/api/v3/reference/events), [occurrences récurrentes](https://developers.google.com/workspace/calendar/api/guides/recurringevents), [versions et If-Match](https://developers.google.com/calendar/api/guides/version-resources).

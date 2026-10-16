@@ -15,12 +15,16 @@ class CommercialInvoiceEntity
 
     private ?CommercialActionEntity $reminderAction = null;
 
+    private DateTimeImmutable $serviceMonth;
+
     public function __construct(
         private CommercialProjectEntity $project,
         private string $reference,
         private int $amountCents,
         private DateTimeImmutable $issuedOn,
+        ?DateTimeImmutable $serviceMonth = null,
     ) {
+        $this->serviceMonth = $serviceMonth ?? new DateTimeImmutable($issuedOn->format('Y-m-01'), $issuedOn->getTimezone());
     }
 
     public function getProject(): CommercialProjectEntity
@@ -41,6 +45,11 @@ class CommercialInvoiceEntity
     public function getIssuedOn(): DateTimeImmutable
     {
         return $this->issuedOn;
+    }
+
+    public function getServiceMonth(): DateTimeImmutable
+    {
+        return $this->serviceMonth;
     }
 
     public function getPaidOn(): ?DateTimeImmutable

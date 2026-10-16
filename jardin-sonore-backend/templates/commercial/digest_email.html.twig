@@ -14,6 +14,33 @@
                     <h1 style="margin:0; color:#34372f; font-size:20px; line-height:27px;">{{ 'heading'|trans({'%date%': digest.localDate|date('d/m/Y')}, 'commercial_digest') }}</h1>
                 </td></tr>
                 <tr><td style="padding:24px 26px 4px;">
+                    {% if digest.upcomingInterventions %}
+                        <h2 style="margin:0 0 11px; color:#47664b; font-size:16px; line-height:23px;">{{ 'sessions'|trans({}, 'commercial_digest') }}</h2>
+                        {% if digest.calendarSyncWarning %}<p style="margin:0 0 12px; color:#896a32; font-size:13px; line-height:19px;">{{ 'calendar_sync_warning'|trans({}, 'commercial_digest') }}</p>{% endif %}
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:24px; border-top:1px solid #e5dcd3;">
+                            {% set startOfNextWeek = digest.localDate|date_modify('monday this week')|date_modify('+7 days') %}
+                            <tr><td style="padding:10px 0 2px; color:#70655a; font-size:13px; font-weight:bold;">{{ 'this_week'|trans({}, 'commercial_digest') }}</td></tr>
+                            {% for intervention in digest.upcomingInterventions %}
+                                {% if intervention.startsAt < startOfNextWeek %}
+                                <tr><td style="padding:8px 0; border-bottom:1px solid #e5dcd3; font-size:14px; line-height:21px;">
+                                    <a href="{{ url('commercial_project_show', {id: intervention.project.id}) }}" style="color:#47664b; font-weight:bold; text-decoration:underline;">{{ intervention.startsAt|date('d/m, H:i', 'Europe/Paris') }} · {{ intervention.project.organization ? intervention.project.organization.name : intervention.project.title }}</a>
+                                    {% if intervention.status == 'option' %}<span style="color:#896a32; font-size:12px; font-weight:bold;"> · {{ 'option'|trans({}, 'commercial_digest') }}</span>{% endif %}
+                                    {% if intervention.location %}<br><span style="color:#70655a; font-size:12px;">{{ intervention.location }}</span>{% endif %}
+                                </td></tr>
+                                {% endif %}
+                            {% endfor %}
+                            <tr><td style="padding:10px 0 2px; color:#70655a; font-size:13px; font-weight:bold;">{{ 'next_week'|trans({}, 'commercial_digest') }}</td></tr>
+                            {% for intervention in digest.upcomingInterventions %}
+                                {% if intervention.startsAt >= startOfNextWeek %}
+                                <tr><td style="padding:8px 0; border-bottom:1px solid #e5dcd3; font-size:14px; line-height:21px;">
+                                    <a href="{{ url('commercial_project_show', {id: intervention.project.id}) }}" style="color:#47664b; font-weight:bold; text-decoration:underline;">{{ intervention.startsAt|date('d/m, H:i', 'Europe/Paris') }} · {{ intervention.project.organization ? intervention.project.organization.name : intervention.project.title }}</a>
+                                    {% if intervention.status == 'option' %}<span style="color:#896a32; font-size:12px; font-weight:bold;"> · {{ 'option'|trans({}, 'commercial_digest') }}</span>{% endif %}
+                                    {% if intervention.location %}<br><span style="color:#70655a; font-size:12px;">{{ intervention.location }}</span>{% endif %}
+                                </td></tr>
+                                {% endif %}
+                            {% endfor %}
+                        </table>
+                    {% endif %}
                     {% if digest.dueActions %}
                         <h2 style="margin:0 0 11px; color:#a64d43; font-size:16px; line-height:23px;">{{ 'actions'|trans({}, 'commercial_digest') }}</h2>
                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:24px; border-top:1px solid #e5dcd3;">

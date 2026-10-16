@@ -1,16 +1,4 @@
 <div class="commercial-dossier__create-controls">
-    {% if project.status in ['discussion', 'confirmed'] %}
-        <details class="commercial-dossier__create">
-            <summary class="internal-button internal-button--secondary internal-button--compact commercial-dossier__create-task">{% include 'commercial/project/_icon.html.twig' with {name: 'bell'} only %} {{ 'project.add_action'|trans({}, 'commercial') }}</summary>
-            <form method="post" action="{{ path('commercial_project_action_create', {id: project.id}) }}" class="internal-form">
-                <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_' ~ project.id ~ '_action_create') }}">
-                <label>{{ 'action.title'|trans({}, 'commercial') }} <input name="title" maxlength="255" required></label>
-                <label>{{ 'action.due_on'|trans({}, 'commercial') }} <input type="date" name="dueOn" value="{{ 'now'|date('Y-m-d') }}" required></label>
-                {% if project.people is not empty %}<label>{{ 'action.person'|trans({}, 'commercial') }}<select name="personId"><option value="">{{ 'action.no_person'|trans({}, 'commercial') }}</option>{% for projectPerson in project.people %}{% if projectPerson.current and projectPerson.person.active %}<option value="{{ projectPerson.person.id }}">{{ projectPerson.person }}</option>{% endif %}{% endfor %}</select></label>{% endif %}
-                <button class="internal-button" type="submit">{{ 'project.add_action_save'|trans({}, 'commercial') }}</button>
-            </form>
-        </details>
-    {% endif %}
     <details class="commercial-dossier__create" {% if noteError is defined or noteForm.vars.submitted %}open{% endif %}>
         <summary class="internal-button internal-button--secondary internal-button--compact commercial-dossier__create-event">{% include 'commercial/project/_icon.html.twig' with {name: 'note'} only %} {{ 'project.add_event'|trans({}, 'commercial') }}</summary>
         {% if noteError is defined %}<p role="alert">{{ noteError|trans({}, 'commercial') }}</p>{% endif %}

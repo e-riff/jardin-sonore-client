@@ -1,6 +1,12 @@
-<section class="commercial-dossier__timeline" aria-labelledby="commercial-timeline-heading">
-    <div class="commercial-dossier__section-heading"><h2 id="commercial-timeline-heading">{{ 'project.history'|trans({}, 'commercial') }}</h2></div>
-    <div class="commercial-timeline">
+<section class="commercial-dossier__timeline-header">
+    <details class="commercial-dossier__timeline" name="commercial-project-details" aria-labelledby="commercial-timeline-heading" {% if project.status == 'discussion' or noteError is defined or noteForm.vars.submitted %}open{% endif %}>
+        <summary>
+            {% include 'commercial/project/_icon.html.twig' with {name: 'note'} only %}
+            <span id="commercial-timeline-heading">{{ 'project.history'|trans({}, 'commercial') }}</span>
+            <span class="commercial-dossier__disclosure-chevron" aria-hidden="true"></span>
+        </summary>
+        <div class="commercial-dossier__timeline-content">
+        <div class="commercial-timeline">
         {% set visibleEvents = project.events|filter(event => not (event.type starts with 'action_') or (event.type == 'action_completed' and event.content|default('')|trim != '')) %}
         {% for event in visibleEvents|reverse %}
             {% set icon = event.type starts with 'action_' ? 'check' : (event.type starts with 'quote_' ? 'quote' : (event.type starts with 'invoice_' ? 'invoice' : (event.type starts with 'contact_' ? 'phone' : 'note'))) %}
@@ -44,5 +50,8 @@
                 {% if event.type == 'project_status_changed' %}<p class="commercial-timeline__status-change">{{ ('project.status.' ~ event.metadata.old_status)|trans({}, 'commercial') }} → {{ ('project.status.' ~ event.metadata.new_status)|trans({}, 'commercial') }}</p>{% endif %}
             </article>
         {% else %}<p class="commercial-dossier__muted">{{ 'event.none'|trans({}, 'commercial') }}</p>{% endfor %}
-    </div>
+        </div>
+        </div>
+    </details>
+    {% include 'commercial/project/_create_controls.html.twig' %}
 </section>

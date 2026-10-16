@@ -1,5 +1,9 @@
 {{ 'heading'|trans({'%date%': digest.localDate|date('d/m/Y')}, 'commercial_digest') }}
 
+{% if digest.upcomingInterventions %}{{ 'sessions'|trans({}, 'commercial_digest') }}
+{% if digest.calendarSyncWarning %}{{ 'calendar_sync_warning'|trans({}, 'commercial_digest') }}
+{% endif %}{% for intervention in digest.upcomingInterventions %}- {{ intervention.startsAt|date('d/m, H:i', 'Europe/Paris') }} — {{ intervention.project.organization ? intervention.project.organization.name : intervention.project.title }}{% if intervention.status == 'option' %} — {{ 'option'|trans({}, 'commercial_digest') }}{% endif %}{% if intervention.location %} — {{ intervention.location }}{% endif %} — {{ url('commercial_project_show', {id: intervention.project.id}) }}
+{% endfor %}{% endif %}
 {% if digest.dueActions %}{{ 'actions'|trans({}, 'commercial_digest') }}
 {% for action in digest.dueActions %}- {{ action.title }} ({{ action.dueOn|date('d/m/Y') }}) — {{ action.project.organization ? action.project.organization.name : action.project.title }} — {{ url('commercial_project_show', {id: action.project.id}) }}
 {% endfor %}

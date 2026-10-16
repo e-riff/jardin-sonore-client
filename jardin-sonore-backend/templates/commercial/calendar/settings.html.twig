@@ -1,0 +1,31 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'calendar.settings.heading'|trans({}, 'commercial') %}
+
+{% block internal_body %}
+    {% include 'components/_internal_back_button.html.twig' with { href: path('commercial_project_index'), label: 'project.back'|trans({}, 'commercial') } only %}
+    <section class="internal-hero">
+        <h1>{{ 'calendar.settings.heading'|trans({}, 'commercial') }}</h1>
+        <p>{{ 'calendar.settings.description'|trans({}, 'commercial') }}</p>
+    </section>
+    <section class="internal-card">
+        {% if connection %}
+            <p>{{ 'calendar.connection.account'|trans({}, 'commercial') }}: <strong>{{ connection.accountEmail }}</strong></p>
+            {% if connection.lastSuccessAt %}
+                <p>{{ 'calendar.connection.last_success'|trans({}, 'commercial') }}: {{ connection.lastSuccessAt|date('d/m/Y H:i', 'Europe/Paris') }}</p>
+            {% endif %}
+            <form method="post" action="{{ path('commercial_calendar_disconnect') }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('commercial_calendar_disconnect') }}">
+                <button class="internal-button internal-button--secondary" type="submit">{{ 'calendar.connection.disconnect'|trans({}, 'commercial') }}</button>
+            </form>
+        {% elseif configured %}
+            <p>{{ 'calendar.connection.not_connected'|trans({}, 'commercial') }}</p>
+            <form method="post" action="{{ path('commercial_calendar_connect') }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('commercial_calendar_connect') }}">
+                <button class="internal-button" type="submit">{{ 'calendar.connection.connect'|trans({}, 'commercial') }}</button>
+            </form>
+        {% else %}
+            <p role="status">{{ 'calendar.connection.configuration_missing'|trans({}, 'commercial') }}</p>
+        {% endif %}
+    </section>
+{% endblock %}

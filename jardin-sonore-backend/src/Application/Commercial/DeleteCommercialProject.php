@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Commercial;
 
+use App\Infrastructure\Doctrine\Entity\CommercialInterventionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -17,6 +18,10 @@ final class DeleteCommercialProject
     {
         $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($projectEntity): void {
             $projectEntity->getRequest()?->removeProject($projectEntity);
+
+            foreach ($entityManager->getRepository(CommercialInterventionEntity::class)->findBy(['project' => $projectEntity]) as $interventionEntity) {
+                $entityManager->remove($interventionEntity);
+            }
 
             foreach ($projectEntity->getEvents() as $eventEntity) {
                 $entityManager->remove($eventEntity);

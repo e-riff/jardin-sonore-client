@@ -80,6 +80,7 @@
 
 - Pour les changements significatifs: lancer au minimum `npm run lint`; lancer `npm run build` pour les changements de build/runtime.
 - Pour une migration Doctrine, verifier avant commit que le diff de schema est propre: il doit correspondre uniquement au besoin de la tache et ne plus rester aucun changement parasite ou hors scope a generer.
+- En fin de fonctionnalite et avant mise en ligne, regrouper si possible les migrations intermediaires du meme sujet en une migration finale lisible. Verifier son SQL, son `down()`, le diff de schema et son execution sur une base locale. Ne jamais reecrire l'historique deja applique en production.
 - Ne pas laisser un serveur dev supplementaire actif si l'utilisateur ne l'a pas demande.
 - Signaler les commandes executees et les fichiers modifies.
 - Proposer un message de commit conventional commit en fin de tache quand il y a des changements.
