@@ -23,7 +23,7 @@
     </div>
 
     {% set sections = this.sections %}
-    {% for bucket, label in {priority: 'project.list.priority', upcoming: 'project.list.upcoming', without_task: 'project.list.without_task', closed: 'project.list.closed'} %}
+    {% for bucket, label in {priority: 'project.list.priority', upcoming: 'project.list.upcoming', without_task: 'project.list.without_task', confirmed: 'project.list.confirmed', closed: 'project.list.closed'} %}
         {% set rows = attribute(sections, bucket) %}
         {% if (bucket == 'closed' and status in ['all', 'closed', 'completed', 'without_result']) or (bucket != 'closed' and status not in ['closed', 'completed', 'without_result']) %}
             <details class="commercial-project-group commercial-project-group--{{ bucket }}" {% if rows is not empty and (bucket != 'closed' or status != 'all') %}open{% endif %}>
@@ -45,15 +45,16 @@
                         <table class="internal-table internal-table--compact-mobile commercial-project-table">
                             <thead><tr>
                                 <th>{{ 'project.list.dossier'|trans({}, 'commercial') }}</th>
+                                <th>{{ 'project.list.state'|trans({}, 'commercial') }}</th>
                                 <th>{{ 'project.list.next_task'|trans({}, 'commercial') }}</th>
                                 <th>{{ 'project.list.due_on'|trans({}, 'commercial') }}</th>
-                                <th>{{ 'project.list.actions'|trans({}, 'commercial') }}</th>
+                                <th>{{ 'project.list.last_activity'|trans({}, 'commercial') }}</th>
                             </tr></thead>
                             <tbody>
                             {% set periodGroups = bucket == 'upcoming' ? sections.upcoming_periods : {all: rows} %}
                             {% for period, periodRows in periodGroups %}
                                 {% if bucket == 'upcoming' and periodRows is not empty %}
-                                    <tr class="commercial-project-table__period-row"><th colspan="4">
+                                    <tr class="commercial-project-table__period-row"><th colspan="5">
                                         <span>{{ ('project.list.' ~ period)|trans({}, 'commercial') }}</span>
                                         <span class="internal-badge internal-badge--muted">{{ periodRows|length }}</span>
                                     </th></tr>
@@ -61,48 +62,23 @@
                                 {% for row in periodRows %}
                                 <tr data-project-id="{{ row.id }}" class="internal-table__row--clickable commercial-project-row commercial-project-row--{{ bucket }}{{ row.nextActionId ? '' : ' commercial-project-row--no-task' }}" tabindex="0" data-controller="catalog-row" data-catalog-row-url-value="{{ path('commercial_project_show', {id: row.id}) }}" data-action="click->catalog-row#navigate keydown->catalog-row#navigateFromKeyboard">
                                     <td data-table-mobile="primary">
-                                        <strong>{{ row.title }}</strong>
+                                        <div class="commercial-project-row__heading">
+                                            <strong title="{{ row.title }}">{{ row.title }}</strong>
+                                            {% set rowStatusBadge = row.status == 'confirmed' ? 'internal-badge--secondary' : 'internal-badge--primary' %}
+                                            <span class="commercial-project-row__status-mobile internal-badge {{ rowStatusBadge }}">{{ ('project.status.' ~ row.status)|trans({}, 'commercial') }}</span>
+                                            {% if row.isNew %}<span class="internal-badge internal-badge--primary">{{ 'project.list.new'|trans({}, 'commercial') }}</span>{% endif %}
+                                            {% if row.isProvisional %}<span class="internal-badge internal-badge--muted">{{ 'project.list.provisional'|trans({}, 'commercial') }}</span>{% endif %}
+                                        </div>
                                         <span class="internal-table-note commercial-project-row__organization">
                                             {{ row.organizationLabel }}{% if row.organizationLocation %}<span aria-hidden="true"> · </span>{{ row.organizationLocation }}{% endif %}
                                         </span>
-                                        {% if row.isNew %}<span class="internal-badge internal-badge--primary">{{ 'project.list.new'|trans({}, 'commercial') }}</span>{% endif %}
-                                        {% if row.isProvisional %}<span class="internal-badge internal-badge--muted">{{ 'project.list.provisional'|trans({}, 'commercial') }}</span>{% endif %}
-                                        {% if row.status == 'confirmed' %}<span class="internal-badge internal-badge--secondary">{{ 'project.status.confirmed'|trans({}, 'commercial') }}</span>{% endif %}
                                         {% if row.nextActionTitle %}<span class="commercial-project-row__task-mobile">{{ row.nextActionTitle }}{% if row.extraTaskCount %} · +{{ row.extraTaskCount }}{% endif %}</span>{% endif %}
                                         {% if row.nextDueOn %}<span class="commercial-project-row__due-mobile">{{ row.nextDueOn|date('d/m/Y') }}</span>{% endif %}
                                     </td>
+                                    <td data-table-mobile="state"><span class="internal-badge {{ rowStatusBadge }} commercial-project-row__status-desktop">{{ ('project.status.' ~ row.status)|trans({}, 'commercial') }}</span></td>
                                     <td data-table-mobile="secondary">{{ row.nextActionTitle ?: 'project.list.no_task'|trans({}, 'commercial') }}{% if row.extraTaskCount %}<span class="internal-table-note">+{{ row.extraTaskCount }}</span>{% endif %}</td>
                                     <td data-table-mobile="secondary"><span class="commercial-project-row__due">{{ row.nextDueOn ? row.nextDueOn|date('d/m/Y') : '—' }}</span></td>
-                                    <td data-table-mobile="actions" data-catalog-row-ignore>
-                                        {% if row.nextActionId %}
-                                            <div class="commercial-project-row__actions">
-                                                <form method="post" action="{{ path('commercial_action_change', {id: row.nextActionId, operation: 'complete'}) }}">
-                                                    <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ row.nextActionId ~ '_complete') }}">
-                                                    <input type="hidden" name="returnTo" value="index">
-                                                    <button class="internal-button internal-button--compact commercial-task-action--complete" type="submit" aria-label="{{ 'action.complete'|trans({}, 'commercial') }}" title="{{ 'action.complete'|trans({}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'check'} only %}</button>
-                                                </form>
-                                                <details class="commercial-project-row__postpone">
-                                                    <summary class="internal-button internal-button--compact commercial-task-action--postpone">{% include 'commercial/project/_icon.html.twig' with {name: 'alarm'} only %} {{ 'action.postpone'|trans({}, 'commercial') }}</summary>
-                                                    <div class="commercial-project-row__postpone-options">
-                                                        {% for days, label in {1: 'project.list.one_day', 2: 'project.list.two_days', 7: 'project.list.one_week'} %}
-                                                            <form method="post" action="{{ path('commercial_action_change', {id: row.nextActionId, operation: 'postpone'}) }}">
-                                                                <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ row.nextActionId ~ '_postpone') }}">
-                                                                <input type="hidden" name="returnTo" value="index">
-                                                                <input type="hidden" name="dueOn" value="{{ row.postponeDate(days) }}">
-                                                                <button type="submit">{{ label|trans({}, 'commercial') }}</button>
-                                                            </form>
-                                                        {% endfor %}
-                                                        <form method="post" action="{{ path('commercial_action_change', {id: row.nextActionId, operation: 'postpone'}) }}">
-                                                            <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ row.nextActionId ~ '_postpone') }}">
-                                                            <input type="hidden" name="returnTo" value="index">
-                                                            <label>{{ 'project.list.other_date'|trans({}, 'commercial') }} <input type="date" name="dueOn" required></label>
-                                                            <button type="submit">{{ 'action.postpone'|trans({}, 'commercial') }}</button>
-                                                        </form>
-                                                    </div>
-                                                </details>
-                                            </div>
-                                        {% endif %}
-                                    </td>
+                                    <td data-table-mobile="activity"><span class="commercial-project-row__activity-label">{{ 'project.list.last_activity'|trans({}, 'commercial') }} :</span> <time datetime="{{ row.lastEventAt ? row.lastEventAt|date('c') : '' }}">{{ row.lastEventAt ? row.lastEventAt|date('d/m/Y') : '—' }}</time></td>
                                 </tr>
                                 {% endfor %}
                             {% endfor %}

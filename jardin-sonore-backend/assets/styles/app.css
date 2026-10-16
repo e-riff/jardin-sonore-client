@@ -834,6 +834,33 @@ button:disabled {
     font-size: 0.76rem;
 }
 
+.commercial-project-row__heading {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 4px 8px;
+}
+
+.commercial-project-row__heading strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.commercial-project-row__heading .internal-badge {
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 3px 7px;
+    white-space: nowrap;
+}
+
+.commercial-project-row__status-mobile,
+.commercial-project-row__activity-label {
+    display: none;
+}
+
 .commercial-project-row__due {
     font-weight: 700;
     white-space: nowrap;
@@ -849,86 +876,9 @@ button:disabled {
     display: none;
 }
 
-.commercial-project-row__actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
-}
-
-.commercial-project-row__actions form {
-    margin: 0;
-}
-
-.commercial-project-row__actions .internal-button {
-    white-space: nowrap;
-}
-
-.commercial-project-row__postpone {
-    position: relative;
-}
-
-.commercial-project-row__postpone > summary {
-    list-style: none;
-}
-
-.commercial-project-row__postpone > summary::-webkit-details-marker {
-    display: none;
-}
-
-.commercial-project-row__postpone-options {
-    position: absolute;
-    z-index: 5;
-    top: calc(100% + 4px);
-    right: 0;
-    width: min(260px, calc(100vw - 36px));
-    display: grid;
-    gap: 3px;
-    border: 1px solid var(--color-outline-variant);
-    border-radius: 14px;
-    padding: 8px;
-    background: var(--color-surface-container-lowest);
-    box-shadow: 0 12px 28px rgb(48 32 26 / 0.18);
-}
-
-.commercial-project-row__postpone-options button {
-    width: 100%;
-    border: 0;
-    border-radius: 8px;
-    padding: 9px 10px;
-    background: transparent;
-    color: var(--color-secondary);
-    cursor: pointer;
-    font: inherit;
-    text-align: left;
-}
-
-.commercial-project-row__postpone-options button:hover,
-.commercial-project-row__postpone-options button:focus-visible {
-    background: color-mix(in oklab, var(--color-secondary-container) 42%, white);
-}
-
 .commercial-project-table tbody tr:hover td,
 .commercial-project-table tbody tr:focus-visible td {
     background: color-mix(in oklab, var(--color-secondary-container) 24%, white);
-}
-
-.commercial-project-row__postpone-options label {
-    display: grid;
-    gap: 5px;
-    border-top: 1px solid var(--color-outline-variant);
-    padding: 9px 10px 0;
-    color: var(--color-on-surface-variant);
-    font-size: 0.8rem;
-}
-
-.commercial-project-row__postpone-options input {
-    width: 100%;
-    min-height: 38px;
-    border: 1px solid var(--color-outline-variant);
-    border-radius: 8px;
-    padding: 6px;
-    font: inherit;
 }
 
 .internal-main:has(.commercial-dossier__hero) {
@@ -6382,6 +6332,19 @@ a.session-composer-overlay__item {
         padding: 4px 10px;
     }
 
+    .commercial-project-table td[data-table-mobile="state"],
+    .commercial-project-table td[data-table-mobile="secondary"] {
+        display: none;
+    }
+
+    .commercial-project-row__status-mobile {
+        display: inline-flex;
+    }
+
+    .commercial-project-row__status-desktop {
+        display: none;
+    }
+
     .commercial-project-row__task-mobile,
     .commercial-project-row__due-mobile {
         display: block;
@@ -6395,13 +6358,16 @@ a.session-composer-overlay__item {
         font-weight: 700;
     }
 
-    .commercial-project-table td[data-table-mobile="actions"] {
-        margin-left: 0;
-        padding: 6px 10px 2px;
+    .commercial-project-table td[data-table-mobile="activity"] {
+        display: block;
+        flex-basis: 100%;
+        padding: 0 10px 4px;
+        color: var(--color-on-surface-variant);
+        font-size: 0.75rem;
     }
 
-    .commercial-project-row--no-task td[data-table-mobile="actions"] {
-        display: none;
+    .commercial-project-row__activity-label {
+        display: inline;
     }
 
     .internal-main:has(.commercial-dossier__hero) {
