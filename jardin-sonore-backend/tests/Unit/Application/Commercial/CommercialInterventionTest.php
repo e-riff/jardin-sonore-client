@@ -76,6 +76,27 @@ final class CommercialInterventionTest extends TestCase
         self::assertSame('etag-1', $interventionEntity->getEtag());
     }
 
+    public function testStatusCanBeChangedWhenAExistingInterventionIsAttachedAgain(): void
+    {
+        $interventionEntity = new CommercialInterventionEntity(
+            new CommercialProjectEntity('Ateliers', null, null, new DateTimeImmutable('2026-10-16')),
+            'professional-calendar',
+            'event-1',
+            'Séance',
+            new DateTimeImmutable('2026-11-03 09:00:00 Europe/Paris'),
+            new DateTimeImmutable('2026-11-03 11:00:00 Europe/Paris'),
+            'Europe/Paris',
+            null,
+            'etag-1',
+            new DateTimeImmutable('2026-10-16 10:00:00 Europe/Paris'),
+        );
+        $interventionEntity->confirm();
+
+        $interventionEntity->setStatus(CommercialInterventionEntity::STATUS_OPTION);
+
+        self::assertSame(CommercialInterventionEntity::STATUS_OPTION, $interventionEntity->getStatus());
+    }
+
     public function testEndMustFollowStart(): void
     {
         $this->expectException(DomainException::class);
