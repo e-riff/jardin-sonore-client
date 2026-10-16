@@ -46,6 +46,9 @@ final class CommercialProjectControllerTest extends WebTestCase
         $projectEntity->setPrimaryContact($personEntity);
         $projectEntity->addAction(new CommercialActionEntity($projectEntity, 'Envoyer le programme', new DateTimeImmutable('2026-10-15')));
         $projectEntity->recordEvent('initial_message', new DateTimeImmutable('2026-10-10 09:00:00'), 'Premier message');
+        $projectEntity->recordEvent('quote_sent', new DateTimeImmutable('2026-10-11 09:00:00'), 'DEV-2026-001');
+        $projectEntity->recordEvent('quote_signed', new DateTimeImmutable('2026-10-12 09:00:00'), 'DEV-2026-001');
+        $projectEntity->recordEvent('quote_refused', new DateTimeImmutable('2026-10-12 10:00:00'), 'DEV-2026-002');
         $projectEntity->recordEvent('note', new DateTimeImmutable('2026-10-13 10:00:00'), str_repeat('Compte rendu détaillé. ', 18));
         foreach ([$adminUserEntity, $organizationEntity, $personEntity, $projectEntity] as $entity) {
             $entityManager->persist($entity);
@@ -64,9 +67,12 @@ final class CommercialProjectControllerTest extends WebTestCase
         self::assertCount(1, $crawler->filterXPath('//*[contains(@class, "commercial-dossier__task")]//time[@datetime="2026-10-15"]'));
         self::assertCount(4, $crawler->filterXPath('//*[contains(@class, "commercial-dossier__task")]//form[contains(@action, "/postpone")]'));
         $timelineItems = $crawler->filterXPath('//*[contains(@class, "commercial-timeline__item")]');
-        self::assertCount(2, $timelineItems);
+        self::assertCount(5, $timelineItems);
         self::assertStringContainsString('Compte rendu détaillé', $timelineItems->first()->text());
         self::assertSame('true', $timelineItems->first()->attr('data-commercial-timeline-expanded-value'));
+        self::assertCount(1, $crawler->filterXPath('//*[contains(@class, "commercial-timeline__item--quote-sent")]//*[contains(@class, "commercial-timeline__event-icon--send")]'));
+        self::assertCount(1, $crawler->filterXPath('//*[contains(@class, "commercial-timeline__item--quote-signed")]//*[contains(@class, "commercial-timeline__event-icon--signed")]'));
+        self::assertCount(1, $crawler->filterXPath('//*[contains(@class, "commercial-timeline__item--quote-refused")]//*[contains(@class, "commercial-timeline__event-icon--close")]'));
         self::assertCount(2, $crawler->filterXPath('//*[contains(@class, "commercial-timeline__item")]//*[contains(@class, "commercial-timeline__edit")]'));
     }
 
@@ -333,16 +339,21 @@ final class CommercialProjectControllerTest extends WebTestCase
         $suffix = bin2hex(random_bytes(5));
         $adminUserEntity = (new AdminUserEntity())->setEmail("project-quick-{$suffix}@example.test")->setPassword('unused');
         $organizationEntity = (new OrganizationEntity())->setName("Crèche {$suffix}");
+        $personEntity = (new PersonEntity())->setFirstName('Camille')->setLastName('Martin');
         $projectEntity = new CommercialProjectEntity('Ateliers', $organizationEntity, null, new DateTimeImmutable());
-        foreach ([$adminUserEntity, $organizationEntity, $projectEntity] as $entity) {
+        $organizationEntity->addPerson($personEntity);
+        $projectEntity->addPerson(new CommercialProjectPersonEntity($projectEntity, $personEntity, new DateTimeImmutable()));
+        foreach ([$adminUserEntity, $organizationEntity, $personEntity, $projectEntity] as $entity) {
             $entityManager->persist($entity);
         }
         $entityManager->flush();
         $client->loginUser($adminUserEntity);
 
         $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
-        $taskToken = $crawler->filterXPath('//form[contains(@action, "/actions")]/input[@name="_token"]')->attr('value');
-        $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/actions', ['_token' => $taskToken, 'title' => 'Envoyer le devis', 'dueOn' => '2026-10-16']);
+        $taskForm = $crawler->filterXPath('//form[@action="/commercial/projects/' . $projectEntity->getId() . '/actions"]')->form();
+        $taskForm['title'] = 'Envoyer le devis';
+        $taskForm['dueOn'] = '2026-10-16';
+        $client->submit($taskForm);
         self::assertResponseRedirects();
         $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
         $eventForm = $crawler->selectButton('Enregistrer la note')->form();

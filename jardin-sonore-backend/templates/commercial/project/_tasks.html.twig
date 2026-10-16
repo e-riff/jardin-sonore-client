@@ -4,16 +4,22 @@
         <h2 id="commercial-tasks-heading">{{ 'project.actions'|trans({}, 'commercial') }}</h2>
         <span class="commercial-dossier__count">{{ openActions|length }}</span>
         {% if project.status in ['discussion', 'confirmed'] %}
-            <details class="commercial-dossier__create">
-                <summary class="internal-button internal-button--secondary internal-button--compact commercial-dossier__create-task">{% include 'commercial/project/_icon.html.twig' with {name: 'bell'} only %} {{ 'project.add_action'|trans({}, 'commercial') }}</summary>
-                <form method="post" action="{{ path('commercial_project_action_create', {id: project.id}) }}" class="internal-form">
-                    <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_' ~ project.id ~ '_action_create') }}">
-                    <label>{{ 'action.title'|trans({}, 'commercial') }} <input name="title" maxlength="255" required></label>
-                    <label>{{ 'action.due_on'|trans({}, 'commercial') }} <input type="date" name="dueOn" value="{{ 'now'|date('Y-m-d') }}" required></label>
-                    {% if project.people is not empty %}<label>{{ 'action.person'|trans({}, 'commercial') }}<select name="personId"><option value="">{{ 'action.no_person'|trans({}, 'commercial') }}</option>{% for projectPerson in project.people %}{% if projectPerson.current and projectPerson.person.active %}<option value="{{ projectPerson.person.id }}">{{ projectPerson.person }}</option>{% endif %}{% endfor %}</select></label>{% endif %}
-                    <button class="internal-button" type="submit">{{ 'project.add_action_save'|trans({}, 'commercial') }}</button>
-                </form>
-            </details>
+            <div class="commercial-dossier__create-controls" data-controller="internal-dialog">
+                <button type="button" class="internal-button internal-button--secondary internal-button--compact commercial-dossier__create-task" aria-haspopup="dialog" aria-controls="commercial-project-action-create-{{ project.id }}" {{ stimulus_action('internal-dialog', 'open') }}>{% include 'commercial/project/_icon.html.twig' with {name: 'bell'} only %} {{ 'project.add_action'|trans({}, 'commercial') }}</button>
+                <dialog id="commercial-project-action-create-{{ project.id }}" class="internal-form-dialog" aria-labelledby="commercial-project-action-create-title-{{ project.id }}" {{ stimulus_target('internal-dialog', 'dialog') }} {{ stimulus_action('internal-dialog', 'closeOnBackdrop', 'click') }}>
+                    <div class="internal-form-dialog__panel">
+                        <button type="button" class="internal-form-dialog__close" aria-label="{{ 'internal.confirmation.delete.close'|trans({}, 'internal') }}" title="{{ 'internal.confirmation.delete.close'|trans({}, 'internal') }}" {{ stimulus_action('internal-dialog', 'close') }}>×</button>
+                        <h2 id="commercial-project-action-create-title-{{ project.id }}">{{ 'project.add_action'|trans({}, 'commercial') }}</h2>
+                        <form method="post" action="{{ path('commercial_project_action_create', {id: project.id}) }}" class="internal-form">
+                            <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_' ~ project.id ~ '_action_create') }}">
+                            <label>{{ 'action.title'|trans({}, 'commercial') }} <input name="title" maxlength="255" required></label>
+                            <label>{{ 'action.due_on'|trans({}, 'commercial') }} <input type="date" name="dueOn" value="{{ 'now'|date('Y-m-d') }}" required></label>
+                            {% if project.people is not empty %}<label>{{ 'action.person'|trans({}, 'commercial') }}<select name="personId"><option value="">{{ 'action.no_person'|trans({}, 'commercial') }}</option>{% for projectPerson in project.people %}{% if projectPerson.current and projectPerson.person.active %}<option value="{{ projectPerson.person.id }}">{{ projectPerson.person }}</option>{% endif %}{% endfor %}</select></label>{% endif %}
+                            <div class="internal-form-dialog__actions"><button class="internal-button" type="submit">{{ 'project.add_action_save'|trans({}, 'commercial') }}</button></div>
+                        </form>
+                    </div>
+                </dialog>
+            </div>
         {% endif %}
     </div>
     {% for action in openActions %}
@@ -25,7 +31,7 @@
                 {% if action.person %}<span class="commercial-dossier__muted">{{ action.person }}</span>{% endif %}
             </div>
             <time class="{{ action.dueOn|date('Y-m-d') <= 'now'|date('Y-m-d') ? 'is-urgent' : '' }}" datetime="{{ action.dueOn|date('Y-m-d') }}">{{ action.dueOn|date('d/m/Y') }}</time>
-            <div class="commercial-dossier__task-actions">
+            <div class="commercial-dossier__task-actions" data-controller="internal-dialog">
                 <details class="commercial-dossier__task-menu">
                     <summary class="internal-button internal-button--compact commercial-task-action--complete" aria-label="{{ 'action.complete'|trans({}, 'commercial') }}" title="{{ 'action.complete'|trans({}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'check'} only %}</summary>
                     <form method="post" action="{{ path('commercial_action_change', {id: action.id, operation: 'complete'}) }}" class="internal-form">
@@ -53,17 +59,22 @@
                         </form>
                     </div>
                 </details>
-                <details class="commercial-dossier__task-menu commercial-dossier__task-menu--edit">
-                    <summary class="commercial-dossier__icon-action" aria-label="{{ 'action.edit'|trans({}, 'commercial') }}" title="{{ 'action.edit'|trans({}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</summary>
-                    <form method="post" action="{{ path('commercial_action_edit', {id: action.id}) }}" class="internal-form">
-                        <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ action.id ~ '_edit') }}">
-                        <label>{{ 'action.title'|trans({}, 'commercial') }} <input type="text" name="title" value="{{ action.title }}" required maxlength="255"></label>
-                        <label>{{ 'action.details'|trans({}, 'commercial') }} <textarea name="details">{{ action.details }}</textarea></label>
-                        <label>{{ 'action.due_on'|trans({}, 'commercial') }} <input type="date" name="dueOn" value="{{ action.dueOn|date('Y-m-d') }}" required></label>
-                        <label>{{ 'action.person'|trans({}, 'commercial') }}<select name="personId"><option value="">{{ 'action.no_person'|trans({}, 'commercial') }}</option>{% for projectPerson in project.people %}{% if projectPerson.current and projectPerson.person.active %}<option value="{{ projectPerson.person.id }}" {% if action.person == projectPerson.person %}selected{% endif %}>{{ projectPerson.person }}</option>{% endif %}{% endfor %}</select></label>
-                        <button class="internal-button internal-button--secondary" type="submit">{{ 'action.edit'|trans({}, 'commercial') }}</button>
-                    </form>
-                </details>
+                <button type="button" class="commercial-dossier__icon-action" aria-label="{{ 'action.edit'|trans({}, 'commercial') }}" title="{{ 'action.edit'|trans({}, 'commercial') }}" aria-haspopup="dialog" aria-controls="commercial-action-edit-{{ action.id }}" {{ stimulus_action('internal-dialog', 'open') }}>{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</button>
+                <dialog id="commercial-action-edit-{{ action.id }}" class="internal-form-dialog" aria-labelledby="commercial-action-edit-title-{{ action.id }}" {{ stimulus_target('internal-dialog', 'dialog') }} {{ stimulus_action('internal-dialog', 'closeOnBackdrop', 'click') }}>
+                    <div class="internal-form-dialog__panel">
+                        <button type="button" class="internal-form-dialog__close" aria-label="{{ 'internal.confirmation.delete.close'|trans({}, 'internal') }}" title="{{ 'internal.confirmation.delete.close'|trans({}, 'internal') }}" {{ stimulus_action('internal-dialog', 'close') }}>×</button>
+                        <p class="internal-eyebrow">{{ action.title }}</p>
+                        <h2 id="commercial-action-edit-title-{{ action.id }}">{{ 'action.edit'|trans({}, 'commercial') }}</h2>
+                        <form method="post" action="{{ path('commercial_action_edit', {id: action.id}) }}" class="internal-form">
+                            <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ action.id ~ '_edit') }}">
+                            <label>{{ 'action.title'|trans({}, 'commercial') }} <input type="text" name="title" value="{{ action.title }}" required maxlength="255"></label>
+                            <label>{{ 'action.details'|trans({}, 'commercial') }} <textarea name="details">{{ action.details }}</textarea></label>
+                            <label>{{ 'action.due_on'|trans({}, 'commercial') }} <input type="date" name="dueOn" value="{{ action.dueOn|date('Y-m-d') }}" required></label>
+                            <label>{{ 'action.person'|trans({}, 'commercial') }}<select name="personId"><option value="">{{ 'action.no_person'|trans({}, 'commercial') }}</option>{% for projectPerson in project.people %}{% if projectPerson.current and projectPerson.person.active %}<option value="{{ projectPerson.person.id }}" {% if action.person == projectPerson.person %}selected{% endif %}>{{ projectPerson.person }}</option>{% endif %}{% endfor %}</select></label>
+                            <div class="internal-form-dialog__actions"><button type="button" class="internal-button internal-button--secondary" {{ stimulus_action('internal-dialog', 'close') }}>{{ 'internal.confirmation.delete.close'|trans({}, 'internal') }}</button><button class="internal-button" type="submit">{{ 'action.edit'|trans({}, 'commercial') }}</button></div>
+                        </form>
+                    </div>
+                </dialog>
                 <details class="commercial-dossier__task-menu commercial-dossier__task-menu--cancel">
                     <summary class="commercial-dossier__icon-action commercial-dossier__icon-action--danger" aria-label="{{ 'action.cancel_task'|trans({}, 'commercial') }}" title="{{ 'action.cancel_task'|trans({}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'close'} only %}</summary>
                     <form method="post" action="{{ path('commercial_action_change', {id: action.id, operation: 'cancel'}) }}" class="internal-form">

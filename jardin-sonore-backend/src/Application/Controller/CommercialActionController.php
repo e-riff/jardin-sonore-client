@@ -59,7 +59,11 @@ final class CommercialActionController extends AbstractController
         $title = trim($request->request->getString('title'));
         $dueOnRaw = $request->request->getString('dueOn');
         $dueOn = DateTimeImmutable::createFromFormat('!Y-m-d', $dueOnRaw);
-        $personId = $request->request->getInt('personId');
+        $personIdRaw = $request->request->getString('personId');
+        if ('' !== $personIdRaw && !ctype_digit($personIdRaw)) {
+            return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        $personId = '' === $personIdRaw ? 0 : (int) $personIdRaw;
         $personEntity = null;
         if (0 < $personId) {
             $personEntity = $entityManager->find(PersonEntity::class, $personId);

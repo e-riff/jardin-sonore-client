@@ -3,7 +3,6 @@ import { Controller } from '@hotwired/stimulus';
 const popupSelector = [
     '.commercial-dossier__status',
     '.commercial-dossier__intervention-menu',
-    '.commercial-dossier__create',
     '.commercial-dossier__task-menu',
     '.commercial-dossier__document-action',
     '.commercial-timeline__edit',
