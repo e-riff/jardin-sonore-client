@@ -29,6 +29,15 @@ final readonly class CommercialProjectQueue
         $rows = $this->connection->fetchAllAssociative(
             'SELECT project.id, project.title, project.status, project.created_at,
                 project.organization_id, organization.name AS organization_name,
+                (SELECT CONCAT_WS(\' — \',
+                    COALESCE(municipality.postal_code, address_contact.postal_code),
+                    COALESCE(municipality.name, address_contact.city)
+                 )
+                 FROM contact_details
+                 INNER JOIN address_contact ON address_contact.contact_details_id = contact_details.id
+                 LEFT JOIN municipality ON municipality.id = address_contact.municipality_id
+                 WHERE contact_details.directory_entry_id = organization.id
+                 ORDER BY address_contact.id ASC LIMIT 1) AS organization_location,
                 request.organization_name AS requested_organization_name, request.sender_name,
                 action.id AS action_id, action.title AS action_title, action.due_on,
                 (SELECT COUNT(*) FROM commercial_action counted WHERE counted.project_id = project.id AND counted.status = ?) AS open_task_count
@@ -60,10 +69,12 @@ final readonly class CommercialProjectQueue
                 default => 'upcoming',
             };
             $organizationLabel = trim((string) ($row['organization_name'] ?: $row['requested_organization_name'] ?: $row['sender_name'] ?: $row['title']));
+            $organizationLocation = trim((string) ($row['organization_location'] ?? ''));
             $projects[] = new CommercialProjectRow(
                 (int) $row['id'],
                 (string) $row['title'],
                 $organizationLabel,
+                '' !== $organizationLocation ? $organizationLocation : null,
                 null === $row['organization_id'],
                 $status,
                 $createdAt,

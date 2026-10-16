@@ -17,7 +17,7 @@
                 <span class="commercial-timeline__marker" aria-hidden="true"></span>
                 <div class="commercial-timeline__heading">
                     {% set timelineDate = event.timelineDate %}
-                    <div><time datetime="{{ timelineDate|date('c') }}">{{ timelineDate|date('d/m/Y') }}{% if not (event.type starts with 'quote_') %} <span>· {{ timelineDate|date('H:i') }}</span>{% endif %}</time><h3>{% if event.type starts with 'quote_' %}<span class="commercial-timeline__event-icon commercial-timeline__event-icon--{{ eventIcon }}" aria-hidden="true">{% include 'commercial/project/_icon.html.twig' with {name: eventIcon} only %}</span>{% endif %}{{ eventLabel }}</h3></div>
+                    <div class="commercial-timeline__event-meta"><time datetime="{{ timelineDate|date('c') }}">{{ timelineDate|date('d/m/Y') }}{% if not (event.type starts with 'quote_') %} <span>· {{ timelineDate|date('H:i') }}</span>{% endif %}</time><h3>{% if event.type starts with 'quote_' %}<span class="commercial-timeline__event-icon commercial-timeline__event-icon--{{ eventIcon }}" aria-hidden="true">{% include 'commercial/project/_icon.html.twig' with {name: eventIcon} only %}</span>{% endif %}{{ eventLabel }}</h3></div>
                     <div class="commercial-timeline__actions">
                     {% if event.type == 'action_completed' and event.action %}
                         <details class="commercial-timeline__edit">
@@ -51,12 +51,12 @@
                     </div>
                 </div>
                 {% if event.type == 'action_completed' %}<strong class="commercial-timeline__subject">{{ event.action ? event.action.title : event.metadata.action_title|default('') }}</strong>{% endif %}
+                {% if event.person %}<span class="commercial-timeline__person">{% include 'commercial/project/_icon.html.twig' with {name: 'person'} only %}{{ event.person }}</span>{% endif %}
                 {% if event.type starts with 'quote_' %}
-                    {% if event.person %}<span class="commercial-dossier__muted commercial-timeline__quote-person">{{ event.person }}</span>{% endif %}
                     {% if event.content %}<span class="commercial-timeline__quote-reference">{{ event.content }}</span>{% endif %}
-                {% elseif event.person %}<span class="commercial-dossier__muted">{{ event.person }}</span>{% endif %}
+                {% endif %}
                 {% if event.content and not (event.type starts with 'quote_') %}
-                    <div class="commercial-timeline__excerpt" data-commercial-timeline-target="excerpt">{{ event.content|mailing_intro_rich_text }}</div>
+                    <div class="commercial-timeline__excerpt" data-commercial-timeline-target="excerpt">{{ event.content|commercial_timeline_rich_text }}</div>
                     <button type="button" class="commercial-timeline__toggle" data-commercial-timeline-target="toggle" data-action="commercial-timeline#toggle" hidden>{{ 'event.show_more'|trans({}, 'commercial') }}</button>
                 {% endif %}
                 {% if event.type == 'project_status_changed' %}<p class="commercial-timeline__status-change">{{ ('project.status.' ~ event.metadata.old_status)|trans({}, 'commercial') }} → {{ ('project.status.' ~ event.metadata.new_status)|trans({}, 'commercial') }}</p>{% endif %}

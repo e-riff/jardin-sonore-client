@@ -790,6 +790,27 @@ button:disabled {
     border-radius: 0 0 19px 19px;
 }
 
+.commercial-project-table th,
+.commercial-project-table td {
+    padding: 9px 12px;
+}
+
+.commercial-project-table .commercial-project-table__period-row th {
+    padding: 8px 12px;
+    background: color-mix(in oklab, var(--color-secondary-container) 25%, white);
+    color: var(--color-on-surface-variant);
+    text-align: left;
+}
+
+.commercial-project-table__period-row th > span:first-child {
+    vertical-align: middle;
+}
+
+.commercial-project-table__period-row .internal-badge {
+    margin: 0 0 0 6px;
+    vertical-align: middle;
+}
+
 .commercial-project-table tbody tr:last-child td:first-child {
     border-bottom-left-radius: 19px;
 }
@@ -803,9 +824,14 @@ button:disabled {
 }
 
 .commercial-project-table .internal-badge {
-    margin: 5px 4px 0 0;
-    padding: 5px 8px;
+    margin: 3px 4px 0 0;
+    padding: 4px 7px;
     font-size: 0.69rem;
+}
+
+.commercial-project-row__organization {
+    margin-top: 2px;
+    font-size: 0.76rem;
 }
 
 .commercial-project-row__due {
@@ -1880,15 +1906,15 @@ button:disabled {
     position: relative;
     min-width: 0;
     margin-left: 22px;
-    padding: 0 0 22px;
+    padding: 0 0 14px;
     overflow-wrap: anywhere;
 }
 
 .commercial-timeline__item--quote-event {
-    margin-bottom: 10px;
+    margin-bottom: 7px;
     border: 1px solid var(--color-outline-variant);
     border-radius: 10px;
-    padding: 8px 10px;
+    padding: 7px 10px;
     background: var(--color-surface-container-low);
 }
 
@@ -1900,15 +1926,15 @@ button:disabled {
     align-items: center;
 }
 
-.commercial-timeline__item--quote-event .commercial-timeline__heading > div:first-child {
+.commercial-timeline__event-meta {
     display: flex;
     min-width: 0;
     align-items: center;
     flex-wrap: wrap;
-    gap: 6px 12px;
+    gap: 4px 10px;
 }
 
-.commercial-timeline__item--quote-event .commercial-timeline__heading h3 {
+.commercial-timeline__heading h3 {
     margin: 0;
 }
 
@@ -1921,16 +1947,31 @@ button:disabled {
     line-height: 1.4;
 }
 
-.commercial-timeline__quote-person {
-    font-size: 0.8rem;
+.commercial-timeline__person {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin: 2px 0;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 999px;
+    padding: 3px 8px;
+    color: var(--color-on-surface-variant);
+    font-size: 0.74rem;
+    line-height: 1.2;
+}
+
+.commercial-timeline__person .commercial-icon {
+    width: 0.95rem;
+    height: 0.95rem;
+    color: var(--color-secondary);
 }
 
 .commercial-timeline__item--completed {
-    margin-bottom: 18px;
+    margin-bottom: 12px;
     border: 1px solid color-mix(in oklab, var(--color-secondary) 25%, white);
     border-left: 3px solid var(--color-secondary);
     border-radius: 12px;
-    padding: 12px 14px 14px;
+    padding: 9px 12px 11px;
     background: color-mix(in oklab, var(--color-secondary-container) 22%, white);
 }
 
@@ -1996,7 +2037,6 @@ button:disabled {
 }
 
 .commercial-timeline__heading h3 {
-    margin: 4px 0 3px;
     color: var(--color-on-background);
     font-size: 0.91rem;
 }
@@ -2034,7 +2074,7 @@ button:disabled {
 
 .commercial-timeline__excerpt,
 .commercial-timeline__status-change {
-    margin: 4px 0;
+    margin: 3px 0;
     color: var(--color-on-surface-variant);
     font-size: 0.85rem;
     line-height: 1.5;
@@ -6313,6 +6353,19 @@ a.session-composer-overlay__item {
         flex-wrap: wrap;
         border-top: 1px solid var(--color-outline-variant);
         padding: 8px 0;
+    }
+
+    .commercial-project-table tbody tr.commercial-project-table__period-row {
+        display: block;
+        border-top: 1px solid var(--color-outline-variant);
+        padding: 0;
+        background: color-mix(in oklab, var(--color-secondary-container) 25%, white);
+    }
+
+    .commercial-project-table__period-row th {
+        display: block;
+        width: 100%;
+        padding: 8px 12px;
     }
 
     .commercial-project-table tbody tr:last-child {

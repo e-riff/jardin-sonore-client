@@ -6,6 +6,7 @@ namespace App\Tests\Integration\Infrastructure\Commercial;
 
 use App\Application\Commercial\CommercialProjectQueue;
 use App\Application\Twig\Component\CommercialProjectTable;
+use App\Infrastructure\Doctrine\Entity\AddressContactEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialActionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
@@ -14,6 +15,7 @@ use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\Clock\MockClock;
 use Symfony\Component\HttpKernel\KernelInterface;
 
 final class CommercialProjectQueueTest extends KernelTestCase
@@ -103,5 +105,51 @@ final class CommercialProjectQueueTest extends KernelTestCase
         $table->status = 'all';
         $sections = $table->getSections();
         self::assertSame([$closedProjectEntity->getId()], array_map(static fn ($row): int => $row->id, $sections['closed']));
+    }
+
+    public function testUpcomingProjectsAreGroupedByCalendarWeekAndShowTheirLocation(): void
+    {
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $projects = [];
+        foreach ([
+            'Cette semaine' => '2026-10-17',
+            'Lundi prochain' => '2026-10-19',
+            'Dimanche prochain' => '2026-10-25',
+            'Après la semaine prochaine' => '2026-10-26',
+        ] as $title => $dueOn) {
+            $organizationEntity = (new OrganizationEntity())->setName("Structure {$title}");
+            $projectEntity = new CommercialProjectEntity($title, $organizationEntity, null, new DateTimeImmutable('2026-10-10'));
+            $projectEntity->addAction(new CommercialActionEntity($projectEntity, 'Rappeler', new DateTimeImmutable($dueOn)));
+            if ('Lundi prochain' === $title) {
+                $organizationEntity->getContactDetails()?->addAddressContact((new AddressContactEntity())->setPostalCode('42000')->setCity('Saint-Étienne'));
+            }
+            $entityManager->persist($organizationEntity);
+            $entityManager->persist($projectEntity);
+            $projects[$title] = $projectEntity;
+        }
+        $entityManager->flush();
+
+        $table = new CommercialProjectTable(
+            new CommercialProjectQueue($entityManager),
+            new MockClock(new DateTimeImmutable('2026-10-16 12:00:00')),
+        );
+        $sections = $table->getSections();
+
+        self::assertSame(
+            [$projects['Cette semaine']->getId()],
+            array_map(static fn ($row): int => $row->id, $sections['upcoming_periods']['this_week']),
+        );
+        self::assertSame(
+            [$projects['Lundi prochain']->getId(), $projects['Dimanche prochain']->getId()],
+            array_map(static fn ($row): int => $row->id, $sections['upcoming_periods']['next_week']),
+        );
+        self::assertSame(
+            [$projects['Après la semaine prochaine']->getId()],
+            array_map(static fn ($row): int => $row->id, $sections['upcoming_periods']['later']),
+        );
+        self::assertSame('42000 — Saint-Étienne', array_values(array_filter(
+            $sections['upcoming'],
+            static fn ($row): bool => $projects['Lundi prochain']->getId() === $row->id,
+        ))[0]->organizationLocation);
     }
 }

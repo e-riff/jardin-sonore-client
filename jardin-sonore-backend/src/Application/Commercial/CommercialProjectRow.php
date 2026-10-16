@@ -12,6 +12,7 @@ final readonly class CommercialProjectRow
         public int $id,
         public string $title,
         public string $organizationLabel,
+        public ?string $organizationLocation,
         public bool $isProvisional,
         public string $status,
         public DateTimeImmutable $createdAt,

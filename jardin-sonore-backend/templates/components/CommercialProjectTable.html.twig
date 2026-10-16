@@ -50,11 +50,21 @@
                                 <th>{{ 'project.list.actions'|trans({}, 'commercial') }}</th>
                             </tr></thead>
                             <tbody>
-                            {% for row in rows %}
+                            {% set periodGroups = bucket == 'upcoming' ? sections.upcoming_periods : {all: rows} %}
+                            {% for period, periodRows in periodGroups %}
+                                {% if bucket == 'upcoming' and periodRows is not empty %}
+                                    <tr class="commercial-project-table__period-row"><th colspan="4">
+                                        <span>{{ ('project.list.' ~ period)|trans({}, 'commercial') }}</span>
+                                        <span class="internal-badge internal-badge--muted">{{ periodRows|length }}</span>
+                                    </th></tr>
+                                {% endif %}
+                                {% for row in periodRows %}
                                 <tr data-project-id="{{ row.id }}" class="internal-table__row--clickable commercial-project-row commercial-project-row--{{ bucket }}{{ row.nextActionId ? '' : ' commercial-project-row--no-task' }}" tabindex="0" data-controller="catalog-row" data-catalog-row-url-value="{{ path('commercial_project_show', {id: row.id}) }}" data-action="click->catalog-row#navigate keydown->catalog-row#navigateFromKeyboard">
                                     <td data-table-mobile="primary">
                                         <strong>{{ row.title }}</strong>
-                                        {% if row.organizationLabel != row.title %}<span class="internal-table-note">{{ row.organizationLabel }}</span>{% endif %}
+                                        <span class="internal-table-note commercial-project-row__organization">
+                                            {{ row.organizationLabel }}{% if row.organizationLocation %}<span aria-hidden="true"> · </span>{{ row.organizationLocation }}{% endif %}
+                                        </span>
                                         {% if row.isNew %}<span class="internal-badge internal-badge--primary">{{ 'project.list.new'|trans({}, 'commercial') }}</span>{% endif %}
                                         {% if row.isProvisional %}<span class="internal-badge internal-badge--muted">{{ 'project.list.provisional'|trans({}, 'commercial') }}</span>{% endif %}
                                         {% if row.status == 'confirmed' %}<span class="internal-badge internal-badge--secondary">{{ 'project.status.confirmed'|trans({}, 'commercial') }}</span>{% endif %}
@@ -94,6 +104,7 @@
                                         {% endif %}
                                     </td>
                                 </tr>
+                                {% endfor %}
                             {% endfor %}
                             </tbody>
                         </table>
