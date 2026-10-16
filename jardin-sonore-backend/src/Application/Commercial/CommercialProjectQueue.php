@@ -57,7 +57,7 @@ final readonly class CommercialProjectQueue
         );
 
         $today = $localDate->format('Y-m-d');
-        $newThreshold = $localDate->modify('-6 days')->format('Y-m-d');
+        $newThreshold = $localDate->modify('-1 day')->format('Y-m-d');
         $projects = [];
         foreach ($rows as $row) {
             $createdAt = new DateTimeImmutable((string) $row['created_at']);
