@@ -65,8 +65,7 @@
                                         <div class="commercial-project-row__heading">
                                             <strong title="{{ row.title }}">{{ row.title }}</strong>
                                             {% set rowStatusBadge = row.status == 'confirmed' ? 'internal-badge--secondary' : 'internal-badge--primary' %}
-                                            <span class="commercial-project-row__status-mobile internal-badge {{ rowStatusBadge }}">{{ ('project.status.' ~ row.status)|trans({}, 'commercial') }}</span>
-                                            {% if row.isNew %}<span class="internal-badge internal-badge--primary">{{ 'project.list.new'|trans({}, 'commercial') }}</span>{% endif %}
+                                            {% if row.isNew %}<span class="internal-badge internal-badge--info">{{ 'project.list.new'|trans({}, 'commercial') }}</span>{% endif %}
                                             {% if row.isProvisional %}<span class="internal-badge internal-badge--muted">{{ 'project.list.provisional'|trans({}, 'commercial') }}</span>{% endif %}
                                         </div>
                                         <span class="internal-table-note commercial-project-row__organization">

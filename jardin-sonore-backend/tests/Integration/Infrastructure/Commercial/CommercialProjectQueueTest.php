@@ -49,11 +49,15 @@ final class CommercialProjectQueueTest extends KernelTestCase
     {
         $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         $organizationEntity = (new OrganizationEntity())->setName('Crèche file');
-        $projectEntity = new CommercialProjectEntity('Ateliers du printemps', $organizationEntity, null, new DateTimeImmutable('2026-10-10'));
+        $projectEntity = new CommercialProjectEntity('Ateliers du printemps', $organizationEntity, null, new DateTimeImmutable('2026-10-12'));
         $projectEntity->addAction(new CommercialActionEntity($projectEntity, 'Envoyer les dates', new DateTimeImmutable('2026-10-17')));
         $projectEntity->addAction(new CommercialActionEntity($projectEntity, 'Répondre', new DateTimeImmutable('2026-10-12')));
+        $olderOrganizationEntity = (new OrganizationEntity())->setName('Crèche ancienne');
+        $olderProjectEntity = new CommercialProjectEntity('Ateliers précédents', $olderOrganizationEntity, null, new DateTimeImmutable('2026-10-11'));
         $entityManager->persist($organizationEntity);
         $entityManager->persist($projectEntity);
+        $entityManager->persist($olderOrganizationEntity);
+        $entityManager->persist($olderProjectEntity);
         $entityManager->flush();
 
         $rows = (new CommercialProjectQueue($entityManager))->forDate(new DateTimeImmutable('2026-10-13'));
@@ -64,6 +68,10 @@ final class CommercialProjectQueueTest extends KernelTestCase
         self::assertSame('Répondre', $matchingRows[0]->nextActionTitle);
         self::assertSame(1, $matchingRows[0]->extraTaskCount);
         self::assertTrue($matchingRows[0]->isNew);
+
+        $olderMatchingRows = array_values(array_filter($rows, static fn ($row): bool => $olderProjectEntity->getId() === $row->id));
+        self::assertCount(1, $olderMatchingRows);
+        self::assertFalse($olderMatchingRows[0]->isNew);
     }
 
     public function testClosedProjectsAreHiddenByDefaultAndCanBeIncluded(): void
