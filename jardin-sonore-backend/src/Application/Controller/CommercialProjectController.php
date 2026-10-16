@@ -117,6 +117,7 @@ final class CommercialProjectController extends AbstractController
         int $id,
         EntityManagerInterface $entityManager,
         RefreshCommercialInterventions $interventionRefresher,
+        ClockInterface $clock,
         #[Autowire('%app.commercial.drive_root_url%')] string $driveRootUrl,
         #[Autowire('%app.commercial.drive_quotes_url%')] string $driveQuotesUrl,
         #[Autowire('%app.commercial.drive_signed_quotes_url%')] string $driveSignedQuotesUrl,
@@ -126,6 +127,7 @@ final class CommercialProjectController extends AbstractController
         $interventionRefresher->run($id);
         $interventions = $entityManager->getRepository(CommercialInterventionEntity::class)->findBy(['project' => $projectEntity], ['startsAt' => 'ASC']);
         $form = $this->createForm(CommercialNoteType::class, [
+            'occurredOn' => $clock->now(),
             'person' => $projectEntity->getPrimaryContact(),
             'nextActionDueOn' => new DateTimeImmutable('+7 days'),
         ], ['people' => $this->currentPeople($projectEntity)]);
@@ -207,10 +209,10 @@ final class CommercialProjectController extends AbstractController
     }
 
     #[Route('/{id}/notes', name: 'note', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function note(int $id, Request $request, EntityManagerInterface $entityManager): Response
+    public function note(int $id, Request $request, EntityManagerInterface $entityManager, ClockInterface $clock): Response
     {
         $projectEntity = $this->findProject($id, $entityManager);
-        $form = $this->createForm(CommercialNoteType::class, null, ['people' => $this->currentPeople($projectEntity)]);
+        $form = $this->createForm(CommercialNoteType::class, ['occurredOn' => $clock->now()], ['people' => $this->currentPeople($projectEntity)]);
         $form->handleRequest($request);
         if (!$form->isSubmitted() || !$form->isValid()) {
             return $this->render('commercial/project/show.html.twig', [
@@ -224,6 +226,7 @@ final class CommercialProjectController extends AbstractController
         /** @var array<string, mixed> $data */
         $data = $form->getData();
         $content = trim((string) ($data['content'] ?? ''));
+        $occurredOn = $data['occurredOn'] ?? null;
         $personEntity = $data['person'] ?? null;
         $actionTitle = trim((string) ($data['nextActionTitle'] ?? ''));
         $dueOn = $data['nextActionDueOn'] ?? null;
@@ -237,7 +240,11 @@ final class CommercialProjectController extends AbstractController
             ], new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY));
         }
 
-        $projectEntity->recordEvent('note', new DateTimeImmutable(), $content, [], $personEntity instanceof PersonEntity ? $personEntity : null);
+        $now = $clock->now();
+        $occurredAt = $occurredOn instanceof DateTimeImmutable
+            ? $occurredOn->setTime((int) $now->format('H'), (int) $now->format('i'), (int) $now->format('s'))
+            : $now;
+        $projectEntity->recordEvent('note', $occurredAt, $content, [], $personEntity instanceof PersonEntity ? $personEntity : null);
         if ('' !== $actionTitle) {
             $actionEntity = new CommercialActionEntity($projectEntity, $actionTitle, $dueOn, null, $personEntity instanceof PersonEntity ? $personEntity : null);
             $projectEntity->addAction($actionEntity);

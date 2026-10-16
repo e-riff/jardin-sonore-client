@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Functional\Application\Controller;
 
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
+use App\Infrastructure\Doctrine\Entity\CommercialEventEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialQuoteEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
@@ -49,6 +50,8 @@ final class CommercialQuoteControllerTest extends WebTestCase
         $quoteEntity = static::getContainer()->get(EntityManagerInterface::class)->getRepository(CommercialQuoteEntity::class)->findOneBy(['reference' => "2026-10 - d{$suffix}"]);
         self::assertInstanceOf(CommercialQuoteEntity::class, $quoteEntity);
         self::assertSame(31050, $quoteEntity->getAmountCents());
+        $sentEventEntity = $quoteEntity->getProject()->getEvents()->filter(static fn ($eventEntity): bool => 'quote_sent' === $eventEntity->getType())->first();
+        self::assertSame($quoteEntity, $sentEventEntity->getQuote());
 
         $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
         $token = $crawler->filterXPath('//form[contains(@action, "/quotes/")]/input[@name="_token"]')->attr('value');
@@ -94,5 +97,44 @@ final class CommercialQuoteControllerTest extends WebTestCase
         $savedQuoteEntity = $entityManager->find(CommercialQuoteEntity::class, $quoteEntity->getId());
         self::assertInstanceOf(CommercialQuoteEntity::class, $savedQuoteEntity);
         self::assertSame('2026-10-14', $savedQuoteEntity->getRefusedOn()?->format('Y-m-d'));
+    }
+
+    public function testSignedQuoteCanBeDeletedWithItsTimelineEvents(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(5));
+        $adminUserEntity = (new AdminUserEntity())->setEmail("quote-delete-{$suffix}@example.test")->setPassword('unused');
+        $organizationEntity = (new OrganizationEntity())->setName("Mairie {$suffix}");
+        $projectEntity = new CommercialProjectEntity('Projet avec devis erroné', $organizationEntity, null, new DateTimeImmutable());
+        $quoteEntity = new CommercialQuoteEntity($projectEntity, "D-{$suffix}", 'devis-errone.pdf', 25000, new DateTimeImmutable('2026-10-10'));
+        $quoteEntity->markSigned(new DateTimeImmutable('2026-10-11'));
+        $replacementQuoteEntity = new CommercialQuoteEntity($projectEntity, "D-remplacement-{$suffix}", 'devis-corrige.pdf', 26000, new DateTimeImmutable('2026-10-12'), $quoteEntity);
+        $projectEntity->addQuote($quoteEntity);
+        $projectEntity->addQuote($replacementQuoteEntity);
+        $sentEventEntity = $projectEntity->recordEvent('quote_sent', new DateTimeImmutable('2026-10-10'), $quoteEntity->getReference());
+        $signedEventEntity = $projectEntity->recordEvent('quote_signed', new DateTimeImmutable('2026-10-11'), $quoteEntity->getReference());
+        $signedEventEntity->linkQuote($quoteEntity);
+        foreach ([$adminUserEntity, $organizationEntity, $projectEntity, $quoteEntity, $replacementQuoteEntity, $sentEventEntity, $signedEventEntity] as $entity) {
+            $entityManager->persist($entity);
+        }
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+
+        $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
+        self::assertResponseIsSuccessful();
+        $token = $crawler->filterXPath(sprintf('//button[contains(@class, "commercial-dossier__quote-delete") and @data-confirmation-dialog-action-value="/commercial/quotes/%d/delete"]', $quoteEntity->getId()))->attr('data-confirmation-dialog-token-value');
+
+        $client->request('POST', '/commercial/quotes/' . $quoteEntity->getId() . '/delete', ['_token' => $token]);
+
+        self::assertResponseRedirects('/commercial/projects/' . $projectEntity->getId());
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $entityManager->clear();
+        self::assertNull($entityManager->find(CommercialQuoteEntity::class, $quoteEntity->getId()));
+        self::assertNull($entityManager->find(CommercialEventEntity::class, $sentEventEntity->getId()));
+        self::assertNull($entityManager->find(CommercialEventEntity::class, $signedEventEntity->getId()));
+        $savedReplacementQuoteEntity = $entityManager->find(CommercialQuoteEntity::class, $replacementQuoteEntity->getId());
+        self::assertInstanceOf(CommercialQuoteEntity::class, $savedReplacementQuoteEntity);
+        self::assertNull($savedReplacementQuoteEntity->getReplaces());
     }
 }

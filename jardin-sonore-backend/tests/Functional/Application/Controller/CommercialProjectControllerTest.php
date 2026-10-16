@@ -327,8 +327,10 @@ final class CommercialProjectControllerTest extends WebTestCase
 
         $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
         self::assertResponseIsSuccessful();
+        self::assertSame((new DateTimeImmutable())->format('Y-m-d'), $crawler->filterXPath('//form[contains(@action, "/notes")]//input[@name="commercial_note[occurredOn]"]')->attr('value'));
         $form = $crawler->selectButton('Enregistrer la note')->form();
         $form['commercial_note[content]'] = 'Appel avec la direction';
+        $form['commercial_note[occurredOn]'] = '2026-10-10';
         $form['commercial_note[nextActionTitle]'] = 'Envoyer les dates';
         $form['commercial_note[nextActionDueOn]'] = '2026-10-16';
         $client->submit($form);
@@ -341,7 +343,10 @@ final class CommercialProjectControllerTest extends WebTestCase
         self::assertSame(CommercialProjectEntity::STATUS_DISCUSSION, $savedProjectEntity->getStatus());
         self::assertCount(1, $savedProjectEntity->getActions());
         self::assertSame('Envoyer les dates', $savedProjectEntity->getActions()->first()->getTitle());
-        self::assertSame('Appel avec la direction', $savedProjectEntity->getEvents()->filter(static fn ($eventEntity): bool => 'note' === $eventEntity->getType())->first()->getContent());
+        $savedNoteEntity = $savedProjectEntity->getEvents()->filter(static fn ($eventEntity): bool => 'note' === $eventEntity->getType())->first();
+        self::assertSame('Appel avec la direction', $savedNoteEntity->getContent());
+        self::assertSame('2026-10-10', $savedNoteEntity->getOccurredAt()->format('Y-m-d'));
+        self::assertCount(1, $crawler->filterXPath('//fieldset[contains(@class, "commercial-note-reminder")]'));
     }
 
     public function testTaskAndTimelineEntryCanBeCreatedSeparately(): void

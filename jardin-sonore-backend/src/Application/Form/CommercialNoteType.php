@@ -21,6 +21,11 @@ final class CommercialNoteType extends AbstractType
     {
         $builder
             ->add('content', TextareaType::class, ['label' => 'note.content'])
+            ->add('occurredOn', DateType::class, [
+                'label' => 'note.occurred_on',
+                'widget' => 'single_text',
+                'input' => 'datetime_immutable',
+            ])
             ->add('person', ChoiceType::class, [
                 'label' => 'note.person',
                 'required' => false,

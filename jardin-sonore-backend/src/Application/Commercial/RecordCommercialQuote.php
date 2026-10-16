@@ -34,7 +34,8 @@ final readonly class RecordCommercialQuote
 
         $quoteEntity = new CommercialQuoteEntity($projectEntity, $reference, $filename, $amountCents, $sentOn, $replaces);
         $projectEntity->addQuote($quoteEntity);
-        $projectEntity->recordEvent('quote_sent', $this->clock->now(), $reference);
+        $eventEntity = $projectEntity->recordEvent('quote_sent', $this->clock->now(), $reference);
+        $eventEntity->linkQuote($quoteEntity);
 
         return $quoteEntity;
     }

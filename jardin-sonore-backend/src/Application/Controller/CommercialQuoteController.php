@@ -108,4 +108,36 @@ final class CommercialQuoteController extends AbstractController
 
         return $this->redirectToRoute('commercial_project_show', ['id' => $quoteEntity->getProject()->getId()]);
     }
+
+    #[Route('/commercial/quotes/{id}/delete', name: 'commercial_quote_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function delete(int $id, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        if (!$this->isCsrfTokenValid("commercial_quote_delete_{$id}", $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $quoteEntity = $entityManager->find(CommercialQuoteEntity::class, $id);
+        if (!$quoteEntity instanceof CommercialQuoteEntity) {
+            throw $this->createNotFoundException();
+        }
+
+        $projectEntity = $quoteEntity->getProject();
+        foreach ($projectEntity->getQuotes() as $otherQuoteEntity) {
+            if ($otherQuoteEntity !== $quoteEntity && $otherQuoteEntity->getReplaces() === $quoteEntity) {
+                $otherQuoteEntity->setReplaces(null);
+            }
+        }
+        foreach ($projectEntity->getEvents() as $eventEntity) {
+            $isLegacyQuoteEvent = in_array($eventEntity->getType(), ['quote_sent', 'quote_signed', 'quote_refused'], true)
+                && $eventEntity->getContent() === $quoteEntity->getReference();
+            if ($eventEntity->getQuote() === $quoteEntity || $isLegacyQuoteEvent) {
+                $entityManager->remove($eventEntity);
+            }
+        }
+
+        $entityManager->remove($quoteEntity);
+        $entityManager->flush();
+
+        return $this->redirectToRoute('commercial_project_show', ['id' => $projectEntity->getId()]);
+    }
 }

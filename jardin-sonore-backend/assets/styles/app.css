@@ -1451,6 +1451,16 @@ button:disabled {
     min-width: 0;
 }
 
+.commercial-dossier__document--quote {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+    align-items: start;
+}
+
+.commercial-dossier__quote-delete {
+    margin-top: 0;
+}
+
 .commercial-dossier__document > .commercial-icon {
     color: var(--color-secondary);
     width: 22px;
@@ -1563,6 +1573,28 @@ button:disabled {
 
 .commercial-dossier__create-hint {
     margin: 0 0 12px;
+    color: var(--color-on-surface-variant);
+    font-size: 0.84rem;
+}
+
+.commercial-note-reminder {
+    display: grid;
+    gap: 12px;
+    margin: 16px 0;
+    padding: 14px;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 12px;
+    background: color-mix(in oklab, var(--color-secondary) 5%, white);
+}
+
+.commercial-note-reminder legend {
+    padding: 0 6px;
+    color: var(--color-secondary);
+    font-weight: 700;
+}
+
+.commercial-note-reminder > p {
+    margin: -6px 0 0;
     color: var(--color-on-surface-variant);
     font-size: 0.84rem;
 }
@@ -2339,15 +2371,16 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
 
 .commercial-dossier__intervention-trigger {
     display: grid;
-    grid-template-columns: max-content auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     justify-content: start;
     align-content: start;
-    gap: 5px 10px;
+    gap: 7px 10px;
     width: 100%;
-    min-height: 92px;
+    min-height: 88px;
     border: 1px solid var(--color-outline-variant);
+    border-left: 3px solid color-mix(in oklab, var(--color-secondary) 58%, white);
     border-radius: 14px;
-    padding: 14px;
+    padding: 13px 14px;
     background: var(--color-surface-container-lowest);
     color: var(--color-on-background);
     font: inherit;
@@ -2366,6 +2399,7 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
 
 .commercial-dossier__intervention-item--option .commercial-dossier__intervention-trigger {
     border-color: #e7c38c;
+    border-left-color: #bf7a22;
     background: #fffaf1;
 }
 
@@ -2382,6 +2416,13 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
     font-weight: 700;
 }
 
+.commercial-dossier__intervention-schedule {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
+}
+
 .commercial-dossier__intervention-time {
     color: var(--color-on-surface-variant);
     font-family: var(--font-sans);
@@ -2393,6 +2434,11 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
 .commercial-dossier__intervention-trigger small {
     grid-column: 1 / -1;
     overflow-wrap: anywhere;
+}
+
+.commercial-dossier__intervention-title {
+    font-size: 0.94rem;
+    font-weight: 600;
 }
 
 .commercial-dossier__intervention-trigger small {
@@ -2624,6 +2670,88 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
     text-align: center;
 }
 
+.commercial-calendar-summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px 20px;
+    margin: 6px 0 2px;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 16px;
+    padding: 14px 18px;
+    background: color-mix(in oklab, var(--color-secondary) 5%, white);
+}
+
+.commercial-calendar-summary__main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.commercial-calendar-summary__main h2 {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+}
+
+.commercial-calendar-summary__main p {
+    margin: 3px 0 0;
+    color: var(--color-on-surface-variant);
+    font-size: 0.82rem;
+}
+
+.commercial-calendar-summary__total {
+    color: var(--color-secondary);
+    font-family: var(--font-sans);
+    font-size: 1.8rem;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.commercial-calendar-summary__details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin: 0;
+    padding: 0;
+    color: var(--color-on-surface-variant);
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    list-style: none;
+}
+
+.commercial-calendar-summary__details strong {
+    color: var(--color-on-background);
+    font-variant-numeric: tabular-nums;
+}
+
+.commercial-calendar-summary__edit {
+    grid-column: 1 / -1;
+}
+
+.commercial-calendar-summary__edit > summary {
+    width: fit-content;
+    color: var(--color-secondary);
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.commercial-calendar-summary__edit form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+    align-items: end;
+    gap: 10px;
+    max-width: 760px;
+    margin-top: 12px;
+}
+
+.commercial-calendar-summary__edit form > button {
+    white-space: nowrap;
+}
+
 .commercial-calendar-planner__grid {
     overflow-x: auto;
 }
@@ -2804,6 +2932,15 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
         flex-direction: column;
     }
 
+    .commercial-calendar-summary {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 13px;
+    }
+
+    .commercial-calendar-summary__edit form {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
     .commercial-calendar-planner__year {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -2945,7 +3082,7 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
     font-size: 0.82rem;
 }
 
-.commercial-calendar-group__form {
+form.internal-form.commercial-calendar-group__form {
     width: 100%;
     max-width: none;
 }
