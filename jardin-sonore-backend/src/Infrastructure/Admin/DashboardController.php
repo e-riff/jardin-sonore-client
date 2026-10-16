@@ -7,6 +7,7 @@ namespace App\Infrastructure\Admin;
 use App\Application\Mailing\NewsletterAudienceOptionsQueryInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
@@ -72,6 +73,11 @@ final class DashboardController extends AbstractDashboardController
             ->setFaviconPath('/favicon/favicon.ico')
             ->setTranslationDomain('backoffice')
             ->useEntityTranslations();
+    }
+
+    public function configureAssets(): Assets
+    {
+        return Assets::new()->addCssFile('backoffice.css');
     }
 
     public function configureMenuItems(): iterable

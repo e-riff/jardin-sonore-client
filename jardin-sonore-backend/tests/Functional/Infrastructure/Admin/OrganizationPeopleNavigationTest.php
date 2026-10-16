@@ -169,6 +169,7 @@ final class OrganizationPeopleNavigationTest extends WebTestCase
             $client->request('GET', '/backoffice/organization?query=' . urlencode($query));
             self::assertResponseIsSuccessful();
             $html = (string) $client->getResponse()->getContent();
+            self::assertStringContainsString('href="/backoffice.css"', $html);
             self::assertStringContainsString("Structure email {$suffix}", $html);
             self::assertStringNotContainsString("Structure sans correspondance {$suffix}", $html);
         }

@@ -36,7 +36,7 @@ final class ContactDisplayFormatter
         }
 
         $callablePhoneNumber = self::callablePhoneNumber($phoneNumber);
-        $displayPhoneNumber = self::displayPhoneNumber($callablePhoneNumber);
+        $displayPhoneNumber = self::displayPhoneNumber($phoneNumber);
 
         if ($inactive) {
             return sprintf('<span style="color:#7a746f; font-style:italic;">%s</span>', self::escape($displayPhoneNumber));
@@ -94,16 +94,22 @@ final class ContactDisplayFormatter
 
     private static function displayPhoneNumber(string $phoneNumber): string
     {
+        $phoneNumber = preg_replace('/[^\d+]/', '', $phoneNumber) ?? '';
+
+        if (str_starts_with($phoneNumber, '00')) {
+            $phoneNumber = '+' . substr($phoneNumber, 2);
+        }
+
+        if (1 === preg_match('/^0\d{9}$/', $phoneNumber)) {
+            return implode(' ', str_split($phoneNumber, 2));
+        }
+
         if (1 === preg_match('/^\+33\d{9}$/', $phoneNumber)) {
             return '+33 ' . substr($phoneNumber, 3, 1) . ' ' . implode(' ', str_split(substr($phoneNumber, 4), 2));
         }
 
         if (str_starts_with($phoneNumber, '+')) {
             return '+' . implode(' ', str_split(substr($phoneNumber, 1), 2));
-        }
-
-        if (1 === preg_match('/^0\d{9}$/', $phoneNumber)) {
-            return implode(' ', str_split($phoneNumber, 2));
         }
 
         return $phoneNumber;

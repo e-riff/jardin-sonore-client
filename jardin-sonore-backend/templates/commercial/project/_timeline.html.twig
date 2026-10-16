@@ -8,11 +8,12 @@
         <div class="commercial-dossier__timeline-content">
         <div class="commercial-timeline">
         {% set visibleEvents = project.events|filter(event => not (event.type starts with 'action_') or (event.type == 'action_completed' and event.content|default('')|trim != '')) %}
+        {% set latestManualEvent = visibleEvents|reverse|filter(event => not (event.type starts with 'quote_'))|first %}
         {% for event in visibleEvents|reverse %}
             {% set icon = event.type starts with 'action_' ? 'check' : (event.type starts with 'quote_' ? 'quote' : (event.type starts with 'invoice_' ? 'invoice' : (event.type starts with 'contact_' ? 'phone' : 'note'))) %}
             {% set eventIcon = event.type == 'quote_sent' ? 'send' : (event.type == 'quote_signed' ? 'signed' : (event.type == 'quote_refused' ? 'close' : icon)) %}
             {% set eventLabel = ('event.' ~ event.type)|trans({}, 'commercial') %}
-            <article class="commercial-timeline__item commercial-timeline__item--{{ icon }}{{ event.type starts with 'quote_' ? ' commercial-timeline__item--quote-' ~ event.type|replace({'quote_': ''}) : '' }}{{ event.type == 'action_completed' ? ' commercial-timeline__item--completed' : '' }}" {% if event.content %}data-controller="commercial-timeline" data-commercial-timeline-expanded-value="{{ loop.first ? 'true' : 'false' }}" data-commercial-timeline-more-label-value="{{ 'event.show_more'|trans({}, 'commercial') }}" data-commercial-timeline-less-label-value="{{ 'event.show_less'|trans({}, 'commercial') }}"{% endif %}>
+            <article class="commercial-timeline__item commercial-timeline__item--{{ icon }}{{ event.type starts with 'quote_' ? ' commercial-timeline__item--quote-' ~ event.type|replace({'quote_': ''}) ~ ' commercial-timeline__item--quote-event' : '' }}{{ event.type == 'action_completed' ? ' commercial-timeline__item--completed' : '' }}" {% if event.content and not (event.type starts with 'quote_') %}data-controller="commercial-timeline" data-commercial-timeline-expanded-value="{{ latestManualEvent and event.id == latestManualEvent.id ? 'true' : 'false' }}" data-commercial-timeline-more-label-value="{{ 'event.show_more'|trans({}, 'commercial') }}" data-commercial-timeline-less-label-value="{{ 'event.show_less'|trans({}, 'commercial') }}"{% endif %}>
                 <span class="commercial-timeline__marker" aria-hidden="true"></span>
                 <div class="commercial-timeline__heading">
                     <div><time datetime="{{ event.occurredAt|date('c') }}">{{ event.occurredAt|date('d/m/Y') }} <span>· {{ event.occurredAt|date('H:i') }}</span></time><h3>{% if event.type starts with 'quote_' %}<span class="commercial-timeline__event-icon commercial-timeline__event-icon--{{ eventIcon }}" aria-hidden="true">{% include 'commercial/project/_icon.html.twig' with {name: eventIcon} only %}</span>{% endif %}{{ eventLabel }}</h3></div>
@@ -43,8 +44,11 @@
                     </div>
                 </div>
                 {% if event.type == 'action_completed' %}<strong class="commercial-timeline__subject">{{ event.action ? event.action.title : event.metadata.action_title|default('') }}</strong>{% endif %}
-                {% if event.person %}<span class="commercial-dossier__muted">{{ event.person }}</span>{% endif %}
-                {% if event.content %}
+                {% if event.type starts with 'quote_' %}
+                    {% if event.person %}<span class="commercial-dossier__muted commercial-timeline__quote-person">{{ event.person }}</span>{% endif %}
+                    {% if event.content %}<span class="commercial-timeline__quote-reference">{{ event.content }}</span>{% endif %}
+                {% elseif event.person %}<span class="commercial-dossier__muted">{{ event.person }}</span>{% endif %}
+                {% if event.content and not (event.type starts with 'quote_') %}
                     <p class="commercial-timeline__excerpt" data-commercial-timeline-target="excerpt">{{ event.content }}</p>
                     <button type="button" class="commercial-timeline__toggle" data-commercial-timeline-target="toggle" data-action="commercial-timeline#toggle" hidden>{{ 'event.show_more'|trans({}, 'commercial') }}</button>
                 {% endif %}
