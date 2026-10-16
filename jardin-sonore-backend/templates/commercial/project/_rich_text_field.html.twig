@@ -1,0 +1,22 @@
+<div class="commercial-note-editor" data-controller="commercial-rich-text">
+    <label id="{{ id }}-label" for="{{ id }}">{{ label|trans({}, 'commercial') }}</label>
+    {% if field is defined %}
+        {{ form_errors(field) }}
+        {{ form_widget(field, {attr: {
+            id: id ~ '-source',
+            class: 'commercial-note-editor__source',
+            'data-commercial-rich-text-target': 'input',
+        }}) }}
+    {% else %}
+        <textarea id="{{ id }}-source" name="{{ name }}" class="commercial-note-editor__source" maxlength="10000" hidden data-commercial-rich-text-target="input">{{ value }}</textarea>
+    {% endif %}
+    <div class="commercial-note-editor__toolbar" role="toolbar" aria-label="{{ 'note.formatting'|trans({}, 'commercial') }}">
+        <button type="button" data-command="bold" data-action="mousedown->commercial-rich-text#keepSelection click->commercial-rich-text#format" aria-label="{{ 'note.bold'|trans({}, 'commercial') }}" title="{{ 'note.bold'|trans({}, 'commercial') }}"><strong>B</strong></button>
+        <button type="button" data-command="italic" data-action="mousedown->commercial-rich-text#keepSelection click->commercial-rich-text#format" aria-label="{{ 'note.italic'|trans({}, 'commercial') }}" title="{{ 'note.italic'|trans({}, 'commercial') }}"><em>I</em></button>
+        <span class="commercial-note-editor__separator" aria-hidden="true"></span>
+        {% for color, colorLabel in {'#A64D43': 'note.color_terracotta', '#692019': 'note.color_brown', '#47664B': 'note.color_green'} %}
+            <button type="button" class="commercial-note-editor__color" style="--note-format-color: {{ color }}" data-command="color" data-color="{{ color }}" data-action="mousedown->commercial-rich-text#keepSelection click->commercial-rich-text#format" aria-label="{{ colorLabel|trans({}, 'commercial') }}" title="{{ colorLabel|trans({}, 'commercial') }}"><span aria-hidden="true"></span></button>
+        {% endfor %}
+    </div>
+    <div id="{{ id }}" class="commercial-note-editor__surface" contenteditable="true" role="textbox" aria-multiline="true" aria-labelledby="{{ id }}-label" data-commercial-rich-text-target="editor" data-action="input->commercial-rich-text#sync paste->commercial-rich-text#paste"></div>
+</div>

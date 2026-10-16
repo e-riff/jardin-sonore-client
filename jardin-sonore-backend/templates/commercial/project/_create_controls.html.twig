@@ -12,7 +12,7 @@
             'data-action': 'input->commercial-note-draft#save change->commercial-note-draft#save turbo:submit-end->commercial-note-draft#submitted',
         }}) }}
             <p class="commercial-dossier__create-hint">{{ 'project.add_event_hint'|trans({}, 'commercial') }}</p>
-            {{ form_row(noteForm.content) }}
+            {% include 'commercial/project/_rich_text_field.html.twig' with { field: noteForm.content, id: noteForm.content.vars.id, name: noteForm.content.vars.full_name, value: noteForm.content.vars.value, label: 'note.content' } only %}
             {{ form_row(noteForm.occurredOn) }}
             {{ form_row(noteForm.person) }}
             <fieldset class="commercial-note-reminder">
