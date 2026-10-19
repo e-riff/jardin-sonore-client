@@ -1,0 +1,135 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Tests\Functional\Application\Controller;
+
+use App\Kernel;
+use stdClass;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpKernel\KernelInterface;
+
+final class McpControllerTest extends WebTestCase
+{
+    private KernelBrowser $client;
+
+    private false|string $previousBearerToken;
+
+    private bool $previousEnvBearerTokenDefined;
+
+    private ?string $previousEnvBearerToken;
+
+    private bool $previousServerBearerTokenDefined;
+
+    private ?string $previousServerBearerToken;
+
+    protected static function createKernel(array $options = []): KernelInterface
+    {
+        return new Kernel('test', true);
+    }
+
+    protected function setUp(): void
+    {
+        $this->previousBearerToken = getenv('MCP_BEARER_TOKEN');
+        $this->previousEnvBearerTokenDefined = array_key_exists('MCP_BEARER_TOKEN', $_ENV);
+        $this->previousEnvBearerToken = $_ENV['MCP_BEARER_TOKEN'] ?? null;
+        $this->previousServerBearerTokenDefined = array_key_exists('MCP_BEARER_TOKEN', $_SERVER);
+        $this->previousServerBearerToken = $_SERVER['MCP_BEARER_TOKEN'] ?? null;
+        $_ENV['MCP_BEARER_TOKEN'] = 'test-mcp-token';
+        $_SERVER['MCP_BEARER_TOKEN'] = 'test-mcp-token';
+        putenv('MCP_BEARER_TOKEN=test-mcp-token');
+        $this->client = static::createClient();
+    }
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+
+        if ($this->previousEnvBearerTokenDefined) {
+            $_ENV['MCP_BEARER_TOKEN'] = $this->previousEnvBearerToken;
+        } else {
+            unset($_ENV['MCP_BEARER_TOKEN']);
+        }
+
+        if ($this->previousServerBearerTokenDefined) {
+            $_SERVER['MCP_BEARER_TOKEN'] = $this->previousServerBearerToken;
+        } else {
+            unset($_SERVER['MCP_BEARER_TOKEN']);
+        }
+
+        if (false === $this->previousBearerToken) {
+            putenv('MCP_BEARER_TOKEN');
+        } else {
+            putenv("MCP_BEARER_TOKEN={$this->previousBearerToken}");
+        }
+    }
+
+    public function testInitializeNegotiatesMcpCapabilities(): void
+    {
+        $this->client->jsonRequest('POST', '/api/mcp', [
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'method' => 'initialize',
+            'params' => [
+                'protocolVersion' => '2025-06-18',
+                'capabilities' => new stdClass(),
+                'clientInfo' => ['name' => 'test-client', 'version' => '1.0'],
+            ],
+        ], ['HTTP_AUTHORIZATION' => 'Bearer test-mcp-token', 'HTTP_ACCEPT' => 'application/json, text/event-stream']);
+
+        self::assertResponseIsSuccessful();
+        $response = json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertSame('2.0', $response['jsonrpc'] ?? null);
+        self::assertSame(1, $response['id'] ?? null);
+        self::assertSame('2025-06-18', $response['result']['protocolVersion'] ?? null);
+        self::assertArrayHasKey('tools', $response['result']['capabilities'] ?? []);
+        self::assertSame('jardin-sonore', $response['result']['serverInfo']['name'] ?? null);
+    }
+
+    public function testInitializedNotificationReturnsAcceptedWithoutBody(): void
+    {
+        $this->client->jsonRequest('POST', '/api/mcp', [
+            'jsonrpc' => '2.0',
+            'method' => 'notifications/initialized',
+        ], ['HTTP_AUTHORIZATION' => 'Bearer test-mcp-token', 'HTTP_ACCEPT' => 'application/json, text/event-stream']);
+
+        self::assertResponseStatusCodeSame(202);
+        self::assertSame('', $this->client->getResponse()->getContent());
+    }
+
+    public function testMissingOrIncorrectBearerTokenIsRejected(): void
+    {
+        foreach ([[], ['HTTP_AUTHORIZATION' => 'Bearer wrong-token']] as $server) {
+            $this->client->jsonRequest('POST', '/api/mcp', ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'initialize'], $server);
+
+            self::assertResponseStatusCodeSame(401);
+            self::assertStringNotContainsString('test-mcp-token', (string) $this->client->getResponse()->getContent());
+        }
+    }
+
+    public function testGetAndCrossOriginRequestsAreRejected(): void
+    {
+        $this->client->request('GET', '/api/mcp', server: ['HTTP_AUTHORIZATION' => 'Bearer test-mcp-token', 'HTTP_ACCEPT' => 'text/event-stream']);
+        self::assertResponseStatusCodeSame(405);
+
+        $this->client->jsonRequest('POST', '/api/mcp', ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'initialize'], [
+            'HTTP_AUTHORIZATION' => 'Bearer test-mcp-token',
+            'HTTP_ACCEPT' => 'application/json, text/event-stream',
+            'HTTP_ORIGIN' => 'https://attacker.example',
+        ]);
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    public function testInvalidJsonAndUnknownMethodReturnJsonRpcErrors(): void
+    {
+        $server = ['HTTP_AUTHORIZATION' => 'Bearer test-mcp-token', 'HTTP_ACCEPT' => 'application/json, text/event-stream'];
+        $this->client->request('POST', '/api/mcp', server: [...$server, 'CONTENT_TYPE' => 'application/json'], content: '{');
+        self::assertResponseStatusCodeSame(400);
+        self::assertSame(-32700, json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR)['error']['code']);
+
+        $this->client->jsonRequest('POST', '/api/mcp', ['jsonrpc' => '2.0', 'id' => 2, 'method' => 'unknown/method'], $server);
+        self::assertResponseIsSuccessful();
+        self::assertSame(-32601, json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR)['error']['code']);
+    }
+}

@@ -34,6 +34,10 @@ return App::config([
                 'pattern' => '^/(_profiler|_wdt|assets|build)/',
                 'security' => false,
             ],
+            'mcp_api' => [
+                'pattern' => '^/api/mcp$',
+                'stateless' => true,
+            ],
             'newsletter_api' => [
                 'pattern' => '^/api/newsletter/',
                 'stateless' => true,
@@ -70,6 +74,7 @@ return App::config([
         ],
         'access_control' => [
             ['path' => '^/api/newsletter/', 'roles' => 'PUBLIC_ACCESS'],
+            ['path' => '^/api/mcp$', 'roles' => 'PUBLIC_ACCESS'],
             ['path' => '^/api/commercial/contact-requests$', 'roles' => 'PUBLIC_ACCESS'],
             [
                 'path' => '^/newsletter/unsubscribe/[^/]+$',

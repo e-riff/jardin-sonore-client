@@ -43,7 +43,8 @@
         "symfony/ux-map": "^3.2",
         "symfony/ux-turbo": "^3.2",
         "symfony/validator": "8.1.*",
-        "symfony/yaml": "^8.1"
+        "symfony/yaml": "^8.1",
+        "webklex/php-imap": "^6.2"
     },
     "config": {
         "allow-plugins": {

@@ -10,11 +10,17 @@ use App\Application\Commercial\CommercialDigestSenderInterface;
 use App\Application\Commercial\GoogleCalendarConnectionStoreInterface;
 use App\Application\Mailing\NewsletterConfirmationMailSenderInterface;
 use App\Application\Mailing\NewsletterRecipientEligibilityInterface;
+use App\Application\Mcp\ImapClientProvider;
+use App\Application\Mcp\MailReader;
+use App\Application\Mcp\ProjectSearch;
 use App\Application\Portal\PortalAccountMailSenderInterface;
 use App\Application\Session\SessionDocumentGeneratorInterface;
 use App\Application\Session\SessionNotificationMailSenderInterface;
 use App\Infrastructure\Doctrine\Commercial\DoctrineGoogleCalendarConnectionStore;
+use App\Infrastructure\Doctrine\Commercial\DoctrineProjectSearch;
 use App\Infrastructure\Google\GoogleCalendarGateway;
+use App\Infrastructure\Mail\ImapMailReader;
+use App\Infrastructure\Mail\WebklexImapClientProvider;
 use App\Infrastructure\Mailer\SymfonyCommercialContactSender;
 use App\Infrastructure\Mailer\SymfonyCommercialDigestSender;
 use App\Infrastructure\Mailer\SymfonyNewsletterConfirmationMailSender;
@@ -74,6 +80,15 @@ return App::config([
         ],
         NewsletterRecipientEligibilityInterface::class => [
             'alias' => DoctrineNewsletterRecipientEligibility::class,
+        ],
+        ImapClientProvider::class => [
+            'alias' => WebklexImapClientProvider::class,
+        ],
+        MailReader::class => [
+            'alias' => ImapMailReader::class,
+        ],
+        ProjectSearch::class => [
+            'alias' => DoctrineProjectSearch::class,
         ],
     ],
 ]);
