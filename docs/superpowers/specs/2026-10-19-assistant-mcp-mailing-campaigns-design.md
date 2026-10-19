@@ -1,6 +1,6 @@
 # MCP : lecture et édition des campagnes de mailing
 
-**État :** implémentation terminée et vérifiée localement ; déploiement en cours. Le droit d'écriture reste désactivé par défaut avec `MCP_MAILING_WRITE_ENABLED=0` et sera activé en production après déploiement.
+**État :** déployé le 19 octobre 2026 sous le tag `deploy-mcp-mailing-drafts-20261019-01`. `MCP_MAILING_WRITE_ENABLED=1` est actif en production ; la valeur par défaut reste `0`.
 
 ## Besoin
 
@@ -26,4 +26,4 @@ Les masques existants sont rattachables, sans création ni modification de masqu
 
 ## Vérification et livraison
 
-Les tests ciblés MCP, PHPStan, PHP CS Fixer et la validation du schéma Doctrine passent. Aucun changement de schéma n'est nécessaire. Le déploiement active `MCP_MAILING_WRITE_ENABLED=1` en production ; les deux outils d'écriture doivent rester réglés sur « Demander » dans le client MCP. L'opération ne peut ni envoyer, ni planifier, ni tester l'envoi d'une campagne.
+Les tests ciblés MCP, PHPStan, PHP CS Fixer et la validation du schéma Doctrine passent. Aucun changement de schéma n'était nécessaire. La vérification après déploiement confirme les cinq outils mailing dans la liste MCP et le rejet d'une demande de création incomplète avant toute sauvegarde. L'opération ne peut ni envoyer, ni planifier, ni tester l'envoi d'une campagne.
