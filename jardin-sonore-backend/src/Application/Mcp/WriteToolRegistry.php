@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Mcp;
 
 use DateTimeImmutable;
+use InvalidArgumentException;
 use JsonException;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Throwable;
@@ -21,6 +22,8 @@ final readonly class WriteToolRegistry
         #[Autowire('%app.mcp.draft_edit_enabled%')] private bool $draftEditEnabled = false,
         private ?StandaloneMailDraftWriter $standaloneMailDraftWriter = null,
         #[Autowire('%app.mcp.draft_compose_enabled%')] private bool $draftComposeEnabled = false,
+        private ?MailingDraftManager $mailingDraftManager = null,
+        #[Autowire('%app.mcp.mailing_write_enabled%')] private bool $mailingWriteEnabled = false,
     ) {
     }
 
@@ -104,6 +107,44 @@ final readonly class WriteToolRegistry
                 ],
                 'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false],
             ],
+            [
+                'name' => 'create_mailing_draft',
+                'description' => 'After explicit confirmation in the client, create a mailing campaign draft. Supply a stable requestId so retries return the same draft. Create campaign-specific recommendations with title, text, tag and optional link; images are nullable and new recommendations start without one. Tell the user which new recommendations need an image added in the backoffice. Never sends, schedules, or test-sends a mailing.',
+                'inputSchema' => ['type' => 'object', 'properties' => [
+                    'requestId' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 100],
+                    'internalTitle' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255],
+                    'emailSubject' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255],
+                    'publicTitle' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255],
+                    'preheader' => ['type' => ['string', 'null'], 'maxLength' => 255],
+                    'subtitle' => ['type' => ['string', 'null'], 'maxLength' => 255],
+                    'introBlocks' => ['type' => 'array', 'maxItems' => 20, 'items' => ['type' => 'object', 'properties' => ['id' => ['type' => 'string', 'maxLength' => 64], 'kind' => ['const' => 'paragraph'], 'text' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 10000]], 'required' => ['id', 'kind', 'text'], 'additionalProperties' => false]],
+                    'callToActionLabel' => ['type' => ['string', 'null'], 'maxLength' => 255],
+                    'callToActionUrl' => ['type' => ['string', 'null'], 'maxLength' => 2048],
+                    'audienceMaskUuid' => ['type' => 'string', 'format' => 'uuid'],
+                    'recommendations' => ['type' => 'array', 'maxItems' => 10, 'items' => ['type' => 'object', 'properties' => ['title' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255], 'tag' => ['type' => ['string', 'null'], 'maxLength' => 255], 'text' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 10000], 'url' => ['type' => ['string', 'null'], 'maxLength' => 2048], 'linkLabel' => ['type' => ['string', 'null'], 'maxLength' => 255], 'imagePath' => ['type' => ['string', 'null']], 'position' => ['type' => 'integer'], 'active' => ['type' => 'boolean']], 'required' => ['title', 'text'], 'additionalProperties' => false]],
+                ], 'required' => ['requestId', 'internalTitle', 'emailSubject', 'publicTitle', 'introBlocks'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
+            [
+                'name' => 'update_mailing_draft',
+                'description' => 'After explicit confirmation in the client, update a mailing by exact UUID and current revision from get_mailing_campaign. Only campaigns whose delivery has not started can be edited. Omitted mailing fields stay unchanged. The recommendations array is the complete ordered set: include existing recommendationUuid values to edit them, omit one to remove it, or omit the UUID to create a campaign-specific recommendation. New recommendations have no image; tell the user which ones need an image added in the backoffice. Never sends, schedules, or test-sends a mailing.',
+                'inputSchema' => ['type' => 'object', 'properties' => [
+                    'campaignUuid' => ['type' => 'string', 'format' => 'uuid'],
+                    'revision' => ['type' => 'string', 'minLength' => 64, 'maxLength' => 64],
+                    'internalTitle' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255],
+                    'emailSubject' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255],
+                    'publicTitle' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255],
+                    'preheader' => ['type' => ['string', 'null'], 'maxLength' => 255],
+                    'subtitle' => ['type' => ['string', 'null'], 'maxLength' => 255],
+                    'mainText' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 20000],
+                    'introBlocks' => ['type' => 'array', 'maxItems' => 20, 'items' => ['type' => 'object', 'properties' => ['id' => ['type' => 'string', 'maxLength' => 64], 'kind' => ['enum' => ['paragraph', 'image', 'split']], 'text' => ['type' => 'string', 'maxLength' => 10000], 'imagePath' => ['type' => 'string'], 'imageAlt' => ['type' => 'string'], 'imageDecorative' => ['type' => 'boolean'], 'imageSide' => ['enum' => ['left', 'right']]], 'required' => ['id', 'kind'], 'additionalProperties' => false]],
+                    'callToActionLabel' => ['type' => ['string', 'null'], 'maxLength' => 255],
+                    'callToActionUrl' => ['type' => ['string', 'null'], 'maxLength' => 2048],
+                    'audienceMaskUuid' => ['type' => ['string', 'null'], 'format' => 'uuid'],
+                    'recommendations' => ['type' => 'array', 'maxItems' => 10, 'items' => ['type' => 'object', 'properties' => ['recommendationUuid' => ['type' => 'string', 'format' => 'uuid'], 'title' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255], 'tag' => ['type' => ['string', 'null'], 'maxLength' => 255], 'text' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 10000], 'url' => ['type' => ['string', 'null'], 'maxLength' => 2048], 'linkLabel' => ['type' => ['string', 'null'], 'maxLength' => 255], 'imagePath' => ['type' => ['string', 'null']], 'position' => ['type' => 'integer'], 'active' => ['type' => 'boolean']], 'required' => ['title', 'text'], 'additionalProperties' => false]],
+                ], 'required' => ['campaignUuid', 'revision'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
         ];
     }
 
@@ -120,6 +161,9 @@ final readonly class WriteToolRegistry
         }
         if ('create_mail_draft' === $name) {
             return $this->callStandaloneDraft($arguments);
+        }
+        if (in_array($name, ['create_mailing_draft', 'update_mailing_draft'], true)) {
+            return $this->callMailingDraft($name, $arguments);
         }
         if (!$this->writeEnabled) {
             return $this->error('Commercial writes are disabled.');
@@ -156,6 +200,46 @@ final readonly class WriteToolRegistry
         } catch (Throwable) {
             return $this->error('The write operation failed.');
         }
+    }
+
+    /** @param array<string, mixed> $arguments
+     * @return array<string, mixed>
+     */
+    private function callMailingDraft(string $name, array $arguments): array
+    {
+        if (!$this->mailingWriteEnabled || null === $this->mailingDraftManager) {
+            return $this->error('Mailing draft writes are disabled.');
+        }
+        try {
+            $allowed = 'create_mailing_draft' === $name
+                ? ['requestId', 'internalTitle', 'emailSubject', 'publicTitle', 'mainText', 'introBlocks', 'preheader', 'subtitle', 'callToActionLabel', 'callToActionUrl', 'audienceMaskUuid', 'recommendations']
+                : ['campaignUuid', 'revision', 'internalTitle', 'emailSubject', 'publicTitle', 'mainText', 'introBlocks', 'preheader', 'subtitle', 'callToActionLabel', 'callToActionUrl', 'audienceMaskUuid', 'recommendations'];
+            if ([] !== array_diff(array_keys($arguments), $allowed)) {
+                throw new InvalidToolArguments('Unexpected argument.');
+            }
+            $result = 'create_mailing_draft' === $name
+                ? $this->mailingDraftManager->create($arguments)
+                : $this->mailingDraftManager->update($this->text($arguments, 'campaignUuid', 36), $this->withoutKey($arguments, 'campaignUuid'));
+            $json = json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+            return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => false];
+        } catch (InvalidToolArguments $exception) {
+            return $this->error($exception->getMessage());
+        } catch (JsonException) {
+            return $this->error('The mailing draft result was invalid.');
+        } catch (Throwable $exception) {
+            return $this->error($exception instanceof InvalidArgumentException ? $exception->getMessage() : 'Mailing draft operation failed.');
+        }
+    }
+
+    /** @param array<string, mixed> $arguments
+     * @return array<string, mixed>
+     */
+    private function withoutKey(array $arguments, string $key): array
+    {
+        unset($arguments[$key]);
+
+        return $arguments;
     }
 
     /** @param array<string, mixed> $arguments
