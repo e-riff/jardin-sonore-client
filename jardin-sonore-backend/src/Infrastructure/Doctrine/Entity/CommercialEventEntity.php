@@ -18,6 +18,21 @@ class CommercialEventEntity
 
     private ?CommercialInvoiceEntity $invoice = null;
 
+    private ?string $mailSourceKey = null;
+
+    public function getMailSourceKey(): ?string
+    {
+        return $this->mailSourceKey;
+    }
+
+    public function setMailSourceKey(string $mailSourceKey): void
+    {
+        if (1 !== preg_match('/^[a-f0-9]{64}$/D', $mailSourceKey)) {
+            throw new DomainException('Invalid mail source key.');
+        }
+        $this->mailSourceKey = $mailSourceKey;
+    }
+
     /** @param array<string, string> $metadata */
     public function __construct(
         private CommercialProjectEntity $project,

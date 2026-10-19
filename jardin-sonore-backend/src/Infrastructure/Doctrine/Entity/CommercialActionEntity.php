@@ -6,6 +6,7 @@ namespace App\Infrastructure\Doctrine\Entity;
 
 use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
 use DateTimeImmutable;
+use DomainException;
 
 class CommercialActionEntity
 {
@@ -18,6 +19,21 @@ class CommercialActionEntity
     private string $status = self::STATUS_OPEN;
 
     private ?DateTimeImmutable $resolvedAt = null;
+
+    private ?string $mailSourceKey = null;
+
+    public function getMailSourceKey(): ?string
+    {
+        return $this->mailSourceKey;
+    }
+
+    public function setMailSourceKey(string $mailSourceKey): void
+    {
+        if (1 !== preg_match('/^[a-f0-9]{64}$/D', $mailSourceKey)) {
+            throw new DomainException('Invalid mail source key.');
+        }
+        $this->mailSourceKey = $mailSourceKey;
+    }
 
     public function __construct(
         private CommercialProjectEntity $project,

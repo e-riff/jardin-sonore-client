@@ -169,4 +169,24 @@ final class McpControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSame(-32601, json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR)['error']['code']);
     }
+
+    public function testListsCommercialReadAndWriteToolsWhileWritesRemainDisabled(): void
+    {
+        $headers = ['HTTP_AUTHORIZATION' => 'Bearer test-mcp-token', 'HTTP_ACCEPT' => 'application/json, text/event-stream'];
+        $this->client->jsonRequest('POST', '/api/mcp', ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/list'], $headers);
+        self::assertResponseIsSuccessful();
+        $response = json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $names = array_column($response['result']['tools'], 'name');
+        self::assertContains('get_project_context', $names);
+        self::assertContains('record_mail_summary', $names);
+        self::assertContains('create_project_reminder', $names);
+
+        $this->client->jsonRequest('POST', '/api/mcp', ['jsonrpc' => '2.0', 'id' => 2, 'method' => 'tools/call', 'params' => [
+            'name' => 'record_mail_summary',
+            'arguments' => ['projectId' => 1, 'mailReference' => 'irrelevant', 'summary' => 'Résumé'],
+        ]], $headers);
+        self::assertResponseIsSuccessful();
+        $response = json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertTrue($response['result']['isError']);
+    }
 }

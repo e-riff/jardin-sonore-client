@@ -52,6 +52,9 @@
                 </div>
                 {% if event.type == 'action_completed' %}<strong class="commercial-timeline__subject">{{ event.action ? event.action.title : event.metadata.action_title|default('') }}</strong>{% endif %}
                 {% if event.person %}<span class="commercial-timeline__person">{% include 'commercial/project/_icon.html.twig' with {name: 'person'} only %}{{ event.person }}</span>{% endif %}
+                {% if event.type == 'note' and event.metadata.source|default('') == 'mail' %}
+                    <p class="commercial-timeline__person">{{ 'event.mail_source'|trans({}, 'commercial') }} · {{ event.metadata.mailDate|default('') ? event.metadata.mailDate|date('d/m/Y') : ('event.mail_unknown'|trans({}, 'commercial')) }} · {{ event.metadata.mailSubject|default('') ?: ('event.mail_unknown'|trans({}, 'commercial')) }} · {{ event.metadata.mailFrom|default('') ?: ('event.mail_unknown'|trans({}, 'commercial')) }}</p>
+                {% endif %}
                 {% if event.type starts with 'quote_' %}
                     {% if event.content %}<span class="commercial-timeline__quote-reference">{{ event.content }}</span>{% endif %}
                 {% endif %}

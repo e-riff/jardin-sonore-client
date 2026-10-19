@@ -10,7 +10,7 @@ final class McpProtocol
 
     private const array SUPPORTED_PROTOCOL_VERSIONS = ['2025-03-26', self::PROTOCOL_VERSION];
 
-    public function __construct(private readonly ReadToolRegistry $toolRegistry)
+    public function __construct(private readonly ReadToolRegistry $toolRegistry, private readonly WriteToolRegistry $writeToolRegistry)
     {
     }
 
@@ -59,7 +59,7 @@ final class McpProtocol
         }
 
         if ('tools/list' === $method) {
-            return ['jsonrpc' => '2.0', 'id' => $id, 'result' => ['tools' => $this->toolRegistry->definitions()]];
+            return ['jsonrpc' => '2.0', 'id' => $id, 'result' => ['tools' => [...$this->toolRegistry->definitions(), ...$this->writeToolRegistry->definitions()]]];
         }
 
         if ('tools/call' === $method) {
@@ -69,7 +69,11 @@ final class McpProtocol
                 return $this->error($id, -32602, 'Invalid params');
             }
 
-            return ['jsonrpc' => '2.0', 'id' => $id, 'result' => $this->toolRegistry->call($name, $arguments)];
+            $writeNames = array_column($this->writeToolRegistry->definitions(), 'name');
+
+            return ['jsonrpc' => '2.0', 'id' => $id, 'result' => in_array($name, $writeNames, true)
+                ? $this->writeToolRegistry->call($name, $arguments)
+                : $this->toolRegistry->call($name, $arguments)];
         }
 
         return $this->error($id, -32601, 'Method not found');

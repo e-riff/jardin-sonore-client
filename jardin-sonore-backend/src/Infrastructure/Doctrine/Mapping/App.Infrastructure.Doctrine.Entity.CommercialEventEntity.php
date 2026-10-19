@@ -20,6 +20,9 @@ return static function (ClassMetadata $metadata): void {
             'idx_commercial_event_quote' => ['columns' => ['quote_id']],
             'idx_commercial_event_invoice' => ['columns' => ['invoice_id']],
         ],
+        'uniqueConstraints' => [
+            'uniq_commercial_event_project_mail' => ['columns' => ['project_id', 'mail_source_key']],
+        ],
     ]);
     $metadata->mapField(['fieldName' => 'id', 'type' => Types::INTEGER, 'id' => true]);
     $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_IDENTITY);
@@ -27,6 +30,7 @@ return static function (ClassMetadata $metadata): void {
     $metadata->mapField(['fieldName' => 'occurredAt', 'columnName' => 'occurred_at', 'type' => Types::DATETIME_IMMUTABLE]);
     $metadata->mapField(['fieldName' => 'content', 'type' => Types::TEXT, 'nullable' => true]);
     $metadata->mapField(['fieldName' => 'metadata', 'type' => Types::JSON]);
+    $metadata->mapField(['fieldName' => 'mailSourceKey', 'columnName' => 'mail_source_key', 'type' => Types::STRING, 'length' => 64, 'nullable' => true]);
     $metadata->mapManyToOne([
         'fieldName' => 'project',
         'targetEntity' => CommercialProjectEntity::class,

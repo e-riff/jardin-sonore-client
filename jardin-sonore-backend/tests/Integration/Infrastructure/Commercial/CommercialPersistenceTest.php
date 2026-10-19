@@ -93,4 +93,25 @@ final class CommercialPersistenceTest extends KernelTestCase
         $this->expectException(ForeignKeyConstraintViolationException::class);
         $this->connection->delete('organization', ['id' => $organizationEntity->getId()]);
     }
+
+    public function testMailSourceKeysAreStoredOnEventsAndActions(): void
+    {
+        $projectEntity = new CommercialProjectEntity('Mail follow-up', null, null, new DateTimeImmutable('2026-10-19'));
+        $actionEntity = new CommercialActionEntity($projectEntity, 'Relancer', new DateTimeImmutable('2026-10-20'));
+        $eventEntity = $projectEntity->recordEvent('note', new DateTimeImmutable('2026-10-19'), 'Résumé');
+        $sourceKey = str_repeat('a', 64);
+        $actionEntity->setMailSourceKey($sourceKey);
+        $eventEntity->setMailSourceKey($sourceKey);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $entityManager->persist($projectEntity);
+        $entityManager->persist($actionEntity);
+        $entityManager->persist($eventEntity);
+        $entityManager->flush();
+        $actionId = $actionEntity->getId();
+        $eventId = $eventEntity->getId();
+        $entityManager->clear();
+
+        self::assertSame($sourceKey, $entityManager->find(CommercialActionEntity::class, $actionId)?->getMailSourceKey());
+        self::assertSame($sourceKey, $entityManager->find(\App\Infrastructure\Doctrine\Entity\CommercialEventEntity::class, $eventId)?->getMailSourceKey());
+    }
 }

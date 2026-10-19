@@ -7,8 +7,10 @@ namespace App\Infrastructure\Mail;
 use App\Application\Mcp\ImapClientProvider;
 use App\Application\Mcp\MailReader;
 use App\Application\Mcp\MailReadException;
+use App\Application\Mcp\MailSource;
 use DateTimeImmutable;
 use JsonException;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Throwable;
 use Webklex\PHPIMAP\Address;
 use Webklex\PHPIMAP\Folder;
@@ -17,8 +19,50 @@ final readonly class ImapMailReader implements MailReader
 {
     private const int BODY_LIMIT = 8_000;
 
-    public function __construct(private ImapClientProvider $clientProvider)
+    public function __construct(private ImapClientProvider $clientProvider, #[Autowire('%app.mcp.imap_username%')] private string $mailboxUsername = '')
     {
+    }
+
+    public function source(string $mailReference): MailSource
+    {
+        try {
+            $reference = $this->decodeReference($mailReference);
+            $folder = $this->inbox($this->clientProvider->client()->getFolder('INBOX'));
+            if ($reference['uidValidity'] !== $this->uidValidity($folder)) {
+                throw new MailReadException('The mail reference is out of date.');
+            }
+
+            $message = $folder->query()
+                ->whereUid($reference['uid'])
+                ->setFetchBody(false)
+                ->setFetchFlags(false)
+                ->limit(1)
+                ->leaveUnread()
+                ->get()->first();
+            if (!is_object($message) || !is_callable([$message, 'getUid']) || $reference['uid'] !== $message->getUid()) {
+                throw new MailReadException('The requested message is no longer available.');
+            }
+
+            $messageId = $this->attributeString($message->getMessageId());
+            $normalizedMessageId = null === $messageId ? null : $this->normalizedMessageId($messageId);
+            $identity = null !== $normalizedMessageId
+                ? $normalizedMessageId
+                : "INBOX:{$reference['uidValidity']}:{$reference['uid']}";
+            $from = $message->getFrom()->first();
+
+            return new MailSource(
+                $mailReference,
+                hash('sha256', mb_strtolower(trim($this->mailboxUsername)) . "\0" . $identity),
+                null === $normalizedMessageId ? null : $messageId,
+                $this->attributeString($message->getSubject()),
+                $from instanceof Address ? $from->mail : (string) $from,
+                $message->getDate()->toDate()->format(DATE_ATOM),
+            );
+        } catch (MailReadException $exception) {
+            throw $exception;
+        } catch (Throwable) {
+            throw new MailReadException('Mailbox read failed.');
+        }
     }
 
     /** @return list<array<string, scalar|null>> */
@@ -240,6 +284,22 @@ final readonly class ImapMailReader implements MailReader
     private function validMessageId(string $messageId): bool
     {
         return 1 === preg_match('/^<[^<>\s\r\n]{1,250}>$/D', $messageId);
+    }
+
+    private function normalizedMessageId(string $messageId): ?string
+    {
+        if (str_starts_with($messageId, '<') || str_ends_with($messageId, '>')) {
+            if (!$this->validMessageId($messageId)) {
+                return null;
+            }
+            $messageId = substr($messageId, 1, -1);
+        }
+
+        if (250 < strlen($messageId) || !str_contains($messageId, '@') || 1 === preg_match('/[<>\s\r\n]/', $messageId)) {
+            return null;
+        }
+
+        return strtolower($messageId);
     }
 
     private function escapeSearchTerm(string $query): string

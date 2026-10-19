@@ -144,6 +144,60 @@ final class ImapMailReaderTest extends TestCase
         }
     }
 
+    public function testSourceUsesHeadersWithoutMarkingMailRead(): void
+    {
+        $message = new ImapMessageFixture(14, 'mail-14@example.test', 'Projet', 'Secret body', '', 0);
+        $query = $this->createMock(WhereQuery::class);
+        $query->expects(self::once())->method('whereUid')->with(14)->willReturnSelf();
+        $query->expects(self::once())->method('setFetchBody')->with(false)->willReturnSelf();
+        $query->expects(self::once())->method('setFetchFlags')->with(false)->willReturnSelf();
+        $query->expects(self::once())->method('leaveUnread')->willReturnSelf();
+        $query->method('limit')->willReturnSelf();
+        $query->method('get')->willReturn(new MessageCollection([$message]));
+        $folder = $this->createStub(Folder::class);
+        $folder->method('status')->willReturn(['UIDVALIDITY' => 77]);
+        $folder->method('query')->willReturn($query);
+        $client = $this->createMock(Client::class);
+        $client->method('connect')->willReturnSelf();
+        $client->method('disconnect')->willReturnSelf();
+        $client->method('getFolder')->willReturn($folder);
+        $provider = $this->createStub(ImapClientProvider::class);
+        $provider->method('client')->willReturn($client);
+
+        $source = (new ImapMailReader($provider, 'contact@example.test'))->source(self::mailReference(77, 14));
+
+        self::assertSame('Projet', $source->subject);
+        self::assertSame('marie@example.test', $source->from);
+        self::assertMatchesRegularExpression('/^[a-f0-9]{64}$/', $source->sourceKey);
+        self::assertSame(hash('sha256', "contact@example.test\0mail-14@example.test"), $source->sourceKey);
+    }
+
+    public function testSourceFallsBackToUidWhenMessageIdIsMissing(): void
+    {
+        $message = new ImapMessageFixture(14, '', 'Projet', 'Secret body', '', 0);
+        $query = $this->createMock(WhereQuery::class);
+        $query->method('whereUid')->willReturnSelf();
+        $query->method('setFetchBody')->willReturnSelf();
+        $query->method('setFetchFlags')->willReturnSelf();
+        $query->method('limit')->willReturnSelf();
+        $query->method('leaveUnread')->willReturnSelf();
+        $query->method('get')->willReturn(new MessageCollection([$message]));
+        $folder = $this->createStub(Folder::class);
+        $folder->method('status')->willReturn(['UIDVALIDITY' => 77]);
+        $folder->method('query')->willReturn($query);
+        $client = $this->createMock(Client::class);
+        $client->method('connect')->willReturnSelf();
+        $client->method('disconnect')->willReturnSelf();
+        $client->method('getFolder')->willReturn($folder);
+        $provider = $this->createStub(ImapClientProvider::class);
+        $provider->method('client')->willReturn($client);
+
+        $source = (new ImapMailReader($provider, 'contact@example.test'))->source(self::mailReference(77, 14));
+
+        self::assertNull($source->messageId);
+        self::assertSame(hash('sha256', "contact@example.test\0INBOX:77:14"), $source->sourceKey);
+    }
+
     private static function mailReference(int $uidValidity, int $uid): string
     {
         return rtrim(strtr(base64_encode(json_encode(['folder' => 'INBOX', 'uidValidity' => $uidValidity, 'uid' => $uid], JSON_THROW_ON_ERROR)), '+/', '-_'), '=');

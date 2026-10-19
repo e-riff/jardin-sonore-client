@@ -6,6 +6,8 @@ namespace App\Application\Mcp;
 
 interface MailReader
 {
+    public function source(string $mailReference): MailSource;
+
     /** @return list<array<string, scalar|null>> */
     public function search(?string $from, ?string $since, ?string $query, int $limit): array;
 

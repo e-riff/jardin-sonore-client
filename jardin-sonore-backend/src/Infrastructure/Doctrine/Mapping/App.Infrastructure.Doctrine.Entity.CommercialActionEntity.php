@@ -15,6 +15,9 @@ return static function (ClassMetadata $metadata): void {
             'idx_commercial_action_project' => ['columns' => ['project_id']],
             'idx_commercial_action_person' => ['columns' => ['person_id']],
         ],
+        'uniqueConstraints' => [
+            'uniq_commercial_action_project_mail' => ['columns' => ['project_id', 'mail_source_key']],
+        ],
     ]);
     $metadata->mapField(['fieldName' => 'id', 'type' => Types::INTEGER, 'id' => true]);
     $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_IDENTITY);
@@ -23,6 +26,7 @@ return static function (ClassMetadata $metadata): void {
     $metadata->mapField(['fieldName' => 'details', 'type' => Types::TEXT, 'nullable' => true]);
     $metadata->mapField(['fieldName' => 'status', 'type' => Types::STRING, 'length' => 16]);
     $metadata->mapField(['fieldName' => 'resolvedAt', 'columnName' => 'resolved_at', 'type' => Types::DATETIME_IMMUTABLE, 'nullable' => true]);
+    $metadata->mapField(['fieldName' => 'mailSourceKey', 'columnName' => 'mail_source_key', 'type' => Types::STRING, 'length' => 64, 'nullable' => true]);
     $metadata->mapManyToOne([
         'fieldName' => 'project',
         'targetEntity' => CommercialProjectEntity::class,

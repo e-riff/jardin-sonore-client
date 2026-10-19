@@ -11,7 +11,7 @@ use Throwable;
 
 final readonly class ReadToolRegistry
 {
-    public function __construct(private MailReader $mailReader, private ProjectSearch $projectSearch)
+    public function __construct(private MailReader $mailReader, private ProjectSearch $projectSearch, private ProjectContextReader $projectContextReader)
     {
     }
 
@@ -63,6 +63,17 @@ final readonly class ReadToolRegistry
                 ],
                 'annotations' => ['readOnlyHint' => true, 'destructiveHint' => false, 'openWorldHint' => false],
             ],
+            [
+                'name' => 'get_project_context',
+                'description' => 'Read a commercial project by its exact ID after search_projects. Returns recent events and open reminders without mail bodies or documents.',
+                'inputSchema' => [
+                    'type' => 'object',
+                    'properties' => ['projectId' => ['type' => 'integer', 'minimum' => 1]],
+                    'required' => ['projectId'],
+                    'additionalProperties' => false,
+                ],
+                'annotations' => ['readOnlyHint' => true, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
         ];
     }
 
@@ -76,6 +87,7 @@ final readonly class ReadToolRegistry
                 'search_mail' => ['from', 'since', 'query', 'limit'],
                 'read_mail_thread' => ['mailReference', 'limit'],
                 'search_projects' => ['email', 'organization', 'terms', 'limit'],
+                'get_project_context' => ['projectId'],
                 default => throw new InvalidToolArguments('Unknown read tool.'),
             };
             foreach (array_keys($arguments) as $argumentName) {
@@ -96,6 +108,13 @@ final readonly class ReadToolRegistry
                     break;
                 case 'search_projects':
                     $result = $this->searchProjects($arguments);
+                    break;
+                case 'get_project_context':
+                    $projectId = $arguments['projectId'] ?? null;
+                    if (!is_int($projectId) || 1 > $projectId) {
+                        throw new InvalidToolArguments('Invalid project ID.');
+                    }
+                    $result = $this->projectContextReader->get($projectId);
                     break;
                 default:
                     throw new InvalidToolArguments('Unknown read tool.');

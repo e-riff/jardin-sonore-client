@@ -219,6 +219,8 @@ note:
   color_brown: Texte brun
   color_green: Texte vert
 event:
+  mail_source: Source e-mail
+  mail_unknown: Non renseigné
   edit: Corriger
   delete: Supprimer cet élément du fil
   delete_item: "l’événement « %type% » du %date%"
