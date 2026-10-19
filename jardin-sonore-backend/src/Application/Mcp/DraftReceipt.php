@@ -13,6 +13,7 @@ final readonly class DraftReceipt
         public string $state,
         public bool $isNew,
         public ?int $uid,
+        public ?string $pendingMessageId = null,
     ) {
     }
 }

@@ -2,6 +2,7 @@ parameters:
   app.mcp.bearer_token: '%env(MCP_BEARER_TOKEN)%'
   app.mcp.write_enabled: '%env(bool:MCP_WRITE_ENABLED)%'
   app.mcp.draft_write_enabled: '%env(bool:MCP_DRAFT_WRITE_ENABLED)%'
+  app.mcp.draft_edit_enabled: '%env(bool:MCP_DRAFT_EDIT_ENABLED)%'
   app.mcp.imap_host: '%env(MCP_IMAP_HOST)%'
   app.mcp.imap_port: '%env(int:MCP_IMAP_PORT)%'
   app.mcp.imap_username: '%env(MCP_IMAP_USERNAME)%'

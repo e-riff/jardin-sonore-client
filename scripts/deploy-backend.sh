@@ -4,12 +4,17 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BACKEND_DIR="$ROOT_DIR/jardin-sonore-backend"
 DEPLOY_ENV_FILE="$ROOT_DIR/.env.deploy.local"
+RUN_MIGRATIONS_OVERRIDE="${CPANEL_BACKEND_RUN_MIGRATIONS:-}"
 
 if [[ -f "$DEPLOY_ENV_FILE" ]]; then
   set -a
   # shellcheck source=/dev/null
   source "$DEPLOY_ENV_FILE"
   set +a
+fi
+
+if [[ -n "$RUN_MIGRATIONS_OVERRIDE" ]]; then
+  CPANEL_BACKEND_RUN_MIGRATIONS="$RUN_MIGRATIONS_OVERRIDE"
 fi
 
 : "${CPANEL_SSH_HOST:?Missing CPANEL_SSH_HOST. Set it in .env.deploy.local or in the shell environment.}"

@@ -17,6 +17,8 @@ final readonly class WriteToolRegistry
         #[Autowire('%app.mcp.write_enabled%')] private bool $writeEnabled,
         private ?MailDraftWriter $mailDraftWriter = null,
         #[Autowire('%app.mcp.draft_write_enabled%')] private bool $draftWriteEnabled = false,
+        private ?MailDraftEditor $mailDraftEditor = null,
+        #[Autowire('%app.mcp.draft_edit_enabled%')] private bool $draftEditEnabled = false,
     ) {
     }
 
@@ -24,6 +26,22 @@ final readonly class WriteToolRegistry
     public function definitions(): array
     {
         return [
+            [
+                'name' => 'update_mail_draft',
+                'description' => 'After a separate explicit user confirmation, replace the MCP-created reply draft linked to the verified source mail with this complete body. Read the draft first and pass its current draftMessageId and revision. The old draft remains if replacement cannot be verified. This never sends email.',
+                'inputSchema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'mailReference' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 1024],
+                        'draftMessageId' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255],
+                        'revision' => ['type' => 'string', 'minLength' => 64, 'maxLength' => 64],
+                        'body' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 10000],
+                    ],
+                    'required' => ['mailReference', 'draftMessageId', 'revision', 'body'],
+                    'additionalProperties' => false,
+                ],
+                'annotations' => ['readOnlyHint' => false, 'destructiveHint' => true, 'openWorldHint' => false],
+            ],
             [
                 'name' => 'save_mail_draft',
                 'description' => 'After a separate explicit user confirmation, save one plain-text reply draft to the configured IMAP Drafts folder. The recipient and subject are derived from the verified source mail. This never sends email; repeating the same source does not overwrite an edited draft.',
@@ -79,6 +97,9 @@ final readonly class WriteToolRegistry
     {
         if ('save_mail_draft' === $name) {
             return $this->callDraft($arguments);
+        }
+        if ('update_mail_draft' === $name) {
+            return $this->callDraftUpdate($arguments);
         }
         if (!$this->writeEnabled) {
             return $this->error('Commercial writes are disabled.');
@@ -142,6 +163,35 @@ final readonly class WriteToolRegistry
         }
     }
 
+    /** @param array<string, mixed> $arguments
+     * @return array<string, mixed>
+     */
+    private function callDraftUpdate(array $arguments): array
+    {
+        if (!$this->draftEditEnabled || null === $this->mailDraftEditor) {
+            return $this->error('Draft editing is disabled.');
+        }
+        try {
+            if ([] !== array_diff(array_keys($arguments), ['mailReference', 'draftMessageId', 'revision', 'body'])) {
+                throw new InvalidToolArguments('Unexpected argument.');
+            }
+            $reference = $this->text($arguments, 'mailReference', 1024);
+            $draftMessageId = $this->text($arguments, 'draftMessageId', 255);
+            $revision = $this->text($arguments, 'revision', 64);
+            $body = $this->draftBody($arguments, 'body', 10_000);
+            $result = $this->mailDraftEditor->update($reference, $draftMessageId, $revision, $body);
+            $json = json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+            return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => !in_array($result['status'] ?? null, ['saved'], true)];
+        } catch (InvalidToolArguments $exception) {
+            return $this->error($exception->getMessage());
+        } catch (JsonException) {
+            return $this->error('The draft update returned invalid data.');
+        } catch (Throwable) {
+            return $this->error('Draft update failed.');
+        }
+    }
+
     /** @param array<string, mixed> $arguments */
     private function text(array $arguments, string $name, int $maxLength): string
     {
@@ -151,6 +201,17 @@ final readonly class WriteToolRegistry
         }
 
         return trim($value);
+    }
+
+    /** @param array<string, mixed> $arguments */
+    private function draftBody(array $arguments, string $name, int $maxLength): string
+    {
+        $value = $arguments[$name] ?? null;
+        if (!is_string($value) || '' === trim($value) || mb_strlen($value) > $maxLength || 1 === preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', $value)) {
+            throw new InvalidToolArguments("Invalid {$name}.");
+        }
+
+        return $value;
     }
 
     /** @param array<string, mixed> $arguments */

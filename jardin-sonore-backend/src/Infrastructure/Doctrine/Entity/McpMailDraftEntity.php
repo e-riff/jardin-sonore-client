@@ -13,6 +13,8 @@ final class McpMailDraftEntity
 
     private ?int $imapUid = null;
 
+    private ?string $pendingMessageId = null;
+
     private string $state = 'reserved';
 
     private DateTimeImmutable $updatedAt;

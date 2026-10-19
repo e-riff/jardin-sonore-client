@@ -177,9 +177,11 @@ final class McpControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $response = json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
         $names = array_column($response['result']['tools'], 'name');
-        self::assertCount(8, $names);
+        self::assertCount(10, $names);
         self::assertContains('find_sent_replies', $names);
         self::assertContains('save_mail_draft', $names);
+        self::assertContains('read_mail_draft', $names);
+        self::assertContains('update_mail_draft', $names);
         self::assertContains('get_project_context', $names);
         self::assertContains('record_mail_summary', $names);
         self::assertContains('create_project_reminder', $names);
