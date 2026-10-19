@@ -198,6 +198,100 @@ final class ImapMailReaderTest extends TestCase
         self::assertSame(hash('sha256', "contact@example.test\0INBOX:77:14"), $source->sourceKey);
     }
 
+    public function testReplyContextUsesTheSingleReplyToAddress(): void
+    {
+        $message = new ImapMessageFixture(14, '<Mail-14@Example.test>', 'Projet', '', '', 0, 'reply@example.test');
+        $query = $this->createMock(WhereQuery::class);
+        $query->method('whereUid')->willReturnSelf();
+        $query->method('setFetchBody')->willReturnSelf();
+        $query->method('setFetchFlags')->willReturnSelf();
+        $query->method('limit')->willReturnSelf();
+        $query->expects(self::once())->method('leaveUnread')->willReturnSelf();
+        $query->method('get')->willReturn(new MessageCollection([$message]));
+        $folder = $this->createStub(Folder::class);
+        $folder->method('status')->willReturn(['UIDVALIDITY' => 77]);
+        $folder->method('query')->willReturn($query);
+        $client = $this->createMock(Client::class);
+        $client->method('connect')->willReturnSelf();
+        $client->method('disconnect')->willReturnSelf();
+        $client->method('getFolder')->willReturn($folder);
+        $provider = $this->createStub(ImapClientProvider::class);
+        $provider->method('client')->willReturn($client);
+
+        $context = (new ImapMailReader($provider, 'contact@example.test'))->replyContext(self::mailReference(77, 14));
+
+        self::assertSame('reply@example.test', $context->replyRecipient);
+        self::assertSame('<Mail-14@Example.test>', $context->messageId);
+        self::assertSame('Projet', $context->subject);
+    }
+
+    public function testReplyContextRejectsMultipleReplyAddressesAndSelfAddressedMail(): void
+    {
+        foreach ([
+            new ImapMessageFixture(14, '<source@example.test>', 'Projet', '', '', 0, ['first@example.test', 'second@example.test']),
+            new ImapMessageFixture(14, '<source@example.test>', 'Projet', '', '', 0, []),
+            new ImapMessageFixture(14, '<source@example.test>', 'Projet', '', '', 0, null, 'contact@example.test'),
+        ] as $message) {
+            $query = $this->createStub(WhereQuery::class);
+            $query->method('whereUid')->willReturnSelf();
+            $query->method('setFetchBody')->willReturnSelf();
+            $query->method('setFetchFlags')->willReturnSelf();
+            $query->method('limit')->willReturnSelf();
+            $query->method('leaveUnread')->willReturnSelf();
+            $query->method('get')->willReturn(new MessageCollection([$message]));
+            $folder = $this->createStub(Folder::class);
+            $folder->method('status')->willReturn(['UIDVALIDITY' => 77]);
+            $folder->method('query')->willReturn($query);
+            $client = new ReaderClientFixture($folder);
+            $provider = $this->createStub(ImapClientProvider::class);
+            $provider->method('client')->willReturn($client);
+
+            try {
+                (new ImapMailReader($provider, 'contact@example.test'))->replyContext(self::mailReference(77, 14));
+                self::fail('Unsafe reply recipient was accepted.');
+            } catch (MailReadException) {
+                self::assertTrue(true);
+            }
+        }
+    }
+
+    public function testFindSentRepliesIsBoundedAndDoesNotMarkMessagesRead(): void
+    {
+        $source = new ImapMessageFixture(14, '<source@example.test>', 'Projet', '', '', 0);
+        $sent = new ImapMessageFixture(20, '<sent@example.test>', 'Re: Projet', 'Réponse envoyée', '', 0);
+        $inboxQuery = $this->createStub(WhereQuery::class);
+        $inboxQuery->method('whereUid')->willReturnSelf();
+        $inboxQuery->method('setFetchBody')->willReturnSelf();
+        $inboxQuery->method('setFetchFlags')->willReturnSelf();
+        $inboxQuery->method('limit')->willReturnSelf();
+        $inboxQuery->method('leaveUnread')->willReturnSelf();
+        $inboxQuery->method('get')->willReturn(new MessageCollection([$source]));
+        $inbox = $this->createStub(Folder::class);
+        $inbox->method('status')->willReturn(['UIDVALIDITY' => 77]);
+        $inbox->method('query')->willReturn($inboxQuery);
+        $sentQuery = $this->createMock(WhereQuery::class);
+        $sentQuery->expects(self::once())->method('whereInReplyTo')->with('<source@example.test>')->willReturnSelf();
+        $sentQuery->expects(self::once())->method('whereHeader')->with('References', '<source@example.test>')->willReturnSelf();
+        $sentQuery->expects(self::exactly(2))->method('leaveUnread')->willReturnSelf();
+        $sentQuery->method('setFetchBody')->willReturnSelf();
+        $sentQuery->method('setFetchFlags')->willReturnSelf();
+        $sentQuery->method('setFetchOrder')->willReturnSelf();
+        $sentQuery->method('limit')->willReturnSelf();
+        $sentQuery->method('get')->willReturn(new MessageCollection([$sent]));
+        $sentFolder = $this->createStub(Folder::class);
+        $sentFolder->method('query')->willReturn($sentQuery);
+        $provider = $this->createStub(ImapClientProvider::class);
+        $provider->method('client')->willReturn(new ReaderClientFixture($inbox, $sentFolder));
+
+        $result = (new ImapMailReader($provider, 'contact@example.test', 'Sent'))->findSentReplies(self::mailReference(77, 14), 3);
+
+        self::assertTrue($result['matchable']);
+        self::assertSame('marie@example.test', $result['replyRecipient']);
+        self::assertSame('Re: Projet', $result['replySubject']);
+        self::assertCount(1, $result['replies']);
+        self::assertSame('Réponse envoyée', $result['replies'][0]['body']);
+    }
+
     private static function mailReference(int $uidValidity, int $uid): string
     {
         return rtrim(strtr(base64_encode(json_encode(['folder' => 'INBOX', 'uidValidity' => $uidValidity, 'uid' => $uid], JSON_THROW_ON_ERROR)), '+/', '-_'), '=');
@@ -213,6 +307,8 @@ final readonly class ImapMessageFixture
         private string $textBody,
         private string $htmlBody,
         private int $attachmentCount,
+        private array|string|null $replyTo = null,
+        private string $fromAddress = 'marie@example.test',
     ) {
     }
 
@@ -233,7 +329,7 @@ final readonly class ImapMessageFixture
 
     public function getFrom(): \Webklex\PHPIMAP\Attribute
     {
-        return new \Webklex\PHPIMAP\Attribute('from', new \Webklex\PHPIMAP\Address((object) ['mailbox' => 'marie', 'host' => 'example.test', 'personal' => 'Marie']));
+        return new \Webklex\PHPIMAP\Attribute('from', new \Webklex\PHPIMAP\Address((object) ['mail' => $this->fromAddress, 'personal' => 'Marie']));
     }
 
     public function getTo(): \Webklex\PHPIMAP\Attribute
@@ -264,6 +360,52 @@ final readonly class ImapMessageFixture
     public function getInReplyTo(): \Webklex\PHPIMAP\Attribute
     {
         return new \Webklex\PHPIMAP\Attribute('in-reply-to', null);
+    }
+
+    public function getReplyTo(): \Webklex\PHPIMAP\Attribute
+    {
+        $addresses = array_map(static fn (string $mail): \Webklex\PHPIMAP\Address => new \Webklex\PHPIMAP\Address((object) ['mail' => $mail]), (array) $this->replyTo);
+
+        return new \Webklex\PHPIMAP\Attribute('reply-to', $addresses);
+    }
+
+    public function getHeader(): ?\Webklex\PHPIMAP\Header
+    {
+        return new HeaderPresenceFixture(null !== $this->replyTo);
+    }
+
+    public function getReferences(): \Webklex\PHPIMAP\Attribute
+    {
+        return new \Webklex\PHPIMAP\Attribute('references', null);
+    }
+}
+
+final class ReaderClientFixture extends Client
+{
+    public function __construct(private Folder $inbox, private ?Folder $sent = null)
+    {
+    }
+
+    public function getFolder(string $folder_name, ?string $delimiter = null, bool $utf7 = false): ?Folder
+    {
+        return 'INBOX' === $folder_name ? $this->inbox : $this->sent;
+    }
+
+    public function disconnect(): Client
+    {
+        return $this;
+    }
+}
+
+final class HeaderPresenceFixture extends \Webklex\PHPIMAP\Header
+{
+    public function __construct(private bool $replyToPresent)
+    {
+    }
+
+    public function has(string $name): bool
+    {
+        return $this->replyToPresent && 'reply-to' === $name;
     }
 }
 

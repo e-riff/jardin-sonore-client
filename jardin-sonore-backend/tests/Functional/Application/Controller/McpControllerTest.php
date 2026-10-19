@@ -177,6 +177,9 @@ final class McpControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $response = json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
         $names = array_column($response['result']['tools'], 'name');
+        self::assertCount(8, $names);
+        self::assertContains('find_sent_replies', $names);
+        self::assertContains('save_mail_draft', $names);
         self::assertContains('get_project_context', $names);
         self::assertContains('record_mail_summary', $names);
         self::assertContains('create_project_reminder', $names);
@@ -188,5 +191,14 @@ final class McpControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $response = json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
         self::assertTrue($response['result']['isError']);
+
+        $this->client->jsonRequest('POST', '/api/mcp', ['jsonrpc' => '2.0', 'id' => 3, 'method' => 'tools/call', 'params' => [
+            'name' => 'save_mail_draft',
+            'arguments' => ['mailReference' => 'irrelevant', 'body' => 'Bonjour'],
+        ]], $headers);
+        self::assertResponseIsSuccessful();
+        $response = json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertTrue($response['result']['isError']);
+        self::assertSame('Draft writes are disabled.', $response['result']['content'][0]['text']);
     }
 }

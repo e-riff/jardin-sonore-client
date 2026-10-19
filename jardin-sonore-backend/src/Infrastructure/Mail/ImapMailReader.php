@@ -8,6 +8,7 @@ use App\Application\Mcp\ImapClientProvider;
 use App\Application\Mcp\MailReader;
 use App\Application\Mcp\MailReadException;
 use App\Application\Mcp\MailSource;
+use App\Application\Mcp\ReplyContext;
 use DateTimeImmutable;
 use JsonException;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -19,8 +20,129 @@ final readonly class ImapMailReader implements MailReader
 {
     private const int BODY_LIMIT = 8_000;
 
-    public function __construct(private ImapClientProvider $clientProvider, #[Autowire('%app.mcp.imap_username%')] private string $mailboxUsername = '')
+    public function __construct(
+        private ImapClientProvider $clientProvider,
+        #[Autowire('%app.mcp.imap_username%')] private string $mailboxUsername = '',
+        #[Autowire('%app.mcp.imap_sent_folder%')] private string $sentFolder = '',
+    ) {
+    }
+
+    public function replyContext(string $mailReference): ReplyContext
     {
+        try {
+            $reference = $this->decodeReference($mailReference);
+            $folder = $this->inbox($this->clientProvider->client()->getFolder('INBOX'));
+            if ($reference['uidValidity'] !== $this->uidValidity($folder)) {
+                throw new MailReadException('The mail reference is out of date.');
+            }
+            $message = $folder->query()->whereUid($reference['uid'])->setFetchBody(false)->setFetchFlags(false)->limit(1)->leaveUnread()->get()->first();
+            if (!is_object($message) || !is_callable([$message, 'getUid']) || $reference['uid'] !== $message->getUid()) {
+                throw new MailReadException('The requested message is no longer available.');
+            }
+
+            $from = $this->singleAddress($message->getFrom(), 'Invalid sender address.');
+            if (strtolower($from) === strtolower(trim($this->mailboxUsername))) {
+                throw new MailReadException('Cannot reply to a message sent by this mailbox.');
+            }
+            $replyTo = $message->getReplyTo();
+            $replyToPresent = $message->getHeader()?->has('reply-to') ?? false;
+            $recipient = $replyToPresent || (is_object($replyTo) && method_exists($replyTo, 'toArray') && [] !== $replyTo->toArray())
+                ? $this->singleAddress($replyTo, 'Invalid Reply-To address.')
+                : $from;
+            if (strtolower($recipient) === strtolower(trim($this->mailboxUsername))) {
+                throw new MailReadException('Cannot create a self-addressed reply.');
+            }
+
+            $rawMessageId = $this->attributeString($message->getMessageId());
+            $normalizedMessageId = null === $rawMessageId ? null : $this->normalizedMessageId($rawMessageId);
+            $messageId = null === $normalizedMessageId ? null : '<' . trim($rawMessageId, '<>') . '>';
+            $identity = $normalizedMessageId ?? "INBOX:{$reference['uidValidity']}:{$reference['uid']}";
+            $sourceKey = hash('sha256', mb_strtolower(trim($this->mailboxUsername)) . "\0" . $identity);
+
+            $references = $this->attributeString($message->getReferences());
+            if (null !== $references && 1 !== preg_match('/^<[^<>\s]{1,250}>(?:\s+<[^<>\s]{1,250}>)*$/D', $references)) {
+                $references = null;
+            }
+
+            return new ReplyContext($sourceKey, $messageId, $this->attributeString($message->getSubject()), $recipient, $references, $mailReference);
+        } catch (MailReadException $exception) {
+            throw $exception;
+        } catch (Throwable) {
+            throw new MailReadException('Mailbox read failed.');
+        }
+    }
+
+    /** @return array{matchable: bool, replyRecipient: string, replySubject: string, replies: list<array{date: string, to: string, subject: ?string, body: string}>} */
+    public function findSentReplies(string $mailReference, int $limit): array
+    {
+        if (1 > $limit || 3 < $limit) {
+            throw new MailReadException('Mailbox read failed.');
+        }
+        $context = $this->replyContext($mailReference);
+        if (null === $context->messageId) {
+            return ['matchable' => false, 'replyRecipient' => $context->replyRecipient, 'replySubject' => $context->replySubject(), 'replies' => []];
+        }
+        if ('' === trim($this->sentFolder)) {
+            throw new MailReadException('Sent folder is not configured.');
+        }
+
+        try {
+            $folder = $this->clientProvider->client()->getFolder($this->sentFolder);
+            if (!$folder instanceof Folder) {
+                throw new MailReadException('Sent folder is not available.');
+            }
+            $messages = [];
+            foreach (['In-Reply-To', 'References'] as $header) {
+                $query = $folder->query();
+                $query = 'In-Reply-To' === $header
+                    ? $query->whereInReplyTo($context->messageId)
+                    : $query->whereHeader('References', $context->messageId);
+                foreach ($query->setFetchBody(true)->setFetchFlags(false)->setFetchOrder('desc')->limit($limit)->leaveUnread()->get() as $message) {
+                    if (is_object($message) && is_callable([$message, 'getUid'])) {
+                        $messages[$message->getUid()] = $message;
+                    }
+                }
+            }
+            $replies = [];
+            foreach ($messages as $message) {
+                $to = array_map(static fn (mixed $address): string => $address instanceof Address ? $address->mail : (string) $address, $message->getTo()->toArray());
+                $body = trim($message->getTextBody());
+                if ('' === $body) {
+                    $body = html_entity_decode(strip_tags($message->getHTMLBody()), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                }
+                $replies[] = [
+                    'date' => $message->getDate()->toDate()->format(DATE_ATOM),
+                    'to' => implode(', ', $to),
+                    'subject' => $this->attributeString($message->getSubject()),
+                    'body' => mb_substr($body, 0, self::BODY_LIMIT),
+                ];
+            }
+
+            usort($replies, static fn (array $first, array $second): int => strcmp($second['date'], $first['date']));
+
+            return ['matchable' => true, 'replyRecipient' => $context->replyRecipient, 'replySubject' => $context->replySubject(), 'replies' => array_slice($replies, 0, $limit)];
+        } catch (MailReadException $exception) {
+            throw $exception;
+        } catch (Throwable) {
+            throw new MailReadException('Mailbox read failed.');
+        }
+    }
+
+    private function singleAddress(mixed $attribute, string $error): string
+    {
+        if (!is_object($attribute) || !method_exists($attribute, 'toArray')) {
+            throw new MailReadException($error);
+        }
+        $addresses = $attribute->toArray();
+        if (1 !== count($addresses) || !$addresses[0] instanceof Address) {
+            throw new MailReadException($error);
+        }
+        $email = $addresses[0]->mail;
+        if (false === filter_var($email, FILTER_VALIDATE_EMAIL) || 1 === preg_match('/[\r\n]/', $email)) {
+            throw new MailReadException($error);
+        }
+
+        return $email;
     }
 
     public function source(string $mailReference): MailSource

@@ -15,6 +15,8 @@ final readonly class WriteToolRegistry
         private MailReader $mailReader,
         private ProjectFollowupWriter $projectFollowupWriter,
         #[Autowire('%app.mcp.write_enabled%')] private bool $writeEnabled,
+        private ?MailDraftWriter $mailDraftWriter = null,
+        #[Autowire('%app.mcp.draft_write_enabled%')] private bool $draftWriteEnabled = false,
     ) {
     }
 
@@ -22,6 +24,20 @@ final readonly class WriteToolRegistry
     public function definitions(): array
     {
         return [
+            [
+                'name' => 'save_mail_draft',
+                'description' => 'After a separate explicit user confirmation, save one plain-text reply draft to the configured IMAP Drafts folder. The recipient and subject are derived from the verified source mail. This never sends email; repeating the same source does not overwrite an edited draft.',
+                'inputSchema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'mailReference' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 1024],
+                        'body' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 10000],
+                    ],
+                    'required' => ['mailReference', 'body'],
+                    'additionalProperties' => false,
+                ],
+                'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
             [
                 'name' => 'record_mail_summary',
                 'description' => 'After explicit user confirmation, add a summary of a verified mail to one exact commercial project. Never infer projectId. Repeating the same project and mail returns the existing note.',
@@ -61,6 +77,9 @@ final readonly class WriteToolRegistry
      */
     public function call(string $name, array $arguments): array
     {
+        if ('save_mail_draft' === $name) {
+            return $this->callDraft($arguments);
+        }
         if (!$this->writeEnabled) {
             return $this->error('Commercial writes are disabled.');
         }
@@ -95,6 +114,31 @@ final readonly class WriteToolRegistry
             return $this->error('The write operation returned invalid data.');
         } catch (Throwable) {
             return $this->error('The write operation failed.');
+        }
+    }
+
+    /** @param array<string, mixed> $arguments
+     * @return array<string, mixed>
+     */
+    private function callDraft(array $arguments): array
+    {
+        if (!$this->draftWriteEnabled || null === $this->mailDraftWriter) {
+            return $this->error('Draft writes are disabled.');
+        }
+        try {
+            if ([] !== array_diff(array_keys($arguments), ['mailReference', 'body'])) {
+                throw new InvalidToolArguments('Unexpected argument.');
+            }
+            $reference = $this->text($arguments, 'mailReference', 1024);
+            $body = $this->text($arguments, 'body', 10_000);
+            $result = $this->mailDraftWriter->save($reference, $body);
+            $json = json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+            return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => in_array($result['status'], ['uncertain', 'missing'], true)];
+        } catch (InvalidToolArguments $exception) {
+            return $this->error($exception->getMessage());
+        } catch (Throwable) {
+            return $this->error('Draft save failed.');
         }
     }
 

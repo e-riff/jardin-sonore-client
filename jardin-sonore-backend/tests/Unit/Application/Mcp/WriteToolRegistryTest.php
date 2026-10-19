@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Application\Mcp;
 
+use App\Application\Mcp\MailDraftWriter;
 use App\Application\Mcp\MailReader;
 use App\Application\Mcp\MailReadException;
 use App\Application\Mcp\MailSource;
@@ -72,5 +73,31 @@ final class WriteToolRegistryTest extends TestCase
         ]);
 
         self::assertFalse($result['isError']);
+    }
+
+    public function testDraftToolHasItsOwnOffByDefaultGateAndRejectsRecipientOverride(): void
+    {
+        $draftWriter = $this->createMock(MailDraftWriter::class);
+        $draftWriter->expects(self::never())->method('save');
+        $registry = new WriteToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectFollowupWriter::class), true, $draftWriter, false);
+
+        self::assertContains('save_mail_draft', array_column($registry->definitions(), 'name'));
+        self::assertTrue($registry->call('save_mail_draft', ['mailReference' => 'reference', 'body' => 'Bonjour'])['isError']);
+
+        $enabled = new WriteToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectFollowupWriter::class), false, $draftWriter, true);
+        self::assertTrue($enabled->call('save_mail_draft', ['mailReference' => 'reference', 'body' => 'Bonjour', 'to' => 'evil@example.test'])['isError']);
+        self::assertTrue($enabled->call('save_mail_draft', ['mailReference' => 'reference', 'body' => str_repeat('x', 10_001)])['isError']);
+    }
+
+    public function testUncertainDraftResultIsReportedAsToolError(): void
+    {
+        $draftWriter = $this->createStub(MailDraftWriter::class);
+        $draftWriter->method('save')->willReturn(['status' => 'uncertain', 'folder' => 'Drafts', 'messageId' => '<draft@example.test>', 'uid' => null]);
+        $registry = new WriteToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectFollowupWriter::class), false, $draftWriter, true);
+
+        $result = $registry->call('save_mail_draft', ['mailReference' => 'reference', 'body' => 'Bonjour']);
+
+        self::assertTrue($result['isError']);
+        self::assertStringContainsString('uncertain', $result['content'][0]['text']);
     }
 }

@@ -11,10 +11,14 @@ use App\Application\Commercial\GoogleCalendarConnectionStoreInterface;
 use App\Application\Mailing\NewsletterConfirmationMailSenderInterface;
 use App\Application\Mailing\NewsletterRecipientEligibilityInterface;
 use App\Application\Mcp\ImapClientProvider;
+use App\Application\Mcp\MailDraftReceiptStore;
+use App\Application\Mcp\MailDraftStore;
+use App\Application\Mcp\MailDraftWriter;
 use App\Application\Mcp\MailReader;
 use App\Application\Mcp\ProjectContextReader;
 use App\Application\Mcp\ProjectFollowupWriter;
 use App\Application\Mcp\ProjectSearch;
+use App\Application\Mcp\SaveMailDraft;
 use App\Application\Portal\PortalAccountMailSenderInterface;
 use App\Application\Session\SessionDocumentGeneratorInterface;
 use App\Application\Session\SessionNotificationMailSenderInterface;
@@ -22,7 +26,9 @@ use App\Infrastructure\Doctrine\Commercial\DoctrineGoogleCalendarConnectionStore
 use App\Infrastructure\Doctrine\Commercial\DoctrineProjectContextReader;
 use App\Infrastructure\Doctrine\Commercial\DoctrineProjectFollowupWriter;
 use App\Infrastructure\Doctrine\Commercial\DoctrineProjectSearch;
+use App\Infrastructure\Doctrine\Mcp\DoctrineMailDraftReceiptStore;
 use App\Infrastructure\Google\GoogleCalendarGateway;
+use App\Infrastructure\Mail\ImapMailDraftStore;
 use App\Infrastructure\Mail\ImapMailReader;
 use App\Infrastructure\Mail\WebklexImapClientProvider;
 use App\Infrastructure\Mailer\SymfonyCommercialContactSender;
@@ -90,6 +96,15 @@ return App::config([
         ],
         MailReader::class => [
             'alias' => ImapMailReader::class,
+        ],
+        MailDraftStore::class => [
+            'alias' => ImapMailDraftStore::class,
+        ],
+        MailDraftReceiptStore::class => [
+            'alias' => DoctrineMailDraftReceiptStore::class,
+        ],
+        MailDraftWriter::class => [
+            'alias' => SaveMailDraft::class,
         ],
         ProjectSearch::class => [
             'alias' => DoctrineProjectSearch::class,

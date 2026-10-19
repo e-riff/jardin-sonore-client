@@ -16,7 +16,7 @@ final class ReadToolRegistryTest extends TestCase
     {
         $registry = new ReadToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectSearch::class), $this->createStub(ProjectContextReader::class));
 
-        self::assertSame(['read_mail_thread', 'search_mail', 'search_projects', 'get_project_context'], array_column($registry->definitions(), 'name'));
+        self::assertSame(['read_mail_thread', 'search_mail', 'find_sent_replies', 'search_projects', 'get_project_context'], array_column($registry->definitions(), 'name'));
         foreach ($registry->definitions() as $definition) {
             self::assertTrue($definition['annotations']['readOnlyHint']);
             self::assertFalse($definition['annotations']['destructiveHint']);
@@ -99,5 +99,15 @@ final class ReadToolRegistryTest extends TestCase
         self::assertTrue($registry->call('get_project_context', ['projectId' => '7'])['isError']);
         self::assertTrue($registry->call('get_project_context', ['projectId' => 0])['isError']);
         self::assertFalse($registry->call('get_project_context', ['projectId' => 7])['isError']);
+    }
+
+    public function testFindSentRepliesUsesAnExactMailReferenceAndThreeResultLimit(): void
+    {
+        $mailReader = $this->createMock(MailReader::class);
+        $mailReader->expects(self::once())->method('findSentReplies')->with('mail-ref', 3)->willReturn(['matchable' => true, 'replies' => []]);
+        $registry = new ReadToolRegistry($mailReader, $this->createStub(ProjectSearch::class), $this->createStub(ProjectContextReader::class));
+
+        self::assertFalse($registry->call('find_sent_replies', ['mailReference' => 'mail-ref'])['isError']);
+        self::assertTrue($registry->call('find_sent_replies', ['mailReference' => 'mail-ref', 'folder' => 'Sent'])['isError']);
     }
 }
