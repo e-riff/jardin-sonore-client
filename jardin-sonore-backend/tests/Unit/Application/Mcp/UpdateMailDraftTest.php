@@ -9,6 +9,7 @@ use App\Application\Mcp\MailDraft;
 use App\Application\Mcp\MailDraftReceiptStore;
 use App\Application\Mcp\MailDraftStore;
 use App\Application\Mcp\MailReader;
+use App\Application\Mcp\MailSource;
 use App\Application\Mcp\ReplyContext;
 use App\Application\Mcp\UpdateMailDraft;
 use App\Infrastructure\Mail\ReplyDraftMimeBuilder;
@@ -16,6 +17,22 @@ use PHPUnit\Framework\TestCase;
 
 final class UpdateMailDraftTest extends TestCase
 {
+    public function testReadingDraftForSelfSentMessageReturnsNotFound(): void
+    {
+        $sourceKey = str_repeat('d', 64);
+        $reader = $this->createMock(MailReader::class);
+        $reader->expects(self::once())->method('source')->with('reference')->willReturn(new MailSource('reference', $sourceKey, null, 'Digest', 'contact@example.test', '2026-10-19T07:00:00+00:00'));
+        $reader->expects(self::never())->method('replyContext');
+        $receiptStore = $this->createMock(MailDraftReceiptStore::class);
+        $receiptStore->expects(self::once())->method('find')->with($sourceKey)->willReturn(null);
+        $draftStore = $this->createMock(MailDraftStore::class);
+        $draftStore->expects(self::never())->method('getByMessageId');
+
+        $result = (new UpdateMailDraft($reader, $receiptStore, $draftStore, new ReplyDraftMimeBuilder(), 'contact@example.test'))->read('reference');
+
+        self::assertSame(['status' => 'not_found'], $result);
+    }
+
     public function testVerifiedReplacementRemovesOnlyPreviousDraft(): void
     {
         $sourceKey = str_repeat('a', 64);

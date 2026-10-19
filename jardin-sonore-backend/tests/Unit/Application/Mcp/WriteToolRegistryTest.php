@@ -100,4 +100,16 @@ final class WriteToolRegistryTest extends TestCase
         self::assertTrue($result['isError']);
         self::assertStringContainsString('uncertain', $result['content'][0]['text']);
     }
+
+    public function testSelfSentMailExplainsWhyReplyDraftCannotBeCreated(): void
+    {
+        $draftWriter = $this->createMock(MailDraftWriter::class);
+        $draftWriter->expects(self::once())->method('save')->willThrowException(new MailReadException('Cannot reply to a message sent by this mailbox.'));
+        $registry = new WriteToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectFollowupWriter::class), false, $draftWriter, true);
+
+        $result = $registry->call('save_mail_draft', ['mailReference' => 'reference', 'body' => 'Bonjour']);
+
+        self::assertTrue($result['isError']);
+        self::assertSame('A reply draft can only be created for a message from another sender.', $result['content'][0]['text']);
+    }
 }

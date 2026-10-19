@@ -44,7 +44,7 @@ final readonly class WriteToolRegistry
             ],
             [
                 'name' => 'save_mail_draft',
-                'description' => 'After a separate explicit user confirmation, save one plain-text reply draft to the configured IMAP Drafts folder. The recipient and subject are derived from the verified source mail. This never sends email; repeating the same source does not overwrite an edited draft.',
+                'description' => 'After a separate explicit user confirmation, save one plain-text reply draft to the configured IMAP Drafts folder for an incoming message from another sender. Do not use this for self-sent digests or reminders. The recipient and subject are derived from the verified source mail. This never sends email; repeating the same source does not overwrite an edited draft.',
                 'inputSchema' => [
                     'type' => 'object',
                     'properties' => [
@@ -158,6 +158,10 @@ final readonly class WriteToolRegistry
             return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => in_array($result['status'], ['uncertain', 'missing'], true)];
         } catch (InvalidToolArguments $exception) {
             return $this->error($exception->getMessage());
+        } catch (MailReadException $exception) {
+            return $this->error('Cannot reply to a message sent by this mailbox.' === $exception->getMessage()
+                ? 'A reply draft can only be created for a message from another sender.'
+                : 'The source message could not be used to create a reply draft.');
         } catch (Throwable) {
             return $this->error('Draft save failed.');
         }

@@ -25,8 +25,8 @@ final readonly class UpdateMailDraft implements MailDraftEditor
     /** @return array<string, mixed> */
     public function read(string $mailReference): array
     {
-        $context = $this->mailReader->replyContext($mailReference);
-        $receipt = $this->receiptStore->find($context->sourceKey);
+        $source = $this->mailReader->source($mailReference);
+        $receipt = $this->receiptStore->find($source->sourceKey);
         if (null === $receipt) {
             return ['status' => 'not_found'];
         }
