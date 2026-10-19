@@ -1,6 +1,6 @@
 # Brouillons de réponse IMAP depuis le connecteur MCP
 
-**État :** conception présentée dans la conversation et approuvée par l'utilisateur le 19 octobre 2026 ; document à relire avant le plan d'implémentation. Cette étape prolonge la [conception MCP IMAP](2026-10-17-assistant-mcp-imap-suivi-dossiers-design.md) et les [écritures commerciales](2026-10-19-assistant-mcp-commercial-followup-design.md).
+**État :** document approuvé par l'utilisateur le 19 octobre 2026. Cette étape prolonge la [conception MCP IMAP](2026-10-17-assistant-mcp-imap-suivi-dossiers-design.md) et les [écritures commerciales](2026-10-19-assistant-mcp-commercial-followup-design.md).
 
 ## Intention et périmètre
 
@@ -27,7 +27,7 @@ L'outil de lecture `find_sent_replies` accepte une `mailReference` de `search_ma
 
 ## Contrat de `save_mail_draft`
 
-L'outil accepte la `mailReference` d'un message reçu et un `body` texte non vide de 10 000 caractères au plus. Il ne prend ni adresse destinataire libre, ni en-têtes bruts, ni pièce jointe. Le serveur choisit une seule adresse de réponse à partir du `Reply-To` valide, sinon du `From` valide, et refuse un mail envoyé par la boîte elle-même ou une adresse de réponse ambiguë. Le serveur construit `From` avec l'adresse professionnelle configurée, `To` avec l'adresse vérifiée et `Subject` avec `Re:` sans le dupliquer. Mistral présente ces valeurs avant la confirmation ; le serveur les recalcule lors de l'écriture.
+L'outil accepte la `mailReference` d'un message reçu et un `body` texte non vide de 10 000 caractères au plus. Il ne prend ni adresse destinataire libre, ni en-têtes bruts, ni pièce jointe. Le serveur choisit une seule adresse de réponse à partir du `Reply-To` valide, ou du `From` valide si `Reply-To` est absent ; un `Reply-To` présent mais malformé ou multiple est refusé. Il refuse aussi un mail envoyé par la boîte elle-même. Le serveur construit `From` avec l'adresse professionnelle configurée, `To` avec l'adresse vérifiée et `Subject` avec `Re:` sans le dupliquer. Mistral présente ces valeurs avant la confirmation ; le serveur les recalcule lors de l'écriture.
 
 Le message stocké est un MIME `text/plain` UTF-8 avec en-têtes encodés et dates conformes, `Message-ID` propre, ainsi que `In-Reply-To` et `References` lorsque l'identifiant source est exploitable. Les retours de ligne et le texte sont échappés pour empêcher l'injection d'en-têtes. L'ajout IMAP utilise le drapeau `\Draft` et vérifie que le brouillon est retrouvable dans le dossier cible. Aucun outil SMTP ou d'envoi n'est exposé au MCP.
 
