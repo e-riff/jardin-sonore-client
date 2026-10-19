@@ -87,6 +87,43 @@ final class McpControllerTest extends WebTestCase
         self::assertSame('jardin-sonore', $response['result']['serverInfo']['name'] ?? null);
     }
 
+    public function testInitializeSupportsMistralProtocolVersion(): void
+    {
+        $this->client->jsonRequest('POST', '/api/mcp', [
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'method' => 'initialize',
+            'params' => [
+                'protocolVersion' => '2025-03-26',
+                'capabilities' => new stdClass(),
+                'clientInfo' => ['name' => 'mistral-mcp-client', 'version' => '1.0'],
+            ],
+        ], ['HTTP_AUTHORIZATION' => 'Bearer test-mcp-token', 'HTTP_ACCEPT' => 'application/json, text/event-stream']);
+
+        self::assertResponseIsSuccessful();
+        $response = json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertSame('2025-03-26', $response['result']['protocolVersion'] ?? null);
+        self::assertArrayHasKey('tools', $response['result']['capabilities'] ?? []);
+    }
+
+    public function testInitializeCountersUnsupportedVersionWithLatestSupportedVersion(): void
+    {
+        $this->client->jsonRequest('POST', '/api/mcp', [
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'method' => 'initialize',
+            'params' => [
+                'protocolVersion' => '2099-01-01',
+                'capabilities' => new stdClass(),
+                'clientInfo' => ['name' => 'test-client', 'version' => '1.0'],
+            ],
+        ], ['HTTP_AUTHORIZATION' => 'Bearer test-mcp-token', 'HTTP_ACCEPT' => 'application/json, text/event-stream']);
+
+        self::assertResponseIsSuccessful();
+        $response = json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertSame('2025-06-18', $response['result']['protocolVersion'] ?? null);
+    }
+
     public function testInitializedNotificationReturnsAcceptedWithoutBody(): void
     {
         $this->client->jsonRequest('POST', '/api/mcp', [

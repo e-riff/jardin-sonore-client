@@ -8,6 +8,8 @@ final class McpProtocol
 {
     public const string PROTOCOL_VERSION = '2025-06-18';
 
+    private const array SUPPORTED_PROTOCOL_VERSIONS = ['2025-03-26', self::PROTOCOL_VERSION];
+
     public function __construct(private readonly ReadToolRegistry $toolRegistry)
     {
     }
@@ -39,15 +41,13 @@ final class McpProtocol
                 return $this->error($id, -32602, 'Invalid params');
             }
 
-            if (self::PROTOCOL_VERSION !== $requestedVersion) {
-                return $this->error($id, -32602, 'Unsupported protocol version');
-            }
-
             return [
                 'jsonrpc' => '2.0',
                 'id' => $id,
                 'result' => [
-                    'protocolVersion' => self::PROTOCOL_VERSION,
+                    'protocolVersion' => in_array($requestedVersion, self::SUPPORTED_PROTOCOL_VERSIONS, true)
+                        ? $requestedVersion
+                        : self::PROTOCOL_VERSION,
                     'capabilities' => ['tools' => (object) []],
                     'serverInfo' => ['name' => 'jardin-sonore', 'version' => '1.0.0'],
                 ],
