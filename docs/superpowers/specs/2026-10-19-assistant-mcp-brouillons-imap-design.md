@@ -1,50 +1,63 @@
 # Brouillons de réponse IMAP depuis le connecteur MCP
 
-**État :** document approuvé par l'utilisateur le 19 octobre 2026. Cette étape prolonge la [conception MCP IMAP](2026-10-17-assistant-mcp-imap-suivi-dossiers-design.md) et les [écritures commerciales](2026-10-19-assistant-mcp-commercial-followup-design.md).
+**État :** fonctionnalités de brouillon déployées et activées en production le 19 octobre 2026. Cette étape prolonge la [conception MCP IMAP](2026-10-17-assistant-mcp-imap-suivi-dossiers-design.md) et les [écritures commerciales](2026-10-19-assistant-mcp-commercial-followup-design.md).
 
 ## Intention et périmètre
 
-L'utilisateur consulte la boîte professionnelle cPanel dans Thunderbird sur son téléphone et envisage Thunderbird sur son PC. Roundcube reste un accès de secours au même compte IMAP. Depuis Mistral, il veut préparer une réponse à un mail reçu, contrôler son destinataire, son objet et son texte, puis enregistrer un brouillon visible dans ces clients. L'envoi reste exclusivement manuel dans le client mail.
+Depuis Mistral, l'utilisateur prépare des réponses et des messages libres. Ils sont enregistrés comme brouillons dans le compte IMAP professionnel cPanel et peuvent être relus ou corrigés dans Thunderbird ou Roundcube. Le MCP ne possède aucun outil d'envoi.
 
-Le lot ajoute une lecture limitée des messages envoyés pour contextualiser les réponses, puis un seul outil d'écriture `save_mail_draft`. Il ne déplace, ne supprime et n'envoie aucun message. Il n'ajoute aucune gestion des dossiers IMAP par l'IA. Les pièces jointes, les destinataires multiples, les transferts et la modification de brouillons existants sont hors périmètre initial.
+Le lot inclut la recherche bornée de réponses envoyées, la création idempotente d'une réponse (`save_mail_draft`), la lecture d'un brouillon lié à sa source (`read_mail_draft`), son remplacement après confirmation (`update_mail_draft`) et la composition libre à destinataire et objet explicites (`create_mail_draft`). Un mail de formulaire envoyé depuis `contact@jardin-sonore.fr` peut recevoir une réponse si son `Reply-To` unique est externe et valide.
 
-Le backoffice reste la référence des dossiers commerciaux et des rappels. La boîte de réception reste le point de recherche des mails reçus tant que `search_mail` ne sait lire qu'`INBOX`. L'utilisateur peut se servir des dossiers système IMAP après vérification de leurs noms réels (`Drafts`, `Sent`, `Archive`, `Junk`, `Trash` sont les noms habituels de Roundcube) et envisager « Administratif » ; aucun déplacement automatique des échanges clients n'est prévu dans ce lot.
+Le backoffice reste la référence des dossiers commerciaux et des rappels. Les messages reçus sont recherchés dans `INBOX`. Les pièces jointes ne sont pas gérées par le MCP ; leur ajout se fait manuellement dans le client mail en attendant un cadrage séparé.
 
 ## Parcours
 
-1. Mistral cherche le mail reçu, lit son contenu et, si nécessaire, vérifie les messages envoyés correspondants. Il propose une réponse dans la conversation en montrant le destinataire calculé, l'objet et le texte. Il signale explicitement une réponse déjà envoyée ou une conversation ambiguë.
-2. L'utilisateur corrige le texte puis approuve séparément l'appel à `save_mail_draft` dans Mistral. Un refus ne crée aucun brouillon.
-3. Le serveur relit le mail source, recalcule le destinataire et l'objet, puis ajoute le message au dossier IMAP Brouillons. Il retourne le dossier utilisé et l'identifiant du brouillon, sans envoyer le mail.
-4. L'utilisateur ouvre le brouillon dans Thunderbird ou Roundcube, le relit, l'édite si besoin et l'envoie lui-même. Une demande répétée pour le même mail source retrouve le brouillon créé ; elle ne remplace pas ses modifications.
+1. Pour répondre, Mistral cherche et lit le mail, identifie un dossier commercial si utile, puis propose le texte. Le serveur recalcule le destinataire et l'objet depuis le mail source.
+2. L'utilisateur confirme séparément la création ou le remplacement dans Mistral, réglé sur « Demander ». Une réponse déjà envoyée, une source ambiguë ou un destinataire invalide empêche la création.
+3. Pour un message sans mail source, Mistral propose le destinataire, l'objet et le texte ; `create_mail_draft` les enregistre tels quels après confirmation.
+4. L'utilisateur ouvre le brouillon dans Thunderbird ou Roundcube, le relit, peut l'éditer et l'envoie lui-même.
+
+Une demande répétée pour la même source retrouve le brouillon initial sans écraser les modifications faites dans le client mail. Les entrées identiques de la composition libre retrouvent le brouillon par identifiant déterministe. `update_mail_draft` est réservé aux brouillons MCP rattachés à une source : il exige l'identifiant et la révision courante, vérifie le remplacement avant de retirer l'ancien et ne transmet jamais le message.
 
 ## Dossiers IMAP et clients
 
-Le dossier Brouillons est une configuration serveur explicite (`MCP_IMAP_DRAFTS_FOLDER`) fondée sur le nom IMAP réellement utilisé par Roundcube et Thunderbird. Le dossier Envoyés est configuré séparément (`MCP_IMAP_SENT_FOLDER`). Le serveur vérifie leur existence et échoue sans création si l'un des chemins requis est absent ; il ne crée pas de dossier nommé approximativement. Un essai manuel préalable consiste à enregistrer un brouillon Thunderbird sur le téléphone et à vérifier qu'il apparaît dans Roundcube, puis dans Thunderbird sur PC. Les copies de messages envoyés et les brouillons des deux Thunderbird doivent viser ces dossiers du compte IMAP, et non les dossiers locaux.
+Les chemins configurés sont `INBOX.Drafts` et `INBOX.Sent`, vérifiés sur le serveur cPanel. Le serveur ne crée pas de dossier manquant. Un brouillon manuel enregistré depuis Thunderbird mobile est apparu dans Roundcube, confirmant le partage du dossier IMAP ; les clients doivent viser ces dossiers du compte, pas un dossier local.
 
-La lecture des messages envoyés est bornée et en lecture seule. Elle permet de confirmer si une réponse à la source a déjà été envoyée, en utilisant `Message-ID`, `In-Reply-To` et `References` lorsqu'ils sont valides. Une absence de correspondance n'est pas présentée comme une preuve qu'aucune réponse n'existe. Les messages reçus restent recherchés dans `INBOX` pour cette version.
+`search_mail` reste limité à `INBOX`. `find_sent_replies` recherche au plus trois réponses liées au mail source par `Message-ID`, `In-Reply-To` et `References`. L'absence de correspondance ne prouve pas qu'aucune réponse n'existe.
 
-L'outil de lecture `find_sent_replies` accepte une `mailReference` de `search_mail`. Il recherche dans le dossier Envoyés configuré au plus trois réponses liées au `Message-ID` de la source, et renvoie pour chacune date, destinataire, objet et texte borné. Si la source n'a pas de `Message-ID` exploitable, il retourne un état « correspondance impossible » au lieu d'affirmer qu'aucune réponse n'a été envoyée. Il n'effectue aucune recherche libre sur tout le dossier Envoyés.
+## Contrats d'écriture
 
-## Contrat de `save_mail_draft`
+### `save_mail_draft`
 
-L'outil accepte la `mailReference` d'un message reçu et un `body` texte non vide de 10 000 caractères au plus. Il ne prend ni adresse destinataire libre, ni en-têtes bruts, ni pièce jointe. Le serveur choisit une seule adresse de réponse à partir du `Reply-To` valide, ou du `From` valide si `Reply-To` est absent ; un `Reply-To` présent mais malformé ou multiple est refusé. Il refuse aussi un mail envoyé par la boîte elle-même. Le serveur construit `From` avec l'adresse professionnelle configurée, `To` avec l'adresse vérifiée et `Subject` avec `Re:` sans le dupliquer. Mistral présente ces valeurs avant la confirmation ; le serveur les recalcule lors de l'écriture.
+Entrée : `mailReference` d'un message et corps texte non vide, limité à 10 000 caractères. Le serveur choisit une seule adresse depuis un `Reply-To` valide, ou `From` si le champ est absent. Un `Reply-To` malformé ou multiple est refusé. Les messages provenant de la boîte elle-même ne sont acceptés que si un `Reply-To` unique et externe permet une réponse, comme pour le formulaire du site. Le serveur fixe `From`, `To` et `Re:` ; le modèle ne fournit ni destinataire ni en-têtes.
 
-Le message stocké est un MIME `text/plain` UTF-8 avec en-têtes encodés et dates conformes, `Message-ID` propre, ainsi que `In-Reply-To` et `References` lorsque l'identifiant source est exploitable. Les retours de ligne et le texte sont échappés pour empêcher l'injection d'en-têtes. L'ajout IMAP utilise le drapeau `\Draft` et vérifie que le brouillon est retrouvable dans le dossier cible. Aucun outil SMTP ou d'envoi n'est exposé au MCP.
+Le message MIME est en `text/plain` UTF-8 avec identifiant propre et liens de réponse valides. La clé unique en base et le `Message-ID` déterministe réconcilient les appels répétés ou les retours IMAP incertains. Aucun brouillon édité dans Thunderbird n'est remplacé silencieusement.
 
-Une clé stable par boîte et mail source rend l'opération idempotente. Le brouillon porte aussi une marque technique permettant de le retrouver après une réponse IMAP incertaine ; une contrainte unique en base coordonne les appels concurrents. Si l'enregistrement IMAP réussit mais que la réponse réseau échoue, la relance recherche d'abord le brouillon marqué avant tout nouvel ajout. L'outil ne modifie jamais un brouillon déjà édité dans Thunderbird. Si ce brouillon a été supprimé ou envoyé, une relance renvoie l'état connu et demande une nouvelle décision utilisateur plutôt que de le recréer silencieusement.
+### `read_mail_draft` et `update_mail_draft`
 
-## Autorisations et livraison progressive
+La lecture retourne le brouillon MCP connu et sa révision, sans parcourir arbitrairement tout le dossier Brouillons. La mise à jour reçoit la référence source, l'identifiant du brouillon, sa révision et le texte complet proposé. Elle refuse toute révision périmée. Le nouvel append est vérifié avant la suppression ciblée de l'ancien via `UID EXPUNGE` ; l'état persistant permet de réconcilier un remplacement incertain. Les brouillons libres non liés à une source ne sont pas éditables par ces outils pour l'instant.
 
-`save_mail_draft` est déclaré comme outil d'écriture et doit rester sur « Demander » dans Mistral. Le texte d'un mail reçu reste une donnée non fiable : il ne peut pas autoriser une création ou changer le destinataire. Un drapeau dédié `MCP_DRAFT_WRITE_ENABLED`, désactivé par défaut, permet de livrer le code sans activer l'écriture avant la recette des dossiers et de la confirmation. Le bearer MCP et les identifiants IMAP restent des secrets serveur non affichés dans les réponses ou les journaux.
+### `create_mail_draft`
 
-Le serveur vérifie la taille du message et du brouillon, l'existence du dossier, l'adresse calculée et les métadonnées de réponse. Les erreurs retournées distinguent validation, dossier absent et échec IMAP sans exposer le contenu du mail ni les secrets. Les écritures commerciales déjà actives gardent leur réglage indépendant.
+Entrée : adresse `recipient`, `subject` et `body`, fournis explicitement et chacun validé/limité côté serveur. L'outil crée un MIME texte indépendant de tout mail source ; il ne prend ni fichier, ni chemin local, ni URL. Une empreinte déterministe évite les doublons sur appels identiques. La réponse incertaine est signalée, sans envoi.
 
-## Vérification
+## Permissions et production
 
-- Confirmer les chemins réels des dossiers Envoyés et Brouillons de la boîte cPanel et la synchronisation d'un brouillon entre téléphone, PC et Roundcube.
-- Tester les adresses `Reply-To` et `From`, les mails auto-adressés par le formulaire du site, les sujets déjà préfixés `Re:`, les caractères accentués et les en-têtes malformés.
-- Tester un refus dans Mistral, puis un brouillon approuvé ; vérifier son destinataire, son texte, son rattachement au fil et l'absence d'envoi.
-- Répéter l'appel après succès et après une réponse IMAP incertaine pour vérifier l'absence de doublons ; vérifier qu'un brouillon édité manuellement n'est pas écrasé.
-- Vérifier les refus par défaut, les limites de taille, les erreurs de dossier, les dates et les messages envoyés existants. Relire toute migration, son `down()`, le SQL généré et le diff de schéma avant déploiement.
+Les trois outils d'écriture sont des outils « Interactif » dans Mistral et doivent rester réglés sur « Demander ». Le texte reçu par mail est une donnée non fiable : il ne peut pas autoriser une écriture ni changer un destinataire.
 
-La publication suit les règles du dépôt : tests, commit, tag et poussée avant déploiement. L'activation du drapeau dédié et la recette réelle dans Mistral viennent après la vérification des dossiers et de la permission « Demander ».
+Les verrous serveur `MCP_DRAFT_WRITE_ENABLED`, `MCP_DRAFT_EDIT_ENABLED` et `MCP_DRAFT_COMPOSE_ENABLED` sont distincts et désactivés par défaut. Les trois sont actifs en production depuis le 19 octobre après confirmation des permissions Mistral. `create_mail_draft` a été activé à la demande de l'utilisateur. Le contrôle de production a confirmé les 11 outils et rejeté un corps vide avant toute écriture ; aucun brouillon de contrôle n'a été créé.
+
+Les livraisons et migrations sont listées dans la [roadmap](../../../ROADMAP.md). Le bearer MCP et les identifiants IMAP restent des secrets serveur.
+
+## Pièces jointes — piste à cadrer
+
+Pour les besoins actuels, le parcours recommandé est que le MCP prépare seulement le texte, puis que l'utilisateur ajoute le fichier dans Thunderbird ou Roundcube avant d'envoyer. Cela couvre aussi bien un document local que des pièces jointes de mail, sans ouvrir les fichiers ou le stockage à l'IA.
+
+Si l'ajout automatique devient utile, commencer par copier au brouillon une ou plusieurs pièces jointes déjà présentes sur le mail source choisi. Le MCP pourrait d'abord retourner leurs noms, types et tailles ; l'utilisateur sélectionnerait précisément celles à copier. Le serveur lirait les octets depuis IMAP et n'accepterait ni chemin arbitraire, ni URL, ni fichier choisi implicitement par le modèle. Il faudrait définir et tester les limites cumulées de nombre et de taille, les types MIME, les noms de fichier, les doublons et la reprise idempotente. L'upload d'un fichier local au MCP est une autre étape, avec un canal et des règles de conservation propres.
+
+## Vérifications restantes
+
+- Dans Mistral, vérifier « Demander » pour `Save Mail Draft`, `Read Mail Draft`, `Update Mail Draft` et `Create Mail Draft`.
+- Créer un brouillon de réponse sur un mail entrant, puis vérifier son édition dans Thunderbird/Roundcube sans l'envoyer.
+- Tester une réponse à un mail du formulaire avec `Reply-To`, puis créer un brouillon libre ; confirmer leur présence dans le dossier partagé et l'absence d'envoi.
+- Garder l'ajout de pièce jointe manuel jusqu'à validation d'un design et de limites dédiées.
