@@ -135,6 +135,19 @@ final class McpControllerTest extends WebTestCase
         self::assertSame('', $this->client->getResponse()->getContent());
     }
 
+    public function testUnimplementedCapabilityListsReturnEmptyLists(): void
+    {
+        $headers = ['HTTP_AUTHORIZATION' => 'Bearer test-mcp-token', 'HTTP_ACCEPT' => 'application/json, text/event-stream'];
+
+        foreach (['prompts/list' => 'prompts', 'resources/list' => 'resources'] as $method => $key) {
+            $this->client->jsonRequest('POST', '/api/mcp', ['jsonrpc' => '2.0', 'id' => 1, 'method' => $method, 'params' => new stdClass()], $headers);
+
+            self::assertResponseIsSuccessful();
+            $response = json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+            self::assertSame([], $response['result'][$key] ?? null);
+        }
+    }
+
     public function testMissingOrIncorrectBearerTokenIsRejected(): void
     {
         foreach ([[], ['HTTP_AUTHORIZATION' => 'Bearer wrong-token']] as $server) {

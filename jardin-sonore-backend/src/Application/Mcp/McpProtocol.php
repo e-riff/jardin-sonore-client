@@ -62,6 +62,14 @@ final class McpProtocol
             return ['jsonrpc' => '2.0', 'id' => $id, 'result' => ['tools' => [...$this->toolRegistry->definitions(), ...$this->writeToolRegistry->definitions()]]];
         }
 
+        if ('prompts/list' === $method) {
+            return ['jsonrpc' => '2.0', 'id' => $id, 'result' => ['prompts' => []]];
+        }
+
+        if ('resources/list' === $method) {
+            return ['jsonrpc' => '2.0', 'id' => $id, 'result' => ['resources' => []]];
+        }
+
         if ('tools/call' === $method) {
             $name = $params['name'] ?? null;
             $arguments = $params['arguments'] ?? [];
