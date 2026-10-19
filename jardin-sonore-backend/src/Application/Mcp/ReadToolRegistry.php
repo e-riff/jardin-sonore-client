@@ -114,7 +114,7 @@ final readonly class ReadToolRegistry
             [
                 'name' => 'list_mailing_audience_masks',
                 'description' => 'List available mailing audience masks by exact UUID and name. Does not expose recipient addresses.',
-                'inputSchema' => ['type' => 'object', 'properties' => [], 'additionalProperties' => false],
+                'inputSchema' => ['type' => 'object', 'properties' => (object) [], 'additionalProperties' => false],
                 'annotations' => ['readOnlyHint' => true, 'destructiveHint' => false, 'openWorldHint' => false],
             ],
         ];

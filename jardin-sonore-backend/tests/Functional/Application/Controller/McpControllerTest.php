@@ -217,4 +217,18 @@ final class McpControllerTest extends WebTestCase
         self::assertTrue($response['result']['isError']);
         self::assertSame('Draft writes are disabled.', $response['result']['content'][0]['text']);
     }
+
+    public function testEveryListedToolHasAnObjectForSchemaProperties(): void
+    {
+        $headers = ['HTTP_AUTHORIZATION' => 'Bearer test-mcp-token', 'HTTP_ACCEPT' => 'application/json, text/event-stream'];
+        $this->client->jsonRequest('POST', '/api/mcp', ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/list'], $headers);
+
+        self::assertResponseIsSuccessful();
+        $response = json_decode((string) $this->client->getResponse()->getContent(), false, 512, JSON_THROW_ON_ERROR);
+        self::assertInstanceOf(stdClass::class, $response);
+
+        foreach ($response->result->tools as $tool) {
+            self::assertInstanceOf(stdClass::class, $tool->inputSchema->properties, $tool->name);
+        }
+    }
 }
