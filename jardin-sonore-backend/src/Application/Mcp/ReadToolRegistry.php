@@ -35,7 +35,7 @@ final readonly class ReadToolRegistry
             ],
             [
                 'name' => 'search_mail',
-                'description' => 'Search the configured professional mailbox by sender, date and terms. Results are limited and do not mark messages as read.',
+                'description' => 'Search the INBOX by sender, date and literal terms. For the newest messages, provide since without from or query. Results are newest first and do not mark messages as read.',
                 'inputSchema' => [
                     'type' => 'object',
                     'properties' => [
@@ -50,7 +50,7 @@ final readonly class ReadToolRegistry
             ],
             [
                 'name' => 'search_projects',
-                'description' => 'Find candidate commercial projects by contact email, organization and context. Returns candidates without selecting one automatically.',
+                'description' => 'Find candidate commercial projects by contact email, organization and context. For an organization request, use this first to identify its exact name and contact before searching mail. Returns candidates without selecting one automatically.',
                 'inputSchema' => [
                     'type' => 'object',
                     'properties' => [

@@ -21,7 +21,8 @@ final class ImapMailReaderTest extends TestCase
 {
     public function testSearchUsesFiltersAndLeavesMessagesUnread(): void
     {
-        $message = new ImapMessageFixture(14, '<mail-14@example.test>', 'Projet éveil', 'Bonjour', '', 0);
+        $olderMessage = new ImapMessageFixture(14, '<mail-14@example.test>', 'Projet éveil', 'Bonjour', '', 0);
+        $newerMessage = new ImapMessageFixture(15, '<mail-15@example.test>', 'Nouvelle réponse', 'Bonjour', '', 0);
         $query = $this->createMock(WhereQuery::class);
         $query->expects(self::once())->method('whereFrom')->with('marie@example.test')->willReturnSelf();
         $query->expects(self::once())->method('whereSince')->with(self::isInstanceOf(DateTimeImmutable::class))->willReturnSelf();
@@ -31,7 +32,7 @@ final class ImapMailReaderTest extends TestCase
         $query->expects(self::once())->method('setFetchOrder')->with('desc')->willReturnSelf();
         $query->expects(self::once())->method('leaveUnread')->willReturnSelf();
         $query->expects(self::once())->method('limit')->with(8)->willReturnSelf();
-        $query->method('get')->willReturn(new MessageCollection([$message]));
+        $query->method('get')->willReturn(new MessageCollection([$olderMessage, $newerMessage]));
         $folder = $this->createStub(Folder::class);
         $folder->method('status')->willReturn(['UIDVALIDITY' => 77]);
         $folder->method('query')->willReturn($query);
@@ -45,9 +46,11 @@ final class ImapMailReaderTest extends TestCase
 
         $result = $reader->search('marie@example.test', '2026-10-01', 'éveil', 8);
 
-        self::assertCount(1, $result);
-        self::assertSame('Projet éveil', $result[0]['subject']);
-        self::assertSame(14, $result[0]['uid']);
+        self::assertCount(2, $result);
+        self::assertSame('Nouvelle réponse', $result[0]['subject']);
+        self::assertSame(15, $result[0]['uid']);
+        self::assertSame('Projet éveil', $result[1]['subject']);
+        self::assertSame(14, $result[1]['uid']);
         self::assertSame(77, $result[0]['uidValidity']);
         self::assertArrayHasKey('mailReference', $result[0]);
     }

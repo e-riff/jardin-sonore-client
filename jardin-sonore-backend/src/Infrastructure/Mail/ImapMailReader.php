@@ -56,6 +56,8 @@ final readonly class ImapMailReader implements MailReader
                 $results[] = $this->metadata($message, $uidValidity);
             }
 
+            usort($results, static fn (array $firstMessage, array $secondMessage): int => $secondMessage['uid'] <=> $firstMessage['uid']);
+
             return $results;
         } catch (MailReadException $exception) {
             throw $exception;
