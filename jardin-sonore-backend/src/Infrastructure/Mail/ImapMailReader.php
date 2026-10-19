@@ -41,14 +41,15 @@ final readonly class ImapMailReader implements MailReader
             }
 
             $from = $this->singleAddress($message->getFrom(), 'Invalid sender address.');
-            if (strtolower($from) === strtolower(trim($this->mailboxUsername))) {
-                throw new MailReadException('Cannot reply to a message sent by this mailbox.');
-            }
             $replyTo = $message->getReplyTo();
             $replyToPresent = $message->getHeader()?->has('reply-to') ?? false;
-            $recipient = $replyToPresent || (is_object($replyTo) && method_exists($replyTo, 'toArray') && [] !== $replyTo->toArray())
+            $hasReplyTo = $replyToPresent || (is_object($replyTo) && method_exists($replyTo, 'toArray') && [] !== $replyTo->toArray());
+            $recipient = $hasReplyTo
                 ? $this->singleAddress($replyTo, 'Invalid Reply-To address.')
                 : $from;
+            if (strtolower($from) === strtolower(trim($this->mailboxUsername)) && (!$hasReplyTo || strtolower($recipient) === strtolower(trim($this->mailboxUsername)))) {
+                throw new MailReadException('Cannot reply to a message sent by this mailbox.');
+            }
             if (strtolower($recipient) === strtolower(trim($this->mailboxUsername))) {
                 throw new MailReadException('Cannot create a self-addressed reply.');
             }

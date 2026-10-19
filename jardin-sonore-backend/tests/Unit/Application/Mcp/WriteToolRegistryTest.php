@@ -9,6 +9,7 @@ use App\Application\Mcp\MailReader;
 use App\Application\Mcp\MailReadException;
 use App\Application\Mcp\MailSource;
 use App\Application\Mcp\ProjectFollowupWriter;
+use App\Application\Mcp\StandaloneMailDraftWriter;
 use App\Application\Mcp\WriteToolRegistry;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
@@ -111,5 +112,21 @@ final class WriteToolRegistryTest extends TestCase
 
         self::assertTrue($result['isError']);
         self::assertSame('A reply draft can only be created for a message from another sender.', $result['content'][0]['text']);
+    }
+
+    public function testStandaloneDraftToolRequiresItsOwnGateAndUsesExplicitRecipient(): void
+    {
+        $draftWriter = $this->createMock(StandaloneMailDraftWriter::class);
+        $draftWriter->expects(self::once())->method('create')->with('marie@example.test', 'Premier échange', 'Bonjour Marie')
+            ->willReturn(['status' => 'saved', 'folder' => 'INBOX.Drafts', 'messageId' => '<draft@example.test>', 'uid' => 9, 'to' => 'marie@example.test', 'subject' => 'Premier échange']);
+        $registry = new WriteToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectFollowupWriter::class), false, null, false, null, false, $draftWriter, false);
+
+        self::assertContains('create_mail_draft', array_column($registry->definitions(), 'name'));
+        self::assertTrue($registry->call('create_mail_draft', ['recipient' => 'marie@example.test', 'subject' => 'Premier échange', 'body' => 'Bonjour Marie'])['isError']);
+
+        $enabled = new WriteToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectFollowupWriter::class), false, null, false, null, false, $draftWriter, true);
+        $result = $enabled->call('create_mail_draft', ['recipient' => 'marie@example.test', 'subject' => 'Premier échange', 'body' => 'Bonjour Marie']);
+
+        self::assertFalse($result['isError']);
     }
 }

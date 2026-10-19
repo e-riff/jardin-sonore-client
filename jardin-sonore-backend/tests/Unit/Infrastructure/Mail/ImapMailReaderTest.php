@@ -225,6 +225,29 @@ final class ImapMailReaderTest extends TestCase
         self::assertSame('Projet', $context->subject);
     }
 
+    public function testReplyContextAllowsFrontContactMailWithExternalReplyTo(): void
+    {
+        $message = new ImapMessageFixture(14, '<contact-14@example.test>', 'Demande depuis le site', '', '', 0, 'visitor@example.net', 'contact@example.test');
+        $query = $this->createStub(WhereQuery::class);
+        $query->method('whereUid')->willReturnSelf();
+        $query->method('setFetchBody')->willReturnSelf();
+        $query->method('setFetchFlags')->willReturnSelf();
+        $query->method('limit')->willReturnSelf();
+        $query->method('leaveUnread')->willReturnSelf();
+        $query->method('get')->willReturn(new MessageCollection([$message]));
+        $folder = $this->createStub(Folder::class);
+        $folder->method('status')->willReturn(['UIDVALIDITY' => 77]);
+        $folder->method('query')->willReturn($query);
+        $client = new ReaderClientFixture($folder);
+        $provider = $this->createStub(ImapClientProvider::class);
+        $provider->method('client')->willReturn($client);
+
+        $context = (new ImapMailReader($provider, 'contact@example.test'))->replyContext(self::mailReference(77, 14));
+
+        self::assertSame('visitor@example.net', $context->replyRecipient);
+        self::assertSame('Re: Demande depuis le site', $context->replySubject());
+    }
+
     public function testReplyContextRejectsMultipleReplyAddressesAndSelfAddressedMail(): void
     {
         foreach ([

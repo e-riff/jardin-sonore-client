@@ -19,6 +19,8 @@ final readonly class WriteToolRegistry
         #[Autowire('%app.mcp.draft_write_enabled%')] private bool $draftWriteEnabled = false,
         private ?MailDraftEditor $mailDraftEditor = null,
         #[Autowire('%app.mcp.draft_edit_enabled%')] private bool $draftEditEnabled = false,
+        private ?StandaloneMailDraftWriter $standaloneMailDraftWriter = null,
+        #[Autowire('%app.mcp.draft_compose_enabled%')] private bool $draftComposeEnabled = false,
     ) {
     }
 
@@ -26,6 +28,21 @@ final readonly class WriteToolRegistry
     public function definitions(): array
     {
         return [
+            [
+                'name' => 'create_mail_draft',
+                'description' => 'After explicit user confirmation, create a standalone plain-text draft with the exact recipient, subject, and body supplied by the user. This does not reply to or inspect a source mail and never sends. Repeating identical inputs returns the existing draft.',
+                'inputSchema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'recipient' => ['type' => 'string', 'format' => 'email', 'minLength' => 3, 'maxLength' => 254],
+                        'subject' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255],
+                        'body' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 10000],
+                    ],
+                    'required' => ['recipient', 'subject', 'body'],
+                    'additionalProperties' => false,
+                ],
+                'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
             [
                 'name' => 'update_mail_draft',
                 'description' => 'After a separate explicit user confirmation, replace the MCP-created reply draft linked to the verified source mail with this complete body. Read the draft first and pass its current draftMessageId and revision. The old draft remains if replacement cannot be verified. This never sends email.',
@@ -100,6 +117,9 @@ final readonly class WriteToolRegistry
         }
         if ('update_mail_draft' === $name) {
             return $this->callDraftUpdate($arguments);
+        }
+        if ('create_mail_draft' === $name) {
+            return $this->callStandaloneDraft($arguments);
         }
         if (!$this->writeEnabled) {
             return $this->error('Commercial writes are disabled.');
@@ -193,6 +213,37 @@ final readonly class WriteToolRegistry
             return $this->error('The draft update returned invalid data.');
         } catch (Throwable) {
             return $this->error('Draft update failed.');
+        }
+    }
+
+    /** @param array<string, mixed> $arguments
+     * @return array<string, mixed>
+     */
+    private function callStandaloneDraft(array $arguments): array
+    {
+        if (!$this->draftComposeEnabled || null === $this->standaloneMailDraftWriter) {
+            return $this->error('Standalone draft creation is disabled.');
+        }
+        try {
+            if ([] !== array_diff(array_keys($arguments), ['recipient', 'subject', 'body'])) {
+                throw new InvalidToolArguments('Unexpected argument.');
+            }
+            $recipient = $this->text($arguments, 'recipient', 254);
+            if (false === filter_var($recipient, FILTER_VALIDATE_EMAIL)) {
+                throw new InvalidToolArguments('Invalid draft recipient.');
+            }
+            $subject = $this->text($arguments, 'subject', 255);
+            $body = $this->draftBody($arguments, 'body', 10_000);
+            $result = $this->standaloneMailDraftWriter->create($recipient, $subject, $body);
+            $json = json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+            return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => in_array($result['status'], ['uncertain'], true)];
+        } catch (InvalidToolArguments $exception) {
+            return $this->error($exception->getMessage());
+        } catch (JsonException) {
+            return $this->error('The standalone draft result was invalid.');
+        } catch (Throwable) {
+            return $this->error('Standalone draft creation failed.');
         }
     }
 
