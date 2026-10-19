@@ -87,7 +87,7 @@ final readonly class ImapMailReader implements MailReader
                 ->leaveUnread()
                 ->get()
                 ->first();
-            if (!is_object($message) || !method_exists($message, 'getUid')) {
+            if (!is_object($message) || !is_callable([$message, 'getUid'])) {
                 throw new MailReadException('The requested message is no longer available.');
             }
 
@@ -103,7 +103,7 @@ final readonly class ImapMailReader implements MailReader
                     ->leaveUnread()
                     ->get()
                     ->first();
-                if (is_object($parentMessage) && method_exists($parentMessage, 'getUid')) {
+                if (is_object($parentMessage) && is_callable([$parentMessage, 'getUid'])) {
                     $messages[] = $parentMessage;
                 }
             }
@@ -117,7 +117,7 @@ final readonly class ImapMailReader implements MailReader
                     ->leaveUnread()
                     ->get();
                 foreach ($replies as $replyMessage) {
-                    if (is_object($replyMessage) && method_exists($replyMessage, 'getUid') && $replyMessage->getUid() !== $message->getUid()) {
+                    if (is_object($replyMessage) && is_callable([$replyMessage, 'getUid']) && $replyMessage->getUid() !== $message->getUid()) {
                         $messages[] = $replyMessage;
                     }
                 }

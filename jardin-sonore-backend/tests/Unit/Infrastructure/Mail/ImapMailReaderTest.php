@@ -98,6 +98,33 @@ final class ImapMailReaderTest extends TestCase
         self::assertSame(2, $result[0]['attachmentCount']);
     }
 
+    public function testReadSupportsMessagesThatExposeUidThroughMagicCall(): void
+    {
+        $message = new MagicUidImapMessageFixture(new ImapMessageFixture(14, '<mail-14@example.test>', 'Projet', 'Bonjour', '', 0));
+        $query = $this->createMock(WhereQuery::class);
+        $query->expects(self::once())->method('whereUid')->with(14)->willReturnSelf();
+        $query->method('setFetchBody')->willReturnSelf();
+        $query->method('setFetchFlags')->willReturnSelf();
+        $query->method('leaveUnread')->willReturnSelf();
+        $query->method('limit')->willReturnSelf();
+        $query->method('get')->willReturn(new MessageCollection([$message]));
+        $folder = $this->createStub(Folder::class);
+        $folder->method('status')->willReturn(['UIDVALIDITY' => 77]);
+        $folder->method('query')->willReturn($query);
+        $client = $this->createMock(Client::class);
+        $client->method('connect')->willReturnSelf();
+        $client->method('disconnect')->willReturnSelf();
+        $client->method('getFolder')->with('INBOX')->willReturn($folder);
+        $provider = $this->createStub(ImapClientProvider::class);
+        $provider->method('client')->willReturn($client);
+        $reader = new ImapMailReader($provider);
+
+        $result = $reader->readThread(self::mailReference(77, 14), 1);
+
+        self::assertCount(1, $result);
+        self::assertSame('Bonjour', $result[0]['body']);
+    }
+
     public function testConnectionFailureDoesNotExposeUnderlyingException(): void
     {
         $provider = $this->createStub(ImapClientProvider::class);
@@ -180,5 +207,21 @@ final readonly class ImapMessageFixture
     public function getInReplyTo(): \Webklex\PHPIMAP\Attribute
     {
         return new \Webklex\PHPIMAP\Attribute('in-reply-to', null);
+    }
+}
+
+final readonly class MagicUidImapMessageFixture
+{
+    public function __construct(private ImapMessageFixture $message)
+    {
+    }
+
+    public function __call(string $method, array $arguments): mixed
+    {
+        if ('getUid' === $method) {
+            return 14;
+        }
+
+        return $this->message->{$method}(...$arguments);
     }
 }
