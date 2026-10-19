@@ -280,16 +280,18 @@ final class ImapMailReaderTest extends TestCase
         $sentQuery->method('get')->willReturn(new MessageCollection([$sent]));
         $sentFolder = $this->createStub(Folder::class);
         $sentFolder->method('query')->willReturn($sentQuery);
+        $client = new ReaderClientFixture($inbox, $sentFolder);
         $provider = $this->createStub(ImapClientProvider::class);
-        $provider->method('client')->willReturn(new ReaderClientFixture($inbox, $sentFolder));
+        $provider->method('client')->willReturn($client);
 
-        $result = (new ImapMailReader($provider, 'contact@example.test', 'Sent'))->findSentReplies(self::mailReference(77, 14), 3);
+        $result = (new ImapMailReader($provider, 'contact@example.test', 'INBOX.Sent'))->findSentReplies(self::mailReference(77, 14), 3);
 
         self::assertTrue($result['matchable']);
         self::assertSame('marie@example.test', $result['replyRecipient']);
         self::assertSame('Re: Projet', $result['replySubject']);
         self::assertCount(1, $result['replies']);
         self::assertSame('Réponse envoyée', $result['replies'][0]['body']);
+        self::assertSame('INBOX.Sent', $client->pathLookedUp);
     }
 
     private static function mailReference(int $uidValidity, int $uid): string
@@ -382,6 +384,8 @@ final readonly class ImapMessageFixture
 
 final class ReaderClientFixture extends Client
 {
+    public ?string $pathLookedUp = null;
+
     public function __construct(private Folder $inbox, private ?Folder $sent = null)
     {
     }
@@ -389,6 +393,13 @@ final class ReaderClientFixture extends Client
     public function getFolder(string $folder_name, ?string $delimiter = null, bool $utf7 = false): ?Folder
     {
         return 'INBOX' === $folder_name ? $this->inbox : $this->sent;
+    }
+
+    public function getFolderByPath($folder_path, bool $utf7 = false, bool $soft_fail = false): ?Folder
+    {
+        $this->pathLookedUp = $folder_path;
+
+        return $this->sent;
     }
 
     public function disconnect(): Client

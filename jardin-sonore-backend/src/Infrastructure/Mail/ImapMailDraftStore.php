@@ -51,7 +51,7 @@ final readonly class ImapMailDraftStore implements MailDraftStore
         if ('' === trim($folderName)) {
             throw new RuntimeException('Draft folder is not configured.');
         }
-        $folder = $this->clientProvider->client()->getFolder($folderName);
+        $folder = $this->clientProvider->client()->getFolderByPath($folderName);
         if (!$folder instanceof Folder) {
             throw new RuntimeException('Draft folder is not available.');
         }

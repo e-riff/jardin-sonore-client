@@ -87,7 +87,7 @@ final readonly class ImapMailReader implements MailReader
         }
 
         try {
-            $folder = $this->clientProvider->client()->getFolder($this->sentFolder);
+            $folder = $this->clientProvider->client()->getFolderByPath($this->sentFolder);
             if (!$folder instanceof Folder) {
                 throw new MailReadException('Sent folder is not available.');
             }

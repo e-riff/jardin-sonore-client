@@ -21,7 +21,8 @@ final class ImapMailDraftStoreTest extends TestCase
         $provider = $this->createStub(ImapClientProvider::class);
         $provider->method('client')->willReturn($client);
 
-        self::assertNull((new ImapMailDraftStore($provider))->append('Drafts', 'MIME'));
+        self::assertNull((new ImapMailDraftStore($provider))->append('INBOX.Drafts', 'MIME'));
+        self::assertSame('path', $client->lookupMode);
     }
 
     public function testMissingFolderFailsWithoutCreatingIt(): void
@@ -37,12 +38,23 @@ final class ImapMailDraftStoreTest extends TestCase
 
 final class DraftStoreClientFixture extends Client
 {
+    public ?string $lookupMode = null;
+
     public function __construct(private ?Folder $folder)
     {
     }
 
     public function getFolder(string $folder_name, ?string $delimiter = null, bool $utf7 = false): ?Folder
     {
+        $this->lookupMode = 'name';
+
+        return $this->folder;
+    }
+
+    public function getFolderByPath($folder_path, bool $utf7 = false, bool $soft_fail = false): ?Folder
+    {
+        $this->lookupMode = 'path';
+
         return $this->folder;
     }
 
