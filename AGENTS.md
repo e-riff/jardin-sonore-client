@@ -90,6 +90,7 @@
 ## Verification
 
 - Pour les changements significatifs: lancer au minimum `npm run lint`; lancer `npm run build` pour les changements de build/runtime.
+- Pour la suite complete des tests backend, lancer directement `docker compose exec -T php php -d memory_limit=1G ./bin/phpunit` depuis la racine ; la limite PHP par defaut de 128 Mo fait regulierement echouer son demarrage.
 - Pour une migration Doctrine, verifier avant commit que le diff de schema est propre: il doit correspondre uniquement au besoin de la tache et ne plus rester aucun changement parasite ou hors scope a generer.
 - En fin de fonctionnalite et avant mise en ligne, regrouper si possible les migrations intermediaires du meme sujet en une migration finale lisible. Verifier son SQL, son `down()`, le diff de schema et son execution sur une base locale. Ne jamais reecrire l'historique deja applique en production.
 - Ne pas laisser un serveur dev supplementaire actif si l'utilisateur ne l'a pas demande.

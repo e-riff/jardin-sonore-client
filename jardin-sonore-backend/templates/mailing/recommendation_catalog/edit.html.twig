@@ -30,12 +30,12 @@
             action: path('mailing_recommendation_catalog_edit', { uuid: recommendation.uuid }),
             attr: { class: 'internal-form', 'data-controller': 'character-counter', 'data-character-counter-limit-value': 320 }
         }) }}
-            {{ form_widget(form.uuid) }}
             {{ form_row(form.title) }}
             {{ form_row(form.tag) }}
             {{ form_row(form.text) }}
             {{ form_row(form.url) }}
             {{ form_row(form.linkLabel) }}
+            {{ form_row(form.imageFile) }}
             {{ form_row(form.active) }}
             <datalist id="newsletter-recommendation-tag-suggestions">{% for tagSuggestion in tagSuggestions %}<option value="{{ tagSuggestion }}">{% endfor %}</datalist>
             <p class="character-counter" data-character-counter-target="output"></p>
