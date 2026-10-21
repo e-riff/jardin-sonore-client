@@ -126,4 +126,26 @@ final class MailingIntroBlocksTypeTest extends KernelTestCase
 
         self::assertSame('existing-block', $block->id);
     }
+
+    public function testNullSubmittedBlockIdAndKindKeepTheirExistingValues(): void
+    {
+        self::bootKernel(['environment' => 'test']);
+        $block = new MailingIntroBlockFormModel();
+        $block->id = 'existing-block';
+        $block->kind = 'paragraph';
+        $form = self::getContainer()->get(FormFactoryInterface::class)->create(MailingIntroBlockType::class, $block);
+
+        $form->submit([
+            'id' => null,
+            'kind' => null,
+            'text' => 'Texte conservé',
+            'imageFile' => '',
+            'imageAlt' => '',
+            'imageDecorative' => '',
+            'imageSide' => 'right',
+        ]);
+
+        self::assertSame('existing-block', $block->id);
+        self::assertSame('paragraph', $block->kind);
+    }
 }

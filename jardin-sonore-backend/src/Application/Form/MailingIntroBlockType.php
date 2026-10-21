@@ -75,7 +75,7 @@ final class MailingIntroBlockType extends AbstractType
 
         $builder->addEventListener(FormEvents::PRE_SUBMIT, static function (FormEvent $event): void {
             $submittedData = $event->getData();
-            if (!is_array($submittedData) || (is_string($submittedData['id'] ?? null) && '' !== $submittedData['id'])) {
+            if (!is_array($submittedData)) {
                 return;
             }
 
@@ -84,7 +84,13 @@ final class MailingIntroBlockType extends AbstractType
                 return;
             }
 
-            $submittedData['id'] = $block->id;
+            if (!is_string($submittedData['id'] ?? null) || '' === $submittedData['id']) {
+                $submittedData['id'] = $block->id;
+            }
+            if (!is_string($submittedData['kind'] ?? null) || '' === $submittedData['kind']) {
+                $submittedData['kind'] = $block->kind;
+            }
+
             $event->setData($submittedData);
         });
     }
