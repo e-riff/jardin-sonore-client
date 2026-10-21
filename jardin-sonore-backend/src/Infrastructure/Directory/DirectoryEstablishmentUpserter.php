@@ -253,7 +253,10 @@ final readonly class DirectoryEstablishmentUpserter
             str_contains($normalizedName, 'ram') => OrganizationType::RAM,
             str_contains($normalizedName, 'mam') => OrganizationType::MAM,
             str_contains($normalizedName, 'garderie') => OrganizationType::GARDERIE,
-            str_contains($normalizedName, 'centre') => OrganizationType::CENTRE,
+            1 === preg_match('/\b(mjc|maison pour tous)\b/', $normalizedName) => OrganizationType::MJC,
+            1 === preg_match('/\b(alsh|centre de loisirs|accueil de loisirs)\b/', $normalizedName) => OrganizationType::CENTRE_LOISIRS,
+            1 === preg_match('/\b(laep|lieu de parentalite|cafe poussette|cafe des enfants)\b/', $normalizedName) => OrganizationType::LIEU_PARENTALITE,
+            str_contains($normalizedName, 'centre social') => OrganizationType::CENTRE,
             default => null,
         };
     }

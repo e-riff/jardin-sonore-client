@@ -332,6 +332,9 @@ address_book:
     mam: "Maison d’assistantes maternelles"
     mediatheque: "Médiathèque"
     centre: "Centre social"
+    mjc: "MJC - maison pour tous"
+    centre_loisirs: "Centre de loisirs - ALSH"
+    lieu_parentalite: "Lieu de parentalité - LAEP, café poussette"
     garderie: "Garderie"
     test: "Test mailing"
   organization_sector:

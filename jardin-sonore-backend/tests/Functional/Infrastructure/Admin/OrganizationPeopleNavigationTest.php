@@ -46,6 +46,25 @@ final class OrganizationPeopleNavigationTest extends WebTestCase
     }
 
     #[RunInSeparateProcess]
+    public function testOrganizationEditFormListsNewTranslatedTypes(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $organizationEntity = (new OrganizationEntity())->setName('Structure types ' . bin2hex(random_bytes(8)));
+        $adminUserEntity = $this->createAdmin($entityManager);
+        $entityManager->persist($organizationEntity);
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+
+        $crawler = $client->request('GET', "/backoffice/organization/{$organizationEntity->getId()}/edit");
+
+        self::assertResponseIsSuccessful();
+        foreach (['MJC - maison pour tous', 'Centre de loisirs - ALSH', 'Lieu de parentalité - LAEP, café poussette'] as $label) {
+            self::assertCount(1, $crawler->filterXPath('//select[contains(@name, "[type]")]/option[normalize-space(.) = "' . $label . '"]'));
+        }
+    }
+
+    #[RunInSeparateProcess]
     public function testOrganizationDetailLinksEachPersonToTheirExistingDetailAndEditPages(): void
     {
         $client = static::createClient();

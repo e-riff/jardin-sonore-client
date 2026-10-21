@@ -79,7 +79,10 @@ final class MailingAudienceMaskController extends AbstractController
                 $criteria[] = $translator->trans('mailing.audience.form.include_free_subscribers', [], 'mailing');
             }
             if ([] !== $audienceFilter->getOrganizationTypes()) {
-                $criteria[] = 'Types : ' . implode(', ', array_map(static fn ($type): string => $type->value, $audienceFilter->getOrganizationTypes()));
+                $criteria[] = 'Types : ' . implode(', ', array_map(
+                    static fn (OrganizationType $organizationType): string => $translator->trans('address_book.organization_type.' . $organizationType->value, [], 'backoffice'),
+                    $audienceFilter->getOrganizationTypes(),
+                ));
             }
             if ([] !== $audienceFilter->getOrganizationSectors()) {
                 $criteria[] = 'Secteurs : ' . implode(', ', array_map(static fn ($sector): string => $sector->value, $audienceFilter->getOrganizationSectors()));

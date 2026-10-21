@@ -10,6 +10,7 @@ use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Kernel;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Form\FormFactoryInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class MailingAudienceTypeTest extends KernelTestCase
 {
@@ -68,5 +69,23 @@ final class MailingAudienceTypeTest extends KernelTestCase
 
         self::assertSame('', $formModel->maskName);
         self::assertFalse($form->isValid());
+    }
+
+    public function testNewOrganizationTypesAreSelectableWithFrenchLabels(): void
+    {
+        self::bootKernel(['environment' => 'test']);
+        $formFactory = self::getContainer()->get(FormFactoryInterface::class);
+        $translator = self::getContainer()->get(TranslatorInterface::class);
+        $form = $formFactory->create(MailingAudienceType::class, new MailingAudienceFormModel());
+        $choices = $form->get('organizationTypes')->getConfig()->getOption('choices');
+
+        foreach ([
+            'address_book.organization_type.mjc' => ['mjc', 'MJC - maison pour tous'],
+            'address_book.organization_type.centre_loisirs' => ['centre_loisirs', 'Centre de loisirs - ALSH'],
+            'address_book.organization_type.lieu_parentalite' => ['lieu_parentalite', 'Lieu de parentalité - LAEP, café poussette'],
+        ] as $translationKey => [$organizationTypeValue, $label]) {
+            self::assertSame($organizationTypeValue, ($choices[$translationKey] ?? null)?->value);
+            self::assertSame($label, $translator->trans($translationKey, [], 'backoffice', 'fr'));
+        }
     }
 }

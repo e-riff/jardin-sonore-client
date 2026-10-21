@@ -7,6 +7,7 @@ namespace App\Tests\Functional\Application\Controller;
 use App\Application\Mailing\CreateMailingAudienceMask;
 use App\Application\Mailing\CreateMailingAudienceMaskInput;
 use App\Application\Mailing\GetMailingAudienceMask;
+use App\Domain\Model\AddressBook\OrganizationType;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
 use App\Kernel;
@@ -82,5 +83,23 @@ final class MailingAudienceMaskControllerTest extends WebTestCase
         $client->request('POST', $deleteUrl, ['_token' => $csrfToken]);
         self::assertResponseRedirects('/mailing/audience-masks');
         self::assertNull((static::getContainer()->get(GetMailingAudienceMask::class))($mailingAudienceMask->getUuid()));
+    }
+
+    public function testCatalogDisplaysTranslatedOrganizationTypes(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $adminUserEntity = (new AdminUserEntity())->setEmail('audience-types-' . bin2hex(random_bytes(5)) . '@example.test')->setPassword('unused');
+        $entityManager->persist($adminUserEntity);
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+        (static::getContainer()->get(CreateMailingAudienceMask::class))(
+            new CreateMailingAudienceMaskInput('Masque MJC', new NewsletterAudienceFilter(organizationTypes: [OrganizationType::MJC])),
+        );
+
+        $client->request('GET', '/mailing/audience-masks?query=Masque%20MJC');
+
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Types : MJC - maison pour tous', (string) $client->getResponse()->getContent());
     }
 }

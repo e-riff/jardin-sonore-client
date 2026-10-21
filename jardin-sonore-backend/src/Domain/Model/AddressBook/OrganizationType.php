@@ -12,6 +12,9 @@ enum OrganizationType: string
     case MAM = 'mam';
     case MEDIATHEQUE = 'mediatheque';
     case CENTRE = 'centre';
+    case MJC = 'mjc';
+    case CENTRE_LOISIRS = 'centre_loisirs';
+    case LIEU_PARENTALITE = 'lieu_parentalite';
     case GARDERIE = 'garderie';
     case TEST = 'test';
 }

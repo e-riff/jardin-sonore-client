@@ -221,6 +221,9 @@ final class MailingAudienceType extends AbstractType
             'address_book.organization_type.mam' => OrganizationType::MAM,
             'address_book.organization_type.mediatheque' => OrganizationType::MEDIATHEQUE,
             'address_book.organization_type.centre' => OrganizationType::CENTRE,
+            'address_book.organization_type.mjc' => OrganizationType::MJC,
+            'address_book.organization_type.centre_loisirs' => OrganizationType::CENTRE_LOISIRS,
+            'address_book.organization_type.lieu_parentalite' => OrganizationType::LIEU_PARENTALITE,
             'address_book.organization_type.garderie' => OrganizationType::GARDERIE,
             'address_book.organization_type.test' => OrganizationType::TEST,
         ];
