@@ -88,7 +88,7 @@ final class MailingIntroBlocksTypeTest extends KernelTestCase
         self::assertNull($formModel->preheader);
     }
 
-    public function testLegacyCampaignOpensAsParagraphBlocksWithoutLosingItsText(): void
+    public function testLegacyCampaignOpensAsOneParagraphBlockWithoutLosingLineBreaks(): void
     {
         self::bootKernel(['environment' => 'test']);
         $campaign = new MailingCampaign(
@@ -102,10 +102,35 @@ final class MailingIntroBlocksTypeTest extends KernelTestCase
         $formModel = EditMailingCampaignFormModel::fromMailingCampaign($campaign);
         $form = self::getContainer()->get(FormFactoryInterface::class)->create(EditMailingCampaignType::class, $formModel);
 
-        self::assertCount(2, $formModel->introBlocks);
-        self::assertSame('Premier paragraphe<br>ligne suivante', $formModel->introBlocks[0]->text);
-        self::assertSame('Second paragraphe', $formModel->introBlocks[1]->text);
+        self::assertCount(1, $formModel->introBlocks);
+        self::assertSame('Premier paragraphe<br>ligne suivante<br><br>Second paragraphe', $formModel->introBlocks[0]->text);
         self::assertNotNull($form->createView());
+    }
+
+    public function testAdjacentParagraphBlocksOpenAsOneEditableBlockAroundAnImage(): void
+    {
+        $campaign = new MailingCampaign(
+            internalTitle: 'Campagne',
+            emailSubject: 'Sujet',
+            publicTitle: 'Titre',
+            mainText: 'Texte',
+            templateKey: 'default',
+            audienceFilter: NewsletterAudienceFilter::empty(),
+            introBlocks: [
+                ['id' => 'first', 'kind' => 'paragraph', 'text' => 'Première ligne<br>suite'],
+                ['id' => 'second', 'kind' => 'paragraph', 'text' => 'Deuxième paragraphe'],
+                ['id' => 'photo', 'kind' => 'image', 'imagePath' => 'uploads/mailing/content/photo.webp', 'imageAlt' => 'Photo'],
+                ['id' => 'third', 'kind' => 'paragraph', 'text' => 'Après la photo'],
+            ],
+        );
+
+        $formModel = EditMailingCampaignFormModel::fromMailingCampaign($campaign);
+
+        self::assertCount(3, $formModel->introBlocks);
+        self::assertSame('first', $formModel->introBlocks[0]->id);
+        self::assertSame('Première ligne<br>suite<br><br>Deuxième paragraphe', $formModel->introBlocks[0]->text);
+        self::assertSame('photo', $formModel->introBlocks[1]->id);
+        self::assertSame('Après la photo', $formModel->introBlocks[2]->text);
     }
 
     public function testAnEmptySubmittedBlockIdKeepsTheExistingIdentifier(): void
@@ -193,5 +218,60 @@ final class MailingIntroBlocksTypeTest extends KernelTestCase
         self::assertTrue($form->isValid(), (string) $form->getErrors(true, false));
         self::assertInstanceOf(UploadedFile::class, $formModel->introBlocks[1]->imageFile);
         self::assertSame('new-image-block', $formModel->introBlocks[1]->id);
+    }
+
+    public function testEditFormRemovesAnExistingEmptyParagraphBlock(): void
+    {
+        self::bootKernel(['environment' => 'test']);
+        $formModel = new EditMailingCampaignFormModel();
+        $firstBlock = new MailingIntroBlockFormModel();
+        $firstBlock->id = 'first-block';
+        $firstBlock->text = 'Texte conservé';
+        $emptyBlock = new MailingIntroBlockFormModel();
+        $emptyBlock->id = 'empty-block';
+        $lastBlock = new MailingIntroBlockFormModel();
+        $lastBlock->id = 'last-block';
+        $lastBlock->text = 'Dernier texte';
+        $formModel->introBlocks = [$firstBlock, $emptyBlock, $lastBlock];
+        $form = self::getContainer()->get(FormFactoryInterface::class)->create(EditMailingCampaignType::class, $formModel, ['csrf_protection' => false]);
+
+        $form->submit([
+            'internalTitle' => 'Campagne',
+            'emailSubject' => 'Sujet',
+            'publicTitle' => 'Titre',
+            'templateKey' => 'default',
+            'introBlocks' => [
+                ['id' => 'first-block', 'kind' => 'paragraph', 'text' => 'Texte conservé'],
+                ['id' => 'last-block', 'kind' => 'paragraph', 'text' => 'Dernier texte'],
+            ],
+        ]);
+
+        self::assertTrue($form->isValid(), (string) $form->getErrors(true, false));
+        self::assertCount(2, $formModel->introBlocks);
+        self::assertSame('first-block', $formModel->introBlocks[0]->id);
+        self::assertSame('last-block', $formModel->introBlocks[1]->id);
+    }
+
+    public function testEmptyParagraphSubmittedAfterDeletingAnotherBlockDoesNotBlockSave(): void
+    {
+        self::bootKernel(['environment' => 'test']);
+        $formModel = new EditMailingCampaignFormModel();
+        $formModel->introBlocks = [new MailingIntroBlockFormModel()];
+        $form = self::getContainer()->get(FormFactoryInterface::class)->create(EditMailingCampaignType::class, $formModel, ['csrf_protection' => false]);
+
+        $form->submit([
+            'internalTitle' => 'Campagne',
+            'emailSubject' => 'Sujet',
+            'publicTitle' => 'Titre',
+            'templateKey' => 'default',
+            'introBlocks' => [
+                ['id' => 'kept', 'kind' => 'paragraph', 'text' => 'Texte conservé'],
+                ['id' => 'empty', 'kind' => 'paragraph', 'text' => '<br><br>'],
+            ],
+        ]);
+
+        self::assertTrue($form->isValid(), (string) $form->getErrors(true, false));
+        self::assertCount(1, $formModel->introBlocks);
+        self::assertSame('kept', $formModel->introBlocks[0]->id);
     }
 }

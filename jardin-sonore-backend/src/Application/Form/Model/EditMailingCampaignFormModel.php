@@ -60,17 +60,27 @@ final class EditMailingCampaignFormModel
         $formModel->preheader = $mailingCampaign->getPreheader();
         $blocks = $mailingCampaign->getIntroBlocks();
         if (null === $blocks) {
-            $paragraphs = preg_split('/\n{2,}/', str_replace(["\r\n", "\r"], "\n", trim($mailingCampaign->getMainText()))) ?: [];
-            $blocks = [];
-            foreach ($paragraphs as $index => $paragraph) {
-                $blocks[] = [
-                    'id' => "legacy-introduction-{$index}",
-                    'kind' => 'paragraph',
-                    'text' => str_replace("\n", '<br>', trim($paragraph)),
-                ];
-            }
+            $mainText = str_replace(["\r\n", "\r"], "\n", trim($mailingCampaign->getMainText()));
+            $blocks = '' === $mainText ? [] : [[
+                'id' => 'legacy-introduction-0',
+                'kind' => 'paragraph',
+                'text' => str_replace("\n", '<br>', $mainText),
+            ]];
         }
-        $formModel->introBlocks = array_map(MailingIntroBlockFormModel::fromBlock(...), $blocks);
+
+        $mergedBlocks = [];
+        foreach ($blocks as $block) {
+            $previousIndex = array_key_last($mergedBlocks);
+            if ('paragraph' === ($block['kind'] ?? null)
+                && null !== $previousIndex
+                && 'paragraph' === ($mergedBlocks[$previousIndex]['kind'] ?? null)) {
+                $mergedBlocks[$previousIndex]['text'] .= '<br><br>' . (string) ($block['text'] ?? '');
+                continue;
+            }
+
+            $mergedBlocks[] = $block;
+        }
+        $formModel->introBlocks = array_map(MailingIntroBlockFormModel::fromBlock(...), $mergedBlocks);
         $imagePaths = [];
         foreach ($blocks as $block) {
             if (isset($block['id'], $block['imagePath']) && is_string($block['imagePath'])) {

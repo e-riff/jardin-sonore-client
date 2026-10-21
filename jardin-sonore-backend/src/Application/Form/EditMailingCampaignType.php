@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Form;
 
 use App\Application\Form\Model\EditMailingCampaignFormModel;
+use App\Application\Form\Model\MailingIntroBlockFormModel;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -68,6 +69,9 @@ final class EditMailingCampaignType extends AbstractType
                 'entry_options' => ['locked' => $locked],
                 'allow_add' => !$locked,
                 'allow_delete' => !$locked,
+                'delete_empty' => static fn (mixed $block): bool => $block instanceof MailingIntroBlockFormModel
+                    && 'paragraph' === $block->kind
+                    && '' === trim(strip_tags($block->text)),
                 'by_reference' => false,
                 'prototype' => !$locked,
                 'disabled' => $locked,

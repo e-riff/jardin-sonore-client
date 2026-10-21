@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Form;
 
 use App\Application\Form\Model\CreateMailingCampaignFormModel;
+use App\Application\Form\Model\MailingIntroBlockFormModel;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
@@ -58,6 +59,9 @@ final class CreateMailingCampaignType extends AbstractType
                 'entry_type' => MailingIntroBlockType::class,
                 'allow_add' => true,
                 'allow_delete' => true,
+                'delete_empty' => static fn (mixed $block): bool => $block instanceof MailingIntroBlockFormModel
+                    && 'paragraph' === $block->kind
+                    && '' === trim(strip_tags($block->text)),
                 'by_reference' => false,
                 'prototype' => true,
                 'label' => false,
