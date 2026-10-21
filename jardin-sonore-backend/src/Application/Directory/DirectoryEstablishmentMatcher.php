@@ -9,6 +9,7 @@ final readonly class DirectoryEstablishmentMatcher
     private const array MATCH_SCORE_THRESHOLDS = [
         'auto_match' => 90,
         'candidate' => 80,
+        'auto_match_margin' => 15,
     ];
 
     public function __construct(
@@ -21,6 +22,21 @@ final readonly class DirectoryEstablishmentMatcher
     public function getAutoMatchScoreThreshold(): int
     {
         return self::MATCH_SCORE_THRESHOLDS['auto_match'];
+    }
+
+    /**
+     * @param list<DirectoryEstablishmentMatch> $matches
+     */
+    public function isConfidentAutoMatch(array $matches): bool
+    {
+        $topMatch = $matches[0] ?? null;
+        if (null === $topMatch || $topMatch->score <= self::MATCH_SCORE_THRESHOLDS['auto_match']) {
+            return false;
+        }
+
+        $secondMatch = $matches[1] ?? null;
+
+        return null === $secondMatch || $topMatch->score - $secondMatch->score >= self::MATCH_SCORE_THRESHOLDS['auto_match_margin'];
     }
 
     public function findImportLinkIdByExternalId(string $source, DirectoryEstablishmentImportItem $item): ?int

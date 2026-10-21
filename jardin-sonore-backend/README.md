@@ -35,6 +35,7 @@ Structure principale :
 
 - [Vue d'ensemble de la documentation](docs/README.md)
 - [Import annuaire](docs/directory-import.md)
+- [Revue des doublons de l’annuaire](docs/directory-duplicate-review.md)
 - [Mailing](docs/mailing.md)
 
 ## Commandes utiles

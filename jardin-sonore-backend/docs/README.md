@@ -12,6 +12,7 @@ Cette documentation couvre le fonctionnement metier et technique du backend Symf
 
 - [Frontieres applicatives et acces donnees](architecture-boundaries.md)
 - [Import annuaire](directory-import.md)
+- [Revue des doublons de l’annuaire](directory-duplicate-review.md)
 - [Mailing](mailing.md)
 
 ## Quand mettre a jour cette doc

@@ -77,8 +77,8 @@ Quand aucune liaison externe n'est connue, le backend calcule des candidats a pa
 
 Seuils actuels :
 
-- `> 90` : liaison automatique ;
-- `80 a 90` : la commande te demande quoi faire en mode interactif ;
+- `> 90` avec au moins 15 points d'avance sur le candidat suivant : liaison automatique ;
+- `80 a 90`, ou candidats proches : la commande te demande quoi faire en mode interactif ;
 - `< 80` : le candidat n'est pas retenu, donc la ligne part vers une creation de nouvel etablissement.
 
 L'action `ignorer` n'est jamais decidee automatiquement a cause du score. Elle n'existe que si l'utilisateur la choisit dans le prompt interactif.
@@ -182,4 +182,5 @@ En fin d'execution, la commande remonte notamment :
 
 - le stockage anti-doublon d'import repose sur la table de liens d'import, pas sur une strategie d'historisation complete ;
 - le rapprochement reste heuristique et doit etre surveille quand la qualite des exports change ;
+- un candidat au-dessus de `90` n'est plus auto-lie si le candidat suivant est à moins de 15 points ;
 - en non interactif, les cas ambigus sont ignores car aucun arbitrage manuel n'est possible.

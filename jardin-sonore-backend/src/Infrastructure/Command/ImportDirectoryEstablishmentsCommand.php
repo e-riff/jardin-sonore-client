@@ -182,11 +182,13 @@ final class ImportDirectoryEstablishmentsCommand extends Command
             return null;
         }
 
-        $topCandidate = $candidates[0];
+        if ($this->matcher->isConfidentAutoMatch($candidates)) {
+            $topCandidate = $candidates[0];
 
-        if ($topCandidate->score > $this->matcher->getAutoMatchScoreThreshold()) {
             return $this->entityManager->getRepository(OrganizationEntity::class)->find($topCandidate->organizationId);
         }
+
+        $topCandidate = $candidates[0];
 
         ++$stats['ambiguous'];
 
