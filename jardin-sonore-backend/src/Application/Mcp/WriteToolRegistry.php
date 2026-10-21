@@ -28,6 +28,7 @@ final readonly class WriteToolRegistry
         #[Autowire('%app.mcp.mailing_write_enabled%')] private bool $mailingWriteEnabled = false,
         private ?ProjectScheduleManager $projectScheduleManager = null,
         #[Autowire('%app.mcp.project_schedule_write_enabled%')] private bool $projectScheduleWriteEnabled = false,
+        private ?StandaloneMailDraftEditor $standaloneMailDraftEditor = null,
     ) {
     }
 
@@ -37,13 +38,14 @@ final readonly class WriteToolRegistry
         return [
             [
                 'name' => 'create_mail_draft',
-                'description' => 'After explicit user confirmation, create a standalone plain-text draft with the exact recipient, subject, and body supplied by the user. This does not reply to or inspect a source mail and never sends. Repeating identical inputs returns the existing draft.',
+                'description' => 'After explicit user confirmation, create a standalone draft with the exact recipient, subject, text body, and optional safe HTML body supplied by the user. This never sends. Keep the returned messageId for later reading or editing. Repeating identical inputs returns the existing draft.',
                 'inputSchema' => [
                     'type' => 'object',
                     'properties' => [
                         'recipient' => ['type' => 'string', 'format' => 'email', 'minLength' => 3, 'maxLength' => 254],
                         'subject' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255],
                         'body' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 10000],
+                        'htmlBody' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 20000],
                     ],
                     'required' => ['recipient', 'subject', 'body'],
                     'additionalProperties' => false,
@@ -52,7 +54,7 @@ final readonly class WriteToolRegistry
             ],
             [
                 'name' => 'update_mail_draft',
-                'description' => 'After a separate explicit user confirmation, replace the MCP-created reply draft linked to the verified source mail with this complete body. Read the draft first and pass its current draftMessageId and revision. The old draft remains if replacement cannot be verified. This never sends email.',
+                'description' => 'After a separate explicit user confirmation, replace the MCP-created reply draft linked to the verified source mail with a complete text body and optional safe HTML body. Read it first and pass its current draftMessageId and revision. The old draft remains if replacement cannot be verified. This never sends email.',
                 'inputSchema' => [
                     'type' => 'object',
                     'properties' => [
@@ -60,6 +62,7 @@ final readonly class WriteToolRegistry
                         'draftMessageId' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255],
                         'revision' => ['type' => 'string', 'minLength' => 64, 'maxLength' => 64],
                         'body' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 10000],
+                        'htmlBody' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 20000],
                     ],
                     'required' => ['mailReference', 'draftMessageId', 'revision', 'body'],
                     'additionalProperties' => false,
@@ -67,13 +70,30 @@ final readonly class WriteToolRegistry
                 'annotations' => ['readOnlyHint' => false, 'destructiveHint' => true, 'openWorldHint' => false],
             ],
             [
+                'name' => 'update_standalone_mail_draft',
+                'description' => 'After a separate explicit user confirmation, replace a standalone draft created by create_mail_draft. Read it with read_standalone_mail_draft first, then supply its current draftMessageId and revision plus the complete new text body and optional safe HTML body. Recipient and subject stay unchanged. This never sends email.',
+                'inputSchema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'draftMessageId' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255],
+                        'revision' => ['type' => 'string', 'minLength' => 64, 'maxLength' => 64],
+                        'body' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 10000],
+                        'htmlBody' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 20000],
+                    ],
+                    'required' => ['draftMessageId', 'revision', 'body'],
+                    'additionalProperties' => false,
+                ],
+                'annotations' => ['readOnlyHint' => false, 'destructiveHint' => true, 'openWorldHint' => false],
+            ],
+            [
                 'name' => 'save_mail_draft',
-                'description' => 'After a separate explicit user confirmation, save one plain-text reply draft to the configured IMAP Drafts folder for an incoming message from another sender. Do not use this for self-sent digests or reminders. The recipient and subject are derived from the verified source mail. This never sends email; repeating the same source does not overwrite an edited draft.',
+                'description' => 'After a separate explicit user confirmation, save one reply draft with a text body and optional safe HTML body to the configured IMAP Drafts folder. Do not use this for self-sent digests or reminders. The recipient and subject come from the verified source mail. This never sends; repeating the same source does not overwrite an edited draft.',
                 'inputSchema' => [
                     'type' => 'object',
                     'properties' => [
                         'mailReference' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 1024],
                         'body' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 10000],
+                        'htmlBody' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 20000],
                     ],
                     'required' => ['mailReference', 'body'],
                     'additionalProperties' => false,
@@ -167,6 +187,9 @@ final readonly class WriteToolRegistry
         }
         if ('create_mail_draft' === $name) {
             return $this->callStandaloneDraft($arguments);
+        }
+        if ('update_standalone_mail_draft' === $name) {
+            return $this->callStandaloneDraftUpdate($arguments);
         }
         if (in_array($name, ['create_mailing_draft', 'update_mailing_draft'], true)) {
             return $this->callMailingDraft($name, $arguments);
@@ -328,12 +351,13 @@ final readonly class WriteToolRegistry
             return $this->error('Draft writes are disabled.');
         }
         try {
-            if ([] !== array_diff(array_keys($arguments), ['mailReference', 'body'])) {
+            if ([] !== array_diff(array_keys($arguments), ['mailReference', 'body', 'htmlBody'])) {
                 throw new InvalidToolArguments('Unexpected argument.');
             }
             $reference = $this->text($arguments, 'mailReference', 1024);
             $body = $this->text($arguments, 'body', 10_000);
-            $result = $this->mailDraftWriter->save($reference, $body);
+            $htmlBody = array_key_exists('htmlBody', $arguments) ? $this->draftBody($arguments, 'htmlBody', 20_000) : null;
+            $result = $this->mailDraftWriter->save($reference, $body, $htmlBody);
             $json = json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
             return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => in_array($result['status'], ['uncertain', 'missing'], true)];
@@ -357,14 +381,15 @@ final readonly class WriteToolRegistry
             return $this->error('Draft editing is disabled.');
         }
         try {
-            if ([] !== array_diff(array_keys($arguments), ['mailReference', 'draftMessageId', 'revision', 'body'])) {
+            if ([] !== array_diff(array_keys($arguments), ['mailReference', 'draftMessageId', 'revision', 'body', 'htmlBody'])) {
                 throw new InvalidToolArguments('Unexpected argument.');
             }
             $reference = $this->text($arguments, 'mailReference', 1024);
             $draftMessageId = $this->text($arguments, 'draftMessageId', 255);
             $revision = $this->text($arguments, 'revision', 64);
             $body = $this->draftBody($arguments, 'body', 10_000);
-            $result = $this->mailDraftEditor->update($reference, $draftMessageId, $revision, $body);
+            $htmlBody = array_key_exists('htmlBody', $arguments) ? $this->draftBody($arguments, 'htmlBody', 20_000) : null;
+            $result = $this->mailDraftEditor->update($reference, $draftMessageId, $revision, $body, $htmlBody);
             $json = json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
             return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => !in_array($result['status'] ?? null, ['saved'], true)];
@@ -386,7 +411,7 @@ final readonly class WriteToolRegistry
             return $this->error('Standalone draft creation is disabled.');
         }
         try {
-            if ([] !== array_diff(array_keys($arguments), ['recipient', 'subject', 'body'])) {
+            if ([] !== array_diff(array_keys($arguments), ['recipient', 'subject', 'body', 'htmlBody'])) {
                 throw new InvalidToolArguments('Unexpected argument.');
             }
             $recipient = $this->text($arguments, 'recipient', 254);
@@ -395,7 +420,8 @@ final readonly class WriteToolRegistry
             }
             $subject = $this->text($arguments, 'subject', 255);
             $body = $this->draftBody($arguments, 'body', 10_000);
-            $result = $this->standaloneMailDraftWriter->create($recipient, $subject, $body);
+            $htmlBody = array_key_exists('htmlBody', $arguments) ? $this->draftBody($arguments, 'htmlBody', 20_000) : null;
+            $result = $this->standaloneMailDraftWriter->create($recipient, $subject, $body, $htmlBody);
             $json = json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
             return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => in_array($result['status'], ['uncertain'], true)];
@@ -405,6 +431,33 @@ final readonly class WriteToolRegistry
             return $this->error('The standalone draft result was invalid.');
         } catch (Throwable) {
             return $this->error('Standalone draft creation failed.');
+        }
+    }
+
+    /** @param array<string, mixed> $arguments
+     * @return array<string, mixed>
+     */
+    private function callStandaloneDraftUpdate(array $arguments): array
+    {
+        if (!$this->draftComposeEnabled || !$this->draftEditEnabled || null === $this->standaloneMailDraftEditor) {
+            return $this->error('Standalone draft editing is disabled.');
+        }
+        try {
+            if ([] !== array_diff(array_keys($arguments), ['draftMessageId', 'revision', 'body', 'htmlBody'])) {
+                throw new InvalidToolArguments('Unexpected argument.');
+            }
+            $draftMessageId = $this->text($arguments, 'draftMessageId', 255);
+            $revision = $this->text($arguments, 'revision', 64);
+            $body = $this->draftBody($arguments, 'body', 10_000);
+            $htmlBody = array_key_exists('htmlBody', $arguments) ? $this->draftBody($arguments, 'htmlBody', 20_000) : null;
+            $result = $this->standaloneMailDraftEditor->update($draftMessageId, $revision, $body, $htmlBody);
+            $json = json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+            return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => 'saved' !== ($result['status'] ?? null)];
+        } catch (InvalidToolArguments $exception) {
+            return $this->error($exception->getMessage());
+        } catch (Throwable) {
+            return $this->error('Standalone draft update failed.');
         }
     }
 

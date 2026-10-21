@@ -11,6 +11,7 @@ use App\Application\Commercial\GoogleCalendarConnectionStoreInterface;
 use App\Application\Mailing\NewsletterConfirmationMailSenderInterface;
 use App\Application\Mailing\NewsletterRecipientEligibilityInterface;
 use App\Application\Mcp\CreateStandaloneMailDraft;
+use App\Application\Mcp\EditStandaloneMailDraft;
 use App\Application\Mcp\ImapClientProvider;
 use App\Application\Mcp\MailDraftEditor;
 use App\Application\Mcp\MailDraftReceiptStore;
@@ -22,6 +23,7 @@ use App\Application\Mcp\ProjectFollowupWriter;
 use App\Application\Mcp\ProjectScheduleManager;
 use App\Application\Mcp\ProjectSearch;
 use App\Application\Mcp\SaveMailDraft;
+use App\Application\Mcp\StandaloneMailDraftEditor;
 use App\Application\Mcp\StandaloneMailDraftWriter;
 use App\Application\Mcp\UpdateMailDraft;
 use App\Application\Portal\PortalAccountMailSenderInterface;
@@ -114,6 +116,9 @@ return App::config([
         ],
         StandaloneMailDraftWriter::class => [
             'alias' => CreateStandaloneMailDraft::class,
+        ],
+        StandaloneMailDraftEditor::class => [
+            'alias' => EditStandaloneMailDraft::class,
         ],
         MailDraftEditor::class => [
             'alias' => UpdateMailDraft::class,

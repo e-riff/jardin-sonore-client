@@ -11,7 +11,7 @@ use Symfony\Component\Mime\Email;
 
 final readonly class ReplyDraftMimeBuilder
 {
-    public function build(ReplyContext $context, string $body, string $draftMessageId, string $mailboxAddress, DateTimeImmutable $createdAt): string
+    public function build(ReplyContext $context, string $body, string $draftMessageId, string $mailboxAddress, DateTimeImmutable $createdAt, ?string $htmlBody = null): string
     {
         $subject = trim($context->subject ?? '');
         if (1 === preg_match('/[\x00-\x1F\x7F]/', $subject) || 1 !== preg_match('/^<[^<>\s]{1,250}>$/D', $draftMessageId)) {
@@ -28,6 +28,9 @@ final readonly class ReplyDraftMimeBuilder
             ->date($createdAt)
             ->text($body, 'utf-8');
         $headers = $email->getHeaders();
+        if (null !== $htmlBody) {
+            $email->html(DraftHtmlBody::sanitize($htmlBody), 'utf-8');
+        }
         $headers->addIdHeader('Message-ID', trim($draftMessageId, '<>'));
         if (null !== $context->messageId) {
             $headers->addIdHeader('In-Reply-To', trim($context->messageId, '<>'));

@@ -35,4 +35,16 @@ final class ReplyDraftMimeBuilderTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $builder->build(new ReplyContext('source-key', null, "Sujet\r\nBcc: evil@example.test", 'marie@example.test', null, 'reference'), 'Merci', '<draft@example.test>', 'contact@example.test', new DateTimeImmutable());
     }
+
+    public function testBuildsAReplyWithTextAndSafeHtmlAlternatives(): void
+    {
+        $context = new ReplyContext('source-key', '<source@example.test>', 'Bonjour', 'marie@example.test', null, 'reference');
+        $message = (new ReplyDraftMimeBuilder())->build($context, 'Merci Marie', '<draft@example.test>', 'contact@example.test', new DateTimeImmutable(), '<p>Merci <strong>Marie</strong></p><script>bad()</script>');
+
+        self::assertStringContainsString('multipart/alternative', $message);
+        self::assertStringContainsString('text/plain', $message);
+        self::assertStringContainsString('text/html', $message);
+        self::assertStringContainsString('<p>Merci <strong>Marie</strong></p>', $message);
+        self::assertStringNotContainsString('bad()', $message);
+    }
 }

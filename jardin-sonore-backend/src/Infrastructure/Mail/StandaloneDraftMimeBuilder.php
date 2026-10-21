@@ -10,7 +10,7 @@ use Symfony\Component\Mime\Email;
 
 final readonly class StandaloneDraftMimeBuilder
 {
-    public function build(string $recipient, string $subject, string $body, string $messageId, string $mailboxAddress, DateTimeImmutable $createdAt): string
+    public function build(string $recipient, string $subject, string $body, string $messageId, string $mailboxAddress, DateTimeImmutable $createdAt, ?string $htmlBody = null): string
     {
         if (false === filter_var($recipient, FILTER_VALIDATE_EMAIL)
             || false === filter_var($mailboxAddress, FILTER_VALIDATE_EMAIL)
@@ -28,6 +28,9 @@ final readonly class StandaloneDraftMimeBuilder
             ->date($createdAt)
             ->text($body, 'utf-8');
         $email->getHeaders()->addIdHeader('Message-ID', trim($messageId, '<>'));
+        if (null !== $htmlBody) {
+            $email->html(DraftHtmlBody::sanitize($htmlBody), 'utf-8');
+        }
 
         return $email->toString();
     }

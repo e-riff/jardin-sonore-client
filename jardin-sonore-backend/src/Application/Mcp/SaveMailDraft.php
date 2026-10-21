@@ -23,7 +23,7 @@ final readonly class SaveMailDraft implements MailDraftWriter
     }
 
     /** @return array{status: string, folder: string, messageId: string, uid: ?int} */
-    public function save(string $mailReference, string $body): array
+    public function save(string $mailReference, string $body, ?string $htmlBody = null): array
     {
         if ('' === trim($body) || 10_000 < mb_strlen($body) || false === filter_var($this->mailboxAddress, FILTER_VALIDATE_EMAIL) || '' === trim($this->draftsFolder)) {
             throw new InvalidArgumentException('Invalid draft request or mailbox configuration.');
@@ -32,7 +32,7 @@ final readonly class SaveMailDraft implements MailDraftWriter
         $context = $this->mailReader->replyContext($mailReference);
         $domain = substr(strrchr($this->mailboxAddress, '@'), 1);
         $draftMessageId = "<mcp-draft-{$context->sourceKey}@{$domain}>";
-        $mime = $this->mimeBuilder->build($context, $body, $draftMessageId, $this->mailboxAddress, new DateTimeImmutable());
+        $mime = $this->mimeBuilder->build($context, $body, $draftMessageId, $this->mailboxAddress, new DateTimeImmutable(), $htmlBody);
         $receipt = $this->receiptStore->reserve($context->sourceKey, $draftMessageId, $this->draftsFolder);
         if (!$receipt->isNew) {
             $uid = $this->draftStore->findByMessageId($receipt->folder, $receipt->messageId);

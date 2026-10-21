@@ -10,5 +10,5 @@ interface MailDraftEditor
     public function read(string $mailReference): array;
 
     /** @return array<string, mixed> */
-    public function update(string $mailReference, string $expectedDraftMessageId, string $expectedRevision, string $body): array;
+    public function update(string $mailReference, string $expectedDraftMessageId, string $expectedRevision, string $body, ?string $htmlBody = null): array;
 }

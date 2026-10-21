@@ -32,6 +32,19 @@ final class CreateStandaloneMailDraftTest extends TestCase
         self::assertSame(42, $result['uid']);
     }
 
+    public function testCreatesMultipartStandaloneDraftWhenHtmlIsProvided(): void
+    {
+        $draftStore = $this->createMock(MailDraftStore::class);
+        $draftStore->expects(self::exactly(2))->method('findByMessageId')->willReturnOnConsecutiveCalls(null, 42);
+        $draftStore->expects(self::once())->method('append')->with('INBOX.Drafts', self::stringContains('multipart/alternative'));
+
+        $result = (new CreateStandaloneMailDraft($draftStore, new StandaloneDraftMimeBuilder(), 'contact@example.test', 'INBOX.Drafts'))
+            ->create('marie@example.test', 'Premier échange', 'Bonjour Marie', '<p>Bonjour <strong>Marie</strong></p>');
+
+        self::assertSame('saved', $result['status']);
+        self::assertSame(42, $result['uid']);
+    }
+
     public function testIdenticalRetryReturnsExistingDraftWithoutAppendingAgain(): void
     {
         $draftStore = $this->createMock(MailDraftStore::class);

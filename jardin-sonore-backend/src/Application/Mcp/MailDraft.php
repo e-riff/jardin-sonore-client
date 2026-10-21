@@ -12,6 +12,17 @@ final readonly class MailDraft
         public ?string $subject,
         public string $recipient,
         public string $body,
+        public ?string $htmlBody = null,
     ) {
+    }
+
+    public function revision(): string
+    {
+        return self::contentRevision($this->body, $this->htmlBody);
+    }
+
+    public static function contentRevision(string $body, ?string $htmlBody): string
+    {
+        return hash('sha256', $body . (null === $htmlBody ? '' : "\0" . $htmlBody));
     }
 }

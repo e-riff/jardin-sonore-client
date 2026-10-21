@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Application\Mcp;
 
+use App\Application\Mcp\MailDraftEditor;
 use App\Application\Mcp\MailDraftWriter;
 use App\Application\Mcp\MailReader;
 use App\Application\Mcp\MailReadException;
 use App\Application\Mcp\MailSource;
 use App\Application\Mcp\ProjectFollowupWriter;
 use App\Application\Mcp\ProjectScheduleManager;
+use App\Application\Mcp\StandaloneMailDraftEditor;
 use App\Application\Mcp\StandaloneMailDraftWriter;
 use App\Application\Mcp\WriteToolRegistry;
 use DateTimeImmutable;
@@ -143,5 +145,36 @@ final class WriteToolRegistryTest extends TestCase
         $result = $enabled->call('create_mail_draft', ['recipient' => 'marie@example.test', 'subject' => 'Premier échange', 'body' => 'Bonjour Marie']);
 
         self::assertFalse($result['isError']);
+    }
+
+    public function testHtmlBodyReachesTheReplyAndStandaloneDraftTools(): void
+    {
+        $htmlBody = '<p>Bonjour <strong>Marie</strong></p>';
+        $replyWriter = $this->createMock(MailDraftWriter::class);
+        $replyWriter->expects(self::once())->method('save')->with('reference', 'Bonjour Marie', $htmlBody)->willReturn(['status' => 'saved']);
+        $replyEditor = $this->createMock(MailDraftEditor::class);
+        $replyEditor->expects(self::once())->method('update')->with('reference', '<reply@example.test>', str_repeat('a', 64), 'Bonjour Marie', $htmlBody)->willReturn(['status' => 'saved']);
+        $standaloneWriter = $this->createMock(StandaloneMailDraftWriter::class);
+        $standaloneWriter->expects(self::once())->method('create')->with('marie@example.test', 'Sujet', 'Bonjour Marie', $htmlBody)->willReturn(['status' => 'saved']);
+        $standaloneEditor = $this->createMock(StandaloneMailDraftEditor::class);
+        $standaloneEditor->expects(self::once())->method('update')->with('<draft@example.test>', str_repeat('b', 64), 'Bonjour Marie', $htmlBody)->willReturn(['status' => 'saved']);
+        $registry = new WriteToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectFollowupWriter::class), false, $replyWriter, true, $replyEditor, true, $standaloneWriter, true, standaloneMailDraftEditor: $standaloneEditor);
+
+        self::assertFalse($registry->call('save_mail_draft', ['mailReference' => 'reference', 'body' => 'Bonjour Marie', 'htmlBody' => $htmlBody])['isError']);
+        self::assertFalse($registry->call('update_mail_draft', ['mailReference' => 'reference', 'draftMessageId' => '<reply@example.test>', 'revision' => str_repeat('a', 64), 'body' => 'Bonjour Marie', 'htmlBody' => $htmlBody])['isError']);
+        self::assertFalse($registry->call('create_mail_draft', ['recipient' => 'marie@example.test', 'subject' => 'Sujet', 'body' => 'Bonjour Marie', 'htmlBody' => $htmlBody])['isError']);
+        self::assertFalse($registry->call('update_standalone_mail_draft', ['draftMessageId' => '<draft@example.test>', 'revision' => str_repeat('b', 64), 'body' => 'Bonjour Marie', 'htmlBody' => $htmlBody])['isError']);
+    }
+
+    public function testStandaloneDraftUpdateRequiresBothGates(): void
+    {
+        $standaloneEditor = $this->createMock(StandaloneMailDraftEditor::class);
+        $standaloneEditor->expects(self::never())->method('update');
+        $arguments = ['draftMessageId' => '<draft@example.test>', 'revision' => str_repeat('a', 64), 'body' => 'Bonjour'];
+        $composeDisabled = new WriteToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectFollowupWriter::class), false, draftEditEnabled: true, standaloneMailDraftEditor: $standaloneEditor);
+        $editDisabled = new WriteToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectFollowupWriter::class), false, draftComposeEnabled: true, standaloneMailDraftEditor: $standaloneEditor);
+
+        self::assertTrue($composeDisabled->call('update_standalone_mail_draft', $arguments)['isError']);
+        self::assertTrue($editDisabled->call('update_standalone_mail_draft', $arguments)['isError']);
     }
 }

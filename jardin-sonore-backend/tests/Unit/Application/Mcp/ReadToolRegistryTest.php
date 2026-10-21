@@ -9,6 +9,7 @@ use App\Application\Mcp\ProjectContextReader;
 use App\Application\Mcp\ProjectScheduleManager;
 use App\Application\Mcp\ProjectSearch;
 use App\Application\Mcp\ReadToolRegistry;
+use App\Application\Mcp\StandaloneMailDraftEditor;
 use PHPUnit\Framework\TestCase;
 
 final class ReadToolRegistryTest extends TestCase
@@ -17,11 +18,24 @@ final class ReadToolRegistryTest extends TestCase
     {
         $registry = new ReadToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectSearch::class), $this->createStub(ProjectContextReader::class));
 
-        self::assertSame(['read_mail_draft', 'read_mail_thread', 'search_mail', 'find_sent_replies', 'search_projects', 'get_project_context', 'get_project_appointment', 'search_mailing_campaigns', 'get_mailing_campaign', 'list_mailing_audience_masks'], array_column($registry->definitions(), 'name'));
+        self::assertSame(['read_mail_draft', 'read_standalone_mail_draft', 'read_mail_thread', 'search_mail', 'find_sent_replies', 'search_projects', 'get_project_context', 'get_project_appointment', 'search_mailing_campaigns', 'get_mailing_campaign', 'list_mailing_audience_masks'], array_column($registry->definitions(), 'name'));
         foreach ($registry->definitions() as $definition) {
             self::assertTrue($definition['annotations']['readOnlyHint']);
             self::assertFalse($definition['annotations']['destructiveHint']);
         }
+    }
+
+    public function testReadsStandaloneDraftByExactMessageId(): void
+    {
+        $draftEditor = $this->createMock(StandaloneMailDraftEditor::class);
+        $draftEditor->expects(self::once())->method('read')->with('<draft@example.test>')->willReturn(['status' => 'saved', 'body' => 'Bonjour', 'htmlBody' => '<p>Bonjour</p>']);
+        $registry = new ReadToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectSearch::class), $this->createStub(ProjectContextReader::class), standaloneMailDraftEditor: $draftEditor);
+
+        self::assertTrue($registry->call('read_standalone_mail_draft', ['draftMessageId' => '<draft@example.test>', 'extra' => true])['isError']);
+        $result = $registry->call('read_standalone_mail_draft', ['draftMessageId' => '<draft@example.test>']);
+
+        self::assertFalse($result['isError']);
+        self::assertStringContainsString('<p>Bonjour</p>', $result['content'][0]['text']);
     }
 
     public function testAppointmentReadRequiresExactDossierAndAppointmentIds(): void

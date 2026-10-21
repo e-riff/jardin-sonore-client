@@ -53,6 +53,7 @@ final readonly class ImapMailDraftStore implements MailDraftStore
                 is_callable([$message, 'getSubject']) ? (string) $message->getSubject() : null,
                 $recipientAddress,
                 is_callable([$message, 'getTextBody']) ? $message->getTextBody() : '',
+                is_callable([$message, 'getHTMLBody']) && '' !== trim($message->getHTMLBody()) ? $message->getHTMLBody() : null,
             );
         } catch (RuntimeException $exception) {
             throw $exception;
