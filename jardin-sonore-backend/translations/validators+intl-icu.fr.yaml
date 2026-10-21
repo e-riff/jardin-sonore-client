@@ -2,6 +2,13 @@ portal:
   password:
     invalid: "Le mot de passe doit contenir au moins 12 caractères, une minuscule, une majuscule et un chiffre."
 mailing:
+  form:
+    intro_text_required: "Ajoutez au moins un paragraphe avec du texte."
+    intro_image_required: "Ajoutez une image à cette zone."
+    intro_alt_required: "Décrivez l’image ou indiquez qu’elle est décorative."
+    intro_block_invalid: "Cette zone est invalide."
+    intro_image_invalid_type: "Utilisez une image JPEG, PNG ou WebP."
+    intro_image_invalid_size: "L’image ne doit pas dépasser 5 Mo."
   audience:
     validation:
       insee_code: "Le code INSEE doit contenir exactement cinq chiffres."

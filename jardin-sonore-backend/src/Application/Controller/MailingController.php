@@ -37,6 +37,7 @@ use App\Domain\Model\Mailing\MailingRecommendation;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Domain\Model\Mailing\NewsletterAudienceRadiusOrigin;
 use InvalidArgumentException;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -328,6 +329,7 @@ final class MailingController extends AbstractController
         GetMailingCampaign $getMailingCampaign,
         UpdateMailingCampaign $updateMailingCampaign,
         NewsletterAudienceResolverInterface $newsletterAudienceResolver,
+        LoggerInterface $logger,
     ): Response {
         $mailingCampaign = $getMailingCampaign($uuid);
 
@@ -374,6 +376,27 @@ final class MailingController extends AbstractController
             return $this->redirectToRoute('mailing_content', [
                 'uuid' => $mailingCampaign->getUuid(),
             ]);
+        }
+
+        if ($form->isSubmitted()) {
+            foreach ($form->getErrors(true) as $formError) {
+                if ('mailing.form.intro_image_required' !== $formError->getMessageTemplate()) {
+                    continue;
+                }
+
+                $uploadErrors = $_FILES[$form->getName()]['error']['introBlocks'] ?? [];
+                $logger->warning('Mailing intro image missing after form submission', [
+                    'upload_errors' => is_array($uploadErrors) ? array_values(array_map(
+                        static fn (mixed $blockErrors): mixed => is_array($blockErrors) ? ($blockErrors['imageFile'] ?? null) : null,
+                        $uploadErrors,
+                    )) : [],
+                    'upload_max_filesize' => ini_get('upload_max_filesize'),
+                    'post_max_size' => ini_get('post_max_size'),
+                    'content_length' => $request->headers->get('content-length'),
+                ]);
+
+                break;
+            }
         }
 
         $audienceRecipientCount = null;

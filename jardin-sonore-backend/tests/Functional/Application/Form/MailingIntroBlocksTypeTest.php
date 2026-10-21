@@ -48,6 +48,7 @@ final class MailingIntroBlocksTypeTest extends KernelTestCase
         self::assertCount(2, $formModel->introBlocks);
         self::assertSame('second', $formModel->introBlocks[1]->id);
         self::assertGreaterThan(0, count($form->get('introBlocks')->get('1')->get('imageFile')->getErrors(true)));
+        self::assertSame('Ajoutez une image à cette zone.', $form->get('introBlocks')->get('1')->get('imageFile')->getErrors(true)->current()->getMessage());
     }
 
     public function testNewFormRendersAndAcceptsSeveralTextBlocks(): void
@@ -147,5 +148,50 @@ final class MailingIntroBlocksTypeTest extends KernelTestCase
 
         self::assertSame('existing-block', $block->id);
         self::assertSame('paragraph', $block->kind);
+    }
+
+    public function testEditFormAcceptsAnImageUploadInANewSplitBlock(): void
+    {
+        self::bootKernel(['environment' => 'test']);
+        $formModel = new EditMailingCampaignFormModel();
+        $existingBlock = new MailingIntroBlockFormModel();
+        $existingBlock->id = 'existing-block';
+        $formModel->introBlocks = [$existingBlock];
+        $form = self::getContainer()->get(FormFactoryInterface::class)->create(EditMailingCampaignType::class, $formModel, ['csrf_protection' => false]);
+
+        self::assertTrue($form->createView()->vars['multipart']);
+
+        $form->handleRequest(Request::create(
+            '/mailing/campaign/content',
+            'POST',
+            [$form->getName() => [
+                'internalTitle' => 'Campagne',
+                'emailSubject' => 'Sujet',
+                'publicTitle' => 'Titre',
+                'mainText' => '',
+                'templateKey' => 'default',
+                'introBlocks' => [
+                    ['id' => 'existing-block', 'kind' => 'paragraph', 'text' => 'Texte existant'],
+                    [
+                        'id' => 'new-image-block',
+                        'kind' => 'split',
+                        'text' => 'Texte ajouté avec la photo',
+                        'imageAlt' => 'Photo de l’atelier',
+                        'imageSide' => 'right',
+                    ],
+                ],
+            ]],
+            files: [$form->getName() => [
+                'introBlocks' => [
+                    1 => [
+                        'imageFile' => new UploadedFile(__DIR__ . '/../../../../public/images/mailing/default-banner.webp', 'photo.webp', 'image/webp', test: true),
+                    ],
+                ],
+            ]],
+        ));
+
+        self::assertTrue($form->isValid(), (string) $form->getErrors(true, false));
+        self::assertInstanceOf(UploadedFile::class, $formModel->introBlocks[1]->imageFile);
+        self::assertSame('new-image-block', $formModel->introBlocks[1]->id);
     }
 }

@@ -120,6 +120,8 @@ Le connecteur mail MCP a été étendu et déployé le 21 octobre sous `deploy-m
 
 Le correctif de sauvegarde après suppression d'un bloc de mailing a été livré le 21 octobre sous `deploy-mailing-block-delete-fix-20261021-02` (`ba595ad`). Le formulaire restaure l'identifiant et le type connus quand les champs cachés ou requis arrivent vides ou nuls ; le cas est couvert par un test de formulaire.
 
+L'ajout d'une photo à un bloc « texte et image » fonctionne en local mais échoue encore en production selon le retour utilisateur. Le fichier fourni mesure 1,58 Mo. La limite PHP CLI de l'hébergement est de 2 Mo, contre 8 Mo en local, mais elle n'explique pas à elle seule cet échec. Le formulaire accepte le fichier dans un test HTTP multipart ; la prochaine livraison aligne la limite web PHP sur 8 Mo, traduit les erreurs de validation et journalise uniquement les codes d'erreur d'upload et les limites PHP lorsqu'une image manque. **À vérifier avec le même fichier en production après déploiement ; consulter le journal si l'échec persiste.**
+
 La boîte cPanel reste la source des échanges avec les clients ; le backoffice porte les dossiers, les échéances et les documents.
 
 ## P2 — Calendrier, interventions, devis et facturation suivie
