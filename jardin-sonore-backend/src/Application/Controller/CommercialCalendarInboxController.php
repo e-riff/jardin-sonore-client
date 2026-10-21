@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Application\Controller;
 
 use App\Application\Commercial\CalendarEventDraft;
+use App\Application\Commercial\CommercialAppointmentTitle;
 use App\Application\Commercial\CommercialCalendarGateway;
 use App\Application\Commercial\CommercialInterventionTitle;
 use App\Application\Commercial\GroupCalendarEvents;
+use App\Infrastructure\Doctrine\Entity\CommercialAppointmentEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialInterventionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use App\Infrastructure\Google\GoogleCalendarApiException;
@@ -76,7 +78,11 @@ final class CommercialCalendarInboxController extends AbstractController
                 $linkedIds[$linkedEntity->getGoogleEventId()] = true;
             }
         }
-        $unlinkedEvents = array_values(array_filter($events, static fn ($event): bool => !isset($linkedIds[$event->id])));
+        $linkedAppointments = [] === $eventIds ? [] : $entityManager->getRepository(CommercialAppointmentEntity::class)->findBy(['calendarId' => $calendarId, 'googleEventId' => $eventIds]);
+        foreach ($linkedAppointments as $appointmentEntity) {
+            $linkedIds[$appointmentEntity->getGoogleEventId()] = true;
+        }
+        $unlinkedEvents = array_values(array_filter($events, static fn ($event): bool => !isset($linkedIds[$event->id]) && !CommercialAppointmentTitle::hasMarker($event->title)));
         $projectEntities = $entityManager->getRepository(CommercialProjectEntity::class)->findBy(
             ['status' => [CommercialProjectEntity::STATUS_DISCUSSION, CommercialProjectEntity::STATUS_CONFIRMED, CommercialProjectEntity::STATUS_COMPLETED]],
             ['createdAt' => 'DESC'],
@@ -142,7 +148,8 @@ final class CommercialCalendarInboxController extends AbstractController
         $eventsToAttach = [];
         foreach ($eventIds as $eventId) {
             $candidateEvent = $candidatesById[$eventId] ?? null;
-            if (null === $candidateEvent || $candidateEvent->allDay) {
+            $linkedAppointment = $entityManager->getRepository(CommercialAppointmentEntity::class)->findOneBy(['calendarId' => $calendarId, 'googleEventId' => $eventId]);
+            if (null === $candidateEvent || $candidateEvent->allDay || CommercialAppointmentTitle::hasMarker($candidateEvent->title) || $linkedAppointment instanceof CommercialAppointmentEntity) {
                 $this->addFlash('error', ['message' => 'calendar.unlinked.invalid_selection', 'domain' => 'commercial']);
 
                 return $this->redirectToUnlinked($request);

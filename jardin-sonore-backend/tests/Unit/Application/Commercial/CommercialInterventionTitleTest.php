@@ -9,6 +9,13 @@ use PHPUnit\Framework\TestCase;
 
 final class CommercialInterventionTitleTest extends TestCase
 {
+    public function testRecognizesOptionMarkerFromGoogleTitle(): void
+    {
+        self::assertTrue(CommercialInterventionTitle::hasOptionMarker('[OPT] IPE - Jardin'));
+        self::assertTrue(CommercialInterventionTitle::hasOptionMarker('??? IPE - Jardin'));
+        self::assertFalse(CommercialInterventionTitle::hasOptionMarker('IPE - Jardin'));
+    }
+
     public function testOptionMarkerIsAddedOnlyOnce(): void
     {
         self::assertSame('[OPT] IPE - Jardin', CommercialInterventionTitle::forOption('IPE - Jardin', true));

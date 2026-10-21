@@ -32,6 +32,11 @@
                         <input type="hidden" name="_token" value="{{ csrf_token('commercial_intervention_' ~ intervention.id ~ '_confirm') }}">
                         <button class="internal-button internal-button--secondary" type="submit">{{ 'calendar.sessions.confirm'|trans({}, 'commercial') }}</button>
                     </form>
+                {% elseif intervention.status == 'confirmed' %}
+                    <form method="post" action="{{ path('commercial_intervention_option', {projectId: project.id, id: intervention.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('commercial_intervention_' ~ intervention.id ~ '_option') }}">
+                        <button class="internal-button internal-button--secondary" type="submit">{{ 'calendar.sessions.set_option'|trans({}, 'commercial') }}</button>
+                    </form>
                 {% endif %}
                 <form method="post" action="{{ path('commercial_intervention_detach', {projectId: project.id, id: intervention.id}) }}">
                     <input type="hidden" name="_token" value="{{ csrf_token('commercial_intervention_' ~ intervention.id ~ '_detach') }}">

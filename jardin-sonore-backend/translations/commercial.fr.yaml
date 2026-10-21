@@ -149,6 +149,7 @@ project:
     add_task: Ajouter une tâche
     task_title: À faire
     task_due_on: Quand ?
+    task_due_time: Heure indicative (facultative)
     customize_title: Donner un titre au dossier (facultatif)
     title: Titre du dossier
     save: Créer le dossier
@@ -239,6 +240,9 @@ event:
   action_postponed: Action reportée
   action_canceled: Action annulée
   action_edited: Action modifiée
+  appointment_created: Rendez-vous créé
+  appointment_updated: Rendez-vous modifié
+  appointment_canceled: Rendez-vous annulé
   project_confirmed: Dossier confirmé
   project_without_result: Dossier classé sans suite
   project_completed: Dossier clos
@@ -264,6 +268,30 @@ action:
   cancel_confirm: La tâche sera retirée des rappels actifs. Son annulation restera visible dans le fil du dossier.
   note: Précision (facultative)
   due_on: Nouvelle date
+  due_time: Heure indicative (facultative)
+  approx_time: vers %time%
+appointment:
+  add: Ajouter un rendez-vous
+  title: Objet du rendez-vous
+  starts_at: Début
+  ends_at: Fin
+  location: Lieu (facultatif)
+  calendar_hint: Ce créneau sera ajouté à ton agenda sans inviter les contacts du dossier.
+  save: Enregistrer le rendez-vous
+  edit: Modifier le rendez-vous
+  cancel: Annuler le rendez-vous
+  cancel_confirm: Le créneau sera supprimé de Google Calendar. Le rendez-vous et son compte rendu resteront dans le fil.
+  canceled: Annulé
+  summary: Compte rendu
+  sync_warning: Horaire à vérifier dans Google Calendar
+  conflict: Le rendez-vous a changé entre-temps. Vérifie sa version actuelle avant de recommencer.
+  upcoming: Rendez-vous à venir
+  next: 'Prochain rendez-vous : %date%'
+  changed_by_google: 'Dans Google Calendar : « %oldTitle% » (%oldDate%) → « %newTitle% » (%newDate%).'
+  canceled_by_google: 'Dans Google Calendar : « %title% » prévu le %date%.'
+  created_in_dossier: '« %title% » prévu le %date%.'
+  changed_in_dossier: '« %oldTitle% » (%oldDate%) → « %newTitle% » (%newDate%).'
+  canceled_in_dossier: '« %title% » prévu le %date%.'
 quote:
   heading: Devis
   new: Enregistrer un devis envoyé
@@ -439,8 +467,21 @@ calendar:
     cancel: Annuler la séance
     canceled: La séance a été annulée dans Google Calendar et conservée dans l’historique du dossier.
     canceled_note: 'Séance annulée : %title%.'
+    canceled_note_label: Séance annulée
     canceled_by_google_note: 'Séance annulée dans Google Calendar : %title%.'
+    canceled_by_google_note_label: Séance annulée dans Google Calendar
     confirm: Confirmer la séance
     confirmed: La séance a été confirmée dans Google Calendar.
     confirmed_note: 'Séance confirmée : %title%.'
+    confirmed_note_label: Séance confirmée
+    set_option: Repasser en option
+    option_set: La séance est repassée en option dans Google Calendar.
+    option_note: 'Séance repassée en option : %title%.'
+    option_note_label: Séance repassée en option
+    bulk_options: '%count% séance(s) en option'
+    bulk_confirm: Tout confirmer
+    bulk_reject: Tout rejeter
+    bulk_reject_item: 'les %count% séances en option dans Google Calendar'
+    bulk_done: '%count% séance(s) traitée(s) dans Google Calendar.'
+    bulk_partial: '%count% séance(s) traitée(s), %failed% en échec. Vérifie les séances signalées avant de réessayer.'
     conflict: La séance a changé dans Google Calendar. Les dernières données ont été chargées ; vérifie-les avant de réessayer.

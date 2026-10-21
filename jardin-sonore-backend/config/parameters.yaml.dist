@@ -1,6 +1,7 @@
 parameters:
   app.mcp.bearer_token: '%env(MCP_BEARER_TOKEN)%'
   app.mcp.write_enabled: '%env(bool:MCP_WRITE_ENABLED)%'
+  app.mcp.project_schedule_write_enabled: '%env(bool:MCP_PROJECT_SCHEDULE_WRITE_ENABLED)%'
   app.mcp.draft_write_enabled: '%env(bool:MCP_DRAFT_WRITE_ENABLED)%'
   app.mcp.draft_edit_enabled: '%env(bool:MCP_DRAFT_EDIT_ENABLED)%'
   app.mcp.draft_compose_enabled: '%env(bool:MCP_DRAFT_COMPOSE_ENABLED)%'

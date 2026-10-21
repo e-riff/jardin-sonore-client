@@ -1,15 +1,37 @@
 <section class="commercial-dossier__timeline-header">
+    {% set upcomingAppointments = appointments|filter(appointment => appointment.status != 'canceled' and appointment.startsAt >= date('now'))|sort((left, right) => left.startsAt <=> right.startsAt) %}
     <details class="commercial-dossier__timeline" name="commercial-project-details" aria-labelledby="commercial-timeline-heading" {% if project.status == 'discussion' or noteError is defined or noteForm.vars.submitted %}open{% endif %}>
         <summary>
             {% include 'commercial/project/_icon.html.twig' with {name: 'note'} only %}
             <span id="commercial-timeline-heading">{{ 'project.history'|trans({}, 'commercial') }}</span>
+            {% if upcomingAppointments is not empty %}<span class="commercial-dossier__muted">{{ 'appointment.next'|trans({'%date%': upcomingAppointments|first.startsAt|date('d/m à H:i', 'Europe/Paris')}, 'commercial') }}</span>{% endif %}
             <span class="commercial-dossier__disclosure-chevron" aria-hidden="true"></span>
         </summary>
         <div class="commercial-dossier__timeline-content">
+        {% if upcomingAppointments is not empty %}
+            <h3>{{ 'appointment.upcoming'|trans({}, 'commercial') }}</h3>
+            {% for appointment in upcomingAppointments %}{% include 'commercial/project/_appointment_card.html.twig' %}{% endfor %}
+        {% endif %}
         <div class="commercial-timeline">
-        {% set visibleEvents = project.events|filter(event => not (event.type starts with 'action_') or (event.type == 'action_completed' and event.content|default('')|trim != ''))|sort((left, right) => left.timelineDate <=> right.timelineDate) %}
+        {% set hiddenSessionNoteLabels = [
+            'calendar.sessions.confirmed_note_label'|trans({}, 'commercial'),
+            'calendar.sessions.canceled_note_label'|trans({}, 'commercial'),
+            'calendar.sessions.canceled_by_google_note_label'|trans({}, 'commercial'),
+            'calendar.sessions.option_note_label'|trans({}, 'commercial')
+        ] %}
+        {% set visibleEvents = project.events|filter(event =>
+            (not (event.type starts with 'action_') or (event.type == 'action_completed' and event.content|default('')|trim != ''))
+            and not (event.type == 'note' and (event.metadata.calendar_change|default(false) or event.content|default('')|split(':')|first|trim in hiddenSessionNoteLabels))
+        )|sort((left, right) => left.timelineDate <=> right.timelineDate) %}
         {% set latestManualEvent = visibleEvents|reverse|filter(event => not (event.type starts with 'quote_'))|first %}
-        {% for event in visibleEvents|reverse %}
+        {% set timelineItems = [] %}
+        {% for event in visibleEvents %}{% set timelineItems = timelineItems|merge([{kind: 'event', date: event.timelineDate, value: event}]) %}{% endfor %}
+        {% for appointment in appointments|filter(appointment => appointment.status == 'canceled' or appointment.startsAt < date('now')) %}{% set timelineItems = timelineItems|merge([{kind: 'appointment', date: appointment.startsAt, value: appointment}]) %}{% endfor %}
+        {% for item in timelineItems|sort((left, right) => left.date <=> right.date)|reverse %}
+            {% if item.kind == 'appointment' %}
+                {% include 'commercial/project/_appointment_card.html.twig' with {appointment: item.value} %}
+            {% else %}
+            {% set event = item.value %}
             {% set icon = event.type starts with 'action_' ? 'check' : (event.type starts with 'quote_' ? 'quote' : (event.type starts with 'invoice_' ? 'invoice' : (event.type starts with 'contact_' ? 'phone' : 'note'))) %}
             {% set eventIcon = event.type == 'quote_sent' ? 'send' : (event.type == 'quote_signed' ? 'signed' : (event.type == 'quote_refused' ? 'close' : icon)) %}
             {% set eventLabel = ('event.' ~ event.type)|trans({}, 'commercial') %}
@@ -64,6 +86,7 @@
                 {% endif %}
                 {% if event.type == 'project_status_changed' %}<p class="commercial-timeline__status-change">{{ ('project.status.' ~ event.metadata.old_status)|trans({}, 'commercial') }} → {{ ('project.status.' ~ event.metadata.new_status)|trans({}, 'commercial') }}</p>{% endif %}
             </article>
+            {% endif %}
         {% else %}<p class="commercial-dossier__muted">{{ 'event.none'|trans({}, 'commercial') }}</p>{% endfor %}
         </div>
         </div>

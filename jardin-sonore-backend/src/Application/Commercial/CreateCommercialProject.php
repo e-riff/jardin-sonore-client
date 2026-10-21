@@ -28,6 +28,7 @@ final readonly class CreateCommercialProject
         string $initialStatus,
         ?string $taskTitle,
         ?DateTimeImmutable $taskDueOn,
+        ?string $taskDueTime = null,
     ): CommercialProjectEntity {
         if (!$organizationEntity->isActive()) {
             throw new DomainException('A manual dossier needs an active organization.');
@@ -60,7 +61,9 @@ final readonly class CreateCommercialProject
         }
         $projectEntity->recordEvent('initial_message', $now, $firstMessage, [], $personEntity);
         if (null !== $taskTitle && '' !== $taskTitle && $taskDueOn instanceof DateTimeImmutable) {
-            $projectEntity->addAction(new CommercialActionEntity($projectEntity, $taskTitle, $taskDueOn, null, $personEntity));
+            $actionEntity = new CommercialActionEntity($projectEntity, $taskTitle, $taskDueOn, null, $personEntity);
+            $actionEntity->setDueTime($taskDueTime);
+            $projectEntity->addAction($actionEntity);
         }
 
         return $projectEntity;

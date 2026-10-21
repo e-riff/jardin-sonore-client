@@ -72,11 +72,11 @@
                                             {{ row.organizationLabel }}{% if row.organizationLocation %}<span aria-hidden="true"> · </span>{{ row.organizationLocation }}{% endif %}
                                         </span>
                                         {% if row.nextActionTitle %}<span class="commercial-project-row__task-mobile">{{ row.nextActionTitle }}{% if row.extraTaskCount %} · +{{ row.extraTaskCount }}{% endif %}</span>{% endif %}
-                                        {% if row.nextDueOn %}<span class="commercial-project-row__due-mobile">{{ row.nextDueOn|date('d/m/Y') }}</span>{% endif %}
+                                        {% if row.nextDueOn %}<span class="commercial-project-row__due-mobile">{{ row.nextDueOn|date('d/m/Y') }}{% if row.nextDueTime %} · {{ 'action.approx_time'|trans({'%time%': row.nextDueTime|replace({':00': ' h', ':': ' h '})}, 'commercial') }}{% endif %}</span>{% endif %}
                                     </td>
                                     <td data-table-mobile="state"><span class="internal-badge {{ rowStatusBadge }} commercial-project-row__status-desktop">{{ ('project.status.' ~ row.status)|trans({}, 'commercial') }}</span></td>
                                     <td data-table-mobile="secondary">{{ row.nextActionTitle ?: 'project.list.no_task'|trans({}, 'commercial') }}{% if row.extraTaskCount %}<span class="internal-table-note">+{{ row.extraTaskCount }}</span>{% endif %}</td>
-                                    <td data-table-mobile="secondary"><span class="commercial-project-row__due">{{ row.nextDueOn ? row.nextDueOn|date('d/m/Y') : '—' }}</span></td>
+                                    <td data-table-mobile="secondary"><span class="commercial-project-row__due">{{ row.nextDueOn ? row.nextDueOn|date('d/m/Y') : '—' }}{% if row.nextDueTime %}<br><small class="commercial-dossier__muted">{{ 'action.approx_time'|trans({'%time%': row.nextDueTime|replace({':00': ' h', ':': ' h '})}, 'commercial') }}</small>{% endif %}</span></td>
                                     <td data-table-mobile="activity"><span class="commercial-project-row__activity-label">{{ 'project.list.last_activity'|trans({}, 'commercial') }} :</span> <time datetime="{{ row.lastEventAt ? row.lastEventAt|date('c') : '' }}">{{ row.lastEventAt ? row.lastEventAt|date('d/m/Y') : '—' }}</time></td>
                                 </tr>
                                 {% endfor %}

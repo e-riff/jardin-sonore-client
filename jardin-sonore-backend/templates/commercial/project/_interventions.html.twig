@@ -1,4 +1,5 @@
 {% set upcomingInterventions = interventions|filter(intervention => intervention.startsAt > date() and intervention.status != 'canceled') %}
+{% set optionInterventions = interventions|filter(intervention => intervention.status == 'option') %}
 {% set pastInterventions = interventions|filter(intervention => intervention.status == 'canceled' or intervention.startsAt <= date())|reverse %}
 {% set upcomingByMonth = {} %}
 {% for intervention in upcomingInterventions %}
@@ -14,6 +15,16 @@
         <span class="commercial-dossier__disclosure-chevron" aria-hidden="true"></span>
     </summary>
     <div class="commercial-dossier__interventions-content">
+    {% if optionInterventions is not empty %}
+        <div class="commercial-dossier__intervention-bulk">
+            <span>{{ 'calendar.sessions.bulk_options'|trans({'%count%': optionInterventions|length}, 'commercial') }}</span>
+            <form method="post" action="{{ path('commercial_intervention_options_bulk', {projectId: project.id, decision: 'confirm'}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_' ~ project.id ~ '_options_confirm') }}">
+                <button class="internal-button internal-button--secondary internal-button--compact" type="submit">{{ 'calendar.sessions.bulk_confirm'|trans({}, 'commercial') }}</button>
+            </form>
+            <button type="button" class="internal-button internal-button--danger internal-button--compact" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('commercial_intervention_options_bulk', {projectId: project.id, decision: 'reject'}) }}" data-confirmation-dialog-item-value="{{ 'calendar.sessions.bulk_reject_item'|trans({'%count%': optionInterventions|length}, 'commercial') }}" data-confirmation-dialog-token-value="{{ csrf_token('commercial_project_' ~ project.id ~ '_options_reject') }}">{{ 'calendar.sessions.bulk_reject'|trans({}, 'commercial') }}</button>
+        </div>
+    {% endif %}
     {% if interventions is empty %}
         <p>{{ 'calendar.sessions.empty'|trans({}, 'commercial') }}</p>
     {% else %}

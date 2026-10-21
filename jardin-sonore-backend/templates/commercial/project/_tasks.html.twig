@@ -14,8 +14,28 @@
                             <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_' ~ project.id ~ '_action_create') }}">
                             <label>{{ 'action.title'|trans({}, 'commercial') }} <input name="title" maxlength="255" required></label>
                             <label>{{ 'action.due_on'|trans({}, 'commercial') }} <input type="date" name="dueOn" value="{{ 'now'|date('Y-m-d') }}" required></label>
+                            <label>{{ 'action.due_time'|trans({}, 'commercial') }} <input type="time" name="dueTime"></label>
                             {% if project.people is not empty %}<label>{{ 'action.person'|trans({}, 'commercial') }}<select name="personId"><option value="">{{ 'action.no_person'|trans({}, 'commercial') }}</option>{% for projectPerson in project.people %}{% if projectPerson.current and projectPerson.person.active %}<option value="{{ projectPerson.person.id }}">{{ projectPerson.person }}</option>{% endif %}{% endfor %}</select></label>{% endif %}
                             <div class="internal-form-dialog__actions"><button class="internal-button" type="submit">{{ 'project.add_action_save'|trans({}, 'commercial') }}</button></div>
+                        </form>
+                    </div>
+                </dialog>
+            </div>
+            <div class="commercial-dossier__create-controls" data-controller="internal-dialog">
+                <button type="button" class="internal-button internal-button--secondary internal-button--compact" aria-haspopup="dialog" aria-controls="commercial-project-appointment-create-{{ project.id }}" {{ stimulus_action('internal-dialog', 'open') }}>{% include 'commercial/project/_icon.html.twig' with {name: 'calendar'} only %} {{ 'appointment.add'|trans({}, 'commercial') }}</button>
+                <dialog id="commercial-project-appointment-create-{{ project.id }}" class="internal-form-dialog" aria-labelledby="commercial-project-appointment-create-title-{{ project.id }}" {{ stimulus_target('internal-dialog', 'dialog') }} {{ stimulus_action('internal-dialog', 'closeOnBackdrop', 'click') }}>
+                    <div class="internal-form-dialog__panel">
+                        <button type="button" class="internal-form-dialog__close" aria-label="{{ 'internal.confirmation.delete.close'|trans({}, 'internal') }}" {{ stimulus_action('internal-dialog', 'close') }}>×</button>
+                        <h2 id="commercial-project-appointment-create-title-{{ project.id }}">{{ 'appointment.add'|trans({}, 'commercial') }}</h2>
+                        <form method="post" action="{{ path('commercial_appointment_create', {projectId: project.id}) }}" class="internal-form">
+                            <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_' ~ project.id ~ '_appointment_create') }}">
+                            <input type="hidden" name="requestId" value="{{ appointmentRequestId }}">
+                            <label>{{ 'appointment.title'|trans({}, 'commercial') }} <input name="title" maxlength="255" required></label>
+                            <label>{{ 'appointment.starts_at'|trans({}, 'commercial') }} <input type="datetime-local" name="startsAt" required></label>
+                            <label>{{ 'appointment.ends_at'|trans({}, 'commercial') }} <input type="datetime-local" name="endsAt" required></label>
+                            <label>{{ 'appointment.location'|trans({}, 'commercial') }} <input name="location" maxlength="1000"></label>
+                            <p class="commercial-dossier__muted">{{ 'appointment.calendar_hint'|trans({}, 'commercial') }}</p>
+                            <div class="internal-form-dialog__actions"><button type="button" class="internal-button internal-button--secondary" {{ stimulus_action('internal-dialog', 'close') }}>{{ 'internal.confirmation.delete.close'|trans({}, 'internal') }}</button><button class="internal-button" type="submit">{{ 'appointment.save'|trans({}, 'commercial') }}</button></div>
                         </form>
                     </div>
                 </dialog>
@@ -30,7 +50,7 @@
                 {% if action.details %}<p>{{ action.details }}</p>{% endif %}
                 {% if action.person %}<span class="commercial-dossier__muted">{{ action.person }}</span>{% endif %}
             </div>
-            <time class="{{ action.dueOn|date('Y-m-d') <= 'now'|date('Y-m-d') ? 'is-urgent' : '' }}" datetime="{{ action.dueOn|date('Y-m-d') }}">{{ action.dueOn|date('d/m/Y') }}</time>
+            <div><time class="{{ action.dueOn|date('Y-m-d') <= 'now'|date('Y-m-d') ? 'is-urgent' : '' }}" datetime="{{ action.dueOn|date('Y-m-d') }}">{{ action.dueOn|date('d/m/Y') }}</time>{% if action.dueTime %}<br><span class="commercial-dossier__muted">{{ 'action.approx_time'|trans({'%time%': action.dueTime|replace({':00': ' h', ':': ' h '})}, 'commercial') }}</span>{% endif %}</div>
             <div class="commercial-dossier__task-actions" data-controller="internal-dialog">
                 <details class="commercial-dossier__task-menu">
                     <summary class="internal-button internal-button--compact commercial-task-action--complete" aria-label="{{ 'action.complete'|trans({}, 'commercial') }}" title="{{ 'action.complete'|trans({}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'check'} only %}</summary>
@@ -55,6 +75,7 @@
                         <form method="post" action="{{ path('commercial_action_change', {id: action.id, operation: 'postpone'}) }}">
                             <input type="hidden" name="_token" value="{{ csrf_token('commercial_action_' ~ action.id ~ '_postpone') }}">
                             <label>{{ 'project.list.other_date'|trans({}, 'commercial') }} <input type="date" name="dueOn" value="{{ action.dueOn|date('Y-m-d') }}" required></label>
+                            <label>{{ 'action.due_time'|trans({}, 'commercial') }} <input type="time" name="dueTime" value="{{ action.dueTime }}"></label>
                             <button type="submit">{{ 'action.postpone'|trans({}, 'commercial') }}</button>
                         </form>
                     </div>
@@ -70,6 +91,7 @@
                             <label>{{ 'action.title'|trans({}, 'commercial') }} <input type="text" name="title" value="{{ action.title }}" required maxlength="255"></label>
                             <label>{{ 'action.details'|trans({}, 'commercial') }} <textarea name="details">{{ action.details }}</textarea></label>
                             <label>{{ 'action.due_on'|trans({}, 'commercial') }} <input type="date" name="dueOn" value="{{ action.dueOn|date('Y-m-d') }}" required></label>
+                            <label>{{ 'action.due_time'|trans({}, 'commercial') }} <input type="time" name="dueTime" value="{{ action.dueTime }}"></label>
                             <label>{{ 'action.person'|trans({}, 'commercial') }}<select name="personId"><option value="">{{ 'action.no_person'|trans({}, 'commercial') }}</option>{% for projectPerson in project.people %}{% if projectPerson.current and projectPerson.person.active %}<option value="{{ projectPerson.person.id }}" {% if action.person == projectPerson.person %}selected{% endif %}>{{ projectPerson.person }}</option>{% endif %}{% endfor %}</select></label>
                             <div class="internal-form-dialog__actions"><button type="button" class="internal-button internal-button--secondary" {{ stimulus_action('internal-dialog', 'close') }}>{{ 'internal.confirmation.delete.close'|trans({}, 'internal') }}</button><button class="internal-button" type="submit">{{ 'action.edit'|trans({}, 'commercial') }}</button></div>
                         </form>

@@ -1,11 +1,16 @@
 {{ 'heading'|trans({'%date%': digest.localDate|date('d/m/Y')}, 'commercial_digest') }}
 
+{% if digest.todayAppointments %}{{ 'appointments'|trans({}, 'commercial_digest') }}
+{% if digest.appointmentSyncWarning %}{{ 'appointment_sync_warning'|trans({}, 'commercial_digest') }}
+{% endif %}{% for appointment in digest.todayAppointments %}- {{ appointment.startsAt|date('H:i', 'Europe/Paris') }} — {{ appointment.title }} — {{ appointment.project.organization ? appointment.project.organization.name : appointment.project.title }}{% if appointment.location %} — {{ appointment.location }}{% endif %} — {{ url('commercial_project_show', {id: appointment.project.id}) }}#appointment-{{ appointment.id }}
+{% endfor %}
+{% endif %}
 {% if digest.upcomingInterventions %}{{ 'sessions'|trans({}, 'commercial_digest') }}
 {% if digest.calendarSyncWarning %}{{ 'calendar_sync_warning'|trans({}, 'commercial_digest') }}
 {% endif %}{% for intervention in digest.upcomingInterventions %}- {{ intervention.startsAt|date('d/m, H:i', 'Europe/Paris') }} — {{ intervention.project.organization ? intervention.project.organization.name : intervention.project.title }}{% if intervention.status == 'option' %} — {{ 'option'|trans({}, 'commercial_digest') }}{% endif %}{% if intervention.location %} — {{ intervention.location }}{% endif %} — {{ url('commercial_project_show', {id: intervention.project.id}) }}
 {% endfor %}{% endif %}
 {% if digest.dueActions %}{{ 'actions'|trans({}, 'commercial_digest') }}
-{% for action in digest.dueActions %}- {{ action.title }} ({{ action.dueOn|date('d/m/Y') }}) — {{ action.project.organization ? action.project.organization.name : action.project.title }} — {{ url('commercial_project_show', {id: action.project.id}) }}
+{% for action in digest.dueActions %}- {{ action.title }} ({{ action.dueOn|date('d/m/Y') }}{% if action.dueTime %}, {{ 'approx_time'|trans({'%time%': action.dueTime|replace({':00': ' h', ':': ' h '})}, 'commercial_digest') }}{% endif %}) — {{ action.project.organization ? action.project.organization.name : action.project.title }} — {{ url('commercial_project_show', {id: action.project.id}) }}
 {% endfor %}
 {% endif %}
 {% if digest.overdueInvoices %}{{ 'invoices'|trans({}, 'commercial_digest') }}

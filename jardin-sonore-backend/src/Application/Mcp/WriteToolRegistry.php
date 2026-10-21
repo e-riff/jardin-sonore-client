@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Application\Mcp;
 
+use App\Infrastructure\Google\GoogleCalendarConflictException;
 use DateTimeImmutable;
+use DomainException;
 use InvalidArgumentException;
 use JsonException;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -24,6 +26,8 @@ final readonly class WriteToolRegistry
         #[Autowire('%app.mcp.draft_compose_enabled%')] private bool $draftComposeEnabled = false,
         private ?MailingDraftManager $mailingDraftManager = null,
         #[Autowire('%app.mcp.mailing_write_enabled%')] private bool $mailingWriteEnabled = false,
+        private ?ProjectScheduleManager $projectScheduleManager = null,
+        #[Autowire('%app.mcp.project_schedule_write_enabled%')] private bool $projectScheduleWriteEnabled = false,
     ) {
     }
 
@@ -101,6 +105,7 @@ final readonly class WriteToolRegistry
                         'mailReference' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 1024],
                         'title' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255],
                         'dueOn' => ['type' => 'string', 'format' => 'date'],
+                        'dueTime' => ['type' => ['string', 'null'], 'pattern' => '^([01][0-9]|2[0-3]):[0-5][0-9]$'],
                     ],
                     'required' => ['projectId', 'mailReference', 'title', 'dueOn'],
                     'additionalProperties' => false,
@@ -145,6 +150,7 @@ final readonly class WriteToolRegistry
                 ], 'required' => ['campaignUuid', 'revision'], 'additionalProperties' => false],
                 'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false],
             ],
+            ...$this->scheduleDefinitions(),
         ];
     }
 
@@ -165,6 +171,9 @@ final readonly class WriteToolRegistry
         if (in_array($name, ['create_mailing_draft', 'update_mailing_draft'], true)) {
             return $this->callMailingDraft($name, $arguments);
         }
+        if (in_array($name, ['create_project_task', 'update_project_task', 'complete_project_task', 'create_project_appointment', 'update_project_appointment', 'cancel_project_appointment', 'set_project_appointment_summary'], true)) {
+            return $this->callSchedule($name, $arguments);
+        }
         if (!$this->writeEnabled) {
             return $this->error('Commercial writes are disabled.');
         }
@@ -172,7 +181,7 @@ final readonly class WriteToolRegistry
         try {
             $allowed = match ($name) {
                 'record_mail_summary' => ['projectId', 'mailReference', 'summary'],
-                'create_project_reminder' => ['projectId', 'mailReference', 'title', 'dueOn'],
+                'create_project_reminder' => ['projectId', 'mailReference', 'title', 'dueOn', 'dueTime'],
                 default => throw new InvalidToolArguments('Unknown write tool.'),
             };
             if ([] !== array_diff(array_keys($arguments), $allowed)) {
@@ -186,10 +195,11 @@ final readonly class WriteToolRegistry
             $summary = 'record_mail_summary' === $name ? $this->text($arguments, 'summary', 10000) : null;
             $title = 'create_project_reminder' === $name ? $this->text($arguments, 'title', 255) : null;
             $dueOn = 'create_project_reminder' === $name ? $this->date($arguments) : null;
+            $dueTime = $this->optionalDueTime($arguments);
             $source = $this->mailReader->source($reference);
             $result = 'record_mail_summary' === $name
                 ? $this->projectFollowupWriter->recordSummary($projectId, $source, $summary)
-                : $this->projectFollowupWriter->createReminder($projectId, $source, $title, $dueOn);
+                : $this->projectFollowupWriter->createReminder($projectId, $source, $title, $dueOn, $dueTime);
             $json = json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
             return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => false];
@@ -199,6 +209,73 @@ final readonly class WriteToolRegistry
             return $this->error('The write operation returned invalid data.');
         } catch (Throwable) {
             return $this->error('The write operation failed.');
+        }
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function scheduleDefinitions(): array
+    {
+        $projectId = ['type' => 'integer', 'minimum' => 1];
+        $recordId = ['type' => 'integer', 'minimum' => 1];
+        $revision = ['type' => 'integer', 'minimum' => 1];
+        $taskRevision = ['type' => 'string', 'minLength' => 64, 'maxLength' => 64];
+        $title = ['type' => 'string', 'minLength' => 1, 'maxLength' => 255];
+        $dueOn = ['type' => 'string', 'format' => 'date'];
+        $dueTime = ['type' => ['string', 'null'], 'pattern' => '^([01][0-9]|2[0-3]):[0-5][0-9]$'];
+        $dateTime = ['type' => 'string', 'pattern' => '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$'];
+        $location = ['type' => ['string', 'null'], 'maxLength' => 1000];
+        $annotation = ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false];
+        $confirmation = 'After a separate explicit user confirmation, ';
+
+        return [
+            ['name' => 'create_project_task', 'description' => $confirmation . 'create a dated task in an exact dossier. The optional time is indicative and does not reserve Calendar.', 'inputSchema' => ['type' => 'object', 'properties' => ['projectId' => $projectId, 'title' => $title, 'dueOn' => $dueOn, 'dueTime' => $dueTime], 'required' => ['projectId', 'title', 'dueOn'], 'additionalProperties' => false], 'annotations' => $annotation],
+            ['name' => 'update_project_task', 'description' => $confirmation . 'update one task by exact dossier and task IDs. Use the revision from get_project_context; omitted dueTime retains its value.', 'inputSchema' => ['type' => 'object', 'properties' => ['projectId' => $projectId, 'taskId' => $recordId, 'revision' => $taskRevision, 'title' => $title, 'dueOn' => $dueOn, 'dueTime' => $dueTime], 'required' => ['projectId', 'taskId', 'revision', 'title', 'dueOn'], 'additionalProperties' => false], 'annotations' => $annotation],
+            ['name' => 'complete_project_task', 'description' => $confirmation . 'complete one task by exact dossier and task IDs with the current revision.', 'inputSchema' => ['type' => 'object', 'properties' => ['projectId' => $projectId, 'taskId' => $recordId, 'revision' => $taskRevision, 'note' => ['type' => ['string', 'null'], 'maxLength' => 10000]], 'required' => ['projectId', 'taskId', 'revision'], 'additionalProperties' => false], 'annotations' => $annotation],
+            ['name' => 'create_project_appointment', 'description' => $confirmation . 'reserve one personal Google Calendar appointment linked to an exact dossier. Supply a stable 32-character hexadecimal requestId for safe retries. No contact is invited.', 'inputSchema' => ['type' => 'object', 'properties' => ['projectId' => $projectId, 'requestId' => ['type' => 'string', 'pattern' => '^[0-9a-f]{32}$'], 'title' => $title, 'startsAt' => $dateTime, 'endsAt' => $dateTime, 'location' => $location], 'required' => ['projectId', 'requestId', 'title', 'startsAt', 'endsAt'], 'additionalProperties' => false], 'annotations' => $annotation],
+            ['name' => 'update_project_appointment', 'description' => $confirmation . 'update one appointment by exact dossier and appointment IDs with the current revision from get_project_appointment. No contact is invited.', 'inputSchema' => ['type' => 'object', 'properties' => ['projectId' => $projectId, 'appointmentId' => $recordId, 'revision' => $revision, 'title' => $title, 'startsAt' => $dateTime, 'endsAt' => $dateTime, 'location' => $location], 'required' => ['projectId', 'appointmentId', 'revision', 'title', 'startsAt', 'endsAt'], 'additionalProperties' => false], 'annotations' => $annotation],
+            ['name' => 'cancel_project_appointment', 'description' => $confirmation . 'remove one appointment from Google Calendar by exact IDs and revision, retaining its dossier history.', 'inputSchema' => ['type' => 'object', 'properties' => ['projectId' => $projectId, 'appointmentId' => $recordId, 'revision' => $revision], 'required' => ['projectId', 'appointmentId', 'revision'], 'additionalProperties' => false], 'annotations' => ['readOnlyHint' => false, 'destructiveHint' => true, 'openWorldHint' => false]],
+            ['name' => 'set_project_appointment_summary', 'description' => $confirmation . 'set or correct the summary of one appointment by exact IDs and revision.', 'inputSchema' => ['type' => 'object', 'properties' => ['projectId' => $projectId, 'appointmentId' => $recordId, 'revision' => $revision, 'summary' => ['type' => ['string', 'null'], 'maxLength' => 10000]], 'required' => ['projectId', 'appointmentId', 'revision'], 'additionalProperties' => false], 'annotations' => $annotation],
+        ];
+    }
+
+    /** @param array<string, mixed> $arguments
+     * @return array<string, mixed>
+     */
+    private function callSchedule(string $name, array $arguments): array
+    {
+        if (!$this->projectScheduleWriteEnabled || null === $this->projectScheduleManager) {
+            return $this->error('Project schedule writes are disabled.');
+        }
+        try {
+            $definition = null;
+            foreach ($this->scheduleDefinitions() as $candidate) {
+                if ($candidate['name'] === $name) {
+                    $definition = $candidate;
+                    break;
+                }
+            }
+            if (null === $definition) {
+                throw new InvalidToolArguments('Unknown schedule operation.');
+            }
+            $schema = $definition['inputSchema'];
+            if ([] !== array_diff(array_keys($arguments), array_keys($schema['properties']))) {
+                throw new InvalidToolArguments('Unexpected argument.');
+            }
+            foreach ($schema['required'] as $required) {
+                if (!array_key_exists($required, $arguments)) {
+                    throw new InvalidToolArguments("Missing {$required}.");
+                }
+            }
+            $result = $this->projectScheduleManager->execute($name, $arguments);
+            $json = json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+            return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => false];
+        } catch (GoogleCalendarConflictException) {
+            return $this->error('The appointment changed; read it again before retrying.');
+        } catch (DomainException|InvalidToolArguments $exception) {
+            return $this->error($exception->getMessage());
+        } catch (Throwable) {
+            return $this->error('The project schedule operation failed.');
         }
     }
 
@@ -366,6 +443,20 @@ final readonly class WriteToolRegistry
         }
 
         return $date;
+    }
+
+    /** @param array<string, mixed> $arguments */
+    private function optionalDueTime(array $arguments): ?string
+    {
+        $value = $arguments['dueTime'] ?? null;
+        if (null === $value) {
+            return null;
+        }
+        if (!is_string($value) || 1 !== preg_match('/^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/D', $value)) {
+            throw new InvalidToolArguments('Invalid indicative time.');
+        }
+
+        return $value;
     }
 
     /** @return array<string, mixed> */

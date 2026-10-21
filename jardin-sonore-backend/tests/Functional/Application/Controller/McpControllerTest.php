@@ -190,7 +190,7 @@ final class McpControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $response = json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
         $names = array_column($response['result']['tools'], 'name');
-        self::assertCount(16, $names);
+        self::assertCount(24, $names);
         self::assertContains('find_sent_replies', $names);
         self::assertContains('save_mail_draft', $names);
         self::assertContains('read_mail_draft', $names);
@@ -199,6 +199,10 @@ final class McpControllerTest extends WebTestCase
         self::assertContains('get_project_context', $names);
         self::assertContains('record_mail_summary', $names);
         self::assertContains('create_project_reminder', $names);
+        self::assertContains('get_project_appointment', $names);
+        self::assertContains('create_project_task', $names);
+        self::assertContains('create_project_appointment', $names);
+        self::assertContains('set_project_appointment_summary', $names);
 
         $this->client->jsonRequest('POST', '/api/mcp', ['jsonrpc' => '2.0', 'id' => 2, 'method' => 'tools/call', 'params' => [
             'name' => 'record_mail_summary',
@@ -216,6 +220,15 @@ final class McpControllerTest extends WebTestCase
         $response = json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
         self::assertTrue($response['result']['isError']);
         self::assertSame('Draft writes are disabled.', $response['result']['content'][0]['text']);
+
+        $this->client->jsonRequest('POST', '/api/mcp', ['jsonrpc' => '2.0', 'id' => 4, 'method' => 'tools/call', 'params' => [
+            'name' => 'create_project_appointment',
+            'arguments' => ['projectId' => 1],
+        ]], $headers);
+        self::assertResponseIsSuccessful();
+        $response = json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertTrue($response['result']['isError']);
+        self::assertSame('Project schedule writes are disabled.', $response['result']['content'][0]['text']);
     }
 
     public function testEveryListedToolHasAnObjectForSchemaProperties(): void

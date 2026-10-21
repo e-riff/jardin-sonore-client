@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Application\Controller;
 
+use App\Application\Commercial\CalendarEventDraft;
+use App\Application\Commercial\CalendarEventOccurrence;
+use App\Application\Commercial\CommercialCalendarGateway;
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialActionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialEventEntity;
@@ -52,6 +55,7 @@ final class CommercialProjectControllerTest extends WebTestCase
         $projectEntity->recordEvent('quote_refused', new DateTimeImmutable('2026-10-12 10:00:00'), 'DEV-2026-002');
         $projectEntity->recordEvent('note', new DateTimeImmutable('2026-10-13 10:00:00'), str_repeat('Compte rendu détaillé. ', 18));
         $projectEntity->recordEvent('quote_sent', new DateTimeImmutable('2026-10-14 10:00:00'), 'DEV-2026-003');
+        $projectEntity->recordEvent('note', new DateTimeImmutable('2026-10-14 11:00:00'), 'Séance confirmée : Atelier.');
         $novemberInterventionEntity = new CommercialInterventionEntity($projectEntity, 'calendar', "event-november-{$suffix}", 'Atelier de novembre', new DateTimeImmutable('2026-11-03 09:00:00'), new DateTimeImmutable('2026-11-03 11:00:00'), 'Europe/Paris', null, '', new DateTimeImmutable('2026-10-13'));
         $novemberInterventionEntity->confirm();
         $decemberInterventionEntity = new CommercialInterventionEntity($projectEntity, 'calendar', "event-december-{$suffix}", 'Atelier de décembre', new DateTimeImmutable('2026-12-14 14:00:00'), new DateTimeImmutable('2026-12-14 16:00:00'), 'Europe/Paris', null, '', new DateTimeImmutable('2026-10-13'));
@@ -74,6 +78,7 @@ final class CommercialProjectControllerTest extends WebTestCase
         self::assertCount(4, $crawler->filterXPath('//*[contains(@class, "commercial-dossier__task")]//form[contains(@action, "/postpone")]'));
         $timelineItems = $crawler->filterXPath('//*[contains(@class, "commercial-timeline__item")]');
         self::assertCount(6, $timelineItems);
+        self::assertStringNotContainsString('Séance confirmée : Atelier.', (string) $client->getResponse()->getContent());
         self::assertCount(1, $timelineItems->first()->filterXPath('.//*[contains(@class, "commercial-timeline__quote-reference")]'));
         self::assertNull($timelineItems->first()->attr('data-controller'));
         self::assertStringContainsString('Compte rendu détaillé', $timelineItems->eq(1)->text());
@@ -86,6 +91,127 @@ final class CommercialProjectControllerTest extends WebTestCase
         self::assertCount(2, $interventionMonths);
         self::assertStringContainsString('novembre 2026', $interventionMonths->first()->text());
         self::assertStringContainsString('3 novembre 2026', $crawler->filterXPath('//*[contains(concat(" ", normalize-space(@class), " "), " commercial-dossier__intervention-date ")]')->first()->text());
+    }
+
+    public function testConfirmedSessionCanReturnToOptionInGoogleCalendar(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(5));
+        $adminUserEntity = (new AdminUserEntity())->setEmail("session-option-{$suffix}@example.test")->setPassword('unused');
+        $projectEntity = new CommercialProjectEntity('Ateliers', null, null, new DateTimeImmutable('2026-10-20'));
+        $startsAt = new DateTimeImmutable('2026-11-03 09:00:00', new DateTimeZone('Europe/Paris'));
+        $interventionEntity = new CommercialInterventionEntity($projectEntity, 'calendar', "event-{$suffix}", 'Atelier', $startsAt, $startsAt->modify('+1 hour'), 'Europe/Paris', null, 'v1', new DateTimeImmutable('2026-10-20'));
+        $interventionEntity->confirm();
+        foreach ([$adminUserEntity, $projectEntity, $interventionEntity] as $entity) {
+            $entityManager->persist($entity);
+        }
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+        $calendarGateway = $this->createMock(CommercialCalendarGateway::class);
+        $calendarGateway->method('event')->with("event-{$suffix}")->willReturn(new CalendarEventOccurrence("event-{$suffix}", 'Atelier', $startsAt, $startsAt->modify('+1 hour'), null, false, etag: 'v1'));
+        $calendarGateway->expects(self::once())->method('updateEvent')->with(
+            self::callback(static fn (CalendarEventOccurrence $event): bool => 'Atelier' === $event->title && 'v1' === $event->etag),
+            self::callback(static fn (CalendarEventDraft $draft): bool => '[OPT] Atelier' === $draft->title),
+        )->willReturn(new CalendarEventOccurrence("event-{$suffix}", '[OPT] Atelier', $startsAt, $startsAt->modify('+1 hour'), null, false, etag: 'v2'));
+        static::getContainer()->set(CommercialCalendarGateway::class, $calendarGateway);
+
+        $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
+        self::assertResponseIsSuccessful();
+        $optionForm = $crawler->filterXPath('//form[contains(@action, "/interventions/' . $interventionEntity->getId() . '/option")]');
+        self::assertCount(1, $optionForm);
+        $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/interventions/' . $interventionEntity->getId() . '/option', [
+            '_token' => $optionForm->filterXPath('.//input[@name="_token"]')->attr('value'),
+        ]);
+
+        self::assertResponseRedirects();
+        $savedInterventionEntity = static::getContainer()->get(EntityManagerInterface::class)->find(CommercialInterventionEntity::class, $interventionEntity->getId());
+        self::assertSame(CommercialInterventionEntity::STATUS_OPTION, $savedInterventionEntity->getStatus());
+        self::assertSame('v2', $savedInterventionEntity->getEtag());
+    }
+
+    public function testAllOptionSessionsCanBeConfirmedTogether(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(5));
+        $adminUserEntity = (new AdminUserEntity())->setEmail("bulk-option-{$suffix}@example.test")->setPassword('unused');
+        $projectEntity = new CommercialProjectEntity('Ateliers', null, null, new DateTimeImmutable('2026-10-20'));
+        $startsAt = new DateTimeImmutable('2026-11-03 09:00:00', new DateTimeZone('Europe/Paris'));
+        $firstInterventionEntity = new CommercialInterventionEntity($projectEntity, 'calendar', "bulk-first-{$suffix}", 'Premier atelier', $startsAt, $startsAt->modify('+1 hour'), 'Europe/Paris', null, 'v1', new DateTimeImmutable('2026-10-20'));
+        $secondInterventionEntity = new CommercialInterventionEntity($projectEntity, 'calendar', "bulk-second-{$suffix}", 'Second atelier', $startsAt->modify('+1 day'), $startsAt->modify('+1 day +1 hour'), 'Europe/Paris', null, 'v1', new DateTimeImmutable('2026-10-20'));
+        foreach ([$adminUserEntity, $projectEntity, $firstInterventionEntity, $secondInterventionEntity] as $entity) {
+            $entityManager->persist($entity);
+        }
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+        $calendarGateway = $this->createMock(CommercialCalendarGateway::class);
+        $calendarGateway->method('event')->willReturnCallback(static fn (string $eventId): CalendarEventOccurrence => new CalendarEventOccurrence(
+            $eventId,
+            str_contains($eventId, 'first') ? '[OPT] Premier atelier' : '[OPT] Second atelier',
+            str_contains($eventId, 'first') ? $startsAt : $startsAt->modify('+1 day'),
+            str_contains($eventId, 'first') ? $startsAt->modify('+1 hour') : $startsAt->modify('+1 day +1 hour'),
+            null,
+            false,
+            etag: 'v1',
+        ));
+        $calendarGateway->expects(self::exactly(2))->method('updateEvent')->willReturnCallback(static function (CalendarEventOccurrence $event, CalendarEventDraft $draft): CalendarEventOccurrence {
+            self::assertStringNotContainsString('[OPT]', $draft->title);
+
+            return new CalendarEventOccurrence($event->id, $draft->title, $draft->startsAt, $draft->endsAt, null, false, etag: 'v2');
+        });
+        static::getContainer()->set(CommercialCalendarGateway::class, $calendarGateway);
+
+        $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
+        self::assertResponseIsSuccessful();
+        $bulkForm = $crawler->filterXPath('//form[contains(@action, "/options/confirm")]');
+        self::assertCount(1, $bulkForm);
+        $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/interventions/options/confirm', [
+            '_token' => $bulkForm->filterXPath('.//input[@name="_token"]')->attr('value'),
+        ]);
+
+        self::assertResponseRedirects();
+        $currentEntityManager = static::getContainer()->get(EntityManagerInterface::class);
+        foreach ([$firstInterventionEntity, $secondInterventionEntity] as $interventionEntity) {
+            $savedInterventionEntity = $currentEntityManager->find(CommercialInterventionEntity::class, $interventionEntity->getId());
+            self::assertSame(CommercialInterventionEntity::STATUS_CONFIRMED, $savedInterventionEntity->getStatus());
+            self::assertSame('v2', $savedInterventionEntity->getEtag());
+        }
+    }
+
+    public function testAllOptionSessionsCanBeRejectedTogether(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(5));
+        $adminUserEntity = (new AdminUserEntity())->setEmail("bulk-reject-{$suffix}@example.test")->setPassword('unused');
+        $projectEntity = new CommercialProjectEntity('Ateliers', null, null, new DateTimeImmutable('2026-10-20'));
+        $startsAt = new DateTimeImmutable('2026-11-03 09:00:00', new DateTimeZone('Europe/Paris'));
+        $interventionEntity = new CommercialInterventionEntity($projectEntity, 'calendar', "reject-{$suffix}", 'Atelier', $startsAt, $startsAt->modify('+1 hour'), 'Europe/Paris', null, 'v1', new DateTimeImmutable('2026-10-20'));
+        foreach ([$adminUserEntity, $projectEntity, $interventionEntity] as $entity) {
+            $entityManager->persist($entity);
+        }
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+        $calendarGateway = $this->createMock(CommercialCalendarGateway::class);
+        $calendarGateway->method('event')->willReturn(new CalendarEventOccurrence("reject-{$suffix}", '[OPT] Atelier', $startsAt, $startsAt->modify('+1 hour'), null, false, etag: 'v1'));
+        $calendarGateway->expects(self::once())->method('deleteEvent')->with(self::callback(static fn (CalendarEventOccurrence $event): bool => '[OPT] Atelier' === $event->title && 'v1' === $event->etag));
+        static::getContainer()->set(CommercialCalendarGateway::class, $calendarGateway);
+
+        $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
+        self::assertResponseIsSuccessful();
+        $rejectButton = $crawler->filterXPath('//button[@data-confirmation-dialog-action-value="/commercial/projects/' . $projectEntity->getId() . '/interventions/options/reject"]');
+        self::assertCount(1, $rejectButton);
+        $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/interventions/options/reject', [
+            '_token' => $rejectButton->attr('data-confirmation-dialog-token-value'),
+        ]);
+
+        self::assertResponseRedirects();
+        $savedInterventionEntity = static::getContainer()->get(EntityManagerInterface::class)->find(CommercialInterventionEntity::class, $interventionEntity->getId());
+        self::assertSame(CommercialInterventionEntity::STATUS_CANCELED, $savedInterventionEntity->getStatus());
     }
 
     public function testManualCreationOpensDossierWithoutCreatingARequest(): void
@@ -154,6 +280,7 @@ final class CommercialProjectControllerTest extends WebTestCase
                 'addTask' => '1',
                 'taskTitle' => 'Répondre',
                 'taskDueOn' => '2026-10-16',
+                'taskDueTime' => '14:00',
             ],
         ]);
         self::assertResponseRedirects();
@@ -169,6 +296,7 @@ final class CommercialProjectControllerTest extends WebTestCase
         self::assertCount(1, $projectEntity->getActions());
         self::assertSame('Répondre', $projectEntity->getActions()->first()->getTitle());
         self::assertSame('2026-10-16', $projectEntity->getActions()->first()->getDueOn()->format('Y-m-d'));
+        self::assertSame('14:00', $projectEntity->getActions()->first()->getDueTime());
     }
 
     public function testManualCreationCanSelectAnExistingPersonAndTodayAsTaskDate(): void

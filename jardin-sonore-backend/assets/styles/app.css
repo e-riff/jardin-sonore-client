@@ -1683,14 +1683,16 @@ button:disabled {
     line-height: 1.4;
 }
 
-.commercial-dossier__task > time {
+.commercial-dossier__task > time,
+.commercial-dossier__task > div > time {
     color: var(--color-secondary);
     font-size: 0.83rem;
     font-weight: 700;
     white-space: nowrap;
 }
 
-.commercial-dossier__task > time.is-urgent {
+.commercial-dossier__task > time.is-urgent,
+.commercial-dossier__task > div > time.is-urgent {
     color: var(--color-primary);
 }
 
@@ -1849,6 +1851,49 @@ button:disabled {
 .commercial-timeline {
     margin-left: 10px;
     border-left: 2px solid color-mix(in oklab, var(--color-primary) 30%, var(--color-outline-variant));
+}
+
+.commercial-appointment {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+    gap: 12px;
+    margin: 10px 0 16px;
+    border: 1px solid color-mix(in oklab, var(--color-primary) 42%, var(--color-outline-variant));
+    border-left: 4px solid var(--color-primary);
+    border-radius: 12px;
+    padding: 12px;
+    background: var(--color-surface-container-lowest);
+}
+
+.commercial-appointment--canceled {
+    border-left-color: var(--color-outline);
+}
+
+.commercial-appointment__icon {
+    color: var(--color-primary);
+}
+
+.commercial-appointment__content {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.commercial-appointment__content time,
+.commercial-appointment__content > span {
+    font-size: 0.88rem;
+}
+
+.commercial-appointment__content p {
+    margin: 6px 0 0;
+    white-space: pre-wrap;
+}
+
+.commercial-appointment__actions {
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
 }
 
 .commercial-timeline__item {
@@ -2027,8 +2072,19 @@ button:disabled {
     color: var(--color-on-surface-variant);
     font-size: 0.85rem;
     line-height: 1.5;
-    white-space: pre-line;
 }
+
+.commercial-timeline__status-change { white-space: pre-line; }
+
+.commercial-dossier__intervention-bulk {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-bottom: 1rem;
+}
+
+.commercial-dossier__intervention-bulk > span { margin-right: auto; }
 
 .commercial-timeline__excerpt > p {
     margin: 0 0 0.75em;
@@ -2900,6 +2956,12 @@ form.internal-form > .commercial-session-create-form__actions > .internal-button
     border-left-color: var(--color-primary);
     background: #fbefeb;
     color: #7e382e;
+}
+
+.commercial-calendar-planner__event--appointment {
+    border-left-color: #6f6291;
+    background: #f2eef9;
+    color: #4f436e;
 }
 
 .commercial-calendar-planner__event.is-option {
@@ -6439,6 +6501,15 @@ a.session-composer-overlay__item {
     .commercial-dossier__task-actions {
         grid-column: 2 / -1;
         justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+
+    .commercial-appointment {
+        grid-template-columns: 26px minmax(0, 1fr);
+    }
+
+    .commercial-appointment__actions {
+        grid-column: 2;
         flex-wrap: wrap;
     }
 

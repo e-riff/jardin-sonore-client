@@ -51,7 +51,9 @@ final class CommercialProjectQueueTest extends KernelTestCase
         $organizationEntity = (new OrganizationEntity())->setName('Crèche file');
         $projectEntity = new CommercialProjectEntity('Ateliers du printemps', $organizationEntity, null, new DateTimeImmutable('2026-10-12'));
         $projectEntity->addAction(new CommercialActionEntity($projectEntity, 'Envoyer les dates', new DateTimeImmutable('2026-10-17')));
-        $projectEntity->addAction(new CommercialActionEntity($projectEntity, 'Répondre', new DateTimeImmutable('2026-10-12')));
+        $timedActionEntity = new CommercialActionEntity($projectEntity, 'Répondre', new DateTimeImmutable('2026-10-12'));
+        $timedActionEntity->setDueTime('14:00');
+        $projectEntity->addAction($timedActionEntity);
         $olderOrganizationEntity = (new OrganizationEntity())->setName('Crèche ancienne');
         $olderProjectEntity = new CommercialProjectEntity('Ateliers précédents', $olderOrganizationEntity, null, new DateTimeImmutable('2026-10-11'));
         $entityManager->persist($organizationEntity);
@@ -66,6 +68,7 @@ final class CommercialProjectQueueTest extends KernelTestCase
         self::assertCount(1, $matchingRows);
         self::assertSame('priority', $matchingRows[0]->bucket);
         self::assertSame('Répondre', $matchingRows[0]->nextActionTitle);
+        self::assertSame('14:00', $matchingRows[0]->nextDueTime);
         self::assertSame(1, $matchingRows[0]->extraTaskCount);
         self::assertTrue($matchingRows[0]->isNew);
 

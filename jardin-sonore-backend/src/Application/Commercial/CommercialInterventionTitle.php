@@ -6,6 +6,11 @@ namespace App\Application\Commercial;
 
 final class CommercialInterventionTitle
 {
+    public static function hasOptionMarker(string $title): bool
+    {
+        return 1 === preg_match('/^(?:\[OPT\]|\?{3})(?:\s|$)/u', trim($title));
+    }
+
     public static function forOption(string $title, bool $isOption): string
     {
         $cleanTitle = self::withoutOptionMarker($title);

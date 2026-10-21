@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Tests\Integration\Infrastructure\Commercial;
 
 use App\Application\Commercial\BuildCommercialDigest;
+use App\Application\Commercial\CalendarEventOccurrence;
 use App\Infrastructure\Doctrine\Entity\CommercialActionEntity;
+use App\Infrastructure\Doctrine\Entity\CommercialAppointmentEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialInvoiceEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialRequestEntity;
@@ -56,10 +58,17 @@ final class BuildCommercialDigestTest extends KernelTestCase
         $projectWithInvoiceEntity->setStatus(CommercialProjectEntity::STATUS_CONFIRMED);
         $invoiceEntity = new CommercialInvoiceEntity($projectWithInvoiceEntity, 'DIG-' . bin2hex(random_bytes(5)), 10000, new DateTimeImmutable('2026-09-01'));
         $reminderActionEntity = new CommercialActionEntity($projectWithInvoiceEntity, 'Relancer facture', new DateTimeImmutable('2026-10-01'));
+        $projectWithTimeEntity = new CommercialProjectEntity('Avec heure indicative', $organizationEntity, null, new DateTimeImmutable('2026-10-09'));
+        $timedActionEntity = new CommercialActionEntity($projectWithTimeEntity, 'Appeler la crèche', new DateTimeImmutable('2026-10-12'));
+        $timedActionEntity->setDueTime('14:00');
+        $projectWithTimeEntity->addAction($timedActionEntity);
+        $appointmentStart = new DateTimeImmutable('2026-10-12 14:00:00');
+        $appointmentEntity = new CommercialAppointmentEntity($projectWithTimeEntity, 'calendar', str_repeat('e', 32), new CalendarEventOccurrence('digest-rdv', 'RDV · Appeler la crèche', $appointmentStart, $appointmentStart->modify('+1 hour'), 'À distance', false, etag: 'v1'), $appointmentStart);
+        $appointmentEntity->markSyncFailed();
         $invoiceEntity->setReminderAction($reminderActionEntity);
         $projectWithInvoiceEntity->addInvoice($invoiceEntity);
         $projectWithInvoiceEntity->addAction($reminderActionEntity);
-        foreach ([$organizationEntity, $requestEntity, $projectWithoutActionEntity, $provisionalProjectEntity, $projectWithInvoiceEntity] as $entity) {
+        foreach ([$organizationEntity, $requestEntity, $projectWithoutActionEntity, $provisionalProjectEntity, $projectWithInvoiceEntity, $projectWithTimeEntity, $appointmentEntity] as $entity) {
             $entityManager->persist($entity);
         }
         $entityManager->flush();
@@ -70,6 +79,9 @@ final class BuildCommercialDigestTest extends KernelTestCase
         self::assertContains($provisionalProjectEntity, $mondayDigest->withoutAction);
         self::assertContains($invoiceEntity, $mondayDigest->overdueInvoices);
         self::assertNotContains($reminderActionEntity, $mondayDigest->dueActions);
+        self::assertContains($timedActionEntity, $mondayDigest->dueActions);
+        self::assertContains($appointmentEntity, $mondayDigest->todayAppointments);
+        self::assertTrue($mondayDigest->appointmentSyncWarning);
 
         $twig = self::getContainer()->get(Environment::class);
         $html = $twig->render('commercial/digest_email.html.twig', ['digest' => $mondayDigest]);
@@ -81,6 +93,11 @@ final class BuildCommercialDigestTest extends KernelTestCase
         self::assertStringNotContainsString('Relancer facture', $html);
         self::assertStringContainsString('Sans structure liée', $html);
         self::assertStringContainsString('Sans structure liée', $text);
+        self::assertStringContainsString('vers 14 h', $html);
+        self::assertStringContainsString('vers 14 h', $text);
+        self::assertStringContainsString('Rendez-vous du jour', $html);
+        self::assertStringContainsString('Rendez-vous du jour', $text);
+        self::assertStringContainsString('RDV · Appeler la crèche', $html);
 
         $tuesdayDigest = $builder->forDate(new DateTimeImmutable('2026-10-13'));
         self::assertSame([], $tuesdayDigest->withoutAction);

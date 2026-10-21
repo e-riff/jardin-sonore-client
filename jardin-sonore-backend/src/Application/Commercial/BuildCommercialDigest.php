@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Commercial;
 
 use App\Infrastructure\Doctrine\Entity\CommercialActionEntity;
+use App\Infrastructure\Doctrine\Entity\CommercialAppointmentEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialInterventionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialInvoiceEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
@@ -71,6 +72,20 @@ final readonly class BuildCommercialDigest
 
         $timeZone = new DateTimeZone('Europe/Paris');
         $localDateParis = new DateTimeImmutable($localDate->format('Y-m-d'), $timeZone);
+        $nextDateParis = $localDateParis->modify('+1 day');
+        $appointmentQueryBuilder = $this->entityManager->getRepository(CommercialAppointmentEntity::class)->createQueryBuilder('appointment');
+        $todayAppointments = $appointmentQueryBuilder
+            ->addSelect('appointmentProject')
+            ->innerJoin('appointment.project', 'appointmentProject')
+            ->andWhere($appointmentQueryBuilder->expr()->gte('appointment.startsAt', ':todayStart'))
+            ->andWhere($appointmentQueryBuilder->expr()->lt('appointment.startsAt', ':tomorrowStart'))
+            ->andWhere($appointmentQueryBuilder->expr()->neq('appointment.status', ':appointmentCanceled'))
+            ->setParameter('todayStart', $localDateParis)
+            ->setParameter('tomorrowStart', $nextDateParis)
+            ->setParameter('appointmentCanceled', CommercialAppointmentEntity::STATUS_CANCELED)
+            ->orderBy('appointment.startsAt', 'ASC')
+            ->getQuery()->getResult();
+        $appointmentSyncWarning = [] !== array_filter($todayAppointments, static fn (CommercialAppointmentEntity $appointmentEntity): bool => null !== $appointmentEntity->getSyncError());
         $firstNextWeek = $localDateParis->modify('monday this week')->modify('+7 days');
         $endOfNextWeek = $firstNextWeek->modify('+7 days');
         $interventionQueryBuilder = $this->entityManager->getRepository(CommercialInterventionEntity::class)->createQueryBuilder('intervention');
@@ -93,6 +108,6 @@ final readonly class BuildCommercialDigest
             }
         }
 
-        return new CommercialDigest($localDate, $dueActions, $overdueInvoices, $withoutAction, $upcomingInterventions, $calendarSyncWarning);
+        return new CommercialDigest($localDate, $dueActions, $overdueInvoices, $withoutAction, $upcomingInterventions, $calendarSyncWarning, $todayAppointments, $appointmentSyncWarning);
     }
 }

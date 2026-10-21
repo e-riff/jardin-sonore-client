@@ -19,6 +19,7 @@ final readonly class CommercialProjectRow
         public ?int $nextActionId,
         public ?string $nextActionTitle,
         public ?DateTimeImmutable $nextDueOn,
+        public ?string $nextDueTime,
         public ?DateTimeImmutable $lastEventAt,
         public int $extraTaskCount,
         public string $bucket,

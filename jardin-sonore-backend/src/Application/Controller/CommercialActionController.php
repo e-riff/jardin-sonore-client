@@ -82,6 +82,12 @@ final class CommercialActionController extends AbstractController
             return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
         $details = trim($request->request->getString('details'));
+        $dueTime = trim($request->request->getString('dueTime'));
+        try {
+            $actionEntity->setDueTime('' === $dueTime ? null : $dueTime);
+        } catch (DomainException) {
+            return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
         $workflow->revise($actionEntity, $title, $dueOn, '' === $details ? null : $details, $personEntity);
         $entityManager->flush();
 
@@ -114,6 +120,14 @@ final class CommercialActionController extends AbstractController
                 $dueOn = DateTimeImmutable::createFromFormat('!Y-m-d', $dueOnRaw);
                 if (!$dueOn instanceof DateTimeImmutable || $dueOn->format('Y-m-d') !== $dueOnRaw) {
                     return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+                }
+                if ($request->request->has('dueTime')) {
+                    $dueTime = trim($request->request->getString('dueTime'));
+                    try {
+                        $actionEntity->setDueTime('' === $dueTime ? null : $dueTime);
+                    } catch (DomainException) {
+                        return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+                    }
                 }
                 $workflow->postpone($actionEntity, $dueOn);
             }

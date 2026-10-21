@@ -7,6 +7,7 @@ namespace App\Tests\Functional\Application\Controller;
 use App\Application\Commercial\CalendarEventOccurrence;
 use App\Application\Commercial\CommercialCalendarGateway;
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
+use App\Infrastructure\Doctrine\Entity\CommercialAppointmentEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialInterventionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use App\Infrastructure\Doctrine\Entity\GoogleCalendarConnectionEntity;
@@ -64,18 +65,21 @@ final class CommercialCalendarControllerTest extends WebTestCase
         $optionEventId = "option-{$suffix}";
         $confirmedEventId = "confirmed-{$suffix}";
         $canceledEventId = "canceled-{$suffix}";
+        $appointmentEventId = "linked-rdv-{$suffix}";
         $optionInterventionEntity = new CommercialInterventionEntity($projectEntity, $calendarId, $optionEventId, 'Option', new DateTimeImmutable('2026-10-20 09:00:00', $timeZone), new DateTimeImmutable('2026-10-20 10:00:00', $timeZone), 'Europe/Paris', null, '', $now);
         $confirmedInterventionEntity = new CommercialInterventionEntity($projectEntity, $calendarId, $confirmedEventId, 'Confirmée', new DateTimeImmutable('2026-11-10 09:00:00', $timeZone), new DateTimeImmutable('2026-11-10 10:00:00', $timeZone), 'Europe/Paris', null, '', $now);
         $confirmedInterventionEntity->confirm();
         $canceledInterventionEntity = new CommercialInterventionEntity($projectEntity, $calendarId, $canceledEventId, 'Annulée', new DateTimeImmutable('2026-11-12 09:00:00', $timeZone), new DateTimeImmutable('2026-11-12 10:00:00', $timeZone), 'Europe/Paris', null, '', $now);
         $canceledInterventionEntity->cancel($now);
+        $appointmentStart = new DateTimeImmutable('2026-11-11 14:00:00', $timeZone);
+        $appointmentEntity = new CommercialAppointmentEntity($projectEntity, $calendarId, str_repeat('a', 32), new CalendarEventOccurrence($appointmentEventId, 'RDV · Direction', $appointmentStart, $appointmentStart->modify('+1 hour'), null, false, etag: 'v1'), $now);
         $connectionEntity = $entityManager->find(GoogleCalendarConnectionEntity::class, GoogleCalendarConnectionEntity::SINGLETON_ID);
         if (!$connectionEntity instanceof GoogleCalendarConnectionEntity) {
             $connectionEntity = new GoogleCalendarConnectionEntity('test-token', 'calendar@example.test', $now);
             $entityManager->persist($connectionEntity);
         }
 
-        foreach ([$adminUserEntity, $organizationEntity, $projectEntity, $optionInterventionEntity, $confirmedInterventionEntity, $canceledInterventionEntity] as $entity) {
+        foreach ([$adminUserEntity, $organizationEntity, $projectEntity, $optionInterventionEntity, $confirmedInterventionEntity, $canceledInterventionEntity, $appointmentEntity] as $entity) {
             $entityManager->persist($entity);
         }
         $entityManager->flush();
@@ -92,6 +96,8 @@ final class CommercialCalendarControllerTest extends WebTestCase
                 new CalendarEventOccurrence($optionEventId, 'Option', new DateTimeImmutable('2026-10-20 09:00:00', $timeZone), new DateTimeImmutable('2026-10-20 10:00:00', $timeZone), null, false),
                 new CalendarEventOccurrence($confirmedEventId, 'Confirmée', new DateTimeImmutable('2026-11-10 09:00:00', $timeZone), new DateTimeImmutable('2026-11-10 10:00:00', $timeZone), null, false),
                 new CalendarEventOccurrence("unlinked-{$suffix}", 'À rattacher', new DateTimeImmutable('2026-12-01 09:00:00', $timeZone), new DateTimeImmutable('2026-12-01 10:00:00', $timeZone), null, false),
+                new CalendarEventOccurrence("appointment-{$suffix}", 'RDV Crèche calendrier', new DateTimeImmutable('2026-12-01 14:00:00', $timeZone), new DateTimeImmutable('2026-12-01 15:00:00', $timeZone), null, false),
+                new CalendarEventOccurrence($appointmentEventId, 'Échange avec la direction', $appointmentStart, $appointmentStart->modify('+1 hour'), null, false, etag: 'v2'),
                 new CalendarEventOccurrence($canceledEventId, 'Annulée', new DateTimeImmutable('2026-11-12 09:00:00', $timeZone), new DateTimeImmutable('2026-11-12 10:00:00', $timeZone), null, false),
                 new CalendarEventOccurrence("all-day-{$suffix}", 'Indisponible', new DateTimeImmutable('2026-11-13 00:00:00', $timeZone), new DateTimeImmutable('2026-11-14 00:00:00', $timeZone), null, true),
             ]);

@@ -6,6 +6,7 @@ namespace App\Tests\Unit\Application\Mcp;
 
 use App\Application\Mcp\MailReader;
 use App\Application\Mcp\ProjectContextReader;
+use App\Application\Mcp\ProjectScheduleManager;
 use App\Application\Mcp\ProjectSearch;
 use App\Application\Mcp\ReadToolRegistry;
 use PHPUnit\Framework\TestCase;
@@ -16,11 +17,22 @@ final class ReadToolRegistryTest extends TestCase
     {
         $registry = new ReadToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectSearch::class), $this->createStub(ProjectContextReader::class));
 
-        self::assertSame(['read_mail_draft', 'read_mail_thread', 'search_mail', 'find_sent_replies', 'search_projects', 'get_project_context', 'search_mailing_campaigns', 'get_mailing_campaign', 'list_mailing_audience_masks'], array_column($registry->definitions(), 'name'));
+        self::assertSame(['read_mail_draft', 'read_mail_thread', 'search_mail', 'find_sent_replies', 'search_projects', 'get_project_context', 'get_project_appointment', 'search_mailing_campaigns', 'get_mailing_campaign', 'list_mailing_audience_masks'], array_column($registry->definitions(), 'name'));
         foreach ($registry->definitions() as $definition) {
             self::assertTrue($definition['annotations']['readOnlyHint']);
             self::assertFalse($definition['annotations']['destructiveHint']);
         }
+    }
+
+    public function testAppointmentReadRequiresExactDossierAndAppointmentIds(): void
+    {
+        $scheduleManager = $this->createMock(ProjectScheduleManager::class);
+        $scheduleManager->expects(self::once())->method('getAppointment')->with(7, 21)->willReturn(['projectId' => 7, 'appointmentId' => 21, 'revision' => 2]);
+        $registry = new ReadToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectSearch::class), $this->createStub(ProjectContextReader::class), null, null, $scheduleManager);
+
+        self::assertTrue($registry->call('get_project_appointment', ['projectId' => 7, 'appointmentId' => '21'])['isError']);
+        self::assertTrue($registry->call('get_project_appointment', ['projectId' => 7, 'appointmentId' => 21, 'extra' => true])['isError']);
+        self::assertFalse($registry->call('get_project_appointment', ['projectId' => 7, 'appointmentId' => 21])['isError']);
     }
 
     public function testSearchMailValidatesAndForwardsBoundedArguments(): void

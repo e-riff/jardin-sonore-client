@@ -19,6 +19,7 @@ use App\Application\Mcp\MailDraftWriter;
 use App\Application\Mcp\MailReader;
 use App\Application\Mcp\ProjectContextReader;
 use App\Application\Mcp\ProjectFollowupWriter;
+use App\Application\Mcp\ProjectScheduleManager;
 use App\Application\Mcp\ProjectSearch;
 use App\Application\Mcp\SaveMailDraft;
 use App\Application\Mcp\StandaloneMailDraftWriter;
@@ -29,6 +30,7 @@ use App\Application\Session\SessionNotificationMailSenderInterface;
 use App\Infrastructure\Doctrine\Commercial\DoctrineGoogleCalendarConnectionStore;
 use App\Infrastructure\Doctrine\Commercial\DoctrineProjectContextReader;
 use App\Infrastructure\Doctrine\Commercial\DoctrineProjectFollowupWriter;
+use App\Infrastructure\Doctrine\Commercial\DoctrineProjectScheduleManager;
 use App\Infrastructure\Doctrine\Commercial\DoctrineProjectSearch;
 use App\Infrastructure\Doctrine\Mcp\DoctrineMailDraftReceiptStore;
 use App\Infrastructure\Google\GoogleCalendarGateway;
@@ -124,6 +126,9 @@ return App::config([
         ],
         ProjectFollowupWriter::class => [
             'alias' => DoctrineProjectFollowupWriter::class,
+        ],
+        ProjectScheduleManager::class => [
+            'alias' => DoctrineProjectScheduleManager::class,
         ],
     ],
 ]);

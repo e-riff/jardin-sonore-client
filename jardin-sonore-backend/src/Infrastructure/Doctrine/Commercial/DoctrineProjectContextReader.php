@@ -6,6 +6,7 @@ namespace App\Infrastructure\Doctrine\Commercial;
 
 use App\Application\Mcp\ProjectContextReader;
 use App\Infrastructure\Doctrine\Entity\CommercialActionEntity;
+use App\Infrastructure\Doctrine\Entity\CommercialAppointmentEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialEventEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use Doctrine\Persistence\ManagerRegistry;
@@ -46,6 +47,13 @@ final readonly class DoctrineProjectContextReader implements ProjectContextReade
             ->addOrderBy('action.id', 'ASC')
             ->setMaxResults(20)
             ->getQuery()->getResult();
+        $appointmentEntities = $this->managerRegistry->getRepository(CommercialAppointmentEntity::class)
+            ->createQueryBuilder('appointment')
+            ->where('appointment.project = :project')
+            ->setParameter('project', $projectEntity)
+            ->orderBy('appointment.startsAt', 'DESC')
+            ->setMaxResults(20)
+            ->getQuery()->getResult();
 
         $primaryContactEntity = $projectEntity->getPrimaryContact();
 
@@ -65,7 +73,20 @@ final readonly class DoctrineProjectContextReader implements ProjectContextReade
                 'id' => $actionEntity->getId(),
                 'title' => $actionEntity->getTitle(),
                 'dueOn' => $actionEntity->getDueOn()->format('Y-m-d'),
+                'dueTime' => $actionEntity->getDueTime(),
+                'revision' => hash('sha256', implode('|', [$actionEntity->getTitle(), $actionEntity->getDueOn()->format('Y-m-d'), $actionEntity->getDueTime() ?? '', $actionEntity->getStatus(), $actionEntity->getDetails() ?? ''])),
             ], $actionEntities),
+            'appointments' => array_map(static fn (CommercialAppointmentEntity $appointmentEntity): array => [
+                'id' => $appointmentEntity->getId(),
+                'title' => $appointmentEntity->getTitle(),
+                'startsAt' => $appointmentEntity->getStartsAt()->format(DATE_ATOM),
+                'endsAt' => $appointmentEntity->getEndsAt()->format(DATE_ATOM),
+                'location' => $appointmentEntity->getLocation(),
+                'status' => $appointmentEntity->getStatus(),
+                'summary' => null === $appointmentEntity->getSummary() ? null : mb_substr($appointmentEntity->getSummary(), 0, 2000),
+                'revision' => $appointmentEntity->getRevision(),
+                'syncWarning' => null !== $appointmentEntity->getSyncError(),
+            ], $appointmentEntities),
             'url' => $this->urlGenerator->generate('commercial_project_show', ['id' => $projectId], UrlGeneratorInterface::ABSOLUTE_URL),
         ];
     }

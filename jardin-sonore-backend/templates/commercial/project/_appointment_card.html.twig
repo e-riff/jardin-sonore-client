@@ -1,0 +1,57 @@
+<article class="commercial-appointment{{ appointment.status == 'canceled' ? ' commercial-appointment--canceled' : '' }}" id="appointment-{{ appointment.id }}">
+    <span class="commercial-appointment__icon">{% include 'commercial/project/_icon.html.twig' with {name: 'calendar'} only %}</span>
+    <div class="commercial-appointment__content">
+        <strong>{{ appointment.title }}</strong>
+        <time datetime="{{ appointment.startsAt|date('c') }}">{{ appointment.startsAt|date('d/m/Y à H:i', 'Europe/Paris') }}–{{ appointment.endsAt|date('H:i', 'Europe/Paris') }}</time>
+        {% if appointment.location %}<span>{{ appointment.location }}</span>{% endif %}
+        {% if appointment.status == 'canceled' %}<span class="commercial-dossier__muted">{{ 'appointment.canceled'|trans({}, 'commercial') }}</span>{% endif %}
+        {% if appointment.syncError %}<span class="commercial-dossier__muted">{{ 'appointment.sync_warning'|trans({}, 'commercial') }}</span>{% endif %}
+        {% if appointment.summary %}<p>{{ appointment.summary }}</p>{% endif %}
+    </div>
+    <div class="commercial-appointment__actions">
+        {% if appointment.status != 'canceled' %}
+            <div data-controller="internal-dialog">
+                <button type="button" class="commercial-dossier__icon-action" aria-label="{{ 'appointment.edit'|trans({}, 'commercial') }}" title="{{ 'appointment.edit'|trans({}, 'commercial') }}" aria-haspopup="dialog" aria-controls="commercial-appointment-edit-{{ appointment.id }}" {{ stimulus_action('internal-dialog', 'open') }}>{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</button>
+                <dialog id="commercial-appointment-edit-{{ appointment.id }}" class="internal-form-dialog" aria-labelledby="commercial-appointment-edit-title-{{ appointment.id }}" {{ stimulus_target('internal-dialog', 'dialog') }} {{ stimulus_action('internal-dialog', 'closeOnBackdrop', 'click') }}>
+                    <div class="internal-form-dialog__panel">
+                        <button type="button" class="internal-form-dialog__close" aria-label="{{ 'internal.confirmation.delete.close'|trans({}, 'internal') }}" {{ stimulus_action('internal-dialog', 'close') }}>×</button>
+                        <h2 id="commercial-appointment-edit-title-{{ appointment.id }}">{{ 'appointment.edit'|trans({}, 'commercial') }}</h2>
+                        <form method="post" action="{{ path('commercial_appointment_edit', {id: appointment.id}) }}" class="internal-form">
+                            <input type="hidden" name="_token" value="{{ csrf_token('commercial_appointment_' ~ appointment.id ~ '_edit') }}">
+                            <input type="hidden" name="revision" value="{{ appointment.revision }}">
+                            <label>{{ 'appointment.title'|trans({}, 'commercial') }} <input name="title" value="{{ appointment.title }}" maxlength="255" required></label>
+                            <label>{{ 'appointment.starts_at'|trans({}, 'commercial') }} <input type="datetime-local" name="startsAt" value="{{ appointment.startsAt|date('Y-m-d\\TH:i', 'Europe/Paris') }}" required></label>
+                            <label>{{ 'appointment.ends_at'|trans({}, 'commercial') }} <input type="datetime-local" name="endsAt" value="{{ appointment.endsAt|date('Y-m-d\\TH:i', 'Europe/Paris') }}" required></label>
+                            <label>{{ 'appointment.location'|trans({}, 'commercial') }} <input name="location" value="{{ appointment.location }}" maxlength="1000"></label>
+                            <div class="internal-form-dialog__actions"><button class="internal-button" type="submit">{{ 'appointment.save'|trans({}, 'commercial') }}</button></div>
+                        </form>
+                    </div>
+                </dialog>
+            </div>
+            <details class="commercial-dossier__task-menu commercial-dossier__task-menu--cancel">
+                <summary class="commercial-dossier__icon-action commercial-dossier__icon-action--danger" aria-label="{{ 'appointment.cancel'|trans({}, 'commercial') }}" title="{{ 'appointment.cancel'|trans({}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'close'} only %}</summary>
+                <form method="post" action="{{ path('commercial_appointment_cancel', {id: appointment.id}) }}" class="internal-form">
+                    <input type="hidden" name="_token" value="{{ csrf_token('commercial_appointment_' ~ appointment.id ~ '_cancel') }}">
+                    <input type="hidden" name="revision" value="{{ appointment.revision }}">
+                    <p>{{ 'appointment.cancel_confirm'|trans({}, 'commercial') }}</p>
+                    <button class="internal-button internal-button--danger" type="submit">{{ 'appointment.cancel'|trans({}, 'commercial') }}</button>
+                </form>
+            </details>
+        {% endif %}
+        <div data-controller="internal-dialog">
+            <button type="button" class="commercial-dossier__icon-action" aria-label="{{ 'appointment.summary'|trans({}, 'commercial') }}" title="{{ 'appointment.summary'|trans({}, 'commercial') }}" aria-haspopup="dialog" aria-controls="commercial-appointment-summary-{{ appointment.id }}" {{ stimulus_action('internal-dialog', 'open') }}>{% include 'commercial/project/_icon.html.twig' with {name: 'note'} only %}</button>
+            <dialog id="commercial-appointment-summary-{{ appointment.id }}" class="internal-form-dialog" aria-labelledby="commercial-appointment-summary-title-{{ appointment.id }}" {{ stimulus_target('internal-dialog', 'dialog') }} {{ stimulus_action('internal-dialog', 'closeOnBackdrop', 'click') }}>
+                <div class="internal-form-dialog__panel">
+                    <button type="button" class="internal-form-dialog__close" aria-label="{{ 'internal.confirmation.delete.close'|trans({}, 'internal') }}" {{ stimulus_action('internal-dialog', 'close') }}>×</button>
+                    <h2 id="commercial-appointment-summary-title-{{ appointment.id }}">{{ 'appointment.summary'|trans({}, 'commercial') }}</h2>
+                    <form method="post" action="{{ path('commercial_appointment_summary', {id: appointment.id}) }}" class="internal-form">
+                        <input type="hidden" name="_token" value="{{ csrf_token('commercial_appointment_' ~ appointment.id ~ '_summary') }}">
+                        <input type="hidden" name="revision" value="{{ appointment.revision }}">
+                        <label>{{ 'appointment.summary'|trans({}, 'commercial') }} <textarea name="summary" maxlength="10000">{{ appointment.summary }}</textarea></label>
+                        <div class="internal-form-dialog__actions"><button class="internal-button" type="submit">{{ 'appointment.save'|trans({}, 'commercial') }}</button></div>
+                    </form>
+                </div>
+            </dialog>
+        </div>
+    </div>
+</article>

@@ -23,6 +23,7 @@ return static function (ClassMetadata $metadata): void {
     $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_IDENTITY);
     $metadata->mapField(['fieldName' => 'title', 'type' => Types::STRING, 'length' => 255]);
     $metadata->mapField(['fieldName' => 'dueOn', 'columnName' => 'due_on', 'type' => Types::DATE_IMMUTABLE]);
+    $metadata->mapField(['fieldName' => 'dueTime', 'columnName' => 'due_time', 'type' => Types::STRING, 'length' => 5, 'nullable' => true]);
     $metadata->mapField(['fieldName' => 'details', 'type' => Types::TEXT, 'nullable' => true]);
     $metadata->mapField(['fieldName' => 'status', 'type' => Types::STRING, 'length' => 16]);
     $metadata->mapField(['fieldName' => 'resolvedAt', 'columnName' => 'resolved_at', 'type' => Types::DATETIME_IMMUTABLE, 'nullable' => true]);

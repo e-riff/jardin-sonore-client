@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Infrastructure\Commercial;
 
+use App\Application\Commercial\CalendarEventOccurrence;
 use App\Infrastructure\Doctrine\Commercial\DoctrineProjectContextReader;
 use App\Infrastructure\Doctrine\Entity\CommercialActionEntity;
+use App\Infrastructure\Doctrine\Entity\CommercialAppointmentEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use App\Kernel;
 use DateTimeImmutable;
@@ -53,9 +55,16 @@ final class DoctrineProjectContextReaderTest extends KernelTestCase
         $projectEntity->recordEvent('initial_message', new DateTimeImmutable('2026-10-13 10:00:00'), 'Raw inbound body');
         $projectEntity->recordEvent('invoice_issued', new DateTimeImmutable('2026-10-14 10:00:00'), 'Invoice reference');
         for ($index = 1; 22 >= $index; ++$index) {
-            $projectEntity->addAction(new CommercialActionEntity($projectEntity, "Action {$index}", new DateTimeImmutable('2026-10-20')));
+            $actionEntity = new CommercialActionEntity($projectEntity, "Action {$index}", new DateTimeImmutable('2026-10-20'));
+            if (1 === $index) {
+                $actionEntity->setDueTime('14:00');
+            }
+            $projectEntity->addAction($actionEntity);
         }
+        $appointmentStart = new DateTimeImmutable('2026-10-21 14:00:00');
+        $appointmentEntity = new CommercialAppointmentEntity($projectEntity, 'calendar', str_repeat('f', 32), new CalendarEventOccurrence('context-rdv', 'RDV · Crèche', $appointmentStart, $appointmentStart->modify('+1 hour'), null, false, etag: 'v1'), $appointmentStart);
         $entityManager->persist($projectEntity);
+        $entityManager->persist($appointmentEntity);
         $entityManager->flush();
         $reader = new DoctrineProjectContextReader(self::getContainer()->get(ManagerRegistry::class), self::getContainer()->get(UrlGeneratorInterface::class));
 
@@ -67,6 +76,10 @@ final class DoctrineProjectContextReaderTest extends KernelTestCase
         self::assertStringNotContainsString('Raw inbound body', json_encode($context, JSON_THROW_ON_ERROR));
         self::assertStringNotContainsString('Invoice reference', json_encode($context, JSON_THROW_ON_ERROR));
         self::assertCount(20, $context['openActions']);
+        self::assertSame('14:00', $context['openActions'][0]['dueTime']);
+        self::assertCount(1, $context['appointments']);
+        self::assertSame('RDV · Crèche', $context['appointments'][0]['title']);
+        self::assertSame(1, $context['appointments'][0]['revision']);
         self::assertStringContainsString('/commercial/projects/', $context['url']);
         self::assertArrayNotHasKey('body', $context);
     }

@@ -12,5 +12,5 @@ interface ProjectFollowupWriter
     public function recordSummary(int $projectId, MailSource $source, string $summary): array;
 
     /** @return array<string, mixed> */
-    public function createReminder(int $projectId, MailSource $source, string $title, DateTimeImmutable $dueOn): array;
+    public function createReminder(int $projectId, MailSource $source, string $title, DateTimeImmutable $dueOn, ?string $dueTime = null): array;
 }

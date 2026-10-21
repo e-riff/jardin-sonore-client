@@ -54,22 +54,43 @@ final class CommercialInterventionController extends AbstractController
         TranslatorInterface $translator,
     ): Response {
         $this->validateToken("commercial_intervention_{$id}_confirm", $request);
+
+        return $this->changeStatus($projectId, $id, CommercialInterventionEntity::STATUS_CONFIRMED, $entityManager, $calendarGateway, $clock, $translator);
+    }
+
+    #[Route('/{id}/option', name: 'option', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    public function option(
+        int $projectId,
+        int $id,
+        Request $request,
+        EntityManagerInterface $entityManager,
+        CommercialCalendarGateway $calendarGateway,
+        ClockInterface $clock,
+        TranslatorInterface $translator,
+    ): Response {
+        $this->validateToken("commercial_intervention_{$id}_option", $request);
+
+        return $this->changeStatus($projectId, $id, CommercialInterventionEntity::STATUS_OPTION, $entityManager, $calendarGateway, $clock, $translator);
+    }
+
+    private function changeStatus(
+        int $projectId,
+        int $id,
+        string $status,
+        EntityManagerInterface $entityManager,
+        CommercialCalendarGateway $calendarGateway,
+        ClockInterface $clock,
+        TranslatorInterface $translator,
+    ): Response {
         $interventionEntity = $this->findIntervention($projectId, $id, $entityManager);
+        if ($interventionEntity->getStatus() === $status || CommercialInterventionEntity::STATUS_CANCELED === $interventionEntity->getStatus()) {
+            return $this->redirectToRoute('commercial_project_show', ['id' => $projectId]);
+        }
         try {
-            $currentEvent = $this->eventSnapshot($interventionEntity);
-            $confirmedDraft = new CalendarEventDraft(
-                CommercialInterventionTitle::forOption($interventionEntity->getTitle(), false),
-                $interventionEntity->getStartsAt(),
-                $interventionEntity->getEndsAt(),
-                $interventionEntity->getTimeZone(),
-                $interventionEntity->getLocation(),
-            );
-            $updatedEvent = $confirmedDraft->title === $currentEvent->title ? $currentEvent : $calendarGateway->updateEvent($currentEvent, $confirmedDraft);
-            $this->refreshIntervention($interventionEntity, $updatedEvent, $clock->now());
-            $interventionEntity->confirm();
-            $interventionEntity->getProject()?->recordEvent('note', $clock->now(), $translator->trans('calendar.sessions.confirmed_note', ['%title%' => $interventionEntity->getTitle()], 'commercial'));
+            $this->applyStatus($interventionEntity, $status, $calendarGateway, $clock, $translator);
             $entityManager->flush();
-            $this->addFlash('success', ['message' => 'calendar.sessions.confirmed', 'domain' => 'commercial']);
+            $flashKey = CommercialInterventionEntity::STATUS_OPTION === $status ? 'calendar.sessions.option_set' : 'calendar.sessions.confirmed';
+            $this->addFlash('success', ['message' => $flashKey, 'domain' => 'commercial']);
         } catch (GoogleCalendarConflictException) {
             $interventionEntity->markSyncFailed('google_version_conflict');
             $entityManager->flush();
@@ -81,6 +102,77 @@ final class CommercialInterventionController extends AbstractController
         }
 
         return $this->redirectToRoute('commercial_project_show', ['id' => $projectId]);
+    }
+
+    #[Route('/options/{decision}', name: 'options_bulk', requirements: ['decision' => 'confirm|reject'], methods: ['POST'])]
+    public function decideOptions(
+        int $projectId,
+        string $decision,
+        Request $request,
+        EntityManagerInterface $entityManager,
+        CommercialCalendarGateway $calendarGateway,
+        ClockInterface $clock,
+        TranslatorInterface $translator,
+    ): Response {
+        $this->validateToken("commercial_project_{$projectId}_options_{$decision}", $request);
+        $projectEntity = $entityManager->find(CommercialProjectEntity::class, $projectId);
+        if (!$projectEntity instanceof CommercialProjectEntity) {
+            throw $this->createNotFoundException();
+        }
+
+        $optionEntities = $entityManager->getRepository(CommercialInterventionEntity::class)->findBy(['project' => $projectEntity, 'status' => CommercialInterventionEntity::STATUS_OPTION]);
+        $successCount = 0;
+        $failedCount = 0;
+        foreach ($optionEntities as $interventionEntity) {
+            try {
+                if ('confirm' === $decision) {
+                    $this->applyStatus($interventionEntity, CommercialInterventionEntity::STATUS_CONFIRMED, $calendarGateway, $clock, $translator);
+                } else {
+                    $this->applyCancellation($interventionEntity, $calendarGateway, $clock, $translator);
+                }
+                ++$successCount;
+            } catch (GoogleCalendarConflictException) {
+                $interventionEntity->markSyncFailed('google_version_conflict');
+                ++$failedCount;
+            } catch (GoogleCalendarApiException|GoogleCalendarOAuthException) {
+                $interventionEntity->markSyncFailed('google_sync_failed');
+                ++$failedCount;
+            }
+            $entityManager->flush();
+        }
+
+        $this->addFlash(0 === $failedCount ? 'success' : 'warning', [
+            'message' => 0 === $failedCount ? 'calendar.sessions.bulk_done' : 'calendar.sessions.bulk_partial',
+            'parameters' => ['%count%' => $successCount, '%failed%' => $failedCount],
+            'domain' => 'commercial',
+        ]);
+
+        return $this->redirectToRoute('commercial_project_show', ['id' => $projectId]);
+    }
+
+    private function applyStatus(CommercialInterventionEntity $interventionEntity, string $status, CommercialCalendarGateway $calendarGateway, ClockInterface $clock, TranslatorInterface $translator): void
+    {
+        $currentEvent = $this->eventSnapshot($interventionEntity);
+        $statusDraft = new CalendarEventDraft(
+            CommercialInterventionTitle::forOption($interventionEntity->getTitle(), CommercialInterventionEntity::STATUS_OPTION === $status),
+            $interventionEntity->getStartsAt(),
+            $interventionEntity->getEndsAt(),
+            $interventionEntity->getTimeZone(),
+            $interventionEntity->getLocation(),
+        );
+        $updatedEvent = $statusDraft->title === $currentEvent->title ? $currentEvent : $calendarGateway->updateEvent($currentEvent, $statusDraft);
+        $this->refreshIntervention($interventionEntity, $updatedEvent, $clock->now());
+        $interventionEntity->setStatus($status);
+        $noteKey = CommercialInterventionEntity::STATUS_OPTION === $status ? 'calendar.sessions.option_note' : 'calendar.sessions.confirmed_note';
+        $interventionEntity->getProject()?->recordEvent('note', $clock->now(), $translator->trans($noteKey, ['%title%' => $interventionEntity->getTitle()], 'commercial'), ['calendar_change' => '1']);
+    }
+
+    private function applyCancellation(CommercialInterventionEntity $interventionEntity, CommercialCalendarGateway $calendarGateway, ClockInterface $clock, TranslatorInterface $translator): void
+    {
+        $calendarGateway->deleteEvent($this->eventSnapshot($interventionEntity));
+        $now = $clock->now();
+        $interventionEntity->cancel($now);
+        $interventionEntity->getProject()?->recordEvent('note', $now, $translator->trans('calendar.sessions.canceled_note', ['%title%' => $interventionEntity->getTitle()], 'commercial'), ['calendar_change' => '1']);
     }
 
     #[Route('/new', name: 'create', methods: ['POST'])]
@@ -180,10 +272,7 @@ final class CommercialInterventionController extends AbstractController
         $interventionEntity = $this->findIntervention($projectId, $id, $entityManager);
 
         try {
-            $calendarGateway->deleteEvent($this->eventSnapshot($interventionEntity));
-            $now = $clock->now();
-            $interventionEntity->cancel($now);
-            $interventionEntity->getProject()?->recordEvent('note', $now, $translator->trans('calendar.sessions.canceled_note', ['%title%' => $interventionEntity->getTitle()], 'commercial'));
+            $this->applyCancellation($interventionEntity, $calendarGateway, $clock, $translator);
             $entityManager->flush();
             $this->addFlash('success', ['message' => 'calendar.sessions.canceled', 'domain' => 'commercial']);
         } catch (GoogleCalendarConflictException) {

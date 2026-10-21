@@ -39,7 +39,7 @@ final readonly class CommercialProjectQueue
                  WHERE contact_details.directory_entry_id = organization.id
                  ORDER BY address_contact.id ASC LIMIT 1) AS organization_location,
                 request.organization_name AS requested_organization_name, request.sender_name,
-                action.id AS action_id, action.title AS action_title, action.due_on,
+                action.id AS action_id, action.title AS action_title, action.due_on, action.due_time,
                 (SELECT MAX(event.occurred_at) FROM commercial_event event WHERE event.project_id = project.id) AS last_event_at,
                 (SELECT COUNT(*) FROM commercial_action counted WHERE counted.project_id = project.id AND counted.status = ?) AS open_task_count
              FROM commercial_project project
@@ -48,7 +48,7 @@ final readonly class CommercialProjectQueue
              LEFT JOIN commercial_action action ON action.id = (
                  SELECT earliest.id FROM commercial_action earliest
                  WHERE earliest.project_id = project.id AND earliest.status = ?
-                 ORDER BY earliest.due_on ASC, earliest.id ASC LIMIT 1
+                 ORDER BY earliest.due_on ASC, earliest.due_time IS NULL ASC, earliest.due_time ASC, earliest.id ASC LIMIT 1
              )
              WHERE project.status IN (?)
              ORDER BY project.created_at DESC, project.id DESC',
@@ -83,6 +83,7 @@ final readonly class CommercialProjectQueue
                 null === $row['action_id'] ? null : (int) $row['action_id'],
                 null === $row['action_title'] ? null : (string) $row['action_title'],
                 $dueOn,
+                null === $row['due_time'] ? null : (string) $row['due_time'],
                 null === $row['last_event_at'] ? null : new DateTimeImmutable((string) $row['last_event_at']),
                 max(0, (int) $row['open_task_count'] - (null === $row['action_id'] ? 0 : 1)),
                 $bucket,

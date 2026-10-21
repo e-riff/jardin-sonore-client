@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Application\Controller;
 
 use App\Application\Commercial\CalendarEventOccurrence;
+use App\Application\Commercial\CommercialAppointmentTitle;
 use App\Application\Commercial\CommercialCalendarGateway;
+use App\Infrastructure\Doctrine\Entity\CommercialAppointmentEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialInterventionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use App\Infrastructure\Google\GoogleCalendarApiException;
@@ -88,16 +90,23 @@ final class CommercialCalendarController extends AbstractController
         foreach ($linkedEntities as $linkedEntity) {
             $interventionsByEventId[$linkedEntity->getGoogleEventId()] = $linkedEntity;
         }
+        $linkedAppointments = [] === $eventIds ? [] : $entityManager->getRepository(CommercialAppointmentEntity::class)->findBy(['calendarId' => $calendarId, 'googleEventId' => $eventIds]);
+        $appointmentsByEventId = [];
+        foreach ($linkedAppointments as $appointmentEntity) {
+            $appointmentsByEventId[$appointmentEntity->getGoogleEventId()] = $appointmentEntity;
+        }
 
         $eventsByDay = [];
         $unlinkedCount = 0;
         $summary = ['total' => 0, 'confirmed' => 0, 'option' => 0, 'unlinked' => 0];
         foreach ($events as $event) {
             $intervention = $interventionsByEventId[$event->id] ?? null;
-            $project = $intervention?->getProject();
+            $appointment = $appointmentsByEventId[$event->id] ?? null;
+            $project = $appointment?->getProject() ?? $intervention?->getProject();
             $eventStartsAt = $event->startsAt->setTimezone($timeZone);
-            $isScheduledSession = !$event->allDay && CommercialInterventionEntity::STATUS_CANCELED !== $intervention?->getStatus();
-            if (null === $project && !$event->allDay && $eventStartsAt >= $rangeStart && $eventStartsAt < $rangeEnd) {
+            $isAppointment = $appointment instanceof CommercialAppointmentEntity || CommercialAppointmentTitle::hasMarker($event->title);
+            $isScheduledSession = !$event->allDay && !$isAppointment && CommercialInterventionEntity::STATUS_CANCELED !== $intervention?->getStatus();
+            if (null === $project && !$event->allDay && !$isAppointment && $eventStartsAt >= $rangeStart && $eventStartsAt < $rangeEnd) {
                 ++$unlinkedCount;
             }
             if ($isScheduledSession && $eventStartsAt >= $summaryFrom && $eventStartsAt < $summaryTo) {
@@ -115,6 +124,7 @@ final class CommercialCalendarController extends AbstractController
                 'event' => $event,
                 'project' => $project,
                 'status' => $intervention?->getStatus(),
+                'appointment' => $isAppointment,
             ];
         }
 

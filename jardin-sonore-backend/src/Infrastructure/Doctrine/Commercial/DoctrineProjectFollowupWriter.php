@@ -51,9 +51,9 @@ final readonly class DoctrineProjectFollowupWriter implements ProjectFollowupWri
     }
 
     /** @return array<string, mixed> */
-    public function createReminder(int $projectId, MailSource $source, string $title, DateTimeImmutable $dueOn): array
+    public function createReminder(int $projectId, MailSource $source, string $title, DateTimeImmutable $dueOn, ?string $dueTime = null): array
     {
-        return $this->entityManager->wrapInTransaction(function () use ($projectId, $source, $title, $dueOn): array {
+        return $this->entityManager->wrapInTransaction(function () use ($projectId, $source, $title, $dueOn, $dueTime): array {
             $projectEntity = $this->lockedProject($projectId);
             $actionEntity = $this->entityManager->getRepository(CommercialActionEntity::class)->findOneBy([
                 'project' => $projectEntity,
@@ -67,6 +67,7 @@ final readonly class DoctrineProjectFollowupWriter implements ProjectFollowupWri
             }
 
             $actionEntity = new CommercialActionEntity($projectEntity, $title, $dueOn);
+            $actionEntity->setDueTime($dueTime);
             $actionEntity->setMailSourceKey($source->sourceKey);
             $projectEntity->addAction($actionEntity);
             $this->entityManager->persist($actionEntity);

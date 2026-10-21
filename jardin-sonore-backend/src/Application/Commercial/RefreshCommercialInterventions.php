@@ -48,6 +48,7 @@ final readonly class RefreshCommercialInterventions
                         'note',
                         $now,
                         $this->translator->trans('calendar.sessions.canceled_by_google_note', ['%title%' => $interventionEntity->getTitle()], 'commercial'),
+                        ['calendar_change' => '1'],
                     );
                 } else {
                     $interventionEntity->refreshFromGoogle(
@@ -59,6 +60,9 @@ final readonly class RefreshCommercialInterventions
                         $googleEvent->etag,
                         $now,
                     );
+                    $interventionEntity->setStatus(CommercialInterventionTitle::hasOptionMarker($googleEvent->title)
+                        ? CommercialInterventionEntity::STATUS_OPTION
+                        : CommercialInterventionEntity::STATUS_CONFIRMED);
                 }
                 ++$refreshedCount;
             } catch (GoogleCalendarApiException|GoogleCalendarOAuthException) {

@@ -14,6 +14,19 @@
                     <h1 style="margin:0; color:#34372f; font-size:20px; line-height:27px;">{{ 'heading'|trans({'%date%': digest.localDate|date('d/m/Y')}, 'commercial_digest') }}</h1>
                 </td></tr>
                 <tr><td style="padding:24px 26px 4px;">
+                    {% if digest.todayAppointments %}
+                        <h2 style="margin:0 0 11px; color:#47664b; font-size:16px; line-height:23px;">{{ 'appointments'|trans({}, 'commercial_digest') }}</h2>
+                        {% if digest.appointmentSyncWarning %}<p style="margin:0 0 12px; color:#896a32; font-size:13px;">{{ 'appointment_sync_warning'|trans({}, 'commercial_digest') }}</p>{% endif %}
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:24px; border-top:1px solid #e5dcd3;">
+                            {% for appointment in digest.todayAppointments %}
+                                <tr><td style="padding:8px 0; border-bottom:1px solid #e5dcd3; font-size:14px; line-height:21px;">
+                                    <a href="{{ url('commercial_project_show', {id: appointment.project.id}) }}#appointment-{{ appointment.id }}" style="color:#47664b; font-weight:bold; text-decoration:underline;">{{ appointment.startsAt|date('H:i', 'Europe/Paris') }} · {{ appointment.title }}</a>
+                                    <span style="color:#70655a;"> · {{ appointment.project.organization ? appointment.project.organization.name : appointment.project.title }}</span>
+                                    {% if appointment.location %}<br><span style="color:#70655a; font-size:12px;">{{ appointment.location }}</span>{% endif %}
+                                </td></tr>
+                            {% endfor %}
+                        </table>
+                    {% endif %}
                     {% if digest.upcomingInterventions %}
                         <h2 style="margin:0 0 11px; color:#47664b; font-size:16px; line-height:23px;">{{ 'sessions'|trans({}, 'commercial_digest') }}</h2>
                         {% if digest.calendarSyncWarning %}<p style="margin:0 0 12px; color:#896a32; font-size:13px; line-height:19px;">{{ 'calendar_sync_warning'|trans({}, 'commercial_digest') }}</p>{% endif %}
@@ -48,7 +61,7 @@
                                 <tr><td style="padding:12px 0; border-bottom:1px solid #e5dcd3; font-size:14px; line-height:21px;">
                                     <a href="{{ url('commercial_project_show', {id: action.project.id}) }}" style="color:#47664b; font-weight:bold; text-decoration:underline;">{{ action.title }}</a>
                                     <span style="color:#70655a;"> · {{ action.project.organization ? action.project.organization.name : action.project.title }}</span><br>
-                                    <span style="color:#a64d43; font-size:12px; font-weight:bold;">{{ action.dueOn|date('d/m/Y') }}</span>
+                                    <span style="color:#a64d43; font-size:12px; font-weight:bold;">{{ action.dueOn|date('d/m/Y') }}</span>{% if action.dueTime %}<span style="color:#70655a; font-size:12px;"> · {{ 'approx_time'|trans({'%time%': action.dueTime|replace({':00': ' h', ':': ' h '})}, 'commercial_digest') }}</span>{% endif %}
                                 </td></tr>
                             {% endfor %}
                         </table>

@@ -22,6 +22,8 @@ class CommercialActionEntity
 
     private ?string $mailSourceKey = null;
 
+    private ?string $dueTime = null;
+
     public function getMailSourceKey(): ?string
     {
         return $this->mailSourceKey;
@@ -62,6 +64,20 @@ class CommercialActionEntity
     public function setDueOn(DateTimeImmutable $dueOn): void
     {
         $this->dueOn = $dueOn;
+    }
+
+    public function getDueTime(): ?string
+    {
+        return $this->dueTime;
+    }
+
+    public function setDueTime(?string $dueTime): void
+    {
+        if (null !== $dueTime && (1 !== preg_match('/^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/D', $dueTime))) {
+            throw new DomainException('Invalid indicative action time.');
+        }
+
+        $this->dueTime = $dueTime;
     }
 
     public function revise(string $title, DateTimeImmutable $dueOn, ?string $details, ?PersonEntity $personEntity): void

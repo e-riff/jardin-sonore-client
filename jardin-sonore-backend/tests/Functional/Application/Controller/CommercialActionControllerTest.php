@@ -109,4 +109,69 @@ final class CommercialActionControllerTest extends WebTestCase
         self::assertSame('2026-10-16', $savedActionEntity->getDueOn()->format('Y-m-d'));
         self::assertSame('action_edited', $savedActionEntity->getProject()->getEvents()->last()->getType());
     }
+
+    public function testActionFormAcceptsAnIndicativeTime(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(5));
+        $adminUserEntity = (new AdminUserEntity())->setEmail("action-time-{$suffix}@example.test")->setPassword('unused');
+        $organizationEntity = (new OrganizationEntity())->setName("Crèche {$suffix}");
+        $projectEntity = new CommercialProjectEntity('Appels', $organizationEntity, null, new DateTimeImmutable());
+        $actionEntity = new CommercialActionEntity($projectEntity, 'Relancer', new DateTimeImmutable('2026-10-21'));
+        $projectEntity->addAction($actionEntity);
+        foreach ([$adminUserEntity, $organizationEntity, $projectEntity] as $entity) {
+            $entityManager->persist($entity);
+        }
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+
+        $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $crawler->filterXPath('//form[@action="/commercial/actions/' . $actionEntity->getId() . '/edit"]//input[@name="dueTime"]'));
+        $editForm = $crawler->filterXPath('//form[@action="/commercial/actions/' . $actionEntity->getId() . '/edit"]')->form();
+        $editForm['dueTime'] = '14:00';
+        $client->submit($editForm);
+        self::assertResponseRedirects();
+
+        $entityManager->clear();
+        $savedActionEntity = $entityManager->find(CommercialActionEntity::class, $actionEntity->getId());
+        self::assertSame('14:00', $savedActionEntity->getDueTime());
+
+        $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
+        self::assertStringContainsString('vers 14 h', (string) $client->getResponse()->getContent());
+        $editToken = $crawler->filterXPath('//form[@action="/commercial/actions/' . $actionEntity->getId() . '/edit"]//input[@name="_token"]')->attr('value');
+        $client->request('POST', '/commercial/actions/' . $actionEntity->getId() . '/edit', ['_token' => $editToken, 'title' => 'Relancer', 'dueOn' => '2026-10-21', 'dueTime' => '24:00']);
+        self::assertResponseStatusCodeSame(422);
+
+        $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
+        $postponeToken = $crawler->filterXPath('//form[contains(@action, "/postpone")]/input[@name="_token"]')->attr('value');
+        $client->request('POST', '/commercial/actions/' . $actionEntity->getId() . '/postpone', ['_token' => $postponeToken, 'dueOn' => '2026-10-22']);
+        self::assertResponseRedirects();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $entityManager->clear();
+        self::assertSame('14:00', $entityManager->find(CommercialActionEntity::class, $actionEntity->getId())->getDueTime());
+
+        $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
+        $editForm = $crawler->filterXPath('//form[@action="/commercial/actions/' . $actionEntity->getId() . '/edit"]')->form();
+        $editForm['dueTime'] = '';
+        $client->submit($editForm);
+        self::assertResponseRedirects();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $entityManager->clear();
+        self::assertNull($entityManager->find(CommercialActionEntity::class, $actionEntity->getId())->getDueTime());
+
+        $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
+        $createForm = $crawler->filterXPath('//form[@action="/commercial/projects/' . $projectEntity->getId() . '/actions"]')->form();
+        $createForm['title'] = 'Préparer le rappel';
+        $createForm['dueOn'] = '2026-10-23';
+        $createForm['dueTime'] = '09:30';
+        $client->submit($createForm);
+        self::assertResponseRedirects();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $entityManager->clear();
+        $createdActionEntity = $entityManager->getRepository(CommercialActionEntity::class)->findOneBy(['project' => $projectEntity, 'title' => 'Préparer le rappel']);
+        self::assertInstanceOf(CommercialActionEntity::class, $createdActionEntity);
+        self::assertSame('09:30', $createdActionEntity->getDueTime());
+    }
 }

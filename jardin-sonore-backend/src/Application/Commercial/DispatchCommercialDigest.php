@@ -23,6 +23,7 @@ final readonly class DispatchCommercialDigest
         private BuildCommercialDigest $builder,
         private CommercialDigestSenderInterface $sender,
         private ?RefreshCommercialInterventions $interventionRefresher = null,
+        private ?RefreshCommercialAppointments $appointmentRefresher = null,
     ) {
     }
 
@@ -39,6 +40,7 @@ final readonly class DispatchCommercialDigest
 
         $localDate = new DateTimeImmutable($now->format('Y-m-d'), new DateTimeZone('Europe/Paris'));
         $this->interventionRefresher?->run();
+        $this->appointmentRefresher?->run();
         $digest = $this->builder->forDate($localDate);
         if ($digest->isEmpty()) {
             return false;

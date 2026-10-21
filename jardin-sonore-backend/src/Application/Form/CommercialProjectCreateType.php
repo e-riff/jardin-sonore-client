@@ -12,6 +12,7 @@ use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\TimeType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -66,6 +67,13 @@ final class CommercialProjectCreateType extends AbstractType
                 'input' => 'datetime_immutable',
                 'model_timezone' => 'Europe/Paris',
                 'view_timezone' => 'Europe/Paris',
+            ])
+            ->add('taskDueTime', TimeType::class, [
+                'label' => 'project.create.task_due_time',
+                'required' => false,
+                'widget' => 'single_text',
+                'input' => 'string',
+                'input_format' => 'H:i',
             ])
             ->add('title', TextType::class, ['label' => 'project.create.title', 'required' => false])
             ->add('submit', SubmitType::class, ['label' => 'project.create.save', 'attr' => ['class' => 'internal-button']]);

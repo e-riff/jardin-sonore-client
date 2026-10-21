@@ -9,6 +9,7 @@ use App\Application\Mcp\MailReader;
 use App\Application\Mcp\MailReadException;
 use App\Application\Mcp\MailSource;
 use App\Application\Mcp\ProjectFollowupWriter;
+use App\Application\Mcp\ProjectScheduleManager;
 use App\Application\Mcp\StandaloneMailDraftWriter;
 use App\Application\Mcp\WriteToolRegistry;
 use DateTimeImmutable;
@@ -27,6 +28,20 @@ final class WriteToolRegistryTest extends TestCase
         $result = $registry->call('record_mail_summary', ['projectId' => 1, 'mailReference' => 'reference', 'summary' => 'Résumé']);
 
         self::assertTrue($result['isError']);
+    }
+
+    public function testProjectScheduleWritesRequireTheirOwnGateAndAnExactProject(): void
+    {
+        $scheduleManager = $this->createMock(ProjectScheduleManager::class);
+        $scheduleManager->expects(self::once())->method('execute')->with('create_project_task', ['projectId' => 7, 'title' => 'Relancer', 'dueOn' => '2026-10-22'])->willReturn(['taskId' => 12]);
+        $registry = new WriteToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectFollowupWriter::class), false, projectScheduleManager: $scheduleManager);
+
+        self::assertContains('create_project_appointment', array_column($registry->definitions(), 'name'));
+        self::assertTrue($registry->call('create_project_task', ['projectId' => 7, 'title' => 'Relancer', 'dueOn' => '2026-10-22'])['isError']);
+
+        $enabled = new WriteToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectFollowupWriter::class), false, projectScheduleManager: $scheduleManager, projectScheduleWriteEnabled: true);
+        self::assertTrue($enabled->call('create_project_task', ['projectId' => 7, 'title' => 'Relancer', 'dueOn' => '2026-10-22', 'mailReference' => 'unwanted'])['isError']);
+        self::assertFalse($enabled->call('create_project_task', ['projectId' => 7, 'title' => 'Relancer', 'dueOn' => '2026-10-22'])['isError']);
     }
 
     public function testEachEnabledToolValidatesAndWritesSeparately(): void
