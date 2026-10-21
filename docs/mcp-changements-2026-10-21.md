@@ -16,4 +16,8 @@
 - L'édition libre ne concerne que les brouillons créés par le MCP dont l'identifiant est connu. Elle ne cherche pas tous les brouillons du compte et ne modifie pas un brouillon créé manuellement dans Thunderbird ou Roundcube. Les pièces jointes restent à ajouter dans le client mail.
 - Les outils d'écriture de brouillon doivent rester sur « Demander » dans Mistral, notamment le nouvel `update_standalone_mail_draft`. Les trois verrous serveur de brouillon sont actifs ; le nouvel outil et `read_standalone_mail_draft` ont été vérifiés dans les 26 outils exposés en production. Une création et une édition réelles dans le client IMAP restent à vérifier.
 
+## Actualiser les outils dans Mistral
+
+Après déploiement, une reconnexion peut laisser affichée l'ancienne liste de 16 outils. Dans Mistral, ouvrir **Connectors → My Connectors → Jardin Sonore → Functions**, puis cliquer sur **Refresh tools**. Vérifier ensuite la présence de `read_standalone_mail_draft`, `update_standalone_mail_draft` et des commandes de rendez-vous. La [documentation Mistral des permissions](https://docs.mistral.ai/vibe/work/safety-and-approvals) indique explicitement que ce bouton recharge la liste des fonctions. La documentation de l'API précise aussi que la liste peut provenir d'un cache tant que l'option `refresh` n'est pas demandée.
+
 La [roadmap](../ROADMAP.md) porte l'état de livraison et la [documentation des brouillons](superpowers/specs/2026-10-19-assistant-mcp-brouillons-imap-design.md) détaille leurs contrats.
