@@ -535,6 +535,97 @@ button:disabled {
     gap: 14px;
 }
 
+.session-edit-heading__title-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.session-edit-heading__title-row h1 {
+    max-width: 760px;
+}
+
+.session-edit-heading__preview {
+    flex: none;
+}
+
+.session-edit-actions__documents {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.session-edit-actions__delete {
+    margin-left: 8px;
+    border-left: 1px solid color-mix(in oklab, var(--color-outline-variant) 60%, white);
+    padding-left: 18px;
+}
+
+.session-pdf-menu {
+    position: relative;
+}
+
+.session-pdf-menu > summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.session-pdf-menu > summary::-webkit-details-marker {
+    display: none;
+}
+
+.session-pdf-menu > summary::after {
+    content: "⌄";
+    font-size: 1.1em;
+    line-height: 1;
+}
+
+.session-pdf-menu__panel {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 8px);
+    right: 0;
+    display: grid;
+    min-width: 220px;
+    gap: 4px;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 14px;
+    padding: 8px;
+    background: var(--color-surface-container-lowest);
+    box-shadow: 0 12px 30px rgb(48 32 26 / 0.18);
+}
+
+.session-pdf-menu__panel form {
+    margin: 0;
+}
+
+.session-pdf-menu__panel a,
+.session-pdf-menu__panel button {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    border: 0;
+    border-radius: 9px;
+    padding: 10px 12px;
+    background: transparent;
+    color: var(--color-on-background);
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.session-pdf-menu__panel a:hover,
+.session-pdf-menu__panel a:focus-visible,
+.session-pdf-menu__panel button:hover,
+.session-pdf-menu__panel button:focus-visible {
+    background: var(--color-surface-container);
+}
+
 .internal-eyebrow {
     margin: 0 0 10px;
     color: var(--color-on-surface-variant);
@@ -4010,8 +4101,6 @@ form.internal-form > .internal-form__actions > .internal-form__back-action {
 }
 
 .session-summary-edit-form { width: 100%; max-width: none; }
-.session-document-status { display: flex; align-items: center; gap: 14px; margin: -16px 0 24px; }
-.session-document-status > a:not(.internal-button) { color: var(--color-primary); font-family: var(--font-sans); font-size: .86rem; font-weight: 700; }
 .session-summary-edit-form__remove { display: flex; justify-content: flex-end; margin-top: 28px; border-top: 1px solid color-mix(in oklab, var(--color-outline-variant) 50%, white); padding-top: 20px; }
 .session-summary-edit-form .internal-form__actions { justify-content: flex-end; }
 .session-summary-edit-form .internal-form__back-action { margin-right: 0; }
@@ -4470,41 +4559,33 @@ a.session-composer-overlay__item {
     gap: 14px;
 }
 
-.session-activity-media > div > div {
+.session-activity-media__item {
     border: 1px solid color-mix(in oklab, var(--color-outline-variant) 55%, white);
     border-radius: 16px;
     padding: 14px;
     background: var(--color-surface-container-lowest);
 }
 
-.session-activity-media > div > div > label {
-    display: none;
-}
-
-.session-activity-media > div > div > div {
+.session-activity-media__item > div {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px 14px;
 }
 
-.session-activity-media > div > div > div > div {
+.session-activity-media__item > div > div {
+    display: grid;
+    gap: 8px;
     min-width: 0;
 }
 
-.session-activity-media > div > div > div > div:nth-last-child(-n + 2) {
-    grid-column: span 1;
-}
-
-.session-activity-media > div > div > div > div:has(input[type="checkbox"]) {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
 @media (max-width: 760px) {
-    .session-activity-media > div > div > div {
+    .session-activity-media__item > div {
         grid-template-columns: 1fr;
     }
+}
+
+.session-media-create-form .internal-form__actions {
+    justify-content: flex-end;
 }
 
 @media (min-width: 761px) {
@@ -5109,26 +5190,6 @@ a.session-composer-overlay__item {
 
 .session-index__document-action { display: inline-flex; }
 
-.session-publication-control {
-    position: relative;
-}
-
-.internal-form input.session-publication-switch__input[type="checkbox"] {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    opacity: 0;
-}
-
-.session-publication-switch {
-    display: inline-flex;
-    align-items: center;
-    gap: .55rem;
-    cursor: pointer;
-    font-size: .85rem;
-    font-weight: 600;
-}
-
 .session-publication-switch--button {
     padding: .2rem;
     border: 0;
@@ -5177,6 +5238,52 @@ a.session-composer-overlay__item {
 }
 
 .session-publication-switch--button:disabled {
+    cursor: wait;
+    opacity: .6;
+}
+
+.session-publication-badge {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    border: 1px solid color-mix(in oklab, var(--color-outline-variant) 75%, white);
+    border-radius: 999px;
+    padding: .35rem .7rem;
+    background: color-mix(in oklab, var(--color-outline-variant) 18%, white);
+    color: var(--color-on-background);
+    font: inherit;
+    font-size: .75rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.session-publication-badge:hover {
+    box-shadow: 0 2px 8px rgb(48 32 26 / 0.14);
+    transform: translateY(-1px);
+}
+
+.session-publication-badge__chevron {
+    width: 6px;
+    height: 6px;
+    margin-left: 2px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg) translateY(-2px);
+}
+
+.session-publication-badge.is-published {
+    border-color: color-mix(in oklab, var(--color-secondary) 35%, white);
+    background: color-mix(in oklab, var(--color-secondary) 16%, white);
+    color: var(--color-secondary);
+}
+
+.session-publication-badge:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 3px;
+}
+
+.session-publication-badge:disabled {
     cursor: wait;
     opacity: .6;
 }
@@ -5962,6 +6069,42 @@ a.session-composer-overlay__item {
 
     .internal-heading-actions .internal-button {
         width: 100%;
+    }
+
+    .session-edit-heading__title-row {
+        align-items: center;
+        flex-direction: row;
+        gap: 10px;
+    }
+
+    .session-edit-heading__preview {
+        width: auto;
+    }
+
+    .session-edit-actions {
+        display: flex;
+        align-items: stretch;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .session-edit-actions__documents {
+        display: block;
+        width: 100%;
+    }
+
+    .session-edit-actions__documents > .internal-button,
+    .session-edit-actions__documents .session-pdf-menu > summary {
+        justify-content: center;
+        text-align: center;
+    }
+
+    .session-edit-actions__delete {
+        width: 100%;
+        margin: 0;
+        border-top: 1px solid color-mix(in oklab, var(--color-outline-variant) 60%, white);
+        border-left: 0;
+        padding: 12px 0 0;
     }
 
     .mailing-audience__groups,

@@ -31,7 +31,6 @@ final readonly class UpdateSessionSequence
             body: trim($saveSessionSequenceInput->body),
             lyrics: $saveSessionSequenceInput->lyrics,
             gestures: $saveSessionSequenceInput->gestures,
-            notes: $saveSessionSequenceInput->notes,
             primaryUrl: $saveSessionSequenceInput->primaryUrl,
             secondaryUrl: $saveSessionSequenceInput->secondaryUrl,
             imageUrl: $saveSessionSequenceInput->imageUrl,

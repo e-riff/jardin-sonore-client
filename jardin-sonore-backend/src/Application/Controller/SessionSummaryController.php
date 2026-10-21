@@ -871,7 +871,6 @@ final class SessionSummaryController extends AbstractController
             body: $sessionSequenceFormModel->body,
             lyrics: $sessionSequenceFormModel->lyrics,
             gestures: $sessionSequenceFormModel->gestures,
-            notes: $sessionSequenceFormModel->notes,
             primaryUrl: $sessionSequenceFormModel->primaryUrl,
             secondaryUrl: $sessionSequenceFormModel->secondaryUrl,
             imageUrl: $sessionSequenceFormModel->imageUrl,

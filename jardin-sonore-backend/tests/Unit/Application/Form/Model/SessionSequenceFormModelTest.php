@@ -23,7 +23,7 @@ final class SessionSequenceFormModelTest extends TestCase
         self::assertStringContainsString("public ?string \$title = '';", $formModel);
     }
 
-    public function testRepertoireNotesAreNotCopiedIntoPrivateSessionNotes(): void
+    public function testRepertoireNotesAreNotCopiedIntoSessionSequence(): void
     {
         $repertoireItem = new RepertoireItem(
             type: RepertoireItemType::NURSERY_RHYME,
@@ -33,7 +33,7 @@ final class SessionSequenceFormModelTest extends TestCase
 
         $sessionSequenceFormModel = SessionSequenceFormModel::fromRepertoireItemView(RepertoireItemView::fromDomain($repertoireItem));
 
-        self::assertNull($sessionSequenceFormModel->notes);
+        self::assertArrayNotHasKey('notes', get_object_vars($sessionSequenceFormModel));
     }
 
     public function testAddingCatalogMediaCopiesItsDisplayDataIntoTheActivity(): void

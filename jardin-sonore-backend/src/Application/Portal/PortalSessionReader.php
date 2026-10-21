@@ -214,7 +214,6 @@ final readonly class PortalSessionReader
                 'body' => $sessionSequenceView->body,
                 'lyrics' => $sessionSequenceView->lyrics,
                 'gestures' => $sessionSequenceView->gestures,
-                'notes' => $sessionSequenceView->notes,
                 'media' => array_map(static fn (SessionSequenceMedia $media): array => self::portalMedia($media, $mediaBaseUrl), $sessionSequenceView->media),
                 'documentMedia' => array_map(static fn (SessionSequenceMedia $media): array => self::portalMedia($media, $mediaBaseUrl), $sessionSequenceView->documentMedia),
                 'showLyricsByDefault' => $sessionSequenceView->showLyricsByDefault,

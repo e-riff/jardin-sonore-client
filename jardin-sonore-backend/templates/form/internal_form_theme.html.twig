@@ -33,7 +33,14 @@
 {% endblock %}
 
 {% block collection_entry_row %}
-    {% if form_parent(form).vars.name == 'organizationAccesses' and value.organization is defined %}
+    {% if form_parent(form).vars.ea_vars is not defined %}
+        {% set rowClass = row_attr.class|default('') %}
+        <div{% with { attr: row_attr|merge({ class: rowClass }) } %}{{ block('attributes') }}{% endwith %}>
+            {{ form_errors(form) }}
+            {{ form_widget(form) }}
+            {{ form_help(form) }}
+        </div>
+    {% elseif form_parent(form).vars.name == 'organizationAccesses' and value.organization is defined %}
         {% set is_complex = form_parent(form).vars.ea_vars.field.customOptions.get('entryIsComplex') ?? false %}
         {% set allows_deleting_items = form_parent(form).vars.allow_delete|default(false) %}
         {% set render_expanded = not form.vars.valid or form_parent(form).vars.ea_vars.field.customOptions.get('renderExpanded')|default(false) %}

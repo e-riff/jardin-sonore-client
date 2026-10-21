@@ -34,16 +34,4 @@
             {% endif %}
         </div>
     {% endif %}
-    {% if section == 'notes' %}
-        <details class="session-sequence-local-details__notes" {% if editing == 'notes' %}open{% endif %}>
-            <summary>{{ 'sessions.sequence.composer.notes'|trans({}, 'sessions') }}</summary>
-            {% if editing == 'notes' or not notes %}
-                <form class="session-sequence-local-details__form" data-action="live#action:prevent" data-live-action-param="save">
-                    <textarea data-model="norender|notes" rows="3" data-action="blur->live#action" data-live-action-param="save">{{ notes }}</textarea>
-                </form>
-            {% else %}
-                <button type="button" class="session-sequence-local-details__add-note" {{ live_action('edit', { field: 'notes' }) }}>{{ notes }}</button>
-            {% endif %}
-        </details>
-    {% endif %}
 </div>

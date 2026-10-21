@@ -9,22 +9,43 @@
     <section class="internal-page-heading">
         <div>
             <p class="internal-eyebrow">{{ 'sessions.summary.edit.eyebrow'|trans({}, 'sessions') }}</p>
-            <h1>{{ session.title }}</h1>
+            <div class="session-edit-heading__title-row">
+                <h1>{{ session.title }}</h1>
+                <button type="button" class="session-publication-badge{{ session.published ? ' is-published' : '' }}"
+                        role="switch" aria-checked="{{ session.published ? 'true' : 'false' }}"
+                        aria-label="{{ 'sessions.summary.table.publication_switch'|trans({title: session.title}, 'sessions') }}"
+                        data-controller="session-publication" data-action="click->session-publication#toggle"
+                        data-session-publication-url-value="{{ path('session_publication', { uuid: session.uuid }) }}"
+                        data-session-publication-token-value="{{ csrf_token('session_publication_' ~ session.uuid) }}"
+                        data-session-publication-published-value="{{ session.published ? 'true' : 'false' }}"
+                        data-session-publication-published-label-value="{{ 'sessions.summary.table.published'|trans({}, 'sessions') }}"
+                        data-session-publication-unpublished-label-value="{{ 'sessions.summary.table.unpublished'|trans({}, 'sessions') }}"
+                        data-session-publication-error-label-value="{{ 'sessions.summary.table.publication_error'|trans({}, 'sessions') }}">
+                    <span aria-live="polite" data-session-publication-target="status">{{ (session.published ? 'sessions.summary.table.published' : 'sessions.summary.table.unpublished')|trans({}, 'sessions') }}</span>
+                    <span class="session-publication-badge__chevron" aria-hidden="true"></span>
+                </button>
+            </div>
             <p>{{ 'sessions.summary.edit.description'|trans({}, 'sessions') }}</p>
         </div>
-        <div class="internal-heading-actions">
-            <a class="internal-button internal-button--secondary" href="{{ path('session_show', { uuid: session.uuid }) }}">{{ 'sessions.summary.edit.preview'|trans({}, 'sessions') }}</a>
-            <button type="button" class="internal-button internal-button--danger" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('session_remove', { uuid: session.uuid }) }}" data-confirmation-dialog-item-value="{{ session.title }}" data-confirmation-dialog-token-value="{{ csrf_token('session_remove_' ~ session.uuid) }}">{{ 'sessions.summary.edit.remove'|trans({}, 'sessions') }}</button>
+        <div class="internal-heading-actions session-edit-actions">
+            <div class="session-edit-actions__documents">
+                <a class="internal-button session-edit-heading__preview" href="{{ path('session_show', { uuid: session.uuid }) }}" target="_blank" rel="noopener">{{ 'sessions.summary.edit.preview'|trans({}, 'sessions') }}</a>
+                <details class="session-pdf-menu" data-controller="internal-popover">
+                    <summary class="internal-button internal-button--secondary">{{ 'sessions.summary.document.actions'|trans({}, 'sessions') }}</summary>
+                    <div class="session-pdf-menu__panel">
+                        {% if documentAvailable %}<a href="{{ path('session_document_download', { uuid: session.uuid }) }}">{{ 'sessions.summary.document.download'|trans({}, 'sessions') }}</a>{% endif %}
+                        <form method="post" action="{{ path('session_document_regenerate', { uuid: session.uuid }) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('session_document_regenerate_' ~ session.uuid) }}">
+                            <button type="submit">{{ 'sessions.summary.document.regenerate'|trans({}, 'sessions') }}</button>
+                        </form>
+                    </div>
+                </details>
+            </div>
+            <div class="session-edit-actions__delete">
+                <button type="button" class="internal-button internal-button--danger" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('session_remove', { uuid: session.uuid }) }}" data-confirmation-dialog-item-value="{{ session.title }}" data-confirmation-dialog-token-value="{{ csrf_token('session_remove_' ~ session.uuid) }}">{{ 'sessions.summary.edit.remove'|trans({}, 'sessions') }}</button>
+            </div>
         </div>
     </section>
-
-    <div class="session-document-status">
-        {% if documentAvailable %}<a class="internal-button internal-button--compact" href="{{ path('session_document_download', { uuid: session.uuid }) }}">{{ 'sessions.summary.document.download'|trans({}, 'sessions') }}</a>{% endif %}
-        <form method="post" action="{{ path('session_document_regenerate', { uuid: session.uuid }) }}">
-            <input type="hidden" name="_token" value="{{ csrf_token('session_document_regenerate_' ~ session.uuid) }}">
-            <button class="internal-button internal-button--secondary internal-button--compact" type="submit">{{ 'sessions.summary.document.regenerate'|trans({}, 'sessions') }}</button>
-        </form>
-    </div>
 
     <section id="session-summary-edit-form" class="internal-card internal-card--form session-summary-edit-form">
         {% if hasErrors %}

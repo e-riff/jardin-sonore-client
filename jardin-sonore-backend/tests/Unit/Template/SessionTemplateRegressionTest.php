@@ -41,7 +41,7 @@ final class SessionTemplateRegressionTest extends TestCase
 
         self::assertIsString($translations);
         self::assertMatchesRegularExpression('/^      instruments: "Instruments pour cette activité"$/m', $translations);
-        self::assertMatchesRegularExpression('/^      notes_private_help: "Ces notes restent privées et ne figurent pas dans le rendu de la séance\."$/m', $translations);
+        self::assertMatchesRegularExpression('/^      private_notes_help: "Ces notes restent dans l’édition et ne figurent pas dans le rendu imprimable\."$/m', $translations);
     }
 
     public function testPreviewShowsTheSessionRoleAndGeneralInstructions(): void
@@ -136,12 +136,10 @@ final class SessionTemplateRegressionTest extends TestCase
     {
         $editTemplate = file_get_contents(__DIR__ . '/../../../templates/session/edit.html.twig');
         $indexTemplate = file_get_contents(__DIR__ . '/../../../templates/session/index.html.twig');
-        $styles = file_get_contents(__DIR__ . '/../../../assets/styles/app.css');
 
         self::assertIsString($editTemplate);
         self::assertIsString($indexTemplate);
-        self::assertIsString($styles);
-        self::assertStringContainsString('session-document-status > a:not(.internal-button)', $styles);
+        self::assertStringContainsString('session-pdf-menu__panel', $editTemplate);
         self::assertStringContainsString("path('session_document_download'", $indexTemplate);
         self::assertStringContainsString("path('session_document_regenerate'", $indexTemplate);
         self::assertStringContainsString('title="{{ \'sessions.summary.document.regenerate\'|trans({}, \'sessions\') }}"', $indexTemplate);
@@ -230,12 +228,12 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertIsString($formType);
         self::assertStringContainsString('form.role', $template);
         self::assertStringContainsString('<twig:SessionSequenceLocalDetails', $template);
-        self::assertStringContainsString('form.notes', $template);
+        self::assertStringNotContainsString('form.notes', $template);
         self::assertStringContainsString('form.instrumentUuids', $template);
         self::assertStringContainsString("action: path('session_sequence_edit'", $template);
         self::assertStringNotContainsString('form.lyrics', $template);
         self::assertStringNotContainsString('form.gestures', $template);
-        self::assertStringContainsString('use Symfony\\Component\\Form\\Extension\\Core\\Type\\TextareaType;', $formType);
+        self::assertStringNotContainsString('TextareaType::class', $formType);
     }
 
     public function testRepertoireSessionEditorProvidesCatalogSelectionAndQuickCreationForMedia(): void
@@ -437,7 +435,7 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertStringContainsString('form.role', $template);
         self::assertStringContainsString('<twig:SessionSequenceLocalDetails', $template);
         self::assertStringContainsString('section="details"', $template);
-        self::assertStringContainsString('form.notes', $template);
+        self::assertStringNotContainsString('form.notes', $template);
         self::assertStringContainsString('form.instrumentUuids', $template);
         self::assertStringNotContainsString('form.lyrics', $template);
         self::assertStringNotContainsString('form.gestures', $template);
@@ -447,10 +445,12 @@ final class SessionTemplateRegressionTest extends TestCase
     public function testActivityMediaCollectionUsesDedicatedLayoutHooks(): void
     {
         $styles = file_get_contents(__DIR__ . '/../../../assets/styles/app.css');
+        $formTheme = file_get_contents(__DIR__ . '/../../../templates/form/internal_form_theme.html.twig');
 
         self::assertIsString($styles);
-        self::assertStringContainsString('.session-activity-media > div > div > label', $styles);
-        self::assertStringContainsString('.session-activity-media > div > div > div {', $styles);
+        self::assertIsString($formTheme);
+        self::assertStringContainsString('.session-activity-media__item', $styles);
+        self::assertStringContainsString('form_parent(form).vars.ea_vars is not defined', $formTheme);
     }
 
     public function testActivitySaveRefreshesTheGlobalSessionInstrumentsForm(): void
@@ -592,10 +592,12 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertStringContainsString("'sessions.sequence.form.body'|trans({}, 'sessions')", $template);
         self::assertStringContainsString("live_action('startEditInstruction'", $template);
         self::assertStringContainsString('function getInstructions()', $component);
-        self::assertStringContainsString('blur->live#action', $template);
+        self::assertStringContainsString('blur->instruction-shortcut#saveInstruction', $template);
+        self::assertStringContainsString('keydown->instruction-shortcut#addNextInstruction', $template);
+        self::assertStringNotContainsString('blur->live#action', $template);
         self::assertStringNotContainsString("'sessions.sequence.composer.save_instruction'", $template);
         self::assertStringNotContainsString("'sessions.sequence.composer.save_notes'", $template);
-        self::assertStringNotContainsString("session-sequence-local-details__notes\" {% if editing == 'notes' or not notes", $template);
+        self::assertStringNotContainsString('section == \'notes\'', $template);
         self::assertStringNotContainsString("editing == 'body'", $template);
     }
 }

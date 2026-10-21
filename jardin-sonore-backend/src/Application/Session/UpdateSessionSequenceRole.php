@@ -36,7 +36,6 @@ final readonly class UpdateSessionSequenceRole
                 body: $sessionSequence->body,
                 lyrics: $sessionSequence->lyrics,
                 gestures: $sessionSequence->gestures,
-                notes: $sessionSequence->notes,
                 primaryUrl: $sessionSequence->primaryUrl,
                 secondaryUrl: $sessionSequence->secondaryUrl,
                 imageUrl: $sessionSequence->imageUrl,

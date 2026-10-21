@@ -21,7 +21,6 @@
             }) }}
                 {{ form_row(form.role) }}
                 <twig:SessionSequenceLocalDetails sessionUuid="{{ session.uuid }}" sequenceUuid="{{ sequence.uuid }}" section="details" showInstructionLabel="true" body="{{ sequence.body ?? '' }}" />
-                {{ form_row(form.notes) }}
                 {{ form_row(form.instrumentUuids) }}
                 {{ form_widget(form.sourceUuid) }}
                 {{ form_widget(form.sourceTitle) }}

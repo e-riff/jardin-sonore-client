@@ -24,7 +24,6 @@ final class SessionSequenceLocalDetails
     #[LiveProp] public bool $showInstructionLabel = false;
     #[LiveProp(writable: true)] public ?string $role = null;
     #[LiveProp(writable: true)] public string $body = '';
-    #[LiveProp(writable: true)] public ?string $notes = null;
     #[LiveProp] public string $editing = '';
     #[LiveProp(writable: true)] public string $instructionValue = '';
     #[LiveProp] public int $editingInstructionIndex = -1;
@@ -35,7 +34,7 @@ final class SessionSequenceLocalDetails
     #[LiveAction]
     public function edit(#[LiveArg] string $field): void
     {
-        if (in_array($field, ['role', 'notes'], true)) {
+        if ('role' === $field) {
             $this->editing = $field;
         }
     }
@@ -85,7 +84,6 @@ final class SessionSequenceLocalDetails
         $value = match ($setting) {
             SessionSequenceLocalSetting::ROLE => $this->role ?? '',
             SessionSequenceLocalSetting::BODY => $this->body,
-            SessionSequenceLocalSetting::NOTES => $this->notes ?? '',
         };
         $this->saveSetting($setting, $value);
         $this->editing = '';

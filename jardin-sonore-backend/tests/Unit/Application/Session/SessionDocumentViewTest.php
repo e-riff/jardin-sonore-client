@@ -84,7 +84,6 @@ final class SessionDocumentViewTest extends TestCase
                 body: '',
                 lyrics: null,
                 gestures: null,
-                notes: 'Privé',
                 primaryUrl: null,
                 secondaryUrl: null,
                 imageUrl: null,

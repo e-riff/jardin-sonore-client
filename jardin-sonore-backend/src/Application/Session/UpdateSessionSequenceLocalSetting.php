@@ -31,7 +31,6 @@ final readonly class UpdateSessionSequenceLocalSetting
                 uuid: $sessionSequence->uuid, type: $sessionSequence->type, title: $sessionSequence->title, subtitle: $sessionSequence->subtitle,
                 body: SessionSequenceLocalSetting::BODY === $setting ? trim((string) $value) : $sessionSequence->body,
                 lyrics: $sessionSequence->lyrics, gestures: $sessionSequence->gestures,
-                notes: SessionSequenceLocalSetting::NOTES === $setting ? $value : $sessionSequence->notes,
                 primaryUrl: $sessionSequence->primaryUrl, secondaryUrl: $sessionSequence->secondaryUrl, imageUrl: $sessionSequence->imageUrl,
                 showLyricsByDefault: $sessionSequence->showLyricsByDefault, sourceUuid: $sessionSequence->sourceUuid,
                 sourceKind: $sessionSequence->sourceKind, sourceTitle: $sessionSequence->sourceTitle,

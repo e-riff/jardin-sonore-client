@@ -10,7 +10,6 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
-use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -40,11 +39,6 @@ final class RepertoireSessionSequenceType extends AbstractType
             ->add('role', TextType::class, [
                 'label' => 'sessions.sequence.form.role',
                 'required' => false,
-            ])
-            ->add('notes', TextareaType::class, [
-                'label' => 'sessions.sequence.form.notes',
-                'required' => false,
-                'attr' => ['rows' => 5],
             ])
             ->add('instrumentUuids', ChoiceType::class, [
                 'label' => 'sessions.sequence.form.instruments',

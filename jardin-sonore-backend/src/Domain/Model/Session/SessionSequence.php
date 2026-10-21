@@ -29,7 +29,6 @@ final readonly class SessionSequence
         public string $body,
         public ?string $lyrics,
         public ?string $gestures,
-        public ?string $notes,
         public ?string $primaryUrl,
         public ?string $secondaryUrl,
         public ?string $imageUrl,
@@ -62,7 +61,6 @@ final readonly class SessionSequence
             'body' => $this->body,
             'lyrics' => $this->lyrics,
             'gestures' => $this->gestures,
-            'notes' => $this->notes,
             'media' => array_map(
                 static fn (SessionSequenceMedia $sessionSequenceMedia): array => $sessionSequenceMedia->toArray(),
                 $this->getMedia(),
@@ -89,7 +87,6 @@ final readonly class SessionSequence
             body: (string) ($payload['body'] ?? ''),
             lyrics: self::nullableString($payload['lyrics'] ?? null),
             gestures: self::nullableString($payload['gestures'] ?? null),
-            notes: self::nullableString($payload['notes'] ?? null),
             primaryUrl: self::nullableString($payload['primaryUrl'] ?? null),
             secondaryUrl: self::nullableString($payload['secondaryUrl'] ?? null),
             imageUrl: self::nullableString($payload['imageUrl'] ?? null),

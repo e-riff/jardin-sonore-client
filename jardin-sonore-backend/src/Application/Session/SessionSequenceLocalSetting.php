@@ -8,5 +8,4 @@ enum SessionSequenceLocalSetting: string
 {
     case ROLE = 'role';
     case BODY = 'body';
-    case NOTES = 'notes';
 }

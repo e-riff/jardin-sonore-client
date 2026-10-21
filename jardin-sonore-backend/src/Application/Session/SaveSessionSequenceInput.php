@@ -22,7 +22,6 @@ final readonly class SaveSessionSequenceInput
         public string $body,
         public ?string $lyrics,
         public ?string $gestures,
-        public ?string $notes,
         public ?string $primaryUrl,
         public ?string $secondaryUrl,
         public ?string $imageUrl,

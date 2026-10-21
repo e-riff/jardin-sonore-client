@@ -58,12 +58,7 @@ final class SessionSequenceType extends AbstractType
             ->add('title', TextType::class, [
                 'label' => 'sessions.sequence.form.title',
             ])
-            ->add('notes', TextareaType::class, [
-                'label' => 'sessions.sequence.form.notes',
-                'required' => false,
-                'attr' => ['rows' => 5],
-            ])
-            ->add('media', CollectionType::class, ['entry_type' => SessionSequenceMediaType::class, 'allow_add' => true, 'allow_delete' => true, 'by_reference' => false, 'required' => false])
+            ->add('media', CollectionType::class, ['entry_type' => SessionSequenceMediaType::class, 'entry_options' => ['row_attr' => ['class' => 'session-activity-media__item']], 'allow_add' => true, 'allow_delete' => true, 'by_reference' => false, 'required' => false])
             ->add('role', TextType::class, [
                 'label' => 'sessions.sequence.form.role',
                 'required' => false,

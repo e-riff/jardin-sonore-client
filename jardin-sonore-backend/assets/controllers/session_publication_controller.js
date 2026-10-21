@@ -30,6 +30,9 @@ export default class extends Controller {
             this.publishedValue = result.published;
             this.statusTarget.textContent = result.published ? this.publishedLabelValue : this.unpublishedLabelValue;
             this.element.setAttribute('aria-checked', String(result.published));
+            this.element.classList.toggle('is-published', result.published);
+            const formInput = document.querySelector('[data-session-publication-form-input]');
+            if (formInput instanceof HTMLInputElement) formInput.checked = result.published;
         } catch {
             this.statusTarget.textContent = this.errorLabelValue;
         } finally {

@@ -35,7 +35,6 @@ final class DeleteRepertoireItemTest extends TestCase
                 body: '',
                 lyrics: null,
                 gestures: null,
-                notes: null,
                 primaryUrl: null,
                 secondaryUrl: null,
                 imageUrl: null,

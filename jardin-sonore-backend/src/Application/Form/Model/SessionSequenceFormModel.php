@@ -29,8 +29,6 @@ final class SessionSequenceFormModel
 
     public ?string $gestures = null;
 
-    public ?string $notes = null;
-
     #[Assert\Url]
     public ?string $primaryUrl = null;
 
@@ -66,7 +64,6 @@ final class SessionSequenceFormModel
         $formModel->body = $sessionSequenceView->body;
         $formModel->lyrics = $sessionSequenceView->lyrics;
         $formModel->gestures = $sessionSequenceView->gestures;
-        $formModel->notes = $sessionSequenceView->notes;
         $formModel->primaryUrl = $sessionSequenceView->primaryUrl;
         $formModel->secondaryUrl = $sessionSequenceView->secondaryUrl;
         $formModel->imageUrl = $sessionSequenceView->imageUrl;
@@ -102,7 +99,6 @@ final class SessionSequenceFormModel
         $formModel->body = '';
         $formModel->lyrics = $repertoireItemView->lyrics;
         $formModel->gestures = $repertoireItemView->gestures;
-        $formModel->notes = null;
         $formModel->sourceUuid = $repertoireItemView->uuid->toRfc4122();
         $formModel->sourceKind = SessionSequenceSourceKind::REPERTOIRE_ITEM;
         $formModel->sourceTitle = $repertoireItemView->title;
@@ -131,7 +127,6 @@ final class SessionSequenceFormModel
         $formModel->type = SessionSequenceType::FREE;
         $formModel->title = $sessionRecommendationView->title;
         $formModel->body = $sessionRecommendationView->text;
-        $formModel->notes = $sessionRecommendationView->notes;
         $formModel->primaryUrl = $sessionRecommendationView->primaryUrl;
         $formModel->secondaryUrl = $sessionRecommendationView->secondaryUrl;
         $formModel->imageUrl = $sessionRecommendationView->imageUrl;
