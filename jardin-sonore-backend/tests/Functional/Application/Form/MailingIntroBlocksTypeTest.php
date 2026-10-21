@@ -6,8 +6,10 @@ namespace App\Tests\Functional\Application\Form;
 
 use App\Application\Form\CreateMailingCampaignType;
 use App\Application\Form\EditMailingCampaignType;
+use App\Application\Form\MailingIntroBlockType;
 use App\Application\Form\Model\CreateMailingCampaignFormModel;
 use App\Application\Form\Model\EditMailingCampaignFormModel;
+use App\Application\Form\Model\MailingIntroBlockFormModel;
 use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Kernel;
@@ -103,5 +105,25 @@ final class MailingIntroBlocksTypeTest extends KernelTestCase
         self::assertSame('Premier paragraphe<br>ligne suivante', $formModel->introBlocks[0]->text);
         self::assertSame('Second paragraphe', $formModel->introBlocks[1]->text);
         self::assertNotNull($form->createView());
+    }
+
+    public function testAnEmptySubmittedBlockIdKeepsTheExistingIdentifier(): void
+    {
+        self::bootKernel(['environment' => 'test']);
+        $block = new MailingIntroBlockFormModel();
+        $block->id = 'existing-block';
+        $form = self::getContainer()->get(FormFactoryInterface::class)->create(MailingIntroBlockType::class, $block);
+
+        $form->submit([
+            'id' => '',
+            'kind' => 'paragraph',
+            'text' => 'Texte conservé',
+            'imageFile' => '',
+            'imageAlt' => '',
+            'imageDecorative' => '',
+            'imageSide' => 'right',
+        ]);
+
+        self::assertSame('existing-block', $block->id);
     }
 }

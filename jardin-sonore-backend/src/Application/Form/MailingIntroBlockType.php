@@ -12,6 +12,8 @@ use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\UX\Dropzone\Form\DropzoneType;
 
@@ -70,6 +72,21 @@ final class MailingIntroBlockType extends AbstractType
                 'required' => false,
                 'empty_data' => 'right',
             ]);
+
+        $builder->addEventListener(FormEvents::PRE_SUBMIT, static function (FormEvent $event): void {
+            $submittedData = $event->getData();
+            if (!is_array($submittedData) || (is_string($submittedData['id'] ?? null) && '' !== $submittedData['id'])) {
+                return;
+            }
+
+            $block = $event->getForm()->getData();
+            if (!$block instanceof MailingIntroBlockFormModel) {
+                return;
+            }
+
+            $submittedData['id'] = $block->id;
+            $event->setData($submittedData);
+        });
     }
 
     public function configureOptions(OptionsResolver $resolver): void
