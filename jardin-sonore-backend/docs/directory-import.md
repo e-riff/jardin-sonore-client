@@ -54,6 +54,31 @@ Le dossier de depot standard est `data/imports/`. La commande accepte :
 
 Le JSON peut exposer les lignes d'import via `results` ou `mainResults`.
 
+Exemple minimal avec plusieurs coordonnees :
+
+```json
+{
+  "results": [
+    {
+      "id": "reseau-mjc-du-parc",
+      "type": "mjc",
+      "name": "MJC du Parc",
+      "commune": "Lyon",
+      "address": "4 rue du Parc, 69003 Lyon",
+      "mail": "accueil@example.org",
+      "additionalEmails": ["direction@example.org"],
+      "phone": "04 72 00 00 00",
+      "additionalPhones": ["04 72 00 00 01"],
+      "siteWeb": "https://example.org"
+    }
+  ]
+}
+```
+
+`id` et `type` sont obligatoires. Donner aussi un `name` precis a chaque fiche. L'`id` est un identifiant externe stable et unique au sein d'une meme source ; avec `--source`, il permet de retrouver la meme organisation lors d'un nouvel import. Ne pas regenerer cet identifiant a chaque export. `organizationId` est facultatif et ne doit etre partage que par des lignes qui decrivent reellement le meme etablissement : ne pas y mettre l'identifiant d'un reseau qui gere plusieurs lieux. `detailsUuid` est lu, mais ne sert pas au rapprochement actuel.
+
+`mail`, `phone`, `address` et `commune` sont les coordonnees principales. Les listes facultatives `additionalEmails`, `additionalPhones` et `additionalAddresses` ajoutent d'autres coordonnees ; chaque adresse supplementaire est une chaine et reprend la meme commune. Placer le code postal dans `address` pour qu'il soit extrait. Les emails doivent etre valides et les telephones exploitables. `siteWeb` renseigne le site web. Les champs libres comme `sourceUrl` ou `note` restent dans le fichier JSON, mais ne deviennent pas des champs de la fiche annuaire ; la trace d'import ne conserve que le hash du contenu.
+
 ### Reconnaissance directe
 
 Avant tout scoring, la commande cherche un lien d'import deja connu via :
@@ -72,6 +97,7 @@ Quand aucune liaison externe n'est connue, le backend calcule des candidats a pa
 - du site web ;
 - du nom ;
 - du nom metier normalise ;
+- du type d'organisation ;
 - de la commune ;
 - de l'adresse.
 
@@ -80,6 +106,8 @@ Seuils actuels :
 - `> 90` avec au moins 15 points d'avance sur le candidat suivant : liaison automatique ;
 - `80 a 90`, ou candidats proches : la commande te demande quoi faire en mode interactif ;
 - `< 80` : le candidat n'est pas retenu, donc la ligne part vers une creation de nouvel etablissement.
+
+Lorsque les deux types sont connus et differents, le candidat est ecarte si les noms ne sont pas presque identiques (similarite inferieure a 90 %). S'ils le sont, son score est plafonne a 90 : il peut etre propose pour une verification manuelle, jamais lie automatiquement. Une correspondance deja etablie par `--source` et identifiant externe reste prioritaire. La recherche par commune ne ramene que les organisations du meme type lorsque le type de l'import est reconnu.
 
 L'action `ignorer` n'est jamais decidee automatiquement a cause du score. Elle n'existe que si l'utilisateur la choisit dans le prompt interactif.
 
@@ -90,7 +118,8 @@ Quand plusieurs candidats plausibles existent ou qu'un meilleur candidat est sou
 - le rang courant de traitement ;
 - les donnees importees ;
 - un tableau des candidats avec leur score ;
-- le detail des informations connues pour chaque candidat.
+- le detail des informations connues pour chaque candidat ;
+- le type connu de chaque candidat, pour comparer avec le type importe.
 
 Choix possibles :
 
@@ -158,7 +187,7 @@ Les anciens libellés ou codes sont acceptés ainsi :
 | `MJC` ou « maison pour tous » dans le nom | `mjc` |
 | « médiathèque » dans le type | `mediatheque` |
 
-Les accents, la casse et les séparateurs sont normalisés pour les correspondances textuelles. Si aucune règle ne correspond, l'importeur ne déduit pas de type. Il ne remplace le type d'une organisation existante que si celle-ci n'en a pas déjà un. Le détail du mapping est dans `DirectoryEstablishmentUpserter::mapOrganizationType()`.
+Les accents, la casse et les séparateurs sont normalisés pour les correspondances textuelles. Si aucune règle ne correspond, l'importeur ne déduit pas de type et le rapprochement ne peut pas s'appuyer sur ce critere. Il ne remplace le type d'une organisation existante que si celle-ci n'en a pas déjà un. Le détail du mapping est dans `DirectoryOrganizationTypeResolver::resolve()`.
 
 Cette conversion ne remplace le type que si l'organisation n'en a pas déjà un. Ainsi, un import qui retrouve une organisation existante conserve son type renseigné ; les nouvelles organisations reçoivent le type déduit. Les valeurs possibles et leurs libellés sont déclarés dans `OrganizationType` et `translations/backoffice+intl-icu.fr.yaml`.
 
@@ -195,6 +224,8 @@ Cette trace permet de stabiliser les imports suivants.
   DTO d'import valide par Symfony Validator.
 - `src/Application/Directory/DirectoryEstablishmentMatcher.php`
   Recherche les liens externes existants et calcule les scores de rapprochement.
+- `src/Application/Directory/DirectoryOrganizationTypeResolver.php`
+  Convertit le type du JSON en type d'annuaire pour l'hydratation et le rapprochement.
 - `src/Application/Directory/DirectoryEstablishmentUpserter.php`
   Hydrate l'organisation et gere les contacts/adresses.
 
@@ -208,7 +239,8 @@ Le score combine des bonus et similarites ponderees, notamment :
 - nom metier exact ;
 - adresse exacte normalisee ;
 - combinaisons fortes nom/adresse ou telephone/adresse ;
-- penalite si le nom parait proche mais que l'adresse est trop eloignee.
+- penalite si le nom parait proche mais que l'adresse est trop eloignee ;
+- exclusion d'un type different lorsque le nom n'est pas presque identique ; revue manuelle seule lorsque le nom l'est.
 
 Les candidats sous `80` sont filtres dans le matcher avant meme d'etre proposes a la commande.
 

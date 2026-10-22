@@ -252,14 +252,16 @@ final class ImportDirectoryEstablishmentsCommand extends Command
         foreach ($candidates as $candidate) {
             $choiceKey = (string) $candidate->organizationId;
             $choices[$choiceKey] = sprintf(
-                'Lier à #%d %s (%d%%)',
+                'Lier à #%d %s (type : %s, %d%%)',
                 $candidate->organizationId,
                 $candidate->organizationName,
+                $candidate->type->value ?? 'non renseigné',
                 $candidate->score,
             );
             $rows[] = [
                 $candidate->organizationId,
                 $candidate->organizationName,
+                $candidate->type->value ?? '—',
                 $candidate->email,
                 $candidate->phone,
                 $candidate->commune,
@@ -268,11 +270,12 @@ final class ImportDirectoryEstablishmentsCommand extends Command
         }
 
         $io->section(sprintf('[%d] Doute pour %s', $organizationRank, $item->name ?? $item->externalId));
-        $io->table(['ID', 'Organisation', 'Email', 'Téléphone', 'Commune', 'Score'], $rows);
+        $io->table(['ID', 'Organisation', 'Type', 'Email', 'Téléphone', 'Commune', 'Score'], $rows);
 
         foreach ($candidates as $candidate) {
             $io->definitionList(
                 [sprintf('Candidat #%d', $candidate->organizationId) => $candidate->organizationName],
+                ['Type base' => $candidate->type->value ?? '—'],
                 ['Email base' => '' !== $candidate->email ? $candidate->email : '—'],
                 ['Téléphone base' => '' !== $candidate->phone ? $candidate->phone : '—'],
                 ['Commune base' => '' !== $candidate->commune ? $candidate->commune : '—'],

@@ -10,6 +10,8 @@ use InvalidArgumentException;
 final class DirectoryEstablishmentScorer
 {
     private const float COMMUNE_COMPATIBILITY_THRESHOLD = 92.0;
+    private const int TYPE_MISMATCH_NAME_SIMILARITY_THRESHOLD = 90;
+    private const int TYPE_MISMATCH_REVIEW_SCORE_CAP = 90;
     private const array SCORE_BONUSES = [
         'email_exact' => 45,
         'phone_exact' => 25,
@@ -69,6 +71,11 @@ final class DirectoryEstablishmentScorer
         'petit',
     ];
 
+    public function __construct(
+        private readonly DirectoryOrganizationTypeResolver $directoryOrganizationTypeResolver,
+    ) {
+    }
+
     public function isCommuneCompatible(?string $importCommune, ?string $candidateCommune): bool
     {
         $normalizedImportCommune = $this->normalizeCommune($importCommune);
@@ -89,6 +96,16 @@ final class DirectoryEstablishmentScorer
 
     public function computeCandidateScore(DirectoryOrganizationCandidate $organizationCandidate, DirectoryEstablishmentImportItem $item): int
     {
+        $importOrganizationType = $this->directoryOrganizationTypeResolver->resolve($item);
+        $typesConflict = null !== $importOrganizationType
+            && null !== $organizationCandidate->type
+            && $importOrganizationType !== $organizationCandidate->type;
+        $nameSimilarity = $this->similarityPercentage($organizationCandidate->name, $item->name);
+
+        if ($typesConflict && self::TYPE_MISMATCH_NAME_SIMILARITY_THRESHOLD > $nameSimilarity) {
+            return 0;
+        }
+
         $score = 0;
 
         $importEmail = $this->normalizeEmail($item->emailAddress);
@@ -109,7 +126,6 @@ final class DirectoryEstablishmentScorer
             $score += self::SCORE_BONUSES['website_exact'];
         }
 
-        $nameSimilarity = $this->similarityPercentage($organizationCandidate->name, $item->name);
         $score += (int) round($nameSimilarity * self::SIMILARITY_WEIGHTS['name']);
 
         $businessNameSimilarity = $this->businessNameSimilarityPercentage($organizationCandidate->name, $item->name);
@@ -157,7 +173,7 @@ final class DirectoryEstablishmentScorer
             $score -= self::SCORE_BONUSES['name_close_address_far_penalty'];
         }
 
-        return min(100, $score);
+        return min($typesConflict ? self::TYPE_MISMATCH_REVIEW_SCORE_CAP : 100, $score);
     }
 
     private function normalizeEmail(?string $emailAddress): ?string

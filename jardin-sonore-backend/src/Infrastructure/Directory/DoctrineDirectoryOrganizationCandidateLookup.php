@@ -7,6 +7,8 @@ namespace App\Infrastructure\Directory;
 use App\Application\Directory\DirectoryEstablishmentImportItem;
 use App\Application\Directory\DirectoryOrganizationCandidate;
 use App\Application\Directory\DirectoryOrganizationCandidateLookupInterface;
+use App\Application\Directory\DirectoryOrganizationTypeResolver;
+use App\Domain\Model\AddressBook\OrganizationType;
 use App\Domain\Model\ValueObject\PhoneNumber;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
@@ -18,6 +20,7 @@ final readonly class DoctrineDirectoryOrganizationCandidateLookup implements Dir
 
     public function __construct(
         private Connection $connection,
+        private DirectoryOrganizationTypeResolver $directoryOrganizationTypeResolver,
     ) {
     }
 
@@ -27,6 +30,7 @@ final readonly class DoctrineDirectoryOrganizationCandidateLookup implements Dir
             ->select(
                 'organization.id',
                 'organization.name',
+                'organization.type',
                 'organization.website_url',
                 'COALESCE(MIN(email.email_address), \'\') AS email',
                 'COALESCE(MIN(phone.phone_number), \'\') AS phone',
@@ -40,12 +44,12 @@ final readonly class DoctrineDirectoryOrganizationCandidateLookup implements Dir
             ->leftJoin('contact', 'contact_details_phone_link', 'phone_link', 'phone_link.contact_details_id = contact.id')
             ->leftJoin('phone_link', 'phone_contact', 'phone', 'phone.id = phone_link.phone_contact_id')
             ->leftJoin('contact', 'address_contact', 'address', 'address.contact_details_id = contact.id')
-            ->groupBy('organization.id', 'organization.name', 'organization.website_url')
+            ->groupBy('organization.id', 'organization.name', 'organization.type', 'organization.website_url')
             ->setMaxResults(self::CANDIDATE_QUERY_LIMIT);
 
         $this->applyLookupFilters($queryBuilder, $item);
 
-        /** @var list<array{id:int|string, name:string, website_url:?string, email:string, phone:string, commune:string, address:string}> $rows */
+        /** @var list<array{id:int|string, name:string, type:?string, website_url:?string, email:string, phone:string, commune:string, address:string}> $rows */
         $rows = $queryBuilder->executeQuery()->fetchAllAssociative();
 
         return array_map(static fn (array $row): DirectoryOrganizationCandidate => new DirectoryOrganizationCandidate(
@@ -56,6 +60,7 @@ final readonly class DoctrineDirectoryOrganizationCandidateLookup implements Dir
             phone: (string) $row['phone'],
             commune: (string) $row['commune'],
             address: (string) $row['address'],
+            type: is_string($row['type']) ? OrganizationType::tryFrom($row['type']) : null,
         ), $rows);
     }
 
@@ -93,7 +98,14 @@ final readonly class DoctrineDirectoryOrganizationCandidateLookup implements Dir
 
         $commune = $this->normalizeText($item->commune);
         if ('' !== $commune) {
-            $orWhere[] = 'LOWER(address.city) = :commune';
+            $organizationType = $this->directoryOrganizationTypeResolver->resolve($item);
+            $communeCondition = 'LOWER(address.city) = :commune';
+            if (null !== $organizationType) {
+                $communeCondition = "({$communeCondition} AND organization.type = :organizationType)";
+                $queryBuilder->setParameter('organizationType', $organizationType->value);
+            }
+
+            $orWhere[] = $communeCondition;
             $queryBuilder->setParameter('commune', $commune);
         }
 

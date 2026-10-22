@@ -95,6 +95,7 @@ final readonly class DirectoryEstablishmentMatcher
                 commune: $organizationCandidate->commune,
                 address: $organizationCandidate->address,
                 website: $organizationCandidate->websiteUrl ?? '',
+                type: $organizationCandidate->type,
             );
         }
 

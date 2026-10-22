@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Infrastructure\Command;
 
+use App\Domain\Model\AddressBook\OrganizationType;
 use App\Infrastructure\Doctrine\Entity\AddressContactEntity;
 use App\Infrastructure\Doctrine\Entity\EmailContactLinkEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
@@ -51,6 +52,43 @@ final class ImportDirectoryEstablishmentsCommandTest extends KernelTestCase
             self::assertSame(0, $commandTester->execute([...$arguments, '--review-matches' => true], ['interactive' => false]));
             self::assertMatchesRegularExpression('/Organizations updated\s+0/', $commandTester->getDisplay());
             self::assertMatchesRegularExpression('/Ignored\s+1/', $commandTester->getDisplay());
+        } finally {
+            $connection->rollBack();
+            $entityManager->clear();
+        }
+    }
+
+    public function testDifferentTypeWithSharedContactsDoesNotMatch(): void
+    {
+        self::bootKernel(['environment' => 'test']);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $connection = $entityManager->getConnection();
+        $connection->beginTransaction();
+
+        try {
+            $organization = (new OrganizationEntity())
+                ->setName('Crèche Les Lucioles')
+                ->setType(OrganizationType::CRECHE)
+                ->setWebsiteUrl('https://mjc-review.example.test/');
+            $organization->getContactDetails()->addEmailContactLink((new EmailContactLinkEntity())->setEmailAddress('mjc-review-fixture@example.test'));
+            $organization->getContactDetails()->addPhoneContactLink((new PhoneContactLinkEntity())->setPhoneNumber('04 76 12 34 56'));
+            $organization->getContactDetails()->addAddressContact(
+                (new AddressContactEntity())->setAddress('12, rue du Test, 38500 Commune revue')->setPostalCode('38500')->setCity('Commune revue'),
+            );
+            $entityManager->persist($organization);
+            $entityManager->flush();
+
+            $application = new Application(self::$kernel);
+            $commandTester = new CommandTester($application->find('app:directory:import-establishments'));
+            self::assertSame(0, $commandTester->execute([
+                'file' => 'tests/Fixtures/Directory/review-mjc-match.json',
+                '--source' => 'mjc-different-type-fixture',
+                '--review-matches' => true,
+            ], ['interactive' => false]));
+
+            self::assertMatchesRegularExpression('/Organizations created\s+1/', $commandTester->getDisplay());
+            self::assertMatchesRegularExpression('/Organizations updated\s+0/', $commandTester->getDisplay());
+            self::assertMatchesRegularExpression('/Ambiguous matches\s+0/', $commandTester->getDisplay());
         } finally {
             $connection->rollBack();
             $entityManager->clear();

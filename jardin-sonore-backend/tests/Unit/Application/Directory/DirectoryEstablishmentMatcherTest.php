@@ -9,6 +9,7 @@ use App\Application\Directory\DirectoryEstablishmentMatcher;
 use App\Application\Directory\DirectoryEstablishmentScorer;
 use App\Application\Directory\DirectoryOrganizationCandidateLookupInterface;
 use App\Application\Directory\DirectoryOrganizationLookupInterface;
+use App\Application\Directory\DirectoryOrganizationTypeResolver;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -20,7 +21,7 @@ final class DirectoryEstablishmentMatcherTest extends TestCase
         $matcher = new DirectoryEstablishmentMatcher(
             $this->createStub(DirectoryOrganizationCandidateLookupInterface::class),
             $this->createStub(DirectoryOrganizationLookupInterface::class),
-            new DirectoryEstablishmentScorer(),
+            new DirectoryEstablishmentScorer(new DirectoryOrganizationTypeResolver()),
         );
 
         self::assertFalse($matcher->isConfidentAutoMatch([

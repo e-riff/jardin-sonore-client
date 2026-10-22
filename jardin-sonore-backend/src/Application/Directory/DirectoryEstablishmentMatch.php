@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Application\Directory;
 
+use App\Domain\Model\AddressBook\OrganizationType;
+
 final readonly class DirectoryEstablishmentMatch
 {
     public function __construct(
@@ -15,6 +17,7 @@ final readonly class DirectoryEstablishmentMatch
         public string $commune,
         public string $address,
         public string $website,
+        public ?OrganizationType $type = null,
     ) {
     }
 }
