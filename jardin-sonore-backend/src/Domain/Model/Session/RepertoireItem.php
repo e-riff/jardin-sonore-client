@@ -53,10 +53,10 @@ final class RepertoireItem implements UuidIdentifiableInterface
     ) {
         $this->initializeUuid($uuid);
         $this->initializeActive($active);
-        $this->createdAt = $createdAt ?? new DateTimeImmutable();
-        $this->updatedAt = $updatedAt ?? new DateTimeImmutable();
         $this->updateContent($title, $source, $body, $contentBlocks, $generalInstructions, $notes, $linkedMediaUuids);
         $this->setThemes($themes);
+        $this->createdAt = $createdAt ?? new DateTimeImmutable();
+        $this->updatedAt = $updatedAt ?? $this->updatedAt;
     }
 
     public function getType(): RepertoireItemType
