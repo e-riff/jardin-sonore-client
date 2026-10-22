@@ -20,7 +20,7 @@ class SessionRecommendationEntity
     private ?string $notes = null;
     private ?string $primaryUrl = null;
     private ?string $secondaryUrl = null;
-    private ?string $imageUrl = null;
+    private ?string $imagePath = null;
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
 
@@ -91,14 +91,14 @@ class SessionRecommendationEntity
         return $this;
     }
 
-    public function getImageUrl(): ?string
+    public function getImagePath(): ?string
     {
-        return $this->imageUrl;
+        return $this->imagePath;
     }
 
-    public function setImageUrl(?string $imageUrl): static
+    public function setImagePath(?string $imagePath): static
     {
-        $this->imageUrl = $imageUrl;
+        $this->imagePath = $imagePath;
 
         return $this;
     }

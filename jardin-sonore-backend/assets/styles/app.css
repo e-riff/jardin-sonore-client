@@ -1984,6 +1984,8 @@ button:disabled {
 .commercial-appointment__actions {
     display: flex;
     align-items: flex-start;
+    justify-content: flex-end;
+    justify-self: end;
     gap: 5px;
 }
 

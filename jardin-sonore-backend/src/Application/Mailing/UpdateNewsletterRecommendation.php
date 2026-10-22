@@ -8,6 +8,7 @@ use App\Application\Storage\RecommendationImageStorageInterface;
 use App\Domain\Repository\NewsletterRecommendationRepositoryInterface;
 use InvalidArgumentException;
 use Symfony\Component\Uid\Uuid;
+use Throwable;
 
 final readonly class UpdateNewsletterRecommendation
 {
@@ -46,6 +47,13 @@ final readonly class UpdateNewsletterRecommendation
             $recommendation->deactivate();
         }
 
-        $this->newsletterRecommendationRepository->save($recommendation);
+        try {
+            $this->newsletterRecommendationRepository->save($recommendation);
+        } catch (Throwable $exception) {
+            if (null !== $input->imageFile && null !== $imagePath) {
+                $this->recommendationImageStorage->delete($imagePath);
+            }
+            throw $exception;
+        }
     }
 }

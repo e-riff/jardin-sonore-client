@@ -94,19 +94,11 @@ final class SessionRecommendationCrudController extends AbstractCrudController
         yield UrlField::new('secondaryUrl', 'admin.field.secondary_url')
             ->setFormTypeOption('required', false)
             ->onlyOnForms();
-        yield TextField::new('imageUrl', 'admin.field.image_url')
+        yield TextField::new('imagePath', 'admin.field.image_url')
             ->formatValue(fn (mixed $value): string => $this->formatLink($value))
             ->renderAsHtml()
             ->hideOnForm()
             ->hideOnIndex();
-        yield UrlField::new('imageUrl', 'admin.field.image_url')
-            ->setFormTypeOption('required', false)
-            ->setHelp('admin.help.recommendation_image_url')
-            ->setFormTypeOption('attr', [
-                'data-controller' => 'exclusive-resource-fields',
-                'data-exclusive-resource-fields-peer-selector-value' => '[name$="[imageFileUpload]"]',
-            ])
-            ->onlyOnForms();
         yield Field::new('imageFileUpload', 'admin.field.image_file')
             ->setFormType(DropzoneType::class)
             ->setFormTypeOption('mapped', false)
@@ -115,11 +107,7 @@ final class SessionRecommendationCrudController extends AbstractCrudController
             ->setFormTypeOption('constraints', [
                 new Image(maxSize: '5M', mimeTypes: ['image/jpeg', 'image/png', 'image/webp']),
             ])
-            ->setFormTypeOption('attr', [
-                'accept' => 'image/jpeg,image/png,image/webp',
-                'data-controller' => 'exclusive-resource-fields',
-                'data-exclusive-resource-fields-peer-selector-value' => '[name$="[imageUrl]"]',
-            ])
+            ->setFormTypeOption('attr', ['accept' => 'image/jpeg,image/png,image/webp'])
             ->onlyOnForms();
         yield BooleanField::new('active', 'admin.field.active');
         yield DateTimeField::new('updatedAt', 'admin.field.updated_at')->hideOnForm();
@@ -149,7 +137,7 @@ final class SessionRecommendationCrudController extends AbstractCrudController
         $imageFileUpload = $this->extractUploadedFile('imageFileUpload');
 
         if ($imageFileUpload instanceof UploadedFile) {
-            $sessionRecommendationEntity->setImageUrl($this->sessionRecommendationImageStorage->store($imageFileUpload));
+            $sessionRecommendationEntity->setImagePath($this->sessionRecommendationImageStorage->store($imageFileUpload));
         }
 
         $sessionRecommendationEntity
@@ -158,7 +146,7 @@ final class SessionRecommendationCrudController extends AbstractCrudController
             ->setNotes($this->normalizeNullableString($sessionRecommendationEntity->getNotes()))
             ->setPrimaryUrl($this->normalizeNullableString($sessionRecommendationEntity->getPrimaryUrl()))
             ->setSecondaryUrl($this->normalizeNullableString($sessionRecommendationEntity->getSecondaryUrl()))
-            ->setImageUrl($this->normalizeNullableString($sessionRecommendationEntity->getImageUrl()))
+            ->setImagePath($this->normalizeNullableString($sessionRecommendationEntity->getImagePath()))
             ->setUpdatedAt(new DateTimeImmutable());
     }
 

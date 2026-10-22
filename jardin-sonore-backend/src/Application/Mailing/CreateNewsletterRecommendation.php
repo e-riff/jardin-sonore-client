@@ -7,6 +7,7 @@ namespace App\Application\Mailing;
 use App\Application\Storage\RecommendationImageStorageInterface;
 use App\Domain\Model\Mailing\NewsletterRecommendation;
 use App\Domain\Repository\NewsletterRecommendationRepositoryInterface;
+use Throwable;
 
 final readonly class CreateNewsletterRecommendation
 {
@@ -32,7 +33,14 @@ final readonly class CreateNewsletterRecommendation
             active: $input->active,
         );
 
-        $this->newsletterRecommendationRepository->save($recommendation);
+        try {
+            $this->newsletterRecommendationRepository->save($recommendation);
+        } catch (Throwable $exception) {
+            if (null !== $imagePath) {
+                $this->recommendationImageStorage->delete($imagePath);
+            }
+            throw $exception;
+        }
 
         return $recommendation;
     }

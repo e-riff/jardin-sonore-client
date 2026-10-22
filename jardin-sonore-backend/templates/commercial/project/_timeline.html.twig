@@ -21,6 +21,7 @@
         ] %}
         {% set visibleEvents = project.events|filter(event =>
             (not (event.type starts with 'action_') or (event.type == 'action_completed' and event.content|default('')|trim != ''))
+            and not (event.type starts with 'appointment_')
             and not (event.type == 'note' and (event.metadata.calendar_change|default(false) or event.content|default('')|split(':')|first|trim in hiddenSessionNoteLabels))
         )|sort((left, right) => left.timelineDate <=> right.timelineDate) %}
         {% set latestManualEvent = visibleEvents|reverse|filter(event => not (event.type starts with 'quote_'))|first %}

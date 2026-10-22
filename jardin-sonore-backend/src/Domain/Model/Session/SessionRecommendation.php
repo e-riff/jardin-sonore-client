@@ -21,7 +21,7 @@ final class SessionRecommendation implements UuidIdentifiableInterface
     private ?string $notes;
     private ?string $primaryUrl;
     private ?string $secondaryUrl;
-    private ?string $imageUrl;
+    private ?string $imagePath;
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
 
@@ -31,7 +31,7 @@ final class SessionRecommendation implements UuidIdentifiableInterface
         ?string $notes = null,
         ?string $primaryUrl = null,
         ?string $secondaryUrl = null,
-        ?string $imageUrl = null,
+        ?string $imagePath = null,
         bool $active = true,
         ?DateTimeImmutable $createdAt = null,
         ?DateTimeImmutable $updatedAt = null,
@@ -41,7 +41,7 @@ final class SessionRecommendation implements UuidIdentifiableInterface
         $this->initializeActive($active);
         $this->createdAt = $createdAt ?? new DateTimeImmutable();
         $this->updatedAt = $updatedAt ?? new DateTimeImmutable();
-        $this->updateContent($title, $text, $notes, $primaryUrl, $secondaryUrl, $imageUrl);
+        $this->updateContent($title, $text, $notes, $primaryUrl, $secondaryUrl, $imagePath);
     }
 
     public function getTitle(): string
@@ -69,9 +69,9 @@ final class SessionRecommendation implements UuidIdentifiableInterface
         return $this->secondaryUrl;
     }
 
-    public function getImageUrl(): ?string
+    public function getImagePath(): ?string
     {
-        return $this->imageUrl;
+        return $this->imagePath;
     }
 
     public function getCreatedAt(): DateTimeImmutable
@@ -90,7 +90,7 @@ final class SessionRecommendation implements UuidIdentifiableInterface
         ?string $notes,
         ?string $primaryUrl,
         ?string $secondaryUrl,
-        ?string $imageUrl,
+        ?string $imagePath,
     ): void {
         if ('' === trim($title)) {
             throw new InvalidArgumentException('Session recommendation title cannot be blank.');
@@ -103,7 +103,7 @@ final class SessionRecommendation implements UuidIdentifiableInterface
         $this->notes = self::normalizeNullableString($notes);
         $this->primaryUrl = self::normalizeNullableString($primaryUrl);
         $this->secondaryUrl = self::normalizeNullableString($secondaryUrl);
-        $this->imageUrl = self::normalizeNullableString($imageUrl);
+        $this->imagePath = self::normalizeNullableString($imagePath);
         $this->updatedAt = new DateTimeImmutable();
     }
 

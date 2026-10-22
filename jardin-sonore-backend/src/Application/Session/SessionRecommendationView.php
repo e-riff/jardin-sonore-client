@@ -17,7 +17,7 @@ final readonly class SessionRecommendationView
         public ?string $notes,
         public ?string $primaryUrl,
         public ?string $secondaryUrl,
-        public ?string $imageUrl,
+        public ?string $imagePath,
         public bool $active,
         public DateTimeImmutable $updatedAt,
     ) {
@@ -32,7 +32,7 @@ final readonly class SessionRecommendationView
             notes: $sessionRecommendation->getNotes(),
             primaryUrl: $sessionRecommendation->getPrimaryUrl(),
             secondaryUrl: $sessionRecommendation->getSecondaryUrl(),
-            imageUrl: $sessionRecommendation->getImageUrl(),
+            imagePath: $sessionRecommendation->getImagePath(),
             active: $sessionRecommendation->isActive(),
             updatedAt: $sessionRecommendation->getUpdatedAt(),
         );

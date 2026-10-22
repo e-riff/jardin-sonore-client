@@ -11,7 +11,7 @@ use Throwable;
 
 final readonly class ReadToolRegistry
 {
-    public function __construct(private MailReader $mailReader, private ProjectSearch $projectSearch, private ProjectContextReader $projectContextReader, private ?MailDraftEditor $mailDraftEditor = null, private ?MailingDraftManager $mailingDraftManager = null, private ?ProjectScheduleManager $projectScheduleManager = null, private ?StandaloneMailDraftEditor $standaloneMailDraftEditor = null)
+    public function __construct(private MailReader $mailReader, private ProjectSearch $projectSearch, private ProjectContextReader $projectContextReader, private ?MailDraftEditor $mailDraftEditor = null, private ?MailingDraftManager $mailingDraftManager = null, private ?ProjectScheduleManager $projectScheduleManager = null, private ?StandaloneMailDraftEditor $standaloneMailDraftEditor = null, private ?McpMailingRecommendations $mcpMailingRecommendations = null, private ?McpSessionCatalog $mcpSessionCatalog = null)
     {
     }
 
@@ -137,6 +137,45 @@ final readonly class ReadToolRegistry
                 'inputSchema' => ['type' => 'object', 'properties' => (object) [], 'additionalProperties' => false],
                 'annotations' => ['readOnlyHint' => true, 'destructiveHint' => false, 'openWorldHint' => false],
             ],
+            [
+                'name' => 'search_mailing_recommendations',
+                'description' => 'Search reusable recommendations in the mailing catalog before creating one. Returns exact UUIDs, image paths and revision tokens; this does not add a recommendation to a campaign.',
+                'inputSchema' => ['type' => 'object', 'properties' => [
+                    'query' => ['type' => 'string', 'maxLength' => 160],
+                    'activeOnly' => ['type' => 'boolean'],
+                    'limit' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 20],
+                ], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => true, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
+            [
+                'name' => 'get_mailing_recommendation',
+                'description' => 'Read one reusable mailing recommendation by exact catalog UUID before editing or attaching it.',
+                'inputSchema' => ['type' => 'object', 'properties' => ['uuid' => ['type' => 'string', 'format' => 'uuid']], 'required' => ['uuid'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => true, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
+            [
+                'name' => 'search_catalog_items',
+                'description' => 'Search the reusable repertoire, instrument, media and session recommendation catalogs. Returns exact UUIDs. Search before creating a new item.',
+                'inputSchema' => ['type' => 'object', 'properties' => [
+                    'category' => ['enum' => ['repertoire', 'instrument', 'media', 'recommendation']],
+                    'query' => ['type' => 'string', 'maxLength' => 160],
+                    'activeOnly' => ['type' => 'boolean'],
+                    'limit' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 20],
+                ], 'required' => ['category'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => true, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
+            [
+                'name' => 'get_catalog_item',
+                'description' => 'Read one reusable repertoire, instrument, media or session recommendation item by exact UUID. Returns its full content and revision for updates.',
+                'inputSchema' => ['type' => 'object', 'properties' => ['category' => ['enum' => ['repertoire', 'instrument', 'media', 'recommendation']], 'uuid' => ['type' => 'string', 'format' => 'uuid']], 'required' => ['category', 'uuid'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => true, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
+            [
+                'name' => 'list_catalog_terms',
+                'description' => 'List exact UUIDs and names of themes and instrument tags before assigning them to catalog items.',
+                'inputSchema' => ['type' => 'object', 'properties' => (object) [], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => true, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
         ];
     }
 
@@ -158,6 +197,11 @@ final readonly class ReadToolRegistry
                 'search_mailing_campaigns' => ['query', 'limit'],
                 'get_mailing_campaign' => ['campaignUuid'],
                 'list_mailing_audience_masks' => [],
+                'search_mailing_recommendations' => ['query', 'activeOnly', 'limit'],
+                'get_mailing_recommendation' => ['uuid'],
+                'search_catalog_items' => ['category', 'query', 'activeOnly', 'limit'],
+                'get_catalog_item' => ['category', 'uuid'],
+                'list_catalog_terms' => [],
                 default => throw new InvalidToolArguments('Unknown read tool.'),
             };
             foreach (array_keys($arguments) as $argumentName) {
@@ -222,10 +266,40 @@ final readonly class ReadToolRegistry
                     $this->assertMailingToolsAvailable();
                     $result = $this->mailingDraftManager->masks();
                     break;
+                case 'search_mailing_recommendations':
+                    if (null === $this->mcpMailingRecommendations || (isset($arguments['query']) && !is_string($arguments['query'])) || (isset($arguments['activeOnly']) && !is_bool($arguments['activeOnly']))) {
+                        throw new InvalidToolArguments('Invalid mailing recommendation search.');
+                    }
+                    $result = $this->mcpMailingRecommendations->search($arguments['query'] ?? null, $arguments['activeOnly'] ?? false, $this->limit($arguments, 10, 20));
+                    break;
+                case 'get_mailing_recommendation':
+                    if (null === $this->mcpMailingRecommendations) {
+                        throw new InvalidToolArguments('Mailing recommendation reading is unavailable.');
+                    }
+                    $result = $this->mcpMailingRecommendations->get($this->requiredText($arguments, 'uuid', 36));
+                    break;
+                case 'search_catalog_items':
+                    if (null === $this->mcpSessionCatalog || (isset($arguments['query']) && !is_string($arguments['query'])) || (isset($arguments['activeOnly']) && !is_bool($arguments['activeOnly']))) {
+                        throw new InvalidToolArguments('Invalid catalog search.');
+                    }
+                    $result = $this->mcpSessionCatalog->search($this->requiredText($arguments, 'category', 32), $arguments['query'] ?? null, $arguments['activeOnly'] ?? false, $this->limit($arguments, 10, 20));
+                    break;
+                case 'get_catalog_item':
+                    if (null === $this->mcpSessionCatalog) {
+                        throw new InvalidToolArguments('Catalog reading is unavailable.');
+                    }
+                    $result = $this->mcpSessionCatalog->get($this->requiredText($arguments, 'category', 32), $this->requiredText($arguments, 'uuid', 36));
+                    break;
+                case 'list_catalog_terms':
+                    if (null === $this->mcpSessionCatalog) {
+                        throw new InvalidToolArguments('Catalog reading is unavailable.');
+                    }
+                    $result = $this->mcpSessionCatalog->terms();
+                    break;
                 default:
                     throw new InvalidToolArguments('Unknown read tool.');
             }
-        } catch (InvalidToolArguments $exception) {
+        } catch (InvalidArgumentException $exception) {
             return $this->toolError($exception->getMessage());
         } catch (Throwable) {
             return $this->toolError('The requested read operation failed.');

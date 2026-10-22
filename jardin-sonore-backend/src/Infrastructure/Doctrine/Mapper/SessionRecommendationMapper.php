@@ -17,7 +17,7 @@ final readonly class SessionRecommendationMapper
             notes: $sessionRecommendationEntity->getNotes(),
             primaryUrl: $sessionRecommendationEntity->getPrimaryUrl(),
             secondaryUrl: $sessionRecommendationEntity->getSecondaryUrl(),
-            imageUrl: $sessionRecommendationEntity->getImageUrl(),
+            imagePath: $sessionRecommendationEntity->getImagePath(),
             active: $sessionRecommendationEntity->isActive(),
             createdAt: $sessionRecommendationEntity->getCreatedAt(),
             updatedAt: $sessionRecommendationEntity->getUpdatedAt(),
@@ -35,7 +35,7 @@ final readonly class SessionRecommendationMapper
             ->setNotes($sessionRecommendation->getNotes())
             ->setPrimaryUrl($sessionRecommendation->getPrimaryUrl())
             ->setSecondaryUrl($sessionRecommendation->getSecondaryUrl())
-            ->setImageUrl($sessionRecommendation->getImageUrl())
+            ->setImagePath($sessionRecommendation->getImagePath())
             ->setActive($sessionRecommendation->isActive())
             ->setCreatedAt($sessionRecommendation->getCreatedAt())
             ->setUpdatedAt($sessionRecommendation->getUpdatedAt());

@@ -37,4 +37,19 @@ final readonly class LocalRecommendationImageStorage implements RecommendationIm
 
         return self::PUBLIC_DIRECTORY . "/{$filename}";
     }
+
+    public function delete(string $imagePath): void
+    {
+        if (!str_starts_with($imagePath, self::PUBLIC_DIRECTORY . '/')) {
+            return;
+        }
+        $filename = substr($imagePath, strlen(self::PUBLIC_DIRECTORY) + 1);
+        if (1 !== preg_match('/^[a-f0-9-]{36}\.(?:jpeg|jpg|png|webp)$/D', $filename)) {
+            return;
+        }
+        $path = $this->uploadDirectory . "/{$filename}";
+        if (is_file($path)) {
+            unlink($path);
+        }
+    }
 }

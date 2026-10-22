@@ -7,6 +7,7 @@ namespace App\Application\Session;
 use App\Application\Storage\SessionRecommendationImageStorageInterface;
 use App\Domain\Model\Session\SessionRecommendation;
 use App\Domain\Repository\SessionRecommendationRepositoryInterface;
+use Throwable;
 
 final readonly class CreateSessionRecommendation
 {
@@ -18,8 +19,8 @@ final readonly class CreateSessionRecommendation
 
     public function __invoke(SaveSessionRecommendationInput $saveSessionRecommendationInput): SessionRecommendation
     {
-        $imageUrl = null === $saveSessionRecommendationInput->imageFile
-            ? $saveSessionRecommendationInput->imageUrl
+        $imagePath = null === $saveSessionRecommendationInput->imageFile
+            ? $saveSessionRecommendationInput->imagePath
             : $this->sessionRecommendationImageStorage->store($saveSessionRecommendationInput->imageFile);
 
         $sessionRecommendation = new SessionRecommendation(
@@ -28,11 +29,18 @@ final readonly class CreateSessionRecommendation
             notes: $saveSessionRecommendationInput->notes,
             primaryUrl: $saveSessionRecommendationInput->primaryUrl,
             secondaryUrl: $saveSessionRecommendationInput->secondaryUrl,
-            imageUrl: $imageUrl,
+            imagePath: $imagePath,
             active: $saveSessionRecommendationInput->active,
         );
 
-        $this->sessionRecommendationRepository->save($sessionRecommendation);
+        try {
+            $this->sessionRecommendationRepository->save($sessionRecommendation);
+        } catch (Throwable $exception) {
+            if (null !== $saveSessionRecommendationInput->imageFile && null !== $imagePath) {
+                $this->sessionRecommendationImageStorage->delete($imagePath);
+            }
+            throw $exception;
+        }
 
         return $sessionRecommendation;
     }

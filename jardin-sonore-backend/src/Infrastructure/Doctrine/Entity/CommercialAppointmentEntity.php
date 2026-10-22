@@ -7,6 +7,7 @@ namespace App\Infrastructure\Doctrine\Entity;
 use App\Application\Commercial\CalendarEventOccurrence;
 use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
 use DateTimeImmutable;
+use DateTimeZone;
 use DomainException;
 
 class CommercialAppointmentEntity
@@ -38,8 +39,8 @@ class CommercialAppointmentEntity
         }
         $this->googleEventId = $event->id;
         $this->title = $event->title;
-        $this->startsAt = $event->startsAt;
-        $this->endsAt = $event->endsAt;
+        $this->startsAt = $event->startsAt->setTimezone(new DateTimeZone('UTC'));
+        $this->endsAt = $event->endsAt->setTimezone(new DateTimeZone('UTC'));
         $this->timeZone = $event->timeZone;
         $this->location = $event->location;
         $this->etag = $event->etag;
@@ -154,8 +155,8 @@ class CommercialAppointmentEntity
             return false;
         }
         $this->title = $event->title;
-        $this->startsAt = $event->startsAt;
-        $this->endsAt = $event->endsAt;
+        $this->startsAt = $event->startsAt->setTimezone(new DateTimeZone('UTC'));
+        $this->endsAt = $event->endsAt->setTimezone(new DateTimeZone('UTC'));
         $this->timeZone = $event->timeZone;
         $this->location = $event->location;
         $this->etag = $event->etag;

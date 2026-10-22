@@ -24,7 +24,7 @@ return static function (ClassMetadata $metadata): void {
     $metadata->mapField(['fieldName' => 'notes', 'type' => Types::TEXT, 'nullable' => true]);
     $metadata->mapField(['fieldName' => 'primaryUrl', 'columnName' => 'primary_url', 'type' => Types::STRING, 'length' => 2048, 'nullable' => true]);
     $metadata->mapField(['fieldName' => 'secondaryUrl', 'columnName' => 'secondary_url', 'type' => Types::STRING, 'length' => 2048, 'nullable' => true]);
-    $metadata->mapField(['fieldName' => 'imageUrl', 'columnName' => 'image_url', 'type' => Types::STRING, 'length' => 2048, 'nullable' => true]);
+    $metadata->mapField(['fieldName' => 'imagePath', 'columnName' => 'image_path', 'type' => Types::STRING, 'length' => 2048, 'nullable' => true]);
     $metadata->mapField(['fieldName' => 'active', 'type' => Types::BOOLEAN, 'options' => ['default' => true]]);
     $metadata->mapField(['fieldName' => 'createdAt', 'columnName' => 'created_at', 'type' => Types::DATETIME_IMMUTABLE]);
     $metadata->mapField(['fieldName' => 'updatedAt', 'columnName' => 'updated_at', 'type' => Types::DATETIME_IMMUTABLE]);

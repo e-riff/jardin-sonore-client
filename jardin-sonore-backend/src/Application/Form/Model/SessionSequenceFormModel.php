@@ -129,7 +129,7 @@ final class SessionSequenceFormModel
         $formModel->body = $sessionRecommendationView->text;
         $formModel->primaryUrl = $sessionRecommendationView->primaryUrl;
         $formModel->secondaryUrl = $sessionRecommendationView->secondaryUrl;
-        $formModel->imageUrl = $sessionRecommendationView->imageUrl;
+        $formModel->imageUrl = $sessionRecommendationView->imagePath;
         $formModel->sourceUuid = $sessionRecommendationView->uuid->toRfc4122();
         $formModel->sourceKind = SessionSequenceSourceKind::SESSION_RECOMMENDATION;
         $formModel->sourceTitle = $sessionRecommendationView->title;

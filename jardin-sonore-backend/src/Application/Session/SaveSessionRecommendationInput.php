@@ -14,7 +14,7 @@ final readonly class SaveSessionRecommendationInput
         public ?string $notes,
         public ?string $primaryUrl,
         public ?string $secondaryUrl,
-        public ?string $imageUrl,
+        public ?string $imagePath,
         public ?UploadedFile $imageFile,
         public bool $active,
     ) {

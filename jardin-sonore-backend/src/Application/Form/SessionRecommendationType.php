@@ -32,15 +32,6 @@ final class SessionRecommendationType extends AbstractType
             ->add('notes', TextareaType::class, ['label' => 'sessions.recommendation.form.notes', 'required' => false, 'attr' => ['rows' => 4]])
             ->add('primaryUrl', UrlType::class, ['label' => 'sessions.recommendation.form.primary_url', 'required' => false])
             ->add('secondaryUrl', UrlType::class, ['label' => 'sessions.recommendation.form.secondary_url', 'required' => false])
-            ->add('imageUrl', UrlType::class, [
-                'label' => 'sessions.recommendation.form.image_url',
-                'required' => false,
-                'help' => 'sessions.recommendation.form.image_url_help',
-                'attr' => [
-                    'data-controller' => 'exclusive-resource-fields',
-                    'data-exclusive-resource-fields-peer-selector-value' => '[name$="[imageFile]"]',
-                ],
-            ])
             ->add('imageFile', DropzoneType::class, [
                 'label' => 'sessions.recommendation.form.image_file',
                 'required' => false,
@@ -48,8 +39,6 @@ final class SessionRecommendationType extends AbstractType
                 'attr' => [
                     'accept' => 'image/jpeg,image/png,image/webp',
                     'placeholder' => 'sessions.recommendation.form.image_file_placeholder',
-                    'data-controller' => 'exclusive-resource-fields',
-                    'data-exclusive-resource-fields-peer-selector-value' => '[name$="[imageUrl]"]',
                 ],
             ])
             ->add('active', CheckboxType::class, ['label' => 'sessions.recommendation.form.active', 'required' => false])

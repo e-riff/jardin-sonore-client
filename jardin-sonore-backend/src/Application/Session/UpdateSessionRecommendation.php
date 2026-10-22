@@ -8,6 +8,7 @@ use App\Application\Storage\SessionRecommendationImageStorageInterface;
 use App\Domain\Repository\SessionRecommendationRepositoryInterface;
 use InvalidArgumentException;
 use Symfony\Component\Uid\Uuid;
+use Throwable;
 
 final readonly class UpdateSessionRecommendation
 {
@@ -25,8 +26,8 @@ final readonly class UpdateSessionRecommendation
             throw new InvalidArgumentException('Session recommendation not found.');
         }
 
-        $imageUrl = null === $saveSessionRecommendationInput->imageFile
-            ? $saveSessionRecommendationInput->imageUrl
+        $imagePath = null === $saveSessionRecommendationInput->imageFile
+            ? $saveSessionRecommendationInput->imagePath
             : $this->sessionRecommendationImageStorage->store($saveSessionRecommendationInput->imageFile);
 
         $sessionRecommendation->updateContent(
@@ -35,10 +36,17 @@ final readonly class UpdateSessionRecommendation
             notes: $saveSessionRecommendationInput->notes,
             primaryUrl: $saveSessionRecommendationInput->primaryUrl,
             secondaryUrl: $saveSessionRecommendationInput->secondaryUrl,
-            imageUrl: $imageUrl,
+            imagePath: $imagePath,
         );
         $sessionRecommendation->setActive($saveSessionRecommendationInput->active);
 
-        $this->sessionRecommendationRepository->save($sessionRecommendation);
+        try {
+            $this->sessionRecommendationRepository->save($sessionRecommendation);
+        } catch (Throwable $exception) {
+            if (null !== $saveSessionRecommendationInput->imageFile && null !== $imagePath) {
+                $this->sessionRecommendationImageStorage->delete($imagePath);
+            }
+            throw $exception;
+        }
     }
 }

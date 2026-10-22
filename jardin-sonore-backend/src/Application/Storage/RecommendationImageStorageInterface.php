@@ -9,4 +9,6 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 interface RecommendationImageStorageInterface
 {
     public function store(UploadedFile $uploadedFile): string;
+
+    public function delete(string $imagePath): void;
 }

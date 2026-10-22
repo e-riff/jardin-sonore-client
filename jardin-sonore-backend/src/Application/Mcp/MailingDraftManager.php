@@ -77,7 +77,7 @@ final readonly class MailingDraftManager
      */
     public function create(array $input): array
     {
-        $this->assertKeys($input, ['requestId', 'internalTitle', 'emailSubject', 'publicTitle', 'mainText', 'introBlocks', 'preheader', 'subtitle', 'callToActionLabel', 'callToActionUrl', 'audienceMaskUuid', 'recommendations']);
+        $this->assertKeys($input, ['requestId', 'internalTitle', 'emailSubject', 'publicTitle', 'mainText', 'introBlocks', 'preheader', 'subtitle', 'callToActionLabel', 'callToActionUrl', 'audienceMaskUuid']);
         $requestId = $this->requiredText($input, 'requestId', 100);
         $uuid = Uuid::v5(Uuid::fromString(self::REQUEST_NAMESPACE), $requestId);
         $existing = $this->campaignRepository->findByUuid($uuid);
@@ -104,19 +104,9 @@ final readonly class MailingDraftManager
         if (isset($input['audienceMaskUuid'])) {
             $campaign->applyAudienceMask($this->findMask($input['audienceMaskUuid']));
         }
-        $createdWithoutImage = [];
-        if (isset($input['recommendations'])) {
-            $recommendations = $this->recommendations($input['recommendations'], []);
-            foreach ($recommendations as $recommendation) {
-                if (null === $recommendation->getImagePath()) {
-                    $createdWithoutImage[] = $recommendation->getTitle();
-                }
-            }
-            $campaign->replaceRecommendations($recommendations);
-        }
         $this->campaignRepository->save($campaign);
 
-        return $this->viewWithImageReminder($campaign, $createdWithoutImage);
+        return $this->view($campaign);
     }
 
     /** @param array<string, mixed> $input
@@ -159,20 +149,13 @@ final readonly class MailingDraftManager
                 ? $campaign->updateAudienceFilter(NewsletterAudienceFilter::empty())
                 : $campaign->applyAudienceMask($this->findMask($input['audienceMaskUuid']));
         }
-        $createdWithoutImage = [];
         if (array_key_exists('recommendations', $input)) {
-            $previousIds = array_map(static fn (MailingRecommendation $recommendation): string => (string) $recommendation->getUuid(), $campaign->getRecommendations());
             $recommendations = $this->recommendations($input['recommendations'], $campaign->getRecommendations());
-            foreach ($recommendations as $recommendation) {
-                if (null === $recommendation->getImagePath() && !in_array((string) $recommendation->getUuid(), $previousIds, true)) {
-                    $createdWithoutImage[] = $recommendation->getTitle();
-                }
-            }
             $campaign->replaceRecommendations($recommendations);
         }
         $this->campaignRepository->save($campaign);
 
-        return $this->viewWithImageReminder($campaign, $createdWithoutImage);
+        return $this->view($campaign);
     }
 
     private function findCampaign(string $uuid): MailingCampaign
@@ -284,7 +267,7 @@ final readonly class MailingDraftManager
             if (!is_array($item)) {
                 throw new InvalidArgumentException('Invalid recommendation.');
             }
-            $this->assertKeys($item, ['recommendationUuid', 'title', 'tag', 'text', 'url', 'linkLabel', 'imagePath', 'position', 'active']);
+            $this->assertKeys($item, ['recommendationUuid', 'sourceRecommendationUuid', 'title', 'tag', 'text', 'url', 'linkLabel', 'imagePath', 'position', 'active']);
             $id = $item['recommendationUuid'] ?? null;
             if (null !== $id && (!is_string($id) || !isset($existingById[$id]) || isset($used[$id]))) {
                 throw new InvalidArgumentException('Invalid recommendation UUID.');
@@ -297,6 +280,9 @@ final readonly class MailingDraftManager
             if (null !== $id) {
                 $used[$id] = true;
                 $recommendation = $existingById[$id];
+                if (array_key_exists('sourceRecommendationUuid', $item) && $item['sourceRecommendationUuid'] !== $recommendation->getSourceRecommendationUuid()?->toRfc4122()) {
+                    throw new InvalidArgumentException('Mailing recommendation source cannot be changed.');
+                }
                 if ((array_key_exists('imagePath', $item) && $item['imagePath'] !== $recommendation->getImagePath())
                     || (array_key_exists('position', $item) && $item['position'] !== $recommendation->getPosition())) {
                     throw new InvalidArgumentException('Existing recommendation media and position cannot be changed through MCP.');
@@ -311,32 +297,12 @@ final readonly class MailingDraftManager
                     $recommendation->setActive($item['active']);
                 }
             } else {
-                if (isset($item['imagePath'])) {
-                    throw new InvalidArgumentException('New recommendation images cannot be added through MCP.');
-                }
-                $active = $item['active'] ?? true;
-                if (!is_bool($active)) {
-                    throw new InvalidArgumentException('Invalid recommendation active state.');
-                }
-                $recommendation = new MailingRecommendation($title, $tag, $text, $index + 1, $url, $linkLabel, active: $active);
+                throw new InvalidArgumentException('Add recommendations from the catalog with add_catalog_recommendation_to_mailing.');
             }
             $items[] = $recommendation;
         }
 
         return $items;
-    }
-
-    /** @param list<string> $recommendationTitles
-     * @return array<string, mixed>
-     */
-    private function viewWithImageReminder(MailingCampaign $campaign, array $recommendationTitles): array
-    {
-        $view = $this->view($campaign);
-        if ([] !== $recommendationTitles) {
-            $view['imageReminder'] = 'Ces recommandations ont été créées sans image : ' . implode(', ', $recommendationTitles) . '. Rappelle à Emeric d’ajouter leurs images dans le backoffice avant l’envoi.';
-        }
-
-        return $view;
     }
 
     /** @return array<string, mixed> */
@@ -362,6 +328,7 @@ final readonly class MailingDraftManager
             'audienceMaskName' => $campaign->getAppliedAudienceMaskName(),
             'recommendations' => array_map(static fn (MailingRecommendation $item): array => [
                 'recommendationUuid' => (string) $item->getUuid(),
+                'sourceRecommendationUuid' => $item->getSourceRecommendationUuid()?->toRfc4122(),
                 'title' => $item->getTitle(),
                 'tag' => $item->getTag(),
                 'text' => $item->getText(),

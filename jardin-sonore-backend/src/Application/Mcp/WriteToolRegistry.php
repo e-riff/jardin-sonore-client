@@ -29,6 +29,10 @@ final readonly class WriteToolRegistry
         private ?ProjectScheduleManager $projectScheduleManager = null,
         #[Autowire('%app.mcp.project_schedule_write_enabled%')] private bool $projectScheduleWriteEnabled = false,
         private ?StandaloneMailDraftEditor $standaloneMailDraftEditor = null,
+        private ?McpMailingRecommendations $mcpMailingRecommendations = null,
+        private ?ProjectNoteWriter $projectNoteWriter = null,
+        private ?McpSessionCatalog $mcpSessionCatalog = null,
+        #[Autowire('%app.mcp.catalog_write_enabled%')] private bool $catalogWriteEnabled = false,
     ) {
     }
 
@@ -116,6 +120,17 @@ final readonly class WriteToolRegistry
                 'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false],
             ],
             [
+                'name' => 'create_project_note',
+                'description' => 'After separate explicit user confirmation, add one free note to the timeline of an exact commercial project. Read the project first. The content may contain safe bold, italic, line breaks and HTTP(S) links. Supply a stable requestId for retries. This does not require a source mail and does not create a task.',
+                'inputSchema' => ['type' => 'object', 'properties' => [
+                    'projectId' => ['type' => 'integer', 'minimum' => 1],
+                    'requestId' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 100],
+                    'content' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 10000],
+                    'occurredOn' => ['type' => 'string', 'format' => 'date'],
+                ], 'required' => ['projectId', 'requestId', 'content'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
+            [
                 'name' => 'create_project_reminder',
                 'description' => 'After separate explicit user confirmation, add one dated open reminder to an exact commercial project and verified source mail. Repeating the same project and mail returns the existing reminder.',
                 'inputSchema' => [
@@ -134,7 +149,7 @@ final readonly class WriteToolRegistry
             ],
             [
                 'name' => 'create_mailing_draft',
-                'description' => 'After explicit confirmation in the client, create a mailing campaign draft. Supply a stable requestId so retries return the same draft. Create campaign-specific recommendations with title, text, tag and optional link; images are nullable and new recommendations start without one. Tell the user which new recommendations need an image added in the backoffice. Never sends, schedules, or test-sends a mailing.',
+                'description' => 'After explicit confirmation in the client, create a mailing campaign draft. Supply a stable requestId so retries return the same draft. Search or create reusable catalog recommendations separately, then attach them with add_catalog_recommendation_to_mailing. Never sends, schedules, or test-sends a mailing.',
                 'inputSchema' => ['type' => 'object', 'properties' => [
                     'requestId' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 100],
                     'internalTitle' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255],
@@ -146,13 +161,12 @@ final readonly class WriteToolRegistry
                     'callToActionLabel' => ['type' => ['string', 'null'], 'maxLength' => 255],
                     'callToActionUrl' => ['type' => ['string', 'null'], 'maxLength' => 2048],
                     'audienceMaskUuid' => ['type' => 'string', 'format' => 'uuid'],
-                    'recommendations' => ['type' => 'array', 'maxItems' => 10, 'items' => ['type' => 'object', 'properties' => ['title' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255], 'tag' => ['type' => ['string', 'null'], 'maxLength' => 255], 'text' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 10000], 'url' => ['type' => ['string', 'null'], 'maxLength' => 2048], 'linkLabel' => ['type' => ['string', 'null'], 'maxLength' => 255], 'imagePath' => ['type' => ['string', 'null']], 'position' => ['type' => 'integer'], 'active' => ['type' => 'boolean']], 'required' => ['title', 'text'], 'additionalProperties' => false]],
                 ], 'required' => ['requestId', 'internalTitle', 'emailSubject', 'publicTitle', 'introBlocks'], 'additionalProperties' => false],
                 'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false],
             ],
             [
                 'name' => 'update_mailing_draft',
-                'description' => 'After explicit confirmation in the client, update a mailing by exact UUID and current revision from get_mailing_campaign. Only campaigns whose delivery has not started can be edited. Omitted mailing fields stay unchanged. The recommendations array is the complete ordered set: include existing recommendationUuid values to edit them, omit one to remove it, or omit the UUID to create a campaign-specific recommendation. New recommendations have no image; tell the user which ones need an image added in the backoffice. Never sends, schedules, or test-sends a mailing.',
+                'description' => 'After explicit confirmation in the client, update a mailing by exact UUID and current revision from get_mailing_campaign. Only campaigns whose delivery has not started can be edited. Omitted mailing fields stay unchanged. The recommendations array is the complete ordered set of existing campaign copies: keep their recommendationUuid values to edit or reorder; omit one to detach it. Add a catalog recommendation with the separate attach tool. Never sends, schedules, or test-sends a mailing.',
                 'inputSchema' => ['type' => 'object', 'properties' => [
                     'campaignUuid' => ['type' => 'string', 'format' => 'uuid'],
                     'revision' => ['type' => 'string', 'minLength' => 64, 'maxLength' => 64],
@@ -166,10 +180,12 @@ final readonly class WriteToolRegistry
                     'callToActionLabel' => ['type' => ['string', 'null'], 'maxLength' => 255],
                     'callToActionUrl' => ['type' => ['string', 'null'], 'maxLength' => 2048],
                     'audienceMaskUuid' => ['type' => ['string', 'null'], 'format' => 'uuid'],
-                    'recommendations' => ['type' => 'array', 'maxItems' => 10, 'items' => ['type' => 'object', 'properties' => ['recommendationUuid' => ['type' => 'string', 'format' => 'uuid'], 'title' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255], 'tag' => ['type' => ['string', 'null'], 'maxLength' => 255], 'text' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 10000], 'url' => ['type' => ['string', 'null'], 'maxLength' => 2048], 'linkLabel' => ['type' => ['string', 'null'], 'maxLength' => 255], 'imagePath' => ['type' => ['string', 'null']], 'position' => ['type' => 'integer'], 'active' => ['type' => 'boolean']], 'required' => ['title', 'text'], 'additionalProperties' => false]],
+                    'recommendations' => ['type' => 'array', 'maxItems' => 10, 'items' => ['type' => 'object', 'properties' => ['recommendationUuid' => ['type' => 'string', 'format' => 'uuid'], 'sourceRecommendationUuid' => ['type' => ['string', 'null'], 'format' => 'uuid'], 'title' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255], 'tag' => ['type' => ['string', 'null'], 'maxLength' => 255], 'text' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 10000], 'url' => ['type' => ['string', 'null'], 'maxLength' => 2048], 'linkLabel' => ['type' => ['string', 'null'], 'maxLength' => 255], 'imagePath' => ['type' => ['string', 'null']], 'position' => ['type' => 'integer'], 'active' => ['type' => 'boolean']], 'required' => ['recommendationUuid', 'title', 'text'], 'additionalProperties' => false]],
                 ], 'required' => ['campaignUuid', 'revision'], 'additionalProperties' => false],
                 'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false],
             ],
+            ...$this->mailingRecommendationDefinitions(),
+            ...$this->sessionCatalogDefinitions(),
             ...$this->scheduleDefinitions(),
         ];
     }
@@ -193,6 +209,15 @@ final readonly class WriteToolRegistry
         }
         if (in_array($name, ['create_mailing_draft', 'update_mailing_draft'], true)) {
             return $this->callMailingDraft($name, $arguments);
+        }
+        if (in_array($name, ['create_mailing_recommendation', 'update_mailing_recommendation', 'set_mailing_catalog_recommendation_image', 'add_catalog_recommendation_to_mailing', 'remove_mailing_recommendation'], true)) {
+            return $this->callMailingRecommendation($name, $arguments);
+        }
+        if ('create_project_note' === $name) {
+            return $this->callProjectNote($arguments);
+        }
+        if (in_array($name, ['create_repertoire_item', 'update_repertoire_item', 'create_instrument', 'update_instrument', 'create_media_resource', 'update_media_resource', 'create_session_recommendation', 'update_session_recommendation', 'set_catalog_recommendation_image'], true)) {
+            return $this->callSessionCatalog($name, $arguments);
         }
         if (in_array($name, ['create_project_task', 'update_project_task', 'complete_project_task', 'create_project_appointment', 'update_project_appointment', 'cancel_project_appointment', 'set_project_appointment_summary'], true)) {
             return $this->callSchedule($name, $arguments);
@@ -233,6 +258,241 @@ final readonly class WriteToolRegistry
         } catch (Throwable) {
             return $this->error('The write operation failed.');
         }
+    }
+
+    /** @param array<string, mixed> $arguments
+     * @return array<string, mixed>
+     */
+    private function callProjectNote(array $arguments): array
+    {
+        if (!$this->writeEnabled || null === $this->projectNoteWriter) {
+            return $this->error('Project note writes are disabled.');
+        }
+
+        try {
+            if ([] !== array_diff(array_keys($arguments), ['projectId', 'requestId', 'content', 'occurredOn'])) {
+                throw new InvalidToolArguments('Unexpected argument.');
+            }
+            $projectId = $arguments['projectId'] ?? null;
+            if (!is_int($projectId) || 1 > $projectId) {
+                throw new InvalidToolArguments('Invalid project ID.');
+            }
+            $requestId = $this->text($arguments, 'requestId', 100);
+            $content = $this->text($arguments, 'content', 10000);
+            $occurredOn = null;
+            if (array_key_exists('occurredOn', $arguments)) {
+                $rawDate = $arguments['occurredOn'];
+                if (!is_string($rawDate) || 1 !== preg_match('/^\d{4}-\d{2}-\d{2}$/D', $rawDate)) {
+                    throw new InvalidToolArguments('Invalid note date.');
+                }
+                $occurredOn = DateTimeImmutable::createFromFormat('!Y-m-d', $rawDate);
+                if (false === $occurredOn || $occurredOn->format('Y-m-d') !== $rawDate) {
+                    throw new InvalidToolArguments('Invalid note date.');
+                }
+            }
+            $result = $this->projectNoteWriter->create($projectId, $requestId, $content, $occurredOn);
+            $json = json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+            return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => false];
+        } catch (InvalidArgumentException $exception) {
+            return $this->error($exception->getMessage());
+        } catch (Throwable) {
+            return $this->error('Project note creation failed.');
+        }
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function sessionCatalogDefinitions(): array
+    {
+        $text = static fn (int $max): array => ['type' => 'string', 'maxLength' => $max];
+        $optional = static fn (int $max): array => ['type' => ['string', 'null'], 'maxLength' => $max];
+        $uuidList = ['type' => 'array', 'maxItems' => 50, 'items' => ['type' => 'string', 'format' => 'uuid']];
+        $active = ['type' => 'boolean'];
+        $fields = [
+            'repertoire_item' => [
+                'type' => ['enum' => ['nursery_rhyme', 'fingerplay']], 'title' => $text(255),
+                'source' => $optional(255), 'body' => $text(20000),
+                'contentBlocks' => ['type' => 'array', 'maxItems' => 50, 'items' => ['type' => 'object', 'properties' => ['kind' => ['enum' => ['line', 'break', 'section']], 'text' => $optional(10000), 'gesture' => $optional(10000)], 'required' => ['kind'], 'additionalProperties' => false]],
+                'generalInstructions' => $optional(20000), 'notes' => $optional(20000),
+                'linkedMediaUuids' => $uuidList, 'themeUuids' => $uuidList, 'active' => $active,
+            ],
+            'instrument' => [
+                'name' => $text(255), 'tuning' => $optional(255), 'quantity' => ['type' => ['integer', 'null'], 'minimum' => 0],
+                'notes' => $optional(20000), 'tagUuids' => $uuidList, 'active' => $active,
+            ],
+            'media_resource' => [
+                'type' => ['enum' => ['soundtrack', 'video', 'link']], 'title' => $text(255),
+                'primaryUrl' => $text(2048), 'source' => $optional(255), 'description' => $optional(20000),
+                'secondaryUrl' => $optional(2048), 'imageUrl' => $optional(2048),
+                'themeUuids' => $uuidList, 'active' => $active,
+            ],
+            'session_recommendation' => [
+                'title' => $text(255), 'text' => $text(20000), 'notes' => $optional(20000),
+                'primaryUrl' => $optional(2048), 'secondaryUrl' => $optional(2048),
+                'clearImage' => $active, 'active' => $active,
+            ],
+        ];
+        $required = [
+            'repertoire_item' => ['type', 'title', 'body'],
+            'instrument' => ['name'],
+            'media_resource' => ['type', 'title', 'primaryUrl'],
+            'session_recommendation' => ['title', 'text'],
+        ];
+        $write = ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false];
+        $definitions = [];
+        foreach ($fields as $kind => $properties) {
+            if ('session_recommendation' === $kind) {
+                unset($properties['clearImage']);
+            }
+            $definitions[] = [
+                'name' => "create_{$kind}",
+                'description' => "After explicit user confirmation, create one reusable {$kind} catalog item. Search first to avoid duplicates. Images and files use separate upload tools; this does not edit a session or mailing.",
+                'inputSchema' => ['type' => 'object', 'properties' => $properties, 'required' => $required[$kind], 'additionalProperties' => false],
+                'annotations' => $write,
+            ];
+            $updateProperties = $fields[$kind];
+            $definitions[] = [
+                'name' => "update_{$kind}",
+                'description' => "After separate explicit confirmation, update one reusable {$kind} item by exact UUID and revision from get_catalog_item. Omitted fields stay unchanged. This does not edit a session or mailing.",
+                'inputSchema' => ['type' => 'object', 'properties' => ['uuid' => ['type' => 'string', 'format' => 'uuid'], 'revision' => ['type' => 'string', 'minLength' => 64, 'maxLength' => 64], ...$updateProperties], 'required' => ['uuid', 'revision'], 'additionalProperties' => false],
+                'annotations' => $write,
+            ];
+        }
+        $definitions[] = [
+            'name' => 'set_catalog_recommendation_image',
+            'description' => 'After separate explicit confirmation, attach actual JPEG, PNG or WebP image bytes to one existing session recommendation by exact UUID and current revision. Supply strict Base64 with at most 5 MB decoded; no remote image URL is accepted.',
+            'inputSchema' => ['type' => 'object', 'properties' => ['uuid' => ['type' => 'string', 'format' => 'uuid'], 'revision' => ['type' => 'string', 'minLength' => 64, 'maxLength' => 64], 'data' => ['type' => 'string', 'maxLength' => 6990508], 'filename' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255]], 'required' => ['uuid', 'revision', 'data', 'filename'], 'additionalProperties' => false],
+            'annotations' => $write,
+        ];
+
+        return $definitions;
+    }
+
+    /** @param array<string, mixed> $arguments
+     * @return array<string, mixed>
+     */
+    private function callSessionCatalog(string $name, array $arguments): array
+    {
+        if (!$this->catalogWriteEnabled || null === $this->mcpSessionCatalog) {
+            return $this->error('Catalog writes are disabled.');
+        }
+        try {
+            $definition = null;
+            foreach ($this->sessionCatalogDefinitions() as $candidate) {
+                if ($candidate['name'] === $name) {
+                    $definition = $candidate;
+                    break;
+                }
+            }
+            if (null === $definition || [] !== array_diff(array_keys($arguments), array_keys($definition['inputSchema']['properties']))) {
+                throw new InvalidToolArguments('Unexpected catalog argument.');
+            }
+            foreach ($definition['inputSchema']['required'] as $required) {
+                if (!array_key_exists($required, $arguments)) {
+                    throw new InvalidToolArguments("Missing {$required}.");
+                }
+            }
+            if ('set_catalog_recommendation_image' === $name) {
+                $result = $this->mcpSessionCatalog->setRecommendationImage($this->text($arguments, 'uuid', 36), $this->text($arguments, 'revision', 64), $this->imageData($arguments), $this->text($arguments, 'filename', 255));
+            } else {
+                $category = match (true) {
+                    str_ends_with($name, 'repertoire_item') => 'repertoire',
+                    str_ends_with($name, 'instrument') => 'instrument',
+                    str_ends_with($name, 'media_resource') => 'media',
+                    str_ends_with($name, 'session_recommendation') => 'recommendation',
+                    default => throw new InvalidToolArguments('Unknown catalog operation.'),
+                };
+                $result = str_starts_with($name, 'create_')
+                    ? $this->mcpSessionCatalog->create($category, $arguments)
+                    : $this->mcpSessionCatalog->update($category, $this->text($arguments, 'uuid', 36), $this->withoutKey($arguments, 'uuid'));
+            }
+            $json = json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+            return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => false];
+        } catch (InvalidArgumentException $exception) {
+            return $this->error($exception->getMessage());
+        } catch (Throwable) {
+            return $this->error('Catalog operation failed.');
+        }
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function mailingRecommendationDefinitions(): array
+    {
+        $uuid = ['type' => 'string', 'format' => 'uuid'];
+        $revision = ['type' => 'string', 'minLength' => 64, 'maxLength' => 64];
+        $fields = [
+            'title' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 110],
+            'tag' => ['type' => ['string', 'null'], 'maxLength' => 40],
+            'text' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 320],
+            'url' => ['type' => ['string', 'null'], 'maxLength' => 2048],
+            'linkLabel' => ['type' => ['string', 'null'], 'maxLength' => 60],
+            'active' => ['type' => 'boolean'],
+        ];
+        $write = ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false];
+
+        return [
+            ['name' => 'create_mailing_recommendation', 'description' => 'After explicit user confirmation, create one reusable recommendation in the mailing catalog. Search the catalog first. This does not add it to a campaign.', 'inputSchema' => ['type' => 'object', 'properties' => $fields, 'required' => ['title', 'text'], 'additionalProperties' => false], 'annotations' => $write],
+            ['name' => 'update_mailing_recommendation', 'description' => 'After separate explicit confirmation, update one mailing catalog recommendation by exact UUID and revision from get_mailing_recommendation. Omitted fields retain their values; already prepared mailings keep their own copies.', 'inputSchema' => ['type' => 'object', 'properties' => ['uuid' => $uuid, 'revision' => $revision, ...$fields], 'required' => ['uuid', 'revision'], 'additionalProperties' => false], 'annotations' => $write],
+            ['name' => 'set_mailing_catalog_recommendation_image', 'description' => 'After separate explicit confirmation, upload actual JPEG, PNG or WebP image bytes as strict Base64 (maximum 5 MB decoded) and attach them to one exact mailing catalog recommendation. Read its current revision first. This does not alter an existing mailing copy.', 'inputSchema' => ['type' => 'object', 'properties' => ['uuid' => $uuid, 'revision' => $revision, 'data' => ['type' => 'string', 'maxLength' => 6990508], 'filename' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255]], 'required' => ['uuid', 'revision', 'data', 'filename'], 'additionalProperties' => false], 'annotations' => $write],
+            ['name' => 'add_catalog_recommendation_to_mailing', 'description' => 'After separate explicit confirmation, copy one existing active mailing catalog recommendation into an editable campaign. Read the campaign revision and exact catalog UUID first. The campaign keeps a snapshot and source UUID; no email is sent.', 'inputSchema' => ['type' => 'object', 'properties' => ['campaignUuid' => $uuid, 'revision' => $revision, 'catalogUuid' => $uuid], 'required' => ['campaignUuid', 'revision', 'catalogUuid'], 'additionalProperties' => false], 'annotations' => $write],
+            ['name' => 'remove_mailing_recommendation', 'description' => 'After separate explicit confirmation, detach one recommendation copy from an editable mailing campaign by its campaign recommendation UUID. The catalog source remains intact; no email is sent.', 'inputSchema' => ['type' => 'object', 'properties' => ['campaignUuid' => $uuid, 'revision' => $revision, 'recommendationUuid' => $uuid], 'required' => ['campaignUuid', 'revision', 'recommendationUuid'], 'additionalProperties' => false], 'annotations' => ['readOnlyHint' => false, 'destructiveHint' => true, 'openWorldHint' => false]],
+        ];
+    }
+
+    /** @param array<string, mixed> $arguments
+     * @return array<string, mixed>
+     */
+    private function callMailingRecommendation(string $name, array $arguments): array
+    {
+        if (!$this->mailingWriteEnabled || null === $this->mcpMailingRecommendations) {
+            return $this->error('Mailing recommendation writes are disabled.');
+        }
+
+        try {
+            $definition = null;
+            foreach ($this->mailingRecommendationDefinitions() as $candidate) {
+                if ($candidate['name'] === $name) {
+                    $definition = $candidate;
+                    break;
+                }
+            }
+            if (null === $definition || [] !== array_diff(array_keys($arguments), array_keys($definition['inputSchema']['properties']))) {
+                throw new InvalidToolArguments('Unexpected argument.');
+            }
+            foreach ($definition['inputSchema']['required'] as $required) {
+                if (!array_key_exists($required, $arguments)) {
+                    throw new InvalidToolArguments("Missing {$required}.");
+                }
+            }
+
+            $result = match ($name) {
+                'create_mailing_recommendation' => $this->mcpMailingRecommendations->create($arguments),
+                'update_mailing_recommendation' => $this->mcpMailingRecommendations->update($this->text($arguments, 'uuid', 36), $this->withoutKey($arguments, 'uuid')),
+                'set_mailing_catalog_recommendation_image' => $this->mcpMailingRecommendations->setImage($this->text($arguments, 'uuid', 36), $this->text($arguments, 'revision', 64), $this->imageData($arguments), $this->text($arguments, 'filename', 255)),
+                'add_catalog_recommendation_to_mailing' => $this->mcpMailingRecommendations->attach($this->text($arguments, 'campaignUuid', 36), $this->text($arguments, 'revision', 64), $this->text($arguments, 'catalogUuid', 36)),
+                'remove_mailing_recommendation' => $this->mcpMailingRecommendations->detach($this->text($arguments, 'campaignUuid', 36), $this->text($arguments, 'revision', 64), $this->text($arguments, 'recommendationUuid', 36)),
+                default => throw new InvalidToolArguments('Unknown mailing recommendation operation.'),
+            };
+            $json = json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+            return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => false];
+        } catch (InvalidArgumentException $exception) {
+            return $this->error($exception->getMessage());
+        } catch (Throwable) {
+            return $this->error('Mailing recommendation operation failed.');
+        }
+    }
+
+    /** @param array<string, mixed> $arguments */
+    private function imageData(array $arguments): string
+    {
+        $data = $arguments['data'] ?? null;
+        if (!is_string($data) || '' === $data || 6990508 < strlen($data)) {
+            throw new InvalidToolArguments('Invalid image data.');
+        }
+
+        return $data;
     }
 
     /** @return list<array<string, mixed>> */
