@@ -8,13 +8,17 @@ enum OrganizationType: string
 {
     case CRECHE = 'creche';
     case MAIRIE = 'mairie';
-    case RAM = 'ram';
+    case RPE = 'rpe';
     case MAM = 'mam';
     case MEDIATHEQUE = 'mediatheque';
     case CENTRE = 'centre';
     case MJC = 'mjc';
-    case CENTRE_LOISIRS = 'centre_loisirs';
     case LIEU_PARENTALITE = 'lieu_parentalite';
+    case LUDOTHEQUE = 'ludotheque';
     case GARDERIE = 'garderie';
+    case CAFE_PARENTS = 'cafe_parents';
+    case LIBRAIRIE_JEUNESSE = 'librairie_jeunesse';
+    case FESTIVAL_EVENEMENT = 'festival_evenement';
+    case SALLE_SPECTACLE = 'salle_spectacle';
     case TEST = 'test';
 }

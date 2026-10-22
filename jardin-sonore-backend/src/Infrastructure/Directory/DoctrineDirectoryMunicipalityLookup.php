@@ -32,6 +32,11 @@ final readonly class DoctrineDirectoryMunicipalityLookup implements DirectoryMun
             $criteria['postalCode'] ?? null,
         );
 
+        if (!$municipality instanceof MunicipalityEntity && null !== $postalCode) {
+            $nameMatches = $this->municipalityDoctrineRepository->findBy(['name' => $commune], limit: 2);
+            $municipality = 1 === count($nameMatches) ? $nameMatches[0] : null;
+        }
+
         return $municipality instanceof MunicipalityEntity ? $municipality->getId() : null;
     }
 }

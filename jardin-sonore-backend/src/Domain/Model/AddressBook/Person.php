@@ -14,12 +14,11 @@ final class Person extends DirectoryEntry
         private string $lastName,
         private Organization $organization,
         private ?string $role = null,
-        ?CustomerStatus $customerStatus = null,
         bool $active = true,
         ?Uuid $uuid = null,
         ?int $id = null,
     ) {
-        parent::__construct(DirectoryEntryType::PERSON, $customerStatus, $active, $uuid, $id);
+        parent::__construct(DirectoryEntryType::PERSON, $active, $uuid, $id);
         $this->assertNamePartIsNotBlank($firstName, 'Person first name cannot be blank.');
         $this->assertNamePartIsNotBlank($lastName, 'Person last name cannot be blank.');
     }

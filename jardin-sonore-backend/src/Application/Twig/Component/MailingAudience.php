@@ -453,7 +453,6 @@ final class MailingAudience
             includeFreeSubscribers: $rawAudienceFilter->includesFreeSubscribers(),
             organizationTypes: $rawAudienceFilter->getOrganizationTypes(),
             organizationSectors: $rawAudienceFilter->getOrganizationSectors(),
-            customerStatuses: $rawAudienceFilter->getCustomerStatuses(),
             organizationUuids: $rawAudienceFilter->getOrganizationUuids(),
             tagUuids: $rawAudienceFilter->getTagUuids(),
             municipalityInseeCodes: $this->materializeCurrentMunicipalityInseeCodes($formModel),

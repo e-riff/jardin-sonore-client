@@ -27,7 +27,6 @@ final readonly class PersonMapper
             lastName: $personEntity->getLastName(),
             organization: $this->organizationMapper->toDomain($organizationEntity),
             role: $personEntity->getRole(),
-            customerStatus: $personEntity->getCustomerStatus(),
             active: $personEntity->isActive(),
             uuid: $personEntity->getUuid(),
             id: $personEntity->getId(),
@@ -43,7 +42,6 @@ final readonly class PersonMapper
             ->setFirstName($person->getFirstName())
             ->setLastName($person->getLastName())
             ->setRole($person->getRole())
-            ->setCustomerStatus($person->getCustomerStatus())
             ->setActive($person->isActive())
             ->setOrganization($this->organizationMapper->toEntity($person->getOrganization(), $personEntity->getOrganization()));
 

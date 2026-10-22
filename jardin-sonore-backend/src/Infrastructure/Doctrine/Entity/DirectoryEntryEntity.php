@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Doctrine\Entity;
 
-use App\Domain\Model\AddressBook\CustomerStatus;
 use App\Domain\Model\AddressBook\DirectoryEntryType;
 use App\Infrastructure\Doctrine\Entity\Behavior\ActivableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
@@ -21,8 +20,6 @@ abstract class DirectoryEntryEntity
     use UuidIdentifiableTrait;
 
     private DirectoryEntryType $entryType;
-
-    private ?CustomerStatus $customerStatus = null;
 
     private ?ContactDetailsEntity $contactDetails = null;
 
@@ -48,18 +45,6 @@ abstract class DirectoryEntryEntity
     public function setEntryType(DirectoryEntryType $entryType): static
     {
         $this->entryType = $entryType;
-
-        return $this;
-    }
-
-    public function getCustomerStatus(): ?CustomerStatus
-    {
-        return $this->customerStatus;
-    }
-
-    public function setCustomerStatus(?CustomerStatus $customerStatus): static
-    {
-        $this->customerStatus = $customerStatus;
 
         return $this;
     }

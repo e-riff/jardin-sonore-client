@@ -374,7 +374,6 @@ mailing:
       organization_types: "Types d’établissement"
       organization_types_help: "Pour une personne rattachée à une organisation, le type de cette organisation est utilisé."
       organization_sectors: "Secteurs"
-      customer_statuses: "Statuts client"
       tags: "Tags"
       municipalities: "Communes"
       municipalities_help: "Recherchez par nom ou code postal. Les communes sont groupées par département."

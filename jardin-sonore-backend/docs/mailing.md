@@ -50,7 +50,6 @@ L'audience peut combiner :
 
 - types d'etablissement ;
 - secteurs ;
-- statuts client ;
 - tags ;
 - regions ;
 - departements ;

@@ -46,6 +46,8 @@ final class ImportDirectoryEstablishmentsCommand extends Command
         string $source = 'caf',
         #[Option(description: 'Persist changes instead of running a dry-run.')]
         bool $apply = false,
+        #[Option(description: 'Review every candidate match manually instead of accepting a high score automatically.')]
+        bool $reviewMatches = false,
         #[Option(description: 'Optional line offset for debugging or batch processing.')]
         int $offset = 0,
         #[Option(description: 'Optional line limit for debugging.')]
@@ -105,7 +107,7 @@ final class ImportDirectoryEstablishmentsCommand extends Command
             }
 
             if (!$organization instanceof OrganizationEntity) {
-                $organization = $this->resolveOrganization($io, $item, $organizationRank, $interactive, $stats);
+                $organization = $this->resolveOrganization($io, $item, $organizationRank, $interactive, $reviewMatches, $stats);
 
                 if (false === $organization) {
                     continue;
@@ -128,12 +130,27 @@ final class ImportDirectoryEstablishmentsCommand extends Command
             [$createdEmail, $reusedEmail] = $this->upserter->upsertEmailLink($organization->getContactDetails(), $item, $apply);
             $stats['createdEmails'] += (int) $createdEmail;
             $stats['reusedEmails'] += (int) $reusedEmail;
+            foreach ($item->additionalEmails as $additionalEmail) {
+                $additionalEmailItem = DirectoryEstablishmentImportItem::fromArray([...$item->rawPayload, 'mail' => $additionalEmail]);
+                [$createdEmail, $reusedEmail] = $this->upserter->upsertEmailLink($organization->getContactDetails(), $additionalEmailItem, $apply);
+                $stats['createdEmails'] += (int) $createdEmail;
+                $stats['reusedEmails'] += (int) $reusedEmail;
+            }
 
             [$createdPhone, $reusedPhone] = $this->upserter->upsertPhoneLink($organization->getContactDetails(), $item, $apply);
             $stats['createdPhones'] += (int) $createdPhone;
             $stats['reusedPhones'] += (int) $reusedPhone;
+            foreach ($item->additionalPhones as $additionalPhone) {
+                $additionalPhoneItem = DirectoryEstablishmentImportItem::fromArray([...$item->rawPayload, 'phone' => $additionalPhone]);
+                [$createdPhone, $reusedPhone] = $this->upserter->upsertPhoneLink($organization->getContactDetails(), $additionalPhoneItem, $apply);
+                $stats['createdPhones'] += (int) $createdPhone;
+                $stats['reusedPhones'] += (int) $reusedPhone;
+            }
 
             $this->upserter->upsertAddressContact($organization->getContactDetails(), $item);
+            foreach ($item->additionalAddresses as $additionalAddress) {
+                $this->upserter->upsertAdditionalAddressContact($organization->getContactDetails(), $additionalAddress, $item->commune);
+            }
 
             if ($apply) {
                 $this->upserter->persistImportLink($organization, $importLinkId, $item, $source);
@@ -174,6 +191,7 @@ final class ImportDirectoryEstablishmentsCommand extends Command
         DirectoryEstablishmentImportItem $item,
         int $organizationRank,
         bool $interactive,
+        bool $reviewMatches,
         array &$stats,
     ): false|OrganizationEntity|null {
         $candidates = $this->matcher->findOrganizationCandidates($item);
@@ -182,7 +200,7 @@ final class ImportDirectoryEstablishmentsCommand extends Command
             return null;
         }
 
-        if ($this->matcher->isConfidentAutoMatch($candidates)) {
+        if (!$reviewMatches && $this->matcher->isConfidentAutoMatch($candidates)) {
             $topCandidate = $candidates[0];
 
             return $this->entityManager->getRepository(OrganizationEntity::class)->find($topCandidate->organizationId);

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Application\Form\Model;
 
-use App\Domain\Model\AddressBook\CustomerStatus;
 use App\Domain\Model\AddressBook\OrganizationSector;
 use App\Domain\Model\AddressBook\OrganizationType;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
@@ -26,11 +25,6 @@ final class MailingAudienceFormModel
      * @var list<OrganizationSector>
      */
     public array $organizationSectors = [];
-
-    /**
-     * @var list<CustomerStatus>
-     */
-    public array $customerStatuses = [];
 
     /**
      * @var list<string>
@@ -77,7 +71,6 @@ final class MailingAudienceFormModel
         $formModel->includeFreeSubscribers = $newsletterAudienceFilter->includesFreeSubscribers();
         $formModel->organizationTypes = $newsletterAudienceFilter->getOrganizationTypes();
         $formModel->organizationSectors = $newsletterAudienceFilter->getOrganizationSectors();
-        $formModel->customerStatuses = $newsletterAudienceFilter->getCustomerStatuses();
         $formModel->organizationUuids = $newsletterAudienceFilter->getOrganizationUuids();
         $formModel->tagUuids = $newsletterAudienceFilter->getTagUuids();
         $formModel->regionCodes = $newsletterAudienceFilter->getRegionCodes();
@@ -106,7 +99,6 @@ final class MailingAudienceFormModel
             includeFreeSubscribers: $this->includeFreeSubscribers,
             organizationTypes: $this->organizationTypes,
             organizationSectors: $this->organizationSectors,
-            customerStatuses: $this->customerStatuses,
             organizationUuids: $organizationUuids,
             tagUuids: $tagUuids,
             municipalityInseeCodes: MailingAudienceGeographicMode::MUNICIPALITIES === $this->geographicMode ? $municipalityInseeCodes : [],

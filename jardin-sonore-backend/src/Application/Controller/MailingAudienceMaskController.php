@@ -18,7 +18,6 @@ use App\Application\Mailing\ListMailingAudienceMasks;
 use App\Application\Mailing\NewsletterAudienceMunicipalityMaterializerInterface;
 use App\Application\Mailing\NewsletterAudienceOptionsQueryInterface;
 use App\Application\Mailing\UpdateMailingCampaignAudience;
-use App\Domain\Model\AddressBook\CustomerStatus;
 use App\Domain\Model\AddressBook\OrganizationSector;
 use App\Domain\Model\AddressBook\OrganizationType;
 use App\Domain\Model\Mailing\MailingCampaign;
@@ -86,9 +85,6 @@ final class MailingAudienceMaskController extends AbstractController
             }
             if ([] !== $audienceFilter->getOrganizationSectors()) {
                 $criteria[] = 'Secteurs : ' . implode(', ', array_map(static fn ($sector): string => $sector->value, $audienceFilter->getOrganizationSectors()));
-            }
-            if ([] !== $audienceFilter->getCustomerStatuses()) {
-                $criteria[] = 'Statuts : ' . implode(', ', array_map(static fn ($status): string => $status->value, $audienceFilter->getCustomerStatuses()));
             }
             if ([] !== $audienceFilter->getTagUuids()) {
                 $criteria[] = 'Tags : ' . implode(', ', array_map(static fn (string $uuid): string => $tagChoices[$uuid] ?? $uuid, $audienceFilter->getTagUuids()));
@@ -364,11 +360,6 @@ final class MailingAudienceMaskController extends AbstractController
             OrganizationSector::class,
             'organizationSectors',
         );
-        $customerStatuses = $this->normalizeEnumList(
-            $submittedAudienceData['customerStatuses'] ?? [],
-            CustomerStatus::class,
-            'customerStatuses',
-        );
         $tagUuids = $this->normalizeStringList($submittedAudienceData['tagUuids'] ?? [], 'tagUuids');
         $organizationUuids = $this->normalizeStringList($submittedAudienceData['organizationUuids'] ?? [], 'organizationUuids');
         $municipalityInseeCodes = $this->normalizeStringList($submittedAudienceData['municipalityInseeCodes'] ?? [], 'municipalityInseeCodes');
@@ -380,7 +371,6 @@ final class MailingAudienceMaskController extends AbstractController
             includeFreeSubscribers: in_array($submittedAudienceData['includeFreeSubscribers'] ?? false, [true, 1, '1'], true),
             organizationTypes: $organizationTypes,
             organizationSectors: $organizationSectors,
-            customerStatuses: $customerStatuses,
             organizationUuids: $organizationUuids,
             tagUuids: $tagUuids,
             municipalityInseeCodes: MailingAudienceGeographicMode::MUNICIPALITIES === $geographicMode ? $municipalityInseeCodes : [],

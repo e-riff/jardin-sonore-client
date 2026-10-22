@@ -164,7 +164,6 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
         bool $includePersonOrganization = true,
     ): void {
         $this->applyOrganizationFilters($queryBuilder, $newsletterAudienceFilter, $includePersonOrganization);
-        $this->applyCustomerStatusFilter($queryBuilder, $newsletterAudienceFilter, $includePersonOrganization);
         $this->applyTagFilter($queryBuilder, $newsletterAudienceFilter, $includePersonOrganization);
         $this->applyGeographicFilters($queryBuilder, $newsletterAudienceFilter, $includePersonOrganization);
     }
@@ -199,28 +198,6 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
                 ))
                 ->setParameter('organizationSectors', $organizationSectors, ArrayParameterType::STRING);
         }
-    }
-
-    private function applyCustomerStatusFilter(
-        QueryBuilder $queryBuilder,
-        NewsletterAudienceFilter $newsletterAudienceFilter,
-        bool $includePersonOrganization,
-    ): void {
-        $customerStatuses = $this->enumValues($newsletterAudienceFilter->getCustomerStatuses());
-
-        if ([] === $customerStatuses) {
-            return;
-        }
-
-        $queryBuilder
-            ->andWhere(
-                $includePersonOrganization ? sprintf(
-                    'COALESCE(%s.customer_status, %s.customer_status) IN (:customerStatuses)',
-                    self::ORGANIZATION_ENTRY_ALIAS,
-                    self::ENTRY_ALIAS,
-                ) : $queryBuilder->expr()->in(self::ENTRY_ALIAS . '.customer_status', ':customerStatuses'),
-            )
-            ->setParameter('customerStatuses', $customerStatuses, ArrayParameterType::STRING);
     }
 
     private function applyTagFilter(

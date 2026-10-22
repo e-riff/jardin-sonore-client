@@ -13,12 +13,11 @@ final class Organization extends DirectoryEntry
         private string $name,
         private ?OrganizationType $type = null,
         private ?OrganizationSector $sector = null,
-        ?CustomerStatus $customerStatus = null,
         bool $active = true,
         ?Uuid $uuid = null,
         ?int $id = null,
     ) {
-        parent::__construct(DirectoryEntryType::ORGANIZATION, $customerStatus, $active, $uuid, $id);
+        parent::__construct(DirectoryEntryType::ORGANIZATION, $active, $uuid, $id);
         $this->assertNameIsNotBlank($name);
     }
 

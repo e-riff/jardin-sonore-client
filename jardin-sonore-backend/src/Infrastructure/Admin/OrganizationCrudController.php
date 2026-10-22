@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Infrastructure\Admin;
 
 use App\Domain\Model\AddressBook\AddressContactType;
-use App\Domain\Model\AddressBook\CustomerStatus;
 use App\Domain\Model\AddressBook\DirectoryEntryType;
 use App\Domain\Model\AddressBook\OrganizationSector;
 use App\Domain\Model\AddressBook\OrganizationType;
@@ -107,7 +106,6 @@ final class OrganizationCrudController extends AbstractCrudController
         return $filters
             ->add(ChoiceFilter::new('type', 'admin.field.organization_type')->setChoices($this->organizationTypeChoices())->setFormTypeOption('value_type_options.translation_domain', 'backoffice'))
             ->add(ChoiceFilter::new('sector', 'admin.field.organization_sector')->setChoices($this->organizationSectorChoices())->setFormTypeOption('value_type_options.translation_domain', 'backoffice'))
-            ->add(ChoiceFilter::new('customerStatus', 'admin.field.customer_status')->setChoices($this->customerStatusChoices())->setFormTypeOption('value_type_options.translation_domain', 'backoffice'))
             ->add(BooleanFilter::new('active', 'admin.field.active'))
             ->add(
                 OrganizationDepartmentFilter::new(label: 'admin.field.department')
@@ -149,11 +147,6 @@ final class OrganizationCrudController extends AbstractCrudController
         yield ChoiceField::new('sector', 'admin.field.organization_sector')
             ->setChoices($this->organizationSectorChoices())
             ->formatValue(fn (mixed $value): string => $this->translateEnumValue('address_book.organization_sector', $value))
-            ->setFormTypeOption('required', false)
-            ->setFormTypeOption('placeholder', '');
-        yield ChoiceField::new('customerStatus', 'admin.field.customer_status')
-            ->setChoices($this->customerStatusChoices())
-            ->formatValue(fn (mixed $value): string => $this->translateEnumValue('address_book.customer_status', $value))
             ->setFormTypeOption('required', false)
             ->setFormTypeOption('placeholder', '');
         yield AssociationField::new('tags', 'admin.field.tags')->autocomplete();
@@ -315,14 +308,18 @@ final class OrganizationCrudController extends AbstractCrudController
         return [
             'address_book.organization_type.creche' => OrganizationType::CRECHE,
             'address_book.organization_type.mairie' => OrganizationType::MAIRIE,
-            'address_book.organization_type.ram' => OrganizationType::RAM,
+            'address_book.organization_type.rpe' => OrganizationType::RPE,
             'address_book.organization_type.mam' => OrganizationType::MAM,
             'address_book.organization_type.mediatheque' => OrganizationType::MEDIATHEQUE,
             'address_book.organization_type.centre' => OrganizationType::CENTRE,
             'address_book.organization_type.mjc' => OrganizationType::MJC,
-            'address_book.organization_type.centre_loisirs' => OrganizationType::CENTRE_LOISIRS,
             'address_book.organization_type.lieu_parentalite' => OrganizationType::LIEU_PARENTALITE,
+            'address_book.organization_type.ludotheque' => OrganizationType::LUDOTHEQUE,
             'address_book.organization_type.garderie' => OrganizationType::GARDERIE,
+            'address_book.organization_type.cafe_parents' => OrganizationType::CAFE_PARENTS,
+            'address_book.organization_type.librairie_jeunesse' => OrganizationType::LIBRAIRIE_JEUNESSE,
+            'address_book.organization_type.festival_evenement' => OrganizationType::FESTIVAL_EVENEMENT,
+            'address_book.organization_type.salle_spectacle' => OrganizationType::SALLE_SPECTACLE,
             'address_book.organization_type.test' => OrganizationType::TEST,
         ];
     }
@@ -336,18 +333,6 @@ final class OrganizationCrudController extends AbstractCrudController
             'address_book.organization_sector.association' => OrganizationSector::ASSOCIATION,
             'address_book.organization_sector.public' => OrganizationSector::PUBLIC,
             'address_book.organization_sector.private' => OrganizationSector::PRIVATE,
-        ];
-    }
-
-    /**
-     * @return array<string, CustomerStatus>
-     */
-    private function customerStatusChoices(): array
-    {
-        return [
-            'address_book.customer_status.customer' => CustomerStatus::CUSTOMER,
-            'address_book.customer_status.prospect' => CustomerStatus::PROSPECT,
-            'address_book.customer_status.former_customer' => CustomerStatus::FORMER_CUSTOMER,
         ];
     }
 

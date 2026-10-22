@@ -126,6 +126,8 @@ Le mailing récent contient plusieurs blocs « paragraphe » consécutifs créé
 
 La boîte cPanel reste la source des échanges avec les clients ; le backoffice porte les dossiers, les échéances et les documents.
 
+Le 21 octobre, les types MJC / maison pour tous, centre de loisirs / ALSH et lieu de parentalité ont été déployés dans l'annuaire et le ciblage des mailings sous `deploy-organization-types-20261021-01` (`270d851`). Le lot fourni de 24 MJC/MPT de l'Isère est importé et contrôlé en base locale seulement. Son fichier JSON et l'option de revue manuelle des rapprochements sont préparés pour une livraison ultérieure ; aucune de ces 24 fiches n'a encore été importée en production.
+
 ## P2 — Calendrier, interventions, devis et facturation suivie
 
 | Chantier | Bénéfice attendu | Dépendances / critère de départ |

@@ -81,8 +81,9 @@ final class MailingAudienceTypeTest extends KernelTestCase
 
         foreach ([
             'address_book.organization_type.mjc' => ['mjc', 'MJC - maison pour tous'],
-            'address_book.organization_type.centre_loisirs' => ['centre_loisirs', 'Centre de loisirs - ALSH'],
+            'address_book.organization_type.centre' => ['centre', 'Centre'],
             'address_book.organization_type.lieu_parentalite' => ['lieu_parentalite', 'Lieu de parentalité - LAEP, café poussette'],
+            'address_book.organization_type.ludotheque' => ['ludotheque', 'Ludothèque'],
         ] as $translationKey => [$organizationTypeValue, $label]) {
             self::assertSame($organizationTypeValue, ($choices[$translationKey] ?? null)?->value);
             self::assertSame($label, $translator->trans($translationKey, [], 'backoffice', 'fr'));

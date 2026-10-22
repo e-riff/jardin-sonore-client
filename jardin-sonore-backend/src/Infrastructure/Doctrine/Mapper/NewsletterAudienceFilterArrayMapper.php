@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Doctrine\Mapper;
 
-use App\Domain\Model\AddressBook\CustomerStatus;
 use App\Domain\Model\AddressBook\OrganizationSector;
 use App\Domain\Model\AddressBook\OrganizationType;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
@@ -22,7 +21,6 @@ final readonly class NewsletterAudienceFilterArrayMapper
         return new NewsletterAudienceFilter(
             organizationTypes: $this->enumList($audienceFilter, 'organizationTypes', OrganizationType::class),
             organizationSectors: $this->enumList($audienceFilter, 'organizationSectors', OrganizationSector::class),
-            customerStatuses: $this->enumList($audienceFilter, 'customerStatuses', CustomerStatus::class),
             organizationUuids: $this->stringList($audienceFilter, 'organizationUuids'),
             tagUuids: $this->stringList($audienceFilter, 'tagUuids'),
             regionCodes: $this->stringList($audienceFilter, 'regionCodes'),
@@ -45,7 +43,6 @@ final readonly class NewsletterAudienceFilterArrayMapper
         return [
             'organizationTypes' => $this->enumValues($audienceFilter->getOrganizationTypes()),
             'organizationSectors' => $this->enumValues($audienceFilter->getOrganizationSectors()),
-            'customerStatuses' => $this->enumValues($audienceFilter->getCustomerStatuses()),
             'organizationUuids' => $audienceFilter->getOrganizationUuids(),
             'tagUuids' => $audienceFilter->getTagUuids(),
             'regionCodes' => $audienceFilter->getRegionCodes(),

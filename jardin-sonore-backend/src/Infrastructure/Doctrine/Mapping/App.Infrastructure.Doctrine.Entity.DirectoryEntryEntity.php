@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Domain\Model\AddressBook\CustomerStatus;
 use App\Domain\Model\AddressBook\DirectoryEntryType;
 use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
@@ -17,7 +16,6 @@ return static function (ClassMetadata $metadata): void {
         'name' => 'directory_entry',
         'indexes' => [
             'idx_directory_entry_type' => ['columns' => ['entry_type']],
-            'idx_directory_entry_customer_status' => ['columns' => ['customer_status']],
         ],
         'uniqueConstraints' => [
             'uniq_directory_entry_uuid' => ['columns' => ['uuid']],
@@ -54,15 +52,6 @@ return static function (ClassMetadata $metadata): void {
         'type' => Types::STRING,
         'length' => 32,
         'enumType' => DirectoryEntryType::class,
-    ]);
-
-    $metadata->mapField([
-        'fieldName' => 'customerStatus',
-        'columnName' => 'customer_status',
-        'type' => Types::STRING,
-        'length' => 32,
-        'nullable' => true,
-        'enumType' => CustomerStatus::class,
     ]);
 
     $metadata->mapField([

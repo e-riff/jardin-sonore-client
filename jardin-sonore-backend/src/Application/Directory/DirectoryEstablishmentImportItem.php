@@ -27,6 +27,13 @@ final readonly class DirectoryEstablishmentImportItem
         public ?bool $isAvip,
         /** @var array<string, mixed> */
         public array $rawPayload,
+        /** @var list<string> */
+        #[Assert\All([new Assert\Email()])]
+        public array $additionalEmails = [],
+        /** @var list<string> */
+        public array $additionalPhones = [],
+        /** @var list<string> */
+        public array $additionalAddresses = [],
     ) {
     }
 
@@ -49,7 +56,22 @@ final readonly class DirectoryEstablishmentImportItem
             distance: is_numeric($payload['distance'] ?? null) ? (int) $payload['distance'] : null,
             isAvip: is_bool($payload['isAvip'] ?? null) ? $payload['isAvip'] : null,
             rawPayload: $payload,
+            additionalEmails: self::stringList($payload['additionalEmails'] ?? []),
+            additionalPhones: self::stringList($payload['additionalPhones'] ?? []),
+            additionalAddresses: self::stringList($payload['additionalAddresses'] ?? []),
         );
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function stringList(mixed $values): array
+    {
+        if (!is_array($values)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map(self::nullableString(...), $values), static fn (?string $value): bool => null !== $value));
     }
 
     private static function nullableString(mixed $value): ?string

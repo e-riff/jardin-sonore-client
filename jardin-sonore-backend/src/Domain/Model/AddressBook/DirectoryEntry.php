@@ -19,7 +19,6 @@ abstract class DirectoryEntry implements IdentifiableInterface, UuidIdentifiable
 
     protected function __construct(
         private readonly DirectoryEntryType $entryType,
-        private ?CustomerStatus $customerStatus = null,
         bool $active = true,
         ?Uuid $uuid = null,
         ?int $id = null,
@@ -32,10 +31,5 @@ abstract class DirectoryEntry implements IdentifiableInterface, UuidIdentifiable
     public function getEntryType(): DirectoryEntryType
     {
         return $this->entryType;
-    }
-
-    public function getCustomerStatus(): ?CustomerStatus
-    {
-        return $this->customerStatus;
     }
 }

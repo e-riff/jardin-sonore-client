@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Infrastructure\Mailing;
 
-use App\Domain\Model\AddressBook\CustomerStatus;
 use App\Domain\Model\AddressBook\OrganizationSector;
 use App\Domain\Model\AddressBook\OrganizationType;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
@@ -224,7 +223,7 @@ final class NewsletterAudienceResolverTest extends KernelTestCase
         $this->link($matchingOrganizationEntity, $this->email('directory'));
         $this->email('matching');
         $this->user('matching', [$matchingOrganizationEntity]);
-        $otherOrganizationEntity = $this->organization()->setType(OrganizationType::MAIRIE)->setSector(OrganizationSector::PRIVATE)->setCustomerStatus(CustomerStatus::PROSPECT);
+        $otherOrganizationEntity = $this->organization()->setType(OrganizationType::MAIRIE)->setSector(OrganizationSector::PRIVATE);
         $this->email('explicit');
         $this->user('explicit', [$otherOrganizationEntity]);
         $this->entityManager->flush();
@@ -232,7 +231,6 @@ final class NewsletterAudienceResolverTest extends KernelTestCase
         $criteria = [
             new NewsletterAudienceFilter(organizationTypes: [OrganizationType::CRECHE]),
             new NewsletterAudienceFilter(organizationSectors: [OrganizationSector::PUBLIC]),
-            new NewsletterAudienceFilter(customerStatuses: [CustomerStatus::CUSTOMER]),
             new NewsletterAudienceFilter(tagUuids: [$tagEntity->getUuid()->toRfc4122()]),
         ];
         foreach ($criteria as $newsletterAudienceFilter) {
@@ -240,7 +238,7 @@ final class NewsletterAudienceResolverTest extends KernelTestCase
         }
         self::assertSame(['directory@example.test', 'explicit@example.test', 'matching@example.test'], $this->addresses(new NewsletterAudienceFilter(
             organizationTypes: [OrganizationType::CRECHE], organizationSectors: [OrganizationSector::PUBLIC],
-            customerStatuses: [CustomerStatus::CUSTOMER], tagUuids: [$tagEntity->getUuid()->toRfc4122()],
+            tagUuids: [$tagEntity->getUuid()->toRfc4122()],
             organizationUuids: [$otherOrganizationEntity->getUuid()->toRfc4122()],
         )));
     }
@@ -291,7 +289,7 @@ final class NewsletterAudienceResolverTest extends KernelTestCase
         self::assertSame(['free@example.test'], $this->addresses(new NewsletterAudienceFilter(municipalityInseeCodes: ['absent'], includeFreeSubscribers: true)));
         self::assertSame([], $this->addresses(new NewsletterAudienceFilter(municipalityInseeCodes: ['absent'])));
         self::assertSame(['free@example.test'], $this->addresses(new NewsletterAudienceFilter(
-            organizationTypes: [OrganizationType::MAIRIE], customerStatuses: [CustomerStatus::PROSPECT], includeFreeSubscribers: true,
+            organizationTypes: [OrganizationType::MAIRIE], includeFreeSubscribers: true,
         )));
     }
 
@@ -303,14 +301,13 @@ final class NewsletterAudienceResolverTest extends KernelTestCase
         $tagEntity = (new TagEntity())->setLabel('Person audience ' . bin2hex(random_bytes(8)));
         $this->entityManager->persist($tagEntity);
         $organizationEntity->addTag($tagEntity);
-        $personEntity = (new PersonEntity())->setFirstName('Alice')->setLastName('Test')->setOrganization($organizationEntity)
-            ->setCustomerStatus(CustomerStatus::PROSPECT);
+        $personEntity = (new PersonEntity())->setFirstName('Alice')->setLastName('Test')->setOrganization($organizationEntity);
         $this->entityManager->persist($personEntity);
         $emailContactEntity = $this->email('person');
         $this->link($personEntity, $emailContactEntity);
         $newsletterAudienceFilter = new NewsletterAudienceFilter(
             organizationTypes: [OrganizationType::CRECHE], organizationSectors: [OrganizationSector::PUBLIC],
-            customerStatuses: [CustomerStatus::CUSTOMER], tagUuids: [$tagEntity->getUuid()->toRfc4122()],
+            tagUuids: [$tagEntity->getUuid()->toRfc4122()],
             municipalityInseeCodes: [$municipalityEntity->getInseeCode()],
         );
 
@@ -344,7 +341,7 @@ final class NewsletterAudienceResolverTest extends KernelTestCase
     private function organization(): OrganizationEntity
     {
         $organizationEntity = (new OrganizationEntity())->setName('Audience ' . bin2hex(random_bytes(8)))
-            ->setType(OrganizationType::CRECHE)->setSector(OrganizationSector::PUBLIC)->setCustomerStatus(CustomerStatus::CUSTOMER);
+            ->setType(OrganizationType::CRECHE)->setSector(OrganizationSector::PUBLIC);
         $this->entityManager->persist($organizationEntity);
         $this->entityManager->flush();
 

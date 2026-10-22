@@ -15,7 +15,6 @@ final readonly class OrganizationMapper
             name: $organizationEntity->getName(),
             type: $organizationEntity->getType(),
             sector: $organizationEntity->getSector(),
-            customerStatus: $organizationEntity->getCustomerStatus(),
             active: $organizationEntity->isActive(),
             uuid: $organizationEntity->getUuid(),
             id: $organizationEntity->getId(),
@@ -31,7 +30,6 @@ final readonly class OrganizationMapper
             ->setName($organization->getName())
             ->setType($organization->getType())
             ->setSector($organization->getSector())
-            ->setCustomerStatus($organization->getCustomerStatus())
             ->setActive($organization->isActive());
 
         return $organizationEntity;

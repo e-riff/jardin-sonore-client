@@ -1,0 +1,14 @@
+{
+  "results": [
+    {
+      "id": "mjc-review-fixture",
+      "type": "MJC",
+      "name": "MJC Revue du rapprochement",
+      "commune": "Commune revue",
+      "address": "12, rue du Test, 38500 Commune revue",
+      "phone": "04 76 12 34 56",
+      "mail": "mjc-review-fixture@example.test",
+      "siteWeb": "https://mjc-review.example.test/"
+    }
+  ]
+}

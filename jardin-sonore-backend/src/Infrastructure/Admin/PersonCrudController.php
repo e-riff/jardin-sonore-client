@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Admin;
 
-use App\Domain\Model\AddressBook\CustomerStatus;
 use App\Domain\Model\AddressBook\DirectoryEntryType;
 use App\Infrastructure\Admin\Formatter\ContactDisplayFormatter;
 use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
@@ -26,7 +25,6 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\BooleanFilter;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -93,7 +91,6 @@ final class PersonCrudController extends AbstractCrudController
     {
         return $filters
             ->add(EntityFilter::new('organization', 'admin.field.organization')->autocomplete())
-            ->add(ChoiceFilter::new('customerStatus', 'admin.field.customer_status')->setChoices($this->customerStatusChoices())->setFormTypeOption('value_type_options.translation_domain', 'backoffice'))
             ->add(BooleanFilter::new('active', 'admin.field.active'))
             ->add(EntityFilter::new('tags', 'admin.field.tags')->canSelectMultiple()->autocomplete());
     }
@@ -109,11 +106,6 @@ final class PersonCrudController extends AbstractCrudController
         yield TextField::new('firstName', 'admin.field.first_name');
         yield TextField::new('lastName', 'admin.field.last_name');
         yield TextField::new('role', 'admin.field.role');
-        yield ChoiceField::new('customerStatus', 'admin.field.customer_status')
-            ->setChoices($this->customerStatusChoices())
-            ->formatValue(fn (mixed $value): string => $this->translateEnumValue('address_book.customer_status', $value))
-            ->setFormTypeOption('required', false)
-            ->setFormTypeOption('placeholder', '');
         yield AssociationField::new('organization', 'admin.field.organization')->autocomplete();
         yield AssociationField::new('tags', 'admin.field.tags')->autocomplete();
         yield AssociationField::new('contactDetails', 'admin.field.contact_details')
@@ -185,18 +177,6 @@ final class PersonCrudController extends AbstractCrudController
             ->setAction(Action::NEW)
             ->set('contactDetailsId', $personEntity->getContactDetails()?->getId())
             ->generateUrl();
-    }
-
-    /**
-     * @return array<string, CustomerStatus>
-     */
-    private function customerStatusChoices(): array
-    {
-        return [
-            'address_book.customer_status.customer' => CustomerStatus::CUSTOMER,
-            'address_book.customer_status.prospect' => CustomerStatus::PROSPECT,
-            'address_book.customer_status.former_customer' => CustomerStatus::FORMER_CUSTOMER,
-        ];
     }
 
     /**

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Domain\Model\Mailing;
 
-use App\Domain\Model\AddressBook\CustomerStatus;
 use App\Domain\Model\AddressBook\OrganizationSector;
 use App\Domain\Model\AddressBook\OrganizationType;
 use InvalidArgumentException;
@@ -14,7 +13,6 @@ final readonly class NewsletterAudienceFilter
     /**
      * @param list<OrganizationType>   $organizationTypes
      * @param list<OrganizationSector> $organizationSectors
-     * @param list<CustomerStatus>     $customerStatuses
      * @param list<string>             $organizationUuids
      * @param list<string>             $tagUuids
      * @param list<string>             $regionCodes
@@ -24,7 +22,6 @@ final readonly class NewsletterAudienceFilter
     public function __construct(
         private array $organizationTypes = [],
         private array $organizationSectors = [],
-        private array $customerStatuses = [],
         private array $organizationUuids = [],
         private array $tagUuids = [],
         private array $regionCodes = [],
@@ -39,7 +36,6 @@ final readonly class NewsletterAudienceFilter
     ) {
         $this->assertEnumList($organizationTypes, OrganizationType::class, 'organization types');
         $this->assertEnumList($organizationSectors, OrganizationSector::class, 'organization sectors');
-        $this->assertEnumList($customerStatuses, CustomerStatus::class, 'customer statuses');
         $this->assertStringList($organizationUuids, 'organization UUIDs');
         $this->assertStringList($tagUuids, 'tag UUIDs');
         $this->assertStringList($regionCodes, 'region codes');
@@ -67,14 +63,6 @@ final readonly class NewsletterAudienceFilter
     public function getOrganizationSectors(): array
     {
         return $this->organizationSectors;
-    }
-
-    /**
-     * @return list<CustomerStatus>
-     */
-    public function getCustomerStatuses(): array
-    {
-        return $this->customerStatuses;
     }
 
     /**
@@ -151,7 +139,6 @@ final readonly class NewsletterAudienceFilter
     {
         return [] !== $this->organizationTypes
             || [] !== $this->organizationSectors
-            || [] !== $this->customerStatuses
             || [] !== $this->organizationUuids
             || [] !== $this->tagUuids
             || [] !== $this->regionCodes

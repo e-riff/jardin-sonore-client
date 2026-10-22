@@ -177,7 +177,7 @@ final class MailingAudienceMaskCrudController extends AbstractCrudController
 
         $audienceFilter['organizationTypes'] = $this->normalizeStringList($audienceFilter['organizationTypes'] ?? []);
         $audienceFilter['organizationSectors'] = $this->normalizeStringList($audienceFilter['organizationSectors'] ?? []);
-        $audienceFilter['customerStatuses'] = $this->normalizeStringList($audienceFilter['customerStatuses'] ?? []);
+        unset($audienceFilter['customerStatuses']);
         $audienceFilter['organizationUuids'] = $this->normalizeStringList($audienceFilter['organizationUuids'] ?? []);
         $audienceFilter['tagUuids'] = $this->normalizeStringList($audienceFilter['tagUuids'] ?? []);
         $audienceFilter['regionCodes'] = [];

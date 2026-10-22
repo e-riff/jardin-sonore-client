@@ -113,8 +113,54 @@ Hydratation actuelle :
 - nom ;
 - site web ;
 - type d'organisation selon le type import et quelques heuristiques simples ;
-- statut client/prospect par defaut si necessaire ;
 - email, telephone et adresse dans le bloc de contact.
+
+### Type importé et type de l'annuaire
+
+Pour les nouveaux fichiers JSON, utiliser de préférence directement l'une des valeurs de l'enum dans le champ `type` :
+
+| `type` recommandé dans le JSON | Valeur stockée |
+|---|---|
+| `creche` | `creche` |
+| `mairie` | `mairie` |
+| `rpe` | `rpe` |
+| `mam` | `mam` |
+| `mediatheque` | `mediatheque` |
+| `centre` | `centre` |
+| `mjc` | `mjc` |
+| `lieu_parentalite` | `lieu_parentalite` |
+| `ludotheque` | `ludotheque` |
+| `garderie` | `garderie` |
+| `cafe_parents` | `cafe_parents` |
+| `librairie_jeunesse` | `librairie_jeunesse` |
+| `festival_evenement` | `festival_evenement` |
+| `salle_spectacle` | `salle_spectacle` |
+| `test` | `test` |
+
+Pour les nouveaux imports, l'outil qui produit le JSON doit choisir le code canonique du tableau, jamais inventer une valeur. `test` est réservé aux données de test et ne doit pas être utilisé pour une structure réelle.
+
+Les anciens libellés ou codes sont acceptés ainsi :
+
+| Valeur source dans `type` ou signal dans `name` | Valeur stockée |
+|---|---|
+| `EAJE` | `creche` |
+| `MPT` | `mjc` |
+| `Café` + `parent` dans le type, ou « café poussette » / « café des enfants » dans le nom | `cafe_parents` |
+| Type contenant « librairie jeunesse » | `librairie_jeunesse` |
+| Type contenant « festival » ou « événement » | `festival_evenement` |
+| Type contenant « salle spectacle », « salle de spectacle », « théâtre », « scène nationale » ou « équipement culturel », ou égal à `CDN` | `salle_spectacle` |
+| « Ludothèque » dans le type ou le nom | `ludotheque` |
+| `Centre social`, `Centre de loisirs`, `centre_loisirs`, `Accueil de loisirs`, `ALSH` dans le type ou expressions correspondantes dans le nom | `centre` |
+| `LAEP`, `Lieu de parentalité`, `Lieux enfants parents` dans le type, ou `LAEP` / « lieu de parentalité » dans le nom | `lieu_parentalite` |
+| `RAM`, « relais petite enfance », « relais assistantes maternelles » dans le type ou le nom ; `RPE` dans le nom | `rpe` |
+| « mairie » ou « ville de » dans le nom | `mairie` |
+| `MAM` ou « garderie » dans le nom | `mam` ou `garderie` respectivement |
+| `MJC` ou « maison pour tous » dans le nom | `mjc` |
+| « médiathèque » dans le type | `mediatheque` |
+
+Les accents, la casse et les séparateurs sont normalisés pour les correspondances textuelles. Si aucune règle ne correspond, l'importeur ne déduit pas de type. Il ne remplace le type d'une organisation existante que si celle-ci n'en a pas déjà un. Le détail du mapping est dans `DirectoryEstablishmentUpserter::mapOrganizationType()`.
+
+Cette conversion ne remplace le type que si l'organisation n'en a pas déjà un. Ainsi, un import qui retrouve une organisation existante conserve son type renseigné ; les nouvelles organisations reçoivent le type déduit. Les valeurs possibles et leurs libellés sont déclarés dans `OrganizationType` et `translations/backoffice+intl-icu.fr.yaml`.
 
 ### Contacts partages
 
