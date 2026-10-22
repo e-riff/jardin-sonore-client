@@ -103,8 +103,13 @@ const fr = {
         paragraphs: [
             "Je m’appelle Emeric RIFF. Musicien et professeur de musique, j’ai découvert l’intervention musicale en petite enfance au fil de mes expériences, et je n’en suis jamais vraiment parti.",
             "J’y ai trouvé un terrain d’exploration précieux : des moments simples, sensibles, où la musique devient un support de lien, d’écoute et de découverte pour les tout-petits.",
-            "Diplômé dans le champ de la formation et de la petite enfance, je construis mes séances à partir de mon parcours d’enseignant, de musicien et d’intervenant auprès des jeunes enfants. Avec le Jardin Sonore, je propose aux structures petite enfance des temps musicaux vivants, doux et adaptés à chaque groupe.",
         ],
+        training: {
+            beforeLink: "Titulaire du ",
+            linkLabel: "DUMUSIS",
+            linkHref: "https://lesla.univ-lyon2.fr/centre-de-formation-des-musiciens-intervenants-cfmi/dumusis-du-de-musicien-specialiste",
+            afterLink: " (diplôme universitaire de musicien spécialiste), obtenu au CFMI de Lyon, je construis mes séances à partir de mon parcours d’enseignant, de musicien et d’intervenant auprès des jeunes enfants. Avec le Jardin Sonore, je propose aux structures petite enfance des temps musicaux vivants, doux et adaptés à chaque groupe.",
+        },
         imageAlt: "Emeric présentant des jeux sonores avec des couvercles",
     },
     about: {

@@ -17,6 +17,13 @@ export default async function FounderSection(): Promise<JSX.Element> {
                         {content.paragraphs.map((paragraph: string) => (
                             <p key={paragraph}>{paragraph}</p>
                         ))}
+                        <p>
+                            {content.training.beforeLink}
+                            <a className="text-primary underline underline-offset-4 hover:text-primary/80 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={content.training.linkHref}>
+                                {content.training.linkLabel}
+                            </a>
+                            {content.training.afterLink}
+                        </p>
                     </div>
                 </div>
 
