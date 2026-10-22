@@ -7,6 +7,7 @@ parameters:
   app.mcp.draft_compose_enabled: '%env(bool:MCP_DRAFT_COMPOSE_ENABLED)%'
   app.mcp.mailing_write_enabled: '%env(bool:MCP_MAILING_WRITE_ENABLED)%'
   app.mcp.catalog_write_enabled: '%env(bool:MCP_CATALOG_WRITE_ENABLED)%'
+  app.mcp.quote_write_enabled: '%env(bool:MCP_QUOTE_WRITE_ENABLED)%'
   app.mcp.imap_host: '%env(MCP_IMAP_HOST)%'
   app.mcp.imap_port: '%env(int:MCP_IMAP_PORT)%'
   app.mcp.imap_username: '%env(MCP_IMAP_USERNAME)%'

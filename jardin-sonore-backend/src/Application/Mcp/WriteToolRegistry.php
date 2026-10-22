@@ -33,6 +33,8 @@ final readonly class WriteToolRegistry
         private ?ProjectNoteWriter $projectNoteWriter = null,
         private ?McpSessionCatalog $mcpSessionCatalog = null,
         #[Autowire('%app.mcp.catalog_write_enabled%')] private bool $catalogWriteEnabled = false,
+        private ?ProjectQuoteManager $projectQuoteManager = null,
+        #[Autowire('%app.mcp.quote_write_enabled%')] private bool $quoteWriteEnabled = false,
     ) {
     }
 
@@ -187,6 +189,7 @@ final readonly class WriteToolRegistry
             ...$this->mailingRecommendationDefinitions(),
             ...$this->sessionCatalogDefinitions(),
             ...$this->scheduleDefinitions(),
+            ...$this->quoteDefinitions(),
         ];
     }
 
@@ -221,6 +224,9 @@ final readonly class WriteToolRegistry
         }
         if (in_array($name, ['create_project_task', 'update_project_task', 'complete_project_task', 'create_project_appointment', 'update_project_appointment', 'cancel_project_appointment', 'set_project_appointment_summary'], true)) {
             return $this->callSchedule($name, $arguments);
+        }
+        if (in_array($name, ['record_project_quote_sent', 'mark_project_quote_signed', 'mark_project_quote_refused'], true)) {
+            return $this->callQuote($name, $arguments);
         }
         if (!$this->writeEnabled) {
             return $this->error('Commercial writes are disabled.');
@@ -493,6 +499,65 @@ final readonly class WriteToolRegistry
         }
 
         return $data;
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function quoteDefinitions(): array
+    {
+        $confirmation = 'After separate explicit user confirmation, ';
+        $projectId = ['type' => 'integer', 'minimum' => 1];
+        $quoteId = ['type' => 'integer', 'minimum' => 1];
+        $revision = ['type' => 'string', 'minLength' => 64, 'maxLength' => 64];
+        $date = ['type' => 'string', 'format' => 'date'];
+        $annotation = ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false];
+
+        return [
+            ['name' => 'record_project_quote_sent', 'description' => $confirmation . 'record one quote sent in an exact dossier. Supply its existing filename only; this tool does not upload or replace files. A replacement relation is optional and does not change the old quote status.', 'inputSchema' => ['type' => 'object', 'properties' => ['projectId' => $projectId, 'reference' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 64], 'filename' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255], 'amount' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 32, 'description' => 'Amount in euros, for example 1250 or 1250,50.'], 'sentOn' => $date, 'replacesQuoteId' => ['type' => ['integer', 'null'], 'minimum' => 1]], 'required' => ['projectId', 'reference', 'filename', 'amount', 'sentOn'], 'additionalProperties' => false], 'annotations' => $annotation],
+            ['name' => 'mark_project_quote_signed', 'description' => $confirmation . 'mark one exact quote as signed. Read it first and pass its current revision and the date the signature was received. This may confirm the dossier using the existing workflow.', 'inputSchema' => ['type' => 'object', 'properties' => ['projectId' => $projectId, 'quoteId' => $quoteId, 'revision' => $revision, 'occurredOn' => $date], 'required' => ['projectId', 'quoteId', 'revision', 'occurredOn'], 'additionalProperties' => false], 'annotations' => $annotation],
+            ['name' => 'mark_project_quote_refused', 'description' => $confirmation . 'mark one exact quote as refused. Read it first and pass its current revision and the date the refusal was received.', 'inputSchema' => ['type' => 'object', 'properties' => ['projectId' => $projectId, 'quoteId' => $quoteId, 'revision' => $revision, 'occurredOn' => $date], 'required' => ['projectId', 'quoteId', 'revision', 'occurredOn'], 'additionalProperties' => false], 'annotations' => $annotation],
+        ];
+    }
+
+    /** @param array<string, mixed> $arguments
+     * @return array<string, mixed>
+     */
+    private function callQuote(string $name, array $arguments): array
+    {
+        if (!$this->quoteWriteEnabled || null === $this->projectQuoteManager) {
+            return $this->error('Project quote writes are disabled.');
+        }
+
+        try {
+            $definition = null;
+            foreach ($this->quoteDefinitions() as $candidate) {
+                if ($candidate['name'] === $name) {
+                    $definition = $candidate;
+                    break;
+                }
+            }
+            if (null === $definition) {
+                throw new InvalidToolArguments('Unknown quote operation.');
+            }
+            $schema = $definition['inputSchema'];
+            if ([] !== array_diff(array_keys($arguments), array_keys($schema['properties']))) {
+                throw new InvalidToolArguments('Unexpected argument.');
+            }
+            foreach ($schema['required'] as $required) {
+                if (!array_key_exists($required, $arguments)) {
+                    throw new InvalidToolArguments("Missing {$required}.");
+                }
+            }
+            $result = $this->projectQuoteManager->execute($name, $arguments);
+            $json = json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+            return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => false];
+        } catch (DomainException|InvalidToolArguments $exception) {
+            return $this->error($exception->getMessage());
+        } catch (JsonException) {
+            return $this->error('The quote operation returned invalid data.');
+        } catch (Throwable) {
+            return $this->error('The quote operation failed.');
+        }
     }
 
     /** @return list<array<string, mixed>> */

@@ -11,7 +11,7 @@ use Throwable;
 
 final readonly class ReadToolRegistry
 {
-    public function __construct(private MailReader $mailReader, private ProjectSearch $projectSearch, private ProjectContextReader $projectContextReader, private ?MailDraftEditor $mailDraftEditor = null, private ?MailingDraftManager $mailingDraftManager = null, private ?ProjectScheduleManager $projectScheduleManager = null, private ?StandaloneMailDraftEditor $standaloneMailDraftEditor = null, private ?McpMailingRecommendations $mcpMailingRecommendations = null, private ?McpSessionCatalog $mcpSessionCatalog = null)
+    public function __construct(private MailReader $mailReader, private ProjectSearch $projectSearch, private ProjectContextReader $projectContextReader, private ?MailDraftEditor $mailDraftEditor = null, private ?MailingDraftManager $mailingDraftManager = null, private ?ProjectScheduleManager $projectScheduleManager = null, private ?StandaloneMailDraftEditor $standaloneMailDraftEditor = null, private ?McpMailingRecommendations $mcpMailingRecommendations = null, private ?McpSessionCatalog $mcpSessionCatalog = null, private ?ProjectQuoteManager $projectQuoteManager = null)
     {
     }
 
@@ -117,6 +117,18 @@ final readonly class ReadToolRegistry
                 'annotations' => ['readOnlyHint' => true, 'destructiveHint' => false, 'openWorldHint' => false],
             ],
             [
+                'name' => 'list_project_quotes',
+                'description' => 'List quotes recorded in one exact commercial project, with their status, replacement relation and revision tokens. This only reads dossier metadata, not quote documents.',
+                'inputSchema' => ['type' => 'object', 'properties' => ['projectId' => ['type' => 'integer', 'minimum' => 1]], 'required' => ['projectId'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => true, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
+            [
+                'name' => 'get_project_quote',
+                'description' => 'Read one quote by exact project and quote IDs before recording a decision. Returns the current revision token; it does not expose or download the quote file.',
+                'inputSchema' => ['type' => 'object', 'properties' => ['projectId' => ['type' => 'integer', 'minimum' => 1], 'quoteId' => ['type' => 'integer', 'minimum' => 1]], 'required' => ['projectId', 'quoteId'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => true, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
+            [
                 'name' => 'search_mailing_campaigns',
                 'description' => 'Search recent mailing campaigns, including sent and in-progress campaigns, for reference and reuse. This tool only reads campaign metadata.',
                 'inputSchema' => ['type' => 'object', 'properties' => [
@@ -194,6 +206,8 @@ final readonly class ReadToolRegistry
                 'search_projects' => ['email', 'organization', 'terms', 'limit'],
                 'get_project_context' => ['projectId'],
                 'get_project_appointment' => ['projectId', 'appointmentId'],
+                'list_project_quotes' => ['projectId'],
+                'get_project_quote' => ['projectId', 'quoteId'],
                 'search_mailing_campaigns' => ['query', 'limit'],
                 'get_mailing_campaign' => ['campaignUuid'],
                 'list_mailing_audience_masks' => [],
@@ -252,6 +266,21 @@ final readonly class ReadToolRegistry
                         throw new InvalidToolArguments('Invalid appointment identifier.');
                     }
                     $result = $this->projectScheduleManager->getAppointment($projectId, $appointmentId);
+                    break;
+                case 'list_project_quotes':
+                    $projectId = $arguments['projectId'] ?? null;
+                    if (!is_int($projectId) || 1 > $projectId || null === $this->projectQuoteManager) {
+                        throw new InvalidToolArguments('Invalid project ID.');
+                    }
+                    $result = $this->projectQuoteManager->list($projectId);
+                    break;
+                case 'get_project_quote':
+                    $projectId = $arguments['projectId'] ?? null;
+                    $quoteId = $arguments['quoteId'] ?? null;
+                    if (!is_int($projectId) || 1 > $projectId || !is_int($quoteId) || 1 > $quoteId || null === $this->projectQuoteManager) {
+                        throw new InvalidToolArguments('Invalid quote identifier.');
+                    }
+                    $result = $this->projectQuoteManager->get($projectId, $quoteId);
                     break;
                 case 'search_mailing_campaigns':
                     $this->assertMailingToolsAvailable();
