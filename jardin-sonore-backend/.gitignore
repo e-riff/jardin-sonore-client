@@ -19,8 +19,7 @@
 /.php-cs-fixer.cache
 ###< friendsofphp/php-cs-fixer ###
 
-/data/*.sql
-!/data/*.sql.xz
+/data/
 
 /public/uploads/
 

@@ -50,7 +50,7 @@ rsync -az --delete \
   --exclude 'var/' \
   --exclude 'vendor/' \
   --exclude '.php-cs-fixer.cache' \
-  --exclude 'data/*.sql' \
+  --exclude 'data/' \
   "$BACKEND_DIR/" \
   "$REMOTE:$CPANEL_BACKEND_PATH/"
 
