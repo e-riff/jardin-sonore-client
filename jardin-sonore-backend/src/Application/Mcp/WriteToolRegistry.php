@@ -123,7 +123,7 @@ final readonly class WriteToolRegistry
             ],
             [
                 'name' => 'create_project_note',
-                'description' => 'After separate explicit user confirmation, add one free note to the timeline of an exact commercial project. Read the project first. The content may contain safe bold, italic, line breaks and HTTP(S) links. Supply a stable requestId for retries. This does not require a source mail and does not create a task.',
+                'description' => 'After separate explicit user confirmation, add one free note to the timeline of an exact commercial project. Read the project first. Format content as a small HTML fragment, never Markdown: use <strong>bold</strong>, <em>italic</em>, <br> or <br><br> for line/paragraph breaks, and <a href="https://example.com">link text</a> for HTTP(S) links. Markdown such as **bold** is displayed literally. Optional colored text may use <span style="color:#47664B">text</span>; only #A64D43, #692019 and #47664B are kept. Plain text is also accepted. Supply a stable requestId for retries. This does not require a source mail and does not create a task.',
                 'inputSchema' => ['type' => 'object', 'properties' => [
                     'projectId' => ['type' => 'integer', 'minimum' => 1],
                     'requestId' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 100],
