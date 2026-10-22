@@ -1,6 +1,6 @@
 # Roadmap Jardin Sonore
 
-Mise à jour le 21 octobre 2026. Ce document est la **seule source de l'état courant, des priorités et du point de reprise**. `AGENTS.md` et `.codex/jardin-sonore-guidelines.md` décrivent la méthode de travail ; les plans, conceptions et bilans datés gardent le détail technique et l'état constaté à leur date. Ne pas reprendre leurs anciennes listes de tâches sans vérifier cette page. L'ordre général est : **visibilité et nouvelles demandes**, puis **gain de temps dans le backoffice**. Les priorités indiquent un ordre de travail, pas un engagement de livraison simultanée.
+Mise à jour le 22 octobre 2026. Ce document est la **seule source de l'état courant, des priorités et du point de reprise**. `AGENTS.md` et `.codex/jardin-sonore-guidelines.md` décrivent la méthode de travail ; les plans, conceptions et bilans datés gardent le détail technique et l'état constaté à leur date. Ne pas reprendre leurs anciennes listes de tâches sans vérifier cette page. L'ordre général est : **visibilité et nouvelles demandes**, puis **gain de temps dans le backoffice**. Les priorités indiquent un ordre de travail, pas un engagement de livraison simultanée.
 
 ## Livré — hors travaux futurs
 
@@ -15,7 +15,13 @@ Mise à jour le 21 octobre 2026. Ce document est la **seule source de l'état co
 - Page d'offre `/eveil-musical-creche` publiée avec la fiche « Crèches & EAJE » actualisée sur l'accueil, le PDF d'exemple, les photos WebP, le fil d'Ariane, les données structurées et le sitemap (`deploy-eveil-musical-creche-20261007-01`).
 - Fiche Google Business Profile existante évaluée et complétée comme activité de zone desservie le 8 octobre : adresse publique masquée, zones et horaires renseignés, photo de couverture choisie et profil de réseau social ajouté. La catégorie « Artiste » est conservée faute de meilleure catégorie proposée. Le favicon Flaticon est crédité sur la page de mentions légales dans la livraison du 8 octobre.
 
-## Point de reprise — 20 octobre 2026
+## Point de reprise — 22 octobre 2026
+
+L'audit en lecture seule du 22 octobre trouve 345 liens d'import vers 345 fiches distinctes pour les 346 lignes des nouveaux JSON. Les neuf lignes Vienne/Pilat ont été importées par l'utilisateur sous la source `rattrapage-rhone-nord-beaujolais`, qui compte désormais 13 liens ; réutiliser cette même source pour une relance tant que les liens ne sont pas corrigés. Seul `laep42-stet-ribambulles-soleil` n'a toujours pas de lien. Sept paires de fiches sont à soumettre en une seule revue métier avant toute fusion : Cerf-Volant Chazelles, MJC Vienne, médiathèques Le Trente et Condrieu, médiathèques-ludothèques Perreux et Chassieu, et centre social Chadrac. Les fiches candidates n'ont ni dossier commercial, ni séance, ni accès portail liés ; vérifier les autres relations et les coordonnées avant toute correction.
+
+Après cette revue, cadrer séparément trois suites MCP : lecture et édition des éléments du répertoire utilisés en séance ; création de notes de dossier avec mise en forme sûre ; suivi des devis envoyés, remplacés ou non, signés et refusés en réutilisant le parcours métier existant. La création de recommandations du catalogue avec image et l'ouverture des séances au MCP restent dans le même programme, après clarification du compositeur. Les recettes calendrier et brouillons semblent satisfaisantes selon le retour utilisateur du 22 octobre ; les reprendre si un problème concret apparaît.
+
+### Historique du 20 octobre 2026
 
 Le suivi commercial et l'harmonisation du backoffice ont été déployés sous `deploy-suivi-clients-backoffice-20261014-01` (`fb71830`), fusionnés dans `main`. La livraison comprenait l'index Dossiers unique, la fiche dossier réorganisée, les tâches et le fil, les mises à jour du rapport du matin, les contrôles d'index, ainsi que l'harmonisation des formulaires de catalogue. À cette date, la production comptait 63 migrations exécutées, aucune en attente, et le schéma Doctrine était synchronisé. La migration `Version20261013132221` avait été appliquée ; la reprise avait créé un dossier historique et son second passage n'en avait créé aucun. Les pages publiques répondaient en HTTP 200 et l'index backoffice renvoyait à l'authentification (HTTP 302). Les 416 tests backend et 2 274 assertions passaient (une notice PHPUnit). Le client n'avait pas été redéployé : il n'avait aucune différence depuis le tag du 12 octobre déjà présent en production.
 
@@ -62,6 +68,8 @@ L'usage visé est une demande matinale dans le chat, avec confirmation avant cha
 L'intégration du calendrier dans les dossiers est déployée en production sous `deploy-commercial-calendar-20261016-01` (`b75705a`). Elle comprend la connexion OAuth chiffrée, la création/modification/annulation des séances, le rattachement manuel groupé, le rafraîchissement périodique et à l'ouverture du dossier, l'aperçu des deux semaines dans le mail commercial, le rappel de facture mensuel et la fiche dossier revue. Les cinq paramètres Google sont configurés dans le `.env.local` de cPanel ; la migration `Version20261016084010` est appliquée et le schéma est synchronisé. Le cron de rafraîchissement tourne toutes les 15 minutes. La connexion OAuth par l'utilisateur, puis la recette d'une séance réelle ou de test (création, déplacement, rattachement et aperçu du mail) restent à faire. La [spécification](docs/superpowers/specs/2026-10-15-calendrier-dossiers-commerciaux-design.md) et le [plan d'implémentation](docs/superpowers/plans/2026-10-15-calendrier-dossiers-commerciaux.md) gardent le détail ; aucune vue agenda globale n'est prévue.
 
 La génération des devis depuis le classeur existant est reportée : ChatGPT et son connecteur conviennent actuellement pour préparer les devis. Le backoffice conserve leur suivi manuel. La recette visuelle authentifiée mobile et desktop reste ouverte.
+
+Le prochain périmètre MCP à cadrer comprend les éléments du répertoire utilisés dans les séances, puis les séances après simplification du compositeur. Les recommandations du catalogue, distinctes des recommandations propres à une campagne de mailing, doivent aussi pouvoir être lues et gérées ; leur image demande un parcours d'ajout explicite. Les outils MCP actuels ne créent que des recommandations dans un brouillon de mailing et n'y ajoutent pas d'image. La page « collaborations et projets » reste une piste de visibilité à préparer avec l'accord des partenaires.
 
 ### Historique du 8 octobre — avant le suivi commercial
 
@@ -126,7 +134,7 @@ Le mailing récent contient plusieurs blocs « paragraphe » consécutifs créé
 
 La boîte cPanel reste la source des échanges avec les clients ; le backoffice porte les dossiers, les échéances et les documents.
 
-Le 21 octobre, les types MJC / maison pour tous, centre de loisirs / ALSH et lieu de parentalité ont été déployés dans l'annuaire et le ciblage des mailings sous `deploy-organization-types-20261021-01` (`270d851`). Le lot fourni de 24 MJC/MPT de l'Isère est importé et contrôlé en base locale seulement. Son fichier JSON et l'option de revue manuelle des rapprochements sont préparés pour une livraison ultérieure ; aucune de ces 24 fiches n'a encore été importée en production.
+Le 21 octobre, les types MJC / maison pour tous, centre de loisirs / ALSH et lieu de parentalité ont été déployés dans l'annuaire et le ciblage des mailings sous `deploy-organization-types-20261021-01` (`270d851`). Le 22 octobre, les autres types d'annuaire, les fichiers d'import et la suppression du statut client/prospect ont été livrés sous `deploy-directory-import-status-20261022-01` ; le rapprochement tient ensuite compte du type sous `deploy-directory-type-matching-20261022-01`. Le résultat du dernier contrôle de production est dans le point de reprise ci-dessus.
 
 ## P2 — Calendrier, interventions, devis et facturation suivie
 
