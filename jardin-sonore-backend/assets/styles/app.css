@@ -4430,6 +4430,16 @@ form.internal-form > .internal-form__actions > .internal-form__back-action {
     background: rgb(255 255 255 / 0.72);
 }
 
+.session-activity-form__identity {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.media-association-picker:has(.ts-wrapper .item) > .media-association-picker__toggle {
+    border-color: color-mix(in oklab, var(--color-secondary) 48%, white);
+    background: color-mix(in oklab, var(--color-secondary-container) 68%, white);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-secondary) 12%, transparent);
+}
+
 .session-composer-overlay__close {
     display: inline-grid;
     width: 40px;

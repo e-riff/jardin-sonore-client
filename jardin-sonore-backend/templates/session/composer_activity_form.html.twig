@@ -17,21 +17,23 @@
                     : path('session_sequence_edit', { uuid: session.uuid, sequenceUuid: sequence.uuid, composer: 1 }),
                 attr: { class: 'internal-form internal-form--wide session-activity-form', 'data-turbo-frame': 'session-composer-overlay' }
             }) }}
-                {{ form_row(form.title) }}
-                {{ form_row(form.instrumentUuids) }}
-                <div class="internal-form__grid">
+                <div class="internal-form__grid session-activity-form__identity">
+                    {{ form_row(form.title) }}
                     {{ form_row(form.role) }}
+                    {{ form_row(form.subtitle) }}
                 </div>
                 {% include 'session/_role_suggestions.html.twig' with { id: 'session-sequence-role-suggestions' } only %}
+                {{ form_row(form.instrumentUuids) }}
                 {{ form_row(form.body) }}
                 {% include 'media_resource/_association_picker.html.twig' with { field: form.catalogMediaUuids } only %}
                 <details class="internal-disclosure">
                     <summary>{{ 'sessions.sequence.form.lyrics_and_gestures'|trans({}, 'sessions') }}</summary>
-                    {{ form_row(form.lyrics) }}
-                    {{ form_row(form.gestures) }}
+                    <div class="internal-form__grid">
+                        {{ form_row(form.lyrics) }}
+                        {{ form_row(form.gestures) }}
+                    </div>
                 </details>
-                {{ form_row(form.subtitle) }}
-                {{ form_row(form.showLyricsByDefault) }}
+                {{ form_widget(form.showLyricsByDefault, { attr: { class: 'internal-visually-hidden', tabindex: '-1', 'aria-hidden': 'true' } }) }}
                 {{ form_widget(form.sourceUuid) }}
                 {{ form_widget(form.sourceTitle) }}
                 <div class="internal-form__actions">

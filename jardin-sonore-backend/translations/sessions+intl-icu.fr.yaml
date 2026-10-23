@@ -92,6 +92,7 @@ sessions:
       manage: "Gérer les médias"
       heading: "Médias associés"
       help: "Choisissez les ressources à utiliser. Une ressource créée ici rejoint le catalogue."
+      validate: "Valider"
     type:
       soundtrack: "Musique"
       ambient_sound: "Fond sonore"
