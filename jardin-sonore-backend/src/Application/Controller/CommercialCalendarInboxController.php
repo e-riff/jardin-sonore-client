@@ -57,7 +57,7 @@ final class CommercialCalendarInboxController extends AbstractController
 
         try {
             $events = $calendarGateway->eventsBetween($startsAt, $endsAt);
-        } catch (GoogleCalendarApiException) {
+        } catch (GoogleCalendarApiException|GoogleCalendarOAuthException) {
             return $this->render('commercial/calendar/unlinked.html.twig', [
                 'groups' => [],
                 'projects' => [],
@@ -135,7 +135,7 @@ final class CommercialCalendarInboxController extends AbstractController
         $endsAt = $this->dateFromQuery($request, 'to', $defaultEnd, true);
         try {
             $candidateEvents = $calendarGateway->eventsBetween($startsAt, $endsAt);
-        } catch (GoogleCalendarApiException) {
+        } catch (GoogleCalendarApiException|GoogleCalendarOAuthException) {
             $this->addFlash('error', ['message' => 'calendar.unlinked.load_error', 'domain' => 'commercial']);
 
             return $this->redirectToUnlinked($request);

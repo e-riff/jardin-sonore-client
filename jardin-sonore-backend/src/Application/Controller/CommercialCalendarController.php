@@ -12,6 +12,7 @@ use App\Infrastructure\Doctrine\Entity\CommercialInterventionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use App\Infrastructure\Google\GoogleCalendarApiException;
 use App\Infrastructure\Google\GoogleCalendarOAuthClient;
+use App\Infrastructure\Google\GoogleCalendarOAuthException;
 use DateTimeImmutable;
 use DateTimeZone;
 use Doctrine\ORM\EntityManagerInterface;
@@ -76,7 +77,7 @@ final class CommercialCalendarController extends AbstractController
         $calendarError = false;
         try {
             $events = $calendarGateway->eventsBetween($queryStart, $queryEnd);
-        } catch (GoogleCalendarApiException) {
+        } catch (GoogleCalendarApiException|GoogleCalendarOAuthException) {
             $events = [];
             $calendarError = true;
         }
