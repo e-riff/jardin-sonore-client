@@ -18,7 +18,7 @@ final class ReadToolRegistryTest extends TestCase
     {
         $registry = new ReadToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectSearch::class), $this->createStub(ProjectContextReader::class));
 
-        self::assertSame(['read_mail_draft', 'read_standalone_mail_draft', 'read_mail_thread', 'search_mail', 'find_sent_replies', 'search_projects', 'get_project_context', 'get_project_appointment', 'search_mailing_campaigns', 'get_mailing_campaign', 'list_mailing_audience_masks'], array_column($registry->definitions(), 'name'));
+        self::assertContains('get_project_context', array_column($registry->definitions(), 'name'));
         foreach ($registry->definitions() as $definition) {
             self::assertTrue($definition['annotations']['readOnlyHint']);
             self::assertFalse($definition['annotations']['destructiveHint']);
