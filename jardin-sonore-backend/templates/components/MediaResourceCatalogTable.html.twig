@@ -96,7 +96,7 @@
                     </thead>
                     <tbody>
                         {% for item in items %}
-                            <tr class="internal-table__row--clickable" data-table-availability="{{ item.active ? 'active' : 'inactive' }}" tabindex="0" data-controller="catalog-row" data-catalog-row-url-value="{{ path('media_resource_edit', { uuid: item.uuid.toRfc4122 }) }}" data-action="click->catalog-row#navigate keydown->catalog-row#navigateFromKeyboard">
+                            <tr id="media-resource-{{ item.uuid.toRfc4122 }}" class="internal-table__row--clickable" data-table-availability="{{ item.active ? 'active' : 'inactive' }}" tabindex="0" data-controller="catalog-row" data-catalog-row-url-value="{{ path('media_resource_edit', { uuid: item.uuid.toRfc4122 }) }}" data-action="click->catalog-row#navigate keydown->catalog-row#navigateFromKeyboard">
                                 <td data-table-mobile="primary" data-label="{{ 'sessions.media.table.title'|trans({}, 'sessions') }}">
                                     <div class="media-catalog-title">
                                         {% if item.thumbnailUrl %}
