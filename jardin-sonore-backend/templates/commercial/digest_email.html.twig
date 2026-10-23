@@ -15,7 +15,7 @@
                 </td></tr>
                 <tr><td style="padding:24px 26px 4px;">
                     {% if digest.todayAppointments %}
-                        <h2 style="margin:0 0 11px; color:#47664b; font-size:16px; line-height:23px;">{{ 'appointments'|trans({}, 'commercial_digest') }}</h2>
+                        {% include 'commercial/_digest_section_heading.html.twig' with { label: 'appointments'|trans({}, 'commercial_digest') } only %}
                         {% if digest.appointmentSyncWarning %}<p style="margin:0 0 12px; color:#896a32; font-size:13px;">{{ 'appointment_sync_warning'|trans({}, 'commercial_digest') }}</p>{% endif %}
                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:24px; border-top:1px solid #e5dcd3;">
                             {% for appointment in digest.todayAppointments %}
@@ -28,7 +28,7 @@
                         </table>
                     {% endif %}
                     {% if digest.upcomingInterventions %}
-                        <h2 style="margin:0 0 11px; color:#47664b; font-size:16px; line-height:23px;">{{ 'sessions'|trans({}, 'commercial_digest') }}</h2>
+                        {% include 'commercial/_digest_section_heading.html.twig' with { label: 'sessions'|trans({}, 'commercial_digest') } only %}
                         {% if digest.calendarSyncWarning %}<p style="margin:0 0 12px; color:#896a32; font-size:13px; line-height:19px;">{{ 'calendar_sync_warning'|trans({}, 'commercial_digest') }}</p>{% endif %}
                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:24px; border-top:1px solid #e5dcd3;">
                             {% set startOfNextWeek = digest.localDate|date_modify('monday this week')|date_modify('+7 days') %}
@@ -55,7 +55,7 @@
                         </table>
                     {% endif %}
                     {% if digest.dueActions %}
-                        <h2 style="margin:0 0 11px; color:#a64d43; font-size:16px; line-height:23px;">{{ 'actions'|trans({}, 'commercial_digest') }}</h2>
+                        {% include 'commercial/_digest_section_heading.html.twig' with { label: 'actions'|trans({}, 'commercial_digest') } only %}
                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:24px; border-top:1px solid #e5dcd3;">
                             {% for action in digest.dueActions %}
                                 <tr><td style="padding:12px 0; border-bottom:1px solid #e5dcd3; font-size:14px; line-height:21px;">
@@ -67,7 +67,7 @@
                         </table>
                     {% endif %}
                     {% if digest.overdueInvoices %}
-                        <h2 style="margin:0 0 11px; color:#896a32; font-size:16px; line-height:23px;">{{ 'invoices'|trans({}, 'commercial_digest') }}</h2>
+                        {% include 'commercial/_digest_section_heading.html.twig' with { label: 'invoices'|trans({}, 'commercial_digest') } only %}
                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:24px; border-top:1px solid #e5dcd3;">
                             {% for invoice in digest.overdueInvoices %}
                                 <tr><td style="padding:12px 0; border-bottom:1px solid #e5dcd3; font-size:14px; line-height:21px;">
@@ -79,7 +79,7 @@
                         </table>
                     {% endif %}
                     {% if digest.withoutAction %}
-                        <h2 style="margin:0 0 11px; color:#47664b; font-size:16px; line-height:23px;">{{ 'without_action'|trans({}, 'commercial_digest') }}</h2>
+                        {% include 'commercial/_digest_section_heading.html.twig' with { label: 'without_action'|trans({}, 'commercial_digest') } only %}
                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:24px; border-top:1px solid #e5dcd3;">
                             {% for project in digest.withoutAction %}
                                 <tr><td style="padding:12px 0; border-bottom:1px solid #e5dcd3; font-size:14px; line-height:21px;">
