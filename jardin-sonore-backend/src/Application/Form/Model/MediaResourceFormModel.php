@@ -33,9 +33,6 @@ final class MediaResourceFormModel
     public ?string $description = null;
 
     #[Assert\Url]
-    public ?string $secondaryUrl = null;
-
-    #[Assert\Url]
     public ?string $imageUrl = null;
 
     #[Assert\Image(
@@ -58,7 +55,6 @@ final class MediaResourceFormModel
         $formModel->primaryUrl = self::normalizeEditableUrl($mediaResourceView->primaryUrl);
         $formModel->source = $mediaResourceView->source;
         $formModel->description = $mediaResourceView->description;
-        $formModel->secondaryUrl = $mediaResourceView->secondaryUrl;
         $formModel->imageUrl = self::normalizeEditableUrl($mediaResourceView->imageUrl);
         $formModel->active = $mediaResourceView->active;
         $formModel->themeUuids = array_column($mediaResourceView->themes, 'uuid');

@@ -34,7 +34,6 @@ final readonly class CreateMediaResource
             primaryUrl: $primaryUrl,
             source: $saveMediaResourceInput->source,
             description: $saveMediaResourceInput->description,
-            secondaryUrl: $saveMediaResourceInput->secondaryUrl,
             imageUrl: $imageUrl,
             active: $saveMediaResourceInput->active,
             themes: array_values(array_filter(array_map(fn (string $themeUuid) => Uuid::isValid($themeUuid) ? $this->themeRepository->findByUuid(Uuid::fromString($themeUuid)) : null, array_unique($saveMediaResourceInput->themeUuids)))),

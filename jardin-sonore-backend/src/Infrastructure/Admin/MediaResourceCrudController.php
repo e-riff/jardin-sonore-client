@@ -59,7 +59,7 @@ final class MediaResourceCrudController extends AbstractCrudController
             ->setPageTitle(Crud::PAGE_DETAIL, 'admin.media_resource.page.detail')
             ->setDefaultSort(['updatedAt' => 'DESC'])
             ->showEntityActionsInlined()
-            ->setSearchFields(['title', 'source', 'description', 'primaryUrl', 'secondaryUrl']);
+            ->setSearchFields(['title', 'source', 'description', 'primaryUrl']);
     }
 
     public function configureActions(Actions $actions): Actions
@@ -112,14 +112,6 @@ final class MediaResourceCrudController extends AbstractCrudController
                 'data-controller' => 'exclusive-resource-fields',
                 'data-exclusive-resource-fields-peer-selector-value' => '[name$="[primaryUrl]"]',
             ])
-            ->onlyOnForms();
-        yield TextField::new('secondaryUrl', 'admin.field.secondary_url')
-            ->formatValue(fn (mixed $value): string => $this->formatLink($value))
-            ->renderAsHtml()
-            ->hideOnForm()
-            ->hideOnIndex();
-        yield UrlField::new('secondaryUrl', 'admin.field.secondary_url')
-            ->setFormTypeOption('required', false)
             ->onlyOnForms();
         yield TextField::new('imageUrl', 'admin.field.image_url')
             ->formatValue(fn (mixed $value): string => $this->formatLink($value))
@@ -216,7 +208,6 @@ final class MediaResourceCrudController extends AbstractCrudController
             ->setSource($this->normalizeNullableString($mediaResourceEntity->getSource()))
             ->setDescription($this->normalizeNullableString($mediaResourceEntity->getDescription()))
             ->setPrimaryUrl(trim($mediaResourceEntity->getPrimaryUrl()))
-            ->setSecondaryUrl($this->normalizeNullableString($mediaResourceEntity->getSecondaryUrl()))
             ->setImageUrl($this->normalizeNullableString($mediaResourceEntity->getImageUrl()))
             ->setUpdatedAt(new DateTimeImmutable());
     }

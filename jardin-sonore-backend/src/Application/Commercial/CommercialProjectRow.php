@@ -23,6 +23,7 @@ final readonly class CommercialProjectRow
         public ?DateTimeImmutable $lastEventAt,
         public int $extraTaskCount,
         public string $bucket,
+        public bool $nextTaskIsAppointment,
         public bool $isNew,
         private DateTimeImmutable $localDate,
     ) {

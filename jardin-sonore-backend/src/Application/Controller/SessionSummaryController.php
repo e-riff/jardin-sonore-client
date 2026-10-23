@@ -335,12 +335,12 @@ final class SessionSummaryController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $sessionSequence = $addSessionSequence($sessionSummaryView->uuid, $this->createSequenceInput($formModel));
+            $this->syncCatalogMedia($formModel, $getMediaResourceForEdit);
+            $addSessionSequence($sessionSummaryView->uuid, $this->createSequenceInput($formModel));
 
             if ($openedFromComposer) {
                 return $this->render('session/composer_activity.stream.html.twig', [
                     'session' => $this->getSessionSummaryView($uuid, $getSessionSummary),
-                    'sequenceUuid' => $sessionSequence->uuid->toRfc4122(),
                 ], new Response(headers: ['Content-Type' => 'text/vnd.turbo-stream.html']));
             }
 
@@ -375,6 +375,7 @@ final class SessionSummaryController extends AbstractController
         Request $request,
         GetSessionSummary $getSessionSummary,
         UpdateSessionSequence $updateSessionSequence,
+        GetMediaResourceForEdit $getMediaResourceForEdit,
     ): Response {
         $sessionSummaryView = $this->getSessionSummaryView($uuid, $getSessionSummary);
 
@@ -406,10 +407,12 @@ final class SessionSummaryController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $formModel->body = $this->getSessionSequenceView(
-                $this->getSessionSummaryView($uuid, $getSessionSummary),
-                $sequenceUuid,
-            )->body;
+            if (!$isRepertoireSessionConfiguration) {
+                $this->syncCatalogMedia($formModel, $getMediaResourceForEdit);
+            }
+            if ($isRepertoireSessionConfiguration) {
+                $formModel->body = $sequenceView->body;
+            }
             $updateSessionSequence(
                 $sessionSummaryView->uuid,
                 Uuid::fromString($sequenceUuid),
@@ -443,7 +446,6 @@ final class SessionSummaryController extends AbstractController
             'hasErrors' => $form->isSubmitted() && !$form->isValid(),
             'session' => $sessionSummaryView,
             'sequence' => $sequenceView,
-            'isDraft' => $request->query->getBoolean('draft'),
         ], $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null);
     }
 
@@ -508,7 +510,6 @@ final class SessionSummaryController extends AbstractController
         return $this->render('session/composer_activity_media_picker.html.twig', [
             'session' => $sessionSummaryView,
             'sequence' => $sequenceView,
-            'isDraft' => $request->query->getBoolean('draft'),
             'mediaResources' => $searchMediaResources(query: $request->query->getString('query'), activeOnly: true),
             'query' => $request->query->getString('query'),
         ]);
@@ -540,7 +541,6 @@ final class SessionSummaryController extends AbstractController
             'hasErrors' => false,
             'session' => $updatedSessionSummaryView,
             'sequence' => $updatedSequenceView,
-            'isDraft' => $request->query->getBoolean('draft'),
         ]);
     }
 
@@ -561,7 +561,6 @@ final class SessionSummaryController extends AbstractController
                     'hasErrors' => true,
                     'session' => $sessionSummaryView,
                     'sequence' => $sequenceView,
-                    'isDraft' => $request->query->getBoolean('draft'),
                 ], new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY));
             }
 
@@ -575,7 +574,7 @@ final class SessionSummaryController extends AbstractController
         $form = $this->createForm(MediaResourceFormType::class, $mediaResourceFormModel);
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
-            $mediaResource = $createMediaResource(new SaveMediaResourceInput($mediaResourceFormModel->type, $mediaResourceFormModel->title, $mediaResourceFormModel->primaryUrl, $mediaResourceFormModel->primaryFile, $mediaResourceFormModel->source, $mediaResourceFormModel->description, $mediaResourceFormModel->secondaryUrl, $mediaResourceFormModel->imageUrl, $mediaResourceFormModel->imageFile, $mediaResourceFormModel->themeUuids, $mediaResourceFormModel->active));
+            $mediaResource = $createMediaResource(new SaveMediaResourceInput($mediaResourceFormModel->type, $mediaResourceFormModel->title, $mediaResourceFormModel->primaryUrl, $mediaResourceFormModel->primaryFile, $mediaResourceFormModel->source, $mediaResourceFormModel->description, $mediaResourceFormModel->imageUrl, $mediaResourceFormModel->imageFile, $mediaResourceFormModel->themeUuids, $mediaResourceFormModel->active));
             $formModel = SessionSequenceFormModel::fromView($sequenceView);
             $formModel->addMediaResource(\App\Application\Session\MediaResourceView::fromDomain($mediaResource));
             $updateSessionSequence($sessionSummaryView->uuid, $sequenceView->uuid, $this->createSequenceInput($formModel));
@@ -589,7 +588,6 @@ final class SessionSummaryController extends AbstractController
                 'hasErrors' => false,
                 'session' => $updatedSessionSummaryView,
                 'sequence' => $updatedSequenceView,
-                'isDraft' => $request->query->getBoolean('draft'),
             ]);
         }
 
@@ -630,7 +628,6 @@ final class SessionSummaryController extends AbstractController
                 primaryFile: null,
                 source: $repertoireItemView->source,
                 description: null,
-                secondaryUrl: null,
                 imageUrl: null,
                 imageFile: null,
                 themeUuids: array_column($repertoireItemView->themes, 'uuid'),
@@ -648,7 +645,6 @@ final class SessionSummaryController extends AbstractController
                 'hasErrors' => false,
                 'session' => $updatedSessionSummaryView,
                 'sequence' => $updatedSequenceView,
-                'isDraft' => $request->query->getBoolean('draft'),
             ]);
         }
 
@@ -657,7 +653,6 @@ final class SessionSummaryController extends AbstractController
             'hasErrors' => $form->isSubmitted() && !$form->isValid(),
             'session' => $sessionSummaryView,
             'sequence' => $sequenceView,
-            'isDraft' => $request->query->getBoolean('draft'),
         ], $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null);
     }
 
@@ -811,15 +806,6 @@ final class SessionSummaryController extends AbstractController
 
             $sessionSequence = $addSessionSequence($sessionSummaryView->uuid, $this->createSequenceInput($formModel));
 
-            if ('repertoire' === $catalog) {
-                return $this->redirectToRoute('session_sequence_edit', [
-                    'uuid' => $sessionSummaryView->uuid->toRfc4122(),
-                    'sequenceUuid' => $sessionSequence->uuid->toRfc4122(),
-                    'composer' => 1,
-                    'draft' => 1,
-                ], Response::HTTP_SEE_OTHER);
-            }
-
             $updatedSessionSummaryView = $this->getSessionSummaryView($uuid, $getSessionSummary);
 
             return $this->render('session/composer_add.stream.html.twig', [
@@ -884,6 +870,22 @@ final class SessionSummaryController extends AbstractController
             instrumentUuids: $sessionSequenceFormModel->instrumentUuids,
             media: array_map(static fn ($media): \App\Domain\Model\Session\SessionSequenceMedia => $media->toDomain(), $sessionSequenceFormModel->media),
         );
+    }
+
+    private function syncCatalogMedia(SessionSequenceFormModel $sessionSequenceFormModel, GetMediaResourceForEdit $getMediaResourceForEdit): void
+    {
+        $sessionSequenceFormModel->retainSelectedCatalogMedia();
+
+        foreach ($sessionSequenceFormModel->catalogMediaUuids as $mediaUuid) {
+            if (!Uuid::isValid($mediaUuid)) {
+                continue;
+            }
+
+            $mediaResourceView = $getMediaResourceForEdit(Uuid::fromString($mediaUuid));
+            if (null !== $mediaResourceView && $mediaResourceView->active) {
+                $sessionSequenceFormModel->addMediaResource($mediaResourceView);
+            }
+        }
     }
 
     /**

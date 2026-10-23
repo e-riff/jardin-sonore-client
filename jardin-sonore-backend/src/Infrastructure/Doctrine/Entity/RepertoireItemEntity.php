@@ -26,8 +26,7 @@ class RepertoireItemEntity
     private ?string $generalInstructions = null;
     /** @var list<array<string, mixed>> */
     private array $contentBlocks = [];
-    private ?string $notes = null;
-    /** @var list<string> */
+    /** @var list<string|array{uuid: string, visible: bool}> */
     private array $linkedMediaUuids = [];
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
@@ -128,22 +127,33 @@ class RepertoireItemEntity
         return $this;
     }
 
-    public function getNotes(): ?string
-    {
-        return $this->notes;
-    }
-
-    public function setNotes(?string $notes): static
-    {
-        $this->notes = $notes;
-
-        return $this;
-    }
-
     /** @return list<string> */
     public function getLinkedMediaUuids(): array
     {
+        return array_map(
+            static fn (array|string $linkedMedia): string => is_array($linkedMedia) ? $linkedMedia['uuid'] : $linkedMedia,
+            $this->linkedMediaUuids,
+        );
+    }
+
+    /** @return list<string|array{uuid: string, visible: bool}> */
+    public function getLinkedMediaLinksPayload(): array
+    {
         return $this->linkedMediaUuids;
+    }
+
+    public function isLinkedMediaVisible(string $mediaUuid): bool
+    {
+        foreach ($this->linkedMediaUuids as $linkedMedia) {
+            if (is_array($linkedMedia) && $linkedMedia['uuid'] === $mediaUuid) {
+                return $linkedMedia['visible'];
+            }
+            if (is_string($linkedMedia) && $linkedMedia === $mediaUuid) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function getLinkedMediaCount(): int
@@ -151,7 +161,7 @@ class RepertoireItemEntity
         return count($this->linkedMediaUuids);
     }
 
-    /** @param list<string> $linkedMediaUuids */
+    /** @param list<string|array{uuid: string, visible: bool}> $linkedMediaUuids */
     public function setLinkedMediaUuids(array $linkedMediaUuids): static
     {
         $this->linkedMediaUuids = $linkedMediaUuids;

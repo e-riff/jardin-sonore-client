@@ -32,7 +32,6 @@ final readonly class CreateRepertoireItem
                 $saveRepertoireItemInput->contentBlocks,
             ),
             generalInstructions: $saveRepertoireItemInput->generalInstructions,
-            notes: $saveRepertoireItemInput->notes,
             linkedMediaUuids: $saveRepertoireItemInput->linkedMediaUuids,
             active: $saveRepertoireItemInput->active,
             themes: $this->resolveThemes($saveRepertoireItemInput->themeUuids),

@@ -106,7 +106,7 @@
             <div class="sequence-heading">
                 <span class="sequence-index">{{ '%02d'|format(loop.index) }}</span>
                 <div class="sequence-heading-copy">
-                    <p class="sequence-heading-meta">{% if sequence.role %}<span class="sequence-heading-role">{{ sequence.role }}</span> — {% endif %}<span class="sequence-heading-type">{{ sequence.type.translationKey()|trans({}, 'sessions') }}</span></p>
+                    <p class="sequence-heading-meta">{% if sequence.role %}<span class="sequence-heading-role">{{ sequence.role }}</span>{% else %}<span class="sequence-heading-type">{{ sequence.type.translationKey()|trans({}, 'sessions') }}</span>{% endif %}</p>
                     <div class="sequence-title-row"><h2>{{ sequence.title }}</h2>{% if sequence.subtitle %}<span class="subtitle"> — {{ sequence.subtitle }}</span>{% endif %}</div>
                 </div>
             </div>

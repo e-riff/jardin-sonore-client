@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Admin;
 
+use App\Application\Directory\OrganizationChoiceLabel;
 use App\Domain\Model\AddressBook\DirectoryEntryType;
 use App\Infrastructure\Admin\Formatter\ContactDisplayFormatter;
 use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
@@ -106,7 +107,7 @@ final class PersonCrudController extends AbstractCrudController
         yield TextField::new('firstName', 'admin.field.first_name');
         yield TextField::new('lastName', 'admin.field.last_name');
         yield TextField::new('role', 'admin.field.role');
-        yield AssociationField::new('organization', 'admin.field.organization')->autocomplete();
+        yield AssociationField::new('organization', 'admin.field.organization')->autocomplete(true, OrganizationChoiceLabel::forEntity(...));
         yield AssociationField::new('tags', 'admin.field.tags')->autocomplete();
         yield AssociationField::new('contactDetails', 'admin.field.contact_details')
             ->renderAsEmbeddedForm(ContactDetailsCrudController::class)

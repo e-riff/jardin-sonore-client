@@ -71,7 +71,7 @@ final class OrganizationCrudController extends AbstractCrudController
             ->setPageTitle(Crud::PAGE_DETAIL, 'admin.organization.page.detail')
             ->setDefaultSort(['name' => 'ASC'])
             ->showEntityActionsInlined()
-            ->setSearchFields(['name', 'websiteUrl', 'contactDetails.emailContactLinks.emailContact.emailAddress']);
+            ->setSearchFields(['name', 'websiteUrl', 'contactDetails.emailContactLinks.emailContact.emailAddress', 'contactDetails.addressContacts.postalCode', 'contactDetails.addressContacts.city', 'contactDetails.addressContacts.municipality.postalCode', 'contactDetails.addressContacts.municipality.name']);
     }
 
     public function configureAssets(Assets $assets): Assets

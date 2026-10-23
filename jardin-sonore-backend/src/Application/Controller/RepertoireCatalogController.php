@@ -6,17 +6,14 @@ namespace App\Application\Controller;
 
 use App\Application\Form\Model\RepertoireItemFormModel;
 use App\Application\Form\RepertoireItemType as RepertoireItemFormType;
-use App\Application\Session\CreateMediaResource;
 use App\Application\Session\CreateRepertoireItem;
 use App\Application\Session\DeleteRepertoireItem;
 use App\Application\Session\GetMediaResourceForEdit;
 use App\Application\Session\GetRepertoireItemForEdit;
 use App\Application\Session\RepertoireBlockTextParser;
-use App\Application\Session\SaveMediaResourceInput;
 use App\Application\Session\SaveRepertoireBlockInput;
 use App\Application\Session\SaveRepertoireItemInput;
 use App\Application\Session\UpdateRepertoireItem;
-use App\Domain\Model\Session\MediaResourceType;
 use App\Domain\Model\Session\RepertoireBlockKind;
 use InvalidArgumentException;
 use LogicException;
@@ -38,14 +35,13 @@ final class RepertoireCatalogController extends AbstractController
     }
 
     #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
-    public function new(Request $request, CreateRepertoireItem $createRepertoireItem, CreateMediaResource $createMediaResource): Response
+    public function new(Request $request, CreateRepertoireItem $createRepertoireItem): Response
     {
         $formModel = new RepertoireItemFormModel();
         $form = $this->createForm(RepertoireItemFormType::class, $formModel);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->createYoutubeVideoAndLink($formModel, $createMediaResource);
             $createRepertoireItem($this->createInput($formModel));
             $this->addFlash('success', ['message' => 'sessions.repertoire.flash.created', 'domain' => 'sessions']);
 
@@ -66,7 +62,6 @@ final class RepertoireCatalogController extends AbstractController
         GetRepertoireItemForEdit $getRepertoireItemForEdit,
         GetMediaResourceForEdit $getMediaResourceForEdit,
         UpdateRepertoireItem $updateRepertoireItem,
-        CreateMediaResource $createMediaResource,
     ): Response {
         $itemView = Uuid::isValid($uuid) ? $getRepertoireItemForEdit(Uuid::fromString($uuid)) : null;
 
@@ -85,8 +80,7 @@ final class RepertoireCatalogController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->createYoutubeVideoAndLink($formModel, $createMediaResource);
-            $updateRepertoireItem($itemView->uuid, $this->createInput($formModel));
+            $updateRepertoireItem($itemView->uuid, $this->createInput($formModel, mediaVisibility: $this->submittedMediaVisibility($request)));
             $this->addFlash('success', ['message' => 'sessions.repertoire.flash.updated', 'domain' => 'sessions']);
 
             return $this->redirectToRoute('repertoire_index', ['type' => $formModel->type->value], Response::HTTP_SEE_OTHER);
@@ -123,9 +117,11 @@ final class RepertoireCatalogController extends AbstractController
         return $this->redirectToRoute('repertoire_index', status: Response::HTTP_SEE_OTHER);
     }
 
+    /** @param array<string, bool>|null $mediaVisibility */
     private function createInput(
         RepertoireItemFormModel $formModel,
         RepertoireBlockTextParser $repertoireBlockTextParser = new RepertoireBlockTextParser(),
+        ?array $mediaVisibility = null,
     ): SaveRepertoireItemInput {
         $contentBlocks = [];
 
@@ -152,34 +148,30 @@ final class RepertoireCatalogController extends AbstractController
             body: $this->buildBodyFromContentBlocks($contentBlocks),
             contentBlocks: $contentBlocks,
             generalInstructions: $formModel->generalInstructions,
-            notes: $formModel->notes,
             linkedMediaUuids: $formModel->linkedMediaUuids,
             themeUuids: $formModel->themeUuids,
             active: $formModel->active,
+            linkedMediaVisibility: $mediaVisibility,
         );
     }
 
-    private function createYoutubeVideoAndLink(RepertoireItemFormModel $formModel, CreateMediaResource $createMediaResource): void
+    /** @return array<string, bool>|null */
+    private function submittedMediaVisibility(Request $request): ?array
     {
-        if (null === $formModel->youtubeVideoUrl || '' === trim($formModel->youtubeVideoUrl)) {
-            return;
+        if ('1' !== $request->request->getString('mediaVisibilityManaged')) {
+            return null;
         }
 
-        $mediaResource = $createMediaResource(new SaveMediaResourceInput(
-            type: MediaResourceType::VIDEO,
-            title: $formModel->title,
-            primaryUrl: $formModel->youtubeVideoUrl,
-            primaryFile: null,
-            source: $formModel->source,
-            description: null,
-            secondaryUrl: null,
-            imageUrl: null,
-            imageFile: null,
-            themeUuids: $formModel->themeUuids,
-            active: true,
-        ));
+        $checkedUuids = $request->request->all('mediaVisibility');
+        $visibility = [];
 
-        $formModel->linkedMediaUuids[] = $mediaResource->getUuid()->toRfc4122();
+        foreach ($checkedUuids as $mediaUuid => $checked) {
+            if (is_string($mediaUuid) && Uuid::isValid($mediaUuid) && '1' === (string) $checked) {
+                $visibility[$mediaUuid] = true;
+            }
+        }
+
+        return $visibility;
     }
 
     /**

@@ -1,4 +1,3 @@
-{% set isDraft = isDraft|default(false) %}
 <turbo-frame id="session-composer-overlay">
     <section class="session-composer-overlay" role="dialog" aria-modal="true" aria-labelledby="session-repertoire-title">
         <div class="session-composer-overlay__panel session-composer-overlay__panel--activity">
@@ -8,27 +7,19 @@
                     <h2 id="session-repertoire-title">{{ 'sessions.sequence.composer.repertoire_config_heading'|trans({ title: form.vars.value.title }, 'sessions') }}</h2>
                     <p>{{ 'sessions.sequence.composer.repertoire_config_description'|trans({}, 'sessions') }}</p>
                 </div>
-                {% if isDraft %}
-                    <form method="post" action="{{ path('session_sequence_remove', { uuid: session.uuid, sequenceUuid: sequence.uuid }) }}" data-turbo-stream="true"><input type="hidden" name="_token" value="{{ csrf_token('session_sequence_remove_' ~ sequence.uuid) }}"><button class="session-composer-overlay__close" type="submit" aria-label="{{ 'sessions.sequence.composer.close'|trans({}, 'sessions') }}">×</button></form>
-                {% else %}
-                    <a class="session-composer-overlay__close" href="{{ path('session_edit', { uuid: session.uuid }) }}" data-turbo-frame="_top" aria-label="{{ 'sessions.sequence.composer.close'|trans({}, 'sessions') }}">×</a>
-                {% endif %}
+                <a class="session-composer-overlay__close" href="{{ path('session_edit', { uuid: session.uuid }) }}" data-turbo-frame="_top" aria-label="{{ 'sessions.sequence.composer.close'|trans({}, 'sessions') }}">×</a>
             </div>
 
             {{ form_start(form, {
-                action: path('session_sequence_edit', { uuid: session.uuid, sequenceUuid: sequence.uuid, composer: 1, draft: isDraft ? 1 : null }),
+                action: path('session_sequence_edit', { uuid: session.uuid, sequenceUuid: sequence.uuid, composer: 1 }),
                 attr: { class: 'internal-form internal-form--wide session-activity-form', 'data-turbo-stream': 'true' }
             }) }}
-                {{ form_row(form.role) }}
-                <twig:SessionSequenceLocalDetails sessionUuid="{{ session.uuid }}" sequenceUuid="{{ sequence.uuid }}" section="details" showInstructionLabel="true" body="{{ sequence.body ?? '' }}" />
                 {{ form_row(form.instrumentUuids) }}
+                {{ form_row(form.role) }}
+                {% include 'session/_role_suggestions.html.twig' with { id: 'session-sequence-role-suggestions' } only %}
+                <twig:SessionSequenceLocalDetails sessionUuid="{{ session.uuid }}" sequenceUuid="{{ sequence.uuid }}" section="details" showInstructionLabel="true" body="{{ sequence.body ?? '' }}" />
                 {{ form_widget(form.sourceUuid) }}
                 {{ form_widget(form.sourceTitle) }}
-                <div class="internal-form__actions">
-                    <a class="internal-button internal-button--secondary" href="{{ path('session_sequence_repertoire_youtube_create', { uuid: session.uuid, sequenceUuid: sequence.uuid, draft: isDraft ? 1 : null }) }}">{{ 'sessions.sequence.composer.add_youtube_video'|trans({}, 'sessions') }}</a>
-                    <button class="internal-button internal-button--secondary" type="submit" formnovalidate formaction="{{ path('session_sequence_media_picker', { uuid: session.uuid, sequenceUuid: sequence.uuid, draft: isDraft ? 1 : null }) }}" formmethod="post" name="activityMediaAction" value="open-media-picker">{{ 'sessions.sequence.composer.add_catalog_media'|trans({}, 'sessions') }}</button>
-                    <button class="internal-button internal-button--secondary" type="submit" formnovalidate formaction="{{ path('session_sequence_media_create', { uuid: session.uuid, sequenceUuid: sequence.uuid, draft: isDraft ? 1 : null }) }}" formmethod="post" name="activityMediaAction" value="open-media-create">{{ 'sessions.sequence.composer.create_catalog_media'|trans({}, 'sessions') }}</button>
-                </div>
                 <div class="internal-form__actions">
                     <a class="internal-button internal-button--secondary internal-form__back-action" href="{{ path('session_edit', { uuid: session.uuid }) }}" data-turbo-frame="_top">{{ 'sessions.sequence.form.back'|trans({}, 'sessions') }}</a>
                     {{ form_widget(form.submit) }}

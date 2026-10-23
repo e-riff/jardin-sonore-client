@@ -23,6 +23,133 @@ use Symfony\Component\Uid\Uuid;
 
 final class SessionSequenceViewTest extends TestCase
 {
+    public function testFreeSequenceReadsCurrentCatalogMediaAndHidesItWhenGloballyInactive(): void
+    {
+        $catalogMedia = new MediaResource(
+            type: MediaResourceType::SCORE,
+            title: 'Partition corrigée',
+            primaryUrl: 'https://example.test/new.pdf',
+        );
+        $oldSnapshot = new SessionSequenceMedia(
+            label: 'Ancienne partition',
+            type: MediaResourceType::LINK,
+            url: 'https://example.test/old.pdf',
+            imageUrl: null,
+            featured: true,
+            displayOnSession: true,
+            resourceUuid: $catalogMedia->getUuid(),
+        );
+        $sequence = new SessionSequence(
+            uuid: Uuid::v4(),
+            type: SessionSequenceType::FREE,
+            title: 'Écoute',
+            subtitle: null,
+            body: '',
+            lyrics: null,
+            gestures: null,
+            primaryUrl: null,
+            secondaryUrl: null,
+            imageUrl: null,
+            showLyricsByDefault: false,
+            media: [$oldSnapshot],
+        );
+        $repository = new class($catalogMedia) implements MediaResourceRepositoryInterface {
+            public function __construct(public MediaResource $media)
+            {
+            }
+
+            public function findByUuid(Uuid $uuid): ?MediaResource
+            {
+                return $this->media->getUuid()->equals($uuid) ? $this->media : null;
+            }
+
+            public function search(?string $query = null, ?MediaResourceType $mediaResourceType = null, bool $activeOnly = false): array
+            {
+                return [];
+            }
+
+            public function save(MediaResource $mediaResource): void
+            {
+            }
+
+            public function delete(MediaResource $mediaResource): void
+            {
+            }
+        };
+
+        $view = SessionSequenceView::fromDomain($sequence, mediaResourceRepository: $repository);
+        self::assertSame('Partition corrigée', $view->documentMedia[0]->label);
+        self::assertSame('https://example.test/new.pdf', $view->documentMedia[0]->url);
+
+        $catalogMedia->setActive(false);
+        $hiddenView = SessionSequenceView::fromDomain($sequence, mediaResourceRepository: $repository);
+        self::assertSame([], $hiddenView->documentMedia);
+    }
+
+    public function testLegacyUrlSnapshotsAreReconciledToTheCatalogWhenTheMatchIsUnique(): void
+    {
+        $catalogMedia = new MediaResource(
+            type: MediaResourceType::SCORE,
+            title: 'Partition actuelle',
+            primaryUrl: 'https://example.test/legacy-score.pdf',
+        );
+        $legacySnapshot = new SessionSequenceMedia(
+            label: 'Ancien titre copié',
+            type: MediaResourceType::LINK,
+            url: $catalogMedia->getPrimaryUrl(),
+            imageUrl: null,
+            featured: true,
+            displayOnSession: true,
+        );
+        $sequence = new SessionSequence(
+            uuid: Uuid::v4(),
+            type: SessionSequenceType::FREE,
+            title: 'Écoute',
+            subtitle: null,
+            body: '',
+            lyrics: null,
+            gestures: null,
+            primaryUrl: null,
+            secondaryUrl: null,
+            imageUrl: null,
+            showLyricsByDefault: false,
+            media: [$legacySnapshot],
+        );
+        $repository = new class($catalogMedia) implements MediaResourceRepositoryInterface {
+            public function __construct(private MediaResource $media)
+            {
+            }
+
+            public function findByUuid(Uuid $uuid): ?MediaResource
+            {
+                return $this->media->getUuid()->equals($uuid) ? $this->media : null;
+            }
+
+            public function search(?string $query = null, ?MediaResourceType $mediaResourceType = null, bool $activeOnly = false): array
+            {
+                return [$this->media];
+            }
+
+            public function save(MediaResource $mediaResource): void
+            {
+            }
+
+            public function delete(MediaResource $mediaResource): void
+            {
+            }
+        };
+
+        $view = SessionSequenceView::fromDomain($sequence, mediaResourceRepository: $repository);
+
+        self::assertSame('Partition actuelle', $view->documentMedia[0]->label);
+        self::assertSame($catalogMedia->getUuid()->toRfc4122(), $view->storedMedia[0]->resourceUuid?->toRfc4122());
+
+        $catalogMedia->setActive(false);
+        $inactiveView = SessionSequenceView::fromDomain($sequence, mediaResourceRepository: $repository);
+        self::assertSame([], $inactiveView->documentMedia);
+        self::assertSame([], $inactiveView->storedMedia);
+    }
+
     public function testRepertoireSourceExposesItsLinkedMediaInTheDocument(): void
     {
         $youtubeMedia = new MediaResource(
@@ -79,6 +206,12 @@ final class SessionSequenceViewTest extends TestCase
         self::assertCount(1, $sessionSequenceView->documentMedia);
         self::assertSame($youtubeMedia->getPrimaryUrl(), $sessionSequenceView->documentMedia[0]->url);
         self::assertTrue($sessionSequenceView->documentMedia[0]->featured);
+        self::assertTrue($sessionSequenceView->hasRepertoireSource);
+
+        $repertoireItem->setLinkedMediaVisibility($youtubeMedia->getUuid()->toRfc4122(), false);
+        $hiddenSequenceView = SessionSequenceView::fromDomain($sessionSequence, $repertoireItem, mediaResourceRepository: $mediaResourceRepository);
+
+        self::assertSame([], $hiddenSequenceView->documentMedia);
     }
 
     public function testRepertoireSourceSuppliesCurrentPublicContentWhileKeepingSessionInstructions(): void

@@ -1,0 +1,14 @@
+<div class="media-association-picker" data-controller="internal-dialog">
+    <button type="button" class="internal-button internal-button--secondary" data-action="internal-dialog#open">{{ 'sessions.media.association.manage'|trans({}, 'sessions') }}</button>
+    <dialog class="internal-form-dialog media-association-picker__dialog" data-internal-dialog-target="dialog" data-action="click->internal-dialog#closeOnBackdrop">
+        <div class="internal-form-dialog__panel">
+        <div class="media-association-picker__heading">
+            <h2>{{ 'sessions.media.association.heading'|trans({}, 'sessions') }}</h2>
+            <button type="button" class="internal-icon-button" data-action="internal-dialog#close" aria-label="{{ 'sessions.sequence.composer.close'|trans({}, 'sessions') }}">×</button>
+        </div>
+        {{ form_row(field, { attr: fieldAttributes|default({}) }) }}
+        <p class="internal-form-help">{{ 'sessions.media.association.help'|trans({}, 'sessions') }}</p>
+        <a class="internal-button internal-button--secondary" href="{{ path('media_resource_new', { pickerSelectId: field.vars.id }) }}" data-turbo-frame="media-resource-create" data-action="media-create-dialog#open">{{ 'sessions.sequence.composer.create_catalog_media'|trans({}, 'sessions') }}</a>
+        </div>
+    </dialog>
+</div>

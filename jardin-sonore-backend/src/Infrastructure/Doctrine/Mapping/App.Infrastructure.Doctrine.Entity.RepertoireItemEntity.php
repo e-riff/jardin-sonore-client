@@ -30,7 +30,6 @@ return static function (ClassMetadata $metadata): void {
     $metadata->mapField(['fieldName' => 'body', 'type' => Types::TEXT]);
     $metadata->mapField(['fieldName' => 'generalInstructions', 'columnName' => 'general_instructions', 'type' => Types::TEXT, 'nullable' => true]);
     $metadata->mapField(['fieldName' => 'contentBlocks', 'columnName' => 'content_blocks', 'type' => Types::JSON]);
-    $metadata->mapField(['fieldName' => 'notes', 'type' => Types::TEXT, 'nullable' => true]);
     $metadata->mapField(['fieldName' => 'linkedMediaUuids', 'columnName' => 'linked_media_uuids', 'type' => Types::JSON]);
     $metadata->mapField(['fieldName' => 'active', 'type' => Types::BOOLEAN, 'options' => ['default' => true]]);
     $metadata->mapField(['fieldName' => 'createdAt', 'columnName' => 'created_at', 'type' => Types::DATETIME_IMMUTABLE]);

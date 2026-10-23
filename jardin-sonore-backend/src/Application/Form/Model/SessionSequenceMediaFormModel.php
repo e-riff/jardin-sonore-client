@@ -6,6 +6,7 @@ namespace App\Application\Form\Model;
 
 use App\Domain\Model\Session\MediaResourceType;
 use App\Domain\Model\Session\SessionSequenceMedia;
+use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
 
 final class SessionSequenceMediaFormModel
@@ -25,6 +26,8 @@ final class SessionSequenceMediaFormModel
 
     public bool $displayOnSession = true;
 
+    public ?string $resourceUuid = null;
+
     public static function fromDomain(SessionSequenceMedia $media): self
     {
         $model = new self();
@@ -34,12 +37,21 @@ final class SessionSequenceMediaFormModel
         $model->imageUrl = $media->imageUrl;
         $model->featured = $media->featured;
         $model->displayOnSession = $media->isDisplayedOnSession();
+        $model->resourceUuid = $media->resourceUuid?->toRfc4122();
 
         return $model;
     }
 
     public function toDomain(): SessionSequenceMedia
     {
-        return new SessionSequenceMedia($this->label, $this->type, $this->url, $this->imageUrl, $this->featured, $this->displayOnSession);
+        return new SessionSequenceMedia(
+            $this->label,
+            $this->type,
+            $this->url,
+            $this->imageUrl,
+            $this->featured,
+            $this->displayOnSession,
+            null !== $this->resourceUuid && Uuid::isValid($this->resourceUuid) ? Uuid::fromString($this->resourceUuid) : null,
+        );
     }
 }

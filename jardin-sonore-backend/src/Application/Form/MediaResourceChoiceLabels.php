@@ -16,30 +16,15 @@ final class MediaResourceChoiceLabels
      */
     public static function byUuid(array $mediaResources, TranslatorInterface $translator): array
     {
-        $titleCounts = array_count_values(array_map(
-            static fn (MediaResource $mediaResource): string => $mediaResource->getTitle(),
-            $mediaResources,
-        ));
         $labelsByUuid = [];
-        $labelCounts = [];
 
         foreach ($mediaResources as $mediaResource) {
             $mediaUuid = $mediaResource->getUuid()->toRfc4122();
-            $label = $mediaResource->getTitle();
-
-            if (($titleCounts[$label] ?? 0) > 1) {
-                $typeLabel = $translator->trans($mediaResource->getType()->translationKey(), [], 'sessions');
-                $source = trim((string) $mediaResource->getSource());
-                $descriptor = '' !== $source ? $source : self::mediaDescriptor($mediaResource->getPrimaryUrl(), $mediaUuid);
-                $label .= " — {$typeLabel} — {$descriptor}";
-            }
-
-            if (isset($labelCounts[$label])) {
-                $label .= ' · ' . substr($mediaUuid, -6);
-            }
-
-            $labelCounts[$label] = true;
-            $labelsByUuid[$mediaUuid] = $label;
+            $typeLabel = $translator->trans($mediaResource->getType()->translationKey(), [], 'sessions');
+            $source = trim((string) $mediaResource->getSource());
+            $descriptor = '' !== $source ? $source : self::mediaDescriptor($mediaResource->getPrimaryUrl(), $mediaUuid);
+            $reference = $mediaResource->getId() ?? substr($mediaUuid, -6);
+            $labelsByUuid[$mediaUuid] = "{$reference} — {$mediaResource->getTitle()} — {$typeLabel} — {$descriptor}";
         }
 
         return $labelsByUuid;

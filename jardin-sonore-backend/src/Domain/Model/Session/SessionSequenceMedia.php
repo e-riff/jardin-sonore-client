@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Model\Session;
 
 use InvalidArgumentException;
+use Symfony\Component\Uid\Uuid;
 
 final readonly class SessionSequenceMedia
 {
@@ -20,6 +21,8 @@ final readonly class SessionSequenceMedia
 
     private bool $displayOnSession;
 
+    public ?Uuid $resourceUuid;
+
     public function __construct(
         string $label,
         MediaResourceType $type,
@@ -27,6 +30,7 @@ final readonly class SessionSequenceMedia
         ?string $imageUrl,
         bool $featured,
         bool $displayOnSession,
+        ?Uuid $resourceUuid = null,
     ) {
         if ('' === trim($label)) {
             throw new InvalidArgumentException('Session sequence media label cannot be blank.');
@@ -42,6 +46,7 @@ final readonly class SessionSequenceMedia
         $this->imageUrl = self::normalizeNullableString($imageUrl);
         $this->featured = $featured;
         $this->displayOnSession = $displayOnSession;
+        $this->resourceUuid = $resourceUuid;
     }
 
     public function isDisplayedOnSession(): bool
@@ -59,6 +64,7 @@ final readonly class SessionSequenceMedia
             'imageUrl' => $this->imageUrl,
             'featured' => $this->featured,
             'displayOnSession' => $this->displayOnSession,
+            'resourceUuid' => $this->resourceUuid?->toRfc4122(),
         ];
     }
 
@@ -74,6 +80,9 @@ final readonly class SessionSequenceMedia
             imageUrl: is_string($payload['imageUrl'] ?? null) ? $payload['imageUrl'] : null,
             featured: (bool) ($payload['featured'] ?? false),
             displayOnSession: (bool) ($payload['displayOnSession'] ?? false),
+            resourceUuid: isset($payload['resourceUuid']) && is_string($payload['resourceUuid']) && Uuid::isValid($payload['resourceUuid'])
+                ? Uuid::fromString($payload['resourceUuid'])
+                : null,
         );
     }
 

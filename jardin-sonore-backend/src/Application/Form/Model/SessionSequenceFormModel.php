@@ -41,6 +41,9 @@ final class SessionSequenceFormModel
     /** @var list<SessionSequenceMediaFormModel> */
     public array $media = [];
 
+    /** @var list<string> */
+    public array $catalogMediaUuids = [];
+
     public bool $showLyricsByDefault = false;
 
     #[Assert\Length(max: 255)]
@@ -67,7 +70,11 @@ final class SessionSequenceFormModel
         $formModel->primaryUrl = $sessionSequenceView->primaryUrl;
         $formModel->secondaryUrl = $sessionSequenceView->secondaryUrl;
         $formModel->imageUrl = $sessionSequenceView->imageUrl;
-        $formModel->media = array_map(SessionSequenceMediaFormModel::fromDomain(...), $sessionSequenceView->media);
+        $formModel->media = array_map(SessionSequenceMediaFormModel::fromDomain(...), [] !== $sessionSequenceView->storedMedia ? $sessionSequenceView->storedMedia : $sessionSequenceView->media);
+        $formModel->catalogMediaUuids = array_values(array_filter(array_map(
+            static fn (SessionSequenceMediaFormModel $media): ?string => $media->resourceUuid,
+            $formModel->media,
+        )));
         $formModel->showLyricsByDefault = $sessionSequenceView->showLyricsByDefault;
         $formModel->role = $sessionSequenceView->role;
         $formModel->sourceUuid = $sessionSequenceView->sourceUuid?->toRfc4122();
@@ -80,14 +87,33 @@ final class SessionSequenceFormModel
 
     public function addMediaResource(MediaResourceView $mediaResourceView): void
     {
+        foreach ($this->media as $media) {
+            if ($media->resourceUuid === $mediaResourceView->uuid->toRfc4122()) {
+                return;
+            }
+        }
+
         $sessionSequenceMediaFormModel = new SessionSequenceMediaFormModel();
         $sessionSequenceMediaFormModel->label = $mediaResourceView->title;
         $sessionSequenceMediaFormModel->type = $mediaResourceView->type;
         $sessionSequenceMediaFormModel->url = $mediaResourceView->primaryUrl;
         $sessionSequenceMediaFormModel->imageUrl = $mediaResourceView->imageUrl;
         $sessionSequenceMediaFormModel->featured = [] === $this->media;
+        $sessionSequenceMediaFormModel->resourceUuid = $mediaResourceView->uuid->toRfc4122();
 
         $this->media[] = $sessionSequenceMediaFormModel;
+        if (!in_array($mediaResourceView->uuid->toRfc4122(), $this->catalogMediaUuids, true)) {
+            $this->catalogMediaUuids[] = $mediaResourceView->uuid->toRfc4122();
+        }
+    }
+
+    public function retainSelectedCatalogMedia(): void
+    {
+        $this->media = array_values(array_filter(
+            $this->media,
+            fn (SessionSequenceMediaFormModel $media): bool => null === $media->resourceUuid
+                || in_array($media->resourceUuid, $this->catalogMediaUuids, true),
+        ));
     }
 
     public static function fromRepertoireItemView(RepertoireItemView $repertoireItemView): self

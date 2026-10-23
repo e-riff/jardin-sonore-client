@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Infrastructure\Commercial;
 
+use App\Application\Commercial\CalendarEventOccurrence;
 use App\Application\Commercial\CommercialProjectQueue;
 use App\Application\Twig\Component\CommercialProjectTable;
 use App\Infrastructure\Doctrine\Entity\AddressContactEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialActionEntity;
+use App\Infrastructure\Doctrine\Entity\CommercialAppointmentEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Kernel;
 use DateTimeImmutable;
+use DateTimeZone;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -75,6 +78,36 @@ final class CommercialProjectQueueTest extends KernelTestCase
         $olderMatchingRows = array_values(array_filter($rows, static fn ($row): bool => $olderProjectEntity->getId() === $row->id));
         self::assertCount(1, $olderMatchingRows);
         self::assertFalse($olderMatchingRows[0]->isNew);
+    }
+
+    public function testTodaysAppointmentPlacesAProjectInPriorityWithoutCreatingAReminder(): void
+    {
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $organizationEntity = (new OrganizationEntity())->setName('Structure avec rendez-vous du jour');
+        $projectEntity = new CommercialProjectEntity('Dossier rendez-vous du jour', $organizationEntity, null, new DateTimeImmutable('2026-10-01'));
+        $startsAt = new DateTimeImmutable('2026-10-13 15:30:00', new DateTimeZone('Europe/Paris'));
+        $appointmentEntity = new CommercialAppointmentEntity(
+            $projectEntity,
+            'calendar-test',
+            str_repeat('a', 32),
+            new CalendarEventOccurrence('appointment-today', 'RDV · Échange avec la direction', $startsAt, $startsAt->modify('+1 hour'), null, false),
+            new DateTimeImmutable('2026-10-13 12:00:00'),
+        );
+        $entityManager->persist($organizationEntity);
+        $entityManager->persist($projectEntity);
+        $entityManager->persist($appointmentEntity);
+        $entityManager->flush();
+
+        $rows = (new CommercialProjectQueue($entityManager))->forDate(new DateTimeImmutable('2026-10-13'));
+        $matchingRows = array_values(array_filter($rows, static fn ($row): bool => $projectEntity->getId() === $row->id));
+
+        self::assertCount(1, $matchingRows);
+        self::assertSame('priority', $matchingRows[0]->bucket);
+        self::assertNull($matchingRows[0]->nextActionId);
+        self::assertSame('RDV · Échange avec la direction', $matchingRows[0]->nextActionTitle);
+        self::assertSame('2026-10-13', $matchingRows[0]->nextDueOn?->format('Y-m-d'));
+        self::assertSame('15:30', $matchingRows[0]->nextDueTime);
+        self::assertTrue($matchingRows[0]->nextTaskIsAppointment);
     }
 
     public function testClosedProjectsAreHiddenByDefaultAndCanBeIncluded(): void

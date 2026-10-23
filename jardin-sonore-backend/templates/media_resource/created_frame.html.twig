@@ -1,0 +1,7 @@
+{% extends '@Turbo/layouts/frame.html.twig' %}
+
+{% block body %}
+    <turbo-frame id="media-resource-create">
+        <div data-controller="media-created" data-media-created-select-id-value="{{ pickerSelectId }}" data-media-created-uuid-value="{{ mediaResource.uuid.toRfc4122 }}" data-media-created-label-value="{{ label }}" data-media-created-title-value="{{ mediaResource.title }}" data-media-created-type-label-value="{{ typeLabel }}" data-media-created-url-value="{{ mediaResource.primaryUrl }}" data-media-created-thumbnail-value="{{ mediaResource.thumbnailUrl ?? '' }}"></div>
+    </turbo-frame>
+{% endblock %}

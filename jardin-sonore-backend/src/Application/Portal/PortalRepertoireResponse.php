@@ -71,7 +71,6 @@ final readonly class PortalRepertoireResponse
             'body' => $itemEntity->getBody(),
             'generalInstructions' => $itemEntity->getGeneralInstructions(),
             'contentBlocks' => $itemEntity->getContentBlocks(),
-            'notes' => $itemEntity->getNotes(),
             'media' => $media,
         ] : $response;
     }

@@ -26,11 +26,10 @@ final class RepertoireItemFormModel
     public array $contentBlocks = [];
 
     public ?string $generalInstructions = null;
-    public ?string $notes = null;
     /** @var list<string> */
     public array $linkedMediaUuids = [];
-    #[Assert\Url]
-    public ?string $youtubeVideoUrl = null;
+    /** @var array<string, bool> */
+    public array $linkedMediaVisibility = [];
     /** @var list<string> */
     public array $themeUuids = [];
     public bool $active = true;
@@ -46,8 +45,8 @@ final class RepertoireItemFormModel
             $repertoireItemView->contentBlocks,
         );
         $formModel->generalInstructions = $repertoireItemView->generalInstructions;
-        $formModel->notes = $repertoireItemView->notes;
         $formModel->linkedMediaUuids = $repertoireItemView->linkedMediaUuids;
+        $formModel->linkedMediaVisibility = $repertoireItemView->linkedMediaVisibility;
         $formModel->themeUuids = array_column($repertoireItemView->themes, 'uuid');
         $formModel->active = $repertoireItemView->active;
 

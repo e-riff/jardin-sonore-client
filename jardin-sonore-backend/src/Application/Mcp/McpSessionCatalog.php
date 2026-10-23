@@ -235,7 +235,7 @@ final readonly class McpSessionCatalog
             'uuid' => $view->uuid->toRfc4122(), 'type' => $view->type->value, 'title' => $view->title,
             'source' => $view->source, 'body' => $view->body,
             'contentBlocks' => array_map(static fn ($block): array => ['kind' => $block->kind->value, 'text' => $block->text, 'gesture' => $block->gesture], $view->contentBlocks),
-            'generalInstructions' => $view->generalInstructions, 'notes' => $view->notes,
+            'generalInstructions' => $view->generalInstructions,
             'linkedMediaUuids' => $view->linkedMediaUuids, 'themeUuids' => array_column($view->themes, 'uuid'),
             'active' => $view->active, 'updatedAt' => $view->updatedAt->format(DATE_ATOM),
             'url' => $this->urlGenerator->generate('repertoire_edit', ['uuid' => $view->uuid], UrlGeneratorInterface::ABSOLUTE_URL),
@@ -259,7 +259,7 @@ final readonly class McpSessionCatalog
         return [
             'uuid' => $view->uuid->toRfc4122(), 'type' => $view->type->value, 'title' => $view->title,
             'primaryUrl' => $view->primaryUrl, 'source' => $view->source, 'description' => $view->description,
-            'secondaryUrl' => $view->secondaryUrl, 'imageUrl' => $view->imageUrl,
+            'imageUrl' => $view->imageUrl,
             'themeUuids' => array_column($view->themes, 'uuid'), 'active' => $view->active,
             'updatedAt' => $view->updatedAt->format(DATE_ATOM),
             'url' => $this->urlGenerator->generate('media_resource_edit', ['uuid' => $view->uuid], UrlGeneratorInterface::ABSOLUTE_URL),
@@ -281,7 +281,7 @@ final readonly class McpSessionCatalog
     /** @param array<string, mixed> $input */
     private function repertoireInput(array $input): SaveRepertoireItemInput
     {
-        $this->assertKeys($input, ['type', 'title', 'source', 'body', 'contentBlocks', 'generalInstructions', 'notes', 'linkedMediaUuids', 'themeUuids', 'active']);
+        $this->assertKeys($input, ['type', 'title', 'source', 'body', 'contentBlocks', 'generalInstructions', 'linkedMediaUuids', 'themeUuids', 'active']);
         $type = $input['type'] ?? null;
         if (!is_string($type) || null === ($repertoireItemType = RepertoireItemType::tryFrom($type))) {
             throw new InvalidArgumentException('Invalid repertoire type.');
@@ -316,7 +316,6 @@ final readonly class McpSessionCatalog
             body: $this->textAllowingEmpty($input, 'body', 20000),
             contentBlocks: $contentBlocks,
             generalInstructions: $this->optionalText($input, 'generalInstructions', 20000),
-            notes: $this->optionalText($input, 'notes', 20000),
             linkedMediaUuids: $linkedMediaUuids,
             themeUuids: $this->themeUuids($input),
             active: $this->active($input),
@@ -353,7 +352,7 @@ final readonly class McpSessionCatalog
      */
     private function mediaInput(array $input, ?array $current = null): SaveMediaResourceInput
     {
-        $this->assertKeys($input, ['type', 'title', 'primaryUrl', 'source', 'description', 'secondaryUrl', 'imageUrl', 'themeUuids', 'active']);
+        $this->assertKeys($input, ['type', 'title', 'primaryUrl', 'source', 'description', 'imageUrl', 'themeUuids', 'active']);
         $type = $input['type'] ?? null;
         if (!is_string($type) || null === ($mediaResourceType = MediaResourceType::tryFrom($type))) {
             throw new InvalidArgumentException('Invalid media resource type.');
@@ -362,12 +361,9 @@ final readonly class McpSessionCatalog
         if (!$this->validUrl($primaryUrl) && (null === $current || $primaryUrl !== $current['primaryUrl'])) {
             throw new InvalidArgumentException('Invalid primary media URL.');
         }
-        $secondaryUrl = $this->optionalText($input, 'secondaryUrl', 2048);
         $imageUrl = $this->optionalText($input, 'imageUrl', 2048);
-        foreach (['secondaryUrl' => $secondaryUrl, 'imageUrl' => $imageUrl] as $field => $url) {
-            if (null !== $url && !$this->validUrl($url) && (null === $current || $url !== $current[$field])) {
-                throw new InvalidArgumentException('Invalid media URL.');
-            }
+        if (null !== $imageUrl && !$this->validUrl($imageUrl) && (null === $current || $imageUrl !== $current['imageUrl'])) {
+            throw new InvalidArgumentException('Invalid media URL.');
         }
 
         return new SaveMediaResourceInput(
@@ -377,7 +373,6 @@ final readonly class McpSessionCatalog
             primaryFile: null,
             source: $this->optionalText($input, 'source', 255),
             description: $this->optionalText($input, 'description', 20000),
-            secondaryUrl: $secondaryUrl,
             imageUrl: $imageUrl,
             imageFile: null,
             themeUuids: $this->themeUuids($input),

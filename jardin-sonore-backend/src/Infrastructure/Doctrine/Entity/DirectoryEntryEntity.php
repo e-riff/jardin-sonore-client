@@ -112,6 +112,9 @@ abstract class DirectoryEntryEntity
     public function getMunicipalitySummary(): string
     {
         foreach ($this->contactDetails?->getAddressContacts() ?? [] as $addressContactEntity) {
+            if (!$addressContactEntity->isActive()) {
+                continue;
+            }
             $municipalityEntity = $addressContactEntity->getMunicipality();
 
             if (null !== $municipalityEntity) {

@@ -23,17 +23,18 @@ final class SessionSequenceFormModelTest extends TestCase
         self::assertStringContainsString("public ?string \$title = '';", $formModel);
     }
 
-    public function testRepertoireNotesAreNotCopiedIntoSessionSequence(): void
+    public function testRepertoireSequenceKeepsSourceDetailsInTheRepertoire(): void
     {
         $repertoireItem = new RepertoireItem(
             type: RepertoireItemType::NURSERY_RHYME,
             title: 'Brrr, brr, il fait froid',
-            notes: 'Note privée du répertoire.',
+            generalInstructions: 'Consigne du répertoire.',
         );
 
         $sessionSequenceFormModel = SessionSequenceFormModel::fromRepertoireItemView(RepertoireItemView::fromDomain($repertoireItem));
 
-        self::assertArrayNotHasKey('notes', get_object_vars($sessionSequenceFormModel));
+        self::assertSame('', $sessionSequenceFormModel->body);
+        self::assertSame($repertoireItem->getUuid()->toRfc4122(), $sessionSequenceFormModel->sourceUuid);
     }
 
     public function testAddingCatalogMediaCopiesItsDisplayDataIntoTheActivity(): void
@@ -73,5 +74,26 @@ final class SessionSequenceFormModelTest extends TestCase
         self::assertSame('https://www.youtube.com/watch?v=dQw4w9WgXcQ', $sessionSequenceFormModel->media[0]->url);
         self::assertSame('https://example.test/waves.jpg', $sessionSequenceFormModel->media[0]->imageUrl);
         self::assertTrue($sessionSequenceFormModel->media[0]->featured);
+    }
+
+    public function testRemovingASelectedCatalogMediumDoesNotRemoveLegacySessionMedia(): void
+    {
+        $catalogMedia = new MediaResource(
+            type: MediaResourceType::VIDEO,
+            title: 'Vidéo liée',
+            primaryUrl: 'https://example.test/video',
+        );
+        $sessionSequenceFormModel = new SessionSequenceFormModel();
+        $sessionSequenceFormModel->addMediaResource(MediaResourceView::fromDomain($catalogMedia));
+        $legacyMedia = new \App\Application\Form\Model\SessionSequenceMediaFormModel();
+        $legacyMedia->label = 'Ancien lien';
+        $legacyMedia->url = 'https://example.test/legacy';
+        $sessionSequenceFormModel->media[] = $legacyMedia;
+        $sessionSequenceFormModel->catalogMediaUuids = [];
+
+        $sessionSequenceFormModel->retainSelectedCatalogMedia();
+
+        self::assertCount(1, $sessionSequenceFormModel->media);
+        self::assertSame('Ancien lien', $sessionSequenceFormModel->media[0]->label);
     }
 }

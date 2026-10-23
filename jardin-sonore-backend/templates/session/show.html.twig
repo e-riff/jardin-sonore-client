@@ -48,8 +48,7 @@
                 <article class="session-document__sequence session-document__sequence--{{ sequence.type.value }}">
                     <div class="session-document__number">{{ loop.index }}</div>
                     <div class="session-document__sequence-content">
-                    <p class="session-document__badge">{{ sequence.type.translationKey()|trans({}, 'sessions') }}</p>
-                    {% if sequence.role %}<p class="internal-eyebrow">{{ sequence.role }}</p>{% endif %}
+                    <p class="session-document__badge">{{ sequence.role ?: sequence.type.translationKey()|trans({}, 'sessions') }}</p>
                     <h2>{{ sequence.title }}{% if sequence.subtitle %}<span>— {{ sequence.subtitle }}</span>{% endif %}</h2>
                     {% if sequence.subtitle %}
                         {# subtitle is visually included in the title, as in the validated layout #}

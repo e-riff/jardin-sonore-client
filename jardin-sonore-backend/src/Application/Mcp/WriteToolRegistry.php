@@ -319,7 +319,7 @@ final readonly class WriteToolRegistry
                 'type' => ['enum' => ['nursery_rhyme', 'fingerplay']], 'title' => $text(255),
                 'source' => $optional(255), 'body' => $text(20000),
                 'contentBlocks' => ['type' => 'array', 'maxItems' => 50, 'items' => ['type' => 'object', 'properties' => ['kind' => ['enum' => ['line', 'break', 'section']], 'text' => $optional(10000), 'gesture' => $optional(10000)], 'required' => ['kind'], 'additionalProperties' => false]],
-                'generalInstructions' => $optional(20000), 'notes' => $optional(20000),
+                'generalInstructions' => $optional(20000),
                 'linkedMediaUuids' => $uuidList, 'themeUuids' => $uuidList, 'active' => $active,
             ],
             'instrument' => [
@@ -329,7 +329,7 @@ final readonly class WriteToolRegistry
             'media_resource' => [
                 'type' => ['enum' => ['soundtrack', 'video', 'link']], 'title' => $text(255),
                 'primaryUrl' => $text(2048), 'source' => $optional(255), 'description' => $optional(20000),
-                'secondaryUrl' => $optional(2048), 'imageUrl' => $optional(2048),
+                'imageUrl' => $optional(2048),
                 'themeUuids' => $uuidList, 'active' => $active,
             ],
             'session_recommendation' => [

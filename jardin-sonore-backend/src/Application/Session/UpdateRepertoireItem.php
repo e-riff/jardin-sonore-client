@@ -38,9 +38,13 @@ final readonly class UpdateRepertoireItem
                 $saveRepertoireItemInput->contentBlocks,
             ),
             generalInstructions: $saveRepertoireItemInput->generalInstructions,
-            notes: $saveRepertoireItemInput->notes,
             linkedMediaUuids: $saveRepertoireItemInput->linkedMediaUuids,
         );
+        if (null !== $saveRepertoireItemInput->linkedMediaVisibility) {
+            foreach ($saveRepertoireItemInput->linkedMediaUuids as $mediaUuid) {
+                $repertoireItem->setLinkedMediaVisibility($mediaUuid, $saveRepertoireItemInput->linkedMediaVisibility[$mediaUuid] ?? false);
+            }
+        }
         $repertoireItem->setActive($saveRepertoireItemInput->active);
         $repertoireItem->setThemes(array_values(array_filter(array_map(fn (string $themeUuid) => Uuid::isValid($themeUuid) ? $this->themeRepository->findByUuid(Uuid::fromString($themeUuid)) : null, array_unique($saveRepertoireItemInput->themeUuids)))));
 

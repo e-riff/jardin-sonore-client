@@ -123,6 +123,7 @@ project:
     last_activity: Dernier élément du fil
     actions: Actions
     no_task: Aucune tâche
+    appointment_prefix: "Rendez-vous :"
     new: Nouveau
     provisional: Structure à rattacher
     one_day: +1 jour

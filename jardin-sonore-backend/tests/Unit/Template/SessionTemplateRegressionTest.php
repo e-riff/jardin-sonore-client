@@ -64,7 +64,7 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertStringContainsString('public ?string $generalInstructions = null;', $formModel);
     }
 
-    public function testRepertoireFormProvidesAnOptionalYoutubeVideoShortcut(): void
+    public function testRepertoireFormUsesTheSharedMediaDialogWithoutYoutubeShortcut(): void
     {
         $template = file_get_contents(__DIR__ . '/../../../templates/repertoire/form.html.twig');
         $formType = file_get_contents(__DIR__ . '/../../../src/Application/Form/RepertoireItemType.php');
@@ -75,11 +75,11 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertIsString($formType);
         self::assertIsString($formModel);
         self::assertIsString($controller);
-        self::assertStringContainsString('form.youtubeVideoUrl', $template);
-        self::assertStringContainsString("->add('youtubeVideoUrl'", $formType);
-        self::assertStringContainsString('public ?string $youtubeVideoUrl = null;', $formModel);
-        self::assertStringContainsString('CreateMediaResource $createMediaResource', $controller);
-        self::assertStringContainsString('MediaResourceType::VIDEO', $controller);
+        self::assertStringContainsString('media_resource/_association_picker.html.twig', $template);
+        self::assertStringNotContainsString('form.youtubeVideoUrl', $template);
+        self::assertStringNotContainsString("->add('youtubeVideoUrl'", $formType);
+        self::assertStringNotContainsString('public ?string $youtubeVideoUrl', $formModel);
+        self::assertStringNotContainsString('createYoutubeVideoAndLink', $controller);
     }
 
     public function testRepertoireTextImportRemovesTheInitialEmptyFormRow(): void
@@ -120,12 +120,12 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertStringContainsString('.cover-subtitle {', $pdfPreview);
     }
 
-    public function testPdfPrioritizesSequencePurposeBeforeItsType(): void
+    public function testPdfDisplaysTheSequencePurposeWithLegacyTypeAsFallback(): void
     {
         $template = file_get_contents(__DIR__ . '/../../../templates/session/document.pdf.twig');
 
         self::assertIsString($template);
-        self::assertStringContainsString('<p class="sequence-heading-meta">{% if sequence.role %}<span class="sequence-heading-role">{{ sequence.role }}</span> — {% endif %}<span class="sequence-heading-type">{{ sequence.type.translationKey()|trans({}, \'sessions\') }}</span></p>', $template);
+        self::assertStringContainsString('<p class="sequence-heading-meta">{% if sequence.role %}<span class="sequence-heading-role">{{ sequence.role }}</span>{% else %}<span class="sequence-heading-type">{{ sequence.type.translationKey()|trans({}, \'sessions\') }}</span>{% endif %}</p>', $template);
         self::assertStringContainsString('<div class="sequence-title-row"><h2>{{ sequence.title }}</h2>{% if sequence.subtitle %}<span class="subtitle"> — {{ sequence.subtitle }}</span>{% endif %}</div>', $template);
         self::assertStringContainsString('.sequence-heading-role {', $template);
         self::assertStringContainsString('.sequence-heading-type {', $template);
@@ -201,8 +201,8 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertStringContainsString("action=\"{{ path('session_composer_add', { uuid: session.uuid, catalog: catalog }) }}\"", $template);
         self::assertStringContainsString('name="sourceUuid" value="{{ item.uuid }}"', $template);
         self::assertStringNotContainsString("session_sequence_new', { uuid: session.uuid, composer: 1, repertoire: item.uuid", $template);
-        self::assertStringContainsString("if ('repertoire' === \$catalog)", $controller);
-        self::assertStringContainsString("return \$this->redirectToRoute('session_sequence_edit'", $controller);
+        self::assertStringContainsString('$formModel = match ($catalog)', $controller);
+        self::assertStringContainsString("return \$this->render('session/composer_add.stream.html.twig'", $controller);
     }
 
     public function testCatalogSearchKeepsItsResultsOutsideOfTheSearchGrid(): void
@@ -236,28 +236,22 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertStringNotContainsString('TextareaType::class', $formType);
     }
 
-    public function testRepertoireSessionEditorProvidesCatalogSelectionAndQuickCreationForMedia(): void
+    public function testRepertoireSessionEditorKeepsMediaManagementInTheRepertoire(): void
     {
         $template = file_get_contents(__DIR__ . '/../../../templates/session/composer_repertoire_form.html.twig');
 
         self::assertIsString($template);
-        self::assertStringContainsString("path('session_sequence_media_picker'", $template);
-        self::assertStringContainsString("path('session_sequence_media_create'", $template);
-        self::assertStringContainsString('formaction="{{ path(\'session_sequence_media_picker\'', $template);
-        self::assertStringContainsString('formaction="{{ path(\'session_sequence_media_create\'', $template);
+        self::assertStringNotContainsString("path('session_sequence_media_picker'", $template);
+        self::assertStringNotContainsString("path('session_sequence_media_create'", $template);
+        self::assertStringContainsString('form.instrumentUuids', $template);
     }
 
-    public function testRepertoireSessionEditorProvidesAOneFieldYoutubeVideoShortcut(): void
+    public function testRepertoireSessionEditorHasNoYoutubeShortcut(): void
     {
         $template = file_get_contents(__DIR__ . '/../../../templates/session/composer_repertoire_form.html.twig');
-        $controller = file_get_contents(__DIR__ . '/../../../src/Application/Controller/SessionSummaryController.php');
 
         self::assertIsString($template);
-        self::assertIsString($controller);
-        self::assertStringContainsString("path('session_sequence_repertoire_youtube_create'", $template);
-        self::assertStringContainsString("name: 'sequence_repertoire_youtube_create'", $controller);
-        self::assertStringContainsString('MediaResourceType::VIDEO', $controller);
-        self::assertStringContainsString('array_column($repertoireItemView->themes, \'uuid\')', $controller);
+        self::assertStringNotContainsString("path('session_sequence_repertoire_youtube_create'", $template);
     }
 
     public function testComposerNumbersAreUpdatedAfterASequenceMove(): void
@@ -281,13 +275,14 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertStringContainsString("'sessions.sequence.composer.edit'", $template);
     }
 
-    public function testComposerShowsSourceAndTypeAlongsideTheTitle(): void
+    public function testComposerLinksToTheRepertoireSource(): void
     {
         $template = file_get_contents(__DIR__ . '/../../../templates/session/_composer.html.twig');
 
         self::assertIsString($template);
         self::assertStringContainsString('session-composer__source', $template);
-        self::assertStringContainsString('session-composer__type', $template);
+        self::assertStringContainsString("path('repertoire_edit'", $template);
+        self::assertStringNotContainsString('session-composer__type', $template);
         self::assertStringNotContainsString('sequence.sourceTitle', $template);
     }
 
@@ -404,7 +399,7 @@ final class SessionTemplateRegressionTest extends TestCase
 
         self::assertIsString($template);
         self::assertStringContainsString("? path('session_sequence_new', { uuid: session.uuid, composer: 1 })", $template);
-        self::assertStringContainsString(": path('session_sequence_edit', { uuid: session.uuid, sequenceUuid: sequence.uuid, composer: 1, draft: isDraft ? 1 : null })", $template);
+        self::assertStringContainsString(": path('session_sequence_edit', { uuid: session.uuid, sequenceUuid: sequence.uuid, composer: 1 })", $template);
     }
 
     public function testComposerCardsOpenTheActivityEditorInTheOverlay(): void
@@ -431,14 +426,14 @@ final class SessionTemplateRegressionTest extends TestCase
         $template = file_get_contents(__DIR__ . '/../../../templates/session/composer_activity_form.html.twig');
 
         self::assertIsString($template);
-        self::assertStringContainsString('form.media', $template);
+        self::assertStringContainsString('form.catalogMediaUuids', $template);
         self::assertStringContainsString('form.role', $template);
-        self::assertStringContainsString('<twig:SessionSequenceLocalDetails', $template);
-        self::assertStringContainsString('section="details"', $template);
+        self::assertStringContainsString('form.body', $template);
         self::assertStringNotContainsString('form.notes', $template);
         self::assertStringContainsString('form.instrumentUuids', $template);
-        self::assertStringNotContainsString('form.lyrics', $template);
-        self::assertStringNotContainsString('form.gestures', $template);
+        self::assertStringContainsString('form.lyrics', $template);
+        self::assertStringContainsString('form.gestures', $template);
+        self::assertStringContainsString('<details class="internal-disclosure">', $template);
         self::assertStringNotContainsString('instruction-list', $template);
     }
 
@@ -481,36 +476,27 @@ final class SessionTemplateRegressionTest extends TestCase
         $template = file_get_contents(__DIR__ . '/../../../templates/session/composer_activity_form.html.twig');
 
         self::assertIsString($template);
-        self::assertStringContainsString("path('session_sequence_media_picker'", $template);
-        self::assertStringContainsString("path('session_sequence_media_create'", $template);
-        self::assertStringContainsString('formaction="{{ path(\'session_sequence_media_picker\'', $template);
-        self::assertStringContainsString('formaction="{{ path(\'session_sequence_media_create\'', $template);
-        self::assertStringContainsString('formnovalidate', $template);
+        self::assertStringContainsString('media_resource/_association_picker.html.twig', $template);
+        self::assertStringContainsString('media-resource-create', $template);
+        self::assertStringNotContainsString("path('session_sequence_media_picker'", $template);
     }
 
-    public function testDraftActivityCloseRemovesOnlyTheNewDraft(): void
+    public function testNewActivityClosesWithoutCreatingASequence(): void
     {
         $template = file_get_contents(__DIR__ . '/../../../templates/session/composer_activity_form.html.twig');
-        $controller = file_get_contents(__DIR__ . '/../../../src/Application/Controller/SessionSummaryController.php');
-
         self::assertIsString($template);
-        self::assertIsString($controller);
-        self::assertStringContainsString('{% if isDraft %}', $template);
-        self::assertStringContainsString("path('session_sequence_remove'", $template);
-        self::assertStringContainsString("'draft' => 1", $controller);
+        self::assertStringContainsString('{% set isNewActivity = sequence is null %}', $template);
+        self::assertStringNotContainsString("path('session_sequence_remove'", $template);
+        self::assertStringContainsString("path('session_edit'", $template);
     }
 
-    public function testDraftRepertoireConfigurationIsRemovedWhenTheOverlayCloses(): void
+    public function testRepertoireSequenceClosesWithoutDraftFlag(): void
     {
         $template = file_get_contents(__DIR__ . '/../../../templates/session/composer_repertoire_form.html.twig');
-        $controller = file_get_contents(__DIR__ . '/../../../src/Application/Controller/SessionSummaryController.php');
-
         self::assertIsString($template);
-        self::assertIsString($controller);
-        self::assertStringContainsString('{% set isDraft = isDraft|default(false) %}', $template);
-        self::assertStringContainsString("path('session_sequence_remove'", $template);
-        self::assertStringContainsString('draft: isDraft ? 1 : null', $template);
-        self::assertStringContainsString("'draft' => 1", $controller);
+        self::assertStringNotContainsString('draft:', $template);
+        self::assertStringNotContainsString("path('session_sequence_remove'", $template);
+        self::assertStringContainsString("path('session_edit'", $template);
     }
 
     public function testOpeningMediaActionsPersistsTheCurrentActivityFormFirst(): void

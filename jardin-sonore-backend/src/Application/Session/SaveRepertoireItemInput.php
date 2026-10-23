@@ -12,6 +12,7 @@ final readonly class SaveRepertoireItemInput
      * @param list<SaveRepertoireBlockInput> $contentBlocks
      * @param list<string>                   $linkedMediaUuids
      * @param list<string>                   $themeUuids
+     * @param array<string, bool>|null       $linkedMediaVisibility
      */
     public function __construct(
         public RepertoireItemType $type,
@@ -20,10 +21,10 @@ final readonly class SaveRepertoireItemInput
         public string $body,
         public array $contentBlocks,
         public ?string $generalInstructions,
-        public ?string $notes,
         public array $linkedMediaUuids,
         public array $themeUuids,
         public bool $active,
+        public ?array $linkedMediaVisibility = null,
     ) {
     }
 }

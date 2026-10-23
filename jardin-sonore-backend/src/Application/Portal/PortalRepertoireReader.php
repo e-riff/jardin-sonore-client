@@ -77,7 +77,7 @@ final readonly class PortalRepertoireReader
     {
         $mediaEntities = [];
         foreach ($itemEntity->getLinkedMediaUuids() as $mediaUuid) {
-            if (!Uuid::isValid($mediaUuid)) {
+            if (!Uuid::isValid($mediaUuid) || !$itemEntity->isLinkedMediaVisible($mediaUuid)) {
                 continue;
             }
             $mediaEntity = $this->entityManager->getRepository(MediaResourceEntity::class)->findOneBy(['uuid' => Uuid::fromString($mediaUuid), 'active' => true]);

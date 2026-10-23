@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Admin;
 
+use App\Application\Directory\OrganizationChoiceLabel;
 use App\Application\Portal\OrganizationAccessContactCreator;
 use App\Application\Portal\OrganizationAccessEmailResolver;
 use App\Application\Portal\OrganizationAccessEmailSelection;
@@ -288,19 +289,18 @@ final class UserCrudController extends AbstractCrudController
         $queryBuilder = $this->entityManager->getRepository(OrganizationEntity::class)
             ->createQueryBuilder('organization')
             ->leftJoin('organization.contactDetails', 'contactDetails')->addSelect('contactDetails')
-            ->leftJoin('contactDetails.addressContacts', 'addressContact')->addSelect('addressContact')
+            ->leftJoin('contactDetails.addressContacts', 'addressContact', 'WITH', 'addressContact.active = true')->addSelect('addressContact')
             ->leftJoin('addressContact.municipality', 'municipality')->addSelect('municipality')
             ->orderBy('organization.name', 'ASC')
             ->setMaxResults(25);
         if ('' !== $query) {
-            $queryBuilder->andWhere('LOWER(organization.name) LIKE LOWER(:query)')->setParameter('query', '%' . $query . '%');
+            $queryBuilder->andWhere('LOWER(organization.name) LIKE LOWER(:query) OR LOWER(municipality.name) LIKE LOWER(:query) OR LOWER(municipality.postalCode) LIKE LOWER(:query) OR LOWER(addressContact.city) LIKE LOWER(:query) OR LOWER(addressContact.postalCode) LIKE LOWER(:query)')->setParameter('query', '%' . addcslashes($query, '%_\\') . '%');
         }
 
-        return new JsonResponse(['items' => array_map(static function (OrganizationEntity $organizationEntity): array {
-            $municipality = $organizationEntity->getMunicipalitySummary();
-
-            return ['id' => (string) $organizationEntity->getId(), 'label' => '—' === $municipality ? $organizationEntity->getName() : "{$organizationEntity->getName()} — {$municipality}"];
-        }, $queryBuilder->getQuery()->getResult())]);
+        return new JsonResponse(['items' => array_map(static fn (OrganizationEntity $organizationEntity): array => [
+            'id' => (string) $organizationEntity->getId(),
+            'label' => OrganizationChoiceLabel::forEntity($organizationEntity),
+        ], $queryBuilder->getQuery()->getResult())]);
     }
 
     private function resolveOrCreateContact(UserEntity $userEntity, OrganizationEntity $organizationEntity): OrganizationAccessEmailSelection

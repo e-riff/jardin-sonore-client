@@ -46,7 +46,6 @@ final class MediaResourceDoctrineRepository extends ServiceEntityRepository impl
                     OR LOWER(COALESCE(media.source, \'\')) LIKE LOWER(:query)
                     OR LOWER(COALESCE(media.description, \'\')) LIKE LOWER(:query)
                     OR LOWER(media.primaryUrl) LIKE LOWER(:query)
-                    OR LOWER(COALESCE(media.secondaryUrl, \'\')) LIKE LOWER(:query)
                 ')
                 ->setParameter('query', '%' . trim($query) . '%');
         }

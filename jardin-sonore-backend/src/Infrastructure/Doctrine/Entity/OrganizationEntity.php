@@ -35,7 +35,9 @@ class OrganizationEntity extends DirectoryEntryEntity
 
     public function __toString(): string
     {
-        return $this->name;
+        $municipality = $this->getMunicipalitySummary();
+
+        return '—' === $municipality ? $this->name : "{$this->name} — {$municipality}";
     }
 
     public function getName(): string

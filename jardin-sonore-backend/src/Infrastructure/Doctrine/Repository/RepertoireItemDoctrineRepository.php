@@ -129,7 +129,6 @@ final class RepertoireItemDoctrineRepository extends ServiceEntityRepository imp
                     LOWER(item.title) LIKE LOWER(:query)
                     OR LOWER(COALESCE(item.source, \'\')) LIKE LOWER(:query)
                     OR LOWER(item.body) LIKE LOWER(:query)
-                    OR LOWER(COALESCE(item.notes, \'\')) LIKE LOWER(:query)
                 ')
                 ->setParameter('query', '%' . trim($query) . '%');
         }

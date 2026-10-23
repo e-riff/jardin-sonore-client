@@ -19,6 +19,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[Route('/sessions/media', name: 'media_resource_')]
 final class MediaResourceCatalogController extends AbstractController
@@ -36,8 +37,14 @@ final class MediaResourceCatalogController extends AbstractController
         Request $request,
         CreateMediaResource $createMediaResource,
         GetRepertoireItemForEdit $getRepertoireItemForEdit,
+        GetMediaResourceForEdit $getMediaResourceForEdit,
         RepertoireItemRepositoryInterface $repertoireItemRepository,
+        TranslatorInterface $translator,
     ): Response {
+        $pickerSelectId = $request->query->getString('pickerSelectId');
+        if ('' !== $pickerSelectId && 1 !== preg_match('/^[a-zA-Z][a-zA-Z0-9_-]{0,100}$/', $pickerSelectId)) {
+            throw $this->createNotFoundException();
+        }
         $repertoireItem = $this->resolveRepertoireItem($request, $getRepertoireItemForEdit);
         $formModel = new MediaResourceFormModel();
         $form = $this->createForm(MediaResourceFormType::class, $formModel);
@@ -45,6 +52,22 @@ final class MediaResourceCatalogController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $mediaResource = $createMediaResource($this->createInput($formModel));
+            if ('' !== $pickerSelectId) {
+                $mediaResourceView = $getMediaResourceForEdit($mediaResource->getUuid());
+                if (null === $mediaResourceView) {
+                    throw $this->createNotFoundException();
+                }
+                $typeLabel = $translator->trans($mediaResourceView->type->translationKey(), [], 'sessions');
+                $descriptor = $mediaResourceView->source ?? parse_url($mediaResourceView->primaryUrl, PHP_URL_HOST) ?? '';
+                $reference = $mediaResourceView->id ?? substr($mediaResourceView->uuid->toRfc4122(), -6);
+
+                return $this->render('media_resource/created_frame.html.twig', [
+                    'mediaResource' => $mediaResourceView,
+                    'pickerSelectId' => $pickerSelectId,
+                    'label' => "{$reference} — {$mediaResourceView->title} — {$typeLabel} — {$descriptor}",
+                    'typeLabel' => $typeLabel,
+                ]);
+            }
             $this->addFlash('success', ['message' => 'sessions.media.flash.created', 'domain' => 'sessions']);
 
             if (null !== $repertoireItem) {
@@ -65,7 +88,6 @@ final class MediaResourceCatalogController extends AbstractController
                         body: $repertoireItemDomain->getBody(),
                         contentBlocks: $repertoireItemDomain->getContentBlocks(),
                         generalInstructions: $repertoireItemDomain->getGeneralInstructions(),
-                        notes: $repertoireItemDomain->getNotes(),
                         linkedMediaUuids: $linkedMediaUuids,
                     );
                     $repertoireItemRepository->save($repertoireItemDomain);
@@ -82,11 +104,12 @@ final class MediaResourceCatalogController extends AbstractController
             return $this->redirectToRoute('media_resource_index', status: Response::HTTP_SEE_OTHER);
         }
 
-        return $this->render(null !== $repertoireItem ? 'media_resource/new_frame.html.twig' : 'media_resource/form.html.twig', [
+        return $this->render('' !== $pickerSelectId ? 'media_resource/picker_frame.html.twig' : (null !== $repertoireItem ? 'media_resource/new_frame.html.twig' : 'media_resource/form.html.twig'), [
             'form' => $form->createView(),
             'hasErrors' => $form->isSubmitted() && !$form->isValid(),
             'item' => null,
             'repertoireItem' => $repertoireItem,
+            'pickerSelectId' => $pickerSelectId,
         ], $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null);
     }
 
@@ -154,7 +177,6 @@ final class MediaResourceCatalogController extends AbstractController
             primaryFile: $formModel->primaryFile,
             source: $formModel->source,
             description: $formModel->description,
-            secondaryUrl: $formModel->secondaryUrl,
             imageUrl: $imageUrl,
             imageFile: $formModel->imageFile,
             themeUuids: $formModel->themeUuids,

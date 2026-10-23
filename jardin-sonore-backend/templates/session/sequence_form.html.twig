@@ -12,7 +12,7 @@
         </div>
     </section>
 
-    <section class="internal-card">
+    <section class="internal-card" data-controller="media-create-dialog">
         {% if hasErrors %}
             <div class="internal-alert internal-alert--error">{{ 'sessions.sequence.form.error_notice'|trans({}, 'sessions') }}</div>
         {% endif %}
@@ -25,17 +25,20 @@
 
         {{ form_start(form, { attr: { class: 'internal-form' } }) }}
             <div class="internal-form__grid">
-                {{ form_row(form.type) }}
                 {{ form_row(form.title) }}
             </div>
 
+            {{ form_row(form.instrumentUuids) }}
+            {{ form_row(form.role) }}
+            {% include 'session/_role_suggestions.html.twig' with { id: 'session-sequence-role-suggestions' } only %}
             {{ form_row(form.subtitle) }}
             {{ form_row(form.body) }}
-            {{ form_row(form.lyrics) }}
-            {{ form_row(form.gestures) }}
-            {{ form_row(form.instrumentUuids) }}
+            <details class="internal-disclosure"><summary>{{ 'sessions.sequence.form.lyrics_and_gestures'|trans({}, 'sessions') }}</summary>
+                {{ form_row(form.lyrics) }}
+                {{ form_row(form.gestures) }}
+            </details>
 
-            {{ form_row(form.media) }}
+            {% include 'media_resource/_association_picker.html.twig' with { field: form.catalogMediaUuids } only %}
             {{ form_row(form.showLyricsByDefault) }}
 
             {{ form_widget(form.sourceUuid) }}
@@ -46,5 +49,9 @@
                 {{ form_widget(form.submit) }}
             </div>
         {{ form_end(form) }}
+        <dialog class="internal-form-dialog media-create-dialog" data-media-create-dialog-target="dialog" data-action="click->media-create-dialog#closeOnBackdrop"><div class="internal-form-dialog__panel">
+            <button type="button" class="internal-icon-button" data-action="media-create-dialog#close" aria-label="{{ 'sessions.sequence.composer.close'|trans({}, 'sessions') }}">×</button>
+            <turbo-frame id="media-resource-create"></turbo-frame>
+        </div></dialog>
     </section>
 {% endblock %}

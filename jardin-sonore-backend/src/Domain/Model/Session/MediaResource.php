@@ -21,7 +21,6 @@ final class MediaResource implements UuidIdentifiableInterface
     private ?string $source;
     private ?string $description;
     private string $primaryUrl;
-    private ?string $secondaryUrl;
     private ?string $imageUrl;
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
@@ -35,25 +34,30 @@ final class MediaResource implements UuidIdentifiableInterface
         string $primaryUrl,
         ?string $source = null,
         ?string $description = null,
-        ?string $secondaryUrl = null,
         ?string $imageUrl = null,
         bool $active = true,
         ?DateTimeImmutable $createdAt = null,
         ?DateTimeImmutable $updatedAt = null,
         ?Uuid $uuid = null,
         array $themes = [],
+        private readonly ?int $id = null,
     ) {
         $this->initializeUuid($uuid);
         $this->initializeActive($active);
         $this->createdAt = $createdAt ?? new DateTimeImmutable();
         $this->updatedAt = $updatedAt ?? new DateTimeImmutable();
-        $this->updateContent($title, $primaryUrl, $source, $description, $secondaryUrl, $imageUrl);
+        $this->updateContent($title, $primaryUrl, $source, $description, $imageUrl);
         $this->setThemes($themes);
     }
 
     public function getType(): MediaResourceType
     {
         return $this->type;
+    }
+
+    public function getId(): ?int
+    {
+        return $this->id;
     }
 
     public function getTitle(): string
@@ -74,11 +78,6 @@ final class MediaResource implements UuidIdentifiableInterface
     public function getPrimaryUrl(): string
     {
         return $this->primaryUrl;
-    }
-
-    public function getSecondaryUrl(): ?string
-    {
-        return $this->secondaryUrl;
     }
 
     public function getImageUrl(): ?string
@@ -113,7 +112,6 @@ final class MediaResource implements UuidIdentifiableInterface
         string $primaryUrl,
         ?string $source,
         ?string $description,
-        ?string $secondaryUrl,
         ?string $imageUrl,
     ): void {
         if ('' === trim($title)) {
@@ -128,7 +126,6 @@ final class MediaResource implements UuidIdentifiableInterface
         $this->primaryUrl = trim($primaryUrl);
         $this->source = self::normalizeNullableString($source);
         $this->description = self::normalizeNullableString($description);
-        $this->secondaryUrl = self::normalizeNullableString($secondaryUrl);
         $this->imageUrl = self::normalizeNullableString($imageUrl);
         $this->updatedAt = new DateTimeImmutable();
     }

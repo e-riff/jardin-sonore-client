@@ -1,0 +1,17 @@
+{% extends '@Turbo/layouts/frame.html.twig' %}
+
+{% block body %}
+    <turbo-frame id="media-resource-create">
+        <h2>{{ 'sessions.media.new.heading'|trans({}, 'sessions') }}</h2>
+        {% if hasErrors %}<div class="internal-alert internal-alert--error">{{ 'sessions.media.form.error_notice'|trans({}, 'sessions') }}</div>{% endif %}
+        {{ form_start(form, { action: path('media_resource_new', { pickerSelectId: pickerSelectId }), attr: { class: 'internal-form' } }) }}
+            <div class="internal-form__grid">{{ form_row(form.type) }}{{ form_row(form.title) }}</div>
+            {{ form_row(form.source) }}
+            {{ form_row(form.primaryUrl) }}
+            {{ form_row(form.primaryFile) }}
+            {{ form_row(form.themeUuids) }}
+            {{ form_row(form.active) }}
+            <div class="internal-form__actions">{{ form_widget(form.submit) }}</div>
+        {{ form_end(form) }}
+    </turbo-frame>
+{% endblock %}

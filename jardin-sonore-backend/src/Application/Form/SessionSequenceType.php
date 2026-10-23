@@ -5,26 +5,29 @@ declare(strict_types=1);
 namespace App\Application\Form;
 
 use App\Application\Form\Model\SessionSequenceFormModel;
-use App\Domain\Model\Session\SessionSequenceType as SequenceType;
 use App\Domain\Repository\InstrumentRepositoryInterface;
+use App\Domain\Repository\MediaResourceRepositoryInterface;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * @extends AbstractType<SessionSequenceFormModel>
  */
 final class SessionSequenceType extends AbstractType
 {
-    public function __construct(private readonly InstrumentRepositoryInterface $instrumentRepository)
-    {
+    public function __construct(
+        private readonly InstrumentRepositoryInterface $instrumentRepository,
+        private readonly MediaResourceRepositoryInterface $mediaResourceRepository,
+        private readonly TranslatorInterface $translator,
+    ) {
     }
 
     /**
@@ -33,35 +36,34 @@ final class SessionSequenceType extends AbstractType
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $activityOnly = $options['activity_only'];
         $instrumentChoices = [];
 
         foreach ($this->instrumentRepository->findAllOrderedByName() as $instrument) {
             $instrumentChoices[$instrument->getName()] = $instrument->getUuid()->toRfc4122();
         }
+        $mediaResources = $this->mediaResourceRepository->search();
+        $mediaLabelsByUuid = MediaResourceChoiceLabels::byUuid($mediaResources, $this->translator);
+        $mediaChoices = [];
+        foreach ($mediaResources as $mediaResource) {
+            $mediaUuid = $mediaResource->getUuid()->toRfc4122();
+            $mediaChoices[$mediaLabelsByUuid[$mediaUuid]] = $mediaUuid;
+        }
 
         $builder
-            ->add('type', ChoiceType::class, [
-                'label' => 'sessions.sequence.form.type',
-                'choices' => [
-                    'sessions.sequence.type.warmup' => SequenceType::WARMUP,
-                    'sessions.sequence.type.nursery_rhyme' => SequenceType::NURSERY_RHYME,
-                    'sessions.sequence.type.fingerplay' => SequenceType::FINGERPLAY,
-                    'sessions.sequence.type.soundtrack' => SequenceType::SOUNDTRACK,
-                    'sessions.sequence.type.manipulation' => SequenceType::MANIPULATION,
-                    'sessions.sequence.type.movement' => SequenceType::MOVEMENT,
-                    'sessions.sequence.type.closing' => SequenceType::CLOSING,
-                    'sessions.sequence.type.free' => SequenceType::FREE,
-                ],
-                'choice_translation_domain' => 'sessions',
-            ])
             ->add('title', TextType::class, [
                 'label' => 'sessions.sequence.form.title',
             ])
-            ->add('media', CollectionType::class, ['entry_type' => SessionSequenceMediaType::class, 'entry_options' => ['row_attr' => ['class' => 'session-activity-media__item']], 'allow_add' => true, 'allow_delete' => true, 'by_reference' => false, 'required' => false])
+            ->add('catalogMediaUuids', ChoiceType::class, [
+                'label' => 'sessions.sequence.form.catalog_media',
+                'required' => false,
+                'multiple' => true,
+                'choices' => $mediaChoices,
+                'autocomplete' => true,
+            ])
             ->add('role', TextType::class, [
                 'label' => 'sessions.sequence.form.role',
                 'required' => false,
+                'attr' => ['list' => 'session-sequence-role-suggestions'],
             ])
             ->add('sourceUuid', HiddenType::class, [
                 'required' => false,
@@ -80,10 +82,6 @@ final class SessionSequenceType extends AbstractType
                 'choices' => $instrumentChoices,
                 'autocomplete' => true,
             ]);
-
-        if ($activityOnly) {
-            return;
-        }
 
         $builder
             ->add('body', TextareaType::class, [

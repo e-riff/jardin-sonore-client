@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Admin;
 
+use App\Application\Directory\OrganizationChoiceLabel;
 use App\Application\Portal\PortalAccessManager;
-use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\UserOrganizationAccessEntity;
 use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
@@ -67,11 +67,7 @@ final class UserOrganizationAccessCrudController extends AbstractCrudController
             ->renderAsHtml();
         yield AssociationField::new('user', 'Compte')->autocomplete()->hideOnForm();
         yield AssociationField::new('organization', 'Structure')
-            ->autocomplete(true, static function (OrganizationEntity $organizationEntity): string {
-                $municipality = $organizationEntity->getMunicipalitySummary();
-
-                return '—' === $municipality ? $organizationEntity->getName() : "{$organizationEntity->getName()} — {$municipality}";
-            })
+            ->autocomplete(true, OrganizationChoiceLabel::forEntity(...))
             ->setSortProperty('name')
             ->hideOnIndex();
         yield AssociationField::new('person', 'Personne')->autocomplete()->hideOnForm();

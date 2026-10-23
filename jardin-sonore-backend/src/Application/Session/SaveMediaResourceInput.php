@@ -17,7 +17,6 @@ final readonly class SaveMediaResourceInput
         public ?UploadedFile $primaryFile,
         public ?string $source,
         public ?string $description,
-        public ?string $secondaryUrl,
         public ?string $imageUrl,
         public ?UploadedFile $imageFile,
         public array $themeUuids,

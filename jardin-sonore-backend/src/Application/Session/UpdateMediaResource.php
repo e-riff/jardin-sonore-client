@@ -39,7 +39,6 @@ final readonly class UpdateMediaResource
             primaryUrl: $primaryUrl,
             source: $saveMediaResourceInput->source,
             description: $saveMediaResourceInput->description,
-            secondaryUrl: $saveMediaResourceInput->secondaryUrl,
             imageUrl: $imageUrl,
         );
         $mediaResource->setActive($saveMediaResourceInput->active);

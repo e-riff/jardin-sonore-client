@@ -6,6 +6,7 @@ namespace App\Application\Form;
 
 use App\Application\Form\Model\RepertoireBlockFormModel;
 use App\Application\Form\Model\RepertoireItemFormModel;
+use App\Application\Session\MediaThumbnailUrl;
 use App\Domain\Model\Session\RepertoireItemType as RepertoireItemKind;
 use App\Domain\Repository\MediaResourceRepositoryInterface;
 use App\Domain\Repository\ThemeRepositoryInterface;
@@ -16,7 +17,6 @@ use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\Form\Extension\Core\Type\UrlType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
@@ -46,6 +46,7 @@ final class RepertoireItemType extends AbstractType
         $mediaChoices = [];
         $themeChoices = [];
         $mediaChoiceAttributes = [];
+        $formModel = $options['data'] instanceof RepertoireItemFormModel ? $options['data'] : null;
 
         foreach ($mediaResources as $mediaResource) {
             $mediaUuid = $mediaResource->getUuid()->toRfc4122();
@@ -55,6 +56,8 @@ final class RepertoireItemType extends AbstractType
                 'data-media-choice-label' => $mediaLabelsByUuid[$mediaUuid],
                 'data-media-type-label' => $this->translator->trans($mediaResource->getType()->translationKey(), [], 'sessions'),
                 'data-media-url' => $mediaResource->getPrimaryUrl(),
+                'data-media-thumbnail' => MediaThumbnailUrl::fromUrl($mediaResource->getPrimaryUrl(), $mediaResource->getImageUrl()) ?? '',
+                'data-media-visible' => ($formModel?->linkedMediaVisibility[$mediaUuid] ?? true) ? '1' : '0',
             ];
         }
         foreach ($this->themeRepository->findAllOrderedByLabel() as $theme) {
@@ -87,7 +90,6 @@ final class RepertoireItemType extends AbstractType
                 'prototype' => true,
             ])
             ->add('generalInstructions', TextareaType::class, ['label' => 'sessions.repertoire.form.general_instructions', 'required' => false, 'attr' => ['rows' => 4]])
-            ->add('notes', TextareaType::class, ['label' => 'sessions.repertoire.form.notes', 'required' => false, 'attr' => ['rows' => 5]])
             ->add('themeUuids', ChoiceType::class, ['label' => 'sessions.repertoire.form.themes', 'required' => false, 'multiple' => true, 'choices' => $themeChoices, 'autocomplete' => true])
             ->add('linkedMediaUuids', ChoiceType::class, [
                 'label' => 'sessions.repertoire.form.linked_media',
@@ -96,11 +98,6 @@ final class RepertoireItemType extends AbstractType
                 'choices' => $mediaChoices,
                 'autocomplete' => true,
                 'choice_attr' => static fn (?string $choice) => null === $choice ? [] : ($mediaChoiceAttributes[$choice] ?? []),
-            ])
-            ->add('youtubeVideoUrl', UrlType::class, [
-                'label' => 'sessions.repertoire.form.youtube_video_url',
-                'help' => 'sessions.repertoire.form.youtube_video_url_help',
-                'required' => false,
             ])
             ->add('active', CheckboxType::class, ['label' => 'sessions.repertoire.form.active', 'required' => false])
             ->add('submit', SubmitType::class, ['label' => 'sessions.repertoire.form.submit', 'attr' => ['class' => 'internal-button']]);

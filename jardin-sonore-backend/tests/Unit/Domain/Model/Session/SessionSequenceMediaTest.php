@@ -47,4 +47,22 @@ final class SessionSequenceMediaTest extends TestCase
         self::assertSame('https://example.test/cover.jpg', $sessionSequence->getMedia()[0]->imageUrl);
         self::assertTrue($sessionSequence->getMedia()[1]->isDisplayedOnSession());
     }
+
+    #[Test]
+    public function itKeepsTheCatalogUuidAlongsideLegacyDisplayData(): void
+    {
+        $mediaUuid = Uuid::v4();
+        $media = new SessionSequenceMedia(
+            label: 'Partition',
+            type: MediaResourceType::SCORE,
+            url: 'https://example.test/partition.pdf',
+            imageUrl: null,
+            featured: true,
+            displayOnSession: true,
+            resourceUuid: $mediaUuid,
+        );
+
+        self::assertSame($mediaUuid->toRfc4122(), $media->toArray()['resourceUuid']);
+        self::assertTrue($mediaUuid->equals(SessionSequenceMedia::fromArray($media->toArray())->resourceUuid));
+    }
 }

@@ -14,6 +14,7 @@ final readonly class RepertoireItemView
     /**
      * @param list<RepertoireBlockView>                          $contentBlocks
      * @param list<string>                                       $linkedMediaUuids
+     * @param array<string, bool>                                $linkedMediaVisibility
      * @param list<array{uuid:string,label:string,color:string}> $themes
      */
     public function __construct(
@@ -26,11 +27,11 @@ final readonly class RepertoireItemView
         public ?string $generalInstructions,
         public ?string $lyrics,
         public ?string $gestures,
-        public ?string $notes,
         public array $linkedMediaUuids,
         public array $themes,
         public bool $active,
         public DateTimeImmutable $updatedAt,
+        public array $linkedMediaVisibility = [],
     ) {
     }
 
@@ -49,11 +50,11 @@ final readonly class RepertoireItemView
             generalInstructions: $repertoireItem->getGeneralInstructions(),
             lyrics: $repertoireItem->getLyrics(),
             gestures: $repertoireItem->getGestures(),
-            notes: $repertoireItem->getNotes(),
             linkedMediaUuids: $repertoireItem->getLinkedMediaUuids(),
             themes: array_map(static fn ($theme): array => ['uuid' => $theme->getUuid()->toRfc4122(), 'label' => $theme->getLabel(), 'color' => $theme->getColor()], $repertoireItem->getThemes()),
             active: $repertoireItem->isActive(),
             updatedAt: $repertoireItem->getUpdatedAt(),
+            linkedMediaVisibility: array_column($repertoireItem->getLinkedMediaLinksPayload(), 'visible', 'uuid'),
         );
     }
 }

@@ -39,6 +39,7 @@ final class RepertoireSessionSequenceType extends AbstractType
             ->add('role', TextType::class, [
                 'label' => 'sessions.sequence.form.role',
                 'required' => false,
+                'attr' => ['list' => 'session-sequence-role-suggestions'],
             ])
             ->add('instrumentUuids', ChoiceType::class, [
                 'label' => 'sessions.sequence.form.instruments',

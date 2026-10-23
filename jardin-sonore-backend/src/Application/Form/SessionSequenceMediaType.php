@@ -8,6 +8,7 @@ use App\Application\Form\Model\SessionSequenceMediaFormModel;
 use App\Domain\Model\Session\MediaResourceType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\UrlType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -29,6 +30,7 @@ final class SessionSequenceMediaType extends AbstractType
                 'choice_translation_domain' => 'sessions',
             ])
             ->add('url', UrlType::class, ['label' => 'sessions.sequence.form.media_url']);
+        $builder->add('resourceUuid', HiddenType::class, ['required' => false]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void

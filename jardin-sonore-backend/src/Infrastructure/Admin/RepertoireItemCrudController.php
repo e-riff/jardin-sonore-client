@@ -66,7 +66,7 @@ final class RepertoireItemCrudController extends AbstractCrudController
             ->setPageTitle(Crud::PAGE_DETAIL, 'admin.repertoire_item.page.detail')
             ->setDefaultSort(['updatedAt' => 'DESC'])
             ->showEntityActionsInlined()
-            ->setSearchFields(['title', 'source', 'body', 'notes']);
+            ->setSearchFields(['title', 'source', 'body']);
     }
 
     public function configureActions(Actions $actions): Actions
@@ -109,9 +109,6 @@ final class RepertoireItemCrudController extends AbstractCrudController
             ->onlyOnForms();
         yield TextareaField::new('body', 'admin.field.body')->hideOnForm();
         yield TextareaField::new('generalInstructions', 'Indications générales')
-            ->setFormTypeOption('required', false)
-            ->hideOnIndex();
-        yield TextareaField::new('notes', 'admin.field.notes')
             ->setFormTypeOption('required', false)
             ->hideOnIndex();
         yield ChoiceField::new('linkedMediaUuids', 'admin.field.linked_media')
@@ -205,7 +202,6 @@ final class RepertoireItemCrudController extends AbstractCrudController
         $repertoireItemEntity
             ->setTitle(trim($repertoireItemEntity->getTitle()))
             ->setSource($this->normalizeNullableString($repertoireItemEntity->getSource()))
-            ->setNotes($this->normalizeNullableString($repertoireItemEntity->getNotes()))
             ->setGeneralInstructions($this->normalizeNullableString($repertoireItemEntity->getGeneralInstructions()))
             ->setContentBlocks($normalizedBlocks)
             ->setBody($this->buildBodyFromContentBlocks($normalizedBlocks))

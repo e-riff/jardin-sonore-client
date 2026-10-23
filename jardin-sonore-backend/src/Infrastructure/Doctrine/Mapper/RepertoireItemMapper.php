@@ -27,8 +27,7 @@ final readonly class RepertoireItemMapper
                 $repertoireItemEntity->getContentBlocks(),
             ),
             generalInstructions: $repertoireItemEntity->getGeneralInstructions(),
-            notes: $repertoireItemEntity->getNotes(),
-            linkedMediaUuids: $repertoireItemEntity->getLinkedMediaUuids(),
+            linkedMediaUuids: $repertoireItemEntity->getLinkedMediaLinksPayload(),
             active: $repertoireItemEntity->isActive(),
             createdAt: $repertoireItemEntity->getCreatedAt(),
             updatedAt: $repertoireItemEntity->getUpdatedAt(),
@@ -51,8 +50,7 @@ final readonly class RepertoireItemMapper
                 static fn (RepertoireBlock $contentBlock): array => $contentBlock->toArray(),
                 $repertoireItem->getContentBlocks(),
             ))
-            ->setNotes($repertoireItem->getNotes())
-            ->setLinkedMediaUuids($repertoireItem->getLinkedMediaUuids())
+            ->setLinkedMediaUuids($repertoireItem->getLinkedMediaLinksPayload())
             ->setActive($repertoireItem->isActive())
             ->setCreatedAt($repertoireItem->getCreatedAt())
             ->setUpdatedAt($repertoireItem->getUpdatedAt());

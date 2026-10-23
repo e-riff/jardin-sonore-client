@@ -1,7 +1,8 @@
 <div {{ attributes }} class="session-sequence-local-details session-sequence-local-details--{{ section }}">
     {% if section == 'role' and editing == 'role' %}
         <form class="session-sequence-local-details__form" data-action="live#action:prevent" data-live-action-param="save">
-            <input data-model="norender|role" value="{{ role }}" autofocus>
+            <input data-model="norender|role" value="{{ role }}" list="role-suggestions-{{ sequenceUuid }}" autofocus>
+            {% include 'session/_role_suggestions.html.twig' with { id: 'role-suggestions-' ~ sequenceUuid } only %}
             <button type="submit" class="internal-button internal-button--secondary internal-button--compact">{{ 'sessions.sequence.composer.save_role'|trans({}, 'sessions') }}</button>
         </form>
     {% elseif section == 'role' %}

@@ -3768,6 +3768,17 @@ form.internal-form.commercial-calendar-group__form {
     overflow-wrap: anywhere;
 }
 
+.media-association-picker__heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.media-create-dialog .internal-form-dialog__panel > .internal-icon-button {
+    justify-self: end;
+}
+
 .internal-form-dialog__close {
     position: absolute;
     top: 14px;
@@ -5870,9 +5881,9 @@ a.session-composer-overlay__item {
 }
 
 .repertoire-media-linker__item {
-    display: flex;
-    align-items: start;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    align-items: center;
     gap: 16px;
     padding: 12px 14px;
     border: 1px solid color-mix(in oklab, var(--color-outline-variant) 40%, white);
@@ -5881,9 +5892,57 @@ a.session-composer-overlay__item {
 }
 
 .repertoire-media-linker__item .internal-link {
-    max-width: 28rem;
-    text-align: right;
+    white-space: nowrap;
+}
+
+.repertoire-media-linker__description {
+    min-width: 0;
+}
+
+.repertoire-media-linker__description strong {
+    display: block;
     overflow-wrap: anywhere;
+}
+
+.repertoire-media-linker__thumbnail {
+    width: 72px;
+    height: 54px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: var(--color-surface-container);
+}
+
+.repertoire-heading-status {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+}
+
+.repertoire-heading-status__toggle:has(input:checked) {
+    border-color: color-mix(in oklab, var(--color-secondary) 35%, white);
+    background: color-mix(in oklab, var(--color-secondary) 16%, white);
+    color: var(--color-secondary);
+}
+
+.repertoire-heading-status__toggle:has(input:focus-visible) {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 3px;
+}
+
+.repertoire-heading-status__toggle:has(input:checked) .repertoire-heading-status__inactive,
+.repertoire-heading-status__toggle:not(:has(input:checked)) .repertoire-heading-status__active {
+    display: none;
+}
+
+.repertoire-media-linker__visibility {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    cursor: pointer;
+    font-size: .78rem;
+    font-weight: 600;
 }
 
 #repertoire-media-create {
@@ -6230,12 +6289,11 @@ a.session-composer-overlay__item {
     }
 
     .repertoire-media-linker__item {
-        flex-direction: column;
+        grid-template-columns: auto minmax(0, 1fr) auto;
     }
 
-    .repertoire-media-linker__item .internal-link {
-        max-width: 100%;
-        text-align: left;
+    .repertoire-media-linker__visibility {
+        grid-column: 2 / -1;
     }
 
     .repertoire-block-row {

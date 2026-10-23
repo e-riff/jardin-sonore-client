@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Form;
 
+use App\Application\Directory\OrganizationChoiceLabel;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use Doctrine\ORM\QueryBuilder;
 use Symfony\Component\Form\AbstractType;
@@ -24,20 +25,14 @@ final class OrganizationAutocompleteType extends AbstractType
             'min_characters' => 2,
             'max_results' => 20,
             'preload' => false,
-            'choice_label' => static fn (OrganizationEntity $organizationEntity): string => $organizationEntity->getName() . ' — ' . $organizationEntity->getMunicipalitySummary() . ' — ' . $organizationEntity->getEmailContactsSummary(),
+            'choice_label' => OrganizationChoiceLabel::forEntity(...),
             'filter_query' => static function (QueryBuilder $queryBuilder, string $query): void {
                 $queryBuilder
                     ->leftJoin('entity.contactDetails', 'contactDetails')
-                    ->leftJoin('contactDetails.addressContacts', 'addressContact')
+                    ->leftJoin('contactDetails.addressContacts', 'addressContact', 'WITH', 'addressContact.active = true')
                     ->leftJoin('addressContact.municipality', 'municipality')
-                    ->leftJoin('contactDetails.emailContactLinks', 'organizationEmailContactLink')
-                    ->leftJoin('organizationEmailContactLink.emailContact', 'emailContact')
-                    ->leftJoin('entity.people', 'person')
-                    ->leftJoin('person.contactDetails', 'personContactDetails')
-                    ->leftJoin('personContactDetails.emailContactLinks', 'personEmailContactLink')
-                    ->leftJoin('personEmailContactLink.emailContact', 'personEmailContact')
-                    ->andWhere('LOWER(entity.name) LIKE LOWER(:query) OR LOWER(municipality.name) LIKE LOWER(:query) OR LOWER(emailContact.emailAddress) LIKE LOWER(:query) OR LOWER(personEmailContact.emailAddress) LIKE LOWER(:query)')
-                    ->setParameter('query', '%' . trim($query) . '%')
+                    ->andWhere('LOWER(entity.name) LIKE LOWER(:query) OR LOWER(municipality.name) LIKE LOWER(:query) OR LOWER(municipality.postalCode) LIKE LOWER(:query) OR LOWER(addressContact.city) LIKE LOWER(:query) OR LOWER(addressContact.postalCode) LIKE LOWER(:query)')
+                    ->setParameter('query', '%' . addcslashes(trim($query), '%_\\') . '%')
                     ->groupBy('entity.id')
                     ->orderBy('entity.name', 'ASC');
             },

@@ -23,18 +23,17 @@ final class RepertoireItem implements UuidIdentifiableInterface
     private ?string $generalInstructions;
     /** @var list<RepertoireBlock> */
     private array $contentBlocks;
-    private ?string $notes;
-    /** @var list<string> */
-    private array $linkedMediaUuids;
+    /** @var array<string, bool> */
+    private array $linkedMediaVisibility = [];
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
     /** @var list<Theme> */
     private array $themes;
 
     /**
-     * @param list<RepertoireBlock> $contentBlocks
-     * @param list<string>          $linkedMediaUuids
-     * @param list<Theme>           $themes
+     * @param list<RepertoireBlock>                           $contentBlocks
+     * @param list<string|array{uuid: string, visible: bool}> $linkedMediaUuids
+     * @param list<Theme>                                     $themes
      */
     public function __construct(
         private RepertoireItemType $type,
@@ -43,7 +42,6 @@ final class RepertoireItem implements UuidIdentifiableInterface
         string $body = '',
         array $contentBlocks = [],
         ?string $generalInstructions = null,
-        ?string $notes = null,
         array $linkedMediaUuids = [],
         bool $active = true,
         ?DateTimeImmutable $createdAt = null,
@@ -53,7 +51,7 @@ final class RepertoireItem implements UuidIdentifiableInterface
     ) {
         $this->initializeUuid($uuid);
         $this->initializeActive($active);
-        $this->updateContent($title, $source, $body, $contentBlocks, $generalInstructions, $notes, $linkedMediaUuids);
+        $this->updateContent($title, $source, $body, $contentBlocks, $generalInstructions, $linkedMediaUuids);
         $this->setThemes($themes);
         $this->createdAt = $createdAt ?? new DateTimeImmutable();
         $this->updatedAt = $updatedAt ?? $this->updatedAt;
@@ -96,15 +94,37 @@ final class RepertoireItem implements UuidIdentifiableInterface
         return $this->contentBlocks;
     }
 
-    public function getNotes(): ?string
-    {
-        return $this->notes;
-    }
-
     /** @return list<string> */
     public function getLinkedMediaUuids(): array
     {
-        return $this->linkedMediaUuids;
+        return array_keys($this->linkedMediaVisibility);
+    }
+
+    public function isLinkedMediaVisible(string $mediaUuid): bool
+    {
+        return $this->linkedMediaVisibility[$mediaUuid] ?? false;
+    }
+
+    public function setLinkedMediaVisibility(string $mediaUuid, bool $visible): void
+    {
+        if (!array_key_exists($mediaUuid, $this->linkedMediaVisibility)) {
+            throw new InvalidArgumentException('Media resource is not linked to this repertoire item.');
+        }
+
+        $this->linkedMediaVisibility[$mediaUuid] = $visible;
+        $this->updatedAt = new DateTimeImmutable();
+    }
+
+    /** @return list<array{uuid: string, visible: bool}> */
+    public function getLinkedMediaLinksPayload(): array
+    {
+        $links = [];
+
+        foreach ($this->linkedMediaVisibility as $mediaUuid => $visible) {
+            $links[] = ['uuid' => $mediaUuid, 'visible' => $visible];
+        }
+
+        return $links;
     }
 
     public function getCreatedAt(): DateTimeImmutable
@@ -132,16 +152,11 @@ final class RepertoireItem implements UuidIdentifiableInterface
     public function removeLinkedMedia(Uuid $mediaUuid): void
     {
         $mediaUuidString = $mediaUuid->toRfc4122();
-        $updatedLinkedMediaUuids = array_values(array_filter(
-            $this->linkedMediaUuids,
-            static fn (string $uuid): bool => $uuid !== $mediaUuidString,
-        ));
-
-        if ($updatedLinkedMediaUuids === $this->linkedMediaUuids) {
+        if (!array_key_exists($mediaUuidString, $this->linkedMediaVisibility)) {
             return;
         }
 
-        $this->linkedMediaUuids = $updatedLinkedMediaUuids;
+        unset($this->linkedMediaVisibility[$mediaUuidString]);
         $this->updatedAt = new DateTimeImmutable();
     }
 
@@ -163,8 +178,8 @@ final class RepertoireItem implements UuidIdentifiableInterface
     }
 
     /**
-     * @param list<RepertoireBlock> $contentBlocks
-     * @param list<string>          $linkedMediaUuids
+     * @param list<RepertoireBlock>                           $contentBlocks
+     * @param list<string|array{uuid: string, visible: bool}> $linkedMediaUuids
      */
     public function updateContent(
         string $title,
@@ -172,7 +187,6 @@ final class RepertoireItem implements UuidIdentifiableInterface
         string $body,
         array $contentBlocks,
         ?string $generalInstructions,
-        ?string $notes,
         array $linkedMediaUuids,
     ): void {
         if ('' === trim($title)) {
@@ -184,11 +198,19 @@ final class RepertoireItem implements UuidIdentifiableInterface
         $this->body = trim($body);
         $this->contentBlocks = array_values($contentBlocks);
         $this->generalInstructions = self::normalizeNullableString($generalInstructions);
-        $this->notes = self::normalizeNullableString($notes);
-        $this->linkedMediaUuids = array_values(array_unique(array_filter(array_map(
-            static fn (string $uuid): string => trim($uuid),
-            $linkedMediaUuids,
-        ), static fn (string $uuid): bool => '' !== $uuid)));
+        $previousVisibility = $this->linkedMediaVisibility;
+        $this->linkedMediaVisibility = [];
+
+        foreach ($linkedMediaUuids as $linkedMedia) {
+            $mediaUuid = trim(is_array($linkedMedia) ? $linkedMedia['uuid'] : $linkedMedia);
+            if ('' === $mediaUuid || array_key_exists($mediaUuid, $this->linkedMediaVisibility)) {
+                continue;
+            }
+
+            $this->linkedMediaVisibility[$mediaUuid] = is_array($linkedMedia)
+                ? $linkedMedia['visible']
+                : ($previousVisibility[$mediaUuid] ?? true);
+        }
         $this->updatedAt = new DateTimeImmutable();
     }
 

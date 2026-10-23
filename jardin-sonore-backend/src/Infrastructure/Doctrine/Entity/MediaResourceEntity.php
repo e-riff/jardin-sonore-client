@@ -23,7 +23,6 @@ class MediaResourceEntity
     private ?string $source = null;
     private ?string $description = null;
     private string $primaryUrl = '';
-    private ?string $secondaryUrl = null;
     private ?string $imageUrl = null;
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
@@ -94,18 +93,6 @@ class MediaResourceEntity
     public function setPrimaryUrl(string $primaryUrl): static
     {
         $this->primaryUrl = $primaryUrl;
-
-        return $this;
-    }
-
-    public function getSecondaryUrl(): ?string
-    {
-        return $this->secondaryUrl;
-    }
-
-    public function setSecondaryUrl(?string $secondaryUrl): static
-    {
-        $this->secondaryUrl = $secondaryUrl;
 
         return $this;
     }

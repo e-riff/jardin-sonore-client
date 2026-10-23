@@ -22,13 +22,13 @@ final readonly class MediaResourceMapper
             primaryUrl: $mediaResourceEntity->getPrimaryUrl(),
             source: $mediaResourceEntity->getSource(),
             description: $mediaResourceEntity->getDescription(),
-            secondaryUrl: $mediaResourceEntity->getSecondaryUrl(),
             imageUrl: $mediaResourceEntity->getImageUrl(),
             active: $mediaResourceEntity->isActive(),
             createdAt: $mediaResourceEntity->getCreatedAt(),
             updatedAt: $mediaResourceEntity->getUpdatedAt(),
             uuid: $mediaResourceEntity->getUuid(),
             themes: array_map(fn (ThemeEntity $theme): \App\Domain\Model\ContentCatalog\Theme => $this->themeMapper->toDomain($theme), $mediaResourceEntity->getThemes()->toArray()),
+            id: $mediaResourceEntity->getId(),
         );
     }
 
@@ -42,7 +42,6 @@ final readonly class MediaResourceMapper
             ->setPrimaryUrl($mediaResource->getPrimaryUrl())
             ->setSource($mediaResource->getSource())
             ->setDescription($mediaResource->getDescription())
-            ->setSecondaryUrl($mediaResource->getSecondaryUrl())
             ->setImageUrl($mediaResource->getImageUrl())
             ->setActive($mediaResource->isActive())
             ->setCreatedAt($mediaResource->getCreatedAt())
