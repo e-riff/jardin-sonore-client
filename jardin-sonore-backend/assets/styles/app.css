@@ -5027,11 +5027,21 @@ a.session-composer-overlay__item {
     flex: 0 0 auto;
 }
 
+.media-catalog-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.media-catalog-title__content {
+    min-width: 0;
+}
+
 .media-catalog-thumbnail {
     display: block;
-    width: 28px;
-    height: 28px;
-    flex: 0 0 28px;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
     object-fit: cover;
     border: 1px solid var(--color-outline-variant);
     border-radius: 6px;
@@ -5041,7 +5051,16 @@ a.session-composer-overlay__item {
     display: grid;
     place-items: center;
     color: var(--color-on-surface-variant);
-    font-size: 17px;
+}
+
+.media-catalog-thumbnail--icon svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.6;
 }
 
 .internal-table td {

@@ -33,6 +33,11 @@ final class MediaResourceCatalogTable
 
     #[LiveProp(writable: true, url: true, onUpdated: 'refreshResults')]
     public string $activeFilter = 'active';
+
+    /** @var list<string> */
+    #[LiveProp(writable: true)]
+    public array $visibleAfterToggle = [];
+
     /** @var list<string> */
     #[LiveProp(writable: true, url: true, onUpdated: 'refreshResults')]
     public array $themeUuids = [];
@@ -75,7 +80,8 @@ final class MediaResourceCatalogTable
             $items = array_values(array_filter($items, fn (MediaResourceView $item): bool => [] !== array_intersect($this->themeUuids, array_column($item->themes, 'uuid'))));
         }
         if ('all' !== $this->activeFilter) {
-            $items = array_values(array_filter($items, fn (MediaResourceView $item): bool => 'active' === $this->activeFilter ? $item->active : !$item->active));
+            $items = array_values(array_filter($items, fn (MediaResourceView $item): bool => in_array($item->uuid->toRfc4122(), $this->visibleAfterToggle, true)
+                || ('active' === $this->activeFilter ? $item->active : !$item->active)));
         }
 
         usort($items, function (MediaResourceView $left, MediaResourceView $right): int {
@@ -137,6 +143,7 @@ final class MediaResourceCatalogTable
         $this->type = '';
         $this->activeFilter = 'active';
         $this->themeUuids = [];
+        $this->visibleAfterToggle = [];
         $this->items = null;
     }
 
@@ -171,6 +178,9 @@ final class MediaResourceCatalogTable
 
         $mediaResource->setActive(!$mediaResource->isActive());
         $this->mediaResourceRepository->save($mediaResource);
+        if (!in_array($uuid, $this->visibleAfterToggle, true)) {
+            $this->visibleAfterToggle[] = $uuid;
+        }
         $this->items = null;
     }
 
