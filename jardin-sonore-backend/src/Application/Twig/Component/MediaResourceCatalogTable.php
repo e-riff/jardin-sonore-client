@@ -7,7 +7,9 @@ namespace App\Application\Twig\Component;
 use App\Application\Session\MediaResourceView;
 use App\Application\Session\SearchMediaResources;
 use App\Domain\Model\Session\MediaResourceType;
+use App\Domain\Repository\MediaResourceRepositoryInterface;
 use App\Domain\Repository\ThemeRepositoryInterface;
+use Symfony\Component\Uid\Uuid;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveArg;
@@ -49,8 +51,11 @@ final class MediaResourceCatalogTable
      */
     private ?array $items = null;
 
-    public function __construct(private readonly SearchMediaResources $searchMediaResources, private readonly ThemeRepositoryInterface $themeRepository)
-    {
+    public function __construct(
+        private readonly SearchMediaResources $searchMediaResources,
+        private readonly ThemeRepositoryInterface $themeRepository,
+        private readonly MediaResourceRepositoryInterface $mediaResourceRepository,
+    ) {
     }
 
     /**
@@ -77,7 +82,6 @@ final class MediaResourceCatalogTable
             $leftValue = match ($this->sortBy) {
                 'type' => $left->type->value,
                 'primaryUrl' => $left->primaryUrl,
-                'source' => $left->source ?? '',
                 'title' => $left->title,
                 'theme' => $left->themes[0]['label'] ?? '',
                 default => $left->updatedAt->format('U.u'),
@@ -85,7 +89,6 @@ final class MediaResourceCatalogTable
             $rightValue = match ($this->sortBy) {
                 'type' => $right->type->value,
                 'primaryUrl' => $right->primaryUrl,
-                'source' => $right->source ?? '',
                 'title' => $right->title,
                 'theme' => $right->themes[0]['label'] ?? '',
                 default => $right->updatedAt->format('U.u'),
@@ -140,7 +143,7 @@ final class MediaResourceCatalogTable
     #[LiveAction]
     public function sort(#[LiveArg] string $column): void
     {
-        if (!in_array($column, ['title', 'type', 'primaryUrl', 'source', 'theme'], true)) {
+        if (!in_array($column, ['title', 'type', 'primaryUrl', 'theme'], true)) {
             return;
         }
 
@@ -151,6 +154,23 @@ final class MediaResourceCatalogTable
             $this->sortDirection = 'asc';
         }
 
+        $this->items = null;
+    }
+
+    #[LiveAction]
+    public function toggleActive(#[LiveArg] string $uuid): void
+    {
+        if (!Uuid::isValid($uuid)) {
+            return;
+        }
+
+        $mediaResource = $this->mediaResourceRepository->findByUuid(Uuid::fromString($uuid));
+        if (null === $mediaResource) {
+            return;
+        }
+
+        $mediaResource->setActive(!$mediaResource->isActive());
+        $this->mediaResourceRepository->save($mediaResource);
         $this->items = null;
     }
 

@@ -99,6 +99,7 @@ sessions:
       score: "Partition"
       video: "Vidéo"
       link: "Autre"
+      tutorial: "Tutoriel"
     flash:
       created: "Le média a été créé."
       updated: "Le média a été mis à jour."
@@ -127,6 +128,8 @@ sessions:
       edit: "Modifier"
       delete: "Supprimer"
       themes: "Thèmes"
+      activate: "Activer le média"
+      deactivate: "Désactiver le média"
     new:
       title: "Nouveau média | Jardin Sonore"
       eyebrow: "Médias"
@@ -346,6 +349,8 @@ sessions:
       role_suggestion_opening: "Ouverture et recentrage"
       role_suggestion_manipulation: "Manipulation"
       role_suggestion_closing: "Retour au calme"
+      role_suggestion_rhyme: "Comptines"
+      role_suggestion_rhyme_repertoire: "Réservoir de comptines"
       add_role: "Ajouter un repère"
       add_instructions: "Ajouter des consignes spécifiques à cette séance"
       save_instructions: "Enregistrer les consignes"

@@ -28,9 +28,9 @@
                     <div class="internal-search__field internal-search__field--compact">
                         <label for="media-active">{{ 'sessions.catalog.active'|trans({}, 'sessions') }}</label>
                         <select id="media-active" data-model="on(change)|activeFilter">
-                            <option value="active">{{ 'sessions.catalog.active_only'|trans({}, 'sessions') }}</option>
-                            <option value="inactive">{{ 'sessions.catalog.inactive_only'|trans({}, 'sessions') }}</option>
-                            <option value="all">{{ 'sessions.catalog.all'|trans({}, 'sessions') }}</option>
+                            <option value="active" {% if activeFilter == 'active' %}selected{% endif %}>{{ 'sessions.catalog.active_only'|trans({}, 'sessions') }}</option>
+                            <option value="inactive" {% if activeFilter == 'inactive' %}selected{% endif %}>{{ 'sessions.catalog.inactive_only'|trans({}, 'sessions') }}</option>
+                            <option value="all" {% if activeFilter == 'all' %}selected{% endif %}>{{ 'sessions.catalog.all'|trans({}, 'sessions') }}</option>
                         </select>
                     </div>
                     <div class="internal-search__field internal-search__field--themes">
@@ -69,7 +69,6 @@
                         <option value="updatedAt" {% if sortBy == 'updatedAt' %}selected{% endif %}>Dernière mise à jour</option>
                         <option value="title" {% if sortBy == 'title' %}selected{% endif %}>Titre</option>
                         <option value="type" {% if sortBy == 'type' %}selected{% endif %}>Type</option>
-                        <option value="source" {% if sortBy == 'source' %}selected{% endif %}>Source</option>
                     </select>
                 </label>
                 <table class="internal-table internal-table--compact-mobile">
@@ -79,8 +78,7 @@
                                 title: 'sessions.media.table.title',
                                 type: 'sessions.media.table.type',
                                 primaryUrl: 'sessions.media.table.link',
-                                source: 'sessions.media.table.source'
-                                ,theme: 'sessions.media.table.themes'
+                                theme: 'sessions.media.table.themes'
                             } %}
                                 <th>
                                     <button
@@ -113,7 +111,6 @@
                                         {{ item.primaryUrl|length > 56 ? item.primaryUrl|slice(0, 56) ~ '…' : item.primaryUrl }}
                                     </a>
                                 </td>
-                                <td data-table-mobile="secondary" data-label="{{ 'sessions.media.table.source'|trans({}, 'sessions') }}">{{ item.source ?? '—' }}</td>
                                 <td data-table-mobile="secondary" data-label="{{ 'sessions.media.table.themes'|trans({}, 'sessions') }}"><div class="instrument-catalog__tags">{% for theme in item.themes %}<span class="internal-badge internal-badge--color" style="--badge-color: {{ theme.color }}">{{ theme.label }}</span>{% endfor %}</div></td>
                                 <td data-table-mobile="actions" data-catalog-row-ignore data-label="{{ 'sessions.media.table.actions'|trans({}, 'sessions') }}">
                                     <div class="instrument-catalog__actions">
@@ -122,7 +119,11 @@
                                                 {{ 'sessions.media.table.insert'|trans({}, 'sessions') }}
                                             </a>
                                         {% endif %}
+                                        <button type="button" class="session-publication-switch session-publication-switch--button media-catalog-switch" role="switch" aria-checked="{{ item.active ? 'true' : 'false' }}" aria-label="{{ (item.active ? 'sessions.media.table.deactivate' : 'sessions.media.table.activate')|trans({}, 'sessions') }}" title="{{ (item.active ? 'sessions.media.table.deactivate' : 'sessions.media.table.activate')|trans({}, 'sessions') }}" {{ live_action('toggleActive', { uuid: item.uuid.toRfc4122 }) }}>
+                                            <span class="session-publication-switch__track"><span class="session-publication-switch__thumb"></span></span>
+                                        </button>
                                         {% include 'components/_catalog_actions.html.twig' with { editUrl: path('media_resource_edit', { uuid: item.uuid.toRfc4122 }), deleteUrl: path('media_resource_delete', { uuid: item.uuid.toRfc4122 }), itemLabel: item.title, token: csrf_token('media_resource_delete_' ~ item.uuid.toRfc4122), editLabel: 'sessions.media.table.edit'|trans({}, 'sessions'), deleteLabel: 'sessions.media.table.delete'|trans({}, 'sessions') } only %}
+                                        {% if item.thumbnailUrl %}<img class="media-catalog-thumbnail" src="{{ item.thumbnailUrl }}" alt="" loading="lazy">{% else %}<span class="media-catalog-thumbnail media-catalog-thumbnail--icon" aria-hidden="true">{% if item.primaryUrl starts with 'uploads/' %}▤{% else %}↗{% endif %}</span>{% endif %}
                                     </div>
                                 </td>
                             </tr>

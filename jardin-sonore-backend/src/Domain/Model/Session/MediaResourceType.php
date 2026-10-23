@@ -11,6 +11,7 @@ enum MediaResourceType: string
     case SCORE = 'score';
     case VIDEO = 'video';
     case LINK = 'link';
+    case TUTORIAL = 'tutorial';
 
     public function translationKey(): string
     {
@@ -20,6 +21,7 @@ enum MediaResourceType: string
             self::SCORE => 'sessions.media.type.score',
             self::VIDEO => 'sessions.media.type.video',
             self::LINK => 'sessions.media.type.link',
+            self::TUTORIAL => 'sessions.media.type.tutorial',
         };
     }
 }
