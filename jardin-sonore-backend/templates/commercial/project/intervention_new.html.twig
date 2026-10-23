@@ -4,6 +4,8 @@
 
 {% block internal_body %}
     {% set organizationAddresses = [] %}
+    {% set organizationDefaultAddress = '' %}
+    {% set organizationDefaultAddressIsMain = false %}
     {% if project.organization and project.organization.contactDetails %}
         {% for addressContact in project.organization.contactDetails.addressContacts %}
             {% if addressContact.active %}
@@ -13,7 +15,14 @@
                 {% set city = (addressContact.city ?: (municipality ? municipality.name : ''))|default('')|trim %}
                 {% set locality = [postalCode, city]|filter(part => part != '')|join(' ') %}
                 {% set address = [street, locality]|filter(part => part != '')|join(', ') %}
-                {% if address != '' and address not in organizationAddresses %}{% set organizationAddresses = organizationAddresses|merge([address]) %}{% endif %}
+                {% if address != '' %}
+                    {% if address not in organizationAddresses %}{% set organizationAddresses = organizationAddresses|merge([address]) %}{% endif %}
+                    {% set addressIsMain = addressContact.type.value == 'main' %}
+                    {% if organizationDefaultAddress == '' or (addressIsMain and not organizationDefaultAddressIsMain) %}
+                        {% set organizationDefaultAddress = address %}
+                        {% set organizationDefaultAddressIsMain = addressIsMain %}
+                    {% endif %}
+                {% endif %}
             {% endif %}
         {% endfor %}
     {% endif %}
@@ -35,17 +44,21 @@
             <input type="hidden" name="request_id" value="{{ calendarCreateRequestId }}">
             <label for="commercial-session-title">{{ 'calendar.unlinked.title'|trans({}, 'commercial') }}<input id="commercial-session-title" name="title" maxlength="255" required autofocus></label>
             <div class="commercial-session-create-form__dates">
-                <label for="commercial-session-start">
-                    <span>{% include 'commercial/project/_icon.html.twig' with {name: 'calendar'} only %} {{ 'calendar.unlinked.starts_at'|trans({}, 'commercial') }}</span>
-                    <input id="commercial-session-start" type="datetime-local" name="starts_at" required>
+                <label for="commercial-session-date">
+                    <span>{% include 'commercial/project/_icon.html.twig' with {name: 'calendar'} only %} {{ 'calendar.unlinked.date'|trans({}, 'commercial') }}</span>
+                    <input id="commercial-session-date" type="date" name="date" required>
                 </label>
-                <label for="commercial-session-end">
+                <label for="commercial-session-start-time">
+                    <span>{% include 'commercial/project/_icon.html.twig' with {name: 'calendar'} only %} {{ 'calendar.unlinked.starts_at'|trans({}, 'commercial') }}</span>
+                    <input id="commercial-session-start-time" type="time" name="start_time" value="09:00" required>
+                </label>
+                <label for="commercial-session-end-time">
                     <span>{% include 'commercial/project/_icon.html.twig' with {name: 'calendar'} only %} {{ 'calendar.unlinked.ends_at'|trans({}, 'commercial') }}</span>
-                    <input id="commercial-session-end" type="datetime-local" name="ends_at" required>
+                    <input id="commercial-session-end-time" type="time" name="end_time" value="11:30" required>
                 </label>
             </div>
             <div class="commercial-session-create-form__location" data-controller="commercial-session-location">
-                <label for="commercial-session-location">{{ 'calendar.unlinked.location'|trans({}, 'commercial') }}<input id="commercial-session-location" name="location" autocomplete="off" data-commercial-session-location-target="input"></label>
+                <label for="commercial-session-location">{{ 'calendar.unlinked.location'|trans({}, 'commercial') }}<input id="commercial-session-location" name="location" value="{{ organizationDefaultAddress }}" autocomplete="off" data-commercial-session-location-target="input"></label>
                 {% if organizationAddresses is not empty %}
                     <div class="commercial-session-create-form__location-suggestions">
                         <span>{{ 'calendar.sessions.organization_address'|trans({}, 'commercial') }}</span>

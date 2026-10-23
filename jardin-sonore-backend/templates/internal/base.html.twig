@@ -247,6 +247,13 @@
                     <div class="internal-alert internal-alert--{{ label }}">
                         {% if message is iterable and message.message is defined %}
                             {{ message.message|trans(message.parameters|default({}), message.domain|default('messages')) }}
+                            {% if message.details is defined and message.details is not empty %}
+                                <ul class="internal-alert__details">
+                                    {% for detail in message.details %}
+                                        <li><strong>{{ detail.title_is_key|default(false) ? detail.title|trans({}, detail.domain|default('messages')) : detail.title }}</strong>{% if detail.date %} — {{ detail.date }}{% endif %} : {{ detail.reason|trans({}, detail.domain|default('messages')) }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
                         {% else %}
                             {{ message|trans({}, 'mailing') }}
                         {% endif %}

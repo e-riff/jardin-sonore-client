@@ -1,0 +1,43 @@
+<fieldset class="commercial-intervention-bulk-row" data-intervention-row>
+    <legend>{{ 'calendar.sessions.bulk_row'|trans({'%number%': rowIndex == '__INDEX__' ? '…' : rowIndex + 1}, 'commercial') }}</legend>
+    <input type="hidden" name="interventions[{{ rowIndex }}][request_id]" value="{{ requestId }}">
+    <label for="commercial-intervention-{{ rowIndex }}-title">{{ 'calendar.unlinked.title'|trans({}, 'commercial') }}<input id="commercial-intervention-{{ rowIndex }}-title" name="interventions[{{ rowIndex }}][title]" maxlength="255" required></label>
+    <div class="commercial-session-create-form__dates">
+        <label for="commercial-intervention-{{ rowIndex }}-date">
+            <span>{% include 'commercial/project/_icon.html.twig' with {name: 'calendar'} only %} {{ 'calendar.unlinked.date'|trans({}, 'commercial') }}</span>
+            <input id="commercial-intervention-{{ rowIndex }}-date" type="date" name="interventions[{{ rowIndex }}][date]" required>
+        </label>
+        <label for="commercial-intervention-{{ rowIndex }}-start">
+            <span>{% include 'commercial/project/_icon.html.twig' with {name: 'calendar'} only %} {{ 'calendar.unlinked.starts_at'|trans({}, 'commercial') }}</span>
+            <input id="commercial-intervention-{{ rowIndex }}-start" type="time" name="interventions[{{ rowIndex }}][start_time]" value="09:00" required>
+        </label>
+        <label for="commercial-intervention-{{ rowIndex }}-end">
+            <span>{% include 'commercial/project/_icon.html.twig' with {name: 'calendar'} only %} {{ 'calendar.unlinked.ends_at'|trans({}, 'commercial') }}</span>
+            <input id="commercial-intervention-{{ rowIndex }}-end" type="time" name="interventions[{{ rowIndex }}][end_time]" value="11:30" required>
+        </label>
+    </div>
+    <div class="commercial-session-create-form__location" data-controller="commercial-session-location">
+        <label for="commercial-intervention-{{ rowIndex }}-location">{{ 'calendar.unlinked.location'|trans({}, 'commercial') }}<input id="commercial-intervention-{{ rowIndex }}-location" name="interventions[{{ rowIndex }}][location]" value="{{ defaultAddress }}" autocomplete="off" data-commercial-session-location-target="input"></label>
+        {% if organizationAddresses is not empty %}
+            <div class="commercial-session-create-form__location-suggestions">
+                <span>{{ 'calendar.sessions.organization_address'|trans({}, 'commercial') }}</span>
+                {% for address in organizationAddresses %}
+                    <button type="button" data-action="click->commercial-session-location#choose" data-commercial-session-location-address-param="{{ address }}">{{ address }}</button>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    <div class="commercial-intervention-bulk-row__footer">
+        <label for="commercial-intervention-{{ rowIndex }}-status">{{ 'calendar.unlinked.status'|trans({}, 'commercial') }}
+            <select id="commercial-intervention-{{ rowIndex }}-status" name="interventions[{{ rowIndex }}][status]" required>
+                <option value="option">{{ 'calendar.status.option'|trans({}, 'commercial') }}</option>
+                <option value="confirmed">{{ 'calendar.status.confirmed'|trans({}, 'commercial') }}</option>
+            </select>
+        </label>
+        {% if rowIndex != 0 and rowIndex != '__INDEX__' %}
+            <button type="button" class="internal-button internal-button--secondary internal-button--compact" data-action="commercial-intervention-collection#remove">{{ 'calendar.sessions.bulk_remove'|trans({}, 'commercial') }}</button>
+        {% elseif rowIndex == '__INDEX__' %}
+            <button type="button" class="internal-button internal-button--secondary internal-button--compact" data-action="commercial-intervention-collection#remove">{{ 'calendar.sessions.bulk_remove'|trans({}, 'commercial') }}</button>
+        {% endif %}
+    </div>
+</fieldset>

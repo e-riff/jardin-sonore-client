@@ -1986,6 +1986,16 @@ button:disabled {
     border-left-color: var(--color-outline);
 }
 
+.commercial-appointment--past {
+    border-color: color-mix(in oklab, var(--color-outline-variant) 78%, white);
+    border-left-color: var(--color-secondary);
+    background: var(--color-surface-container-low);
+}
+
+.commercial-appointment--past .commercial-appointment__icon {
+    color: var(--color-secondary);
+}
+
 .commercial-appointment__icon {
     color: var(--color-primary);
 }
@@ -2448,15 +2458,68 @@ button:disabled {
     box-shadow: 0 10px 24px rgb(48 32 26 / 0.16);
 }
 
-.commercial-dossier__intervention-menu-options a {
+.commercial-dossier__intervention-menu-options a,
+.commercial-dossier__intervention-menu-options button {
     padding: 10px 12px;
+    border: 0;
+    background: transparent;
     color: var(--color-on-background);
+    font: inherit;
+    text-align: left;
     text-decoration: none;
+    cursor: pointer;
 }
 
 .commercial-dossier__intervention-menu-options a:hover,
-.commercial-dossier__intervention-menu-options a:focus-visible {
+.commercial-dossier__intervention-menu-options a:focus-visible,
+.commercial-dossier__intervention-menu-options button:hover,
+.commercial-dossier__intervention-menu-options button:focus-visible {
     background: var(--color-surface-container);
+}
+
+.commercial-dossier__intervention-menu-options button .commercial-icon {
+    margin-right: 6px;
+    vertical-align: -3px;
+}
+
+.commercial-intervention-create-dialog {
+    width: min(calc(100% - 32px), 780px);
+}
+
+.commercial-intervention-bulk-form__rows {
+    display: grid;
+    gap: 12px;
+}
+
+.commercial-intervention-bulk-row {
+    min-width: 0;
+    display: grid;
+    gap: 12px;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 14px;
+    padding: 14px;
+}
+
+.commercial-intervention-bulk-row legend {
+    padding-inline: 6px;
+    color: var(--color-primary);
+    font-weight: 700;
+}
+
+.commercial-intervention-bulk-row__footer {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.commercial-intervention-bulk-form__add {
+    justify-self: start;
+}
+
+.internal-alert__details {
+    margin: 8px 0 0;
+    padding-left: 20px;
 }
 
 .commercial-dossier__intervention-actions .commercial-icon {
@@ -2518,7 +2581,7 @@ button:disabled {
 
 .commercial-session-create-form__dates {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 18px;
 }
 

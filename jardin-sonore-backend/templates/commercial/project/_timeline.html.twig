@@ -1,5 +1,5 @@
 <section class="commercial-dossier__timeline-header">
-    {% set upcomingAppointments = appointments|filter(appointment => appointment.status != 'canceled' and appointment.startsAt >= date('now'))|sort((left, right) => left.startsAt <=> right.startsAt) %}
+    {% set upcomingAppointments = appointments|filter(appointment => appointment.status != 'canceled' and appointment.endsAt > date('now'))|sort((left, right) => left.startsAt <=> right.startsAt) %}
     <details class="commercial-dossier__timeline" name="commercial-project-details" aria-labelledby="commercial-timeline-heading" {% if project.status == 'discussion' or noteError is defined or noteForm.vars.submitted %}open{% endif %}>
         <summary>
             {% include 'commercial/project/_icon.html.twig' with {name: 'note'} only %}
@@ -27,7 +27,7 @@
         {% set latestManualEvent = visibleEvents|reverse|filter(event => not (event.type starts with 'quote_'))|first %}
         {% set timelineItems = [] %}
         {% for event in visibleEvents %}{% set timelineItems = timelineItems|merge([{kind: 'event', date: event.timelineDate, value: event}]) %}{% endfor %}
-        {% for appointment in appointments|filter(appointment => appointment.status == 'canceled' or appointment.startsAt < date('now')) %}{% set timelineItems = timelineItems|merge([{kind: 'appointment', date: appointment.startsAt, value: appointment}]) %}{% endfor %}
+        {% for appointment in appointments|filter(appointment => appointment.status == 'canceled' or appointment.endsAt <= date('now')) %}{% set timelineItems = timelineItems|merge([{kind: 'appointment', date: appointment.startsAt, value: appointment}]) %}{% endfor %}
         {% for item in timelineItems|sort((left, right) => left.date <=> right.date)|reverse %}
             {% if item.kind == 'appointment' %}
                 {% include 'commercial/project/_appointment_card.html.twig' with {appointment: item.value} %}

@@ -97,6 +97,8 @@ project:
   list:
     heading: Dossiers
     intro: Un dossier rassemble les échanges, les tâches et les documents d’une structure.
+    closed_intro: Retrouvez ici les dossiers classés comme terminés ou sans suite.
+    back_to_open: Retour aux dossiers ouverts
     all_dossiers: Tous les dossiers
     back_to_today: Retour au suivi
     search: Rechercher
@@ -284,6 +286,7 @@ appointment:
   cancel: Annuler le rendez-vous
   cancel_confirm: Le créneau sera supprimé de Google Calendar. Le rendez-vous et son compte rendu resteront dans le fil.
   canceled: Annulé
+  completed: Terminé
   summary: Compte rendu
   sync_warning: Horaire à vérifier dans Google Calendar
   conflict: Le rendez-vous a changé entre-temps. Vérifie sa version actuelle avant de recommencer.
@@ -439,6 +442,7 @@ calendar:
     already_linked: Une des séances a déjà été rattachée. Actualise la liste avant de réessayer.
     success: Les séances sélectionnées ont été rattachées au dossier.
     title: Intitulé
+    date: Jour de la séance
     starts_at: Début
     ends_at: Fin
     location: Lieu de la séance
@@ -457,6 +461,21 @@ calendar:
     detach: Détacher du dossier
     attach_more: Rattacher des séances existantes
     create: Créer une séance dans Google Calendar
+    bulk_title: Ajouter des séances
+    bulk_help: Prépare une ou plusieurs séances. Chaque séance est envoyée séparément et les éventuels échecs seront détaillés après l’enregistrement.
+    bulk_row: Séance %number%
+    bulk_add: Ajouter une autre séance
+    bulk_remove: Retirer cette séance
+    bulk_submit: Enregistrer les séances
+    bulk_empty: Aucune séance à enregistrer.
+    bulk_too_many: Tu peux enregistrer jusqu’à 20 séances à la fois.
+    bulk_success: '%created% séance(s) créée(s) et rattachée(s) au dossier.'
+    bulk_create_partial: '%created% séance(s) créée(s), %failed% en échec. Consulte le détail pour les reprendre.'
+    bulk_failure: Aucune des %failed% séances n’a pu être créée. Consulte le détail pour les reprendre.
+    bulk_invalid: Vérifie le titre, la date, les horaires et le statut.
+    bulk_conflict: Google Calendar signale un conflit pour cette séance.
+    bulk_google_error: Google Calendar n’a pas pu enregistrer cette séance. Vérifie la connexion puis réessaie.
+    bulk_untitled: Séance sans titre
     create_intro: Cette séance sera ajoutée à Google Calendar et rattachée automatiquement au dossier « %project% ».
     date_heading: Quand a lieu la séance ?
     date_help: Choisis les horaires réels. Ils seront enregistrés dans le fuseau Europe/Paris.

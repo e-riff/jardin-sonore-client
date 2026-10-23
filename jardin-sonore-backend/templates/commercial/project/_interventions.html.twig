@@ -1,6 +1,29 @@
 {% set upcomingInterventions = interventions|filter(intervention => intervention.startsAt > date() and intervention.status != 'canceled') %}
 {% set optionInterventions = interventions|filter(intervention => intervention.status == 'option') %}
 {% set pastInterventions = interventions|filter(intervention => intervention.status == 'canceled' or intervention.startsAt <= date())|reverse %}
+{% set organizationAddresses = [] %}
+{% set organizationDefaultAddress = '' %}
+{% set organizationDefaultAddressIsMain = false %}
+{% if project.organization and project.organization.contactDetails %}
+    {% for addressContact in project.organization.contactDetails.addressContacts %}
+        {% if addressContact.active %}
+            {% set municipality = addressContact.municipality %}
+            {% set street = addressContact.address|default('')|trim %}
+            {% set postalCode = (addressContact.postalCode ?: (municipality ? municipality.postalCode : ''))|default('')|trim %}
+            {% set city = (addressContact.city ?: (municipality ? municipality.name : ''))|default('')|trim %}
+            {% set locality = [postalCode, city]|filter(part => part != '')|join(' ') %}
+            {% set address = [street, locality]|filter(part => part != '')|join(', ') %}
+            {% if address != '' %}
+                {% if address not in organizationAddresses %}{% set organizationAddresses = organizationAddresses|merge([address]) %}{% endif %}
+                {% set addressIsMain = addressContact.type.value == 'main' %}
+                {% if organizationDefaultAddress == '' or (addressIsMain and not organizationDefaultAddressIsMain) %}
+                    {% set organizationDefaultAddress = address %}
+                    {% set organizationDefaultAddressIsMain = addressIsMain %}
+                {% endif %}
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
 {% set upcomingByMonth = {} %}
 {% for intervention in upcomingInterventions %}
     {% set monthKey = intervention.startsAt|date('Y-m') %}
@@ -51,14 +74,36 @@
     {% endif %}
     </div>
 </details>
+<div class="commercial-dossier__intervention-create" data-controller="internal-dialog commercial-intervention-collection" data-commercial-intervention-collection-next-index-value="1" data-commercial-intervention-collection-max-rows-value="20">
 <details class="commercial-dossier__intervention-menu">
     <summary class="internal-button internal-button--secondary internal-button--compact">
-        {% include 'commercial/project/_icon.html.twig' with {name: 'plus'} only %}
+        {% include 'commercial/project/_icon.html.twig' with {name: 'calendar'} only %}
         {{ 'calendar.sessions.add'|trans({}, 'commercial') }}
     </summary>
     <div class="commercial-dossier__intervention-menu-options">
-        <a href="{{ path('commercial_intervention_new', {projectId: project.id}) }}">{{ 'calendar.sessions.create'|trans({}, 'commercial') }}</a>
+        <button type="button" aria-haspopup="dialog" aria-controls="commercial-project-intervention-create-{{ project.id }}" data-action="click->internal-dialog#open click->commercial-intervention-collection#closeMenu">{% include 'commercial/project/_icon.html.twig' with {name: 'calendar'} only %} {{ 'calendar.sessions.create'|trans({}, 'commercial') }}</button>
         <a href="{{ path('commercial_calendar_unlinked') }}">{{ 'calendar.sessions.attach_more'|trans({}, 'commercial') }}</a>
     </div>
 </details>
+<dialog id="commercial-project-intervention-create-{{ project.id }}" class="internal-form-dialog commercial-intervention-create-dialog" aria-labelledby="commercial-project-intervention-create-title-{{ project.id }}" {{ stimulus_target('internal-dialog', 'dialog') }} {{ stimulus_action('internal-dialog', 'closeOnBackdrop', 'click') }}>
+    <div class="internal-form-dialog__panel">
+        <button type="button" class="internal-form-dialog__close" aria-label="{{ 'internal.confirmation.delete.close'|trans({}, 'internal') }}" title="{{ 'internal.confirmation.delete.close'|trans({}, 'internal') }}" {{ stimulus_action('internal-dialog', 'close') }}>×</button>
+        <p class="internal-eyebrow">{{ project.title }}</p>
+        <h2 id="commercial-project-intervention-create-title-{{ project.id }}">{{ 'calendar.sessions.bulk_title'|trans({}, 'commercial') }}</h2>
+        <p>{{ 'calendar.sessions.bulk_help'|trans({}, 'commercial') }}</p>
+        <form method="post" action="{{ path('commercial_intervention_bulk_create', {projectId: project.id}) }}" class="internal-form commercial-intervention-bulk-form" data-action="submit->commercial-intervention-collection#preventDuplicateSubmit">
+            <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_' ~ project.id ~ '_intervention_create') }}">
+            <div class="commercial-intervention-bulk-form__rows" data-commercial-intervention-collection-target="rows">
+                {% include 'commercial/project/_intervention_create_row.html.twig' with {rowIndex: 0, requestId: '__REQUEST_ID__', defaultAddress: organizationDefaultAddress, organizationAddresses: organizationAddresses} only %}
+            </div>
+            <template data-commercial-intervention-collection-target="template">{% include 'commercial/project/_intervention_create_row.html.twig' with {rowIndex: '__INDEX__', requestId: '__REQUEST_ID__', defaultAddress: organizationDefaultAddress, organizationAddresses: organizationAddresses} only %}</template>
+            <button type="button" class="internal-button internal-button--secondary internal-button--compact commercial-intervention-bulk-form__add" data-action="commercial-intervention-collection#add" data-commercial-intervention-collection-target="addButton">{% include 'commercial/project/_icon.html.twig' with {name: 'plus'} only %} {{ 'calendar.sessions.bulk_add'|trans({}, 'commercial') }}</button>
+            <div class="internal-form-dialog__actions">
+                <button type="button" class="internal-button internal-button--secondary" {{ stimulus_action('internal-dialog', 'close') }}>{{ 'action.cancel'|trans({}, 'commercial') }}</button>
+                <button class="internal-button" type="submit" data-commercial-intervention-collection-target="submit">{% include 'commercial/project/_icon.html.twig' with {name: 'calendar'} only %} {{ 'calendar.sessions.bulk_submit'|trans({}, 'commercial') }}</button>
+            </div>
+        </form>
+    </div>
+</dialog>
+</div>
 </div>

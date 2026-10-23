@@ -23,8 +23,9 @@ final readonly class CommercialProjectQueue
     }
 
     /** @return list<CommercialProjectRow> */
-    public function forDate(DateTimeImmutable $localDate, bool $includeClosed = false): array
+    public function forDate(DateTimeImmutable $localDate, bool $includeClosed = false, ?DateTimeImmutable $now = null): array
     {
+        $nowUtc = ($now ?? $localDate)->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s');
         $statuses = $includeClosed
             ? [CommercialProjectEntity::STATUS_DISCUSSION, CommercialProjectEntity::STATUS_CONFIRMED, CommercialProjectEntity::STATUS_COMPLETED, CommercialProjectEntity::STATUS_WITHOUT_RESULT]
             : [CommercialProjectEntity::STATUS_DISCUSSION, CommercialProjectEntity::STATUS_CONFIRMED];
@@ -44,11 +45,11 @@ final readonly class CommercialProjectQueue
                 action.id AS action_id, action.title AS action_title, action.due_on, action.due_time,
                 (SELECT appointment.title FROM commercial_appointment appointment
                  WHERE appointment.project_id = project.id AND appointment.status = ?
-                   AND appointment.starts_at >= ? AND appointment.starts_at < ?
+                   AND appointment.starts_at >= ? AND appointment.starts_at < ? AND appointment.ends_at > ?
                  ORDER BY appointment.starts_at ASC, appointment.id ASC LIMIT 1) AS today_appointment_title,
                 (SELECT appointment.starts_at FROM commercial_appointment appointment
                  WHERE appointment.project_id = project.id AND appointment.status = ?
-                   AND appointment.starts_at >= ? AND appointment.starts_at < ?
+                   AND appointment.starts_at >= ? AND appointment.starts_at < ? AND appointment.ends_at > ?
                  ORDER BY appointment.starts_at ASC, appointment.id ASC LIMIT 1) AS today_appointment_starts_at,
                 (SELECT MAX(event.occurred_at) FROM commercial_event event WHERE event.project_id = project.id) AS last_event_at,
                 (SELECT COUNT(*) FROM commercial_action counted WHERE counted.project_id = project.id AND counted.status = ?) AS open_task_count
@@ -66,12 +67,14 @@ final readonly class CommercialProjectQueue
                 CommercialAppointmentEntity::STATUS_SCHEDULED,
                 $todayStartUtc = (new DateTimeImmutable($localDate->format('Y-m-d'), new DateTimeZone('Europe/Paris')))->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s'),
                 $tomorrowStartUtc = (new DateTimeImmutable($localDate->format('Y-m-d'), new DateTimeZone('Europe/Paris')))->modify('+1 day')->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s'),
+                $nowUtc,
                 CommercialAppointmentEntity::STATUS_SCHEDULED,
                 $todayStartUtc,
                 $tomorrowStartUtc,
+                $nowUtc,
                 'open', 'open', $statuses,
             ],
-            [ParameterType::STRING, ParameterType::STRING, ParameterType::STRING, ParameterType::STRING, ParameterType::STRING, ParameterType::STRING, ParameterType::STRING, ParameterType::STRING, ArrayParameterType::STRING],
+            [ParameterType::STRING, ParameterType::STRING, ParameterType::STRING, ParameterType::STRING, ParameterType::STRING, ParameterType::STRING, ParameterType::STRING, ParameterType::STRING, ParameterType::STRING, ParameterType::STRING, ArrayParameterType::STRING],
         );
 
         $today = $localDate->format('Y-m-d');

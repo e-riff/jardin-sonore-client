@@ -1,15 +1,20 @@
 {% extends 'internal/base.html.twig' %}
 
-{% set title = 'project.list.heading'|trans({}, 'commercial') %}
+{% set isClosedIndex = app.request.query.get('status') == 'closed' %}
+{% set title = (isClosedIndex ? 'project.list.closed' : 'project.list.heading')|trans({}, 'commercial') %}
 
 {% block internal_body %}
     <section class="internal-hero commercial-project-hero">
         <p class="internal-eyebrow">{{ 'dashboard.eyebrow'|trans({}, 'commercial') }}</p>
-        <h1>{{ 'project.list.heading'|trans({}, 'commercial') }}</h1>
-        <p>{{ 'project.list.intro'|trans({}, 'commercial') }}</p>
+        <h1>{{ title }}</h1>
+        <p>{{ (isClosedIndex ? 'project.list.closed_intro' : 'project.list.intro')|trans({}, 'commercial') }}</p>
         <div class="internal-heading-actions">
             <a class="internal-button" href="{{ path('commercial_project_new') }}">{{ 'project.create.heading'|trans({}, 'commercial') }}</a>
-            <a class="internal-button internal-button--secondary" href="{{ path('commercial_project_index', {status: 'closed'}) }}">{{ 'project.list.closed'|trans({}, 'commercial') }}</a>
+            {% if isClosedIndex %}
+                <a class="internal-button internal-button--secondary" href="{{ path('commercial_project_index') }}">{{ 'project.list.back_to_open'|trans({}, 'commercial') }}</a>
+            {% else %}
+                <a class="internal-button internal-button--secondary" href="{{ path('commercial_project_index', {status: 'closed'}) }}">{{ 'project.list.closed'|trans({}, 'commercial') }}</a>
+            {% endif %}
         </div>
     </section>
     <twig:CommercialProjectTable />

@@ -33,7 +33,8 @@ final class CommercialProjectTable
     /** @return array{priority: list<CommercialProjectRow>, upcoming: list<CommercialProjectRow>, upcoming_periods: array{this_week: list<CommercialProjectRow>, next_week: list<CommercialProjectRow>, later: list<CommercialProjectRow>}, without_task: list<CommercialProjectRow>, confirmed: list<CommercialProjectRow>, closed: list<CommercialProjectRow>} */
     public function getSections(): array
     {
-        $localDate = $this->clock->now()->setTimezone(new DateTimeZone('Europe/Paris'))->setTime(0, 0);
+        $now = $this->clock->now();
+        $localDate = $now->setTimezone(new DateTimeZone('Europe/Paris'))->setTime(0, 0);
         $sections = [
             'priority' => [],
             'upcoming' => [],
@@ -43,7 +44,7 @@ final class CommercialProjectTable
             'closed' => [],
         ];
         $query = mb_strtolower(trim($this->query));
-        foreach ($this->queue->forDate($localDate, 'active' !== $this->status) as $row) {
+        foreach ($this->queue->forDate($localDate, 'active' !== $this->status, $now) as $row) {
             if (!$this->matchesStatus($row) || ('' !== $query && !str_contains(mb_strtolower("{$row->title} {$row->organizationLabel} {$row->organizationLocation} {$row->nextActionTitle}"), $query))) {
                 continue;
             }

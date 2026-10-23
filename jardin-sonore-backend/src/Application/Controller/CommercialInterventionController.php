@@ -175,6 +175,84 @@ final class CommercialInterventionController extends AbstractController
         $interventionEntity->getProject()?->recordEvent('note', $now, $translator->trans('calendar.sessions.canceled_note', ['%title%' => $interventionEntity->getTitle()], 'commercial'), ['calendar_change' => '1']);
     }
 
+    #[Route('/new/bulk', name: 'bulk_create', methods: ['POST'])]
+    public function createBulk(
+        int $projectId,
+        Request $request,
+        EntityManagerInterface $entityManager,
+        CommercialCalendarGateway $calendarGateway,
+        GoogleCalendarOAuthClient $oauthClient,
+        ClockInterface $clock,
+        #[Autowire('%app.commercial.calendar_id%')] string $calendarId,
+    ): Response {
+        $this->validateToken("commercial_project_{$projectId}_intervention_create", $request);
+        $projectEntity = $entityManager->find(CommercialProjectEntity::class, $projectId);
+        if (!$projectEntity instanceof CommercialProjectEntity) {
+            throw $this->createNotFoundException();
+        }
+
+        $rows = $request->request->all('interventions');
+        if ([] === $rows || 20 < count($rows)) {
+            $this->addFlash('error', ['message' => [] === $rows ? 'calendar.sessions.bulk_empty' : 'calendar.sessions.bulk_too_many', 'domain' => 'commercial']);
+
+            return $this->redirectToRoute('commercial_project_show', ['id' => $projectId]);
+        }
+
+        $createdCount = 0;
+        $failures = [];
+        foreach ($rows as $row) {
+            $title = is_array($row) && is_string($row['title'] ?? null) ? trim($row['title']) : '';
+            $date = is_array($row) && is_string($row['date'] ?? null) ? $row['date'] : '';
+
+            try {
+                if (!is_array($row)) {
+                    throw new DomainException('Invalid intervention data.');
+                }
+
+                $draft = $this->draftFromCreateFields($row);
+                $status = $this->fieldString($row, 'status');
+                $requestId = $this->fieldString($row, 'request_id');
+                if (!in_array($status, [CommercialInterventionEntity::STATUS_OPTION, CommercialInterventionEntity::STATUS_CONFIRMED], true)
+                    || 1 !== preg_match('/^[0-9a-f]{32}$/', $requestId)
+                ) {
+                    throw new DomainException('Invalid intervention data.');
+                }
+                if (null === $oauthClient->connection()) {
+                    throw new GoogleCalendarOAuthException('Google Calendar is not connected.');
+                }
+
+                $googleEvent = $calendarGateway->createEvent($this->draftForStatus($draft, CommercialInterventionEntity::STATUS_OPTION === $status), $requestId);
+                $interventionEntity = $this->newIntervention($projectEntity, $calendarId, $googleEvent, $clock->now());
+                if (CommercialInterventionEntity::STATUS_CONFIRMED === $status) {
+                    $interventionEntity->confirm();
+                }
+                $entityManager->persist($interventionEntity);
+                $entityManager->flush();
+                ++$createdCount;
+            } catch (DomainException) {
+                $failures[] = $this->bulkFailure($title, $date, 'calendar.sessions.bulk_invalid');
+            } catch (GoogleCalendarConflictException) {
+                $failures[] = $this->bulkFailure($title, $date, 'calendar.sessions.bulk_conflict');
+            } catch (GoogleCalendarApiException|GoogleCalendarOAuthException) {
+                $failures[] = $this->bulkFailure($title, $date, 'calendar.sessions.bulk_google_error');
+            }
+        }
+
+        $failedCount = count($failures);
+        $message = 0 === $failedCount
+            ? 'calendar.sessions.bulk_success'
+            : (0 === $createdCount ? 'calendar.sessions.bulk_failure' : 'calendar.sessions.bulk_create_partial');
+        $flashType = 0 === $failedCount ? 'success' : (0 === $createdCount ? 'error' : 'warning');
+        $this->addFlash($flashType, [
+            'message' => $message,
+            'parameters' => ['%created%' => $createdCount, '%failed%' => $failedCount],
+            'domain' => 'commercial',
+            'details' => $failures,
+        ]);
+
+        return $this->redirectToRoute('commercial_project_show', ['id' => $projectId]);
+    }
+
     #[Route('/new', name: 'create', methods: ['POST'])]
     public function create(
         int $projectId,
@@ -192,7 +270,7 @@ final class CommercialInterventionController extends AbstractController
         }
 
         try {
-            $draft = $this->draftFromRequest($request);
+            $draft = $this->draftFromCreateRequest($request);
             $status = $request->request->getString('status');
             if (!in_array($status, [CommercialInterventionEntity::STATUS_OPTION, CommercialInterventionEntity::STATUS_CONFIRMED], true)) {
                 throw new DomainException('Invalid intervention status.');
@@ -329,6 +407,49 @@ final class CommercialInterventionController extends AbstractController
             $timeZone,
             '' === trim($request->request->getString('location')) ? null : trim($request->request->getString('location')),
         );
+    }
+
+    private function draftFromCreateRequest(Request $request): CalendarEventDraft
+    {
+        return $this->draftFromCreateFields($request->request->all());
+    }
+
+    /** @param array<string, mixed> $fields */
+    private function draftFromCreateFields(array $fields): CalendarEventDraft
+    {
+        $timeZone = 'Europe/Paris';
+        $date = $this->fieldString($fields, 'date');
+
+        return new CalendarEventDraft(
+            trim($this->fieldString($fields, 'title')),
+            $this->parseLocalDateTime($date . 'T' . $this->fieldString($fields, 'start_time'), $timeZone),
+            $this->parseLocalDateTime($date . 'T' . $this->fieldString($fields, 'end_time'), $timeZone),
+            $timeZone,
+            '' === trim($this->fieldString($fields, 'location')) ? null : trim($this->fieldString($fields, 'location')),
+        );
+    }
+
+    /** @param array<string, mixed> $fields */
+    private function fieldString(array $fields, string $name): string
+    {
+        $value = $fields[$name] ?? '';
+        if (!is_string($value)) {
+            throw new DomainException('Invalid intervention data.');
+        }
+
+        return $value;
+    }
+
+    /** @return array{title: string, title_is_key: bool, date: string, reason: string, domain: string} */
+    private function bulkFailure(string $title, string $date, string $reason): array
+    {
+        return [
+            'title' => '' === $title ? 'calendar.sessions.bulk_untitled' : $title,
+            'title_is_key' => '' === $title,
+            'date' => $date,
+            'reason' => $reason,
+            'domain' => 'commercial',
+        ];
     }
 
     private function parseLocalDateTime(string $value, string $timeZone): DateTimeImmutable

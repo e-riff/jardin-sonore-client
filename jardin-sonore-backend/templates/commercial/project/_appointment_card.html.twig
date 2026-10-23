@@ -1,8 +1,10 @@
-<article class="commercial-appointment{{ appointment.status == 'canceled' ? ' commercial-appointment--canceled' : '' }}" id="appointment-{{ appointment.id }}">
+{% set appointmentIsCompleted = appointment.status != 'canceled' and appointment.endsAt <= date('now') %}
+<article class="commercial-appointment{{ appointment.status == 'canceled' ? ' commercial-appointment--canceled' : '' }}{{ appointmentIsCompleted ? ' commercial-appointment--past' : '' }}" id="appointment-{{ appointment.id }}">
     <span class="commercial-appointment__icon">{% include 'commercial/project/_icon.html.twig' with {name: 'calendar'} only %}</span>
     <div class="commercial-appointment__content">
         <strong>{{ appointment.title }}</strong>
         <time datetime="{{ appointment.startsAt|date('c') }}">{{ appointment.startsAt|date('d/m/Y à H:i', 'Europe/Paris') }}–{{ appointment.endsAt|date('H:i', 'Europe/Paris') }}</time>
+        {% if appointmentIsCompleted %}<span class="internal-badge internal-badge--muted">{{ 'appointment.completed'|trans({}, 'commercial') }}</span>{% endif %}
         {% if appointment.location %}<span>{{ appointment.location }}</span>{% endif %}
         {% if appointment.status == 'canceled' %}<span class="commercial-dossier__muted">{{ 'appointment.canceled'|trans({}, 'commercial') }}</span>{% endif %}
         {% if appointment.syncError %}<span class="commercial-dossier__muted">{{ 'appointment.sync_warning'|trans({}, 'commercial') }}</span>{% endif %}
