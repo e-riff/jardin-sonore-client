@@ -86,6 +86,18 @@
 .mailing-intro-block__preview { display: block; max-width: min(100%, 20rem); max-height: 14rem; margin-bottom: .75rem; object-fit: contain; }
 
 @media (max-width: 760px) {
+    .commercial-dossier__section-heading {
+        flex-wrap: wrap;
+    }
+
+    .commercial-dossier__section-heading > .commercial-dossier__create-actions {
+        flex-basis: 100%;
+    }
+
+    .commercial-dossier__create-actions {
+        justify-content: flex-end;
+    }
+
     .mailing-content-heading .internal-heading-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
     .mailing-content-heading .internal-heading-actions .internal-button { min-height: 2.8rem; padding: .55rem .65rem; font-size: .75rem; line-height: 1.25; text-align: center; }
     .mailing-content-heading .internal-heading-actions .internal-button:last-child:nth-child(odd) { grid-column: 1 / -1; }
@@ -1167,8 +1179,15 @@ button:disabled {
     font-size: 1.28rem;
 }
 
-.commercial-dossier__section-heading > .commercial-dossier__create-controls {
+.commercial-dossier__section-heading > .commercial-dossier__create-actions {
     margin-left: auto;
+}
+
+.commercial-dossier__create-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
 }
 
 .commercial-dossier__count {
@@ -1203,6 +1222,22 @@ button:disabled {
 .commercial-dossier__person strong {
     color: var(--color-on-background);
     font-size: 1rem;
+}
+
+.commercial-dossier__record-heading {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+}
+
+.commercial-dossier__admin-link {
+    width: fit-content;
+    color: var(--color-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
 
 .commercial-dossier__label {

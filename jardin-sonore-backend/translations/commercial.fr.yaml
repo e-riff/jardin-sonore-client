@@ -178,6 +178,7 @@ project:
   contact_former: Ancien interlocuteur
   contact_edit: Corriger la fiche
   contact_manage: Gérer cet interlocuteur
+  open_admin_record: Fiche EasyAdmin ↗
   contact_add: Ajouter ou rattacher un interlocuteur
   contact_save: Enregistrer les corrections
   contact_primary: Choisir comme interlocuteur principal

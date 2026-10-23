@@ -4,6 +4,7 @@
         <h2 id="commercial-tasks-heading">{{ 'project.actions'|trans({}, 'commercial') }}</h2>
         <span class="commercial-dossier__count">{{ openActions|length }}</span>
         {% if project.status in ['discussion', 'confirmed'] %}
+            <div class="commercial-dossier__create-actions">
             <div class="commercial-dossier__create-controls" data-controller="internal-dialog">
                 <button type="button" class="internal-button internal-button--secondary internal-button--compact commercial-dossier__create-task" aria-haspopup="dialog" aria-controls="commercial-project-action-create-{{ project.id }}" {{ stimulus_action('internal-dialog', 'open') }}>{% include 'commercial/project/_icon.html.twig' with {name: 'bell'} only %} {{ 'project.add_action'|trans({}, 'commercial') }}</button>
                 <dialog id="commercial-project-action-create-{{ project.id }}" class="internal-form-dialog" aria-labelledby="commercial-project-action-create-title-{{ project.id }}" {{ stimulus_target('internal-dialog', 'dialog') }} {{ stimulus_action('internal-dialog', 'closeOnBackdrop', 'click') }}>
@@ -39,6 +40,7 @@
                         </form>
                     </div>
                 </dialog>
+            </div>
             </div>
         {% endif %}
     </div>
