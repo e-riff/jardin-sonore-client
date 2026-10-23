@@ -15,7 +15,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/commercial/calendar', name: 'commercial_calendar_')]
 final class GoogleCalendarConnectionController extends AbstractController
 {
-    #[Route('', name: 'settings', methods: ['GET'])]
+    #[Route('/settings', name: 'settings', methods: ['GET'])]
     public function settings(GoogleCalendarOAuthClient $oauthClient): Response
     {
         return $this->render('commercial/calendar/settings.html.twig', [
