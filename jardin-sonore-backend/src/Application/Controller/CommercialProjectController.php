@@ -12,6 +12,8 @@ use App\Application\Commercial\RefreshCommercialInterventions;
 use App\Application\Form\CommercialNoteType;
 use App\Application\Form\CommercialProjectCreateType;
 use App\Application\Form\CommercialProjectOrganizationType;
+use App\Infrastructure\Admin\OrganizationCrudController;
+use App\Infrastructure\Admin\PersonCrudController;
 use App\Infrastructure\Doctrine\Entity\CommercialActionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialAppointmentEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialEventEntity;
@@ -23,6 +25,8 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Doctrine\ORM\EntityManagerInterface;
 use DomainException;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
+use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Clock\ClockInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -119,6 +123,7 @@ final class CommercialProjectController extends AbstractController
     public function show(
         int $id,
         EntityManagerInterface $entityManager,
+        AdminUrlGenerator $adminUrlGenerator,
         RefreshCommercialInterventions $interventionRefresher,
         RefreshCommercialAppointments $appointmentRefresher,
         ClockInterface $clock,
@@ -132,6 +137,15 @@ final class CommercialProjectController extends AbstractController
         $appointmentRefresher->run($id);
         $interventions = $entityManager->getRepository(CommercialInterventionEntity::class)->findBy(['project' => $projectEntity], ['startsAt' => 'ASC']);
         $appointments = $entityManager->getRepository(CommercialAppointmentEntity::class)->findBy(['project' => $projectEntity], ['startsAt' => 'ASC']);
+        $organizationAdminEditUrl = $projectEntity->getOrganization() instanceof OrganizationEntity
+            ? $adminUrlGenerator->unsetAll()->setController(OrganizationCrudController::class)->setAction(Action::EDIT)->setEntityId($projectEntity->getOrganization()->getId())->generateUrl()
+            : null;
+        $personAdminEditUrls = [];
+        foreach ($projectEntity->getPeople() as $personEntity) {
+            if ($personEntity instanceof PersonEntity) {
+                $personAdminEditUrls[$personEntity->getId()] = $adminUrlGenerator->unsetAll()->setController(PersonCrudController::class)->setAction(Action::EDIT)->setEntityId($personEntity->getId())->generateUrl();
+            }
+        }
         $form = $this->createForm(CommercialNoteType::class, [
             'occurredOn' => $clock->now(),
             'person' => $projectEntity->getPrimaryContact(),
@@ -142,6 +156,8 @@ final class CommercialProjectController extends AbstractController
             'project' => $projectEntity,
             'interventions' => $interventions,
             'appointments' => $appointments,
+            'organizationAdminEditUrl' => $organizationAdminEditUrl,
+            'personAdminEditUrls' => $personAdminEditUrls,
             'appointmentRequestId' => bin2hex(random_bytes(16)),
             'noteForm' => $form,
             'organizationForm' => null === $projectEntity->getOrganization() ? $this->createForm(CommercialProjectOrganizationType::class) : null,
