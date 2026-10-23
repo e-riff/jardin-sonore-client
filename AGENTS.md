@@ -47,6 +47,7 @@
 - Ouvrir les formulaires d’ajout ou de modification dans un `dialog` afin qu’ils restent au premier plan, avec des actions alignées en bas. Garder les petits réglages contextuels, comme le choix de l’état du dossier, dans un `popover` pour conserver le contexte.
 - Réserver les menus contextuels (`popover`) aux choix courts liés à un bouton, et les dépliants (`details/summary`) au contenu secondaire ou consulté ponctuellement. Leur chevron reste aligné à droite ; les menus se ferment au clic extérieur et avec Échap.
 - Utiliser les icônes SVG existantes du backoffice ; donner un nom accessible aux commandes avec icône seule. Ne pas dépendre de la couleur seule pour distinguer un état.
+- Pour ouvrir une fiche liée depuis une action contextuelle (par exemple une fiche EasyAdmin depuis un dossier), garder un lien de navigation mais le présenter comme un petit bouton icône standardisé (`.internal-icon-button` ou `.commercial-dossier__icon-action`), avec `title` et nom accessible. Ne pas utiliser un lien texte vert souligné pour ce type d’action.
 - Une ligne ou carte cliquable doit ouvrir un détail clairement annoncé, avoir un état de survol et un état de focus clavier, et passer à une colonne sur mobile.
 
 ## PHP et Symfony
