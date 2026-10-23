@@ -6269,6 +6269,15 @@ a.session-composer-overlay__item {
         width: 100%;
     }
 
+    form.internal-form.repertoire-form > .internal-form__actions {
+        align-items: flex-end;
+        flex-direction: row;
+    }
+
+    form.internal-form.repertoire-form > .internal-form__actions .internal-button {
+        width: auto;
+    }
+
     .internal-confirmation-dialog__actions {
         align-items: stretch;
         flex-direction: column;
