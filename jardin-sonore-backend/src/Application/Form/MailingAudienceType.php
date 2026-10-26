@@ -126,12 +126,8 @@ final class MailingAudienceType extends AbstractType
                 'disabled' => $locked,
                 'choices' => $this->organizationSectorChoices(),
             ])
-            ->add('tagUuids', ChoiceType::class, [
-                ...$multipleOptions,
-                'label' => 'mailing.audience.form.tags',
-                'disabled' => $locked,
-                'choices' => $this->newsletterAudienceOptionsQuery->getTagChoices(),
-            ])
+            ->add('legacyTagUuidsJson', HiddenType::class, ['required' => false])
+            ->add('directoryEntryUuidsJson', HiddenType::class, ['required' => false])
             ->add('municipalityInseeCodes', ChoiceType::class, [
                 ...$municipalityAutocompleteOptions,
                 'label' => 'mailing.audience.form.municipalities',

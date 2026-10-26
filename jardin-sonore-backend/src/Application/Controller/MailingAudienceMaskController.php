@@ -71,7 +71,6 @@ final class MailingAudienceMaskController extends AbstractController
             $audienceFilter = $audienceMask->getAudienceFilter();
             $municipalityInseeCodes = $audienceMask->getMaterializedMunicipalityInseeCodes();
             $municipalityLabelsByInseeCode = $newsletterAudienceOptionsQuery->getMunicipalityLabelsByInseeCodes($municipalityInseeCodes);
-            $tagChoices = $newsletterAudienceOptionsQuery->getTagChoices();
 
             $criteria = [];
             if ($audienceFilter->includesFreeSubscribers()) {
@@ -86,8 +85,8 @@ final class MailingAudienceMaskController extends AbstractController
             if ([] !== $audienceFilter->getOrganizationSectors()) {
                 $criteria[] = 'Secteurs : ' . implode(', ', array_map(static fn ($sector): string => $sector->value, $audienceFilter->getOrganizationSectors()));
             }
-            if ([] !== $audienceFilter->getTagUuids()) {
-                $criteria[] = 'Tags : ' . implode(', ', array_map(static fn (string $uuid): string => $tagChoices[$uuid] ?? $uuid, $audienceFilter->getTagUuids()));
+            if ([] !== $audienceFilter->getTagUuids() || [] !== $audienceFilter->getDirectoryEntryUuids()) {
+                $criteria[] = $translator->trans('mailing.audience.form.legacy_tag_targeting', [], 'mailing');
             }
             if ([] !== $audienceFilter->getRegionCodes()) {
                 $criteria[] = 'Régions : ' . implode(', ', $audienceFilter->getRegionCodes());
@@ -360,7 +359,15 @@ final class MailingAudienceMaskController extends AbstractController
             OrganizationSector::class,
             'organizationSectors',
         );
-        $tagUuids = $this->normalizeStringList($submittedAudienceData['tagUuids'] ?? [], 'tagUuids');
+        $legacyTagUuidsJson = $submittedAudienceData['legacyTagUuidsJson'] ?? null;
+        $directoryEntryUuidsJson = $submittedAudienceData['directoryEntryUuidsJson'] ?? '[]';
+        if ((null !== $legacyTagUuidsJson && !is_string($legacyTagUuidsJson)) || !is_string($directoryEntryUuidsJson)) {
+            throw new InvalidArgumentException('Legacy mailing audience targeting is invalid.');
+        }
+        $legacyTagUuids = null === $legacyTagUuidsJson
+            ? $this->normalizeStringList($submittedAudienceData['tagUuids'] ?? [], 'tagUuids')
+            : $this->decodeSnapshotStringList($legacyTagUuidsJson, 'legacyTagUuids');
+        $directoryEntryUuids = $this->decodeSnapshotStringList($directoryEntryUuidsJson, 'directoryEntryUuids');
         $organizationUuids = $this->normalizeStringList($submittedAudienceData['organizationUuids'] ?? [], 'organizationUuids');
         $municipalityInseeCodes = $this->normalizeStringList($submittedAudienceData['municipalityInseeCodes'] ?? [], 'municipalityInseeCodes');
         $radiusKilometers = $this->nullablePositiveFloat($submittedAudienceData['radiusKilometers'] ?? null, 'radiusKilometers');
@@ -372,7 +379,8 @@ final class MailingAudienceMaskController extends AbstractController
             organizationTypes: $organizationTypes,
             organizationSectors: $organizationSectors,
             organizationUuids: $organizationUuids,
-            tagUuids: $tagUuids,
+            tagUuids: $legacyTagUuids,
+            directoryEntryUuids: $directoryEntryUuids,
             municipalityInseeCodes: MailingAudienceGeographicMode::MUNICIPALITIES === $geographicMode ? $municipalityInseeCodes : [],
             radiusKilometers: MailingAudienceGeographicMode::HOME_RADIUS === $geographicMode
                 || MailingAudienceGeographicMode::MUNICIPALITY_RADIUS === $geographicMode
@@ -425,6 +433,17 @@ final class MailingAudienceMaskController extends AbstractController
         }
 
         return $normalizedValues;
+    }
+
+    /** @return list<string> */
+    private function decodeSnapshotStringList(string $json, string $fieldName): array
+    {
+        $values = json_decode($json, true);
+        if (!is_array($values)) {
+            throw new InvalidArgumentException("Mailing audience snapshot field {$fieldName} must be a JSON list.");
+        }
+
+        return $this->normalizeStringList($values, $fieldName);
     }
 
     /**

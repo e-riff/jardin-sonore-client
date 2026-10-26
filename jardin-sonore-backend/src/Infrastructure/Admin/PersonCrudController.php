@@ -92,8 +92,7 @@ final class PersonCrudController extends AbstractCrudController
     {
         return $filters
             ->add(EntityFilter::new('organization', 'admin.field.organization')->autocomplete())
-            ->add(BooleanFilter::new('active', 'admin.field.active'))
-            ->add(EntityFilter::new('tags', 'admin.field.tags')->canSelectMultiple()->autocomplete());
+            ->add(BooleanFilter::new('active', 'admin.field.active'));
     }
 
     public function configureFields(string $pageName): iterable
@@ -108,7 +107,6 @@ final class PersonCrudController extends AbstractCrudController
         yield TextField::new('lastName', 'admin.field.last_name');
         yield TextField::new('role', 'admin.field.role');
         yield AssociationField::new('organization', 'admin.field.organization')->autocomplete(true, OrganizationChoiceLabel::forEntity(...));
-        yield AssociationField::new('tags', 'admin.field.tags')->autocomplete();
         yield AssociationField::new('contactDetails', 'admin.field.contact_details')
             ->renderAsEmbeddedForm(ContactDetailsCrudController::class)
             ->setColumns('col-md-12 col-xxl-10')

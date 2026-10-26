@@ -24,25 +24,6 @@ final readonly class DoctrineNewsletterAudienceOptionsQuery implements Newslette
     {
     }
 
-    public function getTagChoices(): array
-    {
-        /** @var list<array{label: string, uuid: string}> $tags */
-        $tags = $this->connection->createQueryBuilder()
-            ->select('label', 'uuid')
-            ->from('tag')
-            ->orderBy('label', 'ASC')
-            ->executeQuery()
-            ->fetchAllAssociative();
-
-        $choices = [];
-
-        foreach ($tags as $tag) {
-            $choices[$tag['label']] = Uuid::fromBinary($tag['uuid'])->toRfc4122();
-        }
-
-        return $choices;
-    }
-
     public function getExistingOrganizationUuids(array $organizationUuids): array
     {
         $organizationUuids = $this->normalizeUuids($organizationUuids);

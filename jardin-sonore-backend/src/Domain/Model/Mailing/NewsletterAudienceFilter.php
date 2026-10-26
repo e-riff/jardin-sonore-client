@@ -15,6 +15,7 @@ final readonly class NewsletterAudienceFilter
      * @param list<OrganizationSector> $organizationSectors
      * @param list<string>             $organizationUuids
      * @param list<string>             $tagUuids
+     * @param list<string>             $directoryEntryUuids
      * @param list<string>             $regionCodes
      * @param list<string>             $departmentCodes
      * @param list<string>             $municipalityInseeCodes
@@ -24,6 +25,7 @@ final readonly class NewsletterAudienceFilter
         private array $organizationSectors = [],
         private array $organizationUuids = [],
         private array $tagUuids = [],
+        private array $directoryEntryUuids = [],
         private array $regionCodes = [],
         private array $departmentCodes = [],
         private array $municipalityInseeCodes = [],
@@ -38,6 +40,7 @@ final readonly class NewsletterAudienceFilter
         $this->assertEnumList($organizationSectors, OrganizationSector::class, 'organization sectors');
         $this->assertStringList($organizationUuids, 'organization UUIDs');
         $this->assertStringList($tagUuids, 'tag UUIDs');
+        $this->assertStringList($directoryEntryUuids, 'directory entry UUIDs');
         $this->assertStringList($regionCodes, 'region codes');
         $this->assertStringList($departmentCodes, 'department codes');
         $this->assertStringList($municipalityInseeCodes, 'municipality INSEE codes');
@@ -71,6 +74,12 @@ final readonly class NewsletterAudienceFilter
     public function getTagUuids(): array
     {
         return $this->tagUuids;
+    }
+
+    /** @return list<string> */
+    public function getDirectoryEntryUuids(): array
+    {
+        return $this->directoryEntryUuids;
     }
 
     /**
@@ -141,6 +150,7 @@ final readonly class NewsletterAudienceFilter
             || [] !== $this->organizationSectors
             || [] !== $this->organizationUuids
             || [] !== $this->tagUuids
+            || [] !== $this->directoryEntryUuids
             || [] !== $this->regionCodes
             || [] !== $this->departmentCodes
             || [] !== $this->municipalityInseeCodes

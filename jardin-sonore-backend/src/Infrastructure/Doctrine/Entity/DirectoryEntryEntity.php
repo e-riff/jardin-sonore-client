@@ -9,8 +9,6 @@ use App\Infrastructure\Doctrine\Entity\Behavior\ActivableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\TimestampableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\UuidIdentifiableTrait;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 
 abstract class DirectoryEntryEntity
 {
@@ -23,17 +21,11 @@ abstract class DirectoryEntryEntity
 
     private ?ContactDetailsEntity $contactDetails = null;
 
-    /**
-     * @var Collection<int, TagEntity>
-     */
-    private Collection $tags;
-
     protected function __construct(DirectoryEntryType $entryType)
     {
         $this->initializeUuid();
         $this->initializeTimestamps();
         $this->entryType = $entryType;
-        $this->tags = new ArrayCollection();
         $this->setContactDetails(new ContactDetailsEntity());
     }
 
@@ -62,33 +54,6 @@ abstract class DirectoryEntryEntity
 
         if ($contactDetails->getDirectoryEntry() !== $this) {
             $contactDetails->setDirectoryEntry($this);
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, TagEntity>
-     */
-    public function getTags(): Collection
-    {
-        return $this->tags;
-    }
-
-    public function addTag(TagEntity $tagEntity): static
-    {
-        if (!$this->tags->contains($tagEntity)) {
-            $this->tags->add($tagEntity);
-            $tagEntity->addDirectoryEntry($this);
-        }
-
-        return $this;
-    }
-
-    public function removeTag(TagEntity $tagEntity): static
-    {
-        if ($this->tags->removeElement($tagEntity)) {
-            $tagEntity->removeDirectoryEntry($this);
         }
 
         return $this;

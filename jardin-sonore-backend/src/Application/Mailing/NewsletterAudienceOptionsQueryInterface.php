@@ -7,11 +7,6 @@ namespace App\Application\Mailing;
 interface NewsletterAudienceOptionsQueryInterface
 {
     /**
-     * @return array<string, string>
-     */
-    public function getTagChoices(): array;
-
-    /**
      * @param list<string> $organizationUuids
      *
      * @return list<string>

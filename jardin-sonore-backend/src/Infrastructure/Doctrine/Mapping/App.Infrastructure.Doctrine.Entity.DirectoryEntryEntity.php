@@ -6,7 +6,6 @@ use App\Domain\Model\AddressBook\DirectoryEntryType;
 use App\Infrastructure\Doctrine\Entity\ContactDetailsEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\PersonEntity;
-use App\Infrastructure\Doctrine\Entity\TagEntity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Symfony\Bridge\Doctrine\Types\UuidType;
@@ -87,28 +86,5 @@ return static function (ClassMetadata $metadata): void {
         'targetEntity' => ContactDetailsEntity::class,
         'mappedBy' => 'directoryEntry',
         'cascade' => ['persist'],
-    ]);
-
-    $metadata->mapManyToMany([
-        'fieldName' => 'tags',
-        'targetEntity' => TagEntity::class,
-        'inversedBy' => 'directoryEntries',
-        'joinTable' => [
-            'name' => 'directory_entry_tag',
-            'joinColumns' => [
-                [
-                    'name' => 'directory_entry_id',
-                    'referencedColumnName' => 'id',
-                    'onDelete' => 'CASCADE',
-                ],
-            ],
-            'inverseJoinColumns' => [
-                [
-                    'name' => 'tag_id',
-                    'referencedColumnName' => 'id',
-                    'onDelete' => 'CASCADE',
-                ],
-            ],
-        ],
     ]);
 };

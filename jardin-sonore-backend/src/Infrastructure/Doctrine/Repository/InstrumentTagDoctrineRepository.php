@@ -133,4 +133,36 @@ final class InstrumentTagDoctrineRepository extends ServiceEntityRepository impl
         ));
         $this->getEntityManager()->flush();
     }
+
+    public function usageCountsByUuid(): array
+    {
+        $rows = $this->getEntityManager()->getConnection()->createQueryBuilder()
+            ->select(
+                'LOWER(HEX(instrument_tag.uuid)) AS uuid',
+                '(SELECT COUNT(*) FROM instrument_instrument_tag WHERE instrument_tag_id = instrument_tag.id) AS usage_count',
+            )
+            ->from('instrument_tag', 'instrument_tag')
+            ->executeQuery()
+            ->fetchAllAssociative();
+        $usageCounts = [];
+
+        foreach ($rows as $row) {
+            $uuidHex = (string) $row['uuid'];
+            $uuid = substr($uuidHex, 0, 8) . '-' . substr($uuidHex, 8, 4) . '-' . substr($uuidHex, 12, 4) . '-' . substr($uuidHex, 16, 4) . '-' . substr($uuidHex, 20);
+            $usageCounts[$uuid] = (int) $row['usage_count'];
+        }
+
+        return $usageCounts;
+    }
+
+    public function delete(InstrumentTag $instrumentTag): void
+    {
+        $entity = $this->findOneBy(['uuid' => $instrumentTag->getUuid()]);
+        if (!$entity instanceof InstrumentTagEntity) {
+            return;
+        }
+
+        $this->getEntityManager()->remove($entity);
+        $this->getEntityManager()->flush();
+    }
 }

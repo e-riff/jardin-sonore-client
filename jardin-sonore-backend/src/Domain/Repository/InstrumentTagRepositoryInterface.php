@@ -26,4 +26,9 @@ interface InstrumentTagRepositoryInterface
     public function findAllOrderedByLabel(): array;
 
     public function save(InstrumentTag $instrumentTag): void;
+
+    /** @return array<string, int> Usage counts keyed by RFC 4122 UUID */
+    public function usageCountsByUuid(): array;
+
+    public function delete(InstrumentTag $instrumentTag): void;
 }

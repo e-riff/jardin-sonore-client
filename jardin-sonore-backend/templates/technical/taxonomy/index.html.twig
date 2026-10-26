@@ -1,0 +1,102 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set isThemeCatalog = catalog == 'themes' %}
+{% set titleKey = isThemeCatalog ? 'technical.taxonomy.themes.title' : 'technical.taxonomy.instrument_tags.title' %}
+{% set labelKey = isThemeCatalog ? 'technical.taxonomy.themes.label' : 'technical.taxonomy.instrument_tags.label' %}
+{% set usageKey = isThemeCatalog ? 'technical.taxonomy.themes.usage' : 'technical.taxonomy.instrument_tags.usage' %}
+{% set createKey = isThemeCatalog ? 'technical.taxonomy.themes.create' : 'technical.taxonomy.instrument_tags.create' %}
+{% set title = titleKey|trans({}, 'technical') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ 'technical.taxonomy.eyebrow'|trans({}, 'technical') }}</p>
+            <h1>{{ title }}</h1>
+            <p>{{ (isThemeCatalog ? 'technical.taxonomy.themes.description' : 'technical.taxonomy.instrument_tags.description')|trans({}, 'technical') }}</p>
+        </div>
+        <div class="internal-heading-actions" data-controller="internal-dialog" data-internal-dialog-open-on-connect-value="{{ openDialog == 'new' ? 'true' : 'false' }}">
+            <button type="button" class="internal-button" aria-haspopup="dialog" aria-controls="technical-taxonomy-create" {{ stimulus_action('internal-dialog', 'open') }}>
+                {{ createKey|trans({}, 'technical') }}
+            </button>
+            <dialog id="technical-taxonomy-create" class="internal-form-dialog" aria-labelledby="technical-taxonomy-create-title" {{ stimulus_target('internal-dialog', 'dialog') }} {{ stimulus_action('internal-dialog', 'closeOnBackdrop', 'click') }}>
+                <div class="internal-form-dialog__panel">
+                    <button type="button" class="internal-form-dialog__close" aria-label="{{ 'internal.confirmation.delete.close'|trans({}, 'internal') }}" title="{{ 'internal.confirmation.delete.close'|trans({}, 'internal') }}" {{ stimulus_action('internal-dialog', 'close') }}>×</button>
+                    <p class="internal-eyebrow">{{ 'technical.taxonomy.eyebrow'|trans({}, 'technical') }}</p>
+                    <h2 id="technical-taxonomy-create-title">{{ createKey|trans({}, 'technical') }}</h2>
+                    {{ form_start(newForm, { attr: { class: 'internal-form' } }) }}
+                        {{ form_row(newForm.label) }}
+                        <div class="technical-taxonomy-color" data-controller="color-input">
+                            {{ form_label(newForm.color) }}
+                            {{ form_errors(newForm.color) }}
+                            <div class="technical-taxonomy-color__fields">
+                                {{ form_widget(newForm.color, { attr: newForm.color.vars.attr|merge({ placeholder: 'technical.taxonomy.form.color_placeholder'|trans({}, 'technical') }) }) }}
+                                {{ form_widget(newForm.colorPicker, { attr: newForm.colorPicker.vars.attr|merge({ 'aria-label': 'technical.taxonomy.form.color_picker'|trans({}, 'technical'), title: 'technical.taxonomy.form.color_picker'|trans({}, 'technical') }) }) }}
+                            </div>
+                        </div>
+                        <div class="internal-form-dialog__actions">
+                            <button type="button" class="internal-button internal-button--secondary" {{ stimulus_action('internal-dialog', 'close') }}>{{ 'technical.taxonomy.cancel'|trans({}, 'technical') }}</button><button class="internal-button" type="submit">{{ 'technical.taxonomy.save'|trans({}, 'technical') }}</button>
+                        </div>
+                    {{ form_end(newForm) }}
+                </div>
+            </dialog>
+        </div>
+    </section>
+
+    <section class="internal-card">
+        {% if items is empty %}
+            <p class="internal-empty-state">{{ 'technical.taxonomy.empty'|trans({}, 'technical') }}</p>
+        {% else %}
+            <div class="internal-table-wrapper">
+                <table class="internal-table">
+                    <thead>
+                    <tr>
+                        <th>{{ labelKey|trans({}, 'technical') }}</th>
+                        <th>{{ usageKey|trans({}, 'technical') }}</th>
+                        <th class="internal-table__actions">{{ 'technical.taxonomy.actions'|trans({}, 'technical') }}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in items %}
+                        {% set itemUuid = item.uuid.toRfc4122 %}
+                        {% set usageCount = usageCounts[itemUuid]|default(0) %}
+                        <tr>
+                            <td data-label="{{ labelKey|trans({}, 'technical') }}">
+                                <span class="internal-badge internal-badge--color" style="--badge-color: {{ item.color }}">{{ item.label }}</span>
+                            </td>
+                            <td data-label="{{ usageKey|trans({}, 'technical') }}">{{ usageCount }}</td>
+                            <td data-label="{{ 'technical.taxonomy.actions'|trans({}, 'technical') }}" class="internal-table__actions">
+                                <div class="internal-table__action-group" data-controller="internal-dialog" data-internal-dialog-open-on-connect-value="{{ openDialog == itemUuid ? 'true' : 'false' }}">
+                                    <button type="button" class="internal-icon-button" title="{{ 'technical.taxonomy.edit'|trans({}, 'technical') }}" aria-label="{{ 'technical.taxonomy.edit'|trans({}, 'technical') }} — {{ item.label }}" aria-haspopup="dialog" aria-controls="technical-taxonomy-edit-{{ itemUuid }}" {{ stimulus_action('internal-dialog', 'open') }}>✎</button>
+                                    <button type="button" class="internal-icon-button internal-icon-button--danger" title="{{ 'technical.taxonomy.delete'|trans({}, 'technical') }}" aria-label="{{ 'technical.taxonomy.delete'|trans({}, 'technical') }} — {{ item.label }}" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('technical_taxonomy_delete', { catalog: catalog, uuid: itemUuid }) }}" data-confirmation-dialog-item-value="{{ 'technical.taxonomy.delete_confirmation_item'|trans({ label: item.label, count: usageCount }, 'technical') }}" data-confirmation-dialog-token-value="{{ csrf_token('technical_taxonomy_' ~ catalog ~ '_' ~ itemUuid) }}">🗑</button>
+                                    <dialog id="technical-taxonomy-edit-{{ itemUuid }}" class="internal-form-dialog" aria-labelledby="technical-taxonomy-edit-title-{{ itemUuid }}" {{ stimulus_target('internal-dialog', 'dialog') }} {{ stimulus_action('internal-dialog', 'closeOnBackdrop', 'click') }}>
+                                        <div class="internal-form-dialog__panel">
+                                            <button type="button" class="internal-form-dialog__close" aria-label="{{ 'internal.confirmation.delete.close'|trans({}, 'internal') }}" title="{{ 'internal.confirmation.delete.close'|trans({}, 'internal') }}" {{ stimulus_action('internal-dialog', 'close') }}>×</button>
+                                            <p class="internal-eyebrow">{{ 'technical.taxonomy.eyebrow'|trans({}, 'technical') }}</p>
+                                            <h2 id="technical-taxonomy-edit-title-{{ itemUuid }}">{{ 'technical.taxonomy.edit_title'|trans({ label: item.label }, 'technical') }}</h2>
+                                            {% set editForm = formsByUuid[itemUuid] %}
+                                            {{ form_start(editForm, { attr: { class: 'internal-form' } }) }}
+                                                {{ form_row(editForm.label) }}
+                                                <div class="technical-taxonomy-color" data-controller="color-input">
+                                                    {{ form_label(editForm.color) }}
+                                                    {{ form_errors(editForm.color) }}
+                                                    <div class="technical-taxonomy-color__fields">
+                                                        {{ form_widget(editForm.color, { attr: editForm.color.vars.attr|merge({ placeholder: 'technical.taxonomy.form.color_placeholder'|trans({}, 'technical') }) }) }}
+                                                        {{ form_widget(editForm.colorPicker, { attr: editForm.colorPicker.vars.attr|merge({ 'aria-label': 'technical.taxonomy.form.color_picker'|trans({}, 'technical'), title: 'technical.taxonomy.form.color_picker'|trans({}, 'technical') }) }) }}
+                                                    </div>
+                                                </div>
+                                                <div class="internal-form-dialog__actions">
+                                                    <button type="button" class="internal-button internal-button--secondary" {{ stimulus_action('internal-dialog', 'close') }}>{{ 'technical.taxonomy.cancel'|trans({}, 'technical') }}</button><button class="internal-button" type="submit">{{ 'technical.taxonomy.save'|trans({}, 'technical') }}</button>
+                                                </div>
+                                            {{ form_end(editForm) }}
+                                        </div>
+                                    </dialog>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}

@@ -165,6 +165,7 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
     ): void {
         $this->applyOrganizationFilters($queryBuilder, $newsletterAudienceFilter, $includePersonOrganization);
         $this->applyTagFilter($queryBuilder, $newsletterAudienceFilter, $includePersonOrganization);
+        $this->applyDirectoryEntryFilter($queryBuilder, $newsletterAudienceFilter, $includePersonOrganization);
         $this->applyGeographicFilters($queryBuilder, $newsletterAudienceFilter, $includePersonOrganization);
     }
 
@@ -230,6 +231,30 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
                 ),
             )
             ->setParameter('tagUuids', $tagUuids, ArrayParameterType::BINARY);
+    }
+
+    private function applyDirectoryEntryFilter(
+        QueryBuilder $queryBuilder,
+        NewsletterAudienceFilter $newsletterAudienceFilter,
+        bool $includePersonOrganization,
+    ): void {
+        $directoryEntryUuids = array_map(
+            static fn (string $uuid): string => Uuid::fromString($uuid)->toBinary(),
+            $newsletterAudienceFilter->getDirectoryEntryUuids(),
+        );
+
+        if ([] === $directoryEntryUuids) {
+            return;
+        }
+
+        $entryMatches = sprintf('%s.uuid IN (:directoryEntryUuids)', self::ENTRY_ALIAS);
+        $matches = $includePersonOrganization
+            ? "({$entryMatches} OR " . self::ORGANIZATION_ENTRY_ALIAS . '.uuid IN (:directoryEntryUuids))'
+            : $entryMatches;
+
+        $queryBuilder
+            ->andWhere($matches)
+            ->setParameter('directoryEntryUuids', $directoryEntryUuids, ArrayParameterType::BINARY);
     }
 
     private function applyGeographicFilters(

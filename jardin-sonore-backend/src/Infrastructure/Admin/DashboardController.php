@@ -89,12 +89,9 @@ final class DashboardController extends AbstractDashboardController
         yield MenuItem::linkTo(EmailContactCrudController::class, 'admin.menu.email_contacts', 'fa fa-envelope');
         yield MenuItem::linkTo(PhoneContactCrudController::class, 'admin.menu.phone_contacts', 'fa fa-phone');
         yield MenuItem::linkTo(AddressContactCrudController::class, 'admin.menu.address_contacts', 'fa fa-location-dot');
-        yield MenuItem::linkTo(TagCrudController::class, 'admin.menu.tags', 'fa fa-tags');
         yield MenuItem::linkTo(UserCrudController::class, 'Comptes portail', 'fa fa-user-shield');
         yield MenuItem::section('admin.menu.sessions');
         yield MenuItem::linkTo(InstrumentCrudController::class, 'admin.menu.instruments', 'fa fa-guitar');
-        yield MenuItem::linkTo(InstrumentTagCrudController::class, 'admin.menu.instrument_tags', 'fa fa-tags');
-        yield MenuItem::linkTo(ThemeCrudController::class, 'admin.menu.themes', 'fa fa-palette');
         yield MenuItem::section('admin.menu.session_resources');
         yield MenuItem::linkTo(RepertoireItemCrudController::class, 'admin.menu.repertoire_items', 'fa fa-music');
         yield MenuItem::linkTo(MediaResourceCrudController::class, 'admin.menu.media_resources', 'fa fa-photo-film');

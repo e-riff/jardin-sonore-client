@@ -39,7 +39,6 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\UrlField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\BooleanFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
-use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -123,8 +122,7 @@ final class OrganizationCrudController extends AbstractCrudController
                         ])
                         ->generateUrl())
                     ->setFormTypeOption('value_type_options.attr.data-ea-widget', 'ea-autocomplete'),
-            )
-            ->add(EntityFilter::new('tags', 'admin.field.tags')->canSelectMultiple()->autocomplete());
+            );
     }
 
     public function configureFields(string $pageName): iterable
@@ -149,7 +147,6 @@ final class OrganizationCrudController extends AbstractCrudController
             ->formatValue(fn (mixed $value): string => $this->translateEnumValue('address_book.organization_sector', $value))
             ->setFormTypeOption('required', false)
             ->setFormTypeOption('placeholder', '');
-        yield AssociationField::new('tags', 'admin.field.tags')->autocomplete();
         yield AssociationField::new('contactDetails', 'admin.field.contact_details')
             ->renderAsEmbeddedForm(ContactDetailsCrudController::class)
             ->setColumns('col-md-12 col-xxl-10')

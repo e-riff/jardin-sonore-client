@@ -45,6 +45,7 @@
 - Placer les actions destructives dans le détail de l’élément et demander une confirmation pour annuler ou supprimer.
 - Utiliser une fenêtre en surimpression native (`dialog`) pour modifier un élément avec plusieurs champs ou afficher ses actions. Elle se ferme avec Échap, un bouton de fermeture ou un clic sur le fond.
 - Ouvrir les formulaires d’ajout ou de modification dans un `dialog` afin qu’ils restent au premier plan, avec des actions alignées en bas. Garder les petits réglages contextuels, comme le choix de l’état du dossier, dans un `popover` pour conserver le contexte.
+- Dans les formulaires en dialogue, aligner les actions « Annuler » et « Enregistrer » côte à côte, y compris sur mobile, en gardant leurs libellés visibles.
 - Réserver les menus contextuels (`popover`) aux choix courts liés à un bouton, et les dépliants (`details/summary`) au contenu secondaire ou consulté ponctuellement. Leur chevron reste aligné à droite ; les menus se ferment au clic extérieur et avec Échap.
 - Utiliser les icônes SVG existantes du backoffice ; donner un nom accessible aux commandes avec icône seule. Ne pas dépendre de la couleur seule pour distinguer un état.
 - Pour ouvrir une fiche liée depuis une action contextuelle (par exemple une fiche EasyAdmin depuis un dossier), garder un lien de navigation mais le présenter comme un petit bouton icône standardisé (`.internal-icon-button` ou `.commercial-dossier__icon-action`), avec `title` et nom accessible. Ne pas utiliser un lien texte vert souligné pour ce type d’action.

@@ -1,0 +1,35 @@
+technical:
+  taxonomy:
+    eyebrow: "Outils techniques"
+    title: "Taxonomies"
+    themes:
+      title: "Thèmes"
+      description: "Gérer les thèmes proposés pour les séances, le répertoire et les médias."
+      label: "Thème"
+      usage: "Éléments liés"
+      create: "Ajouter un thème"
+    instrument_tags:
+      title: "Tags d’instruments"
+      description: "Gérer les familles utilisées pour classer les instruments."
+      label: "Tag"
+      usage: "Instruments liés"
+      create: "Ajouter un tag"
+    form:
+      label: "Libellé"
+      color: "Couleur (hex ou rgb)"
+      color_picker: "Choisir une couleur"
+      color_placeholder: "#64748b ou rgb(100, 120, 140)"
+    actions: "Actions"
+    empty: "Aucun élément pour le moment."
+    edit: "Modifier"
+    edit_title: "Modifier « {label} »"
+    delete: "Supprimer"
+    delete_confirmation_item: "{label} — utilisé dans {count, plural, one {# élément. Le rattachement sera retiré.} other {# éléments. Les rattachements seront retirés.}}"
+    cancel: "Annuler"
+    save: "Enregistrer"
+    error:
+      theme_duplicate: "Un thème porte déjà ce libellé."
+      instrument_tag_duplicate: "Un tag d’instrument porte déjà ce libellé."
+      invalid: "Cette valeur ne peut pas être enregistrée."
+    flash:
+      deleted: "L’élément a été supprimé."

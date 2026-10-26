@@ -19,7 +19,6 @@ use App\Infrastructure\Doctrine\Entity\MunicipalityEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\PersonEntity;
 use App\Infrastructure\Doctrine\Entity\RegionEntity;
-use App\Infrastructure\Doctrine\Entity\TagEntity;
 use App\Infrastructure\Doctrine\Entity\UserEntity;
 use App\Infrastructure\Doctrine\Entity\UserOrganizationAccessEntity;
 use App\Infrastructure\Mailing\DoctrineNewsletterAudienceResolver;
@@ -217,9 +216,6 @@ final class NewsletterAudienceResolverTest extends KernelTestCase
     public function testOrganizationCriteriaApplyToDirectoryAndPortalWithExplicitUnion(): void
     {
         $matchingOrganizationEntity = $this->organization();
-        $tagEntity = (new TagEntity())->setLabel('Audience ' . bin2hex(random_bytes(8)));
-        $this->entityManager->persist($tagEntity);
-        $matchingOrganizationEntity->addTag($tagEntity);
         $this->link($matchingOrganizationEntity, $this->email('directory'));
         $this->email('matching');
         $this->user('matching', [$matchingOrganizationEntity]);
@@ -231,14 +227,14 @@ final class NewsletterAudienceResolverTest extends KernelTestCase
         $criteria = [
             new NewsletterAudienceFilter(organizationTypes: [OrganizationType::CRECHE]),
             new NewsletterAudienceFilter(organizationSectors: [OrganizationSector::PUBLIC]),
-            new NewsletterAudienceFilter(tagUuids: [$tagEntity->getUuid()->toRfc4122()]),
+            new NewsletterAudienceFilter(directoryEntryUuids: [$matchingOrganizationEntity->getUuid()->toRfc4122()]),
         ];
         foreach ($criteria as $newsletterAudienceFilter) {
             self::assertSame(['directory@example.test', 'matching@example.test'], $this->addresses($newsletterAudienceFilter));
         }
         self::assertSame(['directory@example.test', 'explicit@example.test', 'matching@example.test'], $this->addresses(new NewsletterAudienceFilter(
             organizationTypes: [OrganizationType::CRECHE], organizationSectors: [OrganizationSector::PUBLIC],
-            tagUuids: [$tagEntity->getUuid()->toRfc4122()],
+            directoryEntryUuids: [$matchingOrganizationEntity->getUuid()->toRfc4122()],
             organizationUuids: [$otherOrganizationEntity->getUuid()->toRfc4122()],
         )));
     }
@@ -298,16 +294,13 @@ final class NewsletterAudienceResolverTest extends KernelTestCase
         $organizationEntity = $this->organization();
         $municipalityEntity = $this->municipality('near', 48.85, 2.35);
         $this->address($organizationEntity, $municipalityEntity);
-        $tagEntity = (new TagEntity())->setLabel('Person audience ' . bin2hex(random_bytes(8)));
-        $this->entityManager->persist($tagEntity);
-        $organizationEntity->addTag($tagEntity);
         $personEntity = (new PersonEntity())->setFirstName('Alice')->setLastName('Test')->setOrganization($organizationEntity);
         $this->entityManager->persist($personEntity);
         $emailContactEntity = $this->email('person');
         $this->link($personEntity, $emailContactEntity);
         $newsletterAudienceFilter = new NewsletterAudienceFilter(
             organizationTypes: [OrganizationType::CRECHE], organizationSectors: [OrganizationSector::PUBLIC],
-            tagUuids: [$tagEntity->getUuid()->toRfc4122()],
+            directoryEntryUuids: [$organizationEntity->getUuid()->toRfc4122()],
             municipalityInseeCodes: [$municipalityEntity->getInseeCode()],
         );
 

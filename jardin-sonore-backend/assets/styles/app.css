@@ -3892,13 +3892,53 @@ form.internal-form.commercial-calendar-group__form {
 
 .internal-form-dialog__actions {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: flex-end;
+    align-items: center;
     gap: 8px;
+}
+
+.internal-form > .internal-form-dialog__actions {
+    display: flex;
 }
 
 .internal-form-dialog__actions .internal-button {
     width: auto;
+    white-space: nowrap;
+}
+
+.technical-taxonomy-color__fields {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.internal-form .technical-taxonomy-color__fields input[type="text"] {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.internal-form .technical-taxonomy-color__fields input[type="color"] {
+    flex: 0 0 52px;
+    width: 52px;
+    height: 52px;
+    padding: 6px;
+    border-radius: 14px;
+    cursor: pointer;
+}
+
+.internal-form .technical-taxonomy-color__fields input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.internal-form .technical-taxonomy-color__fields input[type="color"]::-webkit-color-swatch {
+    border: 0;
+    border-radius: 8px;
+}
+
+.internal-form .technical-taxonomy-color__fields input[type="color"]::-moz-color-swatch {
+    border: 0;
+    border-radius: 8px;
 }
 
 .commercial-intervention-dialog__panel {

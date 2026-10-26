@@ -1,6 +1,10 @@
 portal:
   password:
     invalid: "Le mot de passe doit contenir au moins 12 caractères, une minuscule, une majuscule et un chiffre."
+technical:
+  taxonomy:
+    error:
+      invalid_color: "Saisis une couleur au format #64748b ou rgb(100, 120, 140)."
 mailing:
   form:
     intro_text_required: "Ajoutez au moins un paragraphe avec du texte."

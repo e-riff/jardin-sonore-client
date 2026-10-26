@@ -107,16 +107,28 @@
             ],
         },
         {
-            key: 'administration',
+            key: 'technical',
             route: 'admin',
             icon: '⚙',
-            label: 'internal.base.nav.admin_group'|trans({}, 'internal'),
-            active: currentRoute starts with 'admin',
+            label: 'internal.base.nav.technical_group'|trans({}, 'internal'),
+            active: currentRoute starts with 'admin' or currentRoute starts with 'technical_taxonomy_',
             links: [
                 {
                     route: 'admin',
                     label: 'internal.base.nav.backoffice'|trans({}, 'internal'),
                     active: currentRoute starts with 'admin',
+                },
+                {
+                    route: 'technical_taxonomy_index',
+                    label: 'internal.base.nav.themes'|trans({}, 'internal'),
+                    active: currentRoute == 'technical_taxonomy_index' and app.request.attributes.get('catalog') == 'themes',
+                    routeParameters: { catalog: 'themes' },
+                },
+                {
+                    route: 'technical_taxonomy_index',
+                    label: 'internal.base.nav.instrument_tags'|trans({}, 'internal'),
+                    active: currentRoute == 'technical_taxonomy_index' and app.request.attributes.get('catalog') == 'instrument-tags',
+                    routeParameters: { catalog: 'instrument-tags' },
                 },
             ],
         },

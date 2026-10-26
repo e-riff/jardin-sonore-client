@@ -455,6 +455,7 @@ final class MailingAudience
             organizationSectors: $rawAudienceFilter->getOrganizationSectors(),
             organizationUuids: $rawAudienceFilter->getOrganizationUuids(),
             tagUuids: $rawAudienceFilter->getTagUuids(),
+            directoryEntryUuids: $rawAudienceFilter->getDirectoryEntryUuids(),
             municipalityInseeCodes: $this->materializeCurrentMunicipalityInseeCodes($formModel),
         );
     }

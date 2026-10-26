@@ -8,6 +8,7 @@ use App\Domain\Model\AddressBook\OrganizationSector;
 use App\Domain\Model\AddressBook\OrganizationType;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Domain\Model\Mailing\NewsletterAudienceRadiusOrigin;
+use InvalidArgumentException;
 use Symfony\Component\Validator\Constraints as Assert;
 
 final class MailingAudienceFormModel
@@ -26,10 +27,9 @@ final class MailingAudienceFormModel
      */
     public array $organizationSectors = [];
 
-    /**
-     * @var list<string>
-     */
-    public array $tagUuids = [];
+    public string $legacyTagUuidsJson = '[]';
+
+    public string $directoryEntryUuidsJson = '[]';
 
     /**
      * @var list<string>
@@ -72,7 +72,8 @@ final class MailingAudienceFormModel
         $formModel->organizationTypes = $newsletterAudienceFilter->getOrganizationTypes();
         $formModel->organizationSectors = $newsletterAudienceFilter->getOrganizationSectors();
         $formModel->organizationUuids = $newsletterAudienceFilter->getOrganizationUuids();
-        $formModel->tagUuids = $newsletterAudienceFilter->getTagUuids();
+        $formModel->legacyTagUuidsJson = json_encode($newsletterAudienceFilter->getTagUuids(), JSON_THROW_ON_ERROR);
+        $formModel->directoryEntryUuidsJson = json_encode($newsletterAudienceFilter->getDirectoryEntryUuids(), JSON_THROW_ON_ERROR);
         $formModel->regionCodes = $newsletterAudienceFilter->getRegionCodes();
         $formModel->departmentCodes = $newsletterAudienceFilter->getDepartmentCodes();
         $formModel->municipalityInseeCodes = $newsletterAudienceFilter->getMunicipalityInseeCodes();
@@ -92,7 +93,8 @@ final class MailingAudienceFormModel
     public function toAudienceFilter(): NewsletterAudienceFilter
     {
         $organizationUuids = self::normalizeStringList($this->organizationUuids);
-        $tagUuids = self::normalizeStringList($this->tagUuids);
+        $legacyTagUuids = self::decodeStringList($this->legacyTagUuidsJson);
+        $directoryEntryUuids = self::decodeStringList($this->directoryEntryUuidsJson);
         $municipalityInseeCodes = self::normalizeStringList($this->municipalityInseeCodes);
 
         return new NewsletterAudienceFilter(
@@ -100,7 +102,8 @@ final class MailingAudienceFormModel
             organizationTypes: $this->organizationTypes,
             organizationSectors: $this->organizationSectors,
             organizationUuids: $organizationUuids,
-            tagUuids: $tagUuids,
+            tagUuids: $legacyTagUuids,
+            directoryEntryUuids: $directoryEntryUuids,
             municipalityInseeCodes: MailingAudienceGeographicMode::MUNICIPALITIES === $this->geographicMode ? $municipalityInseeCodes : [],
             radiusKilometers: $this->hasRadiusMode() ? ($this->radiusKilometers ?? 1.0) : null,
             radiusOrigin: match ($this->geographicMode) {
@@ -194,6 +197,17 @@ final class MailingAudienceFormModel
     private static function normalizeNullableFloat(?float $value): ?float
     {
         return null === $value ? null : (float) $value;
+    }
+
+    /** @return list<string> */
+    private static function decodeStringList(string $json): array
+    {
+        $values = json_decode($json, true);
+        if (!is_array($values)) {
+            throw new InvalidArgumentException('Legacy mailing audience targeting is invalid.');
+        }
+
+        return self::normalizeStringList(array_values(array_filter($values, 'is_string')));
     }
 
     private static function normalizeNullableString(?string $value): ?string
