@@ -60,8 +60,8 @@
                         {% if personLocked %}
                             <p><strong>{{ 'qualification.linked_person'|trans({}, 'commercial') }}</strong> {{ commercialRequest.person }}{% if commercialRequest.person.role %} — {{ commercialRequest.person.role }}{% endif %}</p>
                         {% else %}
-                            {{ form_row(form.newPersonFirstName) }}
                             {{ form_row(form.newPersonLastName) }}
+                            {{ form_row(form.newPersonFirstName) }}
                             {{ form_row(form.newPersonRole) }}
                         {% endif %}
                         {{ form_row(form.projectTitle) }}

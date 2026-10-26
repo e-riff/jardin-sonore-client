@@ -63,8 +63,8 @@ export default function PortalProfileForm({content}: {content: AccountContent}):
             <span className="text-xs font-normal text-on-surface-variant">{content.photoHint}</span>
             {displayedAvatarError ? <span className="text-sm font-normal text-primary" id="portal-avatar-error" role="alert">{displayedAvatarError}</span> : null}
         </label>
-        <label className="grid gap-2 text-sm font-semibold"><span>{content.firstNameLabel}</span><input className="rounded-lg border border-outline-variant px-4 py-3" defaultValue={account.firstName ?? ""} name="firstName" autoComplete="given-name" /></label>
         <label className="grid gap-2 text-sm font-semibold"><span>{content.lastNameLabel}</span><input className="rounded-lg border border-outline-variant px-4 py-3" defaultValue={account.lastName ?? ""} name="lastName" autoComplete="family-name" /></label>
+        <label className="grid gap-2 text-sm font-semibold"><span>{content.firstNameLabel}</span><input className="rounded-lg border border-outline-variant px-4 py-3" defaultValue={account.firstName ?? ""} name="firstName" autoComplete="given-name" /></label>
         <label className="flex items-start gap-3 rounded-lg border border-outline-variant bg-surface-container-low p-4 text-sm">
             <input className="mt-0.5 h-4 w-4 accent-primary" defaultChecked={account.newSessionNotificationsEnabled} name="newSessionNotificationsEnabled" type="checkbox" />
             <span><span className="block font-semibold">{content.notificationsTitle}</span><span className="mt-1 block text-on-surface-variant">{content.notificationsDescription}</span></span>

@@ -20,6 +20,7 @@ final class OrganizationAutocompleteType extends AbstractType
     {
         $resolver->setDefaults([
             'class' => OrganizationEntity::class,
+            'multiple' => false,
             'required' => false,
             'placeholder' => 'sessions.summary.form.organization_placeholder',
             'min_characters' => 2,

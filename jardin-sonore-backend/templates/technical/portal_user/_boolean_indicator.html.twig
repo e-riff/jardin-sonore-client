@@ -1,0 +1,11 @@
+{% set stateLabel = (enabled ? 'technical.portal_user.enabled' : 'technical.portal_user.disabled')|trans({}, 'technical') %}
+<span class="portal-user-boolean portal-user-boolean--{{ enabled ? 'enabled' : 'disabled' }}">
+    <svg aria-hidden="true" viewBox="0 0 20 20" focusable="false">
+        {% if enabled %}
+            <path d="m4 10 4 4 8-8" />
+        {% else %}
+            <path d="m5 5 10 10M15 5 5 15" />
+        {% endif %}
+    </svg>
+    <span>{{ stateLabel }}</span>
+</span>

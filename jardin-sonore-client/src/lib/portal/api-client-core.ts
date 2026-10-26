@@ -101,6 +101,12 @@ export class PortalApiClient {
         return this.jsonRequest<PortalTokenResponse>(`/api/portal/password-tokens/${encodeURIComponent(token)}/consume`, data);
     }
 
+    public async validatePasswordToken(token: string): Promise<PortalApiResult<{valid: boolean}>> {
+        const response = await this.request(`/api/portal/password-tokens/${encodeURIComponent(token)}/validate`, {method: "GET"});
+
+        return {data: await readJson<{valid: boolean}>(response), response};
+    }
+
     public async me(): Promise<PortalApiResult<PortalAccount>> {
         return this.getJson<PortalAccount>("/api/portal/me");
     }

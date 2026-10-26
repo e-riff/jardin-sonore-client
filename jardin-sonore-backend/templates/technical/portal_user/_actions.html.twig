@@ -1,0 +1,15 @@
+{% if portalUser.status.value == 'pending' %}
+    <form class="portal-user-action-form" method="post" action="{{ path('technical_portal_user_send_invitation', { id: portalUser.id }) }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('portal_invitation_' ~ portalUser.id) }}">
+        <button class="internal-button" type="submit">{{ 'technical.portal_user.action.send_invitation'|trans({}, 'technical') }}</button>
+    </form>
+{% elseif portalUser.status.value == 'active' %}
+    <form class="portal-user-action-form" method="post" action="{{ path('technical_portal_user_send_password_reset', { id: portalUser.id }) }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('portal_password_reset_' ~ portalUser.id) }}">
+        <button class="internal-button internal-button--secondary" type="submit">{{ 'technical.portal_user.action.send_password_reset'|trans({}, 'technical') }}</button>
+    </form>
+    <form class="portal-user-action-form" method="post" action="{{ path('technical_portal_user_impersonation_launch', { id: portalUser.id }) }}" target="_blank">
+        <input type="hidden" name="_token" value="{{ csrf_token('portal_impersonation_' ~ portalUser.id) }}">
+        <button class="internal-button internal-button--secondary portal-user-action--impersonation" type="submit">{{ 'technical.portal_user.action.impersonate'|trans({}, 'technical') }}</button>
+    </form>
+{% endif %}

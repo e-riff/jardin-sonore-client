@@ -156,6 +156,15 @@ final class PortalApiController extends AbstractController
         return new JsonResponse(['token' => $this->portalSessionManager->create($userEntity)->rawToken]);
     }
 
+    #[Route('/password-tokens/{token}/validate', methods: ['GET'])]
+    public function validatePasswordToken(string $token): JsonResponse
+    {
+        return new JsonResponse(
+            ['valid' => null !== $this->portalPasswordTokenManager->findUsable($token)],
+            headers: ['Cache-Control' => 'no-store, private'],
+        );
+    }
+
     #[Route('/me', methods: ['GET'])]
     public function me(): JsonResponse
     {

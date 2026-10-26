@@ -56,8 +56,8 @@
                 <details><summary>{{ 'project.contact_create'|trans({}, 'commercial') }}</summary>
                     <form method="post" action="{{ path('commercial_project_contact_create', {id: project.id}) }}" class="internal-form">
                         <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_contact_' ~ project.id ~ '_create') }}">
-                        <label>{{ 'project.first_name'|trans({}, 'commercial') }} <input name="firstName" required></label>
                         <label>{{ 'project.last_name'|trans({}, 'commercial') }} <input name="lastName" required></label>
+                        <label>{{ 'project.first_name'|trans({}, 'commercial') }} <input name="firstName" required></label>
                         <label>{{ 'project.role'|trans({}, 'commercial') }} <input name="role"></label>
                         <label><input type="checkbox" name="primary" value="1"> {{ 'project.contact_make_primary'|trans({}, 'commercial') }}</label>
                         <button class="internal-button internal-button--secondary" type="submit">{{ 'project.contact_create_save'|trans({}, 'commercial') }}</button>

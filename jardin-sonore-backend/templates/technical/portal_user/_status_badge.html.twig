@@ -1,0 +1,2 @@
+{% set badgeModifier = status == 'active' ? 'success' : (status == 'pending' ? 'danger' : 'muted') %}
+<span class="internal-badge internal-badge--{{ badgeModifier }}">{{ ('technical.portal_user.status.' ~ status)|trans({}, 'technical') }}</span>

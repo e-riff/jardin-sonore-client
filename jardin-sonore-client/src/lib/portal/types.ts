@@ -14,7 +14,7 @@ export interface PortalAccount {
 }
 
 export const portalAccountDisplayName = (account: PortalAccount): string => {
-    if (account.firstName && account.lastName) return `${account.firstName} ${account.lastName}`;
+    if (account.firstName && account.lastName) return `${account.lastName} ${account.firstName}`;
     if (account.firstName) return account.firstName;
 
     return account.email;

@@ -103,8 +103,8 @@ final class PersonCrudController extends AbstractCrudController
             ->setChoices($this->entryTypeChoices())
             ->formatValue(fn (mixed $value): string => $this->translateEnumValue('address_book.directory_entry_type', $value))
             ->hideOnForm();
-        yield TextField::new('firstName', 'admin.field.first_name');
         yield TextField::new('lastName', 'admin.field.last_name');
+        yield TextField::new('firstName', 'admin.field.first_name');
         yield TextField::new('role', 'admin.field.role');
         yield AssociationField::new('organization', 'admin.field.organization')->autocomplete(true, OrganizationChoiceLabel::forEntity(...));
         yield AssociationField::new('contactDetails', 'admin.field.contact_details')

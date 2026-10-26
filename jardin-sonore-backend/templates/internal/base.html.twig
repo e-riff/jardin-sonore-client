@@ -14,21 +14,25 @@
             links: [
                 {
                     route: 'commercial_project_index',
+                    icon: 'folder',
                     label: 'internal.base.nav.commercial_projects'|trans({}, 'internal'),
                     active: currentRoute == 'commercial_dashboard' or currentRoute starts with 'commercial_project_' or currentRoute starts with 'commercial_request_',
                 },
                 {
                     route: 'commercial_calendar_index',
+                    icon: 'calendar',
                     label: 'internal.base.nav.commercial_calendar'|trans({}, 'internal'),
                     active: currentRoute == 'commercial_calendar_index' or currentRoute == 'commercial_calendar_settings',
                 },
                 {
                     route: 'commercial_calendar_unlinked',
+                    icon: 'alarm',
                     label: 'calendar.unlinked.heading'|trans({}, 'commercial'),
                     active: currentRoute == 'commercial_calendar_unlinked',
                 },
                 {
                     route: 'commercial_digest_settings',
+                    icon: 'mail',
                     label: 'internal.base.nav.commercial_digest'|trans({}, 'internal'),
                     active: currentRoute == 'commercial_digest_settings',
                 },
@@ -43,6 +47,7 @@
                     links: [
                         {
                             route: 'mailing_index',
+                            icon: 'send',
                             label: 'internal.base.nav.mailing'|trans({}, 'internal'),
                             active: currentRoute starts with 'mailing_'
                                 and not (currentRoute starts with 'mailing_invalid_recipients_')
@@ -52,16 +57,19 @@
                         },
                         {
                             route: 'mailing_recommendation_catalog_index',
+                            icon: 'note',
                             label: 'internal.base.nav.recommendation_catalog'|trans({}, 'internal'),
                             active: currentRoute starts with 'mailing_recommendation_catalog_' or currentRoute starts with 'mailing_campaign_recommendation_',
                         },
                         {
                             route: 'mailing_audience_mask_index',
+                            icon: 'people',
                             label: 'internal.base.nav.audience_mask_catalog'|trans({}, 'internal'),
                             active: currentRoute starts with 'mailing_audience_mask_',
                         },
                         {
                             route: 'mailing_invalid_recipients_index',
+                            icon: 'close',
                             label: 'internal.base.nav.invalid_recipients'|trans({}, 'internal'),
                             active: currentRoute starts with 'mailing_invalid_recipients_',
                         },
@@ -80,29 +88,34 @@
             links: [
                 {
                     route: 'session_index',
+                    icon: 'note',
                     label: 'internal.base.nav.session_summaries'|trans({}, 'internal'),
                     active: currentRoute starts with 'session_'
                         and not (currentRoute starts with 'session_recommendation_'),
                 },
                 {
-                    route: 'instrument_index',
-                    label: 'internal.base.nav.instruments'|trans({}, 'internal'),
-                    active: currentRoute starts with 'instrument_',
-                },
-                {
                     route: 'repertoire_index',
+                    icon: 'music',
                     label: 'internal.base.nav.repertoire_catalog'|trans({}, 'internal'),
                     active: currentRoute starts with 'repertoire_',
                 },
                 {
-                    route: 'media_resource_index',
-                    label: 'internal.base.nav.media_resources'|trans({}, 'internal'),
-                    active: currentRoute starts with 'media_resource_',
-                },
-                {
                     route: 'session_recommendation_index',
+                    icon: 'bell',
                     label: 'internal.base.nav.session_recommendations'|trans({}, 'internal'),
                     active: currentRoute starts with 'session_recommendation_',
+                },
+                {
+                    route: 'instrument_index',
+                    icon: 'tag',
+                    label: 'internal.base.nav.instruments'|trans({}, 'internal'),
+                    active: currentRoute starts with 'instrument_',
+                },
+                {
+                    route: 'media_resource_index',
+                    icon: 'folder',
+                    label: 'internal.base.nav.media_resources'|trans({}, 'internal'),
+                    active: currentRoute starts with 'media_resource_',
                 },
             ],
         },
@@ -111,24 +124,34 @@
             route: 'admin',
             icon: '⚙',
             label: 'internal.base.nav.technical_group'|trans({}, 'internal'),
-            active: currentRoute starts with 'admin' or currentRoute starts with 'technical_taxonomy_',
+            active: currentRoute starts with 'admin' or currentRoute starts with 'technical_taxonomy_' or currentRoute starts with 'technical_portal_user_',
             links: [
                 {
                     route: 'admin',
+                    icon: 'external',
                     label: 'internal.base.nav.backoffice'|trans({}, 'internal'),
+                    newTab: true,
                     active: currentRoute starts with 'admin',
                 },
                 {
                     route: 'technical_taxonomy_index',
+                    icon: 'note',
                     label: 'internal.base.nav.themes'|trans({}, 'internal'),
                     active: currentRoute == 'technical_taxonomy_index' and app.request.attributes.get('catalog') == 'themes',
                     routeParameters: { catalog: 'themes' },
                 },
                 {
                     route: 'technical_taxonomy_index',
+                    icon: 'tag',
                     label: 'internal.base.nav.instrument_tags'|trans({}, 'internal'),
                     active: currentRoute == 'technical_taxonomy_index' and app.request.attributes.get('catalog') == 'instrument-tags',
                     routeParameters: { catalog: 'instrument-tags' },
+                },
+                {
+                    route: 'technical_portal_user_index',
+                    icon: 'people',
+                    label: 'internal.base.nav.portal_users'|trans({}, 'internal'),
+                    active: currentRoute starts with 'technical_portal_user_',
                 },
             ],
         },
@@ -183,9 +206,11 @@
                             {% for link in group.links %}
                                 <a
                                     href="{{ path(link.route, link.routeParameters|default({})) }}"
-                                    class="internal-subnav__link{{ link.active ? ' is-active' : '' }}"
+                                    class="internal-subnav__link{{ link.active ? ' is-active' : '' }}{{ link.newTab|default(false) ? ' internal-subnav__link--external' : '' }}"
+                                    {% if link.newTab|default(false) %}target="_blank" rel="noopener noreferrer"{% endif %}
                                     {% if link.active %}aria-current="page"{% endif %}
                                 >
+                                    {% include 'commercial/project/_icon.html.twig' with { name: link.icon, class: 'internal-subnav__icon' } only %}
                                     {{ link.label }}
                                 </a>
                             {% endfor %}
@@ -235,10 +260,12 @@
                             {% for link in group.links %}
                                 <a
                                     href="{{ path(link.route, link.routeParameters|default({})) }}"
-                                    class="internal-mobile-nav__link{{ link.active ? ' is-active' : '' }}"
+                                    class="internal-mobile-nav__link{{ link.active ? ' is-active' : '' }}{{ link.newTab|default(false) ? ' internal-mobile-nav__link--external' : '' }}"
+                                    {% if link.newTab|default(false) %}target="_blank" rel="noopener noreferrer"{% endif %}
                                     {% if link.active %}aria-current="page"{% endif %}
                                     {{ stimulus_action('internal-nav', 'close') }}
                                 >
+                                    {% include 'commercial/project/_icon.html.twig' with { name: link.icon, class: 'internal-mobile-nav__icon' } only %}
                                     {{ link.label }}
                                 </a>
                             {% endfor %}

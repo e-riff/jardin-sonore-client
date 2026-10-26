@@ -1,0 +1,74 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'technical.portal_user.form.edit_title'|trans({}, 'technical') %}
+
+{% block internal_body %}
+    {% include 'components/_internal_back_button.html.twig' with { href: path('technical_portal_user_detail', { id: portalUser.id }), label: 'technical.portal_user.detail.back'|trans({}, 'technical') } only %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ 'technical.portal_user.form.new_eyebrow'|trans({}, 'technical') }}</p>
+            <h1>{{ 'technical.portal_user.form.edit_title'|trans({}, 'technical') }}</h1>
+            <p>{{ portalUser.email }}</p>
+        </div>
+        <div class="internal-heading-actions portal-user-edit-heading-actions">
+            {% include 'technical/portal_user/_delete_action.html.twig' with { portalUser: portalUser } only %}
+        </div>
+    </section>
+    <section class="internal-card">
+        {{ form_start(form, { attr: { class: 'internal-form internal-form--wide', enctype: 'multipart/form-data' } }) }}
+            <div class="internal-form__grid">
+                {{ form_row(form.lastName) }}
+                {{ form_row(form.firstName) }}
+            </div>
+            {{ form_row(form.newSessionNotificationsEnabled) }}
+            <div class="portal-user-avatar-field{% if portalUser.avatarPath %} portal-user-avatar-field--has-current{% endif %}">
+                {% if portalUser.avatarPath %}
+                    <div class="portal-user-avatar-field__current">
+                        <p>{{ 'technical.portal_user.form.current_avatar'|trans({}, 'technical') }}</p>
+                        <div class="portal-user-avatar-field__panel portal-user-avatar-field__panel--current">
+                            <img src="/uploads/portal/avatars/{{ portalUser.avatarPath|url_encode }}" alt="" class="portal-user-avatar-preview">
+                            <div class="portal-user-avatar-field__remove">{{ form_row(form.removeAvatar) }}</div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div hidden>{{ form_widget(form.removeAvatar) }}{{ form_label(form.removeAvatar) }}</div>
+                {% endif %}
+                <div class="portal-user-avatar-field__upload">
+                    {{ form_label(form.avatar) }}
+                    <div class="portal-user-avatar-field__panel">
+                        {{ form_widget(form.avatar) }}
+                        {{ form_errors(form.avatar) }}
+                        {{ form_help(form.avatar) }}
+                    </div>
+                </div>
+            </div>
+
+            <fieldset class="portal-user-accesses">
+                <legend>{{ 'technical.portal_user.form.accesses'|trans({}, 'technical') }}</legend>
+                <div
+                    data-controller="portal-user-access-collection"
+                    data-portal-user-access-collection-prototype-value="{{ form_widget(form.organizationAccesses.vars.prototype)|e('html_attr') }}"
+                    data-portal-user-access-collection-index-value="{{ form.organizationAccesses|length }}"
+                    data-remove-label="{{ 'technical.portal_user.form.remove_access'|trans({}, 'technical') }}"
+                >
+                    <div data-portal-user-access-collection-target="entries">
+                        {% for accessForm in form.organizationAccesses %}
+                            <div class="portal-user-access" data-access-entry>
+                                {{ form_row(accessForm.organization) }}
+                                <button type="button" class="internal-button internal-button--secondary internal-button--compact" {{ stimulus_action('portal-user-access-collection', 'remove') }}>{{ 'technical.portal_user.form.remove_access'|trans({}, 'technical') }}</button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="internal-button internal-button--secondary" {{ stimulus_action('portal-user-access-collection', 'add') }}>{{ 'technical.portal_user.form.add_access'|trans({}, 'technical') }}</button>
+                </div>
+                {{ form_errors(form.organizationAccesses) }}
+                {{ form_help(form.organizationAccesses) }}
+            </fieldset>
+
+            <div class="internal-form__actions">
+                <a class="internal-button internal-button--secondary internal-form__back-action" href="{{ path('technical_portal_user_detail', { id: portalUser.id }) }}">{{ 'technical.portal_user.form.cancel'|trans({}, 'technical') }}</a>
+                <button class="internal-button" type="submit">{{ 'technical.portal_user.form.save'|trans({}, 'technical') }}</button>
+            </div>
+        {{ form_end(form) }}
+    </section>
+{% endblock %}

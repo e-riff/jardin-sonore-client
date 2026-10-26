@@ -1,0 +1,131 @@
+<div {{ attributes }} class="portal-user-list instrument-catalog">
+    {% set users = this.users %}
+    {% set total = this.total %}
+    <section class="internal-card">
+        <div class="instrument-catalog__controls instrument-catalog__controls--inline portal-user-filters">
+            <div class="instrument-catalog__filter-row">
+                <div class="internal-search">
+                    <label for="portal-user-search">{{ 'technical.portal_user.index.search'|trans({}, 'technical') }}</label>
+                    <div>
+                        <input
+                            id="portal-user-search"
+                            type="search"
+                            value="{{ query }}"
+                            data-model="debounce(300)|query"
+                            autocomplete="off"
+                            placeholder="{{ 'technical.portal_user.index.search_placeholder'|trans({}, 'technical') }}"
+                        >
+                    </div>
+                </div>
+                <div class="instrument-catalog__filters instrument-catalog__filters--selects">
+                <div>
+                    <label for="portal-user-status">{{ 'technical.portal_user.index.status'|trans({}, 'technical') }}</label>
+                    <select id="portal-user-status" data-model="on(change)|statusFilter">
+                        <option value="">{{ 'technical.portal_user.index.filter_all'|trans({}, 'technical') }}</option>
+                        {% for status in ['pending', 'active', 'inactive'] %}
+                            <option value="{{ status }}" {% if statusFilter == status %}selected{% endif %}>{{ ('technical.portal_user.status.' ~ status)|trans({}, 'technical') }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="portal-user-active">{{ 'technical.portal_user.index.account_enabled'|trans({}, 'technical') }}</label>
+                    <select id="portal-user-active" data-model="on(change)|activeFilter">
+                        <option value="">{{ 'technical.portal_user.index.filter_all'|trans({}, 'technical') }}</option>
+                        <option value="enabled">{{ 'technical.portal_user.index.authorized_only'|trans({}, 'technical') }}</option>
+                        <option value="disabled">{{ 'technical.portal_user.index.unauthorized_only'|trans({}, 'technical') }}</option>
+                    </select>
+                </div>
+                <div>
+                    <div class="internal-search">
+                        <label for="portal-user-organization">{{ 'technical.portal_user.index.organization_filter'|trans({}, 'technical') }}</label>
+                        <div>
+                            <input
+                                id="portal-user-organization"
+                                type="search"
+                                value="{{ organizationFilter }}"
+                                data-model="debounce(300)|organizationFilter"
+                                autocomplete="off"
+                                placeholder="{{ 'technical.portal_user.index.organization_placeholder'|trans({}, 'technical') }}"
+                            >
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="portal-user-table__meta">
+            <p>{{ 'technical.portal_user.index.result_count'|trans({ count: total }, 'technical') }}</p>
+        </div>
+
+        {% if users is empty %}
+            <p class="internal-empty-state">{{ 'technical.portal_user.index.empty'|trans({}, 'technical') }}</p>
+        {% else %}
+            <div class="internal-table-wrapper">
+                <table class="internal-table">
+                    <thead>
+                    <tr>
+                        {% for column, label in {
+                            email: 'technical.portal_user.index.email',
+                            lastName: 'technical.portal_user.index.last_name',
+                            firstName: 'technical.portal_user.index.first_name',
+                            organization: 'technical.portal_user.index.organizations',
+                            status: 'technical.portal_user.index.status',
+                            active: 'technical.portal_user.index.account_enabled',
+                            newSessionNotificationsEnabled: 'technical.portal_user.index.notifications'
+                        } %}
+                            <th>
+                                <button type="button" class="portal-user-table__sort{% if this.isSortedBy(column) %} is-active{% endif %}" {{ live_action('sort', { column: column }) }}>
+                                    <span>{{ label|trans({}, 'technical') }}</span>
+                                    <span aria-hidden="true">{{ this.sortIconFor(column) }}</span>
+                                </button>
+                            </th>
+                        {% endfor %}
+                        <th class="internal-table__actions">{{ 'technical.portal_user.index.actions'|trans({}, 'technical') }}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for portalUser in users %}
+                        <tr>
+                            <td data-label="{{ 'technical.portal_user.index.email'|trans({}, 'technical') }}"><strong>{{ portalUser.email }}</strong></td>
+                            <td data-label="{{ 'technical.portal_user.index.last_name'|trans({}, 'technical') }}">{{ portalUser.lastName ?? '—' }}</td>
+                            <td data-label="{{ 'technical.portal_user.index.first_name'|trans({}, 'technical') }}">{{ portalUser.firstName ?? '—' }}</td>
+                            <td data-label="{{ 'technical.portal_user.index.organizations'|trans({}, 'technical') }}">
+                                {% set organizationLabels = [] %}
+                                {% for organizationAccess in portalUser.organizationAccesses %}
+                                    {% if organizationAccess.active %}
+                                        {% set organizationLabels = organizationLabels|merge([organizationAccess.organization]) %}
+                                    {% endif %}
+                                {% endfor %}
+                                {{ organizationLabels is empty ? '—' : organizationLabels|join(', ') }}
+                            </td>
+                            <td data-label="{{ 'technical.portal_user.index.status'|trans({}, 'technical') }}">{{ include('technical/portal_user/_status_badge.html.twig', { status: portalUser.status.value }) }}</td>
+                            <td data-label="{{ 'technical.portal_user.index.account_enabled'|trans({}, 'technical') }}">{{ include('technical/portal_user/_boolean_indicator.html.twig', { enabled: portalUser.active }) }}</td>
+                            <td data-label="{{ 'technical.portal_user.index.notifications'|trans({}, 'technical') }}">{{ include('technical/portal_user/_boolean_indicator.html.twig', { enabled: portalUser.newSessionNotificationsEnabled }) }}</td>
+                            <td data-label="{{ 'technical.portal_user.index.actions'|trans({}, 'technical') }}" class="internal-table__actions">
+                                <div class="portal-user-row-actions">
+                                    <a class="internal-icon-button" href="{{ path('technical_portal_user_detail', { id: portalUser.id }) }}" title="{{ 'technical.portal_user.action.view'|trans({}, 'technical') }}" aria-label="{{ 'technical.portal_user.action.view'|trans({}, 'technical') }} — {{ portalUser.email }}">
+                                        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+                                    </a>
+                                    <a class="internal-icon-button" href="{{ path('technical_portal_user_edit', { id: portalUser.id }) }}" title="{{ 'technical.portal_user.action.edit'|trans({}, 'technical') }}" aria-label="{{ 'technical.portal_user.action.edit'|trans({}, 'technical') }} — {{ portalUser.email }}">
+                                        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="m14.5 5.5 4 4M4 20l4.3-.9L19 8.4a2.8 2.8 0 0 0-4-4L4.3 15.1 4 20Z"/></svg>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if this.pageCount > 1 %}
+                <nav class="portal-user-pagination" aria-label="{{ 'technical.portal_user.index.pagination'|trans({}, 'technical') }}">
+                    <span>{{ 'technical.portal_user.index.page'|trans({ page: page, pages: this.pageCount, count: total }, 'technical') }}</span>
+                    <div>
+                        <button class="internal-button internal-button--secondary internal-button--compact" type="button" {{ live_action('previousPage') }} {% if page <= 1 %}disabled{% endif %}>{{ 'technical.portal_user.index.previous'|trans({}, 'technical') }}</button>
+                        <button class="internal-button internal-button--secondary internal-button--compact" type="button" {{ live_action('nextPage') }} {% if page >= this.pageCount %}disabled{% endif %}>{{ 'technical.portal_user.index.next'|trans({}, 'technical') }}</button>
+                    </div>
+                </nav>
+            {% endif %}
+        {% endif %}
+    </section>
+</div>

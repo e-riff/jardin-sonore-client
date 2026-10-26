@@ -1,0 +1,2 @@
+<a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('technical_portal_user_edit', { id: portalUser.id }) }}">{{ 'technical.portal_user.action.edit'|trans({}, 'technical') }}</a>
+{% include 'technical/portal_user/_delete_action.html.twig' with { portalUser: portalUser } only %}

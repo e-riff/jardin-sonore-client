@@ -262,6 +262,11 @@ final class PortalApiControllerTest extends WebTestCase
         $issuedPortalPasswordToken = $portalPasswordTokenManager->issueInvitation($userEntity);
         $issuedPortalSession = static::getContainer()->get(PortalSessionManager::class)->create($userEntity);
 
+        $client->request('GET', '/api/portal/password-tokens/' . $issuedPortalPasswordToken->rawToken . '/validate');
+        self::assertResponseIsSuccessful();
+        self::assertSame(['valid' => true], $this->responseJson($client));
+        self::assertStringContainsString('no-store', (string) $client->getResponse()->headers->get('Cache-Control'));
+
         $this->requestJson($client, 'POST', '/api/portal/password-tokens/' . $issuedPortalPasswordToken->rawToken . '/consume', [
             'password' => 'Une phrase de passe solide 2026',
         ]);
@@ -274,6 +279,10 @@ final class PortalApiControllerTest extends WebTestCase
         self::assertInstanceOf(UserEntity::class, $reloadedUserEntity);
         self::assertSame(UserStatus::ACTIVE, $reloadedUserEntity->getStatus());
         self::assertNull(static::getContainer()->get(PortalSessionManager::class)->findAuthenticatedUser($issuedPortalSession->rawToken));
+
+        $client->request('GET', '/api/portal/password-tokens/' . $issuedPortalPasswordToken->rawToken . '/validate');
+        self::assertResponseIsSuccessful();
+        self::assertSame(['valid' => false], $this->responseJson($client));
 
         $client->request('GET', '/api/portal/me', server: ['HTTP_AUTHORIZATION' => 'Bearer ' . $response['token']]);
         self::assertResponseIsSuccessful();

@@ -13,6 +13,6 @@ final class InternalDashboardController extends AbstractController
     #[Route('/', name: 'internal_dashboard', methods: ['GET'])]
     public function index(): Response
     {
-        return $this->render('internal/dashboard.html.twig');
+        return $this->redirectToRoute('commercial_project_index');
     }
 }

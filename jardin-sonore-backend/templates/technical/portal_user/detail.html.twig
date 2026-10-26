@@ -1,0 +1,69 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = portalUser.email %}
+{% set userStatus = portalUser.status.value %}
+
+{% block internal_body %}
+    {% include 'components/_internal_back_button.html.twig' with { href: path('technical_portal_user_index'), label: 'technical.portal_user.detail.back'|trans({}, 'technical') } only %}
+    <section class="internal-page-heading portal-user-detail-heading">
+        <div class="portal-user-detail-heading__content">
+            <p class="internal-eyebrow">{{ 'technical.portal_user.detail.eyebrow'|trans({}, 'technical') }}</p>
+            <div class="portal-user-detail-heading__identity">
+                {% if portalUser.avatarPath %}<img src="/uploads/portal/avatars/{{ portalUser.avatarPath|url_encode }}" alt="" class="portal-user-detail-heading__avatar">{% endif %}
+                <h1>{{ portalUser.email }}</h1>
+            </div>
+        </div>
+        <div class="internal-heading-actions portal-user-management-actions">
+            {% include 'technical/portal_user/_management_actions.html.twig' with { portalUser: portalUser } only %}
+        </div>
+    </section>
+
+    <section class="internal-card portal-user-detail">
+        <div class="internal-table-wrapper">
+            <table class="internal-table portal-user-detail-table">
+                <tbody>
+                    <tr><th scope="row">{{ 'technical.portal_user.detail.id'|trans({}, 'technical') }}</th><td>{{ portalUser.id }}</td></tr>
+                    <tr><th scope="row">{{ 'technical.portal_user.detail.email'|trans({}, 'technical') }}</th><td>{{ portalUser.email }}</td></tr>
+                    <tr><th scope="row">{{ 'technical.portal_user.detail.last_name'|trans({}, 'technical') }}</th><td>{{ portalUser.lastName ?: '—' }}</td></tr>
+                    <tr><th scope="row">{{ 'technical.portal_user.detail.first_name'|trans({}, 'technical') }}</th><td>{{ portalUser.firstName ?: '—' }}</td></tr>
+                    <tr><th scope="row">{{ 'technical.portal_user.detail.status'|trans({}, 'technical') }}</th><td>{{ include('technical/portal_user/_status_badge.html.twig', { status: userStatus }) }}</td></tr>
+                    <tr><th scope="row" title="{{ 'technical.portal_user.detail.account_enabled_help'|trans({}, 'technical') }}">{{ 'technical.portal_user.detail.account_enabled'|trans({}, 'technical') }}</th><td>{{ include('technical/portal_user/_boolean_indicator.html.twig', { enabled: portalUser.active }) }} <span class="portal-user-detail__help">{{ 'technical.portal_user.detail.account_enabled_help'|trans({}, 'technical') }}</span></td></tr>
+                    <tr><th scope="row">{{ 'technical.portal_user.detail.notifications'|trans({}, 'technical') }}</th><td>{{ include('technical/portal_user/_boolean_indicator.html.twig', { enabled: portalUser.newSessionNotificationsEnabled }) }}</td></tr>
+                    <tr><th scope="row">{{ 'technical.portal_user.detail.uuid'|trans({}, 'technical') }}</th><td>{{ portalUser.uuid }}</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="internal-card portal-user-access-list">
+        <h2>{{ 'technical.portal_user.detail.accesses'|trans({}, 'technical') }}</h2>
+        {% if portalUser.organizationAccesses is empty %}
+            <p class="internal-empty-state">{{ 'technical.portal_user.detail.no_accesses'|trans({}, 'technical') }}</p>
+        {% else %}
+            <div class="internal-table-wrapper">
+                <table class="internal-table">
+                    <thead><tr><th>{{ 'technical.portal_user.detail.organization'|trans({}, 'technical') }}</th><th>{{ 'technical.portal_user.detail.person'|trans({}, 'technical') }}</th><th>{{ 'technical.portal_user.detail.access_active'|trans({}, 'technical') }}</th></tr></thead>
+                    <tbody>
+                    {% for organizationAccess in portalUser.organizationAccesses %}
+                        <tr>
+                            <td data-label="{{ 'technical.portal_user.detail.organization'|trans({}, 'technical') }}">{{ organizationAccess.organization }}</td>
+                            <td data-label="{{ 'technical.portal_user.detail.person'|trans({}, 'technical') }}">{{ organizationAccess.person ?: '—' }}</td>
+                            <td data-label="{{ 'technical.portal_user.detail.access_active'|trans({}, 'technical') }}">{{ include('technical/portal_user/_boolean_indicator.html.twig', { enabled: organizationAccess.active }) }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </section>
+
+    {% if portalUser.status.value != 'inactive' %}
+        <section class="internal-card portal-user-account-actions">
+            <h2>{{ 'technical.portal_user.detail.account_actions'|trans({}, 'technical') }}</h2>
+            <div class="portal-user-account-actions__list">
+                {% include 'technical/portal_user/_actions.html.twig' with { portalUser: portalUser } only %}
+            </div>
+        </section>
+    {% endif %}
+
+{% endblock %}

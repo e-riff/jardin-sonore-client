@@ -29,6 +29,7 @@ internal:
       technical_group: "Technique"
       themes: "Thèmes"
       instrument_tags: "Tags d’instruments"
+      portal_users: "Comptes portail"
       utility_group: "Général"
       admin_group: "Administration"
       dashboard: "Accueil"

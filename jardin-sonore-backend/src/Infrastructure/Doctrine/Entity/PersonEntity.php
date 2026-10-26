@@ -23,7 +23,7 @@ class PersonEntity extends DirectoryEntryEntity
 
     public function __toString(): string
     {
-        return trim(sprintf('%s %s', $this->firstName, $this->lastName));
+        return trim(sprintf('%s %s', $this->lastName, $this->firstName));
     }
 
     public function getFirstName(): string

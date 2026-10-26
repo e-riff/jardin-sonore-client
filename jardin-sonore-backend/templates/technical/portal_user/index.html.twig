@@ -1,0 +1,18 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'technical.portal_user.index.title'|trans({}, 'technical') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ 'technical.portal_user.index.eyebrow'|trans({}, 'technical') }}</p>
+            <h1>{{ 'technical.portal_user.index.title'|trans({}, 'technical') }}</h1>
+            <p>{{ 'technical.portal_user.index.description'|trans({}, 'technical') }}</p>
+        </div>
+        <div class="internal-heading-actions">
+            <a class="internal-button" href="{{ path('technical_portal_user_new') }}">{{ 'technical.portal_user.index.create'|trans({}, 'technical') }}</a>
+        </div>
+    </section>
+
+    <twig:PortalUserTable />
+{% endblock %}

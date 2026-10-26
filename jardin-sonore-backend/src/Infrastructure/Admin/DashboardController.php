@@ -89,21 +89,9 @@ final class DashboardController extends AbstractDashboardController
         yield MenuItem::linkTo(EmailContactCrudController::class, 'admin.menu.email_contacts', 'fa fa-envelope');
         yield MenuItem::linkTo(PhoneContactCrudController::class, 'admin.menu.phone_contacts', 'fa fa-phone');
         yield MenuItem::linkTo(AddressContactCrudController::class, 'admin.menu.address_contacts', 'fa fa-location-dot');
-        yield MenuItem::linkTo(UserCrudController::class, 'Comptes portail', 'fa fa-user-shield');
-        yield MenuItem::section('admin.menu.sessions');
-        yield MenuItem::linkTo(InstrumentCrudController::class, 'admin.menu.instruments', 'fa fa-guitar');
-        yield MenuItem::section('admin.menu.session_resources');
-        yield MenuItem::linkTo(RepertoireItemCrudController::class, 'admin.menu.repertoire_items', 'fa fa-music');
-        yield MenuItem::linkTo(MediaResourceCrudController::class, 'admin.menu.media_resources', 'fa fa-photo-film');
-        yield MenuItem::linkTo(SessionRecommendationCrudController::class, 'admin.menu.session_recommendations', 'fa fa-lightbulb');
         yield MenuItem::section('admin.menu.geography');
         yield MenuItem::linkTo(RegionCrudController::class, 'admin.menu.regions', 'fa fa-map');
         yield MenuItem::linkTo(DepartmentCrudController::class, 'admin.menu.departments', 'fa fa-map-location-dot');
         yield MenuItem::linkTo(MunicipalityCrudController::class, 'admin.menu.municipalities', 'fa fa-city');
-        yield MenuItem::section('admin.menu.newsletters');
-        yield MenuItem::linkTo(MailingCampaignCrudController::class, 'admin.menu.mailing_campaigns', 'fa fa-paper-plane');
-        yield MenuItem::linkToRoute('admin.menu.mailing_audience_masks', 'fa fa-layer-group', 'mailing_audience_mask_index');
-        yield MenuItem::linkTo(NewsletterRecommendationCrudController::class, 'admin.menu.mailing_recommendations', 'fa fa-newspaper');
-        yield MenuItem::linkTo(MailingDeliveryRecipientCrudController::class, 'admin.menu.mailing_delivery_recipients', 'fa fa-envelope-circle-check');
     }
 }

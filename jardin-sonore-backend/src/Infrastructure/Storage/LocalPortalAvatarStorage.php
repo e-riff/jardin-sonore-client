@@ -36,4 +36,16 @@ final readonly class LocalPortalAvatarStorage implements PortalAvatarStorageInte
 
         return $filename;
     }
+
+    public function delete(string $filename): void
+    {
+        if ('' === $filename || $filename !== basename($filename)) {
+            return;
+        }
+
+        $path = $this->uploadDirectory . '/' . $filename;
+        if (is_file($path) && !unlink($path)) {
+            throw new RuntimeException("Unable to delete portal avatar {$filename}.");
+        }
+    }
 }
