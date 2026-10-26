@@ -1,0 +1,7 @@
+{% extends 'internal/base.html.twig' %}
+{% set title = 'technical.geography.municipalities.title'|trans({}, 'technical') %}
+{% block internal_body %}
+    {% include 'technical/geography/_tabs.html.twig' with { current: 'municipalities' } only %}
+    <section class="internal-page-heading"><div><p class="internal-eyebrow">{{ 'technical.geography.eyebrow'|trans({}, 'technical') }}</p><h1>{{ title }}</h1><p>{{ 'technical.geography.municipalities.description'|trans({}, 'technical') }}</p></div><div class="internal-heading-actions"><a class="internal-button" href="{{ path('technical_geography_municipality_new') }}">{{ 'technical.geography.municipalities.create'|trans({}, 'technical') }}</a></div></section>
+    <twig:MunicipalityTable />
+{% endblock %}

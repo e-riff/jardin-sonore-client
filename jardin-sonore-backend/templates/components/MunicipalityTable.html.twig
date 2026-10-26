@@ -1,0 +1,141 @@
+<div {{ attributes }} class="geography-table" data-loading="addClass(geography-table--loading)">
+    <p class="geography-table__loader" data-loading="addClass(geography-table__loader--visible)" role="status" aria-live="polite">
+        <span class="geography-table__loader-spinner" aria-hidden="true"></span>
+        {{ 'technical.geography.municipalities.loading'|trans({}, 'technical') }}
+    </p>
+    <section class="internal-card">
+        <div class="instrument-catalog__controls instrument-catalog__controls--inline portal-user-filters">
+            <div class="instrument-catalog__filter-row geography-filter-row">
+                <div class="internal-search">
+                    <label for="geography-municipality-search">{{ 'technical.geography.municipalities.search_label'|trans({}, 'technical') }}</label>
+                    <div>
+                <input
+                    id="geography-municipality-search"
+                    type="search"
+                    value="{{ query }}"
+                    data-model="debounce(300)|query"
+                    placeholder="{{ 'technical.geography.municipalities.search_placeholder'|trans({}, 'technical') }}"
+                >
+                    </div>
+                </div>
+                <div class="geography-filter-row__reset"><button type="button" class="internal-button internal-button--secondary" {{ live_action('showAllMunicipalities') }}>{{ 'technical.geography.municipalities.show_all'|trans({}, 'technical') }}</button></div>
+            </div>
+        </div>
+
+        <div class="geography-tree" {{ stimulus_controller('geography-filter-tree') }}>
+            <input type="hidden" value="{{ departmentSelection }}" data-model="departmentSelection" {{ stimulus_target('geography-filter-tree', 'selection') }}>
+            <details class="geography-tree__details">
+                <summary>{{ 'technical.geography.municipalities.filter_by_area'|trans({}, 'technical') }}</summary>
+                <ul class="geography-tree__regions">
+                    {% for region in this.departmentTree %}
+                        {% set selectionState = this.regionSelectionState(region.code) %}
+                        <li>
+                            <div class="geography-tree__region">
+                                <input
+                                    type="checkbox"
+                                    value="{{ region.code }}"
+                                    data-region-code="{{ region.code }}"
+                                    data-partial="{{ selectionState == 'partial' ? 'true' : 'false' }}"
+                                    {% if selectionState == 'checked' %}checked{% endif %}
+                                    aria-label="{{ 'technical.geography.municipalities.select_region'|trans({ region: region.name }, 'technical') }}"
+                                    {{ stimulus_action('geography-filter-tree', 'toggleRegion', 'change') }}
+                                    {{ stimulus_target('geography-filter-tree', 'region') }}
+                                >
+                                <details {% if selectionState != 'unchecked' %}open{% endif %}>
+                                    <summary>{{ region.name }}</summary>
+                                    <ul class="geography-tree__departments">
+                                        {% for department in region.departments %}
+                                            <li>
+                                                <label class="geography-tree__choice">
+                                                    <input
+                                                        type="checkbox"
+                                                        value="{{ department.code }}"
+                                                        data-region-code="{{ region.code }}"
+                                                        {% if department.code in this.selectedDepartmentCodes %}checked{% endif %}
+                                                        {{ stimulus_action('geography-filter-tree', 'toggleDepartment', 'change') }}
+                                                        {{ stimulus_target('geography-filter-tree', 'department') }}
+                                                    >
+                                                    <span>{{ department.code }} — {{ department.name }}</span>
+                                                </label>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </details>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </details>
+        </div>
+
+        <p class="internal-results-count geography-table__results">
+            {{ 'technical.geography.municipalities.results_for_departments'|trans({ count: this.pageData.total, departments: this.selectedDepartmentLabels is empty ? 'technical.geography.municipalities.all_departments'|trans({}, 'technical') : this.selectedDepartmentLabels|join(', ') }, 'technical') }}
+        </p>
+
+        {% if this.pageData.rows is empty %}
+            <p class="internal-empty-state">{{ 'technical.geography.municipalities.empty'|trans({}, 'technical') }}</p>
+        {% else %}
+            <div class="internal-table-wrapper">
+                <table class="internal-table geography-table__table">
+                    <thead>
+                    <tr>
+                        {% for column, labelKey in {
+                            name: 'technical.geography.municipalities.name',
+                            inseeCode: 'technical.geography.municipalities.insee_code',
+                            postalCode: 'technical.geography.municipalities.postal_code',
+                            department: 'technical.geography.municipalities.department'
+                        } %}
+                            <th aria-sort="{{ this.isSortedBy(column) ? (sortDirection == 'asc' ? 'ascending' : 'descending') : 'none' }}">
+                                <button type="button" class="geography-table__sort{{ this.isSortedBy(column) ? ' is-active' : '' }}" {{ live_action('sort', { column: column }) }}>
+                                    {{ labelKey|trans({}, 'technical') }} <span aria-hidden="true">{{ this.sortIconFor(column) }}</span>
+                                </button>
+                            </th>
+                        {% endfor %}
+                        <th class="internal-table__actions">{{ 'technical.geography.actions'|trans({}, 'technical') }}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for municipality in this.pageData.rows %}
+                        {% set municipalityLabel = municipality.name ~ ' — ' ~ (municipality.inseeCode ?? '') %}
+                        <tr class="internal-table__row--clickable" tabindex="0" data-controller="catalog-row" data-catalog-row-url-value="{{ path('technical_geography_municipality_edit', { id: municipality.id }) }}" data-action="click->catalog-row#navigate keydown->catalog-row#navigateFromKeyboard" aria-label="{{ 'technical.geography.municipalities.open'|trans({ name: municipality.name }, 'technical') }}">
+                            <td data-label="{{ 'technical.geography.municipalities.name'|trans({}, 'technical') }}">{{ municipality.name }}</td>
+                            <td data-label="{{ 'technical.geography.municipalities.insee_code'|trans({}, 'technical') }}">{{ municipality.inseeCode ?? '—' }}</td>
+                            <td data-label="{{ 'technical.geography.municipalities.postal_code'|trans({}, 'technical') }}">{{ municipality.postalCode ?? '—' }}</td>
+                            <td data-label="{{ 'technical.geography.municipalities.department'|trans({}, 'technical') }}">{{ municipality.departmentCode }} — {{ municipality.departmentName }}</td>
+                            <td class="internal-table__actions" data-label="{{ 'technical.geography.actions'|trans({}, 'technical') }}">
+                                <div class="geography-table__actions">
+                                    <a class="internal-icon-button" href="{{ path('technical_geography_municipality_edit', { id: municipality.id }) }}" title="{{ 'technical.geography.municipalities.edit'|trans({}, 'technical') }}" aria-label="{{ 'technical.geography.municipalities.edit'|trans({}, 'technical') }} — {{ municipalityLabel }}">
+                                        {% include 'commercial/project/_icon.html.twig' with { name: 'edit' } only %}
+                                    </a>
+                                    <button
+                                        type="button"
+                                        class="internal-icon-button internal-icon-button--danger"
+                                        title="{{ 'technical.geography.delete'|trans({}, 'technical') }}"
+                                        aria-label="{{ 'technical.geography.delete'|trans({}, 'technical') }} — {{ municipalityLabel }}"
+                                        {{ stimulus_action('confirmation-dialog', 'open') }}
+                                        data-confirmation-dialog-action-value="{{ path('technical_geography_municipality_delete', { id: municipality.id }) }}"
+                                        data-confirmation-dialog-item-value="{{ 'technical.geography.municipalities.delete_confirmation_item'|trans({ name: municipality.name }, 'technical') }}"
+                                        data-confirmation-dialog-token-value="{{ csrf_token('technical_geography_municipality_' ~ municipality.id) }}"
+                                    >
+                                        <span aria-hidden="true">🗑</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+        <nav class="internal-pagination" aria-label="{{ 'technical.geography.pagination'|trans({}, 'technical') }}">
+            <button class="internal-button internal-button--secondary internal-button--compact" type="button" {{ live_action('previousPage') }} {% if page <= 1 %}disabled{% endif %}>
+                {{ 'technical.geography.previous'|trans({}, 'technical') }}
+            </button>
+            <span>{{ 'technical.geography.page'|trans({ page: page, pageCount: this.pageData.pageCount }, 'technical') }}</span>
+            <button class="internal-button internal-button--secondary internal-button--compact" type="button" {{ live_action('nextPage') }} {% if page >= this.pageData.pageCount %}disabled{% endif %}>
+                {{ 'technical.geography.next'|trans({}, 'technical') }}
+            </button>
+        </nav>
+    </section>
+</div>

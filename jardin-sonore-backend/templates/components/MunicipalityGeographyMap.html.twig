@@ -1,0 +1,11 @@
+<section class="internal-card geography-map-section">
+    <h2>{{ 'technical.geography.municipalities.map_title'|trans({}, 'technical') }}</h2>
+    {% set municipalityMap = this.map %}
+    {% if municipalityMap is null %}
+        <p class="internal-empty-state">{{ 'technical.geography.municipalities.map_unavailable'|trans({}, 'technical') }}</p>
+    {% else %}
+        <div {{ stimulus_controller('geography-map', { geo_shape: this.geoShapeJson }) }}>
+            {{ ux_map(municipalityMap, { class: 'geography-map__canvas' }) }}
+        </div>
+    {% endif %}
+</section>

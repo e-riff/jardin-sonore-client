@@ -1,0 +1,5 @@
+<nav class="geography-local-nav" aria-label="{{ 'technical.geography.nav'|trans({}, 'technical') }}">
+    <a href="{{ path('technical_geography_municipalities') }}" class="{{ current == 'municipalities' ? 'is-active' : '' }}">{{ 'technical.geography.tabs.municipalities'|trans({}, 'technical') }}</a>
+    <a href="{{ path('technical_geography_departments') }}" class="{{ current == 'departments' ? 'is-active' : '' }}">{{ 'technical.geography.tabs.departments'|trans({}, 'technical') }}</a>
+    <a href="{{ path('technical_geography_regions') }}" class="{{ current == 'regions' ? 'is-active' : '' }}">{{ 'technical.geography.tabs.regions'|trans({}, 'technical') }}</a>
+</nav>

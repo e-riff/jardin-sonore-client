@@ -1,0 +1,36 @@
+<div {{ attributes }}>
+    {% set base = kind == 'departments' ? 'technical.geography.departments' : 'technical.geography.regions' %}
+    {% set entityKind = kind == 'departments' ? 'department' : 'region' %}
+    <section class="internal-card">
+        <div class="instrument-catalog__controls instrument-catalog__controls--inline portal-user-filters">
+            <div class="internal-search">
+                <label for="geography-{{ kind }}-search">{{ (base ~ '.search_label')|trans({}, 'technical') }}</label>
+                <div><input id="geography-{{ kind }}-search" type="search" value="{{ query }}" data-model="debounce(250)|query" placeholder="{{ (base ~ '.search_placeholder')|trans({}, 'technical') }}"></div>
+            </div>
+        </div>
+        {% set rows = this.rows %}
+        {% if rows is empty %}
+            <p class="internal-empty-state">{{ (base ~ '.empty')|trans({}, 'technical') }}</p>
+        {% else %}
+            <div class="internal-table-wrapper"><table class="internal-table">
+                <thead><tr>
+                    <th aria-sort="{{ this.isSortedBy('code') ? (sortDirection == 'asc' ? 'ascending' : 'descending') : 'none' }}"><button type="button" class="geography-table__sort{{ this.isSortedBy('code') ? ' is-active' : '' }}" {{ live_action('sort', { column: 'code' }) }}>{{ (base ~ '.code')|trans({}, 'technical') }} <span aria-hidden="true">{{ this.sortIconFor('code') }}</span></button></th>
+                    <th aria-sort="{{ this.isSortedBy('name') ? (sortDirection == 'asc' ? 'ascending' : 'descending') : 'none' }}"><button type="button" class="geography-table__sort{{ this.isSortedBy('name') ? ' is-active' : '' }}" {{ live_action('sort', { column: 'name' }) }}>{{ (base ~ '.name')|trans({}, 'technical') }} <span aria-hidden="true">{{ this.sortIconFor('name') }}</span></button></th>
+                    {% if kind == 'departments' %}<th aria-sort="{{ this.isSortedBy('region') ? (sortDirection == 'asc' ? 'ascending' : 'descending') : 'none' }}"><button type="button" class="geography-table__sort{{ this.isSortedBy('region') ? ' is-active' : '' }}" {{ live_action('sort', { column: 'region' }) }}>{{ (base ~ '.region')|trans({}, 'technical') }} <span aria-hidden="true">{{ this.sortIconFor('region') }}</span></button></th>{% endif %}
+                    <th class="internal-table__actions">{{ 'technical.geography.actions'|trans({}, 'technical') }}</th>
+                </tr></thead>
+                <tbody>{% for row in rows %}
+                    <tr class="internal-table__row--clickable" tabindex="0" data-controller="catalog-row" data-catalog-row-url-value="{{ path('technical_geography_' ~ entityKind ~ '_edit', { id: row.id }) }}" data-action="click->catalog-row#navigate keydown->catalog-row#navigateFromKeyboard" aria-label="{{ 'technical.geography.form.edit'|trans({}, 'technical') }} — {{ row.name }}">
+                        <td data-label="{{ (base ~ '.code')|trans({}, 'technical') }}">{{ row.code }}</td>
+                        <td data-label="{{ (base ~ '.name')|trans({}, 'technical') }}">{{ row.name }}</td>
+                        {% if kind == 'departments' %}<td data-label="{{ (base ~ '.region')|trans({}, 'technical') }}">{{ row.parent }}</td>{% endif %}
+                        <td class="internal-table__actions" data-label="{{ 'technical.geography.actions'|trans({}, 'technical') }}"><div class="geography-table__actions">
+                            <a class="internal-icon-button" href="{{ path('technical_geography_' ~ entityKind ~ '_edit', { id: row.id }) }}" title="{{ 'technical.geography.form.edit'|trans({}, 'technical') }}" aria-label="{{ 'technical.geography.form.edit'|trans({}, 'technical') }} — {{ row.name }}">{% include 'commercial/project/_icon.html.twig' with { name: 'edit' } only %}</a>
+                            <button type="button" class="internal-icon-button internal-icon-button--danger" title="{{ 'technical.geography.delete'|trans({}, 'technical') }}" aria-label="{{ 'technical.geography.delete'|trans({}, 'technical') }} — {{ row.name }}" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('technical_geography_' ~ entityKind ~ '_delete', { id: row.id }) }}" data-confirmation-dialog-item-value="{{ 'technical.geography.form.delete_confirmation'|trans({ name: row.name }, 'technical') }}" data-confirmation-dialog-token-value="{{ csrf_token('technical_geography_' ~ entityKind ~ '_' ~ row.id) }}"><span aria-hidden="true">🗑</span></button>
+                        </div></td>
+                    </tr>
+                {% endfor %}</tbody>
+            </table></div>
+        {% endif %}
+    </section>
+</div>

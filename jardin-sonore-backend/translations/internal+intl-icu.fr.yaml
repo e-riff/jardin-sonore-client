@@ -30,6 +30,7 @@ internal:
       themes: "Thèmes"
       instrument_tags: "Tags d’instruments"
       portal_users: "Comptes portail"
+      geography: "Géographie"
       utility_group: "Général"
       admin_group: "Administration"
       dashboard: "Accueil"

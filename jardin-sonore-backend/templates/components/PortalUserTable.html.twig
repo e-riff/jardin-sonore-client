@@ -86,7 +86,7 @@
                     </thead>
                     <tbody>
                     {% for portalUser in users %}
-                        <tr>
+                        <tr class="internal-table__row--clickable" tabindex="0" data-controller="catalog-row" data-catalog-row-url-value="{{ path('technical_portal_user_detail', { id: portalUser.id }) }}" data-action="click->catalog-row#navigate keydown->catalog-row#navigateFromKeyboard" aria-label="{{ 'technical.portal_user.action.view'|trans({}, 'technical') }} — {{ portalUser.email }}">
                             <td data-label="{{ 'technical.portal_user.index.email'|trans({}, 'technical') }}"><strong>{{ portalUser.email }}</strong></td>
                             <td data-label="{{ 'technical.portal_user.index.last_name'|trans({}, 'technical') }}">{{ portalUser.lastName ?? '—' }}</td>
                             <td data-label="{{ 'technical.portal_user.index.first_name'|trans({}, 'technical') }}">{{ portalUser.firstName ?? '—' }}</td>

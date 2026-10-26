@@ -124,7 +124,7 @@
             route: 'admin',
             icon: '⚙',
             label: 'internal.base.nav.technical_group'|trans({}, 'internal'),
-            active: currentRoute starts with 'admin' or currentRoute starts with 'technical_taxonomy_' or currentRoute starts with 'technical_portal_user_',
+            active: currentRoute starts with 'admin' or currentRoute starts with 'technical_taxonomy_' or currentRoute starts with 'technical_portal_user_' or currentRoute starts with 'technical_geography_',
             links: [
                 {
                     route: 'admin',
@@ -152,6 +152,12 @@
                     icon: 'people',
                     label: 'internal.base.nav.portal_users'|trans({}, 'internal'),
                     active: currentRoute starts with 'technical_portal_user_',
+                },
+                {
+                    route: 'technical_geography_municipalities',
+                    icon: 'map',
+                    label: 'internal.base.nav.geography'|trans({}, 'internal'),
+                    active: currentRoute starts with 'technical_geography_',
                 },
             ],
         },

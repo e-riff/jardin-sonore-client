@@ -59,14 +59,14 @@
                     {% for item in items %}
                         {% set itemUuid = item.uuid.toRfc4122 %}
                         {% set usageCount = usageCounts[itemUuid]|default(0) %}
-                        <tr>
+                        <tr class="internal-table__row--clickable" tabindex="0" data-controller="taxonomy-row" data-action="click->taxonomy-row#open keydown->taxonomy-row#openFromKeyboard" aria-label="{{ 'technical.taxonomy.open_edit'|trans({ label: item.label }, 'technical') }}">
                             <td data-label="{{ labelKey|trans({}, 'technical') }}">
                                 <span class="internal-badge internal-badge--color" style="--badge-color: {{ item.color }}">{{ item.label }}</span>
                             </td>
                             <td data-label="{{ usageKey|trans({}, 'technical') }}">{{ usageCount }}</td>
                             <td data-label="{{ 'technical.taxonomy.actions'|trans({}, 'technical') }}" class="internal-table__actions">
                                 <div class="internal-table__action-group" data-controller="internal-dialog" data-internal-dialog-open-on-connect-value="{{ openDialog == itemUuid ? 'true' : 'false' }}">
-                                    <button type="button" class="internal-icon-button" title="{{ 'technical.taxonomy.edit'|trans({}, 'technical') }}" aria-label="{{ 'technical.taxonomy.edit'|trans({}, 'technical') }} — {{ item.label }}" aria-haspopup="dialog" aria-controls="technical-taxonomy-edit-{{ itemUuid }}" {{ stimulus_action('internal-dialog', 'open') }}>✎</button>
+                                    <button type="button" class="internal-icon-button" data-taxonomy-row-target="edit" title="{{ 'technical.taxonomy.edit'|trans({}, 'technical') }}" aria-label="{{ 'technical.taxonomy.edit'|trans({}, 'technical') }} — {{ item.label }}" aria-haspopup="dialog" aria-controls="technical-taxonomy-edit-{{ itemUuid }}" {{ stimulus_action('internal-dialog', 'open') }}>✎</button>
                                     <button type="button" class="internal-icon-button internal-icon-button--danger" title="{{ 'technical.taxonomy.delete'|trans({}, 'technical') }}" aria-label="{{ 'technical.taxonomy.delete'|trans({}, 'technical') }} — {{ item.label }}" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('technical_taxonomy_delete', { catalog: catalog, uuid: itemUuid }) }}" data-confirmation-dialog-item-value="{{ 'technical.taxonomy.delete_confirmation_item'|trans({ label: item.label, count: usageCount }, 'technical') }}" data-confirmation-dialog-token-value="{{ csrf_token('technical_taxonomy_' ~ catalog ~ '_' ~ itemUuid) }}">🗑</button>
                                     <dialog id="technical-taxonomy-edit-{{ itemUuid }}" class="internal-form-dialog" aria-labelledby="technical-taxonomy-edit-title-{{ itemUuid }}" {{ stimulus_target('internal-dialog', 'dialog') }} {{ stimulus_action('internal-dialog', 'closeOnBackdrop', 'click') }}>
                                         <div class="internal-form-dialog__panel">

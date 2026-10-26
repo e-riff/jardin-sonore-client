@@ -1,0 +1,8 @@
+{% extends 'internal/base.html.twig' %}
+{% set title = (kind == 'departments' ? 'technical.geography.departments.title' : 'technical.geography.regions.title')|trans({}, 'technical') %}
+{% block internal_body %}
+    {% include 'components/_internal_back_button.html.twig' with { href: path('technical_geography_' ~ kind), label: 'technical.geography.form.back'|trans({}, 'technical') } only %}
+    {% include 'technical/geography/_tabs.html.twig' with { current: kind } only %}
+    <section class="internal-page-heading"><div><p class="internal-eyebrow">{{ 'technical.geography.eyebrow'|trans({}, 'technical') }}</p><h1>{{ isNew ? (kind == 'departments' ? 'technical.geography.departments.create' : 'technical.geography.regions.create')|trans({}, 'technical') : 'technical.geography.form.edit'|trans({}, 'technical') }}</h1></div></section>
+    <section class="internal-card internal-card--form">{{ form_start(form, { attr: { class: 'internal-form' } }) }}{{ form_widget(form) }}<div class="internal-form-dialog__actions"><a class="internal-button internal-button--secondary" href="{{ path('technical_geography_' ~ kind) }}">{{ 'technical.geography.form.cancel'|trans({}, 'technical') }}</a><button class="internal-button" type="submit">{{ 'technical.geography.form.save'|trans({}, 'technical') }}</button></div>{{ form_end(form) }}</section>
+{% endblock %}

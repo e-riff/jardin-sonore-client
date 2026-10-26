@@ -1,0 +1,19 @@
+{% extends 'internal/base.html.twig' %}
+{% set title = municipality.name %}
+{% block internal_body %}
+    {% include 'components/_internal_back_button.html.twig' with { href: path('technical_geography_municipalities'), label: 'technical.geography.form.back'|trans({}, 'technical') } only %}
+    {% include 'technical/geography/_tabs.html.twig' with { current: 'municipalities' } only %}
+    <section class="internal-page-heading"><div><p class="internal-eyebrow">{{ 'technical.geography.eyebrow'|trans({}, 'technical') }}</p><h1>{{ isNew|default(false) ? 'technical.geography.municipalities.create'|trans({}, 'technical') : municipality.name }}</h1></div></section>
+    <section class="internal-card internal-card--form">
+        {{ form_start(form, { attr: { class: 'internal-form' } }) }}
+            {{ form_row(form.name) }}
+            <div class="geography-form-grid">{{ form_row(form.inseeCode) }}{{ form_row(form.postalCode) }}</div>
+            {{ form_row(form.department) }}
+            {{ form_row(form.address) }}
+            <div class="geography-form-grid">{{ form_row(form.phoneNumber) }}{{ form_row(form.emailAddress) }}</div>
+            <div class="geography-form-grid">{{ form_row(form.siren) }}{{ form_row(form.siret) }}</div>
+            <div class="internal-form-dialog__actions"><a class="internal-button internal-button--secondary" href="{{ path('technical_geography_municipalities') }}">{{ 'technical.geography.form.cancel'|trans({}, 'technical') }}</a><button class="internal-button" type="submit">{{ 'technical.geography.form.save'|trans({}, 'technical') }}</button></div>
+        {{ form_end(form) }}
+    </section>
+    {% if not isNew|default(false) %}<twig:MunicipalityGeographyMap :municipality="municipality" />{% endif %}
+{% endblock %}
