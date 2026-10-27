@@ -61,11 +61,11 @@ final class Version20261027111508 extends AbstractMigration
                             SELECT COUNT(*)
                             FROM municipality municipality
                             WHERE BINARY municipality.postal_code = BINARY address.postal_code
-                                AND UPPER(TRIM(municipality.name)) = UPPER(TRIM(address.city))
+                            AND BINARY UPPER(TRIM(municipality.name)) = BINARY UPPER(TRIM(address.city))
                         )
                     )
                     OR (
-                        UPPER(TRIM(address.city)) = 'OULLINS'
+                        BINARY UPPER(TRIM(address.city)) = BINARY 'OULLINS'
                         AND BINARY address.postal_code = BINARY '69600'
                         AND 1 = (
                             SELECT COUNT(*)
@@ -136,7 +136,7 @@ final class Version20261027111508 extends AbstractMigration
                 SELECT MIN(municipality.id)
                 FROM municipality municipality
                 WHERE BINARY municipality.postal_code = BINARY address.postal_code
-                    AND UPPER(TRIM(municipality.name)) = UPPER(TRIM(address.city))
+                    AND BINARY UPPER(TRIM(municipality.name)) = BINARY UPPER(TRIM(address.city))
                 HAVING COUNT(*) = 1
             )
             WHERE address.municipality_id IS NULL
@@ -146,7 +146,7 @@ final class Version20261027111508 extends AbstractMigration
                     SELECT COUNT(*)
                     FROM municipality municipality
                     WHERE BINARY municipality.postal_code = BINARY address.postal_code
-                        AND UPPER(TRIM(municipality.name)) = UPPER(TRIM(address.city))
+                        AND BINARY UPPER(TRIM(municipality.name)) = BINARY UPPER(TRIM(address.city))
                 )
             SQL);
         $this->addSql(<<<'SQL'
@@ -159,7 +159,7 @@ final class Version20261027111508 extends AbstractMigration
                 LIMIT 1
             )
             WHERE address.municipality_id IS NULL
-                AND UPPER(TRIM(address.city)) = 'OULLINS'
+                AND BINARY UPPER(TRIM(address.city)) = BINARY 'OULLINS'
                 AND BINARY address.postal_code = BINARY '69600'
             SQL);
         $this->addSql(<<<'SQL'
