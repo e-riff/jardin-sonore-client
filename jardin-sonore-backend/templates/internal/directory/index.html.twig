@@ -1,0 +1,15 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = 'technical.directory.title'|trans({}, 'technical') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading directory-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ 'technical.directory.eyebrow'|trans({}, 'technical') }}</p>
+            <h1>{{ 'technical.directory.title'|trans({}, 'technical') }}</h1>
+            <p>{{ 'technical.directory.description'|trans({}, 'technical') }}</p>
+        </div>
+    </section>
+
+    <twig:DirectoryCatalog />
+{% endblock %}

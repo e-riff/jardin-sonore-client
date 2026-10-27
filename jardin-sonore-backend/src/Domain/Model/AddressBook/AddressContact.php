@@ -11,7 +11,6 @@ use App\Domain\Model\Behavior\NullableLabelTrait;
 use App\Domain\Model\Behavior\UuidIdentifiableInterface;
 use App\Domain\Model\Behavior\UuidIdentifiableTrait;
 use App\Domain\Model\Geo\Municipality;
-use App\Domain\Model\ValueObject\PostalCode;
 use Symfony\Component\Uid\Uuid;
 
 final class AddressContact implements IdentifiableInterface, UuidIdentifiableInterface
@@ -24,8 +23,6 @@ final class AddressContact implements IdentifiableInterface, UuidIdentifiableInt
     public function __construct(
         private AddressContactType $type = AddressContactType::MAIN,
         private ?string $address = null,
-        private ?PostalCode $postalCode = null,
-        private ?string $city = null,
         private ?Municipality $municipality = null,
         ?string $label = null,
         bool $active = true,
@@ -46,16 +43,6 @@ final class AddressContact implements IdentifiableInterface, UuidIdentifiableInt
     public function getAddress(): ?string
     {
         return $this->address;
-    }
-
-    public function getPostalCode(): ?PostalCode
-    {
-        return $this->postalCode;
-    }
-
-    public function getCity(): ?string
-    {
-        return $this->city;
     }
 
     public function getMunicipality(): ?Municipality

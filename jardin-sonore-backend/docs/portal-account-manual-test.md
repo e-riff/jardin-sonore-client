@@ -21,7 +21,7 @@ Prérequis : être connecté au back-office avec un compte administrateur et ouv
 
 ## Renvoi d’invitation et réinitialisation
 
-- [ ] Sur un compte `En attente`, cliquer sur **Envoyer l’invitation** depuis l’index, le détail, puis l’édition. Vérifier à chaque fois le retour sur la page d’origine, sans redirection vers l’accueil EasyAdmin.
+- [ ] Sur un compte `En attente`, envoyer l’invitation depuis l’écran de gestion des comptes portail et vérifier le retour à la fiche du compte.
 - [ ] Conserver le lien A, renvoyer l’invitation, puis conserver le lien B. A doit être indisponible et B doit permettre l’activation.
 - [ ] Sur un compte `Actif`, cliquer sur **Réinitialiser le mot de passe**, ouvrir le message Mailpit et définir un nouveau mot de passe valide. Vérifier la page de succès et que le compte reste `Actif`.
 - [ ] Vérifier qu’un lien de réinitialisation consommé ne peut pas être réutilisé.

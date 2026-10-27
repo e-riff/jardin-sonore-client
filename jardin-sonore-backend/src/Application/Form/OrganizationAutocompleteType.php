@@ -32,7 +32,7 @@ final class OrganizationAutocompleteType extends AbstractType
                     ->leftJoin('entity.contactDetails', 'contactDetails')
                     ->leftJoin('contactDetails.addressContacts', 'addressContact', 'WITH', 'addressContact.active = true')
                     ->leftJoin('addressContact.municipality', 'municipality')
-                    ->andWhere('LOWER(entity.name) LIKE LOWER(:query) OR LOWER(municipality.name) LIKE LOWER(:query) OR LOWER(municipality.postalCode) LIKE LOWER(:query) OR LOWER(addressContact.city) LIKE LOWER(:query) OR LOWER(addressContact.postalCode) LIKE LOWER(:query)')
+                    ->andWhere('LOWER(entity.name) LIKE LOWER(:query) OR LOWER(municipality.name) LIKE LOWER(:query) OR LOWER(municipality.postalCode) LIKE LOWER(:query)')
                     ->setParameter('query', '%' . addcslashes(trim($query), '%_\\') . '%')
                     ->groupBy('entity.id')
                     ->orderBy('entity.name', 'ASC');

@@ -90,13 +90,6 @@ abstract class DirectoryEntryEntity
 
                 return $label;
             }
-
-            $postalCode = $addressContactEntity->getPostalCode();
-            $city = $addressContactEntity->getCity();
-            $label = trim(implode(' — ', array_filter([$postalCode, $city])));
-            if ('' !== $label) {
-                return $label;
-            }
         }
 
         return '—';

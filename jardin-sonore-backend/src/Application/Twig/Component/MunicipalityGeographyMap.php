@@ -8,7 +8,6 @@ use App\Infrastructure\Doctrine\Entity\MunicipalityEntity;
 use JsonException;
 use Symfony\UX\Map\Bridge\Leaflet\LeafletOptions;
 use Symfony\UX\Map\Map;
-use Symfony\UX\Map\Marker;
 use Symfony\UX\Map\Point;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 
@@ -19,7 +18,7 @@ final class MunicipalityGeographyMap
 
     public function getMap(): ?Map
     {
-        $center = $this->centerPoint() ?? $this->shapeCenter();
+        $center = $this->shapeCenter() ?? $this->centerPoint();
         if (null === $center) {
             return null;
         }
@@ -30,13 +29,6 @@ final class MunicipalityGeographyMap
             ->minZoom(4.0)
             ->maxZoom(18.0)
             ->options(new LeafletOptions());
-
-        if (null !== $this->centerPoint()) {
-            $map->addMarker(new Marker(
-                position: $this->centerPoint(),
-                title: $this->municipality->getName(),
-            ));
-        }
 
         return $map;
     }

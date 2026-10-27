@@ -44,7 +44,7 @@ Le service Mailpit Compose expose son interface sur `http://localhost:8025` et s
 - [ ] Sur un compte de test, retirer la photo actuelle ; vérifier que la fiche ne l’affiche plus.
 - [ ] Depuis un compte ayant plusieurs accès, ajouter une structure et vérifier qu’elle apparaît dans la fiche et dans la liste.
 - [ ] Modifier la structure d’un accès et retirer un accès, puis vérifier les changements sur la fiche et dans le portail du compte.
-- [ ] Essayer le retrait du dernier accès sur un compte de test ; noter précisément si le formulaire bloque l’opération ou si le compte se retrouve sans accès. Ce cas sert aussi à confirmer le comportement actuel du formulaire EasyAdmin à collection imbriquée.
+- [ ] Essayer le retrait du dernier accès sur un compte de test ; noter précisément si le formulaire bloque l’opération ou si le compte se retrouve sans accès.
 - [ ] Vérifier qu’un accès lié à une personne conserve cette personne quand on modifie un autre accès ou les informations du compte.
 
 ## Réinitialisation, ouverture du portail et suppression

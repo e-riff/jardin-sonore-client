@@ -39,11 +39,34 @@
             ],
         },
         {
+            key: 'directory',
+            route: 'internal_directory_index',
+            icon: 'people',
+            label: 'internal.base.nav.directory_group'|trans({}, 'internal'),
+            active: currentRoute starts with 'internal_directory_',
+            links: [
+                {
+                    route: 'internal_directory_index',
+                    icon: 'folder',
+                    label: 'internal.base.nav.directory_organizations'|trans({}, 'internal'),
+                    active: currentRoute starts with 'internal_directory_' and app.request.query.get('section', 'organizations') != 'people',
+                    routeParameters: { section: 'organizations' },
+                },
+                {
+                    route: 'internal_directory_index',
+                    icon: 'person',
+                    label: 'internal.base.nav.directory_people'|trans({}, 'internal'),
+                    active: currentRoute starts with 'internal_directory_' and app.request.query.get('section') == 'people',
+                    routeParameters: { section: 'people' },
+                },
+            ],
+        },
+        {
             key: 'newsletters',
             route: 'mailing_index',
             icon: '✉',
             label: 'internal.base.nav.newsletters_group'|trans({}, 'internal'),
-                    active: currentRoute starts with 'mailing_',
+                    active: currentRoute starts with 'mailing_' or currentRoute starts with 'newsletter_subscriber_',
                     links: [
                         {
                             route: 'mailing_index',
@@ -54,6 +77,12 @@
                                 and not (currentRoute starts with 'mailing_audience_mask_')
                                 and not (currentRoute starts with 'mailing_recommendation_catalog_')
                                 and not (currentRoute starts with 'mailing_campaign_recommendation_'),
+                        },
+                        {
+                            route: 'newsletter_subscriber_index',
+                            icon: 'people',
+                            label: 'internal.base.nav.newsletter_subscribers'|trans({}, 'internal'),
+                            active: currentRoute starts with 'newsletter_subscriber_',
                         },
                         {
                             route: 'mailing_recommendation_catalog_index',
@@ -121,18 +150,10 @@
         },
         {
             key: 'technical',
-            route: 'admin',
             icon: '⚙',
             label: 'internal.base.nav.technical_group'|trans({}, 'internal'),
-            active: currentRoute starts with 'admin' or currentRoute starts with 'technical_taxonomy_' or currentRoute starts with 'technical_portal_user_' or currentRoute starts with 'technical_geography_',
+            active: currentRoute starts with 'technical_taxonomy_' or currentRoute starts with 'technical_portal_user_' or currentRoute starts with 'technical_geography_',
             links: [
-                {
-                    route: 'admin',
-                    icon: 'external',
-                    label: 'internal.base.nav.backoffice'|trans({}, 'internal'),
-                    newTab: true,
-                    active: currentRoute starts with 'admin',
-                },
                 {
                     route: 'technical_taxonomy_index',
                     icon: 'note',
@@ -184,7 +205,11 @@
                             {{ stimulus_action('internal-nav', 'selectGroup') }}
                             {% if group.active %}aria-current="page"{% endif %}
                         >
-                            <span class="internal-primary-nav__icon" aria-hidden="true">{{ group.icon }}</span>
+                            {% if group.icon == 'people' %}
+                                {% include 'commercial/project/_icon.html.twig' with {name: group.icon, class: 'internal-primary-nav__icon'} only %}
+                            {% else %}
+                                <span class="internal-primary-nav__icon" aria-hidden="true">{{ group.icon }}</span>
+                            {% endif %}
                             <span>{{ group.label }}</span>
                         </button>
                     {% endfor %}
@@ -257,7 +282,11 @@
                             {{ stimulus_action('internal-nav', 'toggleGroup') }}
                         >
                             <span class="internal-mobile-nav__group-label">
-                                <span class="internal-primary-nav__icon" aria-hidden="true">{{ group.icon }}</span>
+                                {% if group.icon == 'people' %}
+                                    {% include 'commercial/project/_icon.html.twig' with {name: group.icon, class: 'internal-primary-nav__icon'} only %}
+                                {% else %}
+                                    <span class="internal-primary-nav__icon" aria-hidden="true">{{ group.icon }}</span>
+                                {% endif %}
                                 <span>{{ group.label }}</span>
                             </span>
                         </button>

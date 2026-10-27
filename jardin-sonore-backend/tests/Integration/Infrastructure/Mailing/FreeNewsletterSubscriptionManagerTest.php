@@ -7,8 +7,8 @@ namespace App\Tests\Integration\Infrastructure\Mailing;
 use App\Application\Mailing\NewsletterConfirmationMailSenderInterface;
 use App\Application\Mailing\NewsletterConfirmationState;
 use App\Application\Mailing\UnsubscribeNewsletterRecipient;
-use App\Infrastructure\Admin\EmailContactCrudController;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
+use App\Infrastructure\Doctrine\Entity\EmailContactLinkEntity;
 use App\Infrastructure\Doctrine\Entity\UserEntity;
 use App\Infrastructure\Doctrine\Repository\EmailContactDoctrineRepository;
 use App\Infrastructure\Doctrine\Repository\NewsletterSubscriptionRequestDoctrineRepository;
@@ -20,7 +20,6 @@ use DomainException;
 use RuntimeException;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Clock\MockClock;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final class FreeNewsletterSubscriptionManagerTest extends KernelTestCase
 {
@@ -160,14 +159,11 @@ final class FreeNewsletterSubscriptionManagerTest extends KernelTestCase
     {
         $this->manager->requestSubscription($this->emailAddress);
         $emailContactEntity = $this->contact();
-        $emailContactEntity->setEmailAddress('corrected@example.test');
-        try {
-            self::getContainer()->get(EmailContactCrudController::class)->updateEntity($this->entityManager, $emailContactEntity);
-            self::fail('Pending addresses must not be rewritten.');
-        } catch (BadRequestHttpException) {
-            $this->entityManager->refresh($emailContactEntity);
-        }
+        $emailContactLinkEntity = (new EmailContactLinkEntity())->setEmailContact($emailContactEntity);
+        $emailContactLinkEntity->setEmailAddress('corrected@example.test');
+
         self::assertSame($this->emailAddress, $emailContactEntity->getEmailAddress());
+        self::assertSame('corrected@example.test', $emailContactLinkEntity->getEmailAddress());
         self::assertSame(NewsletterConfirmationState::CONFIRMED, $this->manager->confirm($this->sender->tokens[0]));
     }
 

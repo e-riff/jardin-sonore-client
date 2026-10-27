@@ -1,0 +1,17 @@
+<div class="directory-address-list">
+    {% for address in addresses %}
+        {% set locationParts = [] %}
+        {% if address.streetAddress %}{% set locationParts = locationParts|merge([address.streetAddress]) %}{% endif %}
+        {% if address.municipality %}
+            {% set municipalityLabel = address.municipality.postalCode ? address.municipality.postalCode ~ ' — ' ~ address.municipality.name : address.municipality.name %}
+            {% set locationParts = locationParts|merge([municipalityLabel]) %}
+        {% endif %}
+        {% set mapQuery = locationParts|join(', ') %}
+        <div class="directory-address-row">
+            <p>{% if address.label %}<strong>{{ address.label }} · </strong>{% endif %}{% if address.streetAddress %}{{ address.streetAddress }} · {% endif %}{{ address.municipality ? (address.municipality.postalCode ~ ' — ' ~ address.municipality.name) : '—' }}</p>
+            {% if mapQuery %}
+                <a class="internal-icon-button directory-address-map-link" href="https://www.google.com/maps/search/?api=1&amp;query={{ mapQuery|url_encode }}" target="_blank" rel="noopener noreferrer" title="{{ 'technical.directory.open_in_google_maps'|trans({}, 'technical') }}" aria-label="{{ 'technical.directory.open_in_google_maps'|trans({}, 'technical') }} — {{ mapQuery }}">{% include 'commercial/project/_icon.html.twig' with {name: 'map'} only %}</a>
+            {% endif %}
+        </div>
+    {% endfor %}
+</div>

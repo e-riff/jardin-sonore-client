@@ -1,0 +1,19 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = (isNew ? 'technical.directory.form.organization_create' : 'technical.directory.form.organization_edit')|trans({}, 'technical') %}
+
+{% block internal_body %}
+    {{ include('components/_internal_back_button.html.twig', {href: path('internal_directory_index'), label: 'technical.directory.back_to_list'|trans({}, 'technical')}) }}
+    <section class="internal-page-heading">
+        <div><p class="internal-eyebrow">{{ 'technical.directory.eyebrow'|trans({}, 'technical') }}</p><h1>{{ title }}</h1></div>
+    </section>
+    <section class="internal-card internal-card--form directory-form-card">
+        {{ form_start(form, {attr: {class: 'internal-form directory-form'}}) }}
+            {{ include('internal/directory/_organization_fields.html.twig', {form: form}) }}
+            <div class="internal-form-dialog__actions">
+                <a class="internal-button internal-button--secondary" href="{{ path('internal_directory_index') }}">{{ 'technical.directory.form.cancel'|trans({}, 'technical') }}</a>
+                <button class="internal-button" type="submit">{{ 'technical.directory.form.save'|trans({}, 'technical') }}</button>
+            </div>
+        {{ form_end(form) }}
+    </section>
+{% endblock %}

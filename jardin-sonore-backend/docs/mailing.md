@@ -577,7 +577,7 @@ Verifier :
 
 Dans l’audience d’une campagne, « Inclure les abonnés libres » est désactivé par défaut. Cette option reste enregistrée dans le filtre, les masques, duplications et extensions. Les abonnés libres confirmés sont ajoutés sans critères de structure, avec déduplication par adresse ; le consentement courant reste revérifié avant SMTP.
 
-Dans E-mails, « Ajouter un abonné » permet une activation directe avec attestation obligatoire d’un consentement déjà recueilli. « Gérer l’abonnement » permet de retirer le consentement ou de réactiver avec une nouvelle attestation. Les filtres distinguent appartenance libre, origine footer/backoffice, opt-in, date de retrait et état technique actif. Les champs de consentement sont en lecture seule dans EasyAdmin.
+Dans Mailing → Abonnés, l’ajout ou la réinscription demande d’attester qu’un accord explicite a déjà été recueilli. Le consentement suit l’adresse e-mail partagée entre ses fiches. Le retrait désinscrit toutes les fiches qui utilisent cette adresse ; une adresse désactivée pour rejet définitif reste bloquée. Les états « Inscription libre », « Annuaire » et « Sans fiche » décrivent les liens et l’origine, indépendamment du consentement.
 
 Une adresse n’est pas remplacée dans E-mails : ajouter l’adresse corrigée avec son propre consentement et retirer l’ancienne séparément. La correction d’un lien de l’annuaire crée un autre contact sans reprendre le consentement de l’ancien. Les dates/origines historiques et les autres liens restent attachés à l’adresse concernée.
 

@@ -15,7 +15,6 @@ return static function (ClassMetadata $metadata): void {
         'indexes' => [
             'idx_address_contact_details' => ['columns' => ['contact_details_id']],
             'idx_address_contact_municipality' => ['columns' => ['municipality_id']],
-            'idx_address_contact_postal_code' => ['columns' => ['postal_code']],
         ],
         'uniqueConstraints' => [
             'uniq_address_contact_uuid' => ['columns' => ['uuid']],
@@ -74,21 +73,6 @@ return static function (ClassMetadata $metadata): void {
     $metadata->mapField([
         'fieldName' => 'address',
         'type' => Types::TEXT,
-        'nullable' => true,
-    ]);
-
-    $metadata->mapField([
-        'fieldName' => 'postalCode',
-        'columnName' => 'postal_code',
-        'type' => Types::STRING,
-        'length' => 5,
-        'nullable' => true,
-    ]);
-
-    $metadata->mapField([
-        'fieldName' => 'city',
-        'type' => Types::STRING,
-        'length' => 255,
         'nullable' => true,
     ]);
 

@@ -8,9 +8,9 @@
     {% for addressContact in project.organization.contactDetails.addressContacts %}
         {% if addressContact.active %}
             {% set municipality = addressContact.municipality %}
-            {% set street = addressContact.address|default('')|trim %}
-            {% set postalCode = (addressContact.postalCode ?: (municipality ? municipality.postalCode : ''))|default('')|trim %}
-            {% set city = (addressContact.city ?: (municipality ? municipality.name : ''))|default('')|trim %}
+            {% set street = addressContact.streetAddress|default('')|trim %}
+            {% set postalCode = municipality ? municipality.postalCode|default('')|trim : '' %}
+            {% set city = municipality ? municipality.name|default('')|trim : '' %}
             {% set locality = [postalCode, city]|filter(part => part != '')|join(' ') %}
             {% set address = [street, locality]|filter(part => part != '')|join(', ') %}
             {% if address != '' %}

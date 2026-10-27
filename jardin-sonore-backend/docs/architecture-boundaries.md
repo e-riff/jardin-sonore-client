@@ -12,7 +12,7 @@ Le but n'est pas d'imposer une symetrie parfaite partout, mais de rendre chaque 
 
 ## Regles De Base
 
-- Hors `EasyAdmin`, un controller metier ne recoit pas et n'expose pas d'entites Doctrine.
+- Les controllers métier ne reçoivent pas et n'exposent pas directement d'entités Doctrine.
 - Un `Repository` sert a charger ou sauvegarder un vrai objet metier.
 - Une `Query`, un `Lookup` ou un service de lecture sert a retourner une projection utile a l'UI, au support de formulaire ou a une lecture technique ciblee.
 - Un controller metier prefere des DTO / read models adaptes au flux HTTP plutot qu'un objet de domaine rendu directement a la vue.
@@ -50,6 +50,6 @@ Dans ces cas, on evite de reconstruire un modele complet "par principe". Une `Qu
 
 ## Exceptions Assumees
 
-- `EasyAdmin` reste une zone technique autorisee a travailler avec les entites Doctrine.
+- Les accès Doctrine directs restent dans l’infrastructure et les écrans techniques existants.
 - Les batchs d'infrastructure ou commandes tres techniques peuvent garder des acces Doctrine / DBAL directs si leur role est clairement technique et non metier.
 - Un double niveau `Repository de domaine + lecture technique` est accepte quand les deux roles sont reels et distincts. Il doit etre evite si les deux services font en pratique la meme chose.

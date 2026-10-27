@@ -17,7 +17,8 @@ final class DoctrineDirectoryDuplicateCandidateLookupTest extends TestCase
         $connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
         $connection->executeStatement('CREATE TABLE organization (id INTEGER PRIMARY KEY, name VARCHAR(255) NOT NULL)');
         $connection->executeStatement('CREATE TABLE contact_details (id INTEGER PRIMARY KEY, directory_entry_id INTEGER NOT NULL)');
-        $connection->executeStatement('CREATE TABLE address_contact (id INTEGER PRIMARY KEY, contact_details_id INTEGER NOT NULL, address TEXT, postal_code VARCHAR(5), city VARCHAR(255), active BOOLEAN NOT NULL)');
+        $connection->executeStatement('CREATE TABLE municipality (id INTEGER PRIMARY KEY, postal_code VARCHAR(5), name VARCHAR(255))');
+        $connection->executeStatement('CREATE TABLE address_contact (id INTEGER PRIMARY KEY, contact_details_id INTEGER NOT NULL, municipality_id INTEGER, address TEXT, active BOOLEAN NOT NULL)');
         $connection->executeStatement('CREATE TABLE contact_details_email_link (contact_details_id INTEGER NOT NULL, email_contact_id INTEGER NOT NULL)');
         $connection->executeStatement('CREATE TABLE email_contact (id INTEGER PRIMARY KEY, email_address VARCHAR(255) NOT NULL)');
         $connection->executeStatement('CREATE TABLE contact_details_phone_link (contact_details_id INTEGER NOT NULL, phone_contact_id INTEGER NOT NULL)');
@@ -28,8 +29,9 @@ final class DoctrineDirectoryDuplicateCandidateLookupTest extends TestCase
         $connection->insert('organization', ['id' => 30, 'name' => 'Les Ecureuils']);
         $connection->insert('contact_details', ['id' => 1, 'directory_entry_id' => 10]);
         $connection->insert('contact_details', ['id' => 2, 'directory_entry_id' => 20]);
-        $connection->insert('address_contact', ['id' => 1, 'contact_details_id' => 1, 'address' => '15 rue du Centre', 'postal_code' => '69001', 'city' => 'Lyon', 'active' => 1]);
-        $connection->insert('address_contact', ['id' => 2, 'contact_details_id' => 2, 'address' => '15 RUE DU CENTRE', 'postal_code' => '69001', 'city' => 'LYON', 'active' => 1]);
+        $connection->insert('municipality', ['id' => 1, 'postal_code' => '69001', 'name' => 'Lyon']);
+        $connection->insert('address_contact', ['id' => 1, 'contact_details_id' => 1, 'municipality_id' => 1, 'address' => '15 rue du Centre', 'active' => 1]);
+        $connection->insert('address_contact', ['id' => 2, 'contact_details_id' => 2, 'municipality_id' => 1, 'address' => '15 RUE DU CENTRE', 'active' => 1]);
         $connection->insert('organization', ['id' => 40, 'name' => 'Alpha']);
         $connection->insert('organization', ['id' => 50, 'name' => 'Beta']);
         $connection->insert('contact_details', ['id' => 3, 'directory_entry_id' => 40]);

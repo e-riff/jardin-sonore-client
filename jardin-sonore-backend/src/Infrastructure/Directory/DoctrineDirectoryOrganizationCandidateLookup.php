@@ -34,7 +34,7 @@ final readonly class DoctrineDirectoryOrganizationCandidateLookup implements Dir
                 'organization.website_url',
                 'COALESCE(MIN(email.email_address), \'\') AS email',
                 'COALESCE(MIN(phone.phone_number), \'\') AS phone',
-                'COALESCE(MIN(address.city), \'\') AS commune',
+                'COALESCE(MIN(municipality.name), \'\') AS commune',
                 'COALESCE(MIN(address.address), \'\') AS address',
             )
             ->from('organization', 'organization')
@@ -44,6 +44,7 @@ final readonly class DoctrineDirectoryOrganizationCandidateLookup implements Dir
             ->leftJoin('contact', 'contact_details_phone_link', 'phone_link', 'phone_link.contact_details_id = contact.id')
             ->leftJoin('phone_link', 'phone_contact', 'phone', 'phone.id = phone_link.phone_contact_id')
             ->leftJoin('contact', 'address_contact', 'address', 'address.contact_details_id = contact.id')
+            ->leftJoin('address', 'municipality', 'municipality', 'municipality.id = address.municipality_id')
             ->groupBy('organization.id', 'organization.name', 'organization.type', 'organization.website_url')
             ->setMaxResults(self::CANDIDATE_QUERY_LIMIT);
 
@@ -99,7 +100,7 @@ final readonly class DoctrineDirectoryOrganizationCandidateLookup implements Dir
         $commune = $this->normalizeText($item->commune);
         if ('' !== $commune) {
             $organizationType = $this->directoryOrganizationTypeResolver->resolve($item);
-            $communeCondition = 'LOWER(address.city) = :commune';
+            $communeCondition = 'LOWER(municipality.name) = :commune';
             if (null !== $organizationType) {
                 $communeCondition = "({$communeCondition} AND organization.type = :organizationType)";
                 $queryBuilder->setParameter('organizationType', $organizationType->value);

@@ -73,9 +73,10 @@ final readonly class DoctrineDirectoryDuplicateCandidateLookup implements Direct
         }
 
         foreach ($this->connection->fetchAllAssociative(
-            'SELECT contact.directory_entry_id, address.address, address.postal_code, address.city, address.active
+            'SELECT contact.directory_entry_id, address.address, municipality.postal_code, municipality.name AS city, address.active
             FROM contact_details contact
             JOIN address_contact address ON address.contact_details_id = contact.id
+            LEFT JOIN municipality ON municipality.id = address.municipality_id
             ORDER BY contact.directory_entry_id, address.active DESC, address.id',
         ) as $row) {
             $organizationId = (int) $row['directory_entry_id'];
@@ -207,9 +208,10 @@ final readonly class DoctrineDirectoryDuplicateCandidateLookup implements Direct
     {
         $rows = $this->connection->fetchAllAssociative(
             'SELECT contact.directory_entry_id,
-                CONCAT(COALESCE(address.address, \'\'), \'|\', COALESCE(address.postal_code, \'\'), \'|\', COALESCE(address.city, \'\')) AS value
+                CONCAT(COALESCE(address.address, \'\'), \'|\', COALESCE(municipality.postal_code, \'\'), \'|\', COALESCE(municipality.name, \'\')) AS value
             FROM contact_details contact
             JOIN address_contact address ON address.contact_details_id = contact.id
+                LEFT JOIN municipality ON municipality.id = address.municipality_id
             WHERE address.active = 1 AND TRIM(COALESCE(address.address, \'\')) <> \'\'',
         );
 

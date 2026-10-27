@@ -25,7 +25,7 @@ final readonly class DoctrineAddressMunicipalityLinkingReader implements Address
 
         do {
             $queryBuilder = $this->connection->createQueryBuilder()
-                ->select('address.id', 'address.postal_code', 'address.city', 'address.address')
+                ->select('address.id', 'address.address')
                 ->from('address_contact', 'address')
                 ->andWhere('address.id > :lastId')
                 ->andWhere('address.municipality_id IS NULL')
@@ -33,17 +33,25 @@ final readonly class DoctrineAddressMunicipalityLinkingReader implements Address
                 ->orderBy('address.id', 'ASC')
                 ->setMaxResults(self::READ_BATCH_SIZE);
 
-            /** @var list<array{id:int|string, postal_code:?string, city:?string, address:?string}> $rows */
+            /** @var list<array{id:int|string, address:?string}> $rows */
             $rows = $queryBuilder->executeQuery()->fetchAllAssociative();
 
             foreach ($rows as $row) {
                 $lastId = (int) $row['id'];
 
+                $address = is_string($row['address']) ? trim($row['address']) : null;
+                $postalCode = null;
+                $city = null;
+                if (is_string($address) && 1 === preg_match('/\b(\d{5})\s+(.+)$/u', $address, $matches)) {
+                    $postalCode = $matches[1];
+                    $city = trim($matches[2]);
+                }
+
                 yield new AddressContactSnapshot(
                     id: (int) $row['id'],
-                    postalCode: is_string($row['postal_code']) ? trim($row['postal_code']) : null,
-                    city: is_string($row['city']) ? trim($row['city']) : null,
-                    address: is_string($row['address']) ? trim($row['address']) : null,
+                    postalCode: $postalCode,
+                    city: $city,
+                    address: $address,
                 );
             }
         } while ([] !== $rows);

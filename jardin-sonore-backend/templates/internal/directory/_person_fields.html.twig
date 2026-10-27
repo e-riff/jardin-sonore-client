@@ -1,0 +1,12 @@
+<div class="directory-form__grid directory-form__grid--names">
+    {{ form_row(form.lastName) }}
+    {{ form_row(form.firstName) }}
+    {{ form_row(form.role) }}
+    {{ form_row(form.organization) }}
+</div>
+{{ form_row(form.active) }}
+<h3>{{ 'technical.directory.contact_details'|trans({}, 'technical') }}</h3>
+{{ include('internal/directory/_collection.html.twig', {collection: form.contactDetails.emailContactLinks, label: 'technical.directory.form.emails'|trans({}, 'technical'), variant: 'email'}) }}
+{{ include('internal/directory/_collection.html.twig', {collection: form.contactDetails.phoneContactLinks, label: 'technical.directory.form.phones'|trans({}, 'technical'), variant: 'phone'}) }}
+{{ include('internal/directory/_collection.html.twig', {collection: form.contactDetails.addressContacts, label: 'technical.directory.form.addresses'|trans({}, 'technical'), variant: 'address'}) }}
+{% do form.contactDetails.setRendered() %}

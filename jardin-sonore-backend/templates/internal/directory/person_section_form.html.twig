@@ -1,0 +1,33 @@
+{% extends 'internal/base.html.twig' %}
+
+{% set title = ('technical.directory.form.person_' ~ section ~ '_edit')|trans({}, 'technical') %}
+
+{% block internal_body %}
+    {% set returnParameters = person.organization ? {section: 'organizations', selectedId: person.organization.id} : {section: 'people', selectedId: person.id} %}
+    {{ include('components/_internal_back_button.html.twig', {href: path('internal_directory_index', returnParameters), label: 'technical.directory.back_to_person'|trans({}, 'technical')}) }}
+    <section class="internal-page-heading">
+        <div><p class="internal-eyebrow">{{ 'technical.directory.eyebrow'|trans({}, 'technical') }}</p><h1>{{ title }}</h1><p>{{ person.lastName }} {{ person.firstName }}</p></div>
+    </section>
+    <section class="internal-card internal-card--form directory-form-card">
+        {{ form_start(form, {attr: {class: 'internal-form directory-form'}}) }}
+            {% if section == 'details' %}
+                <div class="directory-form__grid directory-form__grid--names">
+                    {{ form_row(form.lastName) }}
+                    {{ form_row(form.firstName) }}
+                    {{ form_row(form.role) }}
+                    {{ form_row(form.organization) }}
+                </div>
+                {{ form_row(form.active) }}
+            {% elseif section == 'contacts' %}
+                {{ include('internal/directory/_collection.html.twig', {collection: form.emailContactLinks, label: 'technical.directory.form.emails'|trans({}, 'technical'), variant: 'email'}) }}
+                {{ include('internal/directory/_collection.html.twig', {collection: form.phoneContactLinks, label: 'technical.directory.form.phones'|trans({}, 'technical'), variant: 'phone'}) }}
+            {% else %}
+                {{ include('internal/directory/_collection.html.twig', {collection: form.addressContacts, label: 'technical.directory.form.addresses'|trans({}, 'technical'), variant: 'address'}) }}
+            {% endif %}
+            <div class="internal-form-dialog__actions">
+                <a class="internal-button internal-button--secondary" href="{{ path('internal_directory_index', returnParameters) }}">{{ 'technical.directory.form.cancel'|trans({}, 'technical') }}</a>
+                <button class="internal-button" type="submit">{{ 'technical.directory.form.save'|trans({}, 'technical') }}</button>
+            </div>
+        {{ form_end(form) }}
+    </section>
+{% endblock %}

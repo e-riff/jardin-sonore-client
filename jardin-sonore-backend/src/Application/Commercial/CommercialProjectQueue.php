@@ -33,8 +33,8 @@ final readonly class CommercialProjectQueue
             'SELECT project.id, project.title, project.status, project.created_at,
                 project.organization_id, organization.name AS organization_name,
                 (SELECT CONCAT_WS(\' — \',
-                    COALESCE(municipality.postal_code, address_contact.postal_code),
-                    COALESCE(municipality.name, address_contact.city)
+                    municipality.postal_code,
+                    municipality.name
                  )
                  FROM contact_details
                  INNER JOIN address_contact ON address_contact.contact_details_id = contact_details.id

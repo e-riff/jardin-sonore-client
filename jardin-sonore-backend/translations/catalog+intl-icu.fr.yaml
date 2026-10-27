@@ -13,7 +13,7 @@ catalog:
       heading: "Instruments"
       description: "Un catalogue vivant pour préparer les futurs déroulés, retrouver un instrument rapidement et garder une mémoire de l’atelier."
       create: "Créer un instrument"
-      backoffice: "Ouvrir le backoffice"
+      backoffice: "Retour à l’espace métier"
       total: "{count, plural, =0 {Aucun instrument} one {# instrument} other {# instruments}}"
       empty: "Aucun instrument ne correspond aux filtres actuels."
     table:
@@ -49,7 +49,7 @@ catalog:
       quantity: "Quantité"
       notes: "Notes"
       tags: "Catégories"
-      tags_help: "Maintenez Ctrl ou Cmd pour sélectionner plusieurs catégories. Les catégories se gèrent dans le backoffice EasyAdmin."
+      tags_help: "Maintenez Ctrl ou Cmd pour sélectionner plusieurs catégories. Les catégories se gèrent dans l’onglet Technique."
       tags_unavailable: "Une ou plusieurs catégories sélectionnées ne sont plus disponibles. Rechargez la page puis réessayez."
       active: "Instrument actif"
       submit: "Enregistrer"

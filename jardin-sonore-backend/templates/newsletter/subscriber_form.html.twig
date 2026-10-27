@@ -5,16 +5,37 @@
     <section class="internal-page-heading">
         <div><p class="internal-eyebrow">{{ 'subscriber.eyebrow'|trans({}, 'newsletter') }}</p><h1>{{ title }}</h1><p>{{ 'subscriber.description'|trans({}, 'newsletter') }}</p></div>
     </section>
-    <section class="internal-card">
+    <section class="internal-card internal-card--form subscriber-management-card">
         {% if emailContact %}
-            <p>{{ (emailContact.active and emailContact.optInNewsletter and not emailContact.unsubscribed ? 'subscriber.current_enabled' : 'subscriber.current_disabled')|trans({}, 'newsletter') }}</p>
-            <p>{{ 'subscriber.address_correction'|trans({}, 'newsletter') }} <a href="{{ path('newsletter_subscriber_new') }}">{{ 'subscriber.add_corrected'|trans({}, 'newsletter') }}</a></p>
+            {% set linkedCount = emailContact.emailContactLinks|filter(link => link.active)|length %}
+            {% set pendingConfirmation = confirmationPending %}
+            {% set subscribed = emailContact.active and emailContact.optInNewsletter and not emailContact.unsubscribed and not pendingConfirmation %}
+            {% set state = not emailContact.active ? 'inactive' : (emailContact.unsubscribed ? 'unsubscribed' : (pendingConfirmation ? 'pending' : (not emailContact.optInNewsletter ? 'not_subscribed' : 'subscribed'))) %}
+            <p class="subscriber-management-card__status"><span class="internal-badge internal-badge--{{ subscribed ? 'success' : (state == 'unsubscribed' ? 'danger' : (state == 'pending' ? 'warning' : 'muted')) }}">{{ ('subscriber.status.' ~ state)|trans({}, 'newsletter') }}</span></p>
+            {% if linkedCount > 0 %}
+                <div class="internal-alert subscriber-management-card__scope">
+                    <p>{{ 'subscriber.shared_address'|trans({count: linkedCount}, 'newsletter') }}</p>
+                    <a href="{{ path('internal_directory_index', {query: emailContact.emailAddress}) }}">{{ 'subscriber.index.linked_count'|trans({count: linkedCount}, 'newsletter') }}</a>
+                </div>
+            {% endif %}
+            {% if state == 'inactive' %}<div class="internal-alert internal-alert--error">{{ 'subscriber.blocked'|trans({}, 'newsletter') }}</div>{% endif %}
+            {% if subscribed %}<p class="subscriber-management-card__correction">{{ 'subscriber.address_correction'|trans({}, 'newsletter') }} <a href="{{ path('newsletter_subscriber_new') }}">{{ 'subscriber.add_corrected'|trans({}, 'newsletter') }}</a></p>{% endif %}
         {% endif %}
-        {{ form(form) }}
-        {% if emailContact and emailContact.optInNewsletter %}
-            <form method="post" action="{{ path('newsletter_subscriber_unsubscribe', {uuid: emailContact.uuid}) }}">
+        {% if not emailContact or (not subscribed and state != 'inactive') %}
+            <div class="subscriber-management-card__form-section">
+                <h2>{{ (emailContact ? 'subscriber.form.reactivate_heading' : 'subscriber.form.add_heading')|trans({}, 'newsletter') }}</h2>
+                {{ form_start(form, {attr: {class: 'internal-form subscriber-management-form'}}) }}
+                    {{ form_row(form.emailAddress) }}
+                    {{ form_row(form.consentAttested, {row_attr: {class: 'internal-form__checkbox'}}) }}
+                    {{ form_errors(form) }}
+                    <div class="internal-form__actions">{{ form_widget(form.submit) }}</div>
+                {{ form_end(form) }}
+            </div>
+        {% endif %}
+        {% if emailContact and emailContact.active and emailContact.optInNewsletter and not emailContact.unsubscribed %}
+            <form class="subscriber-management-card__unsubscribe" method="post" action="{{ path('newsletter_subscriber_unsubscribe', {uuid: emailContact.uuid}) }}">
                 <input type="hidden" name="_token" value="{{ csrf_token('newsletter_unsubscribe_' ~ emailContact.uuid) }}">
-                <button type="submit" id="newsletter-unsubscribe" class="internal-button internal-button--secondary">{{ 'subscriber.unsubscribe'|trans({}, 'newsletter') }}</button>
+                <button type="submit" id="newsletter-unsubscribe" class="internal-button internal-button--danger">{{ 'subscriber.unsubscribe'|trans({}, 'newsletter') }}</button>
                 <p>{{ 'subscriber.unsubscribe_help'|trans({}, 'newsletter') }}</p>
             </form>
         {% endif %}

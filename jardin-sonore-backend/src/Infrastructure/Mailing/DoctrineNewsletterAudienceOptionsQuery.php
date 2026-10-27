@@ -71,7 +71,7 @@ final readonly class DoctrineNewsletterAudienceOptionsQuery implements Newslette
         /** @var list<array{uuid: string, name: string, municipality_name: ?string, postal_code: ?string}> $organizations */
         $organizations = $this->connection->createQueryBuilder()
             ->distinct()
-            ->select('LOWER(HEX(directory_entry.uuid)) AS uuid', 'organization.name', 'COALESCE(municipality.name, address_contact.city) AS municipality_name', 'COALESCE(municipality.postal_code, address_contact.postal_code) AS postal_code')
+            ->select('LOWER(HEX(directory_entry.uuid)) AS uuid', 'organization.name', 'municipality.name AS municipality_name', 'municipality.postal_code AS postal_code')
             ->from('organization', 'organization')
             ->innerJoin('organization', 'directory_entry', 'directory_entry', 'directory_entry.id = organization.id')
             ->leftJoin('directory_entry', 'contact_details', 'contact_details', 'contact_details.directory_entry_id = directory_entry.id')
@@ -255,7 +255,7 @@ final readonly class DoctrineNewsletterAudienceOptionsQuery implements Newslette
          */
         $organizations = $this->connection->createQueryBuilder()
             ->distinct()
-            ->select('LOWER(HEX(directory_entry.uuid)) AS uuid', 'organization.name', 'organization.type', 'COALESCE(municipality.name, address_contact.city) AS municipality_name', 'COALESCE(municipality.postal_code, address_contact.postal_code) AS postal_code')
+            ->select('LOWER(HEX(directory_entry.uuid)) AS uuid', 'organization.name', 'organization.type', 'municipality.name AS municipality_name', 'municipality.postal_code AS postal_code')
             ->from('organization', 'organization')
             ->innerJoin('organization', 'directory_entry', 'directory_entry', 'directory_entry.id = organization.id')
             ->leftJoin('directory_entry', 'contact_details', 'contact_details', 'contact_details.directory_entry_id = directory_entry.id')
@@ -264,8 +264,6 @@ final readonly class DoctrineNewsletterAudienceOptionsQuery implements Newslette
             ->where('organization.name LIKE :likeQuery')
             ->orWhere('municipality.name LIKE :likeQuery')
             ->orWhere('municipality.postal_code LIKE :likeQuery')
-            ->orWhere('address_contact.city LIKE :likeQuery')
-            ->orWhere('address_contact.postal_code LIKE :likeQuery')
             ->setParameter('likeQuery', $likeQuery)
             ->orderBy('organization.name', 'ASC')
             ->setFirstResult($offset)

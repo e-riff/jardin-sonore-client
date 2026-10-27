@@ -1,0 +1,127 @@
+{% extends 'internal/base.html.twig' %}
+{% set title = 'subscriber.index.title'|trans({}, 'newsletter') %}
+
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div>
+            <p class="internal-eyebrow">{{ 'subscriber.eyebrow'|trans({}, 'newsletter') }}</p>
+            <h1>{{ title }}</h1>
+            <p>{{ 'subscriber.index.description'|trans({}, 'newsletter') }}</p>
+        </div>
+        <div class="internal-heading-actions">
+            <a class="internal-button" href="{{ path('newsletter_subscriber_new') }}">{{ 'subscriber.index.add'|trans({}, 'newsletter') }}</a>
+        </div>
+    </section>
+
+    <section class="internal-card" data-controller="auto-filter">
+        <form class="internal-search" method="get" action="{{ path('newsletter_subscriber_index') }}" data-auto-filter-target="form" data-action="input->auto-filter#schedule change->auto-filter#change submit->auto-filter#submit">
+            <input type="hidden" name="sort" value="{{ tableSort.column }}">
+            <input type="hidden" name="direction" value="{{ tableSort.direction }}">
+            <div class="internal-search__row">
+                <div class="internal-search__field">
+                    <label for="subscriber-query">{{ 'subscriber.index.search'|trans({}, 'newsletter') }}</label>
+                    <input id="subscriber-query" name="query" value="{{ query }}" type="search" autocomplete="off">
+                </div>
+                <div class="internal-search__field internal-search__field--compact">
+                    <label for="subscriber-kind">{{ 'subscriber.index.kind'|trans({}, 'newsletter') }}</label>
+                    <select id="subscriber-kind" name="kind">
+                        <option value="">{{ 'subscriber.index.all_kinds'|trans({}, 'newsletter') }}</option>
+                        <option value="linked" {{ kindFilter == 'linked' ? 'selected' }}>{{ 'subscriber.index.linked'|trans({}, 'newsletter') }}</option>
+                        <option value="free" {{ kindFilter == 'free' ? 'selected' }}>{{ 'subscriber.index.free'|trans({}, 'newsletter') }}</option>
+                    </select>
+                </div>
+                <div class="internal-search__field internal-search__field--compact">
+                    <label for="subscriber-status">{{ 'subscriber.index.status'|trans({}, 'newsletter') }}</label>
+                    <select id="subscriber-status" name="status">
+                        <option value="">{{ 'subscriber.index.all_statuses'|trans({}, 'newsletter') }}</option>
+                        {% for status in ['subscribed', 'not_subscribed', 'unsubscribed', 'inactive', 'pending'] %}
+                            <option value="{{ status }}" {{ statusFilter == status ? 'selected' }}>{{ ('subscriber.status.' ~ status)|trans({}, 'newsletter') }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </form>
+
+        <details class="subscriber-index__legend">
+            <summary>{{ 'subscriber.index.status_help.title'|trans({}, 'newsletter') }}</summary>
+            <section class="subscriber-index__scope-note" aria-label="{{ 'subscriber.index.scope.title'|trans({}, 'newsletter') }}">
+                <div>
+                    <strong>{{ 'subscriber.index.scope.address_title'|trans({}, 'newsletter') }}</strong>
+                    <p>{{ 'subscriber.index.scope.address'|trans({}, 'newsletter') }}</p>
+                </div>
+                <div>
+                    <strong>{{ 'subscriber.index.scope.links_title'|trans({}, 'newsletter') }}</strong>
+                    <p>{{ 'subscriber.index.scope.links'|trans({}, 'newsletter') }}</p>
+                </div>
+            </section>
+            <ul>
+                {% for status in ['subscribed', 'not_subscribed', 'unsubscribed', 'inactive', 'pending'] %}
+                    <li>
+                        <span class="internal-badge internal-badge--{{ status == 'subscribed' ? 'success' : (status == 'unsubscribed' ? 'danger' : (status == 'pending' ? 'warning' : 'muted')) }}">{{ ('subscriber.status.' ~ status)|trans({}, 'newsletter') }}</span>
+                        <span>{{ ('subscriber.index.status_help.' ~ status)|trans({}, 'newsletter') }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </details>
+
+        <div data-auto-filter-target="results" aria-live="polite">
+            <p class="subscriber-index__count">{{ 'subscriber.index.count'|trans({count: total}, 'newsletter') }}</p>
+            {% if subscribers is empty %}
+                <div class="internal-empty"><p>{{ 'subscriber.index.empty'|trans({}, 'newsletter') }}</p></div>
+            {% else %}
+                <div class="internal-table-wrapper">
+                    <table class="internal-table">
+                        <thead>
+                        <tr>
+                            <th aria-sort="{{ tableSort.column == 'email' ? (tableSort.direction == 'asc' ? 'ascending' : 'descending') : 'none' }}"><twig:TableSortHeader label="{{ 'subscriber.index.table.email'|trans({}, 'newsletter') }}" :href="path('newsletter_subscriber_index', {query: query, kind: kindFilter, status: statusFilter, sort: 'email', direction: tableSort.nextDirectionFor('email')})" :active="tableSort.column == 'email'" :direction="tableSort.direction" /></th>
+                            <th aria-sort="{{ tableSort.column == 'type' ? (tableSort.direction == 'asc' ? 'ascending' : 'descending') : 'none' }}"><twig:TableSortHeader label="{{ 'subscriber.index.table.type'|trans({}, 'newsletter') }}" :href="path('newsletter_subscriber_index', {query: query, kind: kindFilter, status: statusFilter, sort: 'type', direction: tableSort.nextDirectionFor('type')})" :active="tableSort.column == 'type'" :direction="tableSort.direction" /></th>
+                            <th aria-sort="{{ tableSort.column == 'linked_count' ? (tableSort.direction == 'asc' ? 'ascending' : 'descending') : 'none' }}"><twig:TableSortHeader label="{{ 'subscriber.index.table.linked_records'|trans({}, 'newsletter') }}" :href="path('newsletter_subscriber_index', {query: query, kind: kindFilter, status: statusFilter, sort: 'linked_count', direction: tableSort.nextDirectionFor('linked_count')})" :active="tableSort.column == 'linked_count'" :direction="tableSort.direction" /></th>
+                            <th aria-sort="{{ tableSort.column == 'status' ? (tableSort.direction == 'asc' ? 'ascending' : 'descending') : 'none' }}"><twig:TableSortHeader label="{{ 'subscriber.index.table.status'|trans({}, 'newsletter') }}" :href="path('newsletter_subscriber_index', {query: query, kind: kindFilter, status: statusFilter, sort: 'status', direction: tableSort.nextDirectionFor('status')})" :active="tableSort.column == 'status'" :direction="tableSort.direction" /></th>
+                            <th>{{ 'subscriber.index.table.actions'|trans({}, 'newsletter') }}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for subscriber in subscribers %}
+                            {% set pendingConfirmation = subscriber.confirmation_pending %}
+                            {% set subscribed = subscriber.active and subscriber.opt_in and not subscriber.unsubscribed_at and not pendingConfirmation %}
+                            {% set state = not subscriber.active ? 'inactive' : (subscriber.unsubscribed_at ? 'unsubscribed' : (pendingConfirmation ? 'pending' : (not subscriber.opt_in ? 'not_subscribed' : 'subscribed'))) %}
+                            <tr>
+                                <td data-label="{{ 'subscriber.index.table.email'|trans({}, 'newsletter') }}">
+                                    <strong>{{ subscriber.email }}</strong>
+                                    {% if subscriber.free_subscription and subscriber.confirmed_at %}<small class="subscriber-index__consent-meta">{{ 'subscriber.index.confirmed'|trans({date: subscriber.confirmed_at|date('d/m/Y'), origin: (subscriber.origin ? ('subscriber.index.origin.' ~ subscriber.origin)|trans({}, 'newsletter') : 'subscriber.index.unknown_origin'|trans({}, 'newsletter'))}, 'newsletter') }}</small>{% endif %}
+                                </td>
+                                <td data-label="{{ 'subscriber.index.table.type'|trans({}, 'newsletter') }}">
+                                    {% if subscriber.linked_count > 0 %}<span class="internal-badge internal-badge--primary">{{ 'subscriber.index.linked'|trans({}, 'newsletter') }}</span>{% endif %}
+                                    {% if subscriber.free_subscription %}<span class="internal-badge internal-badge--secondary">{{ 'subscriber.index.free'|trans({}, 'newsletter') }}</span>{% endif %}
+                                    {% if subscriber.linked_count == 0 and not subscriber.free_subscription %}<span class="internal-badge internal-badge--muted">{{ 'subscriber.index.unclassified'|trans({}, 'newsletter') }}</span>{% endif %}
+                                </td>
+                                <td data-label="{{ 'subscriber.index.table.linked_records'|trans({}, 'newsletter') }}">
+                                    {% if subscriber.linked_count > 0 %}<a href="{{ path('internal_directory_index', {query: subscriber.email}) }}">{{ 'subscriber.index.linked_count'|trans({count: subscriber.linked_count}, 'newsletter') }}</a>{% else %}<span class="subscriber-index__no-links">{{ 'subscriber.index.no_linked_records'|trans({}, 'newsletter') }}</span>{% endif %}
+                                </td>
+                                <td data-label="{{ 'subscriber.index.table.status'|trans({}, 'newsletter') }}"><span class="internal-badge internal-badge--{{ subscribed ? 'success' : (state == 'unsubscribed' ? 'danger' : 'muted') }}">{{ ('subscriber.status.' ~ state)|trans({}, 'newsletter') }}</span></td>
+                                <td class="subscriber-index__actions" data-label="{{ 'subscriber.index.table.actions'|trans({}, 'newsletter') }}">
+                                    {% set manageLabel = ('subscriber.index.' ~ (state == 'unsubscribed' ? 'resubscribe' : (state == 'not_subscribed' ? 'subscribe' : 'manage')))|trans({}, 'newsletter') %}
+                                    <a class="internal-icon-button" href="{{ path('newsletter_subscriber_edit', {uuid: subscriber.uuid}) }}" title="{{ manageLabel }}" aria-label="{{ manageLabel }} — {{ subscriber.email }}">{% include 'commercial/project/_icon.html.twig' with {name: state in ['unsubscribed', 'not_subscribed'] ? 'check' : 'edit'} only %}</a>
+                                    {% if subscriber.active and subscriber.opt_in and not subscriber.unsubscribed_at %}
+                                        <form class="subscriber-index__unsubscribe" method="post" action="{{ path('newsletter_subscriber_unsubscribe', {uuid: subscriber.uuid}) }}" onsubmit="return confirm('{{ 'subscriber.unsubscribe_confirm'|trans({}, 'newsletter')|e('js') }}')">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('newsletter_unsubscribe_' ~ subscriber.uuid) }}">
+                                            <button class="internal-icon-button internal-icon-button--danger" type="submit" title="{{ 'subscriber.unsubscribe'|trans({}, 'newsletter') }}" aria-label="{{ 'subscriber.unsubscribe'|trans({}, 'newsletter') }} — {{ subscriber.email }}">{% include 'commercial/project/_icon.html.twig' with {name: 'close'} only %}</button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if pageCount > 1 %}
+                    <nav class="subscriber-index__pagination" aria-label="{{ 'subscriber.index.pagination'|trans({}, 'newsletter') }}">
+                        <a class="internal-button internal-button--secondary internal-button--compact{{ page <= 1 ? ' is-disabled' }}" href="{{ path('newsletter_subscriber_index', {query: query, kind: kindFilter, status: statusFilter, sort: tableSort.column, direction: tableSort.direction, page: page - 1}) }}" {{ page <= 1 ? 'aria-disabled="true" tabindex="-1"' }}>{{ 'subscriber.index.previous'|trans({}, 'newsletter') }}</a>
+                        <span>{{ 'subscriber.index.page'|trans({page: page, pages: pageCount}, 'newsletter') }}</span>
+                        <a class="internal-button internal-button--secondary internal-button--compact{{ page >= pageCount ? ' is-disabled' }}" href="{{ path('newsletter_subscriber_index', {query: query, kind: kindFilter, status: statusFilter, sort: tableSort.column, direction: tableSort.direction, page: page + 1}) }}" {{ page >= pageCount ? 'aria-disabled="true" tabindex="-1"' }}>{{ 'subscriber.index.next'|trans({}, 'newsletter') }}</a>
+                    </nav>
+                {% endif %}
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}

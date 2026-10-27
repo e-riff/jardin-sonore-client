@@ -10,6 +10,7 @@ use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\NullableLabelTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\TimestampableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\UuidIdentifiableTrait;
+use Symfony\Component\String\UnicodeString;
 
 class AddressContactEntity
 {
@@ -27,10 +28,6 @@ class AddressContactEntity
 
     private ?string $address = null;
 
-    private ?string $postalCode = null;
-
-    private ?string $city = null;
-
     private ?MunicipalityEntity $municipality = null;
 
     public function __construct()
@@ -41,7 +38,7 @@ class AddressContactEntity
 
     public function __toString(): string
     {
-        return trim(implode(' ', array_filter([$this->address, $this->postalCode, $this->city])));
+        return trim(implode(' ', array_filter([$this->getStreetAddress(), $this->municipality?->getPostalCode(), $this->municipality?->getName()])));
     }
 
     public function getContactDetails(): ?ContactDetailsEntity
@@ -82,28 +79,29 @@ class AddressContactEntity
         return $this;
     }
 
-    public function getPostalCode(): ?string
+    public function getStreetAddress(): ?string
     {
-        return $this->postalCode;
-    }
+        $address = trim((string) $this->address);
+        $municipality = $this->municipality;
+        $postalCode = $municipality?->getPostalCode();
+        $municipalityName = $municipality?->getName();
 
-    public function setPostalCode(?string $postalCode): static
-    {
-        $this->postalCode = $postalCode;
+        if ('' === $address || null === $postalCode || null === $municipalityName) {
+            return '' === $address ? null : $address;
+        }
 
-        return $this;
-    }
+        $normalizedAddress = (new UnicodeString($address))->ascii()->lower()->replaceMatches('/[^a-z0-9]+/', '')->toString();
+        $normalizedLocality = (new UnicodeString($postalCode . $municipalityName))->ascii()->lower()->replaceMatches('/[^a-z0-9]+/', '')->toString();
+        $normalizedPostalCode = (new UnicodeString($postalCode))->ascii()->lower()->toString();
+        $postalCodePosition = strrpos($address, $postalCode);
 
-    public function getCity(): ?string
-    {
-        return $this->city;
-    }
+        if (str_ends_with($normalizedAddress, $normalizedLocality) && false !== $postalCodePosition) {
+            $address = rtrim(substr($address, 0, $postalCodePosition), " \t\n\r\0\x0B,;·-");
+        } elseif (str_ends_with($normalizedAddress, $normalizedPostalCode)) {
+            $address = rtrim(substr($address, 0, $postalCodePosition), " \t\n\r\0\x0B,;·-");
+        }
 
-    public function setCity(?string $city): static
-    {
-        $this->city = $city;
-
-        return $this;
+        return '' === $address ? null : $address;
     }
 
     public function getMunicipality(): ?MunicipalityEntity

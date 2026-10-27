@@ -10,6 +10,12 @@ export default class extends Controller {
         }
     }
 
+    openOnConnectValueChanged(value) {
+        if (value && this.hasDialogTarget && !this.dialogTarget.open) {
+            this.dialogTarget.showModal();
+        }
+    }
+
     open(event) {
         event.preventDefault();
         if (!this.dialogTarget.open) {
@@ -19,7 +25,14 @@ export default class extends Controller {
 
     close(event) {
         event?.preventDefault();
-        this.dialogTarget.close();
+        if (this.dialogTarget.open) {
+            this.dialogTarget.close();
+        }
+        this.openOnConnectValue = false;
+    }
+
+    markClosed() {
+        this.openOnConnectValue = false;
     }
 
     closeOnBackdrop(event) {

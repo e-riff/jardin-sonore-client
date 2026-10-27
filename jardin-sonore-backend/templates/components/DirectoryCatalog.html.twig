@@ -1,0 +1,247 @@
+<div {{ attributes }} class="directory-catalog directory-catalog--{{ section }}" data-controller="directory-scroll">
+    {% set entries = this.entries %}
+    {% set selectedEntry = this.selectedEntry %}
+    <section class="directory-catalog__layout{{ selectedId ? ' has-selection' : '' }}" data-controller="directory-pane">
+        <div class="directory-catalog__list internal-card">
+            <div class="directory-catalog__controls">
+                <div class="directory-catalog__switch" role="group" aria-label="{{ 'technical.directory.section_label'|trans({}, 'technical') }}">
+                    <button type="button" class="{{ section != 'people' ? 'is-active' : '' }}" {{ live_action('selectSection', {section: 'organizations'}) }}>{{ 'technical.directory.organizations'|trans({}, 'technical') }}</button>
+                    <button type="button" class="{{ section == 'people' ? 'is-active' : '' }}" {{ live_action('selectSection', {section: 'people'}) }}>{{ 'technical.directory.people'|trans({}, 'technical') }}</button>
+                </div>
+                <label class="directory-catalog__search">
+                    <span>{{ 'technical.directory.search'|trans({}, 'technical') }}</span>
+                    <input type="search" data-model="debounce(300)|query" value="{{ query }}" placeholder="{{ 'technical.directory.search_placeholder'|trans({}, 'technical') }}" autocomplete="off">
+                </label>
+                <details class="directory-catalog__filters">
+                    <summary>
+                        <span>{{ 'technical.directory.filters'|trans({}, 'technical') }}</span>
+                        {% if this.activeFilterCount > 0 %}<span class="directory-catalog__filter-count">{{ this.activeFilterCount }}</span>{% endif %}
+                    </summary>
+                    <div class="directory-catalog__filter-grid">
+                        <label class="directory-catalog__active-filter">
+                            <span>{{ 'technical.directory.status'|trans({}, 'technical') }}</span>
+                            <select data-model="on(change)|activeFilter">
+                                <option value="">{{ 'technical.directory.status_all'|trans({}, 'technical') }}</option>
+                                <option value="enabled" {% if activeFilter == 'enabled' %}selected{% endif %}>{{ 'technical.directory.status_active'|trans({}, 'technical') }}</option>
+                                <option value="disabled" {% if activeFilter == 'disabled' %}selected{% endif %}>{{ 'technical.directory.status_inactive'|trans({}, 'technical') }}</option>
+                            </select>
+                        </label>
+                        {% if section == 'organizations' %}
+                            <label class="directory-catalog__active-filter">
+                                <span>{{ 'technical.directory.organization_type'|trans({}, 'technical') }}</span>
+                                <select data-model="on(change)|typeFilter">
+                                    <option value="">{{ 'technical.directory.filter_all'|trans({}, 'technical') }}</option>
+                                    {% for organizationType in this.organizationTypes %}
+                                        <option value="{{ organizationType.value }}" {% if typeFilter == organizationType.value %}selected{% endif %}>{{ ('address_book.organization_type.' ~ organizationType.value)|trans({}, 'backoffice') }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+                            <label class="directory-catalog__active-filter">
+                                <span>{{ 'technical.directory.organization_sector'|trans({}, 'technical') }}</span>
+                                <select data-model="on(change)|sectorFilter">
+                                    <option value="">{{ 'technical.directory.filter_all'|trans({}, 'technical') }}</option>
+                                    {% for organizationSector in this.organizationSectors %}
+                                        <option value="{{ organizationSector.value }}" {% if sectorFilter == organizationSector.value %}selected{% endif %}>{{ ('address_book.organization_sector.' ~ organizationSector.value)|trans({}, 'backoffice') }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+                            <label class="directory-catalog__active-filter">
+                                <span>{{ 'technical.directory.department'|trans({}, 'technical') }}</span>
+                                <input type="search" data-model="debounce(300)|departmentFilter" value="{{ departmentFilter }}" placeholder="{{ 'technical.directory.department_placeholder'|trans({}, 'technical') }}" autocomplete="off">
+                            </label>
+                        {% endif %}
+                    </div>
+                </details>
+            </div>
+
+            <div class="directory-catalog__letter-navigation" data-controller="directory-horizontal-scroll">
+                <button type="button" class="directory-catalog__letter-arrow" {{ stimulus_action('directory-horizontal-scroll', 'scrollPrevious') }} aria-label="{{ 'technical.directory.scroll_letters_previous'|trans({}, 'technical') }}" title="{{ 'technical.directory.scroll_letters_previous'|trans({}, 'technical') }}">‹</button>
+                <nav class="directory-catalog__letters" data-directory-horizontal-scroll-target="viewport" aria-label="{{ 'technical.directory.alphabetical_navigation'|trans({}, 'technical') }}">
+                    <button type="button" class="{{ letter is empty ? 'is-active' : '' }}" {{ live_action('filterByLetter', {letter: 'all'}) }}>{{ 'technical.directory.all_letters'|trans({}, 'technical') }}</button>
+                    {% for availableLetter in this.letters %}
+                        <button type="button" class="{{ letter|upper == availableLetter ? 'is-active' : '' }}" {{ live_action('filterByLetter', {letter: availableLetter}) }}>{{ availableLetter }}</button>
+                    {% endfor %}
+                </nav>
+                <button type="button" class="directory-catalog__letter-arrow" {{ stimulus_action('directory-horizontal-scroll', 'scrollNext') }} aria-label="{{ 'technical.directory.scroll_letters_next'|trans({}, 'technical') }}" title="{{ 'technical.directory.scroll_letters_next'|trans({}, 'technical') }}">›</button>
+            </div>
+
+            <div class="directory-catalog__list-meta">
+                <p class="directory-catalog__count">{{ 'technical.directory.count'|trans({count: this.total}, 'technical') }}</p>
+                <div class="directory-catalog__list-actions">
+                    <button type="button" class="internal-icon-button" {{ live_action('createEntry') }} title="{{ (section == 'people' ? 'technical.directory.create_person' : 'technical.directory.create_organization')|trans({}, 'technical') }}" aria-label="{{ (section == 'people' ? 'technical.directory.create_person' : 'technical.directory.create_organization')|trans({}, 'technical') }}">{% include 'commercial/project/_icon.html.twig' with {name: section == 'people' ? 'person-add' : 'plus'} only %}</button>
+                    <button type="button" class="internal-icon-button directory-detail__toggle" data-directory-pane-target="toggle" data-expand-label="{{ 'technical.directory.expand_details'|trans({}, 'technical') }}" data-collapse-label="{{ 'technical.directory.collapse_details'|trans({}, 'technical') }}" aria-expanded="true" aria-label="{{ 'technical.directory.collapse_details'|trans({}, 'technical') }}" title="{{ 'technical.directory.collapse_details'|trans({}, 'technical') }}" {{ stimulus_action('directory-pane', 'toggle') }}>{% include 'commercial/project/_icon.html.twig' with {name: 'chevron'} only %}</button>
+                </div>
+            </div>
+            {% if entries is empty %}
+                <p class="internal-empty-state">{{ 'technical.directory.empty'|trans({}, 'technical') }}</p>
+            {% else %}
+                <div class="directory-catalog__rows">
+                    {% for entry in entries %}
+                        {% set entryName = section == 'people' ? (entry.lastName ~ ' ' ~ entry.firstName)|trim : entry.name %}
+                        {% set municipality = null %}
+                        {% for address in entry.contactDetails.addressContacts %}
+                            {% if not municipality and address.active and address.municipality %}{% set municipality = address.municipality %}{% endif %}
+                        {% endfor %}
+                        <button type="button" class="directory-catalog__row{{ selectedEntry and selectedEntry.id == entry.id ? ' is-selected' : '' }}" {{ live_action('select', {id: entry.id}) }}>
+                            <span class="directory-catalog__row-title">{{ entryName }}</span>
+                            <span class="directory-catalog__row-meta">{{ section == 'people' ? (entry.role ?? '') : (municipality ? (municipality.postalCode ~ ' — ' ~ municipality.name) : '') }}</span>
+                            {% if section == 'people' and entry.organization %}<span class="directory-catalog__row-meta">{{ entry.organization.name }}</span>{% endif %}
+                            <span class="directory-catalog__status{{ entry.active ? ' is-active' : '' }}">{{ entry.active ? 'technical.directory.status_active'|trans({}, 'technical') : 'technical.directory.status_inactive'|trans({}, 'technical') }}</span>
+                        </button>
+                    {% endfor %}
+                </div>
+                {% if this.pageCount > 1 %}
+                    <nav class="directory-catalog__pagination" aria-label="{{ 'technical.directory.pagination'|trans({}, 'technical') }}">
+                        <button type="button" class="directory-catalog__page-button" {{ live_action('firstPage') }} {% if page <= 1 %}disabled{% endif %} aria-label="{{ 'technical.directory.first_page'|trans({}, 'technical') }}" title="{{ 'technical.directory.first_page'|trans({}, 'technical') }}">«</button>
+                        <button type="button" class="directory-catalog__page-button" {{ live_action('previousPage') }} {% if page <= 1 %}disabled{% endif %} aria-label="{{ 'technical.directory.previous'|trans({}, 'technical') }}" title="{{ 'technical.directory.previous'|trans({}, 'technical') }}">‹</button>
+                        <label class="directory-catalog__page-indicator">
+                            <span class="visually-hidden">{{ 'technical.directory.go_to_page'|trans({}, 'technical') }}</span>
+                            <input type="number" min="1" max="{{ this.pageCount }}" value="{{ pageJump }}" data-model="norender|pageJump" {{ live_action('goToPage', {}, {'keydown.enter': true}) }}>
+                            <span aria-hidden="true">/ {{ this.pageCount }}</span>
+                        </label>
+                        <button type="button" class="directory-catalog__page-button" {{ live_action('nextPage') }} {% if page >= this.pageCount %}disabled{% endif %} aria-label="{{ 'technical.directory.next'|trans({}, 'technical') }}" title="{{ 'technical.directory.next'|trans({}, 'technical') }}">›</button>
+                        <button type="button" class="directory-catalog__page-button" {{ live_action('lastPage') }} {% if page >= this.pageCount %}disabled{% endif %} aria-label="{{ 'technical.directory.last_page'|trans({}, 'technical') }}" title="{{ 'technical.directory.last_page'|trans({}, 'technical') }}">»</button>
+                    </nav>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <div class="directory-catalog__detail-shell" data-directory-pane-target="detail" data-directory-scroll-target="detail">
+            <button type="button" class="internal-button internal-back-button directory-detail__back" {{ live_action('clearSelection') }}>
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7M5 12h14"/></svg>
+                {{ 'technical.directory.back_to_list'|trans({}, 'technical') }}
+            </button>
+            <aside class="directory-catalog__detail internal-card" aria-live="polite">
+            {% if selectedEntry %}
+                {% set isPerson = section == 'people' %}
+                <header class="directory-detail__heading">
+                    <div class="directory-detail__title">
+                        <p class="internal-eyebrow">{{ isPerson ? 'technical.directory.person'|trans({}, 'technical') : 'technical.directory.organization'|trans({}, 'technical') }}</p>
+                        <div class="directory-detail__name-row">
+                            <h2 tabindex="-1" data-directory-scroll-target="heading">{{ isPerson ? (selectedEntry.lastName ~ ' ' ~ selectedEntry.firstName)|trim : selectedEntry.name }}</h2>
+                            {% if isPerson %}<button type="button" class="internal-icon-button directory-edit-button" {{ live_action('editPersonSection', {id: selectedEntry.id, section: 'details'}) }} title="{{ 'technical.directory.edit_person_details'|trans({}, 'technical') }}" aria-label="{{ 'technical.directory.edit_person_details'|trans({}, 'technical') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</button>{% else %}<button type="button" class="internal-icon-button directory-edit-button" {{ live_action('editOrganizationSection', {section: 'details'}) }} title="{{ 'technical.directory.edit_organization_details'|trans({}, 'technical') }}" aria-label="{{ 'technical.directory.edit_organization_details'|trans({}, 'technical') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</button>{% endif %}
+                        </div>
+                        {% if isPerson and (selectedEntry.role or selectedEntry.organization) %}
+                            <div class="directory-detail__subtitle">
+                                {% if selectedEntry.role %}<p>{{ selectedEntry.role }}</p>{% endif %}
+                                {% if selectedEntry.organization %}<p>{{ selectedEntry.organization.name }}</p>{% endif %}
+                            </div>
+                        {% elseif not isPerson and (selectedEntry.type or selectedEntry.sector or selectedEntry.websiteUrl) %}
+                            <div class="directory-detail__subtitle">
+                                {% if selectedEntry.type %}<p>{{ ('address_book.organization_type.' ~ selectedEntry.type.value)|trans({}, 'backoffice') }}{% if selectedEntry.sector %} · {% endif %}{% endif %}{% if selectedEntry.sector %}{{ ('address_book.organization_sector.' ~ selectedEntry.sector.value)|trans({}, 'backoffice') }}{% endif %}</p>
+                                {% if selectedEntry.websiteUrl %}<p><a href="{{ selectedEntry.websiteUrl }}" target="_blank" rel="noopener noreferrer">{{ selectedEntry.websiteUrl }}</a></p>{% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="directory-detail__actions">
+                        <span class="directory-catalog__status{{ selectedEntry.active ? ' is-active' : '' }}">{{ selectedEntry.active ? 'technical.directory.status_active'|trans({}, 'technical') : 'technical.directory.status_inactive'|trans({}, 'technical') }}</span>
+                        {% if not isPerson %}<button type="button" class="internal-icon-button" {{ live_action('addPersonToSelectedOrganization') }} title="{{ 'technical.directory.add_person'|trans({}, 'technical') }}" aria-label="{{ 'technical.directory.add_person'|trans({}, 'technical') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'person-add'} only %}</button>{% endif %}
+                    </div>
+                </header>
+
+                {% if not isPerson %}
+                    <section class="directory-detail__section directory-detail__section--people">
+                        <h3>{{ 'technical.directory.attached_people'|trans({count: selectedEntry.people|length}, 'technical') }}</h3>
+                        {% for person in selectedEntry.people|sort((a, b) => a.lastName <=> b.lastName) %}
+                            <article class="directory-person-card">
+                                <div class="directory-person-card__heading">
+                                    <div><strong>{{ person.lastName }} {{ person.firstName }}</strong>{% if person.role %}<span>{{ person.role }}</span>{% endif %}</div>
+                                    <button type="button" class="internal-icon-button directory-edit-button" {{ live_action('editPersonSection', {id: person.id, section: 'details'}) }} title="{{ 'technical.directory.edit_person_details'|trans({}, 'technical') }}" aria-label="{{ 'technical.directory.edit_person_details'|trans({}, 'technical') }} — {{ person.lastName }} {{ person.firstName }}">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</button>
+                                </div>
+                                <div class="directory-person-card__section-heading">
+                                    <h4>{{ 'technical.directory.contact_details'|trans({}, 'technical') }}</h4>
+                                    <button type="button" class="internal-icon-button directory-edit-button" {{ live_action('editPersonSection', {id: person.id, section: 'contacts'}) }} title="{{ 'technical.directory.edit_person_contacts'|trans({}, 'technical') }}" aria-label="{{ 'technical.directory.edit_person_contacts'|trans({}, 'technical') }} — {{ person.lastName }} {{ person.firstName }}">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</button>
+                                </div>
+                                {{ include('internal/directory/_contact_rows.html.twig', {entry: person}) }}
+                                {% if not person.contactDetails or (person.contactDetails.emailContactLinks is empty and person.contactDetails.phoneContactLinks is empty) %}
+                                    <p class="directory-detail__empty-note">{{ 'technical.directory.no_contact_details'|trans({}, 'technical') }}</p>
+                                {% endif %}
+                                {% set personAddresses = person.contactDetails ? person.contactDetails.addressContacts|filter(address => address.active) : [] %}
+                                <div class="directory-person-card__section-heading">
+                                    <h4>{{ 'technical.directory.location'|trans({}, 'technical') }}</h4>
+                                    <button type="button" class="internal-icon-button directory-edit-button" {{ live_action('editPersonSection', {id: person.id, section: 'addresses'}) }} title="{{ 'technical.directory.edit_person_addresses'|trans({}, 'technical') }}" aria-label="{{ 'technical.directory.edit_person_addresses'|trans({}, 'technical') }} — {{ person.lastName }} {{ person.firstName }}">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</button>
+                                </div>
+                                {% if personAddresses is not empty %}
+                                    {{ include('internal/directory/_address_rows.html.twig', {addresses: personAddresses}) }}
+                                {% else %}
+                                    <p class="directory-detail__empty-note">{{ 'technical.directory.no_addresses'|trans({}, 'technical') }}</p>
+                                {% endif %}
+                            </article>
+                        {% else %}
+                            <p class="directory-detail__empty-note">{{ 'technical.directory.no_people'|trans({}, 'technical') }}</p>
+                        {% endfor %}
+                    </section>
+                {% endif %}
+
+                <section class="directory-detail__section directory-detail__section--contacts">
+                    <div class="directory-detail__section-heading">
+                        <h3>{{ 'technical.directory.contact_details'|trans({}, 'technical') }}</h3>
+                        {% if isPerson %}<button type="button" class="internal-icon-button directory-edit-button" {{ live_action('editPersonSection', {id: selectedEntry.id, section: 'contacts'}) }} title="{{ 'technical.directory.edit_person_contacts'|trans({}, 'technical') }}" aria-label="{{ 'technical.directory.edit_person_contacts'|trans({}, 'technical') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</button>{% else %}<button type="button" class="internal-icon-button directory-edit-button" {{ live_action('editOrganizationSection', {section: 'contacts'}) }} title="{{ 'technical.directory.edit_organization_contacts'|trans({}, 'technical') }}" aria-label="{{ 'technical.directory.edit_organization_contacts'|trans({}, 'technical') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</button>{% endif %}
+                    </div>
+                    {{ include('internal/directory/_contact_rows.html.twig', {entry: selectedEntry}) }}
+                    {% if selectedEntry.contactDetails.emailContactLinks is empty and selectedEntry.contactDetails.phoneContactLinks is empty %}<p class="directory-detail__empty-note">{{ 'technical.directory.no_contact_details'|trans({}, 'technical') }}</p>{% endif %}
+                </section>
+
+                {% set mapAddress = null %}
+                {% set activeAddresses = [] %}
+                {% for address in selectedEntry.contactDetails.addressContacts %}
+                    {% if address.active %}
+                        {% set activeAddresses = activeAddresses|merge([address]) %}
+                        {% if not mapAddress and address.municipality %}{% set mapAddress = address %}{% endif %}
+                    {% endif %}
+                {% endfor %}
+                    <section class="directory-detail__section directory-detail__section--map">
+                        <div class="directory-detail__section-heading">
+                            <h3>{{ 'technical.directory.location'|trans({}, 'technical') }}</h3>
+                            {% if isPerson %}<button type="button" class="internal-icon-button directory-edit-button" {{ live_action('editPersonSection', {id: selectedEntry.id, section: 'addresses'}) }} title="{{ 'technical.directory.edit_person_addresses'|trans({}, 'technical') }}" aria-label="{{ 'technical.directory.edit_person_addresses'|trans({}, 'technical') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</button>{% else %}<button type="button" class="internal-icon-button directory-edit-button" {{ live_action('editOrganizationSection', {section: 'addresses'}) }} title="{{ 'technical.directory.edit_organization_addresses'|trans({}, 'technical') }}" aria-label="{{ 'technical.directory.edit_organization_addresses'|trans({}, 'technical') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</button>{% endif %}
+                        </div>
+                        {% if activeAddresses is not empty %}
+                            {{ include('internal/directory/_address_rows.html.twig', {addresses: activeAddresses}) }}
+                        {% else %}
+                            <p class="directory-detail__empty-note">{{ 'technical.directory.no_addresses'|trans({}, 'technical') }}</p>
+                        {% endif %}
+                        {% if mapAddress %}<twig:MunicipalityGeographyMap :municipality="mapAddress.municipality" />{% endif %}
+                    </section>
+            {% else %}
+                <p class="internal-empty-state">{{ 'technical.directory.select_entry'|trans({}, 'technical') }}</p>
+            {% endif %}
+            </aside>
+        </div>
+    </section>
+
+    {% set dialogForm = this.dialogForm %}
+    {% if dialogForm %}
+        <div data-controller="internal-dialog" data-internal-dialog-open-on-connect-value="true">
+            <dialog class="internal-form-dialog" data-internal-dialog-target="dialog" data-action="click->internal-dialog#closeOnBackdrop close->internal-dialog#markClosed">
+                <div class="internal-form-dialog__panel">
+                    <button type="button" class="internal-icon-button internal-form-dialog__close" data-action="internal-dialog#close" aria-label="{{ 'technical.directory.close_dialog'|trans({}, 'technical') }}" title="{{ 'technical.directory.close_dialog'|trans({}, 'technical') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'close'} only %}</button>
+                    <p class="internal-eyebrow">{{ 'technical.directory.eyebrow'|trans({}, 'technical') }}</p>
+                    <h2>{{ this.dialogTitleKey|trans({}, 'technical') }}</h2>
+                    {{ form_start(dialogForm, {attr: {class: 'internal-form directory-form'}}) }}
+                        {% if this.dialogMode == 'organization_new' %}
+                            {{ include('internal/directory/_organization_fields.html.twig', {form: dialogForm}) }}
+                        {% elseif this.dialogMode == 'organization_details_edit' %}
+                            {{ include('internal/directory/_organization_details_fields.html.twig', {form: dialogForm}) }}
+                        {% elseif this.dialogMode == 'organization_contacts_edit' %}
+                            {{ include('internal/directory/_organization_contacts_fields.html.twig', {form: dialogForm}) }}
+                        {% elseif this.dialogMode == 'organization_addresses_edit' %}
+                            {{ include('internal/directory/_organization_addresses_fields.html.twig', {form: dialogForm}) }}
+                        {% elseif this.dialogMode == 'person_details_edit' or this.dialogMode == 'person_edit' %}
+                            {{ include('internal/directory/_person_details_fields.html.twig', {form: dialogForm}) }}
+                        {% elseif this.dialogMode == 'person_contacts_edit' %}
+                            {{ include('internal/directory/_organization_contacts_fields.html.twig', {form: dialogForm}) }}
+                        {% elseif this.dialogMode == 'person_addresses_edit' %}
+                            {{ include('internal/directory/_organization_addresses_fields.html.twig', {form: dialogForm}) }}
+                        {% else %}
+                            {{ include('internal/directory/_person_fields.html.twig', {form: dialogForm}) }}
+                        {% endif %}
+                        <div class="internal-form-dialog__actions">
+                            <button type="button" class="internal-button internal-button--secondary" data-action="internal-dialog#close">{{ 'technical.directory.form.cancel'|trans({}, 'technical') }}</button>
+                            <button class="internal-button" type="submit">{{ 'technical.directory.form.save'|trans({}, 'technical') }}</button>
+                        </div>
+                    {{ form_end(dialogForm) }}
+                </div>
+            </dialog>
+        </div>
+    {% endif %}
+</div>

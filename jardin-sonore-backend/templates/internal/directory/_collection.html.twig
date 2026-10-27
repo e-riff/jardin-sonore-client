@@ -1,0 +1,29 @@
+<fieldset class="directory-form__collection directory-form__collection--{{ variant }}">
+    <legend>{{ label }}</legend>
+    <div
+        data-controller="directory-collection"
+        data-directory-collection-index-value="{{ collection|length }}"
+        data-directory-collection-prototype-value="{{ form_widget(collection.vars.prototype)|e('html_attr') }}"
+    >
+        <template data-directory-collection-target="removeButtonTemplate">
+            <button type="button" class="internal-icon-button internal-icon-button--danger" data-action="directory-collection#remove" title="{{ 'technical.directory.form.remove'|trans({}, 'technical') }}" aria-label="{{ 'technical.directory.form.remove'|trans({}, 'technical') }}">
+                {% include 'commercial/project/_icon.html.twig' with {name: 'trash'} only %}
+            </button>
+        </template>
+        <div data-directory-collection-target="list">
+            {% for entry in collection %}
+                <div data-collection-entry class="directory-form__collection-entry">
+                    <div class="directory-form__collection-fields">{{ form_widget(entry) }}</div>
+                    <button type="button" class="internal-icon-button internal-icon-button--danger" data-action="directory-collection#remove" title="{{ 'technical.directory.form.remove'|trans({}, 'technical') }}" aria-label="{{ 'technical.directory.form.remove'|trans({}, 'technical') }}">
+                        {% include 'commercial/project/_icon.html.twig' with {name: 'trash'} only %}
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+        <button type="button" class="internal-icon-button directory-form__collection-add" data-action="directory-collection#add" title="{{ 'technical.directory.form.add'|trans({}, 'technical') }}" aria-label="{{ 'technical.directory.form.add'|trans({}, 'technical') }}">
+            {% include 'commercial/project/_icon.html.twig' with {name: 'plus'} only %}
+        </button>
+    </div>
+    {{ form_errors(collection) }}
+    {% do collection.setRendered() %}
+</fieldset>

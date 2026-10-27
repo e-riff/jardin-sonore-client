@@ -160,14 +160,7 @@ final readonly class DirectoryEstablishmentUpserter
             $addressContact->setAddress($item->address);
         }
 
-        if (null !== $item->commune) {
-            $addressContact->setCity($item->commune);
-        }
-
         $postalCode = $this->extractPostalCode($item->address);
-        if (null !== $postalCode) {
-            $addressContact->setPostalCode($postalCode);
-        }
 
         $this->linkMunicipality($addressContact, $item->commune, $postalCode);
     }
@@ -185,9 +178,7 @@ final readonly class DirectoryEstablishmentUpserter
         $addressContact = (new AddressContactEntity())
             ->setType(AddressContactType::OFFICE)
             ->setActive(true)
-            ->setAddress($address)
-            ->setPostalCode($postalCode)
-            ->setCity($commune);
+            ->setAddress($address);
         $this->linkMunicipality($addressContact, $commune, $postalCode);
         $contactDetails->addAddressContact($addressContact);
     }

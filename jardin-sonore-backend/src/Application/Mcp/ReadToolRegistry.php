@@ -98,7 +98,7 @@ final readonly class ReadToolRegistry
             ],
             [
                 'name' => 'get_project_context',
-                'description' => 'Read a commercial project by its exact ID after search_projects. Returns recent events and open reminders without mail bodies or documents.',
+                'description' => 'Read a commercial project by its exact ID after search_projects. Returns the organization and current linked people with their active email, phone and address details, plus recent events and open reminders. Does not return mail bodies or documents.',
                 'inputSchema' => [
                     'type' => 'object',
                     'properties' => ['projectId' => ['type' => 'integer', 'minimum' => 1]],

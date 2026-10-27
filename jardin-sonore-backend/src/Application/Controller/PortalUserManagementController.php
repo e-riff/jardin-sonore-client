@@ -72,7 +72,7 @@ final class PortalUserManagementController extends AbstractController
             ->orderBy('organization.name', 'ASC')
             ->setMaxResults(25);
         if ('' !== $query) {
-            $queryBuilder->andWhere('LOWER(organization.name) LIKE LOWER(:query) OR LOWER(municipality.name) LIKE LOWER(:query) OR LOWER(municipality.postalCode) LIKE LOWER(:query) OR LOWER(addressContact.city) LIKE LOWER(:query) OR LOWER(addressContact.postalCode) LIKE LOWER(:query)')->setParameter('query', '%' . addcslashes($query, '%_\\') . '%');
+            $queryBuilder->andWhere('LOWER(organization.name) LIKE LOWER(:query) OR LOWER(municipality.name) LIKE LOWER(:query) OR LOWER(municipality.postalCode) LIKE LOWER(:query)')->setParameter('query', '%' . addcslashes($query, '%_\\') . '%');
         }
 
         return new JsonResponse(['items' => array_map(static fn (OrganizationEntity $organizationEntity): array => [
