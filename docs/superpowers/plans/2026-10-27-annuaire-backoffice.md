@@ -1,6 +1,6 @@
 # Annuaire du backoffice — plan d’implémentation
 
-**État au 27 octobre 2026 :** navigation, catalogue LiveComponent paginé par 10, recherche/filtres, navigation alphabétique qui ignore les guillemets initiaux, fiche responsive, copie et actions téléphone/e-mail, carte communale en lecture seule, formulaires Symfony et dialogues d’édition par bloc pour les structures et les personnes sont implémentés localement. Le dialogue se rouvre après fermeture ; les géoshapes ne portent plus de marqueur central ni d’épingle d’adresse. Les coordonnées d’adresse ne sont pas enregistrées et le géocodage a été écarté. Après recette utilisateur, EasyAdmin et ses CRUD ont été retirés ; les écrans métier restent le point d’entrée.
+**Livré en production le 27 octobre 2026** sous `deploy-backoffice-annuaire-mailing-20261027-03` (`38a2e67f`). L’annuaire comprend le catalogue LiveComponent paginé par 10, recherche/filtres, navigation alphabétique qui ignore les guillemets initiaux, fiches responsives, copie et actions téléphone/e-mail, carte communale en lecture seule, formulaires Symfony et dialogues d’édition par bloc pour les structures et les personnes. Les géoshapes n’ont pas de marqueur central ni d’épingle d’adresse ; le géocodage a été écarté. La migration `Version20261027111508` a supprimé les anciens champs ville/code postal après rattachement des communes sûres ; « Pays du Gier (18 communes) » est conservé comme secteur desservi sur la fiche du Ludobus. EasyAdmin et sa dépendance Composer sont retirés. Le lien de communes desservies multiples, nécessaire au ciblage géographique automatique du mailing, reste à modéliser ; l’inclusion explicite de la structure dans une campagne fonctionne en attendant.
 
 > **Pour les agents d’exécution :** mettre en œuvre les étapes dans l’ordre dans la branche de travail courante.
 
@@ -19,8 +19,8 @@
 - Rechercher et filtrer côté serveur, trier alphabétiquement et paginer ; proposer une navigation par lettre et un accès direct à une page. Ne pas charger tout l’annuaire dans le navigateur.
 - Montrer le contour géographique de la commune liée sans rendre la géométrie modifiable.
 - N’ajouter ni notes ni jours de présence au modèle, ces champs n’existent pas.
-- Garder EasyAdmin disponible jusqu’à la recette explicite du nouvel annuaire.
-- Ne pas supprimer maintenant les colonnes historiques `city` et `postalCode` ; les formulaires métier n’en feront pas la source de localisation. Toute migration destructive reste à examiner avec les données locales avant exécution.
+- EasyAdmin a été retiré après la recette utilisateur du nouvel annuaire.
+- Les colonnes historiques `city` et `postalCode` ont été supprimées par `Version20261027111508` ; les formulaires métier utilisent la commune liée.
 
 ## Décisions d’interface
 

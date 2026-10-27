@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-26-geography-backoffice-design.md`
 
+**Delivered:** the geography backoffice shipped on 26 October 2026 under `deploy-geography-backoffice-20261026-01` (`8e2a7c28`). The separate inventory of other Geo API fields and Culture open data remains deferred; see `ROADMAP.md` for the next task.
+
 ## Global Constraints
 
 - No schema, import, or synchronization changes.

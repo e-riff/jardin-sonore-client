@@ -2,7 +2,7 @@
 
 > **For agentic workers:** méthode d’exécution native, tâche par tâche.
 
-**Clôture — 27 octobre 2026 :** l’index, les parcours de consentement partagé et les liens depuis l’annuaire sont implémentés. À la demande explicite de l’utilisateur, EasyAdmin et ses fichiers propres ont ensuite été retirés après la reprise des fonctions métier.
+**Clôture — 27 octobre 2026 :** l’index, les parcours d’abonnement partagé et les liens depuis l’annuaire sont en production sous `deploy-backoffice-annuaire-mailing-20261027-03` (`38a2e67f`). Les états d’abonnement de l’adresse sont présentés séparément des fiches rattachées ; les colonnes pertinentes sont triables et les actions sont compactes. À la demande explicite de l’utilisateur, EasyAdmin et sa dépendance Composer ont été retirés après la reprise des fonctions métier.
 
 **Goal:** Gérer les consentements newsletter depuis l’annuaire et un index dédié dans Mailing, sans dupliquer les adresses ni leur état.
 
