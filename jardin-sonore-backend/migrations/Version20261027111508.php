@@ -11,7 +11,7 @@ final class Version20261027111508 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'Vérifie et rattache les adresses orphelines à leur commune avant de supprimer les champs ville et code postal redondants.';
+        return 'Rattache les adresses historiques aux communes sûres, préserve un secteur desservi non communal, puis supprime les champs redondants.';
     }
 
     public function up(Schema $schema): void
@@ -53,6 +53,31 @@ final class Version20261027111508 extends AbstractMigration
                         AND
                         NULLIF(TRIM(address.postal_code), '') IS NOT NULL
                         AND 1 = (SELECT COUNT(*) FROM municipality municipality WHERE BINARY municipality.postal_code = BINARY address.postal_code)
+                    )
+                    OR (
+                        NULLIF(TRIM(address.city), '') IS NOT NULL
+                        AND NULLIF(TRIM(address.postal_code), '') IS NOT NULL
+                        AND 1 = (
+                            SELECT COUNT(*)
+                            FROM municipality municipality
+                            WHERE BINARY municipality.postal_code = BINARY address.postal_code
+                                AND UPPER(TRIM(municipality.name)) = UPPER(TRIM(address.city))
+                        )
+                    )
+                    OR (
+                        UPPER(TRIM(address.city)) = 'OULLINS'
+                        AND BINARY address.postal_code = BINARY '69600'
+                        AND 1 = (
+                            SELECT COUNT(*)
+                            FROM municipality municipality
+                            WHERE BINARY municipality.postal_code = BINARY address.postal_code
+                                AND BINARY municipality.insee_code = BINARY '69149'
+                        )
+                    )
+                    OR (
+                        BINARY TRIM(address.city) = BINARY 'Pays du Gier (18 communes)'
+                        AND NULLIF(TRIM(address.address), '') IS NULL
+                        AND NULLIF(TRIM(address.label), '') IS NULL
                     )
                 )
             SQL);
@@ -104,6 +129,47 @@ final class Version20261027111508 extends AbstractMigration
                         'SAINTMAURICESURLIGNON', 'SAINTFERREOLDAUROURE'
                     )
                 )
+            SQL);
+        $this->addSql(<<<'SQL'
+            UPDATE address_contact address
+            SET address.municipality_id = (
+                SELECT MIN(municipality.id)
+                FROM municipality municipality
+                WHERE BINARY municipality.postal_code = BINARY address.postal_code
+                    AND UPPER(TRIM(municipality.name)) = UPPER(TRIM(address.city))
+                HAVING COUNT(*) = 1
+            )
+            WHERE address.municipality_id IS NULL
+                AND NULLIF(TRIM(address.city), '') IS NOT NULL
+                AND NULLIF(TRIM(address.postal_code), '') IS NOT NULL
+                AND 1 = (
+                    SELECT COUNT(*)
+                    FROM municipality municipality
+                    WHERE BINARY municipality.postal_code = BINARY address.postal_code
+                        AND UPPER(TRIM(municipality.name)) = UPPER(TRIM(address.city))
+                )
+            SQL);
+        $this->addSql(<<<'SQL'
+            UPDATE address_contact address
+            SET address.municipality_id = (
+                SELECT municipality.id
+                FROM municipality municipality
+                WHERE BINARY municipality.postal_code = BINARY '69600'
+                    AND BINARY municipality.insee_code = BINARY '69149'
+                LIMIT 1
+            )
+            WHERE address.municipality_id IS NULL
+                AND UPPER(TRIM(address.city)) = 'OULLINS'
+                AND BINARY address.postal_code = BINARY '69600'
+            SQL);
+        $this->addSql(<<<'SQL'
+            UPDATE address_contact address
+            SET address.label = 'Secteur desservi',
+                address.address = address.city
+            WHERE address.municipality_id IS NULL
+                AND BINARY TRIM(address.city) = BINARY 'Pays du Gier (18 communes)'
+                AND NULLIF(TRIM(address.address), '') IS NULL
+                AND NULLIF(TRIM(address.label), '') IS NULL
             SQL);
         $this->addSql(<<<'SQL'
             UPDATE address_contact address
