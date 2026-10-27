@@ -1,4 +1,4 @@
-<section class="internal-card geography-map-section">
+<section id="municipality-geography-map-{{ municipality.id }}" class="internal-card geography-map-section">
     <h2>{{ 'technical.geography.municipalities.map_title'|trans({}, 'technical') }}</h2>
     {% set municipalityMap = this.map %}
     {% if municipalityMap is null %}
