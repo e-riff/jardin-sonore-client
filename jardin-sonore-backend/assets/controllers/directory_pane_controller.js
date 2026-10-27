@@ -5,8 +5,9 @@ export default class extends Controller {
 
     toggle() {
         const isExpanded = this.toggleTarget.getAttribute('aria-expanded') === 'true';
-        this.detailTarget.hidden = isExpanded;
         this.element.classList.toggle('is-detail-collapsed', isExpanded);
+        this.detailTarget.inert = isExpanded;
+        this.detailTarget.setAttribute('aria-hidden', String(isExpanded));
         this.toggleTarget.setAttribute('aria-expanded', String(!isExpanded));
         this.toggleTarget.title = isExpanded ? this.toggleTarget.dataset.expandLabel : this.toggleTarget.dataset.collapseLabel;
         this.toggleTarget.setAttribute('aria-label', this.toggleTarget.title);

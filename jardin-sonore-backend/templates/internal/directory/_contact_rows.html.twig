@@ -21,8 +21,21 @@
         {% for link in entry.contactDetails.phoneContactLinks %}
             {% if link.active and link.phoneNumber %}
                 {% set normalizedPhone = link.phoneNumber|replace({' ': '', '.': '', '-': '', '(': '', ')': ''}) %}
+                {% set isFrenchPhone = normalizedPhone starts with '+33' and normalizedPhone|length == 12 %}
+                {% set nationalPhone = isFrenchPhone ? '0' ~ normalizedPhone|slice(3) : normalizedPhone %}
                 <div class="directory-contact-row">
-                    <div><small>{{ link.label ?: ('address_book.phone_contact_type.' ~ link.type.value)|trans({}, 'backoffice') }}</small><button type="button" class="directory-contact-value" data-controller="directory-copy" data-directory-copy-value-value="{{ normalizedPhone }}" data-action="directory-copy#copy" title="{{ 'technical.directory.copy_phone'|trans({}, 'technical') }}">{{ link.phoneNumber }}</button></div>
+                    <div>
+                        <small>{{ link.label ?: ('address_book.phone_contact_type.' ~ link.type.value)|trans({}, 'backoffice') }}</small>
+                        <button type="button" class="directory-contact-value directory-contact-value--phone" data-controller="directory-copy" data-directory-copy-value-value="{{ nationalPhone }}" data-action="directory-copy#copy" title="{{ 'technical.directory.copy_phone'|trans({}, 'technical') }}">
+                            {% if isFrenchPhone %}
+                                <span class="directory-phone-number" aria-label="{{ nationalPhone|slice(0, 2) }} {{ nationalPhone|slice(2, 2) }} {{ nationalPhone|slice(4, 2) }} {{ nationalPhone|slice(6, 2) }} {{ nationalPhone|slice(8, 2) }}">
+                                    {% for groupIndex in 0..4 %}<span>{{ nationalPhone|slice(groupIndex * 2, 2) }}</span>{% endfor %}
+                                </span>
+                            {% else %}
+                                {{ link.phoneNumber }}
+                            {% endif %}
+                        </button>
+                    </div>
                     <a class="internal-icon-button" href="tel:{{ normalizedPhone }}" title="{{ 'technical.directory.call'|trans({}, 'technical') }}" aria-label="{{ 'technical.directory.call'|trans({}, 'technical') }} {{ link.phoneNumber }}">{% include 'commercial/project/_icon.html.twig' with {name: 'phone'} only %}</a>
                 </div>
             {% endif %}

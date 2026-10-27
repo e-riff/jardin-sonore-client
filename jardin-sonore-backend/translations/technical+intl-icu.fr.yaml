@@ -59,7 +59,7 @@ technical:
     edit_person_addresses: "Modifier les adresses de cette personne"
     back_to_person: "Retour à la fiche"
     copy_email: "Copier l’adresse e-mail"
-    copy_phone: "Copier le numéro sans espaces"
+    copy_phone: "Copier le numéro au format national"
     email: "Écrire un e-mail"
     call: "Appeler"
     add_person: "Ajouter une personne à cette structure"

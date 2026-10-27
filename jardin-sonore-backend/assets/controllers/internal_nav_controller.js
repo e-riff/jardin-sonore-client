@@ -54,6 +54,34 @@ export default class extends Controller {
         this.setDesktopGroup(selectedKey);
     }
 
+    openDirectory(event) {
+        if (
+            this.mediaQuery.matches
+            || event.button !== 0
+            || event.metaKey
+            || event.ctrlKey
+            || event.shiftKey
+            || event.altKey
+        ) {
+            return;
+        }
+
+        const subnav = this.element.querySelector('.internal-subnav');
+
+        if (!subnav || subnav.classList.contains('is-directory-hidden')) {
+            return;
+        }
+
+        const directoryUrl = event.currentTarget.href;
+
+        event.preventDefault();
+        subnav.classList.add('is-directory-hidden');
+
+        const transitionDuration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 240;
+
+        window.setTimeout(() => window.location.assign(directoryUrl), transitionDuration);
+    }
+
     close(event) {
         if (event && event.currentTarget === this.shellTarget && event.target !== this.shellTarget) {
             return;
@@ -143,6 +171,10 @@ export default class extends Controller {
     }
 
     setDesktopGroup(selectedKey) {
+        const subnav = this.element.querySelector('.internal-subnav');
+
+        subnav?.classList.toggle('is-directory-hidden', selectedKey === 'directory');
+
         for (const button of this.element.querySelectorAll('.internal-primary-nav__link')) {
             const isActive = button.dataset.navGroupKey === selectedKey;
 

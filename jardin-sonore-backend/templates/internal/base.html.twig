@@ -197,21 +197,34 @@
 
                 <nav class="internal-primary-nav" aria-label="{{ 'internal.base.navigation_aria'|trans({}, 'internal') }}">
                     {% for group in navGroups %}
-                        <button
-                            type="button"
-                            class="internal-primary-nav__link{{ group.active ? ' is-active' : '' }}"
-                            data-nav-group-key="{{ group.key }}"
-                            aria-pressed="{{ group.active ? 'true' : 'false' }}"
-                            {{ stimulus_action('internal-nav', 'selectGroup') }}
-                            {% if group.active %}aria-current="page"{% endif %}
-                        >
-                            {% if group.icon == 'people' %}
+                        {% if group.key != 'directory' %}
+                            <button
+                                type="button"
+                                class="internal-primary-nav__link{{ group.active ? ' is-active' : '' }}"
+                                data-nav-group-key="{{ group.key }}"
+                                aria-pressed="{{ group.active ? 'true' : 'false' }}"
+                                {{ stimulus_action('internal-nav', 'selectGroup') }}
+                                {% if group.active %}aria-current="page"{% endif %}
+                            >
+                                {% if group.icon == 'people' %}
+                                    {% include 'commercial/project/_icon.html.twig' with {name: group.icon, class: 'internal-primary-nav__icon'} only %}
+                                {% else %}
+                                    <span class="internal-primary-nav__icon" aria-hidden="true">{{ group.icon }}</span>
+                                {% endif %}
+                                <span>{{ group.label }}</span>
+                            </button>
+                        {% else %}
+                            <a
+                                class="internal-primary-nav__link{{ group.active ? ' is-active' : '' }}"
+                                data-nav-group-key="directory"
+                                href="{{ path(group.route, {section: 'organizations'}) }}"
+                                {% if group.active %}aria-current="page"{% endif %}
+                                {{ stimulus_action('internal-nav', 'openDirectory') }}
+                            >
                                 {% include 'commercial/project/_icon.html.twig' with {name: group.icon, class: 'internal-primary-nav__icon'} only %}
-                            {% else %}
-                                <span class="internal-primary-nav__icon" aria-hidden="true">{{ group.icon }}</span>
-                            {% endif %}
-                            <span>{{ group.label }}</span>
-                        </button>
+                                <span>{{ group.label }}</span>
+                            </a>
+                        {% endif %}
                     {% endfor %}
                 </nav>
 
@@ -230,7 +243,7 @@
                 ></button>
             </div>
 
-            <nav class="internal-subnav" aria-label="{{ 'internal.base.navigation_aria'|trans({}, 'internal') }}">
+            <nav class="internal-subnav{{ currentRoute starts with 'internal_directory_' ? ' is-directory-hidden' : '' }}" aria-label="{{ 'internal.base.navigation_aria'|trans({}, 'internal') }}">
                 <div class="internal-subnav__inner">
                     {% for group in navGroups %}
                         <div class="internal-subnav__group{{ group.active ? ' is-active' : '' }}" data-nav-group-key="{{ group.key }}">
