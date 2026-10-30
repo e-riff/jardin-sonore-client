@@ -9,6 +9,7 @@ const fr = {
         ariaLabel: "Fil d’Ariane",
         home: "Accueil",
         earlyChildhood: "Éveil musical en crèche",
+        partners: "Amis et partenaires",
     },
     metadata: {
         titleDefault: "Éveil musical crèches & EAJE | Saint-Étienne · Lyon",
@@ -74,6 +75,11 @@ const fr = {
         menuAriaLabel: "Ouvrir le menu",
         reserveCta: "Demander des renseignements",
         portalLink: "Espace structures",
+        discoverLabel: "Découvrir",
+        discoverLinks: [
+            {label: "Éveil musical en crèche", href: "/eveil-musical-creche"},
+            {label: "Amis et partenaires", href: "/amis-et-partenaires"},
+        ],
         navigation: [
             {label: "Intervenant", href: "#intervenant-musical"},
             {label: "Formats", href: "#formats"},
@@ -358,6 +364,48 @@ const fr = {
                 },
             },
         ],
+    },
+    partnersPage: {
+        metadata: {
+            title: "Amis et partenaires",
+            description: "Découvrez les personnes, compagnies et ressources qui entourent Jardin Sonore.",
+        },
+        eyebrow: "Rencontres et collaborations",
+        title: "Amis et partenaires",
+        introduction: "Le Jardin Sonore s’est construit au fil des **rencontres, des projets et des collaborations** qui ont nourri mon parcours musical et ma manière de travailler auprès des tout-petits.\n\nVous retrouverez ici les personnes qui interviennent à mes côtés, mais aussi les compagnies et les structures qui inspirent mon travail et que j’ai envie de vous faire découvrir.",
+        heroImageAlt: "Instruments et objets sonores disposés au sol au milieu d’un groupe",
+        heroNavigationLabel: "Explorer la page",
+        heroPeopleLink: "Les personnes",
+        heroCompaniesLink: "Compagnies et association",
+        heroResourcesLink: "Les ressources",
+        peopleTitle: "À mes côtés en petite enfance",
+        peopleEyebrow: "Musiciens et complices",
+        people: [
+            {
+                name: "Marion", image: "/images/partenaires/marion.webp", imageAlt: "Marion avec sa clarinette",
+                description: "Marion et moi nous sommes rencontrés en formation. C’est grâce à elle qu’a germé la première idée du Jardin Sonore ! Depuis, nous avons partagé **de nombreux projets** : jardins sonores, séances de musique, formations de professionnels et animations à la journée.\n\nClarinettiste et multi-instrumentiste, Marion aime explorer les sons sous toutes leurs formes, notamment à travers la **lutherie sauvage**. Comme moi, elle est diplômée en musique et petite enfance ; elle accompagne aujourd’hui les nouvelles promotions en tant que formatrice.\n\nElle intervient principalement dans l’Ain et le Lyonnais, où elle crée aussi des spectacles avec sa compagnie Muma.",
+                linkLabel: "Voir Muma", linkHref: "#compagnie-muma",
+            },
+            {
+                name: "Simon", image: "/images/partenaires/simon.webp", imageAlt: "Simon jouant de la guitare sur scène",
+                description: "Avec Simon, notre complicité musicale remonte à **avant mes interventions en petite enfance** : nous avons joué dans différents groupes et partagé des animations dans la région ligérienne, où nous continuons à travailler ensemble.\n\nGuitariste de métier, Simon aime l’**improvisation** et pratique le soundpainting. Lui aussi diplômé en musique et petite enfance, il intervient auprès des tout-petits et enseigne la guitare en Loire et en Haute-Loire.\n\n**Petite enfance, jazz, variété ? Demandez, c’est joué !**",
+                linkLabel: "Site web", linkHref: "https://rochetain.wixsite.com/simon",
+            },
+        ],
+        companiesTitle: "Compagnies et association amies",
+        companiesEyebrow: "Rencontres artistiques",
+        companies: [
+            {id: "compagnie-scarabee", name: "Cie Un scarabée dans la poche", logo: "/images/partenaires/logo-scarabee-transparent.webp", image: "/images/partenaires/scarabee.webp", imageAlt: "Une artiste manipulant des marionnettes de crabes", imageFit: "cover", description: "Menée par **Mathilde Dambricourt**, la compagnie Un scarabée dans la poche crée de magnifiques spectacles pour les tout-petits, à découvrir dès la naissance et qui continuent d’émerveiller les adultes. Musique, danse et scénographie s’y rencontrent pour donner vie à des univers sensibles et poétiques.\n\nC’est Mathilde qui m’a embarqué dans l’aventure de la **petite enfance** ! J’ai aussi eu la chance de participer à son spectacle **Le chant des faunes**, encore en tournée aujourd’hui. Je vous invite à découvrir leur travail et, pourquoi pas, à les accueillir dans votre crèche.", linkLabel: "Site web", href: "https://www.unscarabeedanslapoche.com", descriptionLinks: {"Mathilde Dambricourt": "https://www.unscarabeedanslapoche.com/mathilde-dambricourt"}, additionalLinkLabel: "Instagram", additionalLinkHref: "https://www.instagram.com/un_scarabee_dans_la_poche/"},
+            {id: "compagnie-pie-piaille", name: "Cie La Pie Piaille", logo: "/images/partenaires/logo-pie-piaille.webp", image: "/images/partenaires/pie-piaille-scene.webp", imageAlt: "Solenne Chardon sur scène", imageFit: "cover", description: "Difficile de vivre dans la région de Saint-Étienne et du Gier sans avoir un jour prêté l’oreille aux histoires de **Solenne Chardon** et de sa compagnie La Pie Piaille ! Conteuse et comédienne, Solenne fait vivre ses récits dans les médiathèques et les écoles, mais aussi auprès des tout-petits.\n\nJ’ai eu la chance de partir avec elle en forêt le temps d’un spectacle : une expérience captivante et immersive, pour les petits comme pour les grands ! Je vous laisse découvrir la suite et les autres histoires de la compagnie sur son site.", linkLabel: "Site web", href: "https://www.lapiepiaille.com", additionalLinkLabel: "Facebook", additionalLinkHref: "https://www.facebook.com/LaPiePiaille/"},
+            {id: "compagnie-muma", name: "Cie Muma", logo: "/images/partenaires/muma.webp", image: "/images/partenaires/muma.webp", imageAlt: "Logo de la compagnie Muma", imageFit: "logo", description: "Déjà évoquée plus haut, voici **Muma : musique et marionnette** ! Cette compagnie réunit Marion Zulke, qui intervient à mes côtés au Jardin Sonore, et Leslie Guivarc’h.\n\nOn y retrouve le goût de Marion pour les propositions **visuelles et participatives** : autour des objets et des livres, marionnette et musique se rencontrent pour donner vie à leurs spectacles.", linkLabel: "Site web", href: "https://marionzulke.wixsite.com/compagniemuma", additionalLinkLabel: "Facebook", additionalLinkHref: "https://www.facebook.com/CompagnieMuma?locale=fy_NL"},
+            {id: "association-panel-production", name: "Association Panel Production", image: "/images/partenaires/panel-production.webp", imageAlt: "Concert sur scène devant le public", imageFit: "cover", description: "**Panel Production**, c’est une association qui réunit des artistes et des spectacles aux horizons très variés : des propositions pour la petite enfance, des musiques traditionnelles, des hommages à de grands artistes et bien d’autres univers à découvrir.\n\nJ’ai eu le plaisir de tourner pendant plusieurs années avec certains de leurs spectacles. J’en garde le souvenir de belles rencontres musicales et de moments partagés sur scène et avec le public. Si vous cherchez un spectacle ou un groupe pour votre événement, je vous invite à découvrir leur programmation.", linkLabel: "Site web", href: "https://panelproduction.fr"},
+        ],
+        resourcesTitle: "Formation et ressources",
+        resourceName: "CFMI de Lyon",
+        resourceImageAlt: "Musiciens réunis autour d’un piano et de percussions",
+        resourceDescription: "Difficile pour moi de ne pas parler du **CFMI de Lyon**, où j’ai suivi ma formation de musicien spécialiste en petite enfance ! C’est un lieu de formation qui fait la part belle à la **pratique, à l’expérimentation et à la découverte**. On n’en ressort pas tout à fait comme on y est entré.\n\nOn y croise aussi de nombreuses personnes : artistes, plasticiens et professionnels aux parcours variés. Une grande partie des artistes présentés sur cette page sont également passés par le CFMI !\n\nPour moi, cette année intense a été une véritable **année d’éveil**, riche en rencontres et en nouvelles façons d’écouter, de créer et de partager.",
+        resourceLinkLabel: "Site web",
+        resourceHref: "https://lesla.univ-lyon2.fr/centre-de-formation-des-musiciens-intervenants-cfmi",
     },
     earlyChildhoodPage: {
         metadata: {

@@ -1,6 +1,6 @@
 import type {Dictionary} from "@/i18n/types";
 
-type BreadcrumbKey = "home" | "earlyChildhood";
+type BreadcrumbKey = "home" | "earlyChildhood" | "partners";
 
 interface PublicRoute {
     parent: string | null;
@@ -10,6 +10,7 @@ interface PublicRoute {
 const publicRoutes: Record<string, PublicRoute> = {
     "/": {parent: null, label: "home"},
     "/eveil-musical-creche": {parent: "/", label: "earlyChildhood"},
+    "/amis-et-partenaires": {parent: "/", label: "partners"},
 };
 
 export interface BreadcrumbItem {

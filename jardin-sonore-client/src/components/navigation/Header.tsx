@@ -1,15 +1,19 @@
 'use client';
 
-import {Bars3Icon, UserCircleIcon, XMarkIcon} from "@heroicons/react/24/outline";
-import {JSX, useEffect, useState} from "react";
+import {Bars3Icon, ChevronDownIcon, UserCircleIcon, XMarkIcon} from "@heroicons/react/24/outline";
+import {JSX, useEffect, useRef, useState} from "react";
 import Link from "next/link";
 import BrandLogo from "@/components/BrandLogo";
 import Button from "@/components/Button";
 import {useTranslations} from "@/i18n/translations-provider";
 import {LinkItem} from "@/types/content";
 
+const showDiscoverNavigation = false;
+
 export default function Header(): JSX.Element {
     const [scrolled, setScrolled] = useState<boolean>(false);
+    const [discoverOpen, setDiscoverOpen] = useState<boolean>(false);
+    const discoverRef = useRef<HTMLDivElement>(null);
     const [menuOpen, setMenuOpen] = useState<boolean>(false);
     const dictionary = useTranslations();
     const content = dictionary.header;
@@ -36,6 +40,25 @@ export default function Header(): JSX.Element {
         return () => window.removeEventListener("keydown", onKeyDown);
     }, [menuOpen]);
 
+    useEffect(() => {
+        if (!discoverOpen) return;
+        const onPointerDown = (event: PointerEvent): void => {
+            if (!discoverRef.current?.contains(event.target as Node)) setDiscoverOpen(false);
+        };
+        const onKeyDown = (event: KeyboardEvent): void => {
+            if (event.key === "Escape") {
+                setDiscoverOpen(false);
+                discoverRef.current?.querySelector("button")?.focus();
+            }
+        };
+        document.addEventListener("pointerdown", onPointerDown);
+        document.addEventListener("keydown", onKeyDown);
+        return () => {
+            document.removeEventListener("pointerdown", onPointerDown);
+            document.removeEventListener("keydown", onKeyDown);
+        };
+    }, [discoverOpen]);
+
     return (
         <header className={`fixed left-0 top-0 z-50 w-full border-b transition duration-300 ${scrolled ? "border-outline-variant/40 bg-background/88 py-2 backdrop-blur-xl" : "border-transparent bg-background/72 py-3 backdrop-blur-md"}`}>
             <nav className="mx-auto max-w-7xl px-6 sm:px-margin" aria-label={content.ariaLabel}>
@@ -44,12 +67,22 @@ export default function Header(): JSX.Element {
                         <BrandLogo label={dictionary.brand.name} className="text-2xl font-semibold md:text-[1.7rem]" />
                     </Link>
 
-                    <div className="hidden items-center gap-6 lg:flex xl:gap-8">
+                    <div className="hidden items-center gap-5 xl:flex">
                         {content.navigation.map((item: LinkItem) => (
                             <a className="font-sans text-sm font-semibold tracking-wider text-on-surface-variant transition hover:text-primary" href={`/${item.href}`} key={item.href}>
                                 {item.label}
                             </a>
                         ))}
+                        {showDiscoverNavigation ? <div className="relative" onBlur={(event) => {
+                            if (!event.currentTarget.contains(event.relatedTarget)) setDiscoverOpen(false);
+                        }} ref={discoverRef}>
+                            <button aria-expanded={discoverOpen} className="inline-flex items-center gap-1 whitespace-nowrap font-sans text-sm font-semibold tracking-wider text-on-surface-variant transition hover:text-primary" onClick={() => setDiscoverOpen((open) => !open)} type="button">
+                                {content.discoverLabel} <ChevronDownIcon aria-hidden="true" className="h-3.5 w-3.5" />
+                            </button>
+                            {discoverOpen ? <div className="absolute right-0 top-full mt-3 w-64 rounded-xl border border-outline-variant/40 bg-background p-2 soft-shadow">
+                                {content.discoverLinks.map((item) => <Link className="block rounded-lg px-4 py-3 font-sans text-sm font-semibold text-on-surface-variant hover:bg-primary/10 hover:text-primary" href={item.href} key={item.href} onClick={() => setDiscoverOpen(false)}>{item.label}</Link>)}
+                            </div> : null}
+                        </div> : null}
                         <Button className="px-5 py-2 xl:px-6" href="/#contact">{content.reserveCta}</Button>
                         <Link
                             aria-label={content.portalLink}
@@ -62,7 +95,7 @@ export default function Header(): JSX.Element {
                     </div>
 
                     <button
-                        className="rounded-full p-2 text-primary transition hover:bg-primary/10 lg:hidden"
+                        className="rounded-full p-2 text-primary transition hover:bg-primary/10 xl:hidden"
                         type="button"
                         aria-controls="mobile-menu"
                         aria-expanded={menuOpen}
@@ -73,7 +106,7 @@ export default function Header(): JSX.Element {
                     </button>
                 </div>
 
-                <div className={`${menuOpen ? "grid" : "hidden"} gap-2 pb-3 pt-5 lg:hidden`} id="mobile-menu" aria-hidden={!menuOpen}>
+                <div className={`${menuOpen ? "grid" : "hidden"} gap-2 pb-3 pt-5 xl:hidden`} id="mobile-menu" aria-hidden={!menuOpen}>
                     {content.navigation.map((item: LinkItem) => (
                         <a
                             className="rounded-xl px-4 py-3 font-sans text-sm font-semibold tracking-wider text-on-surface-variant transition hover:bg-primary/10 hover:text-primary"
@@ -84,6 +117,7 @@ export default function Header(): JSX.Element {
                             {item.label}
                         </a>
                     ))}
+                    {showDiscoverNavigation ? content.discoverLinks.map((item) => <Link className="rounded-xl px-4 py-3 font-sans text-sm font-semibold text-on-surface-variant transition hover:bg-primary/10 hover:text-primary" href={item.href} key={item.href} onClick={() => setMenuOpen(false)}>{item.label}</Link>) : null}
                     <Link
                         className="rounded-xl px-4 py-3 font-sans text-sm font-semibold text-on-surface-variant transition hover:bg-primary/10 hover:text-primary"
                         href="/portail/seances"

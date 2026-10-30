@@ -137,3 +137,18 @@
     font-weight: 700;
   }
 }
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .partner-reveal {
+      animation: partner-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+  }
+}
+
+@keyframes partner-reveal {
+  from { transform: translateY(16px); }
+  to { transform: translateY(0); }
+}
