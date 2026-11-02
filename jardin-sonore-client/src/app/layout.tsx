@@ -80,7 +80,7 @@ export default async function RootLayout({children}: RootLayoutProps): Promise<J
     const dictionary = await getTranslations();
 
     return (
-        <html lang={defaultLocale}>
+        <html lang={defaultLocale} data-scroll-behavior="smooth">
             <body className="flex min-h-screen flex-col bg-background text-on-background antialiased">
                 <TranslationsProvider dictionary={dictionary}>
                     <PortalToastProvider>
