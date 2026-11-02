@@ -23,7 +23,7 @@ Le lot backoffice annuaire, abonnements newsletter et retrait d’EasyAdmin est 
 
 À examiner séparément : permettre plusieurs photos par élément sur la page « Amis et partenaires » et étudier un lien vers la crèche des Jardins du Grand Clos, cliente historique. Ces évolutions ne sont pas nécessaires à sa publication.
 
-La page « Amis et partenaires », partagée par lien depuis le 30 octobre sous `deploy-partenaires-partage-20261030-01` (`8e9094ee`), est préparée pour publication : accès dans les menus, indexation et sitemap activés. Le texte précise la cocréation du spectacle « Le chant des faunes ». La mise en production et ses contrôles restent à effectuer.
+La page « Amis et partenaires », partagée par lien depuis le 30 octobre, est publiée le 2 novembre sous `deploy-partenaires-public-20261102-01` (`9a97269c`) : liens dans les menus, indexation autorisée et sitemap actif. Le texte précise la cocréation du spectacle « Le chant des faunes ». L’accueil, la page, le sitemap et robots.txt répondent en HTTP 200 ; les liens, la directive d’indexation et le sitemap ont été vérifiés en production.
 
 Le moteur de mailing géographique s’appuie encore sur les communes d’adresse. Le secteur du Ludobus est rattaché à Saint-Chamond comme point de référence et apparaît dans les campagnes ciblées sur cette commune. Cela ne représente pas ses 18 communes desservies. Le ciblage exact de ce secteur reste à modéliser avec une relation « communes desservies », après confirmation de la liste. **Prochains chantiers :** reprendre les zones desservies pour le mailing, après confirmation des communes concernées, puis les statistiques mailing. Les champs supplémentaires des API géographiques et la base culturelle Basilic restent à évaluer séparément.
 
@@ -180,7 +180,7 @@ Ces idées restent visibles sans être décidées pour le prochain lot.
 
 | Piste | Bénéfice attendu | Dépendances / critère de départ |
 | --- | --- | --- |
-| Page collaborations et projets, avec témoignages et liens entrants de partenaires. | Rassurer les prospects et améliorer la visibilité SEO grâce à des collaborations réelles et des liens pertinents. | La page « Amis et partenaires » est préparée pour publication ; demander aux partenaires des liens entrants pertinents et examiner les collaborations complémentaires séparément. |
+| Page collaborations et projets, avec témoignages et liens entrants de partenaires. | Rassurer les prospects et améliorer la visibilité SEO grâce à des collaborations réelles et des liens pertinents. | La page « Amis et partenaires » est publiée ; demander aux partenaires des liens entrants pertinents et examiner les collaborations complémentaires séparément. |
 | Actualités et sélection de newsletters publiables. | Proposer du contenu utile et durable sur la vitrine. | Sélection éditoriale explicite ; ne pas publier automatiquement les campagnes internes. |
 | Contenu de la vitrine administrable et messages publics temporaires. | Mettre à jour les informations sans intervention technique. | Cadrer droits d'édition, dates de publication/expiration et séparation des messages publics et réservés aux structures. Prévoir en priorité la mise à jour autonome des photos de la vitrine, puis des liens vers les publications récentes sur les réseaux sociaux. |
 | Recherches réactives du backoffice. | Accélérer la navigation dans les catalogues. | Optimiser et mesurer d'abord les requêtes concernées. |
