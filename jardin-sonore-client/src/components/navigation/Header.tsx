@@ -8,7 +8,7 @@ import Button from "@/components/Button";
 import {useTranslations} from "@/i18n/translations-provider";
 import {LinkItem} from "@/types/content";
 
-const showDiscoverNavigation = false;
+const showDiscoverNavigation = true;
 
 export default function Header(): JSX.Element {
     const [scrolled, setScrolled] = useState<boolean>(false);

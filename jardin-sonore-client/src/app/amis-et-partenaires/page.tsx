@@ -15,7 +15,6 @@ export const metadata: Metadata = {
     title: content.metadata.title,
     description: content.metadata.description,
     alternates: {canonical: "/amis-et-partenaires"},
-    robots: {index: false, follow: true},
     openGraph: {
         type: "website",
         locale: "fr_FR",
