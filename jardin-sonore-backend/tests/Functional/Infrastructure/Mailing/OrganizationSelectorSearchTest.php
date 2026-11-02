@@ -8,6 +8,7 @@ use App\Infrastructure\Doctrine\Entity\AddressContactEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Mailing\DoctrineNewsletterAudienceOptionsQuery;
 use App\Kernel;
+use App\Tests\Support\GeographyFixture;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
@@ -24,8 +25,8 @@ final class OrganizationSelectorSearchTest extends KernelTestCase
         $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         $suffix = bin2hex(random_bytes(4));
         $organizationEntity = (new OrganizationEntity())->setName("École {$suffix}");
-        $firstAddress = (new AddressContactEntity())->setPostalCode('42420')->setCity("Lorette {$suffix}");
-        $secondAddress = (new AddressContactEntity())->setPostalCode('42700')->setCity('Firminy');
+        $firstAddress = (new AddressContactEntity())->setMunicipality(GeographyFixture::municipality($entityManager, "Lorette {$suffix}", '42420'));
+        $secondAddress = (new AddressContactEntity())->setMunicipality(GeographyFixture::municipality($entityManager, 'Firminy', '42700'));
         $organizationEntity->getContactDetails()?->addAddressContact($firstAddress)->addAddressContact($secondAddress);
         $entityManager->persist($organizationEntity);
         $entityManager->persist($firstAddress);

@@ -10,6 +10,7 @@ use App\Infrastructure\Doctrine\Entity\EmailContactLinkEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\PhoneContactLinkEntity;
 use App\Kernel;
+use App\Tests\Support\GeographyFixture;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -34,7 +35,7 @@ final class ImportDirectoryEstablishmentsCommandTest extends KernelTestCase
             $organization->getContactDetails()->addEmailContactLink((new EmailContactLinkEntity())->setEmailAddress('mjc-review-fixture@example.test'));
             $organization->getContactDetails()->addPhoneContactLink((new PhoneContactLinkEntity())->setPhoneNumber('04 76 12 34 56'));
             $organization->getContactDetails()->addAddressContact(
-                (new AddressContactEntity())->setAddress('12, rue du Test, 38500 Commune revue')->setPostalCode('38500')->setCity('Commune revue'),
+                (new AddressContactEntity())->setAddress('12, rue du Test, 38500 Commune revue')->setMunicipality(GeographyFixture::municipality($entityManager, 'Commune revue', '38500')),
             );
             $entityManager->persist($organization);
             $entityManager->flush();
@@ -73,7 +74,7 @@ final class ImportDirectoryEstablishmentsCommandTest extends KernelTestCase
             $organization->getContactDetails()->addEmailContactLink((new EmailContactLinkEntity())->setEmailAddress('mjc-review-fixture@example.test'));
             $organization->getContactDetails()->addPhoneContactLink((new PhoneContactLinkEntity())->setPhoneNumber('04 76 12 34 56'));
             $organization->getContactDetails()->addAddressContact(
-                (new AddressContactEntity())->setAddress('12, rue du Test, 38500 Commune revue')->setPostalCode('38500')->setCity('Commune revue'),
+                (new AddressContactEntity())->setAddress('12, rue du Test, 38500 Commune revue')->setMunicipality(GeographyFixture::municipality($entityManager, 'Commune revue', '38500')),
             );
             $entityManager->persist($organization);
             $entityManager->flush();

@@ -50,12 +50,19 @@ final class CommercialProjectContactsControllerTest extends WebTestCase
         self::assertSame($personEntity->getId(), $savedProjectEntity->getPrimaryContact()?->getId());
 
         $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
-        $token = $crawler->filterXPath('//form[contains(@action, "/contacts/' . $personEntity->getId() . '/edit")]/input[@name="_token"]')->attr('value');
-        $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/contacts/' . $personEntity->getId() . '/edit', [
-            '_token' => $token,
-            'firstName' => 'Clara',
-            'lastName' => 'Martin',
-            'role' => 'Direction',
+        self::assertCount(1, $crawler->filterXPath('//a[contains(@href, "section=people") and contains(@href, "selectedId=' . $personEntity->getId() . '")]'));
+        $crawler = $client->request('GET', '/directory/person/' . $personEntity->getId() . '/edit/details');
+        self::assertResponseIsSuccessful();
+        $token = $crawler->filterXPath('//input[@name="directory_person_details_form[_token]"]')->attr('value');
+        $client->request('POST', '/directory/person/' . $personEntity->getId() . '/edit/details', [
+            'directory_person_details_form' => [
+                '_token' => $token,
+                'firstName' => 'Clara',
+                'lastName' => 'Martin',
+                'role' => 'Direction',
+                'organization' => (string) $organizationEntity->getId(),
+                'active' => '1',
+            ],
         ]);
         self::assertResponseRedirects();
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);

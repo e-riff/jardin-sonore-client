@@ -1,4 +1,33 @@
 mailing:
+  report:
+    title: "Bilan des envois"
+    back: "Retour à la campagne"
+    explanation: "Consultez les résultats de cette campagne et les destinataires associés."
+    statistics: "Statistiques d’envoi"
+    total: "{count, plural, =0 {Aucune adresse} one {# adresse} other {# adresses}}"
+    sent_help: "Envoyé signifie que le serveur d’envoi a accepté le message ; cela ne garantit pas sa réception ou sa lecture."
+    emails: "Adresses e-mail"
+    organizations: "Établissements associés"
+    organizations_help: "Établissements actuellement liés aux adresses envoyées, dans l’annuaire ou le portail. Ces liens peuvent avoir changé depuis l’envoi."
+    search_emails: "Rechercher une adresse"
+    search_organizations: "Rechercher un établissement"
+    results: "{count, plural, =0 {Aucun résultat} one {# résultat} other {# résultats}}"
+    empty: "Aucun résultat."
+    organization: "Établissement"
+    email: "Adresse e-mail"
+    state: "État"
+    date: "Date d’envoi"
+    error: "Erreur"
+    previous: "Précédent"
+    next: "Suivant"
+    page: "Page {page}"
+    status:
+      sent: "Envoyés"
+      failed: "En échec"
+      cancelled: "Annulés"
+      pending: "En attente"
+      processing: "En cours"
+
   index:
     title: "Newsletters | Jardin Sonore"
     eyebrow: "Newsletters"

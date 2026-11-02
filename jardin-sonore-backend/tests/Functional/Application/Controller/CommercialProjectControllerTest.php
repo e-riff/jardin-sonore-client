@@ -291,7 +291,7 @@ final class CommercialProjectControllerTest extends WebTestCase
         self::assertInstanceOf(OrganizationEntity::class, $organizationEntity);
         $projectEntity = $entityManager->getRepository(CommercialProjectEntity::class)->findOneBy(['organization' => $organizationEntity->getId()]);
         self::assertInstanceOf(CommercialProjectEntity::class, $projectEntity);
-        self::assertSame('Camille Martin', (string) $projectEntity->getPrimaryContact());
+        self::assertSame('Martin Camille', (string) $projectEntity->getPrimaryContact());
         self::assertSame($organizationEntity->getId(), $projectEntity->getPrimaryContact()?->getOrganization()?->getId());
         self::assertCount(1, $projectEntity->getActions());
         self::assertSame('Répondre', $projectEntity->getActions()->first()->getTitle());
@@ -545,7 +545,7 @@ final class CommercialProjectControllerTest extends WebTestCase
         self::assertCount(1, $crawler->filterXPath('//dialog[contains(@class, "commercial-timeline__edit-dialog")]'));
         self::assertCount(2, $crawler->filterXPath('//dialog//button[@aria-label="Effacer la mise en forme"]'));
         self::assertCount(1, $crawler->filterXPath('//article[contains(@class, "commercial-timeline__item")]//div[contains(@class, "commercial-timeline__event-meta")]//time/following-sibling::h3[text()="Note"]'));
-        self::assertSame('Anaïs Thioillère', trim($crawler->filterXPath('//span[contains(@class, "commercial-timeline__person")]')->text()));
+        self::assertSame('Thioillère Anaïs', trim($crawler->filterXPath('//span[contains(@class, "commercial-timeline__person")]')->text()));
         self::assertStringContainsString('Projet éveil', $crawler->filterXPath('//section[contains(@class, "commercial-dossier__timeline-header")]')->text());
         self::assertStringContainsString('Ancienne saisie<br>' . "\n" . 'retour suivant', (string) $client->getResponse()->getContent());
         $token = $crawler->filterXPath('//form[contains(@action, "/events/' . $noteEntity->getId() . '/edit")]/input[@name="_token"]')->attr('value');

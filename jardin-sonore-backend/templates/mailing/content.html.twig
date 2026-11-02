@@ -12,6 +12,7 @@
         </div>
 
         <div class="internal-heading-actions">
+            <a class="internal-button internal-button--secondary" href="{{ path('mailing_report', {uuid: campaign.uuid}) }}">{{ 'mailing.report.title'|trans({}, 'mailing') }}</a>
             <a class="internal-button" href="{{ path('mailing_audience', {
                 uuid: campaign.uuid,
                 returnTo: path('mailing_content', { uuid: campaign.uuid })

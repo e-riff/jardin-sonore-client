@@ -1,0 +1,27 @@
+<section {{ attributes.defaults({class: 'internal-card'}) }}>
+    {% set organizations = kind == 'organizations' %}
+    <h2>{{ (organizations ? 'mailing.report.organizations' : 'mailing.report.emails')|trans({}, 'mailing') }}</h2>
+    {% if organizations %}<p>{{ 'mailing.report.organizations_help'|trans({}, 'mailing') }}</p>{% endif %}
+    <div class="internal-search"><div class="internal-search__field">
+        <label for="report-search-{{ kind }}">{{ (organizations ? 'mailing.report.search_organizations' : 'mailing.report.search_emails')|trans({}, 'mailing') }}</label>
+        <input id="report-search-{{ kind }}" type="search" value="{{ query }}" data-model="debounce(350)|query" autocomplete="off">
+    </div></div>
+    {% set results = this.results %}
+    <p aria-live="polite">{{ 'mailing.report.results'|trans({count: results.total}, 'mailing') }}</p>
+    {% if results.rows is empty %}<p>{{ 'mailing.report.empty'|trans({}, 'mailing') }}</p>{% else %}
+        <div class="internal-table-wrapper" data-loading="addClass(opacity-50)"><table class="internal-table internal-table--compact-mobile"><thead><tr>
+            {% if organizations %}<th>{{ 'mailing.report.organization'|trans({}, 'mailing') }}</th>{% else %}
+                <th>{{ 'mailing.report.email'|trans({}, 'mailing') }}</th><th>{{ 'mailing.report.state'|trans({}, 'mailing') }}</th><th>{{ 'mailing.report.date'|trans({}, 'mailing') }}</th><th>{{ 'mailing.report.error'|trans({}, 'mailing') }}</th>
+            {% endif %}
+        </tr></thead><tbody>{% for row in results.rows %}<tr>
+            {% if organizations %}<td><a href="{{ path('internal_directory_index', {section: 'organizations', selectedId: row.id}) }}">{{ row.name }}</a></td>{% else %}
+                <td>{{ row.email_address }}</td><td>{{ ('mailing.report.status.' ~ row.status)|trans({}, 'mailing') }}</td><td>{{ row.sent_at ? row.sent_at|date('d/m/Y H:i') : '—' }}</td><td>{{ row.last_error ?: '—' }}</td>
+            {% endif %}
+        </tr>{% endfor %}</tbody></table></div>
+    {% endif %}
+    <div class="internal-heading-actions">
+        <button type="button" class="internal-button internal-button--secondary" data-action="live#action" data-live-action-param="previousPage" {{ page <= 1 ? 'disabled' : '' }}>{{ 'mailing.report.previous'|trans({}, 'mailing') }}</button>
+        <span>{{ 'mailing.report.page'|trans({page: page}, 'mailing') }}</span>
+        <button type="button" class="internal-button internal-button--secondary" data-action="live#action" data-live-action-param="nextPage" {{ page * 25 >= results.total ? 'disabled' : '' }}>{{ 'mailing.report.next'|trans({}, 'mailing') }}</button>
+    </div>
+</section>

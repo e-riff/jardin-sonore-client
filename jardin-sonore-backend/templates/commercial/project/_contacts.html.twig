@@ -30,6 +30,25 @@
                 <div class="commercial-dossier__person">
                     <div class="commercial-dossier__person-heading"><strong>{{ projectPerson.person }}</strong><a class="commercial-dossier__icon-action" href="{{ path('internal_directory_index', {section: 'people', selectedId: projectPerson.person.id}) }}" title="{{ 'project.open_directory_record'|trans({}, 'commercial') }}" aria-label="{{ 'project.open_directory_record'|trans({}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</a>{% if project.primaryContact == projectPerson.person %}<span class="commercial-dossier__primary" title="{{ 'project.primary_contact'|trans({}, 'commercial') }}">{{ 'project.primary_contact'|trans({}, 'commercial') }}</span>{% endif %}{% if not projectPerson.current %}<span class="internal-badge internal-badge--muted">{{ 'project.contact_former'|trans({}, 'commercial') }}</span>{% endif %}</div>
                     {% if projectPerson.person.role %}<span class="commercial-dossier__muted">{{ projectPerson.person.role }}</span>{% endif %}
+                    {% if projectPerson.current %}
+                        <div data-controller="internal-dialog">
+                            <button type="button" class="internal-button internal-button--secondary internal-button--compact" data-action="internal-dialog#open" aria-haspopup="dialog">{{ 'project.contact_mark_former'|trans({}, 'commercial') }}</button>
+                            <dialog class="internal-form-dialog" data-internal-dialog-target="dialog" data-action="click->internal-dialog#closeOnBackdrop">
+                                <div class="internal-form-dialog__panel">
+                                    <h2>{{ 'project.contact_former_confirm_title'|trans({}, 'commercial') }}</h2>
+                                    <p>{{ 'project.contact_former_confirm_description'|trans({'%name%': projectPerson.person}, 'commercial') }}</p>
+                                    <form method="post" action="{{ path('commercial_project_contact_former', {id: project.id, personId: projectPerson.person.id}) }}">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_contact_' ~ project.id ~ '_' ~ projectPerson.person.id ~ '_former') }}">
+                                        <div class="internal-form-dialog__actions">
+                                            <button type="button" class="internal-button internal-button--secondary" data-action="internal-dialog#close">{{ 'project.contact_former_cancel'|trans({}, 'commercial') }}</button>
+                                            <button type="submit" class="internal-button">{{ 'project.contact_mark_former'|trans({}, 'commercial') }}</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </dialog>
+                        </div>
+                    {% endif %}
+
                     <div class="commercial-dossier__channels">
                         {% for phone in projectPerson.person.contactDetails.phoneContacts %}
                             <span class="commercial-dossier__channel"><span class="commercial-contact-value">{{ phone.phoneNumber }}</span><a href="tel:{{ phone.phoneNumber|replace({' ': '', '.': '', '-': ''}) }}" aria-label="{{ 'project.call_number'|trans({number: phone.phoneNumber}, 'commercial') }}" title="{{ 'project.call_number'|trans({number: phone.phoneNumber}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'phone'} only %}</a></span>

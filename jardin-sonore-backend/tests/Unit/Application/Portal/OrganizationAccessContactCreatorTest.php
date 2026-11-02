@@ -32,7 +32,7 @@ final class OrganizationAccessContactCreatorTest extends TestCase
         );
 
         self::assertSame($organizationEntity, $personEntity->getOrganization());
-        self::assertSame('Anne Martin', (string) $personEntity);
+        self::assertSame('Martin Anne', (string) $personEntity);
         self::assertSame('anne.martin@lilas.test', $personEntity->getContactDetails()?->getEmailContacts()->first()?->getEmailAddress());
     }
 }

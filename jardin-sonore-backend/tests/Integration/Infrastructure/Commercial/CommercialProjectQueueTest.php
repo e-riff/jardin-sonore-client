@@ -13,6 +13,7 @@ use App\Infrastructure\Doctrine\Entity\CommercialAppointmentEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Kernel;
+use App\Tests\Support\GeographyFixture;
 use DateTimeImmutable;
 use DateTimeZone;
 use Doctrine\DBAL\Connection;
@@ -167,7 +168,7 @@ final class CommercialProjectQueueTest extends KernelTestCase
             $projectEntity = new CommercialProjectEntity("{$title} {$suffix}", $organizationEntity, null, new DateTimeImmutable('2026-10-10'));
             $projectEntity->addAction(new CommercialActionEntity($projectEntity, 'Rappeler', new DateTimeImmutable($dueOn)));
             if ('Lundi prochain' === $title) {
-                $organizationEntity->getContactDetails()?->addAddressContact((new AddressContactEntity())->setPostalCode('42000')->setCity('Saint-Étienne'));
+                $organizationEntity->getContactDetails()?->addAddressContact((new AddressContactEntity())->setMunicipality(GeographyFixture::municipality($entityManager, 'Saint-Étienne', '42000')));
             }
             if ('Dossier confirmé' === $title) {
                 $projectEntity->setStatus(CommercialProjectEntity::STATUS_CONFIRMED);

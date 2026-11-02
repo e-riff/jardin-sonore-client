@@ -185,6 +185,9 @@ project:
   contact_save: Enregistrer les corrections
   contact_primary: Choisir comme interlocuteur principal
   contact_mark_former: Ne suit plus ce dossier
+  contact_former_confirm_title: Retirer l’interlocuteur du suivi
+  contact_former_confirm_description: "%name% ne suivra plus ce dossier. Sa fiche reste dans l’annuaire."
+  contact_former_cancel: Annuler
   contact_link: Rattacher une personne de la structure
   contact_person: Personne
   contact_select: Choisir une personne

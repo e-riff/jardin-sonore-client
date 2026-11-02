@@ -445,7 +445,8 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertIsString($styles);
         self::assertIsString($formTheme);
         self::assertStringContainsString('.session-activity-media__item', $styles);
-        self::assertStringContainsString('form_parent(form).vars.ea_vars is not defined', $formTheme);
+        self::assertStringContainsString('{% block collection_entry_row %}', $formTheme);
+        self::assertStringNotContainsString('ea_vars', $formTheme);
     }
 
     public function testActivitySaveRefreshesTheGlobalSessionInstrumentsForm(): void

@@ -1,0 +1,17 @@
+{% extends 'internal/base.html.twig' %}
+{% set title = 'mailing.report.title'|trans({}, 'mailing') %}
+{% block internal_body %}
+    {% include 'components/_internal_back_button.html.twig' with { href: path('mailing_content', {uuid: campaign.uuid}), label: 'mailing.report.back'|trans({}, 'mailing') } only %}
+    <section class="internal-page-heading">
+        <div><p class="internal-eyebrow">{{ 'mailing.report.title'|trans({}, 'mailing') }}</p><h1>{{ campaign.internalTitle }}</h1><p>{{ 'mailing.report.explanation'|trans({}, 'mailing') }}</p></div>
+    </section>
+    <section class="internal-card">
+        <h2>{{ 'mailing.report.statistics'|trans({}, 'mailing') }}</h2>
+        <p>{{ 'mailing.report.sent_help'|trans({}, 'mailing') }}</p>
+        {% set total = 0 %}{% for count in counts %}{% set total = total + count %}{% endfor %}
+        <p><strong>{{ 'mailing.report.total'|trans({count: total}, 'mailing') }}</strong></p>
+        <div class="internal-table-wrapper"><table class="internal-table"><thead><tr>{% for status in ['sent', 'failed', 'cancelled', 'pending', 'processing'] %}<th>{{ ('mailing.report.status.' ~ status)|trans({}, 'mailing') }}</th>{% endfor %}</tr></thead><tbody><tr>{% for status in ['sent', 'failed', 'cancelled', 'pending', 'processing'] %}<td>{{ counts[status]|default(0) }}</td>{% endfor %}</tr></tbody></table></div>
+    </section>
+    <twig:MailingReportTable :campaignUuid="campaign.uuid.toRfc4122" kind="emails" />
+    <twig:MailingReportTable :campaignUuid="campaign.uuid.toRfc4122" kind="organizations" />
+{% endblock %}

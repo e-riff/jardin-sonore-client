@@ -40,7 +40,7 @@ final class CommercialRequestControllerTest extends WebTestCase
 
         $client->request('GET', '/commercial/requests/people?organizationId=' . $firstOrganizationEntity->getId());
         self::assertResponseIsSuccessful();
-        self::assertSame(['people' => [['id' => $personEntity->getId(), 'label' => 'Camille Martin']]], json_decode((string) $client->getResponse()->getContent(), true));
+        self::assertSame(['people' => [['id' => $personEntity->getId(), 'label' => 'Martin Camille']]], json_decode((string) $client->getResponse()->getContent(), true));
 
         $crawler = $client->request('GET', '/commercial/requests/new');
         self::assertResponseIsSuccessful();
@@ -69,7 +69,7 @@ final class CommercialRequestControllerTest extends WebTestCase
         self::assertSame(CommercialRequestEntity::STATUS_TO_QUALIFY, $requestEntity->getStatus());
         self::assertSame($firstOrganizationEntity->getId(), $requestEntity->getOrganization()?->getId());
         self::assertSame($personEntity->getId(), $requestEntity->getPerson()?->getId());
-        self::assertSame('Camille Martin', $requestEntity->getSenderName());
+        self::assertSame('Martin Camille', $requestEntity->getSenderName());
         self::assertSame($firstOrganizationEntity->getName(), $requestEntity->getOrganizationName());
         self::assertNull($requestEntity->getCity());
         self::assertCount(0, $requestEntity->getProjects());
@@ -151,7 +151,7 @@ final class CommercialRequestControllerTest extends WebTestCase
         self::assertInstanceOf(CommercialRequestEntity::class, $savedRequestEntity);
         self::assertCount(1, $savedRequestEntity->getProjects());
         self::assertSame("Nouvelle structure {$suffix}", $savedRequestEntity->getProjects()->first()->getOrganization()->getName());
-        self::assertSame('Alex Martin', (string) $savedRequestEntity->getProjects()->first()->getPrimaryContact());
+        self::assertSame('Martin Alex', (string) $savedRequestEntity->getProjects()->first()->getPrimaryContact());
 
         $client->request('POST', '/commercial/requests/' . $requestEntity->getId() . '/close', ['_token' => 'invalid']);
         self::assertResponseStatusCodeSame(403);
@@ -224,14 +224,14 @@ final class CommercialRequestControllerTest extends WebTestCase
         $requestEntity = static::getContainer()->get(EntityManagerInterface::class)->getRepository(CommercialRequestEntity::class)->findOneBy(['message' => 'Premier échange'], ['id' => 'DESC']);
         self::assertInstanceOf(CommercialRequestEntity::class, $requestEntity);
         self::assertSame($firstOrganizationEntity->getId(), $requestEntity->getOrganization()?->getId());
-        self::assertSame('Camille Martin', (string) $requestEntity->getPerson());
-        self::assertSame('Camille Martin', $requestEntity->getSenderName());
+        self::assertSame('Martin Camille', (string) $requestEntity->getPerson());
+        self::assertSame('Martin Camille', $requestEntity->getSenderName());
 
         $client->request('GET', '/commercial/requests/people?organizationId=' . $firstOrganizationEntity->getId());
         self::assertResponseIsSuccessful();
         $peoplePayload = json_decode((string) $client->getResponse()->getContent(), true);
         self::assertCount(1, $peoplePayload['people']);
-        self::assertSame('Camille Martin — Direction', $peoplePayload['people'][0]['label']);
+        self::assertSame('Martin Camille — Direction', $peoplePayload['people'][0]['label']);
 
         $crawler = $client->request('GET', '/commercial/requests/new');
         $form = $crawler->selectButton('Enregistrer la demande')->form();

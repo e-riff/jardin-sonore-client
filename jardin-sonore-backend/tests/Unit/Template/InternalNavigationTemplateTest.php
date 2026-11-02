@@ -13,7 +13,8 @@ final class InternalNavigationTemplateTest extends TestCase
         $template = file_get_contents(__DIR__ . '/../../../templates/internal/base.html.twig');
 
         self::assertIsString($template);
-        self::assertStringContainsString('<nav class="internal-subnav"', $template);
+        self::assertStringContainsString('<nav class="internal-subnav{{', $template);
+        self::assertStringContainsString("currentRoute starts with 'internal_directory_' ? ' is-directory-hidden'", $template);
         self::assertStringNotContainsString('{% if activeNavGroup %}', $template);
     }
 }
