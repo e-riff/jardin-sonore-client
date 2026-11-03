@@ -374,8 +374,15 @@ final class CommercialProjectController extends AbstractController
         $projectEntity = $this->findProject($id, $entityManager);
         try {
             $workflow->changeStatusManually($projectEntity, $request->request->getString('status'));
-        } catch (DomainException) {
-            return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+        } catch (DomainException $exception) {
+            $message = match ($exception->getMessage()) {
+                'The project still has an open action.' => 'project.status_error_open_action',
+                'The project still has an unpaid invoice.' => 'project.status_error_unpaid_invoice',
+                default => 'project.status_error',
+            };
+            $this->addFlash('error', ['message' => $message, 'domain' => 'commercial']);
+
+            return $this->redirectToRoute('commercial_project_show', ['id' => $id]);
         }
         $entityManager->flush();
 

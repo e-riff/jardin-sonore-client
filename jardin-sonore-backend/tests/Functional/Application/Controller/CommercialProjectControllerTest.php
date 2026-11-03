@@ -588,6 +588,10 @@ final class CommercialProjectControllerTest extends WebTestCase
 
         $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
         $token = $crawler->filterXPath('//form[contains(@action, "/status") and not(contains(@action, "/status/"))]/input[@name="_token"]')->attr('value');
+        $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/status', ['_token' => $token, 'status' => 'completed']);
+        self::assertResponseRedirects();
+        $crawler = $client->followRedirect();
+        self::assertStringContainsString('Terminez ou annulez les tâches ouvertes', $crawler->filterXPath('//*[contains(@class, "internal-alert")]')->text());
         $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/status', ['_token' => $token, 'status' => 'without_result']);
         self::assertResponseRedirects();
         $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/status', ['_token' => $token, 'status' => 'discussion']);
@@ -598,6 +602,26 @@ final class CommercialProjectControllerTest extends WebTestCase
         $savedProjectEntity = $entityManager->find(CommercialProjectEntity::class, $projectEntity->getId());
         self::assertSame(CommercialProjectEntity::STATUS_DISCUSSION, $savedProjectEntity->getStatus());
         self::assertSame(CommercialActionEntity::STATUS_CANCELED, $savedProjectEntity->getActions()->first()->getStatus());
+    }
+
+    public function testProjectInDiscussionCanBeClosed(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(5));
+        $adminUserEntity = (new AdminUserEntity())->setEmail("project-close-{$suffix}@example.test")->setPassword('unused');
+        $projectEntity = new CommercialProjectEntity('Ateliers', null, null, new DateTimeImmutable());
+        $entityManager->persist($adminUserEntity);
+        $entityManager->persist($projectEntity);
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+
+        $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
+        $token = $crawler->filterXPath('//form[contains(@action, "/status") and not(contains(@action, "/status/"))]/input[@name="_token"]')->attr('value');
+        $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/status', ['_token' => $token, 'status' => 'completed']);
+        self::assertResponseRedirects();
+        $entityManager->clear();
+        self::assertSame(CommercialProjectEntity::STATUS_COMPLETED, $entityManager->find(CommercialProjectEntity::class, $projectEntity->getId())->getStatus());
     }
 
     public function testInvalidNoteOnProvisionalDossierReturnsValidationResponse(): void

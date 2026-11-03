@@ -173,6 +173,9 @@ project:
   add_event: Ajouter au fil
   add_event_save: Ajouter au fil
   change_status: État du dossier
+  status_error: Impossible de modifier l’état de ce dossier.
+  status_error_open_action: Terminez ou annulez les tâches ouvertes avant de clore ce dossier.
+  status_error_unpaid_invoice: Réglez les factures impayées avant de clore ce dossier.
   status_label: État
   change_status_save: Changer l’état
   no_actions: Aucune tâche à faire.

@@ -70,8 +70,8 @@ final readonly class CommercialProjectWorkflow
 
     public function complete(CommercialProjectEntity $projectEntity): void
     {
-        if (CommercialProjectEntity::STATUS_CONFIRMED !== $projectEntity->getStatus()) {
-            throw new DomainException('Only a confirmed project can be completed.');
+        if (!in_array($projectEntity->getStatus(), [CommercialProjectEntity::STATUS_DISCUSSION, CommercialProjectEntity::STATUS_CONFIRMED], true)) {
+            throw new DomainException('Only a project in discussion or confirmed can be completed.');
         }
         foreach ($projectEntity->getActions() as $actionEntity) {
             if (CommercialActionEntity::STATUS_OPEN === $actionEntity->getStatus()) {
