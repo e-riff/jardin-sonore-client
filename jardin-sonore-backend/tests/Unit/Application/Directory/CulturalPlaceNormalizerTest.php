@@ -15,7 +15,7 @@ final class CulturalPlaceNormalizerTest extends TestCase
             'id' => 'a-unique-id', 'nom_du_lieu' => 'Librairie des enfants', 'code_departement' => '42',
             'sous_domaines' => '["Librairie"]', 'types' => '["Jeunesse"]',
             'courriels' => ['bonjour@example.test'], 'telephones' => ['0477000000'],
-            'commune' => 'Saint-Étienne', 'date_modification' => '2026-10-01T10:00:00',
+            'commune' => 'Saint-Étienne', 'code_commune' => '42218', 'date_modification' => '2026-10-01T10:00:00',
         ];
 
         $result = (new CulturalPlaceNormalizer())->normalize($row, '42');
@@ -23,6 +23,7 @@ final class CulturalPlaceNormalizerTest extends TestCase
         self::assertSame('librairie_jeunesse', $result['item']['type']);
         self::assertTrue($result['youth']);
         self::assertSame('bonjour@example.test', $result['item']['mail']);
+        self::assertSame('42218', $result['item']['codeCommune']);
         self::assertSame('2026-10-01T10:00:00', $result['sourceUpdatedAt']);
         self::assertNull((new CulturalPlaceNormalizer())->normalize($row, '43'));
     }

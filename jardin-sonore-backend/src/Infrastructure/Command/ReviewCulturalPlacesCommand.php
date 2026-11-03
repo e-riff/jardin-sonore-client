@@ -6,10 +6,15 @@ namespace App\Infrastructure\Command;
 
 use App\Application\Directory\CulturalPlaceWorkFile;
 use App\Application\Directory\DirectoryEstablishmentImportItem;
+use App\Application\Directory\DirectoryEstablishmentMatch;
 use App\Application\Directory\DirectoryEstablishmentMatcher;
+use App\Application\Directory\DirectoryOrganizationTypeResolver;
+use App\Infrastructure\Directory\CulturalPlaceCandidateFinder;
+use InvalidArgumentException;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Attribute\Option;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -18,57 +23,102 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 #[AsCommand(name: 'app:directory:cultural-places-review', description: 'Examiner et mémoriser les rapprochements de lieux culturels.')]
 final class ReviewCulturalPlacesCommand extends Command
 {
-    public function __construct(private readonly CulturalPlaceWorkFile $workFile, private readonly DirectoryEstablishmentMatcher $matcher)
+    public function __construct(private readonly CulturalPlaceWorkFile $workFile, private readonly DirectoryEstablishmentMatcher $matcher, private readonly CulturalPlaceCandidateFinder $candidateFinder, private readonly DirectoryOrganizationTypeResolver $typeResolver)
     {
         parent::__construct();
     }
 
-    public function __invoke(InputInterface $input, OutputInterface $output, #[Argument] string $file): int
+    public function __invoke(InputInterface $input, OutputInterface $output, #[Argument] string $file, #[Option(description: 'Revoir le numéro de ligne affiché précédemment.')] ?int $reconsider = null): int
     {
         $io = new SymfonyStyle($input, $output);
         $batch = $this->workFile->load($file);
+        $reconsiderIndex = null;
+        $indexes = array_keys($batch['rows']);
+        if (null !== $reconsider) {
+            $reconsiderIndex = $reconsider - 1;
+            $row = $batch['rows'][$reconsiderIndex] ?? null;
+            if (!$input->isInteractive() || 1 > $reconsider || !is_array($row) || !is_array($row['item'] ?? null)) {
+                $io->error('Indique un numéro de ligne valide et lance la revue en mode interactif.');
+
+                return Command::FAILURE;
+            }
+            if (true === ($row['applied'] ?? false) || null !== $this->matcher->findOrganizationIdLinkedByExternalIdentifiers('culture-lieux', DirectoryEstablishmentImportItem::fromArray($row['item']))) {
+                $io->error('Cette ligne est déjà importée : sa liaison ne peut pas être modifiée ici.');
+
+                return Command::FAILURE;
+            }
+            $batch['rows'][$reconsiderIndex]['decision'] = null;
+            unset($batch['rows'][$reconsiderIndex]['organizationId'], $batch['rows'][$reconsiderIndex]['candidateHash'], $batch['rows'][$reconsiderIndex]['candidatesHash'], $batch['rows'][$reconsiderIndex]['linkedBySource']);
+            $this->workFile->save($file, $batch);
+            $indexes = [$reconsiderIndex, ...array_values(array_filter($indexes, static fn (int $index): bool => $index !== $reconsiderIndex))];
+        }
         $unresolved = 0;
-        foreach ($batch['rows'] as $index => $row) {
+        foreach ($indexes as $index) {
+            $row = $batch['rows'][$index];
             if (!is_array($row) || !is_array($row['item'] ?? null)) {
                 throw new RuntimeException('Ligne de travail invalide.');
+            }
+            $item = DirectoryEstablishmentImportItem::fromArray($row['item']);
+            if ('new' === ($row['decision'] ?? null) && ($row['candidatesHash'] ?? null) === hash('sha256', '[]') && [] !== $this->candidateFinder->findCandidates($item)) {
+                $batch['rows'][$index]['decision'] = null;
+                $row['decision'] = null;
+                $this->workFile->save($file, $batch);
             }
             if (null !== ($row['decision'] ?? null)) {
                 continue;
             }
-            $item = DirectoryEstablishmentImportItem::fromArray($row['item']);
             $linkedId = $this->matcher->findOrganizationIdLinkedByExternalIdentifiers('culture-lieux', $item);
-            $candidates = null === $linkedId ? $this->matcher->findOrganizationCandidates($item) : [];
+            $candidates = null === $linkedId ? $this->candidateFinder->findCandidates($item) : [];
             if (null !== $linkedId) {
                 $batch['rows'][$index]['decision'] = 'linked';
                 $batch['rows'][$index]['organizationId'] = $linkedId;
                 $batch['rows'][$index]['linkedBySource'] = true;
-            } elseif ([] === $candidates) {
+            } elseif ([] === $candidates && $index !== $reconsiderIndex) {
                 $batch['rows'][$index]['decision'] = 'new';
                 $batch['rows'][$index]['candidatesHash'] = hash('sha256', json_encode($candidates, JSON_THROW_ON_ERROR));
             } elseif (!$input->isInteractive()) {
                 ++$unresolved;
                 continue;
             } else {
-                $choices = ['new' => 'Créer une fiche', 'skip' => 'Ignorer'];
+                $choices = ['0' => 'new', 'i' => 'skip'];
                 $io->section(sprintf('%d/%d — %s', $index + 1, count($batch['rows']), $item->name));
-                foreach ($candidates as $candidate) {
+                $displayCandidates = $candidates;
+                $type = $this->typeResolver->resolve($item);
+                if (null !== $type) {
+                    usort($displayCandidates, static function (DirectoryEstablishmentMatch $a, DirectoryEstablishmentMatch $b) use ($type): int {
+                        $rank = static fn (DirectoryEstablishmentMatch $match): int => $match->type === $type ? 0 : (null === $match->type ? 1 : 2);
+
+                        return ($rank($a) <=> $rank($b)) ?: ($b->score <=> $a->score) ?: ($a->organizationId <=> $b->organizationId);
+                    });
+                }
+                $headers = ['Champ', 'À importer'];
+                $rows = [
+                    ['Nom', $item->name],
+                    ['Type', $item->type],
+                    ['Commune', $item->commune],
+                    ['Adresse', $item->address],
+                    ['Courriel', $item->emailAddress],
+                    ['Téléphone', $item->phoneNumber],
+                    ['Site', $item->websiteUrl],
+                ];
+                foreach ($displayCandidates as $candidateIndex => $candidate) {
                     $id = (string) $candidate->organizationId;
-                    $choices[$id] = "Rattacher à la fiche #{$id} : {$candidate->organizationName}";
-                    $io->table(['Champ', 'À importer', "Fiche #{$id} ({$candidate->score} %)"], [
-                        ['Nom', $item->name, $candidate->organizationName],
-                        ['Type', $item->type, $candidate->type?->value],
-                        ['Commune', $item->commune, $candidate->commune],
-                        ['Adresse', $item->address, $candidate->address],
-                        ['Courriel', $item->emailAddress, $candidate->email],
-                        ['Téléphone', $item->phoneNumber, $candidate->phone],
-                        ['Site', $item->websiteUrl, $candidate->website],
-                    ]);
+                    $selectionNumber = (string) ($candidateIndex + 1);
+                    $choices[$selectionNumber] = $id;
+                    $headers[] = "[{$selectionNumber}] Fiche #{$id}";
+                    foreach ([$candidate->organizationName, $candidate->type?->value, $candidate->commune, $candidate->address, $candidate->email, $candidate->phone, $candidate->website] as $fieldIndex => $value) {
+                        $rows[$fieldIndex][] = $value;
+                    }
                 }
-                $selection = $io->choice('Que faire ?', array_values($choices));
-                $choice = array_search($selection, $choices, true);
-                if (false === $choice) {
-                    throw new RuntimeException('Choix invalide.');
-                }
+                $io->table($headers, $rows);
+                $choice = $io->ask('Que faire ? (0 = créer, i = ignorer, numéro = rattacher)', null, static function (?string $answer) use ($choices): string {
+                    $answer = mb_strtolower(trim($answer ?? ''));
+                    if (!array_key_exists($answer, $choices)) {
+                        throw new InvalidArgumentException('Choisis un numéro affiché, 0 ou i.');
+                    }
+
+                    return $choices[$answer];
+                });
                 if ('new' === $choice || 'skip' === $choice) {
                     $batch['rows'][$index]['decision'] = $choice;
                     if ('new' === $choice) {

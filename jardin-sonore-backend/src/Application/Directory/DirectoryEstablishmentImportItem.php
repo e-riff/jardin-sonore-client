@@ -34,6 +34,7 @@ final readonly class DirectoryEstablishmentImportItem
         public array $additionalPhones = [],
         /** @var list<string> */
         public array $additionalAddresses = [],
+        public ?string $municipalityInseeCode = null,
     ) {
     }
 
@@ -59,6 +60,7 @@ final readonly class DirectoryEstablishmentImportItem
             additionalEmails: self::stringList($payload['additionalEmails'] ?? []),
             additionalPhones: self::stringList($payload['additionalPhones'] ?? []),
             additionalAddresses: self::stringList($payload['additionalAddresses'] ?? []),
+            municipalityInseeCode: self::nullableString($payload['codeCommune'] ?? null),
         );
     }
 

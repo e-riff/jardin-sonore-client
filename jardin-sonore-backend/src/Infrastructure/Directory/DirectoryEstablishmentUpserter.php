@@ -27,6 +27,7 @@ use App\Infrastructure\Doctrine\Repository\MunicipalityDoctrineRepository;
 use App\Infrastructure\Doctrine\Repository\PhoneContactDoctrineRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use InvalidArgumentException;
+use RuntimeException;
 
 final readonly class DirectoryEstablishmentUpserter
 {
@@ -162,7 +163,7 @@ final readonly class DirectoryEstablishmentUpserter
 
         $postalCode = $this->extractPostalCode($item->address);
 
-        $this->linkMunicipality($addressContact, $item->commune, $postalCode);
+        $this->linkMunicipality($addressContact, $item->commune, $postalCode, $item->municipalityInseeCode);
     }
 
     public function upsertAdditionalAddressContact(ContactDetailsEntity $contactDetails, string $address, ?string $commune): void
@@ -183,8 +184,17 @@ final readonly class DirectoryEstablishmentUpserter
         $contactDetails->addAddressContact($addressContact);
     }
 
-    private function linkMunicipality(AddressContactEntity $addressContact, ?string $commune, ?string $postalCode): void
+    private function linkMunicipality(AddressContactEntity $addressContact, ?string $commune, ?string $postalCode, ?string $inseeCode = null): void
     {
+        if (null !== $inseeCode) {
+            $municipality = $this->municipalityDoctrineRepository->findOneBy(['inseeCode' => $inseeCode]);
+            if (null === $municipality) {
+                throw new RuntimeException("Commune introuvable pour le code INSEE {$inseeCode}.");
+            }
+            $addressContact->setMunicipality($municipality);
+
+            return;
+        }
         $municipalityId = $this->directoryMunicipalityLookup->findIdByNameAndPostalCode(
             commune: $commune,
             postalCode: $postalCode,

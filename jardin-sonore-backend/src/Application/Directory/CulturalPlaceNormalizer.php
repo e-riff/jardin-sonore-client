@@ -44,6 +44,7 @@ final class CulturalPlaceNormalizer
                 'siteWeb' => $websites[0] ?? null,
                 'address' => $row['adresse_entree_public'] ?? $row['adresse_complete'] ?? null,
                 'commune' => $row['commune'] ?? null,
+                'codeCommune' => $row['code_commune'] ?? null,
             ],
             'youth' => $youth,
             'sourceUpdatedAt' => is_string($row['date_modification'] ?? null) ? $row['date_modification'] : null,

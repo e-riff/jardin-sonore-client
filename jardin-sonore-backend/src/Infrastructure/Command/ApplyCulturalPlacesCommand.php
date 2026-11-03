@@ -8,9 +8,11 @@ use App\Application\Directory\CulturalPlaceWorkFile;
 use App\Application\Directory\DirectoryEstablishmentImportItem;
 use App\Application\Directory\DirectoryEstablishmentMatcher;
 use App\Application\Directory\DirectoryOrganizationTypeResolver;
+use App\Infrastructure\Directory\CulturalPlaceCandidateFinder;
 use App\Infrastructure\Directory\DirectoryEstablishmentUpserter;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Repository\EmailContactDoctrineRepository;
+use App\Infrastructure\Doctrine\Repository\MunicipalityDoctrineRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\Argument;
@@ -29,9 +31,11 @@ final class ApplyCulturalPlacesCommand extends Command
     public function __construct(
         private readonly CulturalPlaceWorkFile $workFile,
         private readonly DirectoryEstablishmentMatcher $matcher,
+        private readonly CulturalPlaceCandidateFinder $candidateFinder,
         private readonly DirectoryEstablishmentUpserter $upserter,
         private readonly DirectoryOrganizationTypeResolver $typeResolver,
         private readonly EmailContactDoctrineRepository $emailRepository,
+        private readonly MunicipalityDoctrineRepository $municipalityRepository,
         private readonly EntityManagerInterface $entityManager,
         private readonly ValidatorInterface $validator,
     ) {
@@ -48,6 +52,59 @@ final class ApplyCulturalPlacesCommand extends Command
 
                 return Command::FAILURE;
             }
+            if ('skip' !== $row['decision'] && null !== ($row['item']['commune'] ?? null)) {
+                $code = $row['item']['codeCommune'] ?? null;
+                if (!is_string($code) || 1 !== preg_match('/^(?:\d{2}|2A|2B)\d{3}$/', $code)) {
+                    $io->error('Code INSEE absent ou invalide. Actualisez les communes du fichier avant l’import.');
+
+                    return Command::FAILURE;
+                }
+                if (null === $this->municipalityRepository->findOneBy(['inseeCode' => $code])) {
+                    $io->error("Commune inconnue dans l’annuaire : code INSEE {$code}. Aucune ligne n’a été importée.");
+
+                    return Command::FAILURE;
+                }
+            }
+        }
+        $staleRows = [];
+        foreach ($batch['rows'] as $index => $row) {
+            if ('skip' === $row['decision'] || true === ($row['applied'] ?? false)) {
+                continue;
+            }
+            $item = DirectoryEstablishmentImportItem::fromArray($row['item']);
+            $linkedId = $this->matcher->findOrganizationIdLinkedByExternalIdentifiers(self::SOURCE, $item);
+            $staleMessage = null;
+            if (null !== $linkedId && 'linked' === $row['decision'] && $linkedId !== ($row['organizationId'] ?? null)) {
+                throw new RuntimeException("Le lien externe de {$item->externalId} a changé.");
+            }
+            if (null === $linkedId && 'new' === $row['decision']) {
+                $candidatesHash = hash('sha256', json_encode($this->candidateFinder->findCandidates($item), JSON_THROW_ON_ERROR));
+                $reviewedCandidatesHash = $row['candidatesHash'] ?? hash('sha256', '[]');
+                if ($candidatesHash !== $reviewedCandidatesHash) {
+                    $staleMessage = "Un rapprochement est apparu pour {$item->externalId}";
+                }
+            } elseif (null === $linkedId && true === ($row['linkedBySource'] ?? false)) {
+                $staleMessage = "Le lien externe de {$item->externalId} a disparu";
+            } elseif (null === $linkedId && 'linked' === $row['decision'] && isset($row['candidateHash'])) {
+                $organizationId = $row['organizationId'] ?? null;
+                $currentHash = null;
+                foreach ($this->candidateFinder->findCandidates($item) as $candidate) {
+                    if ($candidate->organizationId === $organizationId) {
+                        $currentHash = hash('sha256', json_encode($candidate, JSON_THROW_ON_ERROR));
+                    }
+                }
+                if ($currentHash !== $row['candidateHash']) {
+                    $staleMessage = "La fiche choisie pour {$item->externalId} a changé";
+                }
+            }
+            if (null !== $staleMessage) {
+                $batch['rows'][$index]['decision'] = null;
+                $staleRows[] = $staleMessage;
+            }
+        }
+        if ([] !== $staleRows) {
+            $this->workFile->save($file, $batch);
+            throw new RuntimeException(implode("\n", $staleRows) . '. Reprenez la revue. Aucune nouvelle fiche n’a été écrite.');
         }
         foreach ($batch['rows'] as $index => $row) {
             if ('skip' === $row['decision'] || true === ($row['applied'] ?? false)) {
@@ -60,44 +117,16 @@ final class ApplyCulturalPlacesCommand extends Command
             $linkedId = $this->matcher->findOrganizationIdLinkedByExternalIdentifiers(self::SOURCE, $item);
             $result = 'linked';
             if (null !== $linkedId) {
-                if ('linked' === $row['decision'] && $linkedId !== ($row['organizationId'] ?? null)) {
-                    throw new RuntimeException("Le lien externe de {$item->externalId} a changé.");
-                }
                 $organization = $this->entityManager->find(OrganizationEntity::class, $linkedId);
                 if ('new' === $row['decision']) {
                     $result = 'recovered';
                 }
             } elseif ('new' === $row['decision']) {
-                $candidatesHash = hash('sha256', json_encode($this->matcher->findOrganizationCandidates($item), JSON_THROW_ON_ERROR));
-                $reviewedCandidatesHash = $row['candidatesHash'] ?? hash('sha256', '[]');
-                if ($candidatesHash !== $reviewedCandidatesHash) {
-                    $batch['rows'][$index]['decision'] = null;
-                    $this->workFile->save($file, $batch);
-                    throw new RuntimeException("Un rapprochement est apparu pour {$item->externalId} ; reprendre la revue.");
-                }
                 $organization = (new OrganizationEntity())->setName($item->name)->setType($this->typeResolver->resolve($item));
                 $result = 'created';
             } else {
-                if (true === ($row['linkedBySource'] ?? false)) {
-                    $batch['rows'][$index]['decision'] = null;
-                    $this->workFile->save($file, $batch);
-                    throw new RuntimeException("Le lien externe de {$item->externalId} a disparu ; reprendre la revue.");
-                }
                 $organizationId = $row['organizationId'] ?? null;
                 $organization = is_int($organizationId) ? $this->entityManager->find(OrganizationEntity::class, $organizationId) : null;
-                if (isset($row['candidateHash'])) {
-                    $currentHash = null;
-                    foreach ($this->matcher->findOrganizationCandidates($item) as $candidate) {
-                        if ($candidate->organizationId === $organizationId) {
-                            $currentHash = hash('sha256', json_encode($candidate, JSON_THROW_ON_ERROR));
-                        }
-                    }
-                    if ($currentHash !== $row['candidateHash']) {
-                        $batch['rows'][$index]['decision'] = null;
-                        $this->workFile->save($file, $batch);
-                        throw new RuntimeException("La fiche choisie pour {$item->externalId} a changé ; reprendre la revue.");
-                    }
-                }
             }
             if (!$organization instanceof OrganizationEntity) {
                 throw new RuntimeException("Fiche introuvable pour {$item->externalId}.");
