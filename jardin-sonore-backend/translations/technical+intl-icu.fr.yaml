@@ -1,5 +1,7 @@
 technical:
   directory:
+    import_sources: "Sources des données"
+    cultural_places_source: "Base des lieux culturels"
     title: "Annuaire & Contacts"
     eyebrow: "Espace métier"
     description: "Retrouver rapidement une structure ou une personne et accéder à ses coordonnées."

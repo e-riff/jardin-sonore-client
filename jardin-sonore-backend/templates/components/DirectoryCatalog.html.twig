@@ -140,6 +140,17 @@
                 </header>
 
                 {% if not isPerson %}
+                    {% set importSources = this.selectedImportSources %}
+                    {% if importSources is not empty %}
+                        <details class="directory-detail__section">
+                            <summary>{{ 'technical.directory.import_sources'|trans({}, 'technical') }}</summary>
+                            <ul>
+                                {% for source in importSources %}
+                                    <li>{{ source.source == 'culture-lieux' ? 'technical.directory.cultural_places_source'|trans({}, 'technical') : source.source }} — {{ source.externalId }}</li>
+                                {% endfor %}
+                            </ul>
+                        </details>
+                    {% endif %}
                     <section class="directory-detail__section directory-detail__section--people">
                         <h3>{{ 'technical.directory.attached_people'|trans({count: selectedEntry.people|length}, 'technical') }}</h3>
                         {% for person in selectedEntry.people|sort((a, b) => a.lastName <=> b.lastName) %}

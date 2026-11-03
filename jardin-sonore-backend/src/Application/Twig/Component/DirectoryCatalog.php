@@ -11,6 +11,7 @@ use App\Application\Form\DirectoryPersonDetailsFormType;
 use App\Application\Form\DirectoryPersonFormType;
 use App\Domain\Model\AddressBook\OrganizationSector;
 use App\Domain\Model\AddressBook\OrganizationType;
+use App\Infrastructure\Doctrine\Entity\DirectoryImportLinkEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\PersonEntity;
 use Doctrine\ORM\EntityManagerInterface;
@@ -126,6 +127,17 @@ final class DirectoryCatalog
         $class = 'people' === $this->section ? PersonEntity::class : OrganizationEntity::class;
 
         return $this->loadEntry($class, $this->selectedId);
+    }
+
+    /** @return list<DirectoryImportLinkEntity> */
+    public function getSelectedImportSources(): array
+    {
+        $entry = $this->getSelectedEntry();
+        if (!$entry instanceof OrganizationEntity) {
+            return [];
+        }
+
+        return $this->entityManager->getRepository(DirectoryImportLinkEntity::class)->findBy(['directoryEntry' => $entry], ['source' => 'ASC', 'externalId' => 'ASC']);
     }
 
     /** @param class-string<OrganizationEntity|PersonEntity> $class */
