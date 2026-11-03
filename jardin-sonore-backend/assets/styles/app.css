@@ -6526,20 +6526,9 @@ a.session-composer-overlay__item {
     white-space: pre-wrap;
 }
 
-@media (max-width: 760px) {
-    .internal-page-heading {
-        align-items: stretch;
-        flex-direction: column;
-    }
-
+@media (max-width: 1200px) {
     .internal-header {
         position: static;
-    }
-
-    .internal-header__bar,
-    .internal-subnav__inner,
-    .internal-main {
-        width: min(100% - 24px, 1280px);
     }
 
     .internal-header__bar {
@@ -6588,6 +6577,19 @@ a.session-composer-overlay__item {
         opacity: 1;
         visibility: visible;
         pointer-events: auto;
+    }
+}
+
+@media (max-width: 760px) {
+    .internal-page-heading {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .internal-header__bar,
+    .internal-subnav__inner,
+    .internal-main {
+        width: min(100% - 24px, 1280px);
     }
 
     .internal-grid {
