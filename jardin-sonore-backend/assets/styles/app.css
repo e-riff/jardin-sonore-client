@@ -932,14 +932,22 @@ button:disabled {
     border-radius: 0 0 19px 19px;
     padding-bottom: 1px;
     background: var(--color-surface-container-lowest);
-    overflow: visible;
+    overflow-x: auto;
 }
 
 .commercial-project-table {
     border-collapse: separate;
     border-spacing: 0;
     border-radius: 0 0 19px 19px;
+    table-layout: fixed;
+    overflow-wrap: anywhere;
 }
+
+.commercial-project-table thead th:nth-child(1) { width: 34%; }
+.commercial-project-table thead th:nth-child(2) { width: 15%; }
+.commercial-project-table thead th:nth-child(3) { width: 23%; }
+.commercial-project-table thead th:nth-child(4),
+.commercial-project-table thead th:nth-child(5) { width: 14%; }
 
 .commercial-project-table th,
 .commercial-project-table td {

@@ -4,7 +4,7 @@ export default class extends Controller {
     static targets = ['button', 'panel', 'shell'];
 
     connect() {
-        this.mediaQuery = window.matchMedia('(max-width: 760px)');
+        this.mediaQuery = window.matchMedia('(max-width: 1200px)');
         this.handleViewportChange = this.handleViewportChange.bind(this);
 
         this.handleViewportChange();
