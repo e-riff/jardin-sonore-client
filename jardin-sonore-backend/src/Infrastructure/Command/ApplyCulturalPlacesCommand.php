@@ -47,6 +47,10 @@ final class ApplyCulturalPlacesCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
         $batch = $this->workFile->load($file);
+        $source = $batch['source'] ?? self::SOURCE;
+        if (!is_string($source) || '' === trim($source)) {
+            throw new RuntimeException('Source du lot invalide.');
+        }
         foreach ($batch['rows'] as $row) {
             if (!is_array($row) || !is_array($row['item'] ?? null) || !in_array($row['decision'] ?? null, ['new', 'linked', 'skip'], true)) {
                 $io->error('Terminez la revue de toutes les lignes avant l’application.');
@@ -74,7 +78,7 @@ final class ApplyCulturalPlacesCommand extends Command
                 continue;
             }
             $item = DirectoryEstablishmentImportItem::fromArray($row['item']);
-            $linkedId = $this->matcher->findOrganizationIdLinkedByExternalIdentifiers(self::SOURCE, $item);
+            $linkedId = $this->matcher->findOrganizationIdLinkedByExternalIdentifiers($source, $item);
             $staleMessage = null;
             if (null !== $linkedId && 'linked' === $row['decision'] && $linkedId !== ($row['organizationId'] ?? null)) {
                 throw new RuntimeException("Le lien externe de {$item->externalId} a changé.");
@@ -116,7 +120,7 @@ final class ApplyCulturalPlacesCommand extends Command
             if (0 < count($this->validator->validate($item)) || null === $item->name) {
                 throw new RuntimeException("Données invalides pour {$item->externalId} ; import interrompu.");
             }
-            $linkedId = $this->matcher->findOrganizationIdLinkedByExternalIdentifiers(self::SOURCE, $item);
+            $linkedId = $this->matcher->findOrganizationIdLinkedByExternalIdentifiers($source, $item);
             $result = 'linked';
             if (null !== $linkedId) {
                 $organization = $this->entityManager->find(OrganizationEntity::class, $linkedId);
@@ -133,7 +137,7 @@ final class ApplyCulturalPlacesCommand extends Command
             if (!$organization instanceof OrganizationEntity) {
                 throw new RuntimeException("Fiche introuvable pour {$item->externalId}.");
             }
-            $this->entityManager->wrapInTransaction(function () use ($organization, $item): void {
+            $this->entityManager->wrapInTransaction(function () use ($organization, $item, $source): void {
                 $this->entityManager->persist($organization);
                 if (null === $organization->getWebsiteUrl() && null !== $item->websiteUrl) {
                     $organization->setWebsiteUrl($item->websiteUrl);
@@ -156,8 +160,8 @@ final class ApplyCulturalPlacesCommand extends Command
                 if ($organization->getContactDetails()->getAddressContacts()->isEmpty()) {
                     $this->upserter->upsertAddressContact($organization->getContactDetails(), $item);
                 }
-                $linkId = $this->matcher->findImportLinkIdByExternalId(self::SOURCE, $item);
-                $this->upserter->persistImportLink($organization, $linkId, $item, self::SOURCE);
+                $linkId = $this->matcher->findImportLinkIdByExternalId($source, $item);
+                $this->upserter->persistImportLink($organization, $linkId, $item, $source);
             });
             $batch['rows'][$index]['applied'] = true;
             $batch['rows'][$index]['result'] = $result;

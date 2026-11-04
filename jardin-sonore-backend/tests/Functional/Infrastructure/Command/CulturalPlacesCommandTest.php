@@ -177,7 +177,7 @@ final class CulturalPlacesCommandTest extends KernelTestCase
         $municipality = GeographyFixture::municipality($entityManager, "Saint-Just {$sourceId}", '42170')->setInseeCode('98999');
         $entityManager->flush();
         $workFile = new CulturalPlaceWorkFile();
-        $workFile->save($path, ['department' => '42', 'rows' => [[
+        $workFile->save($path, ['department' => '42', 'source' => 'manual-teaching-test', 'rows' => [[
             'item' => ['id' => $sourceId, 'type' => 'mediatheque', 'name' => "Médiathèque {$sourceId}", 'address' => '1 place Test 42170', 'commune' => 'ST JUST TEST', 'codeCommune' => '98999'],
             'decision' => 'new',
         ]]]);
@@ -185,6 +185,7 @@ final class CulturalPlacesCommandTest extends KernelTestCase
             $tester = new CommandTester((new Application(self::$kernel))->find('app:directory:cultural-places-apply'));
             self::assertSame(0, $tester->execute(['file' => $path], ['interactive' => false]));
             $id = $workFile->load($path)['rows'][0]['organizationId'];
+            self::assertCount(1, $entityManager->getRepository(DirectoryImportLinkEntity::class)->findBy(['source' => 'manual-teaching-test', 'externalId' => $sourceId]));
             $entityManager->clear();
             $saved = $entityManager->find(OrganizationEntity::class, $id);
             self::assertSame($municipality->getId(), $saved->getContactDetails()->getAddressContacts()->first()->getMunicipality()->getId());

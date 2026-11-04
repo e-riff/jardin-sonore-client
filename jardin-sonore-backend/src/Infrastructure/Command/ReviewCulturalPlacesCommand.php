@@ -32,6 +32,10 @@ final class ReviewCulturalPlacesCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
         $batch = $this->workFile->load($file);
+        $source = $batch['source'] ?? 'culture-lieux';
+        if (!is_string($source) || '' === trim($source)) {
+            throw new RuntimeException('Source du lot invalide.');
+        }
         $reconsiderIndex = null;
         $indexes = array_keys($batch['rows']);
         if (null !== $reconsider) {
@@ -42,7 +46,7 @@ final class ReviewCulturalPlacesCommand extends Command
 
                 return Command::FAILURE;
             }
-            if (true === ($row['applied'] ?? false) || null !== $this->matcher->findOrganizationIdLinkedByExternalIdentifiers('culture-lieux', DirectoryEstablishmentImportItem::fromArray($row['item']))) {
+            if (true === ($row['applied'] ?? false) || null !== $this->matcher->findOrganizationIdLinkedByExternalIdentifiers($source, DirectoryEstablishmentImportItem::fromArray($row['item']))) {
                 $io->error('Cette ligne est déjà importée : sa liaison ne peut pas être modifiée ici.');
 
                 return Command::FAILURE;
@@ -70,7 +74,7 @@ final class ReviewCulturalPlacesCommand extends Command
             if (null !== ($row['decision'] ?? null)) {
                 continue;
             }
-            $linkedId = $this->matcher->findOrganizationIdLinkedByExternalIdentifiers('culture-lieux', $item);
+            $linkedId = $this->matcher->findOrganizationIdLinkedByExternalIdentifiers($source, $item);
             $candidates = null === $linkedId ? $this->candidateFinder->findCandidates($item) : [];
             if (null !== $linkedId) {
                 $batch['rows'][$index]['decision'] = 'linked';
