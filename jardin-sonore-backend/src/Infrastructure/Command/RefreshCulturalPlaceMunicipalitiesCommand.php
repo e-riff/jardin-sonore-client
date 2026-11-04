@@ -33,7 +33,10 @@ final class RefreshCulturalPlaceMunicipalitiesCommand extends Command
         $sourceRows = $this->fetcher->fetch($department);
         $updated = $this->merger->merge($batch, $sourceRows);
         $this->workFile->save($file, $updated);
-        (new SymfonyStyle($input, $output))->success('Codes INSEE ajoutés ; décisions conservées.');
+        $io = new SymfonyStyle($input, $output);
+        $io->success('Codes INSEE ajoutés ; décisions conservées.');
+        $io->text('Étape suivante :');
+        $io->writeln('php bin/console app:directory:cultural-places-review ' . escapeshellarg($file), OutputInterface::OUTPUT_RAW);
 
         return Command::SUCCESS;
     }

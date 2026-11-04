@@ -15,8 +15,12 @@ final readonly class CulturalPlaceFetcher
     {
     }
 
-    /** @return list<array{item: array<string, mixed>, youth: bool, sourceUpdatedAt: ?string}> */
-    public function fetch(string $department, int $pageSize = 200): array
+    /**
+     * @param list<string> $categories
+     *
+     * @return list<array{item: array<string, mixed>, youth: bool, sourceUpdatedAt: ?string}>
+     */
+    public function fetch(string $department, int $pageSize = 200, array $categories = []): array
     {
         $department = strtoupper(trim($department));
         if (1 !== preg_match('/^(?:\d{2}|2A|2B|97\d|98\d)$/', $department) || 1 > $pageSize || 200 < $pageSize) {
@@ -36,7 +40,7 @@ final readonly class CulturalPlaceFetcher
                     throw new RuntimeException('Invalid cultural place.');
                 }
                 $item = $this->normalizer->normalize($row, $department);
-                if (null !== $item) {
+                if (null !== $item && ([] === $categories || in_array($item['item']['type'], $categories, true))) {
                     $items[] = $item;
                 }
             }

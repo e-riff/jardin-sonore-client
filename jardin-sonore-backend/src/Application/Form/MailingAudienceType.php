@@ -218,6 +218,9 @@ final class MailingAudienceType extends AbstractType
             'address_book.organization_type.librairie_jeunesse' => OrganizationType::LIBRAIRIE_JEUNESSE,
             'address_book.organization_type.festival_evenement' => OrganizationType::FESTIVAL_EVENEMENT,
             'address_book.organization_type.salle_spectacle' => OrganizationType::SALLE_SPECTACLE,
+            'address_book.organization_type.enseignement_artistique' => OrganizationType::ENSEIGNEMENT_ARTISTIQUE,
+            'address_book.organization_type.centre_culturel' => OrganizationType::CENTRE_CULTUREL,
+            'address_book.organization_type.tiers_lieu' => OrganizationType::TIERS_LIEU,
             'address_book.organization_type.test' => OrganizationType::TEST,
         ];
     }

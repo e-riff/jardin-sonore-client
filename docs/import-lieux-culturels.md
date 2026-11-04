@@ -2,6 +2,22 @@
 
 La préparation et la revue ne modifient pas l'annuaire. Le fichier contient des coordonnées : le conserver dans `jardin-sonore-backend/data/`, exclu de Git et du déploiement, et le sauvegarder avant toute opération. Utiliser un chemin différent pour chaque département et chaque nouveau lot. Un fichier dans `/tmp` peut disparaître avec le conteneur.
 
+Pour ouvrir l’assistant depuis le terminal backend (`/app`) :
+
+```bash
+php bin/console app:directory:cultural-places-prepare
+```
+
+Il demande le département, affiche les derniers lots présents dans `data/` pour chaque catégorie, puis permet de choisir plusieurs catégories avec leurs numéros séparés par des virgules. Il propose un fichier daté et demande confirmation avant récupération. Chaque commande affiche ensuite la commande à copier pour poursuivre : revue, application ou préparation d’un nouveau lot. Les dates de récupération et d’application sont conservées séparément ; les lots anciens sans date affichent « inconnue ». L’historique est propre au serveur et aux fichiers encore présents, pas partagé entre développement et production.
+
+Catégories sélectionnables : médiathèques, librairies jeunesse, salles de spectacle, enseignement artistique (conservatoires et écoles de musique), centres culturels, tiers-lieux, MJC et festivals. Les librairies généralistes sont exclues des nouveaux lots. La présence et la couverture de chaque catégorie dépendent des classifications renseignées par la source ; une catégorie sélectionnée peut ne retourner aucun lieu.
+
+L’usage avec arguments reste disponible. Pour restreindre les catégories :
+
+```bash
+php bin/console app:directory:cultural-places-prepare 42 /app/data/lieux-42-nouveau.json --types=enseignement_artistique,tiers_lieu
+```
+
 Depuis la racine du projet, pour la Loire :
 
 ```bash
@@ -29,6 +45,6 @@ Elle refuse les lignes non revues et vérifie tous les rapprochements avant d'é
 
 Le bilan affiché à la fin indique chaque lieu créé ou relié, son identifiant source et le numéro de sa fiche dans l'annuaire. Ces informations restent dans le fichier : relancer la commande affiche à nouveau le bilan sans réimporter les lignes déjà traitées. Si une interruption a eu lieu juste après l'enregistrement d'une fiche mais avant la sauvegarde du fichier, la reprise indique « Lien retrouvé après reprise ».
 
-Le filtre utilise le code de département (`42`, `2A`, `2B`, `971`, etc.). Les catégories ciblées sont bibliothèques et médiathèques, librairies, théâtres, centres culturels et musique. Les librairies explicitement classées jeunesse passent en premier. Les autres lieux ne sont pas réputés programmer du jeune public. L'adresse est reliée à la commune de l'annuaire par son code INSEE ; avant toute écriture, l'application refuse un code absent ou inconnu. La date de modification source est conservée dans le fichier mais ne prouve pas qu'une information est fiable.
+Le filtre utilise le code de département (`42`, `2A`, `2B`, `971`, etc.). Les catégories ciblées sont celles sélectionnées lors de la préparation. Les librairies explicitement classées jeunesse passent en premier. Les autres lieux ne sont pas réputés programmer du jeune public. L'adresse est reliée à la commune de l'annuaire par son code INSEE ; avant toute écriture, l'application refuse un code absent ou inconnu. La date de modification source est conservée dans le fichier mais ne prouve pas qu'une information est fiable.
 
 La page publique du jeu de données et les métadonnées API ont indiqué des licences différentes. Clarifier cette divergence avant réutilisation effective ou import en production. Une comparaison doit être réalisée sur l'annuaire de destination : les candidats issus de la base locale ne décrivent pas nécessairement la production.

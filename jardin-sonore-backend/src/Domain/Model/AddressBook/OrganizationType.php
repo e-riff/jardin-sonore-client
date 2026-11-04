@@ -20,5 +20,8 @@ enum OrganizationType: string
     case LIBRAIRIE_JEUNESSE = 'librairie_jeunesse';
     case FESTIVAL_EVENEMENT = 'festival_evenement';
     case SALLE_SPECTACLE = 'salle_spectacle';
+    case ENSEIGNEMENT_ARTISTIQUE = 'enseignement_artistique';
+    case CENTRE_CULTUREL = 'centre_culturel';
+    case TIERS_LIEU = 'tiers_lieu';
     case TEST = 'test';
 }

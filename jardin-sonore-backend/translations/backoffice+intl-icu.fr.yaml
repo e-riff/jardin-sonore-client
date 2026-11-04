@@ -337,6 +337,9 @@ address_book:
     cafe_parents: "Café parents-enfants"
     librairie_jeunesse: "Librairie jeunesse"
     festival_evenement: "Festival / événement"
+    enseignement_artistique: "Enseignement artistique"
+    centre_culturel: "Centre culturel"
+    tiers_lieu: "Tiers-lieu"
     salle_spectacle: "Salle de spectacle / théâtre / équipement jeune public"
     test: "Test mailing"
   organization_sector:

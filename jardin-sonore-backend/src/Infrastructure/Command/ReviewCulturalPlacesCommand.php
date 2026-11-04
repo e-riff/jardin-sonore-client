@@ -58,6 +58,9 @@ final class ReviewCulturalPlacesCommand extends Command
             if (!is_array($row) || !is_array($row['item'] ?? null)) {
                 throw new RuntimeException('Ligne de travail invalide.');
             }
+            if (true === ($row['applied'] ?? false)) {
+                continue;
+            }
             $item = DirectoryEstablishmentImportItem::fromArray($row['item']);
             if ('new' === ($row['decision'] ?? null) && ($row['candidatesHash'] ?? null) === hash('sha256', '[]') && [] !== $this->candidateFinder->findCandidates($item)) {
                 $batch['rows'][$index]['decision'] = null;
@@ -153,6 +156,10 @@ final class ReviewCulturalPlacesCommand extends Command
             $io->table(['Nom', 'Type', 'Commune', 'Courriel'], $newRows);
         }
         $io->note(sprintf('Revue enregistrée : %d à créer, %d à relier, %d ignorés, %d à examiner.', $summary['new'], $summary['linked'], $summary['skip'], $unresolved));
+
+        $next = 0 === $unresolved ? 'apply' : 'review';
+        $io->text('Étape suivante :');
+        $io->writeln('php bin/console app:directory:cultural-places-' . $next . ' ' . escapeshellarg($file), OutputInterface::OUTPUT_RAW);
 
         return Command::SUCCESS;
     }

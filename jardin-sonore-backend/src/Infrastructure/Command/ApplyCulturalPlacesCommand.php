@@ -13,6 +13,7 @@ use App\Infrastructure\Directory\DirectoryEstablishmentUpserter;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Repository\EmailContactDoctrineRepository;
 use App\Infrastructure\Doctrine\Repository\MunicipalityDoctrineRepository;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\Argument;
@@ -49,6 +50,7 @@ final class ApplyCulturalPlacesCommand extends Command
         foreach ($batch['rows'] as $row) {
             if (!is_array($row) || !is_array($row['item'] ?? null) || !in_array($row['decision'] ?? null, ['new', 'linked', 'skip'], true)) {
                 $io->error('Terminez la revue de toutes les lignes avant l’application.');
+                $io->writeln('php bin/console app:directory:cultural-places-review ' . escapeshellarg($file), OutputInterface::OUTPUT_RAW);
 
                 return Command::FAILURE;
             }
@@ -104,7 +106,7 @@ final class ApplyCulturalPlacesCommand extends Command
         }
         if ([] !== $staleRows) {
             $this->workFile->save($file, $batch);
-            throw new RuntimeException(implode("\n", $staleRows) . '. Reprenez la revue. Aucune nouvelle fiche n’a été écrite.');
+            throw new RuntimeException(implode("\n", $staleRows) . '. Reprenez la revue. Aucune nouvelle fiche n’a été écrite. Commande : php bin/console app:directory:cultural-places-review ' . escapeshellarg($file));
         }
         foreach ($batch['rows'] as $index => $row) {
             if ('skip' === $row['decision'] || true === ($row['applied'] ?? false)) {
@@ -162,6 +164,8 @@ final class ApplyCulturalPlacesCommand extends Command
             $batch['rows'][$index]['organizationId'] = $organization->getId();
             $this->workFile->save($file, $batch);
         }
+        $batch['appliedAt'] ??= (new DateTimeImmutable())->format(DATE_ATOM);
+        $this->workFile->save($file, $batch);
         $summaryRows = [];
         foreach ($batch['rows'] as $row) {
             $resultLabel = match ($row['result'] ?? null) {
@@ -174,6 +178,8 @@ final class ApplyCulturalPlacesCommand extends Command
         }
         $io->table(['Résultat', 'Lieu', 'Identifiant source', 'Fiche annuaire'], $summaryRows);
         $io->success('Lot appliqué. Les décisions sont conservées dans le fichier.');
+        $io->text('Pour préparer un nouveau lot :');
+        $io->writeln('php bin/console app:directory:cultural-places-prepare', OutputInterface::OUTPUT_RAW);
 
         return Command::SUCCESS;
     }

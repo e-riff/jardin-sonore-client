@@ -6,6 +6,17 @@ namespace App\Application\Directory;
 
 final class CulturalPlaceNormalizer
 {
+    public const array CATEGORIES = [
+        'mediatheque' => 'Bibliothèques et médiathèques',
+        'librairie_jeunesse' => 'Librairies jeunesse',
+        'salle_spectacle' => 'Théâtres et salles de spectacle',
+        'enseignement_artistique' => 'Enseignement artistique',
+        'centre_culturel' => 'Centres culturels',
+        'tiers_lieu' => 'Tiers-lieux',
+        'mjc' => 'MJC',
+        'festival_evenement' => 'Festivals et événements',
+    ];
+
     /**
      * @param array<string, mixed> $row
      *
@@ -19,12 +30,17 @@ final class CulturalPlaceNormalizer
         $domains = $this->values($row['sous_domaines'] ?? null);
         $types = $this->values($row['types'] ?? null);
         $youth = in_array('Jeunesse', $types, true);
+        $classification = mb_strtolower(implode(' ', [...$domains, ...$types]));
         $type = match (true) {
+            str_contains($classification, 'conservatoire'), str_contains($classification, 'école de musique'), str_contains($classification, 'enseignement artistique') => 'enseignement_artistique',
+            str_contains($classification, 'tiers-lieu'), str_contains($classification, 'tiers lieu') => 'tiers_lieu',
+            in_array('MJC', $types, true), in_array('MJC', $domains, true) => 'mjc',
+            in_array('Festival', $domains, true), in_array('Festival', $types, true) => 'festival_evenement',
             in_array('Bibliothèque et médiathèque', $domains, true) => 'mediatheque',
-            in_array('Librairie', $domains, true) => $youth ? 'librairie_jeunesse' : 'librairie',
+            in_array('Librairie', $domains, true) && $youth => 'librairie_jeunesse',
             in_array('Théâtre', $domains, true) => 'salle_spectacle',
             in_array('Musique', $domains, true) => 'salle_spectacle',
-            in_array('Centre culturel', $domains, true) => 'centre culturel',
+            in_array('Centre culturel', $domains, true) => 'centre_culturel',
             default => null,
         };
         $id = $row['id'] ?? null;
