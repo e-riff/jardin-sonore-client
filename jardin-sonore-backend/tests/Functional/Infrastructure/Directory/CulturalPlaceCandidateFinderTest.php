@@ -35,10 +35,14 @@ final class CulturalPlaceCandidateFinderTest extends KernelTestCase
             $organization = (new OrganizationEntity())->setName('Bibliothèque de Saint-Haon-le-Vieux')->setType(OrganizationType::MEDIATHEQUE);
             $organization->getContactDetails()->addAddressContact((new AddressContactEntity())->setMunicipality($municipality));
             $em->persist($organization);
+            $unrelated = (new OrganizationEntity())->setName('De Saint-Haon-le-Vieux')->setType(OrganizationType::RPE);
+            $unrelated->getContactDetails()->addAddressContact((new AddressContactEntity())->setMunicipality($municipality));
+            $em->persist($unrelated);
             $em->flush();
             $item = DirectoryEstablishmentImportItem::fromArray(['id' => 'test', 'type' => 'mediatheque', 'name' => 'Bibliothèque - Saint-Haon-Le-Vieux', 'commune' => 'ST HAON LE VIEUX', 'codeCommune' => '98998']);
             $matches = self::getContainer()->get(CulturalPlaceCandidateFinder::class)->findCandidates($item);
             self::assertContains($organization->getId(), array_map(static fn ($match): int => $match->organizationId, $matches));
+            self::assertNotContains($unrelated->getId(), array_map(static fn ($match): int => $match->organizationId, $matches));
 
             $path = tempnam(sys_get_temp_dir(), 'cultural-review-');
             self::assertIsString($path);

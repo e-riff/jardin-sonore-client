@@ -7,18 +7,20 @@ namespace App\Infrastructure\Directory;
 use App\Application\Directory\DirectoryEstablishmentImportItem;
 use App\Application\Directory\DirectoryEstablishmentMatch;
 use App\Application\Directory\DirectoryEstablishmentMatcher;
+use App\Application\Directory\DirectoryOrganizationTypeResolver;
 use App\Domain\Model\AddressBook\OrganizationType;
 use Doctrine\DBAL\Connection;
 
 final readonly class CulturalPlaceCandidateFinder
 {
-    public function __construct(private Connection $connection, private DirectoryEstablishmentMatcher $matcher)
+    public function __construct(private Connection $connection, private DirectoryEstablishmentMatcher $matcher, private DirectoryOrganizationTypeResolver $typeResolver)
     {
     }
 
     /** @return list<DirectoryEstablishmentMatch> */
     public function findCandidates(DirectoryEstablishmentImportItem $item): array
     {
+        $importType = $this->typeResolver->resolve($item);
         $matches = $this->matcher->findOrganizationCandidates($item);
         $seen = [];
         foreach ($matches as $match) {
@@ -54,6 +56,10 @@ final readonly class CulturalPlaceCandidateFinder
             if (isset($seen[$id])) {
                 continue;
             }
+            $candidateType = is_string($row['type']) ? OrganizationType::tryFrom($row['type']) : null;
+            if (null !== $importType && null !== $candidateType && $importType !== $candidateType) {
+                continue;
+            }
             $candidateName = $this->normalizeName((string) $row['name']);
             if ('' === $candidateName) {
                 continue;
@@ -73,10 +79,14 @@ final readonly class CulturalPlaceCandidateFinder
                 commune: (string) $row['commune'],
                 address: (string) $row['address'],
                 website: (string) ($row['website_url'] ?? ''),
-                type: is_string($row['type']) ? OrganizationType::tryFrom($row['type']) : null,
+                type: $candidateType,
             );
         }
-        usort($matches, static fn (DirectoryEstablishmentMatch $a, DirectoryEstablishmentMatch $b): int => ($b->score <=> $a->score) ?: ($a->organizationId <=> $b->organizationId));
+        usort($matches, static function (DirectoryEstablishmentMatch $a, DirectoryEstablishmentMatch $b) use ($importType): int {
+            $rank = static fn (DirectoryEstablishmentMatch $match): int => null === $importType || $match->type === $importType ? 0 : (null === $match->type ? 1 : 2);
+
+            return ($rank($a) <=> $rank($b)) ?: ($b->score <=> $a->score) ?: ($a->organizationId <=> $b->organizationId);
+        });
 
         return array_slice($matches, 0, 10);
     }
