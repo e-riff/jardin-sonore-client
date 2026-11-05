@@ -31,6 +31,8 @@ final readonly class CulturalPlaceCandidateFinder
         if ('' === $name || null === $code) {
             return $matches;
         }
+        $departmentLength = str_starts_with($code, '97') || str_starts_with($code, '98') ? 3 : 2;
+        $department = substr($code, 0, $departmentLength);
         $terms = explode(' ', $name);
         usort($terms, static fn (string $a, string $b): int => strlen($b) <=> strlen($a));
         $term = $terms[0] ?? '';
@@ -38,7 +40,8 @@ final readonly class CulturalPlaceCandidateFinder
             "SELECT o.id, o.name, o.type, o.website_url, COALESCE(MIN(e.email_address), '') AS email,
                     COALESCE(MIN(p.phone_number), '') AS phone, COALESCE(MIN(m.name), '') AS commune,
                     COALESCE(MIN(a.address), '') AS address,
-                    MAX(CASE WHEN m.insee_code = :code THEN 1 ELSE 0 END) AS same_commune
+                    MAX(CASE WHEN m.insee_code = :code THEN 1 ELSE 0 END) AS same_commune,
+                    MAX(CASE WHEN SUBSTRING(m.insee_code, 1, :department_length) = :department THEN 1 ELSE 0 END) AS same_department
              FROM organization o
              LEFT JOIN contact_details c ON c.directory_entry_id = o.id
              LEFT JOIN contact_details_email_link el ON el.contact_details_id = c.id
@@ -49,7 +52,7 @@ final readonly class CulturalPlaceCandidateFinder
              LEFT JOIN municipality m ON m.id = a.municipality_id
              WHERE m.insee_code = :code2 OR LOWER(o.name) LIKE :term
              GROUP BY o.id, o.name, o.type, o.website_url",
-            ['code' => $code, 'code2' => $code, 'term' => 5 <= strlen($term) ? "%{$term}%" : ''],
+            ['code' => $code, 'code2' => $code, 'department_length' => $departmentLength, 'department' => $department, 'term' => 5 <= strlen($term) ? "%{$term}%" : ''],
         );
         foreach ($rows as $row) {
             $id = (int) $row['id'];
@@ -66,7 +69,12 @@ final readonly class CulturalPlaceCandidateFinder
             }
             similar_text($name, $candidateName, $percent);
             $sameCommune = 1 === (int) $row['same_commune'];
-            $strongName = 8 <= strlen($name) && (str_ends_with($candidateName, $name) || str_ends_with($name, $candidateName));
+            $distinctiveName = $this->distinctiveName($name);
+            $distinctiveCandidateName = $this->distinctiveName($candidateName);
+            $strongName = 1 === (int) $row['same_department'] && 8 <= strlen($distinctiveName) && 8 <= strlen($distinctiveCandidateName)
+                && ($distinctiveName === $distinctiveCandidateName
+                    || str_ends_with($distinctiveCandidateName, ' ' . $distinctiveName)
+                    || str_ends_with($distinctiveName, ' ' . $distinctiveCandidateName));
             if ((!$sameCommune || 70 > $percent) && !$strongName) {
                 continue;
             }
@@ -89,6 +97,13 @@ final readonly class CulturalPlaceCandidateFinder
         });
 
         return array_slice($matches, 0, 10);
+    }
+
+    private function distinctiveName(string $name): string
+    {
+        $name = preg_replace('/\b(intercommunale|intercommunal|communale|communal|communautaire|departementale|departemental|reseau|bibliobus)\b/', ' ', $name) ?? $name;
+
+        return trim(preg_replace('/\s+/', ' ', $name) ?? $name);
     }
 
     private function normalizeName(?string $value): string

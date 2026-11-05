@@ -63,6 +63,30 @@ final class CulturalPlaceCandidateFinderTest extends KernelTestCase
         }
     }
 
+    public function testGenericIntercommunalNameDoesNotMatchAnotherMunicipality(): void
+    {
+        self::bootKernel(['environment' => 'test']);
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $connection = $em->getConnection();
+        $connection->beginTransaction();
+        try {
+            $municipality = GeographyFixture::municipality($em, 'Saint-Germain-Laval', '42260')->setInseeCode('98995');
+            $organization = (new OrganizationEntity())->setName('Médiathèque intercommunale')->setType(OrganizationType::MEDIATHEQUE);
+            $organization->getContactDetails()->addAddressContact((new AddressContactEntity())->setMunicipality($municipality));
+            $em->persist($organization);
+            $em->flush();
+            $item = DirectoryEstablishmentImportItem::fromArray(['id' => 'ardoix', 'type' => 'mediatheque', 'name' => 'Bibliothèque Intercommunale', 'commune' => 'ARDOIX', 'codeCommune' => '07013', 'phone' => '0475345446']);
+            $matches = self::getContainer()->get(CulturalPlaceCandidateFinder::class)->findCandidates($item);
+            self::assertNotContains($organization->getId(), array_map(static fn ($match): int => $match->organizationId, $matches));
+            $localItem = DirectoryEstablishmentImportItem::fromArray(['id' => 'local-library', 'type' => 'mediatheque', 'name' => 'Bibliothèque Intercommunale', 'commune' => 'Saint-Germain-Laval', 'codeCommune' => '98995']);
+            $localMatches = self::getContainer()->get(CulturalPlaceCandidateFinder::class)->findCandidates($localItem);
+            self::assertContains($organization->getId(), array_map(static fn ($match): int => $match->organizationId, $localMatches));
+        } finally {
+            $connection->rollBack();
+            $em->clear();
+        }
+    }
+
     public function testFindsStrongNameDespiteIncorrectMunicipalityOnExistingEntry(): void
     {
         self::bootKernel(['environment' => 'test']);
@@ -75,9 +99,12 @@ final class CulturalPlaceCandidateFinderTest extends KernelTestCase
             $organization->getContactDetails()->addAddressContact((new AddressContactEntity())->setMunicipality($municipality));
             $em->persist($organization);
             $em->flush();
-            $item = DirectoryEstablishmentImportItem::fromArray(['id' => 'test', 'type' => 'mediatheque', 'name' => 'Médiathèque - Saint-Just-Saint-Rambert', 'commune' => 'ST JUST ST RAMBERT', 'codeCommune' => '42279']);
+            $item = DirectoryEstablishmentImportItem::fromArray(['id' => 'test', 'type' => 'mediatheque', 'name' => 'Médiathèque - Saint-Just-Saint-Rambert', 'commune' => 'ST JUST ST RAMBERT', 'codeCommune' => '98994']);
             $matches = self::getContainer()->get(CulturalPlaceCandidateFinder::class)->findCandidates($item);
             self::assertContains($organization->getId(), array_map(static fn ($match): int => $match->organizationId, $matches));
+            $otherDepartmentItem = DirectoryEstablishmentImportItem::fromArray(['id' => 'other-department', 'type' => 'mediatheque', 'name' => 'Médiathèque - Saint-Just-Saint-Rambert', 'commune' => 'Autre commune', 'codeCommune' => '07013']);
+            $otherDepartmentMatches = self::getContainer()->get(CulturalPlaceCandidateFinder::class)->findCandidates($otherDepartmentItem);
+            self::assertNotContains($organization->getId(), array_map(static fn ($match): int => $match->organizationId, $otherDepartmentMatches));
         } finally {
             $connection->rollBack();
             $em->clear();
