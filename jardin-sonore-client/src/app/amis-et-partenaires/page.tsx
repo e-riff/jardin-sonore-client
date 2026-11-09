@@ -75,9 +75,12 @@ export default function PartnersPage(): JSX.Element {
                 <SectionHeading eyebrow={content.companiesEyebrow} id="partners-companies" title={content.companiesTitle} />
                 <div className="mt-10 divide-y divide-outline-variant/50">
                     {content.companies.map((company, index) => <article className="partner-reveal group grid items-center gap-7 py-8 first:pt-0 last:pb-0 lg:grid-cols-2 lg:gap-14" id={company.id} key={company.name}>
-                        <div className={`relative flex aspect-[16/10] items-center justify-center overflow-hidden rounded-2xl bg-secondary/10 ${index % 2 === 1 ? "lg:order-2" : ""}`}>
-                            <Image alt={company.imageAlt} className={`${company.imageFit === "logo" ? "bg-white object-contain" : "object-cover"} transition-transform duration-700 group-hover:scale-[1.03] group-focus-within:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100 motion-reduce:group-focus-within:scale-100`} fill sizes="(min-width: 1024px) 48vw, 100vw" src={company.image} />
-                        </div>
+                        <figure className={`min-w-0 ${index % 2 === 1 ? "lg:order-2" : ""}`}>
+                            <div className="relative flex aspect-[16/10] items-center justify-center overflow-hidden rounded-2xl bg-secondary/10">
+                                <Image alt={company.imageAlt} className={`${company.imageFit === "logo" ? "bg-white object-contain" : "object-cover"} transition-transform duration-700 group-hover:scale-[1.03] group-focus-within:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100 motion-reduce:group-focus-within:scale-100`} fill sizes="(min-width: 1024px) 48vw, 100vw" src={company.image} />
+                            </div>
+                            {"imageCredit" in company ? <figcaption className="mt-2 text-right text-xs text-on-surface-variant">{company.imageCredit}</figcaption> : null}
+                        </figure>
                         <div>
                             <div className="flex items-center gap-4">
                                 {"logo" in company ? <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-outline-variant/30 bg-white p-2 shadow-sm"><Image alt="" className="object-contain p-2" fill sizes="80px" src={company.logo} /></div> : null}

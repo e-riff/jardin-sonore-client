@@ -29,7 +29,7 @@ export default async function EarlyChildhoodWorkshopsSection(): Promise<JSX.Elem
                 </ol>
             </div>
             <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-surface-container-low">
-                <Image alt={content.imageAlt} className="object-cover object-center" fill sizes="(min-width: 1024px) 44vw, 100vw" src="/images/galerie/animateur-tabla-enfants.webp" />
+                <Image alt={content.imageAlt} className="object-cover object-center" fill sizes="(min-width: 1024px) 44vw, 100vw" src="/images/ateliers/riviere-musicale-automne.webp" />
             </div>
         </div>
     </section>;
