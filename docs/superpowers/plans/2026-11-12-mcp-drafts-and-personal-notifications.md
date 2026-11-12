@@ -194,3 +194,8 @@ curl -sS -o /dev/null -w 'public_site_http=%{http_code}\n' https://jardin-sonore
 - Follow-up verification:620 tests,3164 assertions,0 failures;2 deprecations and
   4 PHPUnit notices. PHPStan and CS pass. Focused independent review found no
   substantive defect in recipient validation,fingerprinting,To or Envelope.
+
+- Follow-up deployed as `91c3114b`,tag02 pushed before `make deploy-backend`.
+  Production schema synchronized,77 migrations applied/no new migration;
+  authenticated HTTP200 and53 tools. Optional recipient schema verified and invalid
+  email rejected before reservation;receipt count remains0,no real SMTP test.

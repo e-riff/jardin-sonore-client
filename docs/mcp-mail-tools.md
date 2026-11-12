@@ -142,7 +142,9 @@ JSON de 14 Mio accepté. Recherche IMAP réelle réussie, aucun brouillon prése
 du contrôle. Rafraîchir les outils Mistral avant la recette d’édition et d’envoi.
 
 
-Le complément `recipient` facultatif a été demandé après la première livraison.
+Le complément `recipient` facultatif est déployé sous
+`deploy-mcp-drafts-notifications-20261112-02` (`91c3114b`), après demande explicite
+de l’utilisateur.
 Il conserve le destinataire personnel par défaut et inclut la destination effective
 dans l’empreinte de dédoublonnage : une même clé ne peut pas être réutilisée pour
 une autre adresse. Aucun mail réel n’est nécessaire pour vérifier cette règle.

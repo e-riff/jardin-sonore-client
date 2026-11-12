@@ -18,7 +18,7 @@ production sont appliquées, aucune en attente**. L’ancienne migration de donn
 `Version20261027160000` (Ludobus) reste en attente uniquement en local, volontairement
 non exécutée dans ce lot. Les trois droits de brouillon restent actifs.
 
-Vérification : **618 tests et 3 155 assertions passent**, avec quatre notices
+Vérification : **620 tests et 3 164 assertions passent**, avec deux dépréciations et quatre notices
 PHPUnit ; PHPStan, style, conteneur Symfony, validation Composer et compilation des
 81 assets Symfony passent. L’ancien échec du test de dossier provenait de dates
 fixes devenues passées ; les deux séances utilisent désormais deux mois futurs,
@@ -35,11 +35,14 @@ d’un brouillon réel et la livraison Gmail restent à confirmer dans Mistral a
 rafraîchissement de ses outils. Voir le [guide MCP mail](docs/mcp-mail-tools.md) et le
 [plan du lot](docs/superpowers/plans/2026-11-12-mcp-drafts-and-personal-notifications.md).
 
-Complément demandé après la première livraison : `recipient` facultatif pour les
-notifications, afin de sélectionner librement une adresse tout en gardant l’adresse
-personnelle comme défaut. La destination effective entre dans le dédoublonnage et
-l’enveloppe SMTP ; une même clé vers une autre adresse est refusée. Livraison
-complémentaire prévue sous `deploy-mcp-drafts-notifications-20261112-02`, sans migration.
+Complément **déployé** sous `deploy-mcp-drafts-notifications-20261112-02`
+(commit `91c3114b`) : `recipient` facultatif pour les notifications, afin de
+sélectionner librement une adresse tout en gardant l’adresse personnelle comme
+défaut. La destination effective entre dans le dédoublonnage et l’enveloppe SMTP ;
+une même clé vers une autre adresse est refusée. Aucun changement de migration.
+Le MCP de production expose le nouveau champ facultatif et rejette les adresses
+invalides avant réservation/envoi ; 53 outils et schéma Doctrine synchronisé
+confirmés après cette seconde livraison. Aucun mail de recette envoyé.
 
 ## Livré — hors travaux futurs
 
