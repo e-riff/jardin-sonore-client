@@ -54,3 +54,41 @@ aucun PATCH Calendar.
 - Après commit/tag/push/déploiement : sauvegarde privée du seul événement encore
   incohérent,reprise ciblée via le service,vérification marqueur/statut/horaires et
   lieu. Ne pas retoucher le dossier déjà cohérent.
+
+
+## Livraison et reprise existante
+
+- Commit `b67a189a` et tag annoté `deploy-quote-calendar-confirmation-20261112-01`
+  poussés avant `make deploy-backend`. Installation verrouillée sans changement,
+  compilation81 assets,cache reconstruit,workers signalés ; aucune migration nouvelle.
+- Préflight Google réel a confirmé qu’un des deux dossiers était déjà cohérent.
+  Ce dossier n’a pas été modifié.
+- Reprise du seul événement encore en option dans l’autre dossier : gardes sur
+  dossier confirmé,devis signé et identifiant exact de séance,refus de toute option
+  supplémentaire inattendue. Sauvegarde de l’événement avant modification sous
+  `var/backups/` hors Git,mode0600.
+- Service exécuté :confirmed1/failed0 ; état local confirmé,marqueur Google absent,
+  début/fin/lieu préservés. Aucun autre dossier ou événement modifié.
+- Site publicHTTP200 après déploiement. Pas de nouveau paramètre ou outil MCP,
+  aucune reconnexion nécessaire ; la description de signature indique calendarSync.
+
+Commandes principales :
+
+```sh
+docker compose exec -T php php -d memory_limit=1G ./bin/phpunit
+docker compose exec -T php php -d memory_limit=1G ./bin/phpunit --filter 'CommercialQuote|ConfirmCommercialProjectInterventions'
+docker compose exec -T php vendor/bin/phpstan analyse --memory-limit=1G --no-progress
+docker compose exec -T php vendor/bin/php-cs-fixer fix --dry-run --diff --quiet
+docker compose exec -T php php bin/console lint:container
+docker compose exec -T php php bin/console doctrine:schema:validate
+git diff --check
+git commit -m "fix(calendar): confirm option sessions when accepting a quote"
+git tag -a deploy-quote-calendar-confirmation-20261112-01 -m "Confirm linked option sessions in Google when accepting quotes"
+git push origin main
+git push origin deploy-quote-calendar-confirmation-20261112-01
+make deploy-backend
+```
+
+Les scripts SSH ciblés ont effectué le préflight en lecture seule,la sauvegarde et
+la reprise d’une seule séance,puis une relecture Google des deux dossiers demandés.
+Les noms/dates des clients ne sont pas recopiés dans ce document versionné.

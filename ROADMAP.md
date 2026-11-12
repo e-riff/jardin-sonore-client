@@ -69,22 +69,28 @@ Site public et MCP authentifié HTTP200 ; 53 outils et descriptions correctives
 exposés. **Rafraîchir les outils Mistral suffit normalement ; pas de changement
 d’authentification,de noms ou de paramètres nécessitant une reconnexion.**
 
-## Acceptation d’un devis et confirmation des séances — correctif en préparation
+## Acceptation d’un devis et confirmation des séances — livré le 12 novembre
 
-Le passage d’un devis à « accepté » confirmait le dossier sans confirmer ses séances
-liées en option ni retirer leur marqueur Google. Le chemin de signature partagé
-backoffice/MCP confirme désormais ces séances à partir d’un événement Google frais
-avec son ETag,sans écraser les horaires ou le lieu. Les séances annulées ou déjà
-confirmées ne sont pas modifiées. Les échecs restent en option avec avertissement
-backoffice et compteurs `calendarSync` dans la réponse MCP ; une relance ne rejoue
-que les options restantes,sans doubler l’historique de signature.
+Déployé sous `deploy-quote-calendar-confirmation-20261112-01` (commit `b67a189a`).
+Le passage d’un devis à « accepté » confirmait seulement le dossier,et ne retirait
+pas `[OPT]` sur ses séances liées. Le chemin de signature partagé backoffice/MCP
+confirme désormais les options du dossier à partir d’un événement Google frais et
+de son ETag,sans écraser horaires ou lieu. Les séances annulées ou déjà confirmées
+ne sont pas modifiées. Les échecs restent en option avec avertissement backoffice
+et compteurs `calendarSync` dans le MCP ; une relance traite les options restantes
+sans doubler l’historique de signature.
 
-Régression reproduite puis corrigée ; **638 tests,3 250 assertions**,PHPStan,style,
-conteneur et revue passent. Pas de migration ni dépendance supplémentaire.
-Livraison prévue : `deploy-quote-calendar-confirmation-20261112-01`.
-Deux dossiers indiqués par l’utilisateur ont été contrôlés en lecture seule :
-l’un est déjà cohérent,côté local et Google ; l’autre a encore une séance en option
-malgré son devis signé. Reprise ciblée de cette seule séance après déploiement.
+**638 tests et 3 250 assertions passent** (2 dépréciations,4 notices),ainsi que
+PHPStan,style et conteneur. Les 11 tests ciblés devis/confirmation passent
+(92 assertions) ; revue sans défaut substantiel. Schéma synchronisé,pas de migration
+ou dépendance supplémentaire ; déploiement backend et compilation des 81 assets
+réussis,site public HTTP200.
+
+Les deux dossiers indiqués par l’utilisateur ont été contrôlés côté Google :
+l’un était déjà cohérent et n’a pas été modifié. L’autre avait une seule option
+malgré son devis signé ; reprise ciblée après sauvegarde privée,confirmation locale
+et retrait du marqueur vérifiés,horaires et lieu conservés. Aucun autre dossier
+modifié. Détails : [plan et vérifications](docs/superpowers/plans/2026-11-12-quote-calendar-confirmation-fix.md).
 
 ## Livré — hors travaux futurs
 
