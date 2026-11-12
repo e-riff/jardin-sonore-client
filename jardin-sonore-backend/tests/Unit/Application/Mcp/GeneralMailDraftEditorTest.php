@@ -11,11 +11,56 @@ use App\Application\Mcp\MailDraftStore;
 use App\Infrastructure\Mail\DraftMessageMapper;
 use App\Infrastructure\Mail\DraftMimeBuilder;
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Webklex\PHPIMAP\Message;
 
 final class GeneralMailDraftEditorTest extends TestCase
 {
+    /** @return iterable<string, array{bool}> */
+    public static function cleanupFailures(): iterable
+    {
+        yield 'removal not verified' => [false];
+        yield 'removal interrupted' => [true];
+    }
+
+    #[DataProvider('cleanupFailures')]
+    public function testVerifiedReplacementReportsPendingCleanupAndRetryDoesNotAppendAgain(bool $throwOnFirstRemoval): void
+    {
+        $draft = new MailDraft(12, '<manual@example.test>', 'Sujet', 'a@example.test', 'Bonjour', imapReference: 'draft:27:12');
+        $store = $this->createMock(MailDraftStore::class);
+        $replacementIds = [];
+        $store->method('getByMessageId')->willReturnCallback(static function (string $folder, string $id) use ($draft, &$replacementIds): MailDraft {
+            if (in_array($id, [$draft->messageId, $draft->imapReference], true)) {
+                return $draft;
+            }
+            $replacementIds[] = $id;
+
+            return new MailDraft(18, $id, 'Sujet', 'a@example.test', 'Modifié', imapReference: 'draft:27:18');
+        });
+        $store->expects(self::never())->method('append');
+        $store->expects(self::exactly(2))->method('deleteByMessageId')->willReturnCallback(static function () use ($throwOnFirstRemoval): bool {
+            static $attempts = 0;
+            if (0 === $attempts++) {
+                if ($throwOnFirstRemoval) {
+                    throw new RuntimeException('IMAP removal interrupted');
+                }
+
+                return false;
+            }
+
+            return true;
+        });
+        $first = $this->editor($store)->update($draft->imapReference, $draft->snapshotRevision(), ['body' => 'Modifié']);
+        self::assertSame('replacement_saved_cleanup_pending', $first['status']);
+        self::assertSame('draft:27:18', $first['draftMessageId']);
+        self::assertFalse($first['previousDraftRemovalVerified']);
+        $second = $this->editor($store)->update($draft->messageId, $draft->snapshotRevision(), ['body' => 'Modifié']);
+        self::assertSame('saved', $second['status']);
+        self::assertSame($replacementIds[0], $replacementIds[1]);
+    }
+
     public function testReplacementIsVerifiedThroughTheRealMimeParserWithAttachmentChanges(): void
     {
         $oldFile = new MailDraftAttachment('ancien.pdf', 'application/pdf', 'OLD');
@@ -100,7 +145,9 @@ final class GeneralMailDraftEditorTest extends TestCase
         $store->method('getByMessageId')->willReturnCallback(static fn (string $folder, string $id): ?MailDraft => $id === $draft->messageId ? $draft : null);
         $store->expects(self::once())->method('append');
         $store->expects(self::never())->method('deleteByMessageId');
-        self::assertSame('uncertain', $this->editor($store)->update($draft->messageId, $draft->snapshotRevision(), ['body' => 'Modifié'])['status']);
+        $result = $this->editor($store)->update($draft->messageId, $draft->snapshotRevision(), ['body' => 'Modifié']);
+        self::assertSame('verification_failed', $result['status']);
+        self::assertFalse($result['previousDraftRemovalAttempted']);
     }
 
     public function testRejectsInvalidBase64BeforeWritingAnything(): void

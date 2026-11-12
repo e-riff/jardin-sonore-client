@@ -38,9 +38,9 @@ final readonly class ImapMailDraftStore implements MailDraftStore
             $results[] = [
                 'draftMessageId' => "draft:{$uidValidity}:{$message->getUid()}",
                 'messageId' => '' === $id ? null : "<{$id}>",
-                'subject' => iconv_mime_decode((string) $message->getSubject(), ICONV_MIME_DECODE_CONTINUE_ON_ERROR, 'UTF-8') ?: (string) $message->getSubject(),
+                'subject' => (new DraftMessageMapper())->subject($message),
                 'to' => (string) $message->getTo(),
-                'date' => (string) $message->getDate(),
+                'date' => $message->getDate()->toDate()->setTimezone('Europe/Paris')->format(DATE_ATOM),
             ];
         }
 
@@ -63,12 +63,16 @@ final readonly class ImapMailDraftStore implements MailDraftStore
     public function getByMessageId(string $folder, string $messageId): ?MailDraft
     {
         try {
-            $message = $this->find($this->clientProvider->client(), $folder, $messageId, true);
+            $client = $this->clientProvider->client();
+            $message = $this->find($client, $folder, $messageId, true);
             if (!$message instanceof Message) {
                 return null;
             }
 
-            return (new DraftMessageMapper())->map($message, $messageId);
+            $uidValidity = $this->uidValidity($this->folder($folder, $client));
+            $headerId = trim((string) $message->getMessageId(), '<>');
+
+            return (new DraftMessageMapper())->map($message, '' === $headerId ? $messageId : "<{$headerId}>", "draft:{$uidValidity}:{$message->getUid()}");
         } catch (RuntimeException $exception) {
             throw $exception;
         } catch (Throwable) {

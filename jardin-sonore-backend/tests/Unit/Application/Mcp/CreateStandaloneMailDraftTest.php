@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Application\Mcp;
 
 use App\Application\Mcp\CreateStandaloneMailDraft;
+use App\Application\Mcp\MailDraft;
 use App\Application\Mcp\MailDraftStore;
 use App\Infrastructure\Mail\StandaloneDraftMimeBuilder;
 use InvalidArgumentException;
@@ -13,10 +14,23 @@ use RuntimeException;
 
 final class CreateStandaloneMailDraftTest extends TestCase
 {
+    public function testCreationVerifiesAndReturnsTheStoredSubjectInsteadOfEchoingInput(): void
+    {
+        $draftStore = $this->createMock(MailDraftStore::class);
+        $draftStore->method('findByMessageId')->willReturnOnConsecutiveCalls(null, 42);
+        $draftStore->method('getByMessageId')->willReturnCallback(static fn (string $folder, string $id): MailDraft => new MailDraft(42, $id, 'Stored damaged subject', 'marie@example.test', 'Bonjour Marie', imapReference: 'draft:27:42'));
+        $draftStore->expects(self::once())->method('append');
+        $result = (new CreateStandaloneMailDraft($draftStore, new StandaloneDraftMimeBuilder(), 'contact@example.test', 'INBOX.Drafts'))->create('marie@example.test', 'Éveil musical', 'Bonjour Marie');
+        self::assertSame('verification_failed', $result['status']);
+        self::assertSame('Stored damaged subject', $result['subject']);
+        self::assertSame('draft:27:42', $result['draftMessageId']);
+    }
+
     public function testCreatesVerifiedStandaloneDraftWithoutReplyHeaders(): void
     {
         $draftStore = $this->createMock(MailDraftStore::class);
         $draftStore->expects(self::exactly(2))->method('findByMessageId')->willReturnOnConsecutiveCalls(null, 42);
+        $draftStore->method('getByMessageId')->willReturnCallback(static fn (string $folder, string $id): MailDraft => new MailDraft(42, $id, 'Premier échange', 'marie@example.test', 'Bonjour Marie'));
         $draftStore->expects(self::once())->method('append')->with('INBOX.Drafts', self::callback(static function (string $mime): bool {
             return str_contains($mime, 'To: marie@example.test')
                 && str_contains($mime, 'Bonjour Marie')
@@ -36,6 +50,7 @@ final class CreateStandaloneMailDraftTest extends TestCase
     {
         $draftStore = $this->createMock(MailDraftStore::class);
         $draftStore->expects(self::exactly(2))->method('findByMessageId')->willReturnOnConsecutiveCalls(null, 42);
+        $draftStore->method('getByMessageId')->willReturnCallback(static fn (string $folder, string $id): MailDraft => new MailDraft(42, $id, 'Premier échange', 'marie@example.test', 'Bonjour Marie', '<p>Bonjour <strong>Marie</strong></p>'));
         $draftStore->expects(self::once())->method('append')->with('INBOX.Drafts', self::stringContains('multipart/alternative'));
 
         $result = (new CreateStandaloneMailDraft($draftStore, new StandaloneDraftMimeBuilder(), 'contact@example.test', 'INBOX.Drafts'))
@@ -49,6 +64,7 @@ final class CreateStandaloneMailDraftTest extends TestCase
     {
         $draftStore = $this->createMock(MailDraftStore::class);
         $draftStore->expects(self::once())->method('findByMessageId')->willReturn(42);
+        $draftStore->method('getByMessageId')->willReturnCallback(static fn (string $folder, string $id): MailDraft => new MailDraft(42, $id, 'Premier échange', 'marie@example.test', 'Bonjour Marie'));
         $draftStore->expects(self::never())->method('append');
 
         $result = (new CreateStandaloneMailDraft($draftStore, new StandaloneDraftMimeBuilder(), 'contact@example.test', 'INBOX.Drafts'))

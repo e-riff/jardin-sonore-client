@@ -25,6 +25,7 @@ final readonly class MailDraft
         public array $attachments = [],
         public ?string $inReplyTo = null,
         public ?string $references = null,
+        public ?string $imapReference = null,
     ) {
     }
 
@@ -46,7 +47,8 @@ final readonly class MailDraft
     public function result(): array
     {
         return [
-            'status' => 'saved', 'draftMessageId' => $this->messageId,
+            'status' => 'saved', 'draftMessageId' => $this->imapReference ?? $this->messageId,
+            'messageId' => str_starts_with($this->messageId, '<') ? $this->messageId : null,
             'revision' => $this->snapshotRevision(), 'to' => $this->recipient,
             'recipients' => array_values(array_filter([$this->recipient, ...$this->additionalRecipients])),
             'cc' => $this->cc, 'bcc' => $this->bcc, 'subject' => $this->subject,

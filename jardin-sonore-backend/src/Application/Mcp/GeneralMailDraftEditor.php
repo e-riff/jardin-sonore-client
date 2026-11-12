@@ -7,6 +7,7 @@ namespace App\Application\Mcp;
 use App\Infrastructure\Mail\DraftHtmlBody;
 use App\Infrastructure\Mail\DraftMimeBuilder;
 use InvalidArgumentException;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Throwable;
 
@@ -17,6 +18,7 @@ final readonly class GeneralMailDraftEditor
         private DraftMimeBuilder $mimeBuilder,
         #[Autowire('%app.mcp.imap_username%')] private string $mailboxAddress,
         #[Autowire('%app.mcp.imap_drafts_folder%')] private string $draftsFolder,
+        private ?LoggerInterface $logger = null,
     ) {
     }
 
@@ -56,29 +58,61 @@ final readonly class GeneralMailDraftEditor
             return ['status' => 'conflict', 'nextAction' => 'read_standalone_mail_draft'];
         }
         $desired = $this->applyChanges($current, $changes);
-        $newId = '<mcp-standalone-edit-' . hash('sha256', $messageId . "\0" . $revision . "\0" . $desired->snapshotRevision()) . '@' . substr(strrchr($this->mailboxAddress, '@'), 1) . '>';
+        $operationReference = $current->imapReference ?? $current->messageId;
+        $newId = '<mcp-standalone-edit-' . hash('sha256', $operationReference . "\0" . $revision . "\0" . $desired->snapshotRevision()) . '@' . substr(strrchr($this->mailboxAddress, '@'), 1) . '>';
         $desired = new MailDraft(0, $newId, $desired->subject, $desired->recipient, $desired->body, $desired->htmlBody, $desired->additionalRecipients, $desired->cc, $desired->bcc, $desired->attachments, $desired->inReplyTo, $desired->references);
+        $stage = 'lookup_replacement';
+        $removalAttempted = false;
         try {
             $replacement = $this->draftStore->getByMessageId($this->draftsFolder, $newId);
             if (null === $replacement) {
+                $stage = 'append_replacement';
                 $this->draftStore->append($this->draftsFolder, $this->mimeBuilder->build($desired, $this->mailboxAddress));
+                $stage = 'read_replacement';
                 $replacement = $this->draftStore->getByMessageId($this->draftsFolder, $newId);
             }
             if (null === $replacement || !hash_equals($desired->snapshotRevision(), $replacement->snapshotRevision())) {
-                return ['status' => 'uncertain'];
+                $this->logger?->warning('MCP draft replacement verification failed.', ['replacementMessageId' => $newId]);
+
+                return [
+                    'status' => 'verification_failed', 'replacementMessageId' => $newId,
+                    'replacementDraftMessageId' => $replacement->imapReference ?? $newId,
+                    'previousDraftRemovalAttempted' => false, 'nextAction' => 'read_standalone_mail_draft',
+                ];
             }
+            $stage = 'verify_original';
             $latest = $this->draftStore->getByMessageId($this->draftsFolder, $messageId);
             if (null === $latest || $latest->uid !== $current->uid || !hash_equals($revision, $latest->snapshotRevision())) {
                 return ['status' => 'conflict', 'replacementMessageId' => $newId];
             }
+            $stage = 'remove_original';
+            $removalAttempted = true;
             if (!$this->draftStore->deleteByMessageId($this->draftsFolder, $messageId, $current->uid)) {
-                return ['status' => 'uncertain', 'replacementVerified' => true, 'previousDraftRemoved' => false, 'replacementMessageId' => $newId];
+                return $this->cleanupPendingResult($replacement, $messageId);
             }
 
             return $replacement->result();
-        } catch (Throwable) {
-            return ['status' => 'uncertain'];
+        } catch (Throwable $exception) {
+            $this->logger?->warning('MCP draft replacement interrupted.', ['stage' => $stage, 'replacementMessageId' => $newId, 'exceptionClass' => $exception::class]);
+            if ('remove_original' === $stage && isset($replacement)) {
+                return $this->cleanupPendingResult($replacement, $messageId);
+            }
+
+            return [
+                'status' => 'uncertain', 'stage' => $stage, 'replacementMessageId' => $newId,
+                'previousDraftRemovalAttempted' => $removalAttempted, 'nextAction' => 'retry_same_update',
+            ];
         }
+    }
+
+    /** @return array<string, mixed> */
+    private function cleanupPendingResult(MailDraft $replacement, string $previousDraftMessageId): array
+    {
+        return array_replace($replacement->result(), [
+            'status' => 'replacement_saved_cleanup_pending', 'replacementVerified' => true,
+            'previousDraftRemovalVerified' => false, 'previousDraftMessageId' => $previousDraftMessageId,
+            'nextAction' => 'retry_same_update',
+        ]);
     }
 
     /** @param array<string, mixed> $changes */

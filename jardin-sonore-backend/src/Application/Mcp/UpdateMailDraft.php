@@ -162,6 +162,6 @@ final readonly class UpdateMailDraft implements MailDraftEditor
     /** @return array<string, mixed> */
     private function draftResult(MailDraft $draft, string $state): array
     {
-        return array_replace($draft->result(), ['status' => $state]);
+        return array_replace($draft->result(), ['status' => $state, 'draftMessageId' => $draft->messageId]);
     }
 }

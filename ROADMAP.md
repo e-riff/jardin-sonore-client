@@ -44,6 +44,16 @@ Le MCP de production expose le nouveau champ facultatif et rejette les adresses
 invalides avant réservation/envoi ; 53 outils et schéma Doctrine synchronisé
 confirmés après cette seconde livraison. Aucun mail de recette envoyé.
 
+### Correction des brouillons en préparation
+
+Le retour d’usage a révélé une double conversion des objets déjà en UTF-8 dans la
+lecture : les accents disparaissaient,la vérification du remplacement échouait et
+l’ancien brouillon était conservé. Le correctif décode uniquement les mots MIME,
+relit aussi les créations avant succès,renvoie la référence canonique et distingue
+un remplacement vérifié dont le nettoyage reste en attente. Dates ISO8601 Paris
+avec décalage explicite. Les régressions sont couvertes ; aucun brouillon existant
+n’a été modifié. Livraison prévue : `deploy-mcp-draft-encoding-20261112-01`.
+
 ## Livré — hors travaux futurs
 
 - Backoffice métier pour l'annuaire, les médias, les prolongements, le mailing, les séances et les outils techniques ; EasyAdmin a été retiré.

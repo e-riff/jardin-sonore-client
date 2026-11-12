@@ -23,7 +23,7 @@ final readonly class CreateStandaloneMailDraft implements StandaloneMailDraftWri
     }
 
     /** @param list<array<string, mixed>> $attachments
-     * @return array{status: string, folder: string, messageId: string, uid: ?int, to: string, subject: string}
+     * @return array<string, mixed>
      */
     public function create(string $recipient, string $subject, string $body, ?string $htmlBody = null, array $attachments = []): array
     {
@@ -60,7 +60,7 @@ final readonly class CreateStandaloneMailDraft implements StandaloneMailDraftWri
         try {
             $uid = $this->draftStore->findByMessageId($this->draftsFolder, $messageId);
             if (null !== $uid) {
-                return $this->result('already_exists', $messageId, $uid, $recipient, $subject);
+                return $this->storedResult('already_exists', $messageId, $draft);
             }
 
             $mime = $this->mimeBuilder->build($recipient, $subject, $body, $messageId, $this->mailboxAddress, new DateTimeImmutable(), $htmlBody);
@@ -73,10 +73,24 @@ final readonly class CreateStandaloneMailDraft implements StandaloneMailDraftWri
                 return $this->result('uncertain', $messageId, null, $recipient, $subject);
             }
 
-            return $this->result('saved', $messageId, $uid, $recipient, $subject);
+            return $this->storedResult('saved', $messageId, $draft);
         } catch (Throwable) {
             return $this->result('uncertain', $messageId, null, $recipient, $subject);
         }
+    }
+
+    /** @return array<string, mixed> */
+    private function storedResult(string $status, string $messageId, MailDraft $expectedDraft): array
+    {
+        $storedDraft = $this->draftStore->getByMessageId($this->draftsFolder, $messageId);
+        if (null === $storedDraft) {
+            return ['status' => 'uncertain', 'messageId' => $messageId, 'nextAction' => 'read_standalone_mail_draft'];
+        }
+        if ('saved' === $status && !hash_equals($expectedDraft->snapshotRevision(), $storedDraft->snapshotRevision())) {
+            $status = 'verification_failed';
+        }
+
+        return array_replace($storedDraft->result(), ['status' => $status, 'folder' => $this->draftsFolder, 'uid' => $storedDraft->uid]);
     }
 
     /** @return array{status: string, folder: string, messageId: string, uid: ?int, to: string, subject: string} */

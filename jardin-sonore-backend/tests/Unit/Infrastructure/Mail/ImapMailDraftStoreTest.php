@@ -17,6 +17,35 @@ use Webklex\PHPIMAP\Support\MessageCollection;
 
 final class ImapMailDraftStoreTest extends TestCase
 {
+    public function testMessageIdReadReturnsCanonicalReferenceThatCanBeReadAgain(): void
+    {
+        $message = Message::fromString("Message-ID: <test@example.test>\r\nFrom: contact@example.test\r\nTo: marie@example.test\r\nSubject: Test\r\n\r\nBonjour");
+        $message->uid = 56;
+        $store = $this->queryStore(new DraftQueryFixture(new MessageCollection([$message])));
+        $result = $store->getByMessageId('INBOX.Drafts', '<test@example.test>')->result();
+        self::assertSame('draft:27:56', $result['draftMessageId']);
+        self::assertSame('<test@example.test>', $result['messageId']);
+        self::assertSame('Bonjour', $store->getByMessageId('INBOX.Drafts', $result['draftMessageId'])->body);
+    }
+
+    public function testSearchPreservesDecodedSubjectAndReturnsParisDateWithOffset(): void
+    {
+        $subject = 'TEST connecteur (é è à ç œ)';
+        $message = Message::fromString("Message-ID: <test@example.test>\r\nFrom: contact@example.test\r\nTo: marie@example.test\r\nSubject: {$subject}\r\nDate: Thu, 12 Nov 2026 11:25:30 +0000\r\n\r\nBonjour");
+        $message->uid = 56;
+        $results = $this->queryStore(new DraftQueryFixture(new MessageCollection([$message])))->search('INBOX.Drafts', null, 1);
+        self::assertSame($subject, $results[0]['subject']);
+        self::assertSame('2026-11-12T12:25:30+01:00', $results[0]['date']);
+    }
+
+    public function testSummerDateUsesParisDaylightSavingOffset(): void
+    {
+        $message = Message::fromString("From: contact@example.test\r\nTo: marie@example.test\r\nSubject: Test\r\nDate: Sun, 12 Jul 2026 11:25:30 +0000\r\n\r\nBonjour");
+        $message->uid = 56;
+        $results = $this->queryStore(new DraftQueryFixture(new MessageCollection([$message])))->search('INBOX.Drafts', null, 1);
+        self::assertSame('2026-07-12T13:25:30+02:00', $results[0]['date']);
+    }
+
     public function testSearchReturnsUidValidityReferenceForManualDraftWithoutMessageId(): void
     {
         $message = Message::fromString("From: contact@example.test\r\nTo: marie@example.test\r\nSubject: Manuel\r\n\r\nBonjour");

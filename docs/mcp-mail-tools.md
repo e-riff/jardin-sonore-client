@@ -51,6 +51,30 @@ relu et vérifié avant le retrait de l'ancien UID, sans expunge global.
 Les verrous `MCP_DRAFT_COMPOSE_ENABLED` et `MCP_DRAFT_EDIT_ENABLED` restent
 nécessaires à l'édition générale. Aucun outil de brouillon n'envoie de mail.
 
+## Résultats des écritures de brouillons
+
+La création et l’édition relisent le contenu stocké avant de répondre `saved`.
+L’objet renvoyé vient du message relu, et les accents UTF-8 sont conservés ; seuls
+les mots MIME encodés de l’en-tête brut sont décodés. La recherche expose les dates
+au format ISO8601 avec le décalage Europe/Paris (hiver/été).
+
+`draftMessageId` est la référence canonique courante `draft:…:…`, et `messageId`
+est l’identifiant MIME du message. Les deux formats sont acceptés à la lecture
+et à l’édition générale. Un remplacement change d’UID ; utiliser directement la
+nouvelle référence retournée, sans refaire systématiquement une recherche.
+
+| État de l’édition générale | Action |
+| --- | --- |
+| `saved` | Remplacement relu et vérifié, retrait de l’ancien confirmé. Utiliser les nouveaux identifiants et la nouvelle révision. |
+| `verification_failed` | L’ancien n’a pas été retiré par l’opération ; inspecter `replacementDraftMessageId` plutôt que créer une autre copie. |
+| `replacement_saved_cleanup_pending` | Le nouveau brouillon est vérifié, le retrait de l’ancien reste à confirmer. Relancer exactement les arguments originaux : même source, même révision, mêmes changements. Le remplacement existant sera réutilisé. |
+| `uncertain` | Une étape a été interrompue ; `stage` et `replacementMessageId` permettent de la situer. Ne pas reformuler la demande en nouvelle création. |
+
+Les anciennes révisions obtenues avant la correction du décodage doivent être
+rafraîchies par une lecture avant toute édition. Les descriptions MCP sont mises
+à jour : un rafraîchissement des outils est recommandé pour l’IA ; les noms,
+paramètres et authentification ne changent pas.
+
 ## Notifications de tâches planifiées
 
 L'outil distinct `send_personal_notification` envoie par le transport du backend.

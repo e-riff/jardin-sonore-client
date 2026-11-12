@@ -199,3 +199,38 @@ curl -sS -o /dev/null -w 'public_site_http=%{http_code}\n' https://jardin-sonore
   Production schema synchronized,77 migrations applied/no new migration;
   authenticated HTTP200 and53 tools. Optional recipient schema verified and invalid
   email rejected before reservation;receipt count remains0,no real SMTP test.
+
+
+## Repair: accented subjects, partial saves and draft references
+
+- User supplied reproducible accented-subject failures and duplicate drafts.
+- Root cause reproduced locally: `iconv_mime_decode` on already decoded UTF-8
+  drops non-ASCII characters. The comparison with the desired full snapshot then
+  fails and correctly keeps the original,leaving the appended replacement.
+- Subject writes already use Symfony MIME encoding. Repair reads the raw unfolded
+  Subject and decodes only RFC2047 encoded-word groups,preserving surrounding UTF8.
+  Tests cover raw,mixed,folded,Latin1 and zero-valued encoded words.
+- Creation now rereads and verifies the stored snapshot,returns actual stored
+  fields instead of an optimistic subject echo.
+- General read/edit and creation expose canonical `draftMessageId` plus MIME
+  `messageId`; both accepted. Operation identity uses the current canonical
+  reference,so aliases on a retry do not produce a different replacement.
+- Verified replacement with failed/interrupted old removal has explicit
+  `replacement_saved_cleanup_pending`; unverified replacement has
+  `verification_failed`; transport exceptions include stage and replacement ID.
+  Logs contain technical stage/identifier/exception class,never mail content.
+- Dates were valid UTC Date headers serialized as timezone-less strings.
+  Search now returns ISO8601 Europe/Paris dates,with winter and summer tests.
+- Diagnostic on the previously reported TEST UID56 found no matching synthetic
+  draft; no other existing message was inspected or mutated.
+- Regression tests observed failing before fixes. Full631-test suite passed
+  (3192 assertions,2 deprecations,4 notices),final focused101 tests535 assertions,PHPStan,CS and container lint pass.
+- No migration or dependencies added. Planned corrective deployment tag:
+  `deploy-mcp-draft-encoding-20261112-01`.
+- Production recipe will create one uniquely named synthetic draft,read/edit it
+  through both reference formats with accents/HTML/attachment,date-check it and
+  remove only this recipe’s drafts by exact UID. No existing draft or SMTP send.
+- Existing customer/test duplicates from the report remain untouched.
+
+- Final read-only review accepted the cleanup-exception handling and ID flow;
+  no substantive finding remains. Optional logger uses technical metadata only.

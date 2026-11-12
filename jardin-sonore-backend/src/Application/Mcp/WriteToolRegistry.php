@@ -59,7 +59,7 @@ final readonly class WriteToolRegistry
             ],
             [
                 'name' => 'create_mail_draft',
-                'description' => 'After explicit user confirmation, create a standalone draft with the exact recipient, subject, text body, and optional safe HTML body supplied by the user. This never sends. Keep the returned messageId for later reading or editing. Repeating identical inputs returns the existing draft.',
+                'description' => 'After explicit user confirmation, create a standalone draft with recipient, subject, text body, optional safe HTML and attachments. This never sends. A saved result is verified by rereading the stored content and returns its real subject, canonical draftMessageId, MIME messageId and revision. Both ID formats work for reading/editing. Repeating identical inputs returns the existing draft without overwriting it. On verification_failed, inspect the returned draft; do not create another copy.',
                 'inputSchema' => [
                     'type' => 'object',
                     'properties' => [
@@ -93,7 +93,7 @@ final readonly class WriteToolRegistry
             ],
             [
                 'name' => 'update_standalone_mail_draft',
-                'description' => 'Edit any manual or MCP draft in the configured Drafts folder. Read it first and supply the current draftMessageId and full revision. Omitted fields are preserved. attachments adds files as filename/mimeType/base64 (10 files, 5 MiB each, 10 MiB total); removeAttachmentIds explicitly removes files by IDs from the read result. htmlBody:null removes HTML. recipient sets one To address; recipients sets all To addresses. No email is sent. On missing IDs, search_mail_drafts again.',
+                'description' => 'Edit any manual or MCP draft in the configured Drafts folder. Read it first and supply the current draftMessageId and full revision. Omitted fields are preserved. attachments adds filename/mimeType/base64 files (10 files, 5 MiB each, 10 MiB total); removeAttachmentIds removes exact files from the read result. htmlBody:null removes HTML. recipient sets one To address; recipients sets all To addresses. No email is sent. saved returns the replacement canonical draftMessageId and MIME messageId, both usable directly. replacement_saved_cleanup_pending means replacement verified but old removal unconfirmed: retry exactly the original arguments to finish cleanup without a new append. verification_failed leaves the original intact: inspect replacementDraftMessageId, do not blindly create a copy. On missing IDs, search_mail_drafts again.',
                 'inputSchema' => [
                     'type' => 'object',
                     'properties' => [
@@ -807,7 +807,7 @@ final readonly class WriteToolRegistry
             }
             $json = json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
-            return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => in_array($result['status'], ['uncertain'], true)];
+            return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => !in_array($result['status'], ['saved', 'already_exists'], true)];
         } catch (InvalidToolArguments $exception) {
             return $this->error($exception->getMessage());
         } catch (JsonException) {
