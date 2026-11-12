@@ -18,6 +18,34 @@ use Symfony\Component\Mime\RawMessage;
 
 final class PersonalNotificationSenderTest extends TestCase
 {
+    public function testExplicitRecipientOverridesPersonalDefaultAndIsPartOfDeduplication(): void
+    {
+        $store = new NotificationStoreFixture();
+        $transport = new NotificationTransportFixture();
+        $sender = $this->sender($store, $transport);
+        $arguments = ['requestId' => 'reminder:external:1', 'subject' => 'Rappel', 'body' => 'Bonjour', 'recipient' => 'other@example.test'];
+        self::assertSame('accepted', $sender->send($arguments)['status']);
+        $message = $transport->messages[0];
+        self::assertInstanceOf(Email::class, $message);
+        self::assertSame('other@example.test', $message->getTo()[0]->getAddress());
+        self::assertSame('other@example.test', $transport->envelopes[0]->getRecipients()[0]->getAddress());
+        self::assertSame('conflict', $sender->send(array_replace($arguments, ['recipient' => 'third@example.test']))['status']);
+        self::assertCount(1, $transport->messages);
+    }
+
+    public function testInvalidExplicitRecipientIsRejectedBeforeReservation(): void
+    {
+        $store = new NotificationStoreFixture();
+        $transport = new NotificationTransportFixture();
+        $this->expectException(InvalidArgumentException::class);
+        try {
+            $this->sender($store, $transport)->send(['requestId' => 'reminder:invalid:1', 'subject' => 'Rappel', 'body' => 'Bonjour', 'recipient' => "other@example.test\r\nBcc: third@example.test"]);
+        } finally {
+            self::assertSame([], $store->rows);
+            self::assertSame([], $transport->messages);
+        }
+    }
+
     public function testSendsSafeHtmlOnlyToConfiguredRecipientAndDoesNotResend(): void
     {
         $store = new NotificationStoreFixture();
@@ -58,7 +86,7 @@ final class PersonalNotificationSenderTest extends TestCase
         self::assertCount(1, $transport->messages);
     }
 
-    public function testRejectsRecipientArgumentBeforeReservingOrSending(): void
+    public function testRejectsUnsupportedToArgumentBeforeReservingOrSending(): void
     {
         $store = new NotificationStoreFixture();
         $transport = new NotificationTransportFixture();
@@ -104,6 +132,9 @@ final class NotificationTransportFixture implements TransportInterface
     /** @var list<RawMessage> */
     public array $messages = [];
 
+    /** @var list<Envelope> */
+    public array $envelopes = [];
+
     public function __construct(private bool $fails = false)
     {
     }
@@ -111,6 +142,7 @@ final class NotificationTransportFixture implements TransportInterface
     public function send(RawMessage $message, ?Envelope $envelope = null): ?SentMessage
     {
         $this->messages[] = $message;
+        $this->envelopes[] = $envelope ?? Envelope::create($message);
         if ($this->fails) {
             throw new RuntimeException('SMTP connection lost');
         }

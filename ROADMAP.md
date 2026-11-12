@@ -35,6 +35,12 @@ d’un brouillon réel et la livraison Gmail restent à confirmer dans Mistral a
 rafraîchissement de ses outils. Voir le [guide MCP mail](docs/mcp-mail-tools.md) et le
 [plan du lot](docs/superpowers/plans/2026-11-12-mcp-drafts-and-personal-notifications.md).
 
+Complément demandé après la première livraison : `recipient` facultatif pour les
+notifications, afin de sélectionner librement une adresse tout en gardant l’adresse
+personnelle comme défaut. La destination effective entre dans le dédoublonnage et
+l’enveloppe SMTP ; une même clé vers une autre adresse est refusée. Livraison
+complémentaire prévue sous `deploy-mcp-drafts-notifications-20261112-02`, sans migration.
+
 ## Livré — hors travaux futurs
 
 - Backoffice métier pour l'annuaire, les médias, les prolongements, le mailing, les séances et les outils techniques ; EasyAdmin a été retiré.

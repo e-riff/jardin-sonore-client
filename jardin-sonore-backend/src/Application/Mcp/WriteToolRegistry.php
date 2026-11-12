@@ -47,9 +47,10 @@ final readonly class WriteToolRegistry
         return [
             [
                 'name' => 'send_personal_notification',
-                'description' => 'Send a personal reminder or digest through the backend to the single server-configured personal recipient. No recipient override is accepted. Intended for authorized scheduled tasks; no per-occurrence interactive confirmation is required by this tool. Use a stable requestId for one task occurrence and reuse it on retries; use a different key for the next occurrence. accepted means SMTP acceptance, not delivery. sending/uncertain means do not resend under a new key. Limited to 10 new requests per hour. HTML is filtered.',
+                'description' => 'Send a reminder or digest through the backend. Optional recipient selects one valid email address; when omitted, the server-configured personal address is used. The sender always remains the backend configured address. Intended for authorized scheduled tasks; no per-occurrence interactive confirmation is required by this tool. Use a stable requestId for one task occurrence and reuse it on retries; use a different key for the next occurrence. A changed recipient with the same key conflicts. accepted means SMTP acceptance, not delivery. sending/uncertain means do not resend under a new key. Limited to 10 new requests per hour. HTML is filtered.',
                 'inputSchema' => ['type' => 'object', 'properties' => [
                     'requestId' => ['type' => 'string', 'pattern' => '^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$'],
+                    'recipient' => ['type' => 'string', 'format' => 'email', 'minLength' => 3, 'maxLength' => 254],
                     'subject' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255],
                     'body' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 10000],
                     'htmlBody' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 20000],

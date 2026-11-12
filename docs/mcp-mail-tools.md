@@ -53,9 +53,11 @@ nécessaires à l'édition générale. Aucun outil de brouillon n'envoie de mail
 
 ## Notifications de tâches planifiées
 
-L'outil distinct `send_personal_notification` envoie par le transport du backend
-vers le seul destinataire configuré côté serveur. Il n'accède pas à Gmail et ne
-peut pas envoyer de notification à un contact choisi par l'IA.
+L'outil distinct `send_personal_notification` envoie par le transport du backend.
+Le champ `recipient` facultatif permet de choisir une adresse ; s'il est omis,
+l'adresse personnelle configurée côté serveur est utilisée. L'expéditeur reste
+celui de Jardin Sonore. L'outil n'accède pas à Gmail. Une tâche planifiée autorisée
+peut aussi utiliser un destinataire explicite.
 
 Configuration locale ou de production, jamais une adresse personnelle dans le
 fichier `.env` versionné :
@@ -81,12 +83,17 @@ Exemple de demande :
 }
 ```
 
+Pour envoyer à une autre adresse, ajouter par exemple
+`"recipient": "marie@example.test"` à la demande. Sans ce champ, le mail part vers
+l'adresse personnelle configurée.
+
 La clé identifie une occurrence de tâche, pas une tentative d'appel : la conserver
 à chaque relance ; en créer une autre pour l'occurrence suivante. Elle contient
 1 à 128 caractères ASCII (lettres, chiffres, point, tiret, soulignement, deux-points).
 Objet : 255 caractères, texte : 10 000, HTML : 20 000. Le HTML conserve les
 paragraphes, titres simples, listes et liens HTTP(S), sans scripts ni images.
-L'outil n'accepte ni destinataire, ni expéditeur, ni pièces jointes.
+Le champ `recipient` accepte une seule adresse email valide (254 caractères
+maximum). L'outil n'accepte ni expéditeur libre, ni Cc/Bcc, ni pièces jointes.
 
 Résultats :
 
@@ -95,7 +102,7 @@ Résultats :
 | `accepted` | Transport synchrone terminé ; avec SMTP, le serveur a accepté le mail. Ce n'est pas une preuve de livraison dans Gmail. |
 | `sending` | Demande déjà réservée, résultat final non enregistré. Aucun nouvel essai SMTP. |
 | `uncertain` | Issue incertaine du transport ou de l'enregistrement du résultat. Aucun renvoi automatique. |
-| `conflict` | Clé déjà utilisée avec un contenu ou une configuration d'adresses différents. |
+| `conflict` | Clé déjà utilisée avec un contenu, un destinataire ou un expéditeur différents. |
 | `rate_limited` | 10 nouvelles demandes déjà réservées dans la dernière heure. |
 
 La base garde clé unique, empreinte, état et dates, sans corps du mail. Le verrou
@@ -130,6 +137,12 @@ test. Ils ne prouvent ni la recette IMAP réelle ni la livraison Gmail.
 
 Déployé sous `deploy-mcp-drafts-notifications-20261112-01` (`9c468fb9`).
 Migration appliquée, notifications activées vers l’adresse personnelle confirmée,
-53 outils MCP exposés. Contrôles HTTP et destinataire fixe réussis sans envoi réel ;
+53 outils MCP exposés. Contrôles HTTP et refus des paramètres non autorisés réussis sans envoi réel ;
 JSON de 14 Mio accepté. Recherche IMAP réelle réussie, aucun brouillon présent lors
 du contrôle. Rafraîchir les outils Mistral avant la recette d’édition et d’envoi.
+
+
+Le complément `recipient` facultatif a été demandé après la première livraison.
+Il conserve le destinataire personnel par défaut et inclut la destination effective
+dans l’empreinte de dédoublonnage : une même clé ne peut pas être réutilisée pour
+une autre adresse. Aucun mail réel n’est nécessaire pour vérifier cette règle.

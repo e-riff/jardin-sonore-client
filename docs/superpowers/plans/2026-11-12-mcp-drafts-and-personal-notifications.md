@@ -179,3 +179,18 @@ make deploy-backend
 # schema+HTTP contract checks and read-only IMAP search.
 curl -sS -o /dev/null -w 'public_site_http=%{http_code}\n' https://jardin-sonore.fr
 ```
+
+
+## Follow-up: optional explicit recipient
+
+- User explicitly requested arbitrary destinations after initial production checks.
+- Small amendment:optional `recipient`,default unchanged; validate one email address
+  before reservation,use effective address in payload fingerprint,Email To and
+  transport Envelope. No selectable sender,Cc/Bcc,attachments or quota changes.
+- Sender tests6/6 pass(26 assertions),including actual envelope destination and
+  conflict when a reused requestId changes recipient. No migration needed.
+- Planned follow-up tag:`deploy-mcp-drafts-notifications-20261112-02`.
+
+- Follow-up verification:620 tests,3164 assertions,0 failures;2 deprecations and
+  4 PHPUnit notices. PHPStan and CS pass. Focused independent review found no
+  substantive defect in recipient validation,fingerprinting,To or Envelope.

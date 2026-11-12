@@ -31,7 +31,7 @@ final readonly class PersonalNotificationSender
      */
     public function send(array $arguments): array
     {
-        if ([] !== array_diff(array_keys($arguments), ['requestId', 'subject', 'body', 'htmlBody'])) {
+        if ([] !== array_diff(array_keys($arguments), ['requestId', 'subject', 'body', 'htmlBody', 'recipient'])) {
             throw new InvalidArgumentException('Unexpected notification argument.');
         }
         $requestId = $arguments['requestId'] ?? null;
@@ -41,24 +41,28 @@ final readonly class PersonalNotificationSender
         $subject = $this->text($arguments['subject'] ?? null, 255, true);
         $body = $this->text($arguments['body'] ?? null, 10_000);
         $html = array_key_exists('htmlBody', $arguments) ? DraftHtmlBody::sanitize($this->text($arguments['htmlBody'], 20_000)) : null;
-        foreach ([$this->senderAddress, $this->recipientAddress] as $address) {
+        $recipientAddress = array_key_exists('recipient', $arguments) ? $arguments['recipient'] : $this->recipientAddress;
+        if (!is_string($recipientAddress) || 254 < strlen($recipientAddress) || false === filter_var($recipientAddress, FILTER_VALIDATE_EMAIL)) {
+            throw new InvalidArgumentException('Invalid notification recipient.');
+        }
+        foreach ([$this->senderAddress, $recipientAddress] as $address) {
             if (false === filter_var($address, FILTER_VALIDATE_EMAIL)) {
                 throw new InvalidArgumentException('Personal notification mail configuration is unavailable.');
             }
         }
-        $fingerprint = hash('sha256', json_encode([$this->senderAddress, $this->recipientAddress, $subject, $body, $html], JSON_THROW_ON_ERROR));
+        $fingerprint = hash('sha256', json_encode([$this->senderAddress, $recipientAddress, $subject, $body, $html], JSON_THROW_ON_ERROR));
         $reservation = $this->notificationStore->reserve($requestId, $fingerprint);
         if (!$reservation['isNew']) {
             return ['status' => $reservation['status'], 'requestId' => $requestId, 'attempted' => false];
         }
         $status = 'uncertain';
         try {
-            $email = (new Email())->from($this->senderAddress)->to($this->recipientAddress)->subject($subject)->text($body, 'utf-8');
+            $email = (new Email())->from($this->senderAddress)->to($recipientAddress)->subject($subject)->text($body, 'utf-8');
             if (null !== $html) {
                 $email->html($html, 'utf-8');
             }
             // Synchronous transport: queue acceptance must never be mistaken for SMTP acceptance.
-            $sentMessage = $this->transport->send($email, new Envelope(new Address($this->senderAddress), [new Address($this->recipientAddress)]));
+            $sentMessage = $this->transport->send($email, new Envelope(new Address($this->senderAddress), [new Address($recipientAddress)]));
             if (null !== $sentMessage) {
                 $status = 'accepted';
             }

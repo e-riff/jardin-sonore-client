@@ -5,12 +5,13 @@
 Permettre au connecteur de retrouver et modifier les brouillons de la boîte Jardin
 Sonore, y compris ceux créés ou modifiés dans un logiciel mail. Ajouter un outil
 MCP distinct pour les notifications des tâches planifiées de Mistral, envoyées par
-le backend depuis l'adresse Jardin Sonore vers l’adresse personnelle confirmée uniquement.
+le backend depuis l'adresse Jardin Sonore vers l’adresse personnelle confirmée par défaut, ou une adresse explicitement
+fournie dans `recipient` (amendement utilisateur après la première livraison).
 Aucun accès à Gmail n'est nécessaire.
 
 L'utilisateur a donné son accord pour l'élargissement des droits sur les
 brouillons et pour le principe des notifications personnelles. Le stockage de
-leur résultat reste une proposition à valider.
+leur résultat en base a été validé par l’utilisateur.
 
 ## Constats dans le code
 
@@ -69,12 +70,13 @@ leur résultat reste une proposition à valider.
 
 ### Contrat proposé : `send_personal_notification`
 
-- Entrées : `requestId`, `subject`, `body`, `htmlBody` facultatif.
+- Entrées obligatoires : `requestId`, `subject`, `body`.
+- Entrées facultatives : `htmlBody`, `recipient`.
 - `requestId` identifie une occurrence de tâche (par exemple une veille à une
   date donnée) et reste identique lors des relances de cette occurrence.
-- Destinataire fixé côté serveur par `MCP_PERSONAL_NOTIFICATION_RECIPIENT` ;
-  valeur de production prévue : adresse personnelle confirmée, conservée hors Git. Aucun argument `to`,
-  `cc`, `bcc`, expéditeur ou pièce jointe n'est accepté par cet outil.
+- Destinataire par défaut fixé côté serveur par `MCP_PERSONAL_NOTIFICATION_RECIPIENT` ;
+  valeur de production prévue : adresse personnelle confirmée, conservée hors Git. Le champ `recipient` peut sélectionner une adresse email valide de 254 caractères
+  maximum. Aucun argument `to`, `cc`, `bcc`, expéditeur ou pièce jointe n'est accepté.
 - Expéditeur issu de `DEFAULT_CONTACT`, transport SMTP du backend existant.
 - Activation indépendante : `MCP_PERSONAL_NOTIFICATION_ENABLED`, désactivée par
   défaut. Une tâche autorisée peut appeler l'outil sans confirmation interactive
@@ -117,3 +119,12 @@ L'entité de notification nécessite une migration : la générer, relire son SQ
 son `down()`, vérifier le diff de schéma, puis demander confirmation avant son
 exécution conformément aux consignes du projet. Aucun commit, déploiement ou
 mail réel n'est inclus sans autorisation correspondante.
+
+
+## Amendement confirmé après livraison initiale
+
+L’utilisateur a explicitement demandé la possibilité d’un destinataire arbitraire.
+Le paramètre `recipient` devient facultatif ; l’adresse personnelle reste le défaut.
+La destination effective est validée avant réservation et incluse dans l’empreinte,
+le To MIME et l’enveloppe SMTP. Les tâches planifiées peuvent utiliser ce champ.
+Aucune nouvelle migration ou dépendance ; les anciens appels restent compatibles.
