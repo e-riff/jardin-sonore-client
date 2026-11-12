@@ -234,3 +234,25 @@ curl -sS -o /dev/null -w 'public_site_http=%{http_code}\n' https://jardin-sonore
 
 - Final read-only review accepted the cleanup-exception handling and ID flow;
   no substantive finding remains. Optional logger uses technical metadata only.
+
+
+## Repair deployment result
+
+- Commit `4e67dd0e` and annotated tag `deploy-mcp-draft-encoding-20261112-01`
+  pushed before `make deploy-backend`;deployment succeeded,81 assets compiled,
+  cache cleared,workers signalled,77 existing migrations up-to-date.
+- Real authenticated HTTP/IMAP recipe succeeded:one unique synthetic draft created
+  with UTF8 subject,multiline text,HTML and attachment;canonical read succeeded;
+  accented edit preserved HTML/attachment and left exactly1 recipe message;
+  second edit using MIME Message-ID also succeeded with exactly1 recipe message.
+- Search timestamp carried an explicit offset and represented the current instant;
+  raw MIME Subject contained only ASCII encoded words and decoded to correct UTF8.
+- Finally removed only nonce-scoped recipe messages after checking exact recipient
+  and subject prefix,using UID-specific removal. No existing message changed and
+  no email sent. Pre-existing reported duplicates intentionally untouched.
+- Production tools/list exposes53 tools and corrected descriptions including
+  partial cleanup states;HTTP200,optional recipient validation still works.
+  Notification receipt count4 at final observation;the recipe/validation did not
+  create notification requests. Public homepageHTTP200,schema synchronized.
+- Mistral:refresh tools to update descriptions;no endpoint/auth/name/parameter
+  change requires reconnecting. Old cached draft revisions must be reread.

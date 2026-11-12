@@ -44,15 +44,30 @@ Le MCP de production expose le nouveau champ facultatif et rejette les adresses
 invalides avant réservation/envoi ; 53 outils et schéma Doctrine synchronisé
 confirmés après cette seconde livraison. Aucun mail de recette envoyé.
 
-### Correction des brouillons en préparation
+### Correction des brouillons — livrée et vérifiée
 
-Le retour d’usage a révélé une double conversion des objets déjà en UTF-8 dans la
-lecture : les accents disparaissaient,la vérification du remplacement échouait et
+Déployée sous `deploy-mcp-draft-encoding-20261112-01` (commit `4e67dd0e`).
+Le retour d’usage avait révélé une double conversion à la lecture des objets déjà
+en UTF-8 : les accents disparaissaient,la vérification du remplacement échouait et
 l’ancien brouillon était conservé. Le correctif décode uniquement les mots MIME,
 relit aussi les créations avant succès,renvoie la référence canonique et distingue
 un remplacement vérifié dont le nettoyage reste en attente. Dates ISO8601 Paris
-avec décalage explicite. Les régressions sont couvertes ; aucun brouillon existant
-n’a été modifié. Livraison prévue : `deploy-mcp-draft-encoding-20261112-01`.
+avec décalage explicite. Pas de migration ou dépendance supplémentaire.
+
+**631 tests et 3 192 assertions passent**,avec deux dépréciations et quatre notices
+PHPUnit ; les 101 tests ciblés MCP/mail (535 assertions),PHPStan,style et conteneur
+passent. Revue indépendante sans constat restant. Le déploiement a compilé les
+81 assets,confirmé les 77 migrations appliquées et un schéma Doctrine synchronisé.
+
+La recette en production a créé un brouillon technique isolé avec accents,HTML et
+pièce jointe,puis l’a relu et modifié deux fois : succès,un seul message de recette
+après chaque édition,références canoniques et Message-ID directement réutilisables,
+HTML/pièce jointe conservés,date avec décalage correct,en-tête brut encodé en MIME.
+Les seuls messages de recette ont été retirés par UID ; aucun brouillon existant
+modifié, aucun mail envoyé par la recette. Les doublons précédemment signalés restent inchangés.
+Site public et MCP authentifié HTTP200 ; 53 outils et descriptions correctives
+exposés. **Rafraîchir les outils Mistral suffit normalement ; pas de changement
+d’authentification,de noms ou de paramètres nécessitant une reconnexion.**
 
 ## Livré — hors travaux futurs
 

@@ -172,3 +172,15 @@ de l’utilisateur.
 Il conserve le destinataire personnel par défaut et inclut la destination effective
 dans l’empreinte de dédoublonnage : une même clé ne peut pas être réutilisée pour
 une autre adresse. Aucun mail réel n’est nécessaire pour vérifier cette règle.
+
+
+## Correction accents et recette réelle
+
+Le correctif `deploy-mcp-draft-encoding-20261112-01` (`4e67dd0e`) est déployé.
+Recette IMAP réelle réussie : création et deux éditions avec accents,texte multiligne,
+HTML et pièce jointe ; un seul brouillon de recette après chaque édition,lecture
+immédiate via référence canonique ou Message-ID,date ISO8601 avec décalage correct.
+L’en-tête brut est bien encodé MIME. Les seuls messages de recette ont été retirés ;
+les brouillons existants et leurs éventuels doublons restent inchangés. Aucun envoi.
+Les descriptions MCP corrigées sont exposées ; rafraîchir la liste des outils dans
+Mistral pour les récupérer,sans reconnexion nécessaire à l’authentification.
