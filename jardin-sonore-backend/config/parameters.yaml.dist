@@ -8,6 +8,8 @@ parameters:
   app.mcp.mailing_write_enabled: '%env(bool:MCP_MAILING_WRITE_ENABLED)%'
   app.mcp.catalog_write_enabled: '%env(bool:MCP_CATALOG_WRITE_ENABLED)%'
   app.mcp.quote_write_enabled: '%env(bool:MCP_QUOTE_WRITE_ENABLED)%'
+  app.mcp.personal_notification_enabled: '%env(bool:MCP_PERSONAL_NOTIFICATION_ENABLED)%'
+  app.mcp.personal_notification_recipient: '%env(MCP_PERSONAL_NOTIFICATION_RECIPIENT)%'
   app.mcp.imap_host: '%env(MCP_IMAP_HOST)%'
   app.mcp.imap_port: '%env(int:MCP_IMAP_PORT)%'
   app.mcp.imap_username: '%env(MCP_IMAP_USERNAME)%'

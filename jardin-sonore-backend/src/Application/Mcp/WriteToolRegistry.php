@@ -35,6 +35,9 @@ final readonly class WriteToolRegistry
         #[Autowire('%app.mcp.catalog_write_enabled%')] private bool $catalogWriteEnabled = false,
         private ?ProjectQuoteManager $projectQuoteManager = null,
         #[Autowire('%app.mcp.quote_write_enabled%')] private bool $quoteWriteEnabled = false,
+        private ?GeneralMailDraftEditor $generalMailDraftEditor = null,
+        private ?PersonalNotificationSender $personalNotificationSender = null,
+        #[Autowire('%app.mcp.personal_notification_enabled%')] private bool $personalNotificationEnabled = false,
     ) {
     }
 
@@ -42,6 +45,17 @@ final readonly class WriteToolRegistry
     public function definitions(): array
     {
         return [
+            [
+                'name' => 'send_personal_notification',
+                'description' => 'Send a personal reminder or digest through the backend to the single server-configured personal recipient. No recipient override is accepted. Intended for authorized scheduled tasks; no per-occurrence interactive confirmation is required by this tool. Use a stable requestId for one task occurrence and reuse it on retries; use a different key for the next occurrence. accepted means SMTP acceptance, not delivery. sending/uncertain means do not resend under a new key. Limited to 10 new requests per hour. HTML is filtered.',
+                'inputSchema' => ['type' => 'object', 'properties' => [
+                    'requestId' => ['type' => 'string', 'pattern' => '^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$'],
+                    'subject' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255],
+                    'body' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 10000],
+                    'htmlBody' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 20000],
+                ], 'required' => ['requestId', 'subject', 'body'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => true, 'idempotentHint' => true],
+            ],
             [
                 'name' => 'create_mail_draft',
                 'description' => 'After explicit user confirmation, create a standalone draft with the exact recipient, subject, text body, and optional safe HTML body supplied by the user. This never sends. Keep the returned messageId for later reading or editing. Repeating identical inputs returns the existing draft.',
@@ -52,6 +66,7 @@ final readonly class WriteToolRegistry
                         'subject' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255],
                         'body' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 10000],
                         'htmlBody' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 20000],
+                        'attachments' => $this->attachmentSchema(),
                     ],
                     'required' => ['recipient', 'subject', 'body'],
                     'additionalProperties' => false,
@@ -77,16 +92,23 @@ final readonly class WriteToolRegistry
             ],
             [
                 'name' => 'update_standalone_mail_draft',
-                'description' => 'After a separate explicit user confirmation, replace a standalone draft created by create_mail_draft. Read it with read_standalone_mail_draft first, then supply its current draftMessageId and revision plus the complete new text body and optional safe HTML body. Recipient and subject stay unchanged. This never sends email.',
+                'description' => 'Edit any manual or MCP draft in the configured Drafts folder. Read it first and supply the current draftMessageId and full revision. Omitted fields are preserved. attachments adds files as filename/mimeType/base64 (10 files, 5 MiB each, 10 MiB total); removeAttachmentIds explicitly removes files by IDs from the read result. htmlBody:null removes HTML. recipient sets one To address; recipients sets all To addresses. No email is sent. On missing IDs, search_mail_drafts again.',
                 'inputSchema' => [
                     'type' => 'object',
                     'properties' => [
                         'draftMessageId' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255],
                         'revision' => ['type' => 'string', 'minLength' => 64, 'maxLength' => 64],
                         'body' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 10000],
-                        'htmlBody' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 20000],
+                        'htmlBody' => ['type' => ['string', 'null'], 'minLength' => 1, 'maxLength' => 20000],
+                        'subject' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255],
+                        'recipient' => ['type' => 'string', 'format' => 'email'],
+                        'recipients' => ['type' => 'array', 'maxItems' => 50, 'items' => ['type' => 'string', 'format' => 'email']],
+                        'cc' => ['type' => 'array', 'maxItems' => 50, 'items' => ['type' => 'string', 'format' => 'email']],
+                        'bcc' => ['type' => 'array', 'maxItems' => 50, 'items' => ['type' => 'string', 'format' => 'email']],
+                        'attachments' => $this->attachmentSchema(),
+                        'removeAttachmentIds' => ['type' => 'array', 'maxItems' => 10, 'items' => ['type' => 'string', 'pattern' => '^[a-f0-9]{64}$']],
                     ],
-                    'required' => ['draftMessageId', 'revision', 'body'],
+                    'required' => ['draftMessageId', 'revision'],
                     'additionalProperties' => false,
                 ],
                 'annotations' => ['readOnlyHint' => false, 'destructiveHint' => true, 'openWorldHint' => false],
@@ -198,6 +220,20 @@ final readonly class WriteToolRegistry
      */
     public function call(string $name, array $arguments): array
     {
+        if ('send_personal_notification' === $name) {
+            if (!$this->personalNotificationEnabled || null === $this->personalNotificationSender) {
+                return $this->error('Personal notifications are disabled.');
+            }
+            try {
+                $result = $this->personalNotificationSender->send($arguments);
+
+                return ['content' => [['type' => 'text', 'text' => json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)]], 'isError' => 'accepted' !== $result['status']];
+            } catch (InvalidArgumentException $exception) {
+                return $this->error($exception->getMessage());
+            } catch (Throwable) {
+                return $this->error('Personal notification unavailable; retry only with the same requestId.');
+            }
+        }
         if ('save_mail_draft' === $name) {
             return $this->callDraft($arguments);
         }
@@ -264,6 +300,20 @@ final readonly class WriteToolRegistry
         } catch (Throwable) {
             return $this->error('The write operation failed.');
         }
+    }
+
+    /** @return array<string, mixed> */
+    private function attachmentSchema(): array
+    {
+        return ['type' => 'array', 'maxItems' => 10, 'items' => [
+            'type' => 'object',
+            'properties' => [
+                'filename' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255],
+                'mimeType' => ['type' => 'string', 'maxLength' => 127],
+                'base64' => ['type' => 'string', 'maxLength' => 6990508],
+            ],
+            'required' => ['filename', 'mimeType', 'base64'], 'additionalProperties' => false,
+        ]];
     }
 
     /** @param array<string, mixed> $arguments
@@ -736,7 +786,7 @@ final readonly class WriteToolRegistry
             return $this->error('Standalone draft creation is disabled.');
         }
         try {
-            if ([] !== array_diff(array_keys($arguments), ['recipient', 'subject', 'body', 'htmlBody'])) {
+            if ([] !== array_diff(array_keys($arguments), ['recipient', 'subject', 'body', 'htmlBody', 'attachments'])) {
                 throw new InvalidToolArguments('Unexpected argument.');
             }
             $recipient = $this->text($arguments, 'recipient', 254);
@@ -746,7 +796,14 @@ final readonly class WriteToolRegistry
             $subject = $this->text($arguments, 'subject', 255);
             $body = $this->draftBody($arguments, 'body', 10_000);
             $htmlBody = array_key_exists('htmlBody', $arguments) ? $this->draftBody($arguments, 'htmlBody', 20_000) : null;
-            $result = $this->standaloneMailDraftWriter->create($recipient, $subject, $body, $htmlBody);
+            if (array_key_exists('attachments', $arguments)) {
+                if (!is_array($arguments['attachments']) || !array_is_list($arguments['attachments'])) {
+                    throw new InvalidToolArguments('Invalid attachments.');
+                }
+                $result = $this->standaloneMailDraftWriter->create($recipient, $subject, $body, $htmlBody, $arguments['attachments']);
+            } else {
+                $result = $this->standaloneMailDraftWriter->create($recipient, $subject, $body, $htmlBody);
+            }
             $json = json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
             return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => in_array($result['status'], ['uncertain'], true)];
@@ -768,11 +825,19 @@ final readonly class WriteToolRegistry
             return $this->error('Standalone draft editing is disabled.');
         }
         try {
-            if ([] !== array_diff(array_keys($arguments), ['draftMessageId', 'revision', 'body', 'htmlBody'])) {
+            if ([] !== array_diff(array_keys($arguments), ['draftMessageId', 'revision', 'body', 'htmlBody', 'subject', 'recipient', 'recipients', 'cc', 'bcc', 'attachments', 'removeAttachmentIds'])) {
                 throw new InvalidToolArguments('Unexpected argument.');
             }
             $draftMessageId = $this->text($arguments, 'draftMessageId', 255);
             $revision = $this->text($arguments, 'revision', 64);
+            if (null !== $this->generalMailDraftEditor) {
+                $changes = $arguments;
+                unset($changes['draftMessageId'], $changes['revision']);
+                $result = $this->generalMailDraftEditor->update($draftMessageId, $revision, $changes);
+                $json = json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+                return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => 'saved' !== ($result['status'] ?? null)];
+            }
             $body = $this->draftBody($arguments, 'body', 10_000);
             $htmlBody = array_key_exists('htmlBody', $arguments) ? $this->draftBody($arguments, 'htmlBody', 20_000) : null;
             $result = $this->standaloneMailDraftEditor->update($draftMessageId, $revision, $body, $htmlBody);

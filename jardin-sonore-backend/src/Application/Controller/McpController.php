@@ -15,6 +15,8 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/mcp', name: 'mcp_', methods: ['POST', 'GET'])]
 final readonly class McpController
 {
+    private const int MAX_REQUEST_BYTES = 16 * 1024 * 1024;
+
     public function __construct(
         private McpProtocol $protocol,
         #[Autowire('%app.mcp.bearer_token%')]
@@ -52,8 +54,13 @@ final readonly class McpController
             return new JsonResponse(['error' => 'unsupported_content_type'], Response::HTTP_UNSUPPORTED_MEDIA_TYPE);
         }
 
+        $content = $request->getContent();
+        if (self::MAX_REQUEST_BYTES < strlen($content)) {
+            return new JsonResponse(['error' => 'request_too_large'], Response::HTTP_REQUEST_ENTITY_TOO_LARGE);
+        }
+
         try {
-            $message = json_decode($request->getContent(), true, 64, JSON_THROW_ON_ERROR);
+            $message = json_decode($content, true, 64, JSON_THROW_ON_ERROR);
         } catch (JsonException) {
             return new JsonResponse(['jsonrpc' => '2.0', 'id' => null, 'error' => ['code' => -32700, 'message' => 'Parse error']], Response::HTTP_BAD_REQUEST);
         }

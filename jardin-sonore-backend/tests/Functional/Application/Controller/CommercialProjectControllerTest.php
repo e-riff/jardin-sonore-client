@@ -56,11 +56,13 @@ final class CommercialProjectControllerTest extends WebTestCase
         $projectEntity->recordEvent('note', new DateTimeImmutable('2026-10-13 10:00:00'), str_repeat('Compte rendu détaillé. ', 18));
         $projectEntity->recordEvent('quote_sent', new DateTimeImmutable('2026-10-14 10:00:00'), 'DEV-2026-003');
         $projectEntity->recordEvent('note', new DateTimeImmutable('2026-10-14 11:00:00'), 'Séance confirmée : Atelier.');
-        $novemberInterventionEntity = new CommercialInterventionEntity($projectEntity, 'calendar', "event-november-{$suffix}", 'Atelier de novembre', new DateTimeImmutable('2026-11-03 09:00:00'), new DateTimeImmutable('2026-11-03 11:00:00'), 'Europe/Paris', null, '', new DateTimeImmutable('2026-10-13'));
-        $novemberInterventionEntity->confirm();
-        $decemberInterventionEntity = new CommercialInterventionEntity($projectEntity, 'calendar', "event-december-{$suffix}", 'Atelier de décembre', new DateTimeImmutable('2026-12-14 14:00:00'), new DateTimeImmutable('2026-12-14 16:00:00'), 'Europe/Paris', null, '', new DateTimeImmutable('2026-10-13'));
-        $decemberInterventionEntity->confirm();
-        foreach ([$adminUserEntity, $organizationEntity, $personEntity, $projectEntity, $novemberInterventionEntity, $decemberInterventionEntity] as $entity) {
+        $firstUpcomingStartsAt = (new DateTimeImmutable('first day of next month 09:00:00', new DateTimeZone('Europe/Paris')))->modify('+2 days');
+        $secondUpcomingStartsAt = $firstUpcomingStartsAt->modify('first day of next month')->modify('+13 days')->setTime(14, 0);
+        $firstUpcomingInterventionEntity = new CommercialInterventionEntity($projectEntity, 'calendar', "event-november-{$suffix}", 'Atelier de novembre', $firstUpcomingStartsAt, $firstUpcomingStartsAt->modify('+2 hours'), 'Europe/Paris', null, '', new DateTimeImmutable('2026-10-13'));
+        $firstUpcomingInterventionEntity->confirm();
+        $secondUpcomingInterventionEntity = new CommercialInterventionEntity($projectEntity, 'calendar', "event-december-{$suffix}", 'Atelier de décembre', $secondUpcomingStartsAt, $secondUpcomingStartsAt->modify('+2 hours'), 'Europe/Paris', null, '', new DateTimeImmutable('2026-10-13'));
+        $secondUpcomingInterventionEntity->confirm();
+        foreach ([$adminUserEntity, $organizationEntity, $personEntity, $projectEntity, $firstUpcomingInterventionEntity, $secondUpcomingInterventionEntity] as $entity) {
             $entityManager->persist($entity);
         }
         $entityManager->flush();
@@ -89,8 +91,8 @@ final class CommercialProjectControllerTest extends WebTestCase
         self::assertCount(2, $crawler->filterXPath('//*[contains(@class, "commercial-timeline__item")]//*[contains(@class, "commercial-timeline__edit")]'));
         $interventionMonths = $crawler->filterXPath('//*[contains(concat(" ", normalize-space(@class), " "), " commercial-dossier__intervention-month ")]');
         self::assertCount(2, $interventionMonths);
-        self::assertStringContainsString('novembre 2026', $interventionMonths->first()->text());
-        self::assertStringContainsString('3 novembre 2026', $crawler->filterXPath('//*[contains(concat(" ", normalize-space(@class), " "), " commercial-dossier__intervention-date ")]')->first()->text());
+        self::assertStringContainsString($firstUpcomingStartsAt->format('Y'), $interventionMonths->first()->text());
+        self::assertSame($firstUpcomingStartsAt->format('Y-m-d'), $crawler->filterXPath('//*[contains(concat(" ", normalize-space(@class), " "), " commercial-dossier__intervention-date ")]')->first()->attr('datetime'));
     }
 
     public function testConfirmedSessionCanReturnToOptionInGoogleCalendar(): void

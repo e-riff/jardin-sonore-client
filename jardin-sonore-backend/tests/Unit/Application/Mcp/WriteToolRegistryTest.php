@@ -19,6 +19,13 @@ use PHPUnit\Framework\TestCase;
 
 final class WriteToolRegistryTest extends TestCase
 {
+    public function testPersonalNotificationToolIsSeparateAndDisabledByDefault(): void
+    {
+        $registry = new WriteToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectFollowupWriter::class), true);
+        self::assertContains('send_personal_notification', array_column($registry->definitions(), 'name'));
+        self::assertTrue($registry->call('send_personal_notification', ['requestId' => 'daily:1', 'subject' => 'Veille', 'body' => 'Bonjour'])['isError']);
+    }
+
     public function testDisabledToolRefusesBeforeReadingMailOrWriting(): void
     {
         $mailReader = $this->createMock(MailReader::class);

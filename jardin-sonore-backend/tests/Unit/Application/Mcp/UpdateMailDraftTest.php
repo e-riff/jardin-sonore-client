@@ -12,11 +12,29 @@ use App\Application\Mcp\MailReader;
 use App\Application\Mcp\MailSource;
 use App\Application\Mcp\ReplyContext;
 use App\Application\Mcp\UpdateMailDraft;
-use App\Infrastructure\Mail\ReplyDraftMimeBuilder;
+use App\Infrastructure\Mail\DraftMimeBuilder;
 use PHPUnit\Framework\TestCase;
 
 final class UpdateMailDraftTest extends TestCase
 {
+    public function testRetryFinalizesVerifiedReplacementAfterOriginalWasAlreadyRemoved(): void
+    {
+        $sourceKey = str_repeat('e', 64);
+        $oldDraft = new MailDraft(12, '<old@example.test>', 'Re: Bonjour', 'marie@example.test', 'Ancien texte');
+        $desired = new MailDraft(18, '<pending@example.test>', 'Re: Bonjour', 'marie@example.test', 'Texte corrigé');
+        $requestKey = substr(hash('sha256', $sourceKey . "\0" . $oldDraft->messageId . "\0" . $oldDraft->snapshotRevision() . "\0" . 'Texte corrigé'), 0, 24);
+        $pendingId = '<mcp-edit-' . $requestKey . '-' . $desired->snapshotRevision() . '@example.test>';
+        $pending = new MailDraft(18, $pendingId, $desired->subject, $desired->recipient, $desired->body);
+        $receipts = $this->createMock(MailDraftReceiptStore::class);
+        $receipts->method('find')->willReturn(new DraftReceipt($sourceKey, $oldDraft->messageId, 'Drafts', 'updating', false, 12, $pendingId));
+        $receipts->expects(self::once())->method('completeUpdate')->with($sourceKey, $pendingId, 18)->willReturn(true);
+        $store = $this->createMock(MailDraftStore::class);
+        $store->method('getByMessageId')->willReturnCallback(static fn (string $folder, string $id): ?MailDraft => $id === $pendingId ? $pending : null);
+        $store->expects(self::never())->method('append');
+        $store->expects(self::never())->method('deleteByMessageId');
+        self::assertSame('saved', $this->editor($sourceKey, $receipts, $store)->update('reference', $oldDraft->messageId, $oldDraft->snapshotRevision(), 'Texte corrigé')['status']);
+    }
+
     public function testReadingDraftForSelfSentMessageReturnsNotFound(): void
     {
         $sourceKey = str_repeat('d', 64);
@@ -28,7 +46,7 @@ final class UpdateMailDraftTest extends TestCase
         $draftStore = $this->createMock(MailDraftStore::class);
         $draftStore->expects(self::never())->method('getByMessageId');
 
-        $result = (new UpdateMailDraft($reader, $receiptStore, $draftStore, new ReplyDraftMimeBuilder(), 'contact@example.test'))->read('reference');
+        $result = (new UpdateMailDraft($reader, $receiptStore, $draftStore, new DraftMimeBuilder(), 'contact@example.test'))->read('reference');
 
         self::assertSame(['status' => 'not_found'], $result);
     }
@@ -38,7 +56,9 @@ final class UpdateMailDraftTest extends TestCase
         $sourceKey = str_repeat('a', 64);
         $oldId = '<old@example.test>';
         $oldDraft = new MailDraft(12, $oldId, 'Re: Bonjour', 'marie@example.test', 'Ancien texte');
-        $newId = '<mcp-edit-' . $sourceKey . '-' . hash('sha256', $oldId . "\0" . 'Texte corrigé') . '@example.test>';
+        $desired = new MailDraft(18, '<pending@example.test>', 'Re: Bonjour', 'marie@example.test', 'Texte corrigé');
+        $requestKey = substr(hash('sha256', $sourceKey . "\0" . $oldId . "\0" . $oldDraft->snapshotRevision() . "\0" . 'Texte corrigé'), 0, 24);
+        $newId = '<mcp-edit-' . $requestKey . '-' . $desired->snapshotRevision() . '@example.test>';
         $newDraft = new MailDraft(18, $newId, 'Re: Bonjour', 'marie@example.test', 'Texte corrigé');
         $receiptStore = $this->createMock(MailDraftReceiptStore::class);
         $receiptStore->expects(self::exactly(2))->method('find')->willReturnOnConsecutiveCalls(
@@ -65,7 +85,7 @@ final class UpdateMailDraftTest extends TestCase
         $draftStore->expects(self::once())->method('append')->with('Drafts', self::stringContains('Texte corrig'));
         $draftStore->expects(self::once())->method('deleteByMessageId')->with('Drafts', $oldId, 12)->willReturn(true);
 
-        $result = $this->editor($sourceKey, $receiptStore, $draftStore)->update('reference', $oldId, hash('sha256', $oldDraft->body), 'Texte corrigé');
+        $result = $this->editor($sourceKey, $receiptStore, $draftStore)->update('reference', $oldId, $oldDraft->snapshotRevision(), 'Texte corrigé');
 
         self::assertSame('saved', $result['status']);
         self::assertSame($newId, $result['draftMessageId']);
@@ -89,7 +109,7 @@ final class UpdateMailDraftTest extends TestCase
         $draftStore->expects(self::once())->method('append');
         $draftStore->expects(self::never())->method('deleteByMessageId');
 
-        $result = $this->editor($sourceKey, $receiptStore, $draftStore)->update('reference', $oldId, hash('sha256', $oldDraft->body), 'Texte corrigé');
+        $result = $this->editor($sourceKey, $receiptStore, $draftStore)->update('reference', $oldId, $oldDraft->snapshotRevision(), 'Texte corrigé');
 
         self::assertSame('uncertain', $result['status']);
     }
@@ -114,6 +134,6 @@ final class UpdateMailDraftTest extends TestCase
         $reader = $this->createStub(MailReader::class);
         $reader->method('replyContext')->willReturn(new ReplyContext($sourceKey, '<source@example.test>', 'Bonjour', 'marie@example.test', null, 'reference'));
 
-        return new UpdateMailDraft($reader, $receiptStore, $draftStore, new ReplyDraftMimeBuilder(), 'contact@example.test');
+        return new UpdateMailDraft($reader, $receiptStore, $draftStore, new DraftMimeBuilder(), 'contact@example.test');
     }
 }

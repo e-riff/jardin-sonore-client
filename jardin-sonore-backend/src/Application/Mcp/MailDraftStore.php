@@ -6,6 +6,9 @@ namespace App\Application\Mcp;
 
 interface MailDraftStore
 {
+    /** @return list<array<string, mixed>> */
+    public function search(string $folder, ?string $query, int $limit): array;
+
     public function findByMessageId(string $folder, string $messageId): ?int;
 
     public function getByMessageId(string $folder, string $messageId): ?MailDraft;

@@ -13,11 +13,38 @@ use Webklex\PHPIMAP\Client;
 use Webklex\PHPIMAP\Connection\Protocols\ImapProtocol;
 use Webklex\PHPIMAP\Folder;
 use Webklex\PHPIMAP\IMAP;
+use Webklex\PHPIMAP\Message;
 
 final readonly class ImapMailDraftStore implements MailDraftStore
 {
     public function __construct(private ImapClientProvider $clientProvider)
     {
+    }
+
+    public function search(string $folder, ?string $query, int $limit): array
+    {
+        if (1 > $limit || 25 < $limit || (null !== $query && (200 < mb_strlen($query) || 1 === preg_match('/[\x00-\x1F\x7F]/', $query)))) {
+            throw new RuntimeException('Invalid draft search.');
+        }
+        $draftFolder = $this->folder($folder);
+        $uidValidity = $this->uidValidity($draftFolder);
+        $search = $draftFolder->query()->whereUndeleted()->setFetchBody(false)->setFetchFlags(false)->setFetchOrderDesc()->limit($limit)->leaveUnread();
+        if (null !== $query && '' !== trim($query)) {
+            $search->whereText(str_replace(['\\', '"'], ['\\\\', '\\"'], $query));
+        }
+        $results = [];
+        foreach ($search->get() as $message) {
+            $id = trim((string) $message->getMessageId(), '<>');
+            $results[] = [
+                'draftMessageId' => "draft:{$uidValidity}:{$message->getUid()}",
+                'messageId' => '' === $id ? null : "<{$id}>",
+                'subject' => iconv_mime_decode((string) $message->getSubject(), ICONV_MIME_DECODE_CONTINUE_ON_ERROR, 'UTF-8') ?: (string) $message->getSubject(),
+                'to' => (string) $message->getTo(),
+                'date' => (string) $message->getDate(),
+            ];
+        }
+
+        return $results;
     }
 
     public function findByMessageId(string $folder, string $messageId): ?int
@@ -37,24 +64,11 @@ final readonly class ImapMailDraftStore implements MailDraftStore
     {
         try {
             $message = $this->find($this->clientProvider->client(), $folder, $messageId, true);
-            if (!is_object($message) || !is_callable([$message, 'getUid'])) {
+            if (!$message instanceof Message) {
                 return null;
             }
 
-            $recipient = $message->getTo();
-            $recipient = is_object($recipient) && is_callable([$recipient, 'toArray']) ? $recipient->toArray() : [];
-            $recipientAddress = is_array($recipient) && isset($recipient[0]) && is_object($recipient[0]) && isset($recipient[0]->mail)
-                ? (string) $recipient[0]->mail
-                : '';
-
-            return new MailDraft(
-                $message->getUid(),
-                $messageId,
-                is_callable([$message, 'getSubject']) ? (string) $message->getSubject() : null,
-                $recipientAddress,
-                is_callable([$message, 'getTextBody']) ? $message->getTextBody() : '',
-                is_callable([$message, 'getHTMLBody']) && '' !== trim($message->getHTMLBody()) ? $message->getHTMLBody() : null,
-            );
+            return (new DraftMessageMapper())->map($message, $messageId);
         } catch (RuntimeException $exception) {
             throw $exception;
         } catch (Throwable) {
@@ -130,13 +144,40 @@ final readonly class ImapMailDraftStore implements MailDraftStore
 
     private function find(Client $client, string $folderName, string $messageId, bool $fetchBody): ?object
     {
-        if (1 !== preg_match('/^<[^<>\s]{1,250}>$/D', $messageId)) {
+        $folder = $this->folder($folderName, $client);
+        $query = $folder->query()->whereUndeleted()->setFetchBody($fetchBody)->setFetchFlags(false)->leaveUnread();
+        if (1 === preg_match('/^draft:([1-9][0-9]{0,9}):([1-9][0-9]{0,9})$/D', $messageId, $matches)) {
+            if ((int) $matches[1] !== $this->uidValidity($folder)) {
+                return null;
+            }
+
+            return $query->whereUid((int) $matches[2])->limit(1)->get()->first();
+        }
+        if (1 !== preg_match('/^<[^<>\s"\\\\]{1,250}>$/D', $messageId)) {
             throw new RuntimeException('Invalid draft identifier.');
         }
-        $message = $this->folder($folderName, $client)->query()->whereMessageId($messageId)
-            ->setFetchBody($fetchBody)->setFetchFlags(false)->limit(1)->leaveUnread()->get()->first();
+        $messages = $query->whereMessageId($messageId)->limit(2)->get();
+        if (1 < $messages->count()) {
+            throw new RuntimeException('Ambiguous draft identifier; search drafts again.');
+        }
+        $message = $messages->first();
 
-        return is_object($message) ? $message : null;
+        if (!$message instanceof Message || trim((string) $message->getMessageId(), '<>') !== trim($messageId, '<>')) {
+            return null;
+        }
+
+        return $message;
+    }
+
+    private function uidValidity(Folder $folder): int
+    {
+        foreach ($folder->status() as $key => $value) {
+            if ('UIDVALIDITY' === strtoupper((string) $key) && is_numeric($value) && 0 < (int) $value) {
+                return (int) $value;
+            }
+        }
+
+        throw new RuntimeException('Draft folder UIDVALIDITY is unavailable.');
     }
 
     /** @return list<string> */

@@ -18,6 +18,7 @@ use App\Application\Mcp\MailDraftReceiptStore;
 use App\Application\Mcp\MailDraftStore;
 use App\Application\Mcp\MailDraftWriter;
 use App\Application\Mcp\MailReader;
+use App\Application\Mcp\PersonalNotificationStore;
 use App\Application\Mcp\ProjectContextReader;
 use App\Application\Mcp\ProjectFollowupWriter;
 use App\Application\Mcp\ProjectNoteWriter;
@@ -39,6 +40,7 @@ use App\Infrastructure\Doctrine\Commercial\DoctrineProjectQuoteManager;
 use App\Infrastructure\Doctrine\Commercial\DoctrineProjectScheduleManager;
 use App\Infrastructure\Doctrine\Commercial\DoctrineProjectSearch;
 use App\Infrastructure\Doctrine\Mcp\DoctrineMailDraftReceiptStore;
+use App\Infrastructure\Doctrine\Mcp\DoctrinePersonalNotificationStore;
 use App\Infrastructure\Google\GoogleCalendarGateway;
 use App\Infrastructure\Mail\ImapMailDraftStore;
 use App\Infrastructure\Mail\ImapMailReader;
@@ -114,6 +116,9 @@ return App::config([
         ],
         MailDraftReceiptStore::class => [
             'alias' => DoctrineMailDraftReceiptStore::class,
+        ],
+        PersonalNotificationStore::class => [
+            'alias' => DoctrinePersonalNotificationStore::class,
         ],
         MailDraftWriter::class => [
             'alias' => SaveMailDraft::class,

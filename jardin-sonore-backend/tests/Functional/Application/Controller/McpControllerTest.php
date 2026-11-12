@@ -12,6 +12,16 @@ use Symfony\Component\HttpKernel\KernelInterface;
 
 final class McpControllerTest extends WebTestCase
 {
+    public function testRejectsOversizedAuthenticatedJsonBeforeDecoding(): void
+    {
+        $this->client->request('POST', '/api/mcp', server: [
+            'HTTP_AUTHORIZATION' => 'Bearer test-mcp-token',
+            'HTTP_ACCEPT' => 'application/json, text/event-stream',
+            'CONTENT_TYPE' => 'application/json',
+        ], content: str_repeat('x', 16 * 1024 * 1024 + 1));
+        self::assertResponseStatusCodeSame(413);
+    }
+
     private KernelBrowser $client;
 
     private false|string $previousBearerToken;

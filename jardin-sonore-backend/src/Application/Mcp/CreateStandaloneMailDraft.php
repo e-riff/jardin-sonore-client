@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Mcp;
 
 use App\Infrastructure\Mail\DraftHtmlBody;
+use App\Infrastructure\Mail\DraftMimeBuilder;
 use App\Infrastructure\Mail\StandaloneDraftMimeBuilder;
 use DateTimeImmutable;
 use InvalidArgumentException;
@@ -21,8 +22,10 @@ final readonly class CreateStandaloneMailDraft implements StandaloneMailDraftWri
     ) {
     }
 
-    /** @return array{status: string, folder: string, messageId: string, uid: ?int, to: string, subject: string} */
-    public function create(string $recipient, string $subject, string $body, ?string $htmlBody = null): array
+    /** @param list<array<string, mixed>> $attachments
+     * @return array{status: string, folder: string, messageId: string, uid: ?int, to: string, subject: string}
+     */
+    public function create(string $recipient, string $subject, string $body, ?string $htmlBody = null, array $attachments = []): array
     {
         $recipient = trim($recipient);
         $subject = trim($subject);
@@ -43,7 +46,15 @@ final readonly class CreateStandaloneMailDraft implements StandaloneMailDraftWri
         }
 
         $domain = substr(strrchr($this->mailboxAddress, '@'), 1);
+        $draftMimeBuilder = new DraftMimeBuilder();
+        $draft = (new GeneralMailDraftEditor($this->draftStore, $draftMimeBuilder, $this->mailboxAddress, $this->draftsFolder))->applyChanges(
+            new MailDraft(0, '<pending@' . $domain . '>', $subject, $recipient, $body, $htmlBody),
+            ['attachments' => $attachments],
+        );
         $identity = hash('sha256', mb_strtolower($recipient) . "\0" . $subject . "\0" . $body . (null === $htmlBody ? '' : "\0" . $htmlBody));
+        if ([] !== $attachments) {
+            $identity = $draft->snapshotRevision();
+        }
         $messageId = '<mcp-' . substr($identity, 0, 56) . '@' . $domain . '>';
 
         try {
@@ -53,6 +64,9 @@ final readonly class CreateStandaloneMailDraft implements StandaloneMailDraftWri
             }
 
             $mime = $this->mimeBuilder->build($recipient, $subject, $body, $messageId, $this->mailboxAddress, new DateTimeImmutable(), $htmlBody);
+            if ([] !== $attachments) {
+                $mime = $draftMimeBuilder->build(new MailDraft(0, $messageId, $subject, $recipient, $body, $htmlBody, attachments: $draft->attachments), $this->mailboxAddress);
+            }
             $this->draftStore->append($this->draftsFolder, $mime);
             $uid = $this->draftStore->findByMessageId($this->draftsFolder, $messageId);
             if (null === $uid) {

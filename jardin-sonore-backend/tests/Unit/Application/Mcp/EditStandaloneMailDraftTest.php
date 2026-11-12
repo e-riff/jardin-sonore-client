@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Application\Mcp;
 
 use App\Application\Mcp\EditStandaloneMailDraft;
+use App\Application\Mcp\GeneralMailDraftEditor;
 use App\Application\Mcp\MailDraft;
 use App\Application\Mcp\MailDraftStore;
-use App\Infrastructure\Mail\StandaloneDraftMimeBuilder;
+use App\Infrastructure\Mail\DraftMimeBuilder;
 use PHPUnit\Framework\TestCase;
 
 final class EditStandaloneMailDraftTest extends TestCase
@@ -22,7 +23,7 @@ final class EditStandaloneMailDraftTest extends TestCase
 
         $result = $this->editor($draftStore)->read(self::DRAFT_ID);
 
-        self::assertSame($draft->revision(), $result['revision']);
+        self::assertSame($draft->snapshotRevision(), $result['revision']);
         self::assertSame('<p>Bonjour</p>', $result['htmlBody']);
         self::assertSame('marie@example.test', $result['to']);
     }
@@ -43,7 +44,8 @@ final class EditStandaloneMailDraftTest extends TestCase
     {
         $oldDraft = new MailDraft(12, self::DRAFT_ID, 'Premier échange', 'marie@example.test', 'Bonjour');
         $newHtml = '<p>Bonjour <strong>Marie</strong></p>';
-        $newId = '<mcp-standalone-edit-' . hash('sha256', self::DRAFT_ID . "\0" . 'Bonjour Marie' . "\0" . $newHtml) . '@example.test>';
+        $desiredDraft = new MailDraft(0, self::DRAFT_ID, 'Premier échange', 'marie@example.test', 'Bonjour Marie', $newHtml);
+        $newId = '<mcp-standalone-edit-' . hash('sha256', self::DRAFT_ID . "\0" . $oldDraft->snapshotRevision() . "\0" . $desiredDraft->snapshotRevision()) . '@example.test>';
         $newDraft = new MailDraft(18, $newId, 'Premier échange', 'marie@example.test', 'Bonjour Marie', $newHtml);
         $draftStore = $this->createMock(MailDraftStore::class);
         $draftStore->method('getByMessageId')->willReturnCallback(static function (string $folder, string $messageId) use ($oldDraft, $newDraft, $newId): ?MailDraft {
@@ -61,7 +63,7 @@ final class EditStandaloneMailDraftTest extends TestCase
         $draftStore->expects(self::once())->method('append')->with('INBOX.Drafts', self::stringContains('multipart/alternative'));
         $draftStore->expects(self::once())->method('deleteByMessageId')->with('INBOX.Drafts', self::DRAFT_ID, 12)->willReturn(true);
 
-        $result = $this->editor($draftStore)->update(self::DRAFT_ID, $oldDraft->revision(), 'Bonjour Marie', $newHtml);
+        $result = $this->editor($draftStore)->update(self::DRAFT_ID, $oldDraft->snapshotRevision(), 'Bonjour Marie', $newHtml);
 
         self::assertSame('saved', $result['status']);
         self::assertSame($newId, $result['draftMessageId']);
@@ -70,6 +72,6 @@ final class EditStandaloneMailDraftTest extends TestCase
 
     private function editor(MailDraftStore $draftStore): EditStandaloneMailDraft
     {
-        return new EditStandaloneMailDraft($draftStore, new StandaloneDraftMimeBuilder(), 'contact@example.test', 'INBOX.Drafts');
+        return new EditStandaloneMailDraft(new GeneralMailDraftEditor($draftStore, new DraftMimeBuilder(), 'contact@example.test', 'INBOX.Drafts'));
     }
 }
