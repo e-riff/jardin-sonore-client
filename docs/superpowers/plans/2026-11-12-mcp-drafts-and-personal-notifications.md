@@ -139,3 +139,43 @@ No migration was applied; no commit,push,deploy or real email was performed.
   push branch/tag before backend deployment.
 - Planned deployment tag:`deploy-mcp-drafts-notifications-20261112-01`.
 - Production recipient activation and post-deployment read-only checks pending.
+
+
+## Deployment result — 12 November
+
+- Code committed as `9c468fb9`, fast-forwarded to `main`, pushed before deployment.
+- Annotated tag `deploy-mcp-drafts-notifications-20261112-01` created and pushed
+  before `make deploy-backend`.
+- Deployment succeeded:locked Composer dependencies unchanged,81 assets compiled,
+  new migration applied,production cache cleared,workers signalled for restart.
+- Production77 migrations applied,0 pending; Doctrine mapping/schema validation pass.
+- Fixed personal recipient configured in private `.env.local`; backup stored with
+  mode0600 under excluded `var/backups/`; feature enabled,cache rebuilt and effective
+  environment values verified without exposing secrets.
+- Authenticated production MCP HTTP200:53 tools,expected draft schemas and
+  attachments exposed; recipient override rejected before SMTP;14MiB JSON
+  accepted by real web hosting. Notification receipt count remained0.
+- Real IMAP search over HTTP200 succeeded and returned0 drafts. No existing draft
+  read/edited and no temporary draft created. No real email was sent.
+- Public homepage HTTP200. Local working tree clean after implementation commit;
+  this final delivery record is committed separately as documentation only.
+- Remaining user recipe:refresh Mistral tools; create/edit an actual draft and
+  observe personal notification delivery. These are not claimed as tested.
+
+Additional commands/actions:
+
+```sh
+docker compose exec -T php php bin/console doctrine:migrations:execute 'DoctrineMigrations\Version20261112080023' --up --no-interaction
+docker compose exec -T php php bin/console doctrine:schema:validate
+# Baseline test fixture stabilized; full618-test suite passes.
+git commit -m "feat(mcp): expand draft editing and add personal notifications"
+git switch main
+git merge --ff-only feat/mcp-drafts-personal-notifications
+git tag -a deploy-mcp-drafts-notifications-20261112-01 -m "MCP draft editing, attachments and personal notifications"
+git push origin main
+git push origin deploy-mcp-drafts-notifications-20261112-01
+make deploy-backend
+# Scoped SSH scripts performed preflight,private environment activation,
+# schema+HTTP contract checks and read-only IMAP search.
+curl -sS -o /dev/null -w 'public_site_http=%{http_code}\n' https://jardin-sonore.fr
+```

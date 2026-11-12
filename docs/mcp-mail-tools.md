@@ -124,3 +124,12 @@ ni secret SMTP. Ne pas contourner `sending` ou `uncertain` en changeant de clé.
 
 Les tests locaux utilisent des transports factices et des tables temporaires de
 test. Ils ne prouvent ni la recette IMAP réelle ni la livraison Gmail.
+
+
+## État de la livraison du 12 novembre 2026
+
+Déployé sous `deploy-mcp-drafts-notifications-20261112-01` (`9c468fb9`).
+Migration appliquée, notifications activées vers l’adresse personnelle confirmée,
+53 outils MCP exposés. Contrôles HTTP et destinataire fixe réussis sans envoi réel ;
+JSON de 14 Mio accepté. Recherche IMAP réelle réussie, aucun brouillon présent lors
+du contrôle. Rafraîchir les outils Mistral avant la recette d’édition et d’envoi.

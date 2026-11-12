@@ -2,24 +2,23 @@
 
 Mise à jour le 12 novembre 2026. Ce document est la **seule source de l'état courant, des priorités et du point de reprise**. `AGENTS.md` et `.codex/jardin-sonore-guidelines.md` décrivent la méthode de travail ; les plans, conceptions et bilans datés gardent le détail technique et l'état constaté à leur date. Ne pas reprendre leurs anciennes listes de tâches sans vérifier cette page. L'ordre général est : **visibilité et nouvelles demandes**, puis **gain de temps dans le backoffice**. Les priorités indiquent un ordre de travail, pas un engagement de livraison simultanée.
 
-## Connecteur MCP — livraison du 12 novembre en préparation
+## Connecteur MCP — livré le 12 novembre
 
 L’édition générale des brouillons manuels et MCP, leur recherche, la conservation
-To/Cc/Bcc/HTML/fil de réponse et l’ajout/retrait de pièces jointes sont implémentés.
-Un outil distinct de notifications personnelles utilise le transport Jardin
-Sonore, un destinataire fixé côté serveur et une trace persistante pour le
-dédoublonnage et la limite de 10 demandes par heure. L’adresse personnelle reste
-hors Git. Le tag prévu est `deploy-mcp-drafts-notifications-20261112-01`.
+To/Cc/Bcc/HTML/fil de réponse et l’ajout/retrait de pièces jointes sont déployés sous
+`deploy-mcp-drafts-notifications-20261112-01` (commit `9c468fb9`). L’outil distinct
+`send_personal_notification` utilise le transport Jardin Sonore, un destinataire
+personnel fixé côté serveur et une trace persistante pour le dédoublonnage et la
+limite de 10 demandes par heure. Le canal est **activé en production** ; l’adresse
+personnelle et la sauvegarde préalable de configuration restent hors Git.
 
-La migration `Version20261112080023` est appliquée en local après accord utilisateur ;
-le schéma Doctrine est synchronisé. Ses simulations `up`/`down` ont été vérifiées.
-Une ancienne migration de données `Version20261027160000` (Ludobus) reste en attente
-uniquement en local et n’est pas incluse dans ce lot. Le contrôle de production
-avant livraison confirme les 76 migrations existantes appliquées, un schéma
-synchronisé et les trois droits de brouillon actifs. La nouvelle migration et
-l’activation des notifications personnelles en production restent à exécuter.
+La migration `Version20261112080023` est appliquée en local et en production après
+accord utilisateur. Le schéma Doctrine est synchronisé ; les **77 migrations de
+production sont appliquées, aucune en attente**. L’ancienne migration de données
+`Version20261027160000` (Ludobus) reste en attente uniquement en local, volontairement
+non exécutée dans ce lot. Les trois droits de brouillon restent actifs.
 
-Vérification finale : **618 tests et 3 155 assertions passent**, avec quatre notices
+Vérification : **618 tests et 3 155 assertions passent**, avec quatre notices
 PHPUnit ; PHPStan, style, conteneur Symfony, validation Composer et compilation des
 81 assets Symfony passent. L’ancien échec du test de dossier provenait de dates
 fixes devenues passées ; les deux séances utilisent désormais deux mois futurs,
@@ -27,8 +26,13 @@ sans changement du comportement applicatif. Les 88 tests ciblés MCP/mail passen
 également (498 assertions). La configuration POST PHP/Nginx passe à 16 Mio pour
 les pièces jointes base64 ; la limite d’upload classique reste à 8 Mio.
 
-La recette IMAP/Mistral et la livraison Gmail ne sont pas encore attestées. Voir
-le [guide MCP mail](docs/mcp-mail-tools.md) et le
+Contrôles HTTP authentifiés de production : **53 outils MCP**, recherche/édition
+et schémas de pièces jointes présents, destinataire arbitraire refusé par l’outil
+de notification sans appel SMTP, JSON de **14 Mio accepté**. Site public HTTP 200.
+La recherche IMAP réelle fonctionne et retourne zéro brouillon lors de la recette ;
+aucun brouillon n’a été créé/modifié et aucun mail n’a été envoyé. La lecture/édition
+d’un brouillon réel et la livraison Gmail restent à confirmer dans Mistral après
+rafraîchissement de ses outils. Voir le [guide MCP mail](docs/mcp-mail-tools.md) et le
 [plan du lot](docs/superpowers/plans/2026-11-12-mcp-drafts-and-personal-notifications.md).
 
 ## Livré — hors travaux futurs
