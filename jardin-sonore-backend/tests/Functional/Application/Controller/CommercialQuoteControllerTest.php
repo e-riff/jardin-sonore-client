@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Application\Controller;
 
+use App\Application\Commercial\CalendarEventDraft;
+use App\Application\Commercial\CalendarEventOccurrence;
+use App\Application\Commercial\CommercialCalendarGateway;
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialEventEntity;
+use App\Infrastructure\Doctrine\Entity\CommercialInterventionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialQuoteEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
@@ -17,6 +21,46 @@ use Symfony\Component\HttpKernel\KernelInterface;
 
 final class CommercialQuoteControllerTest extends WebTestCase
 {
+    public function testSigningQuoteConfirmsOptionSessionsAndRemovesCalendarMarker(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(5));
+        $adminUserEntity = (new AdminUserEntity())->setEmail("quote-calendar-{$suffix}@example.test")->setPassword('unused');
+        $commercialProjectEntity = new CommercialProjectEntity('Ateliers', null, null, new DateTimeImmutable());
+        $commercialQuoteEntity = new CommercialQuoteEntity($commercialProjectEntity, "CAL-{$suffix}", 'devis.pdf', 25000, new DateTimeImmutable('today'));
+        $commercialProjectEntity->addQuote($commercialQuoteEntity);
+        $start = new DateTimeImmutable('+7 days 10:00:00');
+        $optionInterventionEntity = new CommercialInterventionEntity($commercialProjectEntity, 'calendar', "option-{$suffix}", 'Atelier', $start, $start->modify('+1 hour'), 'Europe/Paris', null, 'v1', new DateTimeImmutable());
+        $confirmedInterventionEntity = new CommercialInterventionEntity($commercialProjectEntity, 'calendar', "confirmed-{$suffix}", 'Déjà confirmée', $start, $start->modify('+1 hour'), 'Europe/Paris', null, 'v1', new DateTimeImmutable());
+        $confirmedInterventionEntity->confirm();
+        $canceledInterventionEntity = new CommercialInterventionEntity($commercialProjectEntity, 'calendar', "canceled-{$suffix}", 'Annulée', $start, $start->modify('+1 hour'), 'Europe/Paris', null, 'v1', new DateTimeImmutable());
+        $canceledInterventionEntity->cancel(new DateTimeImmutable());
+        foreach ([$adminUserEntity, $commercialProjectEntity, $commercialQuoteEntity, $optionInterventionEntity, $confirmedInterventionEntity, $canceledInterventionEntity] as $entity) {
+            $entityManager->persist($entity);
+        }
+        $entityManager->flush();
+        $calendarGateway = $this->createMock(CommercialCalendarGateway::class);
+        $calendarGateway->method('event')->willReturnCallback(static fn (string $id): CalendarEventOccurrence => new CalendarEventOccurrence($id, $id === $optionInterventionEntity->getGoogleEventId() ? '[OPT] Atelier' : 'Déjà confirmée', $start, $start->modify('+1 hour'), null, false, etag: 'v1'));
+        $calendarGateway->expects(self::once())->method('updateEvent')->with(
+            self::callback(static fn (CalendarEventOccurrence $event): bool => $event->id === $optionInterventionEntity->getGoogleEventId() && 'v1' === $event->etag),
+            self::callback(static fn (CalendarEventDraft $draft): bool => 'Atelier' === $draft->title),
+        )->willReturn(new CalendarEventOccurrence($optionInterventionEntity->getGoogleEventId(), 'Atelier', $start, $start->modify('+1 hour'), null, false, etag: 'v2'));
+        static::getContainer()->set(CommercialCalendarGateway::class, $calendarGateway);
+        $client->loginUser($adminUserEntity);
+        $crawler = $client->request('GET', '/commercial/projects/' . $commercialProjectEntity->getId());
+        $token = $crawler->filterXPath('//form[contains(@action, "/quotes/' . $commercialQuoteEntity->getId() . '/sign")]/input[@name="_token"]')->attr('value');
+        $client->request('POST', '/commercial/quotes/' . $commercialQuoteEntity->getId() . '/sign', ['_token' => $token, 'signedOn' => (new DateTimeImmutable('today'))->format('Y-m-d')]);
+        self::assertResponseRedirects();
+        $currentEntityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $optionInterventionEntity = $currentEntityManager->find(CommercialInterventionEntity::class, $optionInterventionEntity->getId());
+        self::assertSame(CommercialInterventionEntity::STATUS_CONFIRMED, $optionInterventionEntity->getStatus());
+        self::assertSame('v2', $optionInterventionEntity->getEtag());
+        $canceledInterventionEntity = $currentEntityManager->find(CommercialInterventionEntity::class, $canceledInterventionEntity->getId());
+        self::assertSame(CommercialInterventionEntity::STATUS_CANCELED, $canceledInterventionEntity->getStatus());
+    }
+
     /** @param array<string, mixed> $options */
     protected static function createKernel(array $options = []): KernelInterface
     {

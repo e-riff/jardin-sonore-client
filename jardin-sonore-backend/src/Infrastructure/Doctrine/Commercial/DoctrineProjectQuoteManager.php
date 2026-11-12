@@ -90,10 +90,10 @@ final readonly class DoctrineProjectQuoteManager implements ProjectQuoteManager
     {
         $quoteEntity = $this->quote($projectId, $this->positiveId($arguments, 'quoteId'));
         $this->assertRevision($quoteEntity, $this->text($arguments, 'revision', 64));
-        $this->quoteRecorder->markSigned($quoteEntity, $this->date($arguments, 'occurredOn'));
+        $calendarSync = $this->quoteRecorder->markSigned($quoteEntity, $this->date($arguments, 'occurredOn'));
         $this->entityManager->flush();
 
-        return $this->result($quoteEntity);
+        return array_replace($this->result($quoteEntity), ['calendarSync' => $calendarSync]);
     }
 
     /** @param array<string, mixed> $arguments

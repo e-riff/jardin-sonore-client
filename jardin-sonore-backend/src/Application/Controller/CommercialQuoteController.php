@@ -83,8 +83,15 @@ final class CommercialQuoteController extends AbstractController
         if (!$signedOn instanceof DateTimeImmutable) {
             return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
-        $recorder->markSigned($quoteEntity, $signedOn);
+        $calendarSync = $recorder->markSigned($quoteEntity, $signedOn);
         $entityManager->flush();
+        if (0 < $calendarSync['failed']) {
+            $this->addFlash('warning', [
+                'message' => 'calendar.sessions.bulk_partial',
+                'parameters' => ['%count%' => $calendarSync['confirmed'], '%failed%' => $calendarSync['failed']],
+                'domain' => 'commercial',
+            ]);
+        }
 
         return $this->redirectToRoute('commercial_project_show', ['id' => $quoteEntity->getProject()->getId()]);
     }

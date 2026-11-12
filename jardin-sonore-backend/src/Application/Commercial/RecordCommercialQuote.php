@@ -15,6 +15,7 @@ final readonly class RecordCommercialQuote
     public function __construct(
         private CommercialProjectWorkflow $projectWorkflow,
         private ClockInterface $clock,
+        private ConfirmCommercialProjectInterventions $interventionConfirmer,
     ) {
     }
 
@@ -40,10 +41,13 @@ final readonly class RecordCommercialQuote
         return $quoteEntity;
     }
 
-    public function markSigned(CommercialQuoteEntity $quoteEntity, DateTimeImmutable $signedOn): void
+    /** @return array{confirmed: int, failed: int}
+     * @see ConfirmCommercialProjectInterventions
+     */
+    public function markSigned(CommercialQuoteEntity $quoteEntity, DateTimeImmutable $signedOn): array
     {
         if (null !== $quoteEntity->getSignedOn()) {
-            return;
+            return $this->interventionConfirmer->forProject($quoteEntity->getProject());
         }
         if (null !== $quoteEntity->getRefusedOn()) {
             throw new DomainException('A refused quote cannot be signed.');
@@ -58,6 +62,8 @@ final readonly class RecordCommercialQuote
         $quoteEntity->markSigned($signedOn);
         $eventEntity = $projectEntity->recordEvent('quote_signed', $this->atDate($signedOn), $quoteEntity->getReference());
         $eventEntity->linkQuote($quoteEntity);
+
+        return $this->interventionConfirmer->forProject($projectEntity);
     }
 
     public function markRefused(CommercialQuoteEntity $quoteEntity, DateTimeImmutable $refusedOn): void

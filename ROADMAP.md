@@ -69,6 +69,23 @@ Site public et MCP authentifié HTTP200 ; 53 outils et descriptions correctives
 exposés. **Rafraîchir les outils Mistral suffit normalement ; pas de changement
 d’authentification,de noms ou de paramètres nécessitant une reconnexion.**
 
+## Acceptation d’un devis et confirmation des séances — correctif en préparation
+
+Le passage d’un devis à « accepté » confirmait le dossier sans confirmer ses séances
+liées en option ni retirer leur marqueur Google. Le chemin de signature partagé
+backoffice/MCP confirme désormais ces séances à partir d’un événement Google frais
+avec son ETag,sans écraser les horaires ou le lieu. Les séances annulées ou déjà
+confirmées ne sont pas modifiées. Les échecs restent en option avec avertissement
+backoffice et compteurs `calendarSync` dans la réponse MCP ; une relance ne rejoue
+que les options restantes,sans doubler l’historique de signature.
+
+Régression reproduite puis corrigée ; **638 tests,3 250 assertions**,PHPStan,style,
+conteneur et revue passent. Pas de migration ni dépendance supplémentaire.
+Livraison prévue : `deploy-quote-calendar-confirmation-20261112-01`.
+Deux dossiers indiqués par l’utilisateur ont été contrôlés en lecture seule :
+l’un est déjà cohérent,côté local et Google ; l’autre a encore une séance en option
+malgré son devis signé. Reprise ciblée de cette seule séance après déploiement.
+
 ## Livré — hors travaux futurs
 
 - Backoffice métier pour l'annuaire, les médias, les prolongements, le mailing, les séances et les outils techniques ; EasyAdmin a été retiré.
