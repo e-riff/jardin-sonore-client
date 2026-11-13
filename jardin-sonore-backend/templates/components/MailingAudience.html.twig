@@ -176,12 +176,16 @@
             </div>
 
             <div class="mailing-audience__groups mailing-audience__groups--compact">
-                {{ form_row(form.organizationTypes) }}
-                {{ form_row(form.organizationSectors) }}
-                {% if form.vars.data.directoryEntryUuidsJson != '[]' or form.vars.data.legacyTagUuidsJson != '[]' %}
-                    <p class="internal-notice">{{ 'mailing.audience.form.legacy_tag_targeting'|trans({}, 'mailing') }}</p>
-                {% endif %}
-                {{ form_row(form.includeFreeSubscribers) }}
+                <div class="mailing-audience__organization-types">
+                    {{ form_row(form.organizationTypes) }}
+                </div>
+                <div class="mailing-audience__profile-options">
+                    {{ form_row(form.organizationSectors) }}
+                    {% if form.vars.data.directoryEntryUuidsJson != '[]' or form.vars.data.legacyTagUuidsJson != '[]' %}
+                        <p class="internal-notice">{{ 'mailing.audience.form.legacy_tag_targeting'|trans({}, 'mailing') }}</p>
+                    {% endif %}
+                    {{ form_row(form.includeFreeSubscribers) }}
+                </div>
             </div>
         </section>
 

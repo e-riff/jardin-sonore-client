@@ -5858,7 +5858,25 @@ a.session-composer-overlay__item {
 }
 
 .mailing-audience__groups--compact {
-    gap: 14px;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: 24px;
+}
+
+.mailing-audience__organization-types .mailing-audience__choice-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mailing-audience__profile-options {
+    display: grid;
+    align-content: start;
+    gap: 20px;
+}
+
+@media (max-width: 760px) {
+    .mailing-audience__groups--compact,
+    .mailing-audience__organization-types .mailing-audience__choice-list {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }
 
 .mailing-audience__fieldset {
@@ -5936,7 +5954,7 @@ a.session-composer-overlay__item {
 }
 
 .mailing-audience__mask-summary h2 {
-    font-size: clamp(1.7rem, 2.2vw, 2.2rem);
+    font-size: clamp(1.1rem, 1.6vw, 1.4rem);
 }
 
 .mailing-audience__mask-summary-meta {
@@ -6008,13 +6026,13 @@ a.session-composer-overlay__item {
     gap: 10px;
 }
 
-.mailing-audience__choice {
+.internal-form .mailing-audience__choice {
     display: flex;
     align-items: center;
     gap: 12px;
     border: 1px solid color-mix(in oklab, var(--color-outline-variant) 82%, white);
     border-radius: 12px;
-    padding: 12px 14px;
+    padding: 9px 10px;
     background: color-mix(in oklab, var(--color-surface-container) 65%, white);
     cursor: pointer;
 }

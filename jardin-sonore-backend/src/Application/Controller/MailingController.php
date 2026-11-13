@@ -170,7 +170,7 @@ final class MailingController extends AbstractController
     ): JsonResponse {
         $payload = json_decode($request->getContent(), true);
         $inseeCodes = $this->normalizeStringList($payload['municipalityInseeCodes'] ?? []);
-        $shapeLimit = 100;
+        $shapeLimit = 160;
         $count = count($inseeCodes);
         $shapes = [];
         $points = [];

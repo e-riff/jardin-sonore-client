@@ -53,7 +53,7 @@ final class MailingAudience
     use ComponentWithFormTrait;
     use DefaultActionTrait;
 
-    private const int MAP_MUNICIPALITY_SHAPE_LIMIT = 100;
+    private const int MAP_MUNICIPALITY_SHAPE_LIMIT = 160;
 
     #[LiveProp]
     public string $campaignUuid = '';
