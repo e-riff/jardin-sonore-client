@@ -14,3 +14,10 @@ Demande validée : retirer les préparations de séances du mail et du suivi ; d
 - `composer cs-check`, `composer stan`, `lint:twig templates/commercial`, `lint:container` : réussis.
 - `npm run lint`, `npm run build` : réussis. Métadonnée générée `noindex, follow`, URL absente du sitemap généré.
 - Nettoyage local : zéro tâche ; production : 29 et 35 annulées puis absence de tâches ouvertes confirmée.
+
+## Livraison
+
+Déployé le 13 novembre après accord utilisateur : commit `15d76413`, tag `deploy-digest-partners-noindex-20261113-01`, branche et tag poussés avant les déploiements.
+`CPANEL_BACKEND_RUN_MIGRATIONS=0 make deploy-backend` puis `make deploy-client` réussis ; aucune nouvelle migration dans ce lot.
+Production : Twig valide, schéma Doctrine synchronisé, 77 migrations exécutées et aucune nouvelle ; nettoyage en aperçu : zéro tâche.
+Contrôles HTTP 200 sur la page partenaires (`noindex, follow` présent) et le sitemap (URL partenaires absente). Aucun mail de recette envoyé.
