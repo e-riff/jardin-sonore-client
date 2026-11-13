@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Infrastructure\Commercial;
 
+use App\Application\Command\CancelSessionPreparationActionsCommand;
 use App\Application\Commercial\BuildCommercialDigest;
 use App\Application\Commercial\CalendarEventOccurrence;
+use App\Application\Commercial\CommercialActionWorkflow;
+use App\Application\Commercial\CommercialDigest;
 use App\Infrastructure\Doctrine\Entity\CommercialActionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialAppointmentEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialInvoiceEntity;
+use App\Infrastructure\Doctrine\Entity\CommercialInvoicePreparationEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialRequestEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
@@ -17,6 +21,8 @@ use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\Clock\MockClock;
+use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Twig\Environment;
 
@@ -45,6 +51,55 @@ final class BuildCommercialDigestTest extends KernelTestCase
         }
 
         parent::tearDown();
+    }
+
+    public function testSessionPreparationCleanupPreviewsThenCancelsOnlyOpenSessionTasks(): void
+    {
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $projectEntity = new CommercialProjectEntity('Nettoyage préparations', null, null, new DateTimeImmutable('2026-11-01'));
+        $sessionActionEntity = new CommercialActionEntity($projectEntity, 'Préparer la séance de mardi', new DateTimeImmutable('2026-11-13'));
+        $invoiceActionEntity = new CommercialActionEntity($projectEntity, 'Préparer la facture', new DateTimeImmutable('2026-11-13'));
+        $projectEntity->addAction($sessionActionEntity);
+        $projectEntity->addAction($invoiceActionEntity);
+        $entityManager->persist($projectEntity);
+        $entityManager->flush();
+        $commandTester = new CommandTester(new CancelSessionPreparationActionsCommand($entityManager, new CommercialActionWorkflow(new MockClock('2026-11-13'))));
+        self::assertSame(0, $commandTester->execute([]));
+        self::assertStringContainsString('Préparer la séance de mardi', $commandTester->getDisplay());
+        self::assertSame(CommercialActionEntity::STATUS_OPEN, $sessionActionEntity->getStatus());
+        self::assertSame(0, $commandTester->execute(['--apply' => true]));
+        self::assertSame(CommercialActionEntity::STATUS_CANCELED, $sessionActionEntity->getStatus());
+        self::assertSame(CommercialActionEntity::STATUS_OPEN, $invoiceActionEntity->getStatus());
+        self::assertCount(1, $projectEntity->getEvents());
+        self::assertSame(0, $commandTester->execute(['--apply' => true]));
+        self::assertCount(1, $projectEntity->getEvents());
+    }
+
+    public function testInvoicePreparationHasItsOwnSectionWithoutTitleGuessing(): void
+    {
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $projectEntity = new CommercialProjectEntity('Facturation distincte', null, null, new DateTimeImmutable('2026-11-01'));
+        $invoiceActionEntity = new CommercialActionEntity($projectEntity, 'Émettre le document mensuel', new DateTimeImmutable('2026-11-12'));
+        $followUpActionEntity = new CommercialActionEntity($projectEntity, 'Préparer la facture avec le client', new DateTimeImmutable('2026-11-13'));
+        $projectEntity->addAction($invoiceActionEntity);
+        $projectEntity->addAction($followUpActionEntity);
+        $entityManager->persist($projectEntity);
+        $entityManager->persist(new CommercialInvoicePreparationEntity($projectEntity, new DateTimeImmutable('2026-11-01'), $invoiceActionEntity));
+        $entityManager->flush();
+
+        $digest = (new BuildCommercialDigest($entityManager))->forDate(new DateTimeImmutable('2026-11-13'));
+        self::assertContains($invoiceActionEntity, $digest->invoicePreparations);
+        self::assertNotContains($invoiceActionEntity, $digest->dueActions);
+        self::assertContains($followUpActionEntity, $digest->dueActions);
+        $invoiceOnlyDigest = new CommercialDigest(new DateTimeImmutable('2026-11-13'), [], [], [], invoicePreparations: [$invoiceActionEntity]);
+        self::assertFalse($invoiceOnlyDigest->isEmpty());
+        foreach (['html', 'txt'] as $format) {
+            $rendered = self::getContainer()->get(Environment::class)->render("commercial/digest_email.{$format}.twig", ['digest' => $digest]);
+            self::assertStringContainsString('Factures à faire', $rendered);
+            self::assertSame(1, substr_count($rendered, 'Émettre le document mensuel'));
+            self::assertStringContainsString('En retard', $rendered);
+            self::assertStringContainsString('Aujourd’hui', $rendered);
+        }
     }
 
     public function testMondayLinksDossiersOnceAndExcludesDuplicateInvoiceReminder(): void

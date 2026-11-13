@@ -12,6 +12,7 @@ const content = fr.partnersPage;
 const partnerLinkClassName = "inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-primary/35 bg-surface/70 px-6 py-3 text-center font-sans text-sm font-bold text-primary-container transition-colors duration-200 hover:border-primary hover:bg-primary-fixed/35 motion-reduce:transition-none";
 
 export const metadata: Metadata = {
+    robots: {index: false, follow: true},
     title: content.metadata.title,
     description: content.metadata.description,
     alternates: {canonical: "/amis-et-partenaires"},

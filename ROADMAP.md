@@ -1,6 +1,23 @@
 # Roadmap Jardin Sonore
 
-Mise à jour le 12 novembre 2026. Ce document est la **seule source de l'état courant, des priorités et du point de reprise**. `AGENTS.md` et `.codex/jardin-sonore-guidelines.md` décrivent la méthode de travail ; les plans, conceptions et bilans datés gardent le détail technique et l'état constaté à leur date. Ne pas reprendre leurs anciennes listes de tâches sans vérifier cette page. L'ordre général est : **visibilité et nouvelles demandes**, puis **gain de temps dans le backoffice**. Les priorités indiquent un ordre de travail, pas un engagement de livraison simultanée.
+Mise à jour le 13 novembre 2026. Ce document est la **seule source de l'état courant, des priorités et du point de reprise**. `AGENTS.md` et `.codex/jardin-sonore-guidelines.md` décrivent la méthode de travail ; les plans, conceptions et bilans datés gardent le détail technique et l'état constaté à leur date. Ne pas reprendre leurs anciennes listes de tâches sans vérifier cette page. L'ordre général est : **visibilité et nouvelles demandes**, puis **gain de temps dans le backoffice**. Les priorités indiquent un ordre de travail, pas un engagement de livraison simultanée.
+
+## Ajustements du récapitulatif — 13 novembre, code local
+
+Les deux tâches de préparation de séance (29 et 35) ont été annulées en production
+via le workflow des dossiers ; leur contenu et la trace d’annulation restent dans
+l’historique. Contrôle effectué : aucune tâche ouverte « Préparer la séance … » restante.
+Ne plus créer de tâches de préparation : les séances à venir servent déjà de repère.
+Conserver les rappels de préparation de facture après les séances confirmées du mois.
+
+Le code local sépare « Factures à faire », « Suivis à faire » et « Factures à relancer »
+dans le mail HTML et texte, avec échéances « Aujourd’hui » / « En retard ».
+La page `/amis-et-partenaires` passe en `noindex, follow` et sort du sitemap.
+Vérifications locales : 640 tests / 3 273 assertions passent (deux dépréciations,
+quatre notices PHPUnit), PHPStan, style, Twig et conteneur Symfony, lint/build front.
+Le HTML généré contient `noindex, follow` et le sitemap ne contient plus cette page.
+Ces changements de code ne sont pas encore déployés. Voir le
+[plan du lot](docs/superpowers/plans/2026-11-13-commercial-digest-readability.md).
 
 ## Connecteur MCP — livré le 12 novembre
 

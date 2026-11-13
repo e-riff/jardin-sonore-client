@@ -54,14 +54,26 @@
                             {% endfor %}
                         </table>
                     {% endif %}
+                    {% if digest.invoicePreparations %}
+                        {% include 'commercial/_digest_section_heading.html.twig' with { label: 'invoice_preparations'|trans({}, 'commercial_digest') } only %}
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:24px; border-top:1px solid #e5dcd3;">
+                            {% for action in digest.invoicePreparations %}
+                                <tr><td style="padding:12px 0; border-bottom:1px solid #e5dcd3; font-size:14px; line-height:21px;">
+                                    <a href="{{ url('commercial_project_show', {id: action.project.id}) }}" style="color:#63518a; font-weight:bold; text-decoration:underline;">{{ action.title }}</a>
+                                    <br><span style="color:#70655a;">{{ action.project.organization ? action.project.organization.name : action.project.title }}</span><br>
+                                    <span style="color:{{ action.dueOn|date('Y-m-d') < digest.localDate|date('Y-m-d') ? '#a64d43' : '#896a32' }}; font-size:12px; font-weight:bold;">{{ (action.dueOn|date('Y-m-d') < digest.localDate|date('Y-m-d') ? 'overdue' : 'today')|trans({}, 'commercial_digest') }} · {{ action.dueOn|date('d/m/Y') }}</span>{% if action.dueTime %}<span style="color:#70655a; font-size:12px;"> · {{ 'approx_time'|trans({'%time%': action.dueTime|replace({':00': ' h', ':': ' h '})}, 'commercial_digest') }}</span>{% endif %}
+                                </td></tr>
+                            {% endfor %}
+                        </table>
+                    {% endif %}
                     {% if digest.dueActions %}
                         {% include 'commercial/_digest_section_heading.html.twig' with { label: 'actions'|trans({}, 'commercial_digest') } only %}
                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:24px; border-top:1px solid #e5dcd3;">
                             {% for action in digest.dueActions %}
                                 <tr><td style="padding:12px 0; border-bottom:1px solid #e5dcd3; font-size:14px; line-height:21px;">
                                     <a href="{{ url('commercial_project_show', {id: action.project.id}) }}" style="color:#47664b; font-weight:bold; text-decoration:underline;">{{ action.title }}</a>
-                                    <span style="color:#70655a;"> · {{ action.project.organization ? action.project.organization.name : action.project.title }}</span><br>
-                                    <span style="color:#a64d43; font-size:12px; font-weight:bold;">{{ action.dueOn|date('d/m/Y') }}</span>{% if action.dueTime %}<span style="color:#70655a; font-size:12px;"> · {{ 'approx_time'|trans({'%time%': action.dueTime|replace({':00': ' h', ':': ' h '})}, 'commercial_digest') }}</span>{% endif %}
+                                    <br><span style="color:#70655a;">{{ action.project.organization ? action.project.organization.name : action.project.title }}</span><br>
+                                    <span style="color:{{ action.dueOn|date('Y-m-d') < digest.localDate|date('Y-m-d') ? '#a64d43' : '#896a32' }}; font-size:12px; font-weight:bold;">{{ (action.dueOn|date('Y-m-d') < digest.localDate|date('Y-m-d') ? 'overdue' : 'today')|trans({}, 'commercial_digest') }} · {{ action.dueOn|date('d/m/Y') }}</span>{% if action.dueTime %}<span style="color:#70655a; font-size:12px;"> · {{ 'approx_time'|trans({'%time%': action.dueTime|replace({':00': ' h', ':': ' h '})}, 'commercial_digest') }}</span>{% endif %}
                                 </td></tr>
                             {% endfor %}
                         </table>

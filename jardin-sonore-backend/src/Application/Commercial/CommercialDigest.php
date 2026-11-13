@@ -14,6 +14,7 @@ use DateTimeImmutable;
 final readonly class CommercialDigest
 {
     /**
+     * @param list<CommercialActionEntity>       $invoicePreparations
      * @param list<CommercialActionEntity>       $dueActions
      * @param list<CommercialInvoiceEntity>      $overdueInvoices
      * @param list<CommercialProjectEntity>      $withoutAction
@@ -29,11 +30,12 @@ final readonly class CommercialDigest
         public bool $calendarSyncWarning = false,
         public array $todayAppointments = [],
         public bool $appointmentSyncWarning = false,
+        public array $invoicePreparations = [],
     ) {
     }
 
     public function isEmpty(): bool
     {
-        return [] === $this->dueActions && [] === $this->overdueInvoices && [] === $this->withoutAction && [] === $this->upcomingInterventions && [] === $this->todayAppointments;
+        return [] === $this->invoicePreparations && [] === $this->dueActions && [] === $this->overdueInvoices && [] === $this->withoutAction && [] === $this->upcomingInterventions && [] === $this->todayAppointments;
     }
 }

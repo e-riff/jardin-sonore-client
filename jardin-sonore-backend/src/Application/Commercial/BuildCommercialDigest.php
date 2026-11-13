@@ -8,6 +8,7 @@ use App\Infrastructure\Doctrine\Entity\CommercialActionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialAppointmentEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialInterventionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialInvoiceEntity;
+use App\Infrastructure\Doctrine\Entity\CommercialInvoicePreparationEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use DateTimeImmutable;
 use DateTimeZone;
@@ -46,10 +47,24 @@ final readonly class BuildCommercialDigest
                 $invoiceReminderIds[] = $reminderId;
             }
         }
-        $dueActions = array_values(array_filter(
-            $actions,
-            static fn (CommercialActionEntity $actionEntity): bool => !in_array($actionEntity->getId(), $invoiceReminderIds, true),
-        ));
+        $preparationQueryBuilder = $this->entityManager->getRepository(CommercialInvoicePreparationEntity::class)->createQueryBuilder('preparation');
+        $preparationEntities = [] === $actions ? [] : $preparationQueryBuilder
+            ->andWhere($preparationQueryBuilder->expr()->in('preparation.action', ':actions'))
+            ->setParameter('actions', $actions)
+            ->getQuery()->getResult();
+        $preparationActionIds = array_map(
+            static fn (CommercialInvoicePreparationEntity $preparationEntity): ?int => $preparationEntity->getAction()->getId(),
+            $preparationEntities,
+        );
+        $invoicePreparations = [];
+        $dueActions = [];
+        foreach ($actions as $actionEntity) {
+            if (in_array($actionEntity->getId(), $preparationActionIds, true)) {
+                $invoicePreparations[] = $actionEntity;
+            } elseif (!in_array($actionEntity->getId(), $invoiceReminderIds, true)) {
+                $dueActions[] = $actionEntity;
+            }
+        }
 
         $withoutAction = [];
         if ('1' === $localDate->format('N')) {
@@ -108,6 +123,6 @@ final readonly class BuildCommercialDigest
             }
         }
 
-        return new CommercialDigest($localDate, $dueActions, $overdueInvoices, $withoutAction, $upcomingInterventions, $calendarSyncWarning, $todayAppointments, $appointmentSyncWarning);
+        return new CommercialDigest($localDate, $dueActions, $overdueInvoices, $withoutAction, $upcomingInterventions, $calendarSyncWarning, $todayAppointments, $appointmentSyncWarning, $invoicePreparations);
     }
 }
