@@ -28,6 +28,10 @@
             <p>{{ 'sessions.summary.edit.description'|trans({}, 'sessions') }}</p>
         </div>
         <div class="internal-heading-actions session-edit-actions">
+            <form method="post" action="{{ path('session_duplicate', {uuid: session.uuid}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('session_duplicate_' ~ session.uuid) }}">
+                <button type="submit" class="internal-button internal-button--secondary">{{ 'sessions.summary.duplicate.action'|trans({}, 'sessions') }}</button>
+            </form>
             <div class="session-edit-actions__documents">
                 <a class="internal-button session-edit-heading__preview" href="{{ path('session_show', { uuid: session.uuid }) }}" target="_blank" rel="noopener">{{ 'sessions.summary.edit.preview'|trans({}, 'sessions') }}</a>
                 <details class="session-pdf-menu" data-controller="internal-popover">

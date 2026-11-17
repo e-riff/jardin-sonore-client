@@ -18,6 +18,7 @@ use App\Application\Session\AddSessionSequence;
 use App\Application\Session\CreateMediaResource;
 use App\Application\Session\CreateSessionSummary;
 use App\Application\Session\DeleteSessionSummary;
+use App\Application\Session\DuplicateSessionSummary;
 use App\Application\Session\GetMediaResourceForEdit;
 use App\Application\Session\GetRepertoireItemForEdit;
 use App\Application\Session\GetSessionRecommendationForEdit;
@@ -60,6 +61,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[Route('/sessions', name: 'session_')]
 final class SessionSummaryController extends AbstractController
@@ -116,6 +118,22 @@ final class SessionSummaryController extends AbstractController
             'sessions' => $sessions,
             'tableSort' => $tableSort,
         ]);
+    }
+
+    #[Route('/{uuid}/duplicate', name: 'duplicate', methods: ['POST'])]
+    public function duplicate(string $uuid, Request $request, GetSessionSummary $getSessionSummary, DuplicateSessionSummary $duplicateSessionSummary, TranslatorInterface $translator): Response
+    {
+        if (!$this->isCsrfTokenValid("session_duplicate_{$uuid}", $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+        $sourceSessionSummaryView = $this->getSessionSummaryView($uuid, $getSessionSummary);
+        $sessionSummary = $duplicateSessionSummary($sourceSessionSummaryView->uuid, $translator->trans('sessions.summary.duplicate.copy_title', ['title' => $sourceSessionSummaryView->title], 'sessions'));
+        if (null === $sessionSummary) {
+            throw $this->createNotFoundException();
+        }
+        $this->addFlash('success', ['message' => 'sessions.summary.flash.duplicated', 'domain' => 'sessions']);
+
+        return $this->redirectToRoute('session_edit', ['uuid' => $sessionSummary->getUuid()->toRfc4122()], Response::HTTP_SEE_OTHER);
     }
 
     #[Route('/{uuid}/publication', name: 'publication', methods: ['POST'])]

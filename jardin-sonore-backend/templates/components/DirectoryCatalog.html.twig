@@ -223,7 +223,7 @@
     {% set dialogForm = this.dialogForm %}
     {% if dialogForm %}
         <div data-controller="internal-dialog" data-internal-dialog-open-on-connect-value="true">
-            <dialog class="internal-form-dialog" data-internal-dialog-target="dialog" data-action="click->internal-dialog#closeOnBackdrop close->internal-dialog#markClosed">
+            <dialog class="internal-form-dialog" data-internal-dialog-target="dialog" data-action="click->internal-dialog#closeOnBackdrop close->internal-dialog#markClosed close->live#action" data-live-action-param="closeDialog">
                 <div class="internal-form-dialog__panel">
                     <button type="button" class="internal-icon-button internal-form-dialog__close" data-action="internal-dialog#close" aria-label="{{ 'technical.directory.close_dialog'|trans({}, 'technical') }}" title="{{ 'technical.directory.close_dialog'|trans({}, 'technical') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'close'} only %}</button>
                     <p class="internal-eyebrow">{{ 'technical.directory.eyebrow'|trans({}, 'technical') }}</p>

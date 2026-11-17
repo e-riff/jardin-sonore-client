@@ -1,6 +1,27 @@
 # Roadmap Jardin Sonore
 
-Mise à jour le 13 novembre 2026. Ce document est la **seule source de l'état courant, des priorités et du point de reprise**. `AGENTS.md` et `.codex/jardin-sonore-guidelines.md` décrivent la méthode de travail ; les plans, conceptions et bilans datés gardent le détail technique et l'état constaté à leur date. Ne pas reprendre leurs anciennes listes de tâches sans vérifier cette page. L'ordre général est : **visibilité et nouvelles demandes**, puis **gain de temps dans le backoffice**. Les priorités indiquent un ordre de travail, pas un engagement de livraison simultanée.
+Mise à jour le 17 novembre 2026. Ce document est la **seule source de l'état courant, des priorités et du point de reprise**. `AGENTS.md` et `.codex/jardin-sonore-guidelines.md` décrivent la méthode de travail ; les plans, conceptions et bilans datés gardent le détail technique et l'état constaté à leur date. Ne pas reprendre leurs anciennes listes de tâches sans vérifier cette page. L'ordre général est : **visibilité et nouvelles demandes**, puis **gain de temps dans le backoffice**. Les priorités indiquent un ordre de travail, pas un engagement de livraison simultanée.
+
+## Correctifs annuaire, dossiers, MCP et séances — 17 novembre
+
+Lot identifié par `deploy-backoffice-small-fixes-20261117-01` : fermeture des dialogues
+annuaire synchronisée avec LiveComponent (Échap, fond, croix, annulation), téléphones
+français des dossiers regroupés par CSS sans espaces dans le texte ni modification
+des liens `tel:`, option `replyAll` sur `save_mail_draft` (To/Cc visibles, exclusion de
+la boîte et des doublons), duplication depuis la fiche séance vers une copie non
+publiée, sans structure/lieu rattaché. Contenu, séquences, médias et liens au catalogue
+sont conservés ; séance et séquences reçoivent de nouveaux UUID.
+
+Validation : 645 tests backend passent (quatre notices PHPUnit préexistantes), PHPStan,
+style PHP, Twig, YAML, conteneur Symfony, Composer, compilation des 81 assets et lint
+front. Recette locale authentifiée : réouverture de dialogues après Échap et clic sur
+le fond, y compris du même formulaire. Aucun changement de schéma ni migration.
+Après livraison, rafraîchir les fonctions Mistral pour voir `replyAll` sur l’outil
+existant ; aucune recréation de connecteur prévue. La création IMAP réelle en mode
+répondre à tous reste à confirmer depuis Mistral, sans envoi.
+
+Le regroupement des séances en familles et variantes reste à concevoir ; aucune
+relation parent/enfant ni héritage automatique n’est introduit par la duplication.
 
 ## Ajustements du récapitulatif — livrés le 13 novembre
 

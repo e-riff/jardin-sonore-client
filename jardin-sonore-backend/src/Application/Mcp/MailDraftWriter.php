@@ -7,5 +7,5 @@ namespace App\Application\Mcp;
 interface MailDraftWriter
 {
     /** @return array{status: string, folder: string, messageId: string, uid: ?int} */
-    public function save(string $mailReference, string $body, ?string $htmlBody = null): array;
+    public function save(string $mailReference, string $body, ?string $htmlBody = null, bool $replyAll = false): array;
 }

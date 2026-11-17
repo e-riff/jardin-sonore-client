@@ -116,10 +116,11 @@ final readonly class WriteToolRegistry
             ],
             [
                 'name' => 'save_mail_draft',
-                'description' => 'After a separate explicit user confirmation, save one reply draft with a text body and optional safe HTML body to the configured IMAP Drafts folder. Do not use this for self-sent digests or reminders. The recipient and subject come from the verified source mail. This never sends; repeating the same source does not overwrite an edited draft.',
+                'description' => 'After a separate explicit user confirmation, save one reply draft with a text body and optional safe HTML body to the configured IMAP Drafts folder. Do not use this for self-sent digests or reminders. The recipient and subject come from the verified source mail. Set replyAll=true when the user asks to reply to all: original To and Cc recipients are included, excluding this mailbox and duplicates. Existing drafts are never changed by retrying; use update_standalone_mail_draft with recipients/cc to change an existing draft. This never sends; repeating the same source does not overwrite an edited draft.',
                 'inputSchema' => [
                     'type' => 'object',
                     'properties' => [
+                        'replyAll' => ['type' => 'boolean', 'default' => false],
                         'mailReference' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 1024],
                         'body' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 10000],
                         'htmlBody' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 20000],
@@ -727,13 +728,17 @@ final readonly class WriteToolRegistry
             return $this->error('Draft writes are disabled.');
         }
         try {
-            if ([] !== array_diff(array_keys($arguments), ['mailReference', 'body', 'htmlBody'])) {
+            if ([] !== array_diff(array_keys($arguments), ['mailReference', 'body', 'htmlBody', 'replyAll'])) {
                 throw new InvalidToolArguments('Unexpected argument.');
             }
             $reference = $this->text($arguments, 'mailReference', 1024);
             $body = $this->text($arguments, 'body', 10_000);
             $htmlBody = array_key_exists('htmlBody', $arguments) ? $this->draftBody($arguments, 'htmlBody', 20_000) : null;
-            $result = $this->mailDraftWriter->save($reference, $body, $htmlBody);
+            $replyAll = $arguments['replyAll'] ?? false;
+            if (!is_bool($replyAll) || (array_key_exists('replyAll', $arguments) && null === $arguments['replyAll'])) {
+                throw new InvalidToolArguments('replyAll must be a boolean.');
+            }
+            $result = $this->mailDraftWriter->save($reference, $body, $htmlBody, $replyAll);
             $json = json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
             return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => in_array($result['status'], ['uncertain', 'missing'], true)];

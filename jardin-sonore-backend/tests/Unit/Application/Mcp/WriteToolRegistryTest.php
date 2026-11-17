@@ -114,6 +114,16 @@ final class WriteToolRegistryTest extends TestCase
         self::assertTrue($enabled->call('save_mail_draft', ['mailReference' => 'reference', 'body' => str_repeat('x', 10_001)])['isError']);
     }
 
+    public function testReplyAllOptionIsPassedToDraftWriterAndRequiresABoolean(): void
+    {
+        $draftWriter = $this->createMock(MailDraftWriter::class);
+        $draftWriter->expects(self::once())->method('save')->with('reference', 'Bonjour', null, true)
+            ->willReturn(['status' => 'saved', 'folder' => 'Drafts', 'messageId' => '<draft@example.test>', 'uid' => 42]);
+        $registry = new WriteToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectFollowupWriter::class), false, $draftWriter, true);
+        self::assertFalse($registry->call('save_mail_draft', ['mailReference' => 'reference', 'body' => 'Bonjour', 'replyAll' => true])['isError']);
+        self::assertTrue($registry->call('save_mail_draft', ['mailReference' => 'reference', 'body' => 'Bonjour', 'replyAll' => 'true'])['isError']);
+    }
+
     public function testUncertainDraftResultIsReportedAsToolError(): void
     {
         $draftWriter = $this->createStub(MailDraftWriter::class);

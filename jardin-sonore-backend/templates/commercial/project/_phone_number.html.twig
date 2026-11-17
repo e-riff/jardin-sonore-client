@@ -1,0 +1,7 @@
+{%- set digits = number|replace({' ': '', '.': '', '-': '', '(': '', ')': ''}) -%}
+{%- if digits matches '/^(?:0[0-9]{9}|(?:\\+33|0033)[1-9][0-9]{8})$/' -%}
+    {%- if digits starts with '+33' -%}{%- set digits = '0' ~ digits|slice(3) -%}{%- elseif digits starts with '0033' -%}{%- set digits = '0' ~ digits|slice(4) -%}{%- endif -%}
+    <span class="commercial-phone-number">{%- for pair in digits|split('', 2) -%}<span>{{ pair }}</span>{%- endfor -%}</span>
+{%- else -%}
+    {{- number -}}
+{%- endif -%}

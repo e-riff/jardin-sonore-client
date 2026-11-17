@@ -11,7 +11,7 @@ use Symfony\Component\Mime\Email;
 
 final readonly class ReplyDraftMimeBuilder
 {
-    public function build(ReplyContext $context, string $body, string $draftMessageId, string $mailboxAddress, DateTimeImmutable $createdAt, ?string $htmlBody = null): string
+    public function build(ReplyContext $context, string $body, string $draftMessageId, string $mailboxAddress, DateTimeImmutable $createdAt, ?string $htmlBody = null, bool $replyAll = false): string
     {
         $subject = trim($context->subject ?? '');
         if (1 === preg_match('/[\x00-\x1F\x7F]/', $subject) || 1 !== preg_match('/^<[^<>\s]{1,250}>$/D', $draftMessageId)) {
@@ -27,6 +27,23 @@ final readonly class ReplyDraftMimeBuilder
             ->subject($context->replySubject())
             ->date($createdAt)
             ->text($body, 'utf-8');
+        if ($replyAll) {
+            $seen = [strtolower(trim($mailboxAddress)) => true, strtolower($context->replyRecipient) => true];
+            foreach (['to' => $context->to, 'cc' => $context->cc] as $kind => $addresses) {
+                foreach ($addresses as $address) {
+                    $key = strtolower(trim($address));
+                    if (isset($seen[$key])) {
+                        continue;
+                    }
+                    $seen[$key] = true;
+                    if ('to' === $kind) {
+                        $email->addTo($address);
+                    } else {
+                        $email->addCc($address);
+                    }
+                }
+            }
+        }
         $headers = $email->getHeaders();
         if (null !== $htmlBody) {
             $email->html(DraftHtmlBody::sanitize($htmlBody), 'utf-8');

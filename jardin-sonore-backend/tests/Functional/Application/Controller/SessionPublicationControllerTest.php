@@ -75,6 +75,34 @@ final class SessionPublicationControllerTest extends WebTestCase
         self::assertCount(1, $editCrawler->filterXPath('//input[@name="session_summary[published]" and @checked]'));
     }
 
+    public function testDuplicateCreatesAnUnpublishedSessionAndRedirectsToItsEditor(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $adminUserEntity = (new AdminUserEntity())->setEmail('duplicate-' . bin2hex(random_bytes(8)) . '@portal.test')->setPassword('unused');
+        $sessionSummaryEntity = (new SessionSummaryEntity())->setTitle('Séance à dupliquer')->setPublished(true);
+        $entityManager->persist($adminUserEntity);
+        $entityManager->persist($sessionSummaryEntity);
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+        $uuid = $sessionSummaryEntity->getUuid()->toRfc4122();
+        $crawler = $client->request('GET', "/sessions/{$uuid}/edit");
+        self::assertResponseIsSuccessful();
+        $form = $crawler->filterXPath('//form[@action="/sessions/' . $uuid . '/duplicate"]');
+        self::assertCount(1, $form);
+        $token = $form->filterXPath('.//input[@name="_token"]')->attr('value');
+        $client->request('POST', "/sessions/{$uuid}/duplicate", ['_token' => 'invalid']);
+        self::assertResponseStatusCodeSame(403);
+        $client->request('POST', "/sessions/{$uuid}/duplicate", ['_token' => $token]);
+        self::assertResponseStatusCodeSame(303);
+        self::assertNotSame("/sessions/{$uuid}/edit", $client->getResponse()->headers->get('Location'));
+        $crawler = $client->followRedirect();
+        self::assertResponseIsSuccessful();
+        self::assertSame('Séance à dupliquer (copie)', $crawler->filterXPath('//h1')->text());
+        self::assertSame('false', $crawler->filterXPath('//*[@data-controller="session-publication"]')->attr('aria-checked'));
+        self::assertCount(0, $crawler->filterXPath('//select[@name="session_summary[organizations][]"]/option[@selected]'));
+    }
+
     public function testSessionListCanFilterByPublicationAndCategory(): void
     {
         $client = static::createClient();

@@ -6,6 +6,9 @@ namespace App\Application\Mcp;
 
 final readonly class ReplyContext
 {
+    /** @param list<string> $to
+     * @param list<string> $cc
+     */
     public function __construct(
         public string $sourceKey,
         public ?string $messageId,
@@ -13,6 +16,8 @@ final readonly class ReplyContext
         public string $replyRecipient,
         public ?string $references,
         public string $mailReference,
+        public array $to = [],
+        public array $cc = [],
     ) {
     }
 

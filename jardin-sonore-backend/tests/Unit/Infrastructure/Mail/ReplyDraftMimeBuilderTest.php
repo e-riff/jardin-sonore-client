@@ -25,6 +25,21 @@ final class ReplyDraftMimeBuilderTest extends TestCase
         self::assertStringContainsString('Bonjour Marie,', $message);
     }
 
+    public function testReplyAllKeepsToAndCcWithoutSelfOrDuplicates(): void
+    {
+        $context = new ReplyContext('key', '<source@example.test>', 'Sujet', 'sender@example.test', null, 'reference',
+            ['contact@example.test', 'other@example.test', 'SENDER@example.test'],
+            ['copy@example.test', 'OTHER@example.test', 'CONTACT@example.test']);
+        $builder = new ReplyDraftMimeBuilder();
+        $message = $builder->build($context, 'Merci', '<draft@example.test>', 'contact@example.test', new DateTimeImmutable(), replyAll: true);
+        self::assertStringContainsString('To: sender@example.test, other@example.test', $message);
+        self::assertStringContainsString('Cc: copy@example.test', $message);
+        self::assertStringNotContainsString('CONTACT@example.test', $message);
+        $simple = $builder->build($context, 'Merci', '<draft@example.test>', 'contact@example.test', new DateTimeImmutable());
+        self::assertStringNotContainsString('other@example.test', $simple);
+        self::assertStringNotContainsString('Cc:', $simple);
+    }
+
     public function testDoesNotDuplicateReplyPrefixAndRejectsHeaderInjection(): void
     {
         $context = new ReplyContext('source-key', null, 'Re: Déjà répondu', 'marie@example.test', null, 'reference');

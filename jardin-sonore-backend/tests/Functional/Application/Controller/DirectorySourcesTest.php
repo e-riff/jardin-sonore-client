@@ -35,4 +35,16 @@ final class DirectorySourcesTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertStringContainsString("lieu-{$suffix}", (string) $client->getResponse()->getContent());
     }
+
+    public function testPhoneDisplayUsesCssSpacingWithoutChangingTheNumber(): void
+    {
+        static::bootKernel(['environment' => 'test']);
+        $twig = static::getContainer()->get('twig');
+        foreach (['0654565640', '06 54 56 56 40', '+33654565640', '0033654565640'] as $number) {
+            $html = $twig->render('commercial/project/_phone_number.html.twig', ['number' => $number]);
+            self::assertSame('0654565640', strip_tags($html));
+            self::assertStringContainsString('<span>06</span><span>54</span><span>56</span><span>56</span><span>40</span>', $html);
+        }
+        self::assertSame('+44 123456789', trim($twig->render('commercial/project/_phone_number.html.twig', ['number' => '+44 123456789'])));
+    }
 }

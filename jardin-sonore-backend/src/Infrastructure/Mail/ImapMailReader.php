@@ -65,7 +65,7 @@ final readonly class ImapMailReader implements MailReader
                 $references = null;
             }
 
-            return new ReplyContext($sourceKey, $messageId, $this->attributeString($message->getSubject()), $recipient, $references, $mailReference);
+            return new ReplyContext($sourceKey, $messageId, $this->attributeString($message->getSubject()), $recipient, $references, $mailReference, $this->recipientAddresses($message->getTo()), $this->recipientAddresses($message->getCc()));
         } catch (MailReadException $exception) {
             throw $exception;
         } catch (Throwable) {
@@ -127,6 +127,23 @@ final readonly class ImapMailReader implements MailReader
         } catch (Throwable) {
             throw new MailReadException('Mailbox read failed.');
         }
+    }
+
+    /** @return list<string> */
+    private function recipientAddresses(mixed $attribute): array
+    {
+        if (!is_object($attribute) || !method_exists($attribute, 'toArray')) {
+            throw new MailReadException('Invalid recipient addresses.');
+        }
+        $addresses = [];
+        foreach ($attribute->toArray() as $address) {
+            if (!$address instanceof Address || false === filter_var($address->mail, FILTER_VALIDATE_EMAIL) || 1 === preg_match('/[\r\n]/', $address->mail)) {
+                throw new MailReadException('Invalid recipient address.');
+            }
+            $addresses[] = $address->mail;
+        }
+
+        return $addresses;
     }
 
     private function singleAddress(mixed $attribute, string $error): string

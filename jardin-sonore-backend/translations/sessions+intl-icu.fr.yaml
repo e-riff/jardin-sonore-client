@@ -210,7 +210,11 @@ sessions:
       back: "Retour au catalogue"
       error_notice: "Le formulaire contient des erreurs."
   summary:
+    duplicate:
+      action: "Dupliquer"
+      copy_title: "{title} (copie)"
     flash:
+      duplicated: "La copie a été créée, non publiée et sans lieu rattaché."
       created: "La séance a été créée."
       updated: "La séance a été mise à jour."
       removed: "La séance a été supprimée."

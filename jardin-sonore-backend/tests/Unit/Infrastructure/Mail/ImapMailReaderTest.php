@@ -200,7 +200,7 @@ final class ImapMailReaderTest extends TestCase
 
     public function testReplyContextUsesTheSingleReplyToAddress(): void
     {
-        $message = new ImapMessageFixture(14, '<Mail-14@Example.test>', 'Projet', '', '', 0, 'reply@example.test');
+        $message = new ImapMessageFixture(14, '<Mail-14@Example.test>', 'Projet', '', '', 0, 'reply@example.test', toAddresses: ['contact@example.test', 'other@example.test'], ccAddresses: ['copy@example.test']);
         $query = $this->createMock(WhereQuery::class);
         $query->method('whereUid')->willReturnSelf();
         $query->method('setFetchBody')->willReturnSelf();
@@ -221,6 +221,8 @@ final class ImapMailReaderTest extends TestCase
         $context = (new ImapMailReader($provider, 'contact@example.test'))->replyContext(self::mailReference(77, 14));
 
         self::assertSame('reply@example.test', $context->replyRecipient);
+        self::assertSame(['contact@example.test', 'other@example.test'], $context->to);
+        self::assertSame(['copy@example.test'], $context->cc);
         self::assertSame('<Mail-14@Example.test>', $context->messageId);
         self::assertSame('Projet', $context->subject);
     }
@@ -334,6 +336,8 @@ final readonly class ImapMessageFixture
         private int $attachmentCount,
         private array|string|null $replyTo = null,
         private string $fromAddress = 'marie@example.test',
+        private array $toAddresses = ['contact@example.test'],
+        private array $ccAddresses = [],
     ) {
     }
 
@@ -359,7 +363,12 @@ final readonly class ImapMessageFixture
 
     public function getTo(): \Webklex\PHPIMAP\Attribute
     {
-        return new \Webklex\PHPIMAP\Attribute('to', new \Webklex\PHPIMAP\Address((object) ['mailbox' => 'contact', 'host' => 'example.test']));
+        return new \Webklex\PHPIMAP\Attribute('to', array_map(static fn (string $mail): \Webklex\PHPIMAP\Address => new \Webklex\PHPIMAP\Address((object) ['mail' => $mail]), $this->toAddresses));
+    }
+
+    public function getCc(): \Webklex\PHPIMAP\Attribute
+    {
+        return new \Webklex\PHPIMAP\Attribute('cc', array_map(static fn (string $mail): \Webklex\PHPIMAP\Address => new \Webklex\PHPIMAP\Address((object) ['mail' => $mail]), $this->ccAddresses));
     }
 
     public function getDate(): \Webklex\PHPIMAP\Attribute

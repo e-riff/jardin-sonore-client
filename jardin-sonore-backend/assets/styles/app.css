@@ -1318,6 +1318,14 @@ button:disabled {
     font-size: 0.9rem;
 }
 
+.commercial-phone-number {
+    white-space: nowrap;
+}
+
+.commercial-phone-number > span + span {
+    margin-inline-start: 0.25em;
+}
+
 .commercial-contact-value {
     overflow-wrap: anywhere;
 }
