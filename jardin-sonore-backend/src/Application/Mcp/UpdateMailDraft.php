@@ -42,8 +42,12 @@ final readonly class UpdateMailDraft implements MailDraftEditor
         return $this->draftResult($draft, $receipt->state);
     }
 
-    /** @return array<string, mixed> */
-    public function update(string $mailReference, string $expectedDraftMessageId, string $expectedRevision, string $body, ?string $htmlBody = null): array
+    /** @param list<array<string, mixed>> $attachments
+     * @param list<string> $removeAttachmentIds
+     *
+     * @return array<string, mixed>
+     */
+    public function update(string $mailReference, string $expectedDraftMessageId, string $expectedRevision, string $body, ?string $htmlBody = null, array $attachments = [], array $removeAttachmentIds = []): array
     {
         if ('' === trim($body) || 10_000 < mb_strlen($body) || 64 !== strlen($expectedRevision) || 1 !== preg_match('/^[a-f0-9]{64}$/D', $expectedRevision)) {
             throw new InvalidArgumentException('Invalid draft update.');
@@ -55,6 +59,15 @@ final readonly class UpdateMailDraft implements MailDraftEditor
             $htmlBody = DraftHtmlBody::sanitize($htmlBody);
         }
 
+        $draftAttachments = MailDraftAttachment::fromPayloads($attachments);
+        if (!array_is_list($removeAttachmentIds) || MailDraftAttachment::MAX_COUNT < count($removeAttachmentIds)) {
+            throw new InvalidArgumentException('Invalid attachment removal list.');
+        }
+        foreach ($removeAttachmentIds as $id) {
+            if (!is_string($id) || 1 !== preg_match('/^[a-f0-9]{64}$/D', $id)) {
+                throw new InvalidArgumentException('Invalid attachment identifier.');
+            }
+        }
         $context = $this->mailReader->replyContext($mailReference);
         $receipt = $this->receiptStore->find($context->sourceKey);
         if (null === $receipt) {
@@ -65,7 +78,15 @@ final readonly class UpdateMailDraft implements MailDraftEditor
         }
 
         $domain = substr(strrchr($this->mailboxAddress, '@'), 1);
-        $requestKey = substr(hash('sha256', $context->sourceKey . "\0" . $expectedDraftMessageId . "\0" . $expectedRevision . "\0" . $body . (null === $htmlBody ? '' : "\0" . $htmlBody)), 0, 24);
+        $attachmentRequest = '';
+        if ([] !== $draftAttachments || [] !== $removeAttachmentIds) {
+            $attachmentIds = array_map(static fn (MailDraftAttachment $attachment): string => $attachment->metadata()['id'], $draftAttachments);
+            sort($attachmentIds);
+            $sortedRemovalIds = $removeAttachmentIds;
+            sort($sortedRemovalIds);
+            $attachmentRequest = "\0" . json_encode([$attachmentIds, $sortedRemovalIds], JSON_THROW_ON_ERROR);
+        }
+        $requestKey = substr(hash('sha256', $context->sourceKey . "\0" . $expectedDraftMessageId . "\0" . $expectedRevision . "\0" . $body . (null === $htmlBody ? '' : "\0" . $htmlBody) . $attachmentRequest), 0, 24);
         $pendingMessageId = $receipt->pendingMessageId ?? '';
         if ('updating' === $receipt->state && !str_starts_with($pendingMessageId, "<mcp-edit-{$requestKey}-")) {
             return ['status' => 'update_in_progress', 'nextAction' => 'search_mail_drafts'];
@@ -81,7 +102,7 @@ final readonly class UpdateMailDraft implements MailDraftEditor
             if (!hash_equals($expectedRevision, $currentDraft->snapshotRevision())) {
                 return ['status' => 'conflict'];
             }
-            $desired = $this->desiredDraft($currentDraft, $body, $htmlBody, $receipt->folder);
+            $desired = $this->desiredDraft($currentDraft, $body, $htmlBody, $receipt->folder, $attachments, $removeAttachmentIds);
             // Persist the desired full snapshot in the replacement ID before touching IMAP.
             $pendingMessageId = "<mcp-edit-{$requestKey}-{$desired->snapshotRevision()}@{$domain}>";
             if (!$this->receiptStore->beginUpdate($context->sourceKey, $receipt->messageId, $pendingMessageId)) {
@@ -97,11 +118,15 @@ final readonly class UpdateMailDraft implements MailDraftEditor
             return ['status' => 'uncertain', 'nextAction' => 'search_mail_drafts'];
         }
 
-        return $this->replaceDraft($context, $receipt, $pendingMessageId, $matches[1], $expectedRevision, $body, $htmlBody);
+        return $this->replaceDraft($context, $receipt, $pendingMessageId, $matches[1], $expectedRevision, $body, $htmlBody, $attachments, $removeAttachmentIds);
     }
 
-    /** @return array<string, mixed> */
-    private function replaceDraft(ReplyContext $context, DraftReceipt $receipt, string $pendingMessageId, string $desiredRevision, string $expectedRevision, string $body, ?string $htmlBody): array
+    /** @param list<array<string, mixed>> $attachments
+     * @param list<string> $removeAttachmentIds
+     *
+     * @return array<string, mixed>
+     */
+    private function replaceDraft(ReplyContext $context, DraftReceipt $receipt, string $pendingMessageId, string $desiredRevision, string $expectedRevision, string $body, ?string $htmlBody, array $attachments, array $removeAttachmentIds): array
     {
         try {
             $pendingDraft = $this->draftStore->getByMessageId($receipt->folder, $pendingMessageId);
@@ -118,7 +143,7 @@ final readonly class UpdateMailDraft implements MailDraftEditor
                 return ['status' => 'conflict'];
             }
             $draftMimeBuilder = $this->mimeBuilder;
-            $desired = $this->desiredDraft($currentDraft, $body, $htmlBody, $receipt->folder);
+            $desired = $this->desiredDraft($currentDraft, $body, $htmlBody, $receipt->folder, $attachments, $removeAttachmentIds);
             if (!hash_equals($desiredRevision, $desired->snapshotRevision())) {
                 return ['status' => 'conflict'];
             }
@@ -149,9 +174,12 @@ final readonly class UpdateMailDraft implements MailDraftEditor
         }
     }
 
-    private function desiredDraft(MailDraft $currentDraft, string $body, ?string $htmlBody, string $folder): MailDraft
+    /** @param list<array<string, mixed>> $attachments
+     * @param list<string> $removeAttachmentIds
+     */
+    private function desiredDraft(MailDraft $currentDraft, string $body, ?string $htmlBody, string $folder, array $attachments, array $removeAttachmentIds): MailDraft
     {
-        $changes = ['body' => $body];
+        $changes = ['body' => $body, 'attachments' => $attachments, 'removeAttachmentIds' => $removeAttachmentIds];
         if (null !== $htmlBody) {
             $changes['htmlBody'] = $htmlBody;
         }

@@ -10,6 +10,19 @@ use PHPUnit\Framework\TestCase;
 
 final class MailDraftAttachmentTest extends TestCase
 {
+    public function testPayloadListEnforcesAggregateDecodedLimit(): void
+    {
+        $payload = ['filename' => 'x.pdf', 'mimeType' => 'application/pdf', 'base64' => base64_encode(str_repeat('a', 4 * 1024 * 1024))];
+        $this->expectException(InvalidArgumentException::class);
+        MailDraftAttachment::fromPayloads([$payload, $payload, $payload]);
+    }
+
+    public function testPayloadListAcceptsExactlyTenMiB(): void
+    {
+        $payload = ['filename' => 'x.pdf', 'mimeType' => 'application/pdf', 'base64' => base64_encode(str_repeat('a', 5 * 1024 * 1024))];
+        self::assertCount(2, MailDraftAttachment::fromPayloads([$payload, $payload]));
+    }
+
     public function testAcceptsAFileAtTheFiveMiBLimit(): void
     {
         $content = str_repeat('a', 5 * 1024 * 1024);

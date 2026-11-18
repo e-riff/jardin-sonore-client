@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Infrastructure\Mail;
 
+use App\Application\Mcp\MailDraftAttachment;
 use App\Application\Mcp\ReplyContext;
 use App\Infrastructure\Mail\ReplyDraftMimeBuilder;
 use DateTimeImmutable;
@@ -12,6 +13,22 @@ use PHPUnit\Framework\TestCase;
 
 final class ReplyDraftMimeBuilderTest extends TestCase
 {
+    public function testReplyAllWithAttachmentKeepsRecipientsAndThreadHeaders(): void
+    {
+        $context = new ReplyContext('key', '<source@example.test>', 'Sujet', 'sender@example.test', '<parent@example.test>', 'reference',
+            ['contact@example.test', 'other@example.test'], ['copy@example.test', 'OTHER@example.test']);
+        $attachment = new MailDraftAttachment('devis.pdf', 'application/pdf', 'PDF content');
+        $message = (new ReplyDraftMimeBuilder())->build($context, 'Merci', '<draft@example.test>', 'contact@example.test', new DateTimeImmutable(), '<p>Merci</p>', true, [$attachment]);
+        self::assertStringContainsString('To: sender@example.test, other@example.test', $message);
+        self::assertStringContainsString('Cc: copy@example.test', $message);
+        self::assertStringContainsString('In-Reply-To: <source@example.test>', $message);
+        self::assertStringContainsString('References: <parent@example.test> <source@example.test>', $message);
+        self::assertStringContainsString('multipart/mixed', $message);
+        self::assertStringContainsString('multipart/alternative', $message);
+        self::assertStringContainsString('filename=devis.pdf', $message);
+        self::assertStringContainsString(base64_encode('PDF content'), $message);
+    }
+
     public function testBuildsAThreadedUtf8PlainTextReply(): void
     {
         $context = new ReplyContext('source-key', '<source@example.test>', 'Éveil musical', 'marie@example.test', '<parent@example.test>', 'reference');

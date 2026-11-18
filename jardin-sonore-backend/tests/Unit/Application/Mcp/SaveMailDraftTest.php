@@ -11,11 +11,41 @@ use App\Application\Mcp\MailReader;
 use App\Application\Mcp\ReplyContext;
 use App\Application\Mcp\SaveMailDraft;
 use App\Infrastructure\Mail\ReplyDraftMimeBuilder;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
 final class SaveMailDraftTest extends TestCase
 {
+    public function testReplyAttachmentsReachTheStoredMime(): void
+    {
+        $sourceKey = str_repeat('f', 64);
+        $reader = $this->createStub(MailReader::class);
+        $reader->method('replyContext')->willReturn(new ReplyContext($sourceKey, '<source@example.test>', 'Bonjour', 'marie@example.test', null, 'reference'));
+        $receipts = $this->createMock(MailDraftReceiptStore::class);
+        $receipts->method('reserve')->willReturn(new DraftReceipt($sourceKey, '<draft@example.test>', 'Drafts', 'reserved', true, null));
+        $receipts->expects(self::once())->method('markSaved');
+        $drafts = $this->createMock(MailDraftStore::class);
+        $drafts->expects(self::once())->method('append')->with('Drafts', self::stringContains('filename=devis.pdf'));
+        $drafts->method('findByMessageId')->willReturn(54);
+        $result = (new SaveMailDraft($reader, $receipts, $drafts, new ReplyDraftMimeBuilder(), 'contact@example.test', 'Drafts'))
+            ->save('reference', 'Bonjour', attachments: [['filename' => 'devis.pdf', 'mimeType' => 'application/pdf', 'base64' => 'UERG']]);
+        self::assertSame('saved', $result['status']);
+    }
+
+    public function testInvalidAttachmentsAreRejectedBeforeReadingOrReservation(): void
+    {
+        $reader = $this->createMock(MailReader::class);
+        $reader->expects(self::never())->method('replyContext');
+        $receipts = $this->createMock(MailDraftReceiptStore::class);
+        $receipts->expects(self::never())->method('reserve');
+        $drafts = $this->createMock(MailDraftStore::class);
+        $drafts->expects(self::never())->method('append');
+        $this->expectException(InvalidArgumentException::class);
+        (new SaveMailDraft($reader, $receipts, $drafts, new ReplyDraftMimeBuilder(), 'contact@example.test', 'Drafts'))
+            ->save('reference', 'Bonjour', attachments: [['filename' => '../devis.pdf', 'mimeType' => 'application/pdf', 'base64' => 'UERG']]);
+    }
+
     public function testNewDraftIsAppendedAndRecordedOnce(): void
     {
         $sourceKey = str_repeat('d', 64);

@@ -22,17 +22,20 @@ final readonly class SaveMailDraft implements MailDraftWriter
     ) {
     }
 
-    /** @return array{status: string, folder: string, messageId: string, uid: ?int} */
-    public function save(string $mailReference, string $body, ?string $htmlBody = null, bool $replyAll = false): array
+    /** @param list<array<string, mixed>> $attachments
+     * @return array{status: string, folder: string, messageId: string, uid: ?int}
+     */
+    public function save(string $mailReference, string $body, ?string $htmlBody = null, bool $replyAll = false, array $attachments = []): array
     {
         if ('' === trim($body) || 10_000 < mb_strlen($body) || false === filter_var($this->mailboxAddress, FILTER_VALIDATE_EMAIL) || '' === trim($this->draftsFolder)) {
             throw new InvalidArgumentException('Invalid draft request or mailbox configuration.');
         }
 
+        $draftAttachments = MailDraftAttachment::fromPayloads($attachments);
         $context = $this->mailReader->replyContext($mailReference);
         $domain = substr(strrchr($this->mailboxAddress, '@'), 1);
         $draftMessageId = "<mcp-draft-{$context->sourceKey}@{$domain}>";
-        $mime = $this->mimeBuilder->build($context, $body, $draftMessageId, $this->mailboxAddress, new DateTimeImmutable(), $htmlBody, $replyAll);
+        $mime = $this->mimeBuilder->build($context, $body, $draftMessageId, $this->mailboxAddress, new DateTimeImmutable(), $htmlBody, $replyAll, $draftAttachments);
         $receipt = $this->receiptStore->reserve($context->sourceKey, $draftMessageId, $this->draftsFolder);
         if (!$receipt->isNew) {
             $uid = $this->draftStore->findByMessageId($receipt->folder, $receipt->messageId);

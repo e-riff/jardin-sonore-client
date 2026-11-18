@@ -12,6 +12,24 @@ use Symfony\Component\HttpKernel\KernelInterface;
 
 final class McpControllerTest extends WebTestCase
 {
+    public function testRejectsObjectsUsedAsAttachmentArraysBeforeDispatch(): void
+    {
+        foreach (['{}', '{"0":{"filename":"devis.pdf","mimeType":"application/pdf","base64":"UERG"}}'] as $jsonObject) {
+            foreach (['attachments', 'removeAttachmentIds'] as $field) {
+                $content = '{"jsonrpc":"2.0","id":17,"method":"tools/call","params":{"name":"send_personal_notification","arguments":{"requestId":"invalid:files","subject":"Devis","body":"Bonjour","' . $field . '":' . $jsonObject . '}}}';
+                $this->client->request('POST', '/api/mcp', server: [
+                    'HTTP_AUTHORIZATION' => 'Bearer test-mcp-token',
+                    'HTTP_ACCEPT' => 'application/json, text/event-stream',
+                    'CONTENT_TYPE' => 'application/json',
+                ], content: $content);
+                self::assertResponseIsSuccessful();
+                $response = json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+                self::assertSame(-32602, $response['error']['code'] ?? null);
+                self::assertSame(17, $response['id'] ?? null);
+            }
+        }
+    }
+
     public function testRejectsOversizedAuthenticatedJsonBeforeDecoding(): void
     {
         $this->client->request('POST', '/api/mcp', server: [

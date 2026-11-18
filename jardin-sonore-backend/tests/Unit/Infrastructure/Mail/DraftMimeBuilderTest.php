@@ -14,6 +14,38 @@ use Webklex\PHPIMAP\Message;
 
 final class DraftMimeBuilderTest extends TestCase
 {
+    /** @return iterable<string, array{string}> */
+    public static function attachmentFilenames(): iterable
+    {
+        foreach (['devis été.pdf', 'Offre..v2.pdf', '0', 'offre+20%20.pdf', ' devis.pdf ', 'devis "atelier".pdf', str_repeat('été-', 35) . '.pdf'] as $filename) {
+            yield $filename => [$filename];
+        }
+    }
+
+    #[DataProvider('attachmentFilenames')]
+    public function testMimeRoundTripPreservesExactAttachmentFilename(string $filename): void
+    {
+        $draft = new MailDraft(1, '<draft@example.test>', 'Objet', 'first@example.test', 'Bonjour', attachments: [new MailDraftAttachment($filename, 'application/pdf', 'PDF')]);
+        $message = Message::fromString((new DraftMimeBuilder())->build($draft, 'contact@example.test'));
+        $message->uid = 1;
+        $parsed = (new DraftMessageMapper())->map($message, $draft->messageId);
+        self::assertCount(1, $parsed->attachments);
+        self::assertSame($filename, $parsed->attachments[0]->filename);
+        self::assertSame($draft->snapshotRevision(), $parsed->snapshotRevision());
+    }
+
+    public function testMimeRoundTripKeepsEmptyFilesAndTheirIdentifiers(): void
+    {
+        $draft = new MailDraft(1, '<draft@example.test>', 'Objet', 'first@example.test', 'Bonjour', attachments: [new MailDraftAttachment('vide.txt', 'text/plain', '')]);
+        $message = Message::fromString((new DraftMimeBuilder())->build($draft, 'contact@example.test'));
+        $message->uid = 1;
+        $parsed = (new DraftMessageMapper())->map($message, $draft->messageId);
+        self::assertCount(1, $parsed->attachments);
+        self::assertSame('', $parsed->attachments[0]->content);
+        self::assertSame($draft->attachments[0]->metadata()['id'], $parsed->attachments[0]->metadata()['id']);
+        self::assertSame($draft->snapshotRevision(), $parsed->snapshotRevision());
+    }
+
     /** @return iterable<string, array{string, string}> */
     public static function subjectHeaders(): iterable
     {

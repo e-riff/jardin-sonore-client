@@ -39,8 +39,56 @@ binaires ne sont pas retournés au connecteur. Aucun téléchargement depuis une
 URL ni lecture d'un chemin serveur n'est accepté.
 
 Limites : 10 fichiers, 5 Mio par fichier et 10 Mio cumulés après décodage. La
-création `create_mail_draft` accepte aussi `attachments`. Pour une réponse créée
-avec `save_mail_draft`, ajouter ensuite les fichiers par l'éditeur général.
+création `create_mail_draft` et la création de réponse `save_mail_draft` acceptent
+également `attachments`. `update_mail_draft` accepte `attachments` pour ajouter des
+fichiers et `removeAttachmentIds` pour retirer ceux identifiés à la lecture ; son
+`body` complet reste obligatoire. Pour modifier uniquement les pièces jointes,
+utiliser `update_standalone_mail_draft`, qui fonctionne sur tous les brouillons.
+Les fichiers omis, les To/Cc/Bcc et le contexte de réponse sont conservés.
+
+Exemple d'ajout et de retrait sur un brouillon existant, après lecture :
+
+```json
+{
+  "draftMessageId": "<identifiant courant retourné par la lecture>",
+  "revision": "<révision courante retournée par la lecture>",
+  "attachments": [
+    {"filename": "devis.pdf", "mimeType": "application/pdf", "base64": "<contenu réel encodé en base64>"}
+  ],
+  "removeAttachmentIds": ["<id exact du fichier à retirer, retourné par la lecture>"]
+}
+```
+
+Une liste `attachments: []` n'efface aucun fichier existant. Ne pas fabriquer les
+identifiants ou le contenu base64 ; le fichier doit être disponible au connecteur.
+Pour une édition interrompue, réutiliser les mêmes arguments, y compris fichiers
+et identifiants de retrait. Changer les fichiers ne reprend pas la même opération.
+
+## Répondre à tous en brouillon
+
+`save_mail_draft` accepte `replyAll: true`, y compris avec des pièces jointes :
+
+```json
+{
+  "mailReference": "<référence exacte du mail source>",
+  "body": "Bonjour, voici le devis pour notre atelier.",
+  "replyAll": true,
+  "attachments": [
+    {"filename": "devis.pdf", "mimeType": "application/pdf", "base64": "<contenu réel encodé en base64>"}
+  ]
+}
+```
+
+Le brouillon conserve la réponse dans le fil et ajoute les destinataires To/Cc du
+mail source, en excluant notre boîte et les doublons. Sans `replyAll`, la réponse
+reste simple. Aucun envoi n'a lieu. Relancer `save_mail_draft` pour le même mail
+source renvoie le brouillon existant sans changer ses destinataires ni ses fichiers.
+Pour modifier un brouillon existant, le relire puis utiliser l'éditeur général
+avec `recipients`, `cc`, `attachments` et/ou `removeAttachmentIds`.
+
+Si l'IA affirme que `replyAll` ou les pièces jointes sont indisponibles, actualiser
+les outils dans **Connectors → My Connectors → Functions → Refresh tools** puis
+relire le schéma des outils ; ne pas recréer le connecteur par défaut.
 
 Une modification externe des corps, destinataires, objet, pièces jointes ou du
 contexte de réponse invalide la révision. Relire après `conflict`. Après `missing`
@@ -117,7 +165,12 @@ La clé identifie une occurrence de tâche, pas une tentative d'appel : la conse
 Objet : 255 caractères, texte : 10 000, HTML : 20 000. Le HTML conserve les
 paragraphes, titres simples, listes et liens HTTP(S), sans scripts ni images.
 Le champ `recipient` accepte une seule adresse email valide (254 caractères
-maximum). L'outil n'accepte ni expéditeur libre, ni Cc/Bcc, ni pièces jointes.
+maximum). L'outil n'accepte ni expéditeur libre ni Cc/Bcc. `attachments` permet de
+joindre des fichiers avec le même format et les mêmes limites que les brouillons.
+Les fichiers sont validés avant réservation et envoi. Ils font partie de l'empreinte
+de dédoublonnage : changer leur nom, type, contenu ou les retirer avec le même
+`requestId` produit `conflict`, sans nouvel envoi. Leur simple réordonnancement ne
+renvoie pas le mail. Les demandes historiques sans fichier gardent leur empreinte.
 
 Résultats :
 

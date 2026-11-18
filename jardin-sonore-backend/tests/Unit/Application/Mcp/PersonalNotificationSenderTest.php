@@ -18,6 +18,64 @@ use Symfony\Component\Mime\RawMessage;
 
 final class PersonalNotificationSenderTest extends TestCase
 {
+    public function testAttachmentsAreSentOnceAndChangedOrRemovedFilesConflict(): void
+    {
+        $store = new NotificationStoreFixture();
+        $transport = new NotificationTransportFixture();
+        $sender = $this->sender($store, $transport);
+        $file = ['filename' => 'devis.pdf', 'mimeType' => 'application/pdf', 'base64' => 'UERG'];
+        $arguments = ['requestId' => 'files:1', 'subject' => 'Devis', 'body' => 'Bonjour', 'attachments' => [$file]];
+        self::assertSame('accepted', $sender->send($arguments)['status']);
+        self::assertSame('accepted', $sender->send($arguments)['status']);
+        $message = $transport->messages[0];
+        self::assertInstanceOf(Email::class, $message);
+        self::assertCount(1, $message->getAttachments());
+        self::assertSame('devis.pdf', $message->getAttachments()[0]->getFilename());
+        self::assertSame('PDF', $message->getAttachments()[0]->getBody());
+        foreach (['filename' => 'autre.pdf', 'mimeType' => 'text/plain', 'base64' => 'QVVUUkU='] as $key => $value) {
+            self::assertSame('conflict', $sender->send(array_replace($arguments, ['attachments' => [array_replace($file, [$key => $value])]]))['status']);
+        }
+        self::assertSame('conflict', $sender->send(array_replace($arguments, ['attachments' => []]))['status']);
+        self::assertCount(1, $transport->messages);
+    }
+
+    public function testEmptyAttachmentListPreservesHistoricalFingerprint(): void
+    {
+        $store = new NotificationStoreFixture();
+        $store->reserve('historical:1', hash('sha256', json_encode(['contact@example.test', 'personal@example.test', 'Veille', 'Bonjour', null], JSON_THROW_ON_ERROR)));
+        $store->finish('historical:1', 'accepted');
+        $transport = new NotificationTransportFixture();
+        self::assertSame('accepted', $this->sender($store, $transport)->send(['requestId' => 'historical:1', 'subject' => 'Veille', 'body' => 'Bonjour', 'attachments' => []])['status']);
+        self::assertSame([], $transport->messages);
+    }
+
+    public function testInvalidAttachmentListIsRejectedBeforeReservation(): void
+    {
+        foreach ([null, 'file', ['filename' => 'devis.pdf'], [null], [['filename' => 'x', 'mimeType' => 'application/pdf', 'base64' => 'invalid']], array_fill(0, 11, ['filename' => 'x', 'mimeType' => 'application/pdf', 'base64' => 'UERG'])] as $attachments) {
+            $store = new NotificationStoreFixture();
+            $transport = new NotificationTransportFixture();
+            try {
+                $this->sender($store, $transport)->send(['requestId' => 'invalid:files', 'subject' => 'Veille', 'body' => 'Bonjour', 'attachments' => $attachments]);
+                self::fail('Invalid attachments accepted.');
+            } catch (InvalidArgumentException) {
+                self::assertSame([], $store->rows);
+                self::assertSame([], $transport->messages);
+            }
+        }
+    }
+
+    public function testReorderedAttachmentsDoNotResend(): void
+    {
+        $store = new NotificationStoreFixture();
+        $transport = new NotificationTransportFixture();
+        $sender = $this->sender($store, $transport);
+        $files = [['filename' => 'a.txt', 'mimeType' => 'text/plain', 'base64' => 'YQ=='], ['filename' => 'b.txt', 'mimeType' => 'text/plain', 'base64' => 'Yg==']];
+        $arguments = ['requestId' => 'order:1', 'subject' => 'Fichiers', 'body' => 'Bonjour', 'attachments' => $files];
+        self::assertSame('accepted', $sender->send($arguments)['status']);
+        self::assertSame('accepted', $sender->send(array_replace($arguments, ['attachments' => array_reverse($files)]))['status']);
+        self::assertCount(1, $transport->messages);
+    }
+
     public function testExplicitRecipientOverridesPersonalDefaultAndIsPartOfDeduplication(): void
     {
         $store = new NotificationStoreFixture();

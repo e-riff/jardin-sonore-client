@@ -6,6 +6,7 @@ namespace App\Tests\Unit\Application\Mcp;
 
 use App\Application\Mcp\DraftReceipt;
 use App\Application\Mcp\MailDraft;
+use App\Application\Mcp\MailDraftAttachment;
 use App\Application\Mcp\MailDraftReceiptStore;
 use App\Application\Mcp\MailDraftStore;
 use App\Application\Mcp\MailReader;
@@ -13,10 +14,71 @@ use App\Application\Mcp\MailSource;
 use App\Application\Mcp\ReplyContext;
 use App\Application\Mcp\UpdateMailDraft;
 use App\Infrastructure\Mail\DraftMimeBuilder;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 final class UpdateMailDraftTest extends TestCase
 {
+    public function testAddsAndRemovesFilesPreservingRecipientsAndCanResumeCleanup(): void
+    {
+        $sourceKey = str_repeat('f', 64);
+        $removed = new MailDraftAttachment('old.pdf', 'application/pdf', 'OLD');
+        $kept = new MailDraftAttachment('keep.txt', 'text/plain', 'KEEP');
+        $added = ['filename' => 'new.pdf', 'mimeType' => 'application/pdf', 'base64' => 'TkVX'];
+        $old = new MailDraft(12, '<old@example.test>', 'Re: Bonjour', 'marie@example.test', 'Bonjour', '<p>Bonjour</p>', ['other@example.test'], ['copy@example.test'], ['hidden@example.test'], [$removed, $kept], '<source@example.test>', '<parent@example.test> <source@example.test>');
+        $desired = new MailDraft(18, '<pending@example.test>', $old->subject, $old->recipient, $old->body, $old->htmlBody, $old->additionalRecipients, $old->cc, $old->bcc, [$kept, new MailDraftAttachment('new.pdf', 'application/pdf', 'NEW')], $old->inReplyTo, $old->references);
+        $receipt = new DraftReceipt($sourceKey, $old->messageId, 'Drafts', 'saved', false, 12);
+        $pending = null;
+        $appended = false;
+        $receipts = $this->createMock(MailDraftReceiptStore::class);
+        // Reference capture lets a retry observe the pending replacement receipt.
+        $receipts->method('find')->willReturnCallback(static function () use (&$receipt): DraftReceipt { return $receipt; });
+        $receipts->expects(self::once())->method('beginUpdate')->willReturnCallback(static function (string $key, string $oldId, string $newId) use (&$receipt, &$pending, $desired): bool {
+            $pending = new MailDraft(18, $newId, $desired->subject, $desired->recipient, $desired->body, $desired->htmlBody, $desired->additionalRecipients, $desired->cc, $desired->bcc, $desired->attachments, $desired->inReplyTo, $desired->references);
+            $receipt = new DraftReceipt($key, $oldId, 'Drafts', 'updating', false, 12, $newId);
+
+            return true;
+        });
+        $receipts->expects(self::once())->method('completeUpdate')->willReturn(true);
+        $store = $this->createMock(MailDraftStore::class);
+        $store->method('getByMessageId')->willReturnCallback(static function (string $folder, string $id) use ($old, &$pending, &$appended): ?MailDraft {
+            return $id === $old->messageId ? $old : ($appended ? $pending : null);
+        });
+        $store->expects(self::once())->method('append')->willReturnCallback(static function (string $folder, string $mime) use (&$appended): void {
+            self::assertStringContainsString('filename=new.pdf', $mime);
+            self::assertStringContainsString('filename=keep.txt', $mime);
+            self::assertStringNotContainsString('filename=old.pdf', $mime);
+            self::assertStringContainsString('To: marie@example.test, other@example.test', $mime);
+            self::assertStringContainsString('Cc: copy@example.test', $mime);
+            self::assertStringContainsString('Bcc: hidden@example.test', $mime);
+            self::assertStringContainsString('In-Reply-To: <source@example.test>', $mime);
+            $appended = true;
+        });
+        $store->expects(self::exactly(2))->method('deleteByMessageId')->with('Drafts', $old->messageId, 12)->willReturnOnConsecutiveCalls(false, true);
+        $editor = $this->editor($sourceKey, $receipts, $store);
+        $removedIds = [$removed->metadata()['id']];
+        self::assertSame('uncertain', $editor->update('reference', $old->messageId, $old->snapshotRevision(), 'Bonjour', attachments: [$added], removeAttachmentIds: $removedIds)['status']);
+        self::assertSame('update_in_progress', $editor->update('reference', $old->messageId, $old->snapshotRevision(), 'Bonjour', attachments: [array_replace($added, ['base64' => 'T1RIRVI='])], removeAttachmentIds: $removedIds)['status']);
+        self::assertSame('update_in_progress', $editor->update('reference', $old->messageId, $old->snapshotRevision(), 'Bonjour', attachments: [$added])['status']);
+        $result = $editor->update('reference', $old->messageId, $old->snapshotRevision(), 'Bonjour', attachments: [$added], removeAttachmentIds: $removedIds);
+        self::assertSame('saved', $result['status']);
+        self::assertSame(['keep.txt', 'new.pdf'], array_column($result['attachments'], 'filename'));
+    }
+
+    public function testUnknownAttachmentRemovalDoesNotReserveOrAppend(): void
+    {
+        $sourceKey = str_repeat('f', 64);
+        $old = new MailDraft(12, '<old@example.test>', 'Re: Bonjour', 'marie@example.test', 'Bonjour');
+        $receipts = $this->createMock(MailDraftReceiptStore::class);
+        $receipts->method('find')->willReturn(new DraftReceipt($sourceKey, $old->messageId, 'Drafts', 'saved', false, 12));
+        $receipts->expects(self::never())->method('beginUpdate');
+        $store = $this->createMock(MailDraftStore::class);
+        $store->method('getByMessageId')->willReturn($old);
+        $store->expects(self::never())->method('append');
+        $this->expectException(InvalidArgumentException::class);
+        $this->editor($sourceKey, $receipts, $store)->update('reference', $old->messageId, $old->snapshotRevision(), 'Bonjour', removeAttachmentIds: [str_repeat('a', 64)]);
+    }
+
     public function testRetryFinalizesVerifiedReplacementAfterOriginalWasAlreadyRemoved(): void
     {
         $sourceKey = str_repeat('e', 64);

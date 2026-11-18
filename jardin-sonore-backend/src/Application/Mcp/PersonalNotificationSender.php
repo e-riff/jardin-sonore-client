@@ -31,7 +31,7 @@ final readonly class PersonalNotificationSender
      */
     public function send(array $arguments): array
     {
-        if ([] !== array_diff(array_keys($arguments), ['requestId', 'subject', 'body', 'htmlBody', 'recipient'])) {
+        if ([] !== array_diff(array_keys($arguments), ['requestId', 'subject', 'body', 'htmlBody', 'recipient', 'attachments'])) {
             throw new InvalidArgumentException('Unexpected notification argument.');
         }
         $requestId = $arguments['requestId'] ?? null;
@@ -50,7 +50,15 @@ final readonly class PersonalNotificationSender
                 throw new InvalidArgumentException('Personal notification mail configuration is unavailable.');
             }
         }
-        $fingerprint = hash('sha256', json_encode([$this->senderAddress, $recipientAddress, $subject, $body, $html], JSON_THROW_ON_ERROR));
+        $attachments = MailDraftAttachment::fromPayloads(array_key_exists('attachments', $arguments) ? $arguments['attachments'] : []);
+        $fingerprintData = [$this->senderAddress, $recipientAddress, $subject, $body, $html];
+        if ([] !== $attachments) {
+            $attachmentIds = array_map(static fn (MailDraftAttachment $attachment): string => $attachment->metadata()['id'], $attachments);
+            sort($attachmentIds);
+            // Keep the historical fingerprint unchanged for requests without files.
+            $fingerprintData[] = $attachmentIds;
+        }
+        $fingerprint = hash('sha256', json_encode($fingerprintData, JSON_THROW_ON_ERROR));
         $reservation = $this->notificationStore->reserve($requestId, $fingerprint);
         if (!$reservation['isNew']) {
             return ['status' => $reservation['status'], 'requestId' => $requestId, 'attempted' => false];
@@ -60,6 +68,9 @@ final readonly class PersonalNotificationSender
             $email = (new Email())->from($this->senderAddress)->to($recipientAddress)->subject($subject)->text($body, 'utf-8');
             if (null !== $html) {
                 $email->html($html, 'utf-8');
+            }
+            foreach ($attachments as $attachment) {
+                $email->attach($attachment->content, $attachment->filename, $attachment->mimeType);
             }
             // Synchronous transport: queue acceptance must never be mistaken for SMTP acceptance.
             $sentMessage = $this->transport->send($email, new Envelope(new Address($this->senderAddress), [new Address($recipientAddress)]));

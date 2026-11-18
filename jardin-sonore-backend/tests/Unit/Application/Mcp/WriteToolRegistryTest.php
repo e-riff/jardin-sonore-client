@@ -19,6 +19,48 @@ use PHPUnit\Framework\TestCase;
 
 final class WriteToolRegistryTest extends TestCase
 {
+    public function testMailSchemasExposeFilesAndReplyAll(): void
+    {
+        $registry = new WriteToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectFollowupWriter::class), false);
+        $definitions = array_column($registry->definitions(), null, 'name');
+        foreach (['create_mail_draft', 'save_mail_draft', 'update_mail_draft', 'update_standalone_mail_draft', 'send_personal_notification'] as $name) {
+            self::assertArrayHasKey('attachments', $definitions[$name]['inputSchema']['properties']);
+            self::assertSame(10, $definitions[$name]['inputSchema']['properties']['attachments']['maxItems']);
+        }
+        self::assertArrayHasKey('removeAttachmentIds', $definitions['update_mail_draft']['inputSchema']['properties']);
+        self::assertArrayHasKey('replyAll', $definitions['save_mail_draft']['inputSchema']['properties']);
+    }
+
+    public function testReplyCreationPassesFilesTogetherWithReplyAll(): void
+    {
+        $files = [['filename' => 'devis.pdf', 'mimeType' => 'application/pdf', 'base64' => 'UERG']];
+        $writer = $this->createMock(MailDraftWriter::class);
+        $writer->expects(self::once())->method('save')->with('reference', 'Bonjour', null, true, $files)
+            ->willReturn(['status' => 'saved', 'folder' => 'Drafts', 'messageId' => '<draft@example.test>', 'uid' => 42]);
+        $registry = new WriteToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectFollowupWriter::class), false, $writer, true);
+        self::assertFalse($registry->call('save_mail_draft', ['mailReference' => 'reference', 'body' => 'Bonjour', 'replyAll' => true, 'attachments' => $files])['isError']);
+        foreach ([null, 'file', ['filename' => 'file']] as $invalid) {
+            self::assertTrue($registry->call('save_mail_draft', ['mailReference' => 'reference', 'body' => 'Bonjour', 'attachments' => $invalid])['isError']);
+        }
+    }
+
+    public function testReplyEditingPassesFilesAndRemovalIds(): void
+    {
+        $files = [['filename' => 'devis.pdf', 'mimeType' => 'application/pdf', 'base64' => 'UERG']];
+        $ids = [str_repeat('b', 64)];
+        $editor = $this->createMock(MailDraftEditor::class);
+        $editor->expects(self::once())->method('update')->with('reference', '<draft@example.test>', str_repeat('a', 64), 'Bonjour', null, $files, $ids)
+            ->willReturn(['status' => 'saved']);
+        $registry = new WriteToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectFollowupWriter::class), false, mailDraftEditor: $editor, draftEditEnabled: true);
+        $arguments = ['mailReference' => 'reference', 'draftMessageId' => '<draft@example.test>', 'revision' => str_repeat('a', 64), 'body' => 'Bonjour', 'attachments' => $files, 'removeAttachmentIds' => $ids];
+        self::assertFalse($registry->call('update_mail_draft', $arguments)['isError']);
+        foreach (['attachments', 'removeAttachmentIds'] as $key) {
+            foreach ([null, 'file', ['key' => 'file']] as $invalid) {
+                self::assertTrue($registry->call('update_mail_draft', array_replace($arguments, [$key => $invalid]))['isError']);
+            }
+        }
+    }
+
     public function testPersonalNotificationToolIsSeparateAndDisabledByDefault(): void
     {
         $registry = new WriteToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectFollowupWriter::class), true);

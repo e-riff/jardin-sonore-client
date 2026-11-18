@@ -47,13 +47,14 @@ final readonly class WriteToolRegistry
         return [
             [
                 'name' => 'send_personal_notification',
-                'description' => 'Send a reminder or digest through the backend. Optional recipient selects one valid email address; when omitted, the server-configured personal address is used. The sender always remains the backend configured address. Intended for authorized scheduled tasks; no per-occurrence interactive confirmation is required by this tool. Use a stable requestId for one task occurrence and reuse it on retries; use a different key for the next occurrence. A changed recipient with the same key conflicts. accepted means SMTP acceptance, not delivery. sending/uncertain means do not resend under a new key. Limited to 10 new requests per hour. HTML is filtered.',
+                'description' => 'Send a reminder or digest through the backend. Optional recipient selects one valid email address; when omitted, the server-configured personal address is used. The sender always remains the backend configured address. Intended for authorized scheduled tasks; no per-occurrence interactive confirmation is required by this tool. Use a stable requestId for one task occurrence and reuse it on retries; use a different key for the next occurrence. A changed recipient with the same key conflicts. accepted means SMTP acceptance, not delivery. sending/uncertain means do not resend under a new key. Optional attachments accepts filename/mimeType/base64 files (10 files, 5 MiB each, 10 MiB total). Changed files with the same requestId conflict; an identical retry never sends again. No server paths or file URLs. Limited to 10 new requests per hour. HTML is filtered.',
                 'inputSchema' => ['type' => 'object', 'properties' => [
                     'requestId' => ['type' => 'string', 'pattern' => '^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$'],
                     'recipient' => ['type' => 'string', 'format' => 'email', 'minLength' => 3, 'maxLength' => 254],
                     'subject' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255],
                     'body' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 10000],
                     'htmlBody' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 20000],
+                    'attachments' => $this->attachmentSchema(),
                 ], 'required' => ['requestId', 'subject', 'body'], 'additionalProperties' => false],
                 'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => true, 'idempotentHint' => true],
             ],
@@ -76,7 +77,7 @@ final readonly class WriteToolRegistry
             ],
             [
                 'name' => 'update_mail_draft',
-                'description' => 'After a separate explicit user confirmation, replace the MCP-created reply draft linked to the verified source mail with a complete text body and optional safe HTML body. Read it first and pass its current draftMessageId and revision. The old draft remains if replacement cannot be verified. This never sends email.',
+                'description' => 'After a separate explicit user confirmation, replace the MCP-created reply draft linked to the verified source mail with a complete text body and optional safe HTML body. Read it first and pass its current draftMessageId and revision. Omitted attachments are preserved. attachments adds filename/mimeType/base64 files (10 files, 5 MiB each, 10 MiB total); removeAttachmentIds removes exact files by IDs returned when reading the draft. To/Cc/Bcc and reply headers are preserved. Retry an interrupted update with exactly the same files and removal IDs. For attachment-only edits on any manual or MCP draft, use update_standalone_mail_draft. The old draft remains if replacement cannot be verified. This never sends email.',
                 'inputSchema' => [
                     'type' => 'object',
                     'properties' => [
@@ -85,6 +86,8 @@ final readonly class WriteToolRegistry
                         'revision' => ['type' => 'string', 'minLength' => 64, 'maxLength' => 64],
                         'body' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 10000],
                         'htmlBody' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 20000],
+                        'attachments' => $this->attachmentSchema(),
+                        'removeAttachmentIds' => ['type' => 'array', 'maxItems' => 10, 'items' => ['type' => 'string', 'pattern' => '^[a-f0-9]{64}$']],
                     ],
                     'required' => ['mailReference', 'draftMessageId', 'revision', 'body'],
                     'additionalProperties' => false,
@@ -116,7 +119,7 @@ final readonly class WriteToolRegistry
             ],
             [
                 'name' => 'save_mail_draft',
-                'description' => 'After a separate explicit user confirmation, save one reply draft with a text body and optional safe HTML body to the configured IMAP Drafts folder. Do not use this for self-sent digests or reminders. The recipient and subject come from the verified source mail. Set replyAll=true when the user asks to reply to all: original To and Cc recipients are included, excluding this mailbox and duplicates. Existing drafts are never changed by retrying; use update_standalone_mail_draft with recipients/cc to change an existing draft. This never sends; repeating the same source does not overwrite an edited draft.',
+                'description' => 'After a separate explicit user confirmation, save one reply draft with a text body, optional safe HTML body and attachments (filename/mimeType/base64; 10 files, 5 MiB each, 10 MiB total) to the configured IMAP Drafts folder. Do not use this for self-sent digests or reminders. The recipient and subject come from the verified source mail. Set replyAll=true when the user asks to reply to all: original To and Cc recipients are included, excluding this mailbox and duplicates. Existing drafts are never changed by retrying; use update_standalone_mail_draft with recipients/cc to change an existing draft. This never sends; repeating the same source does not overwrite an edited draft or change its attachments. Read the existing draft and edit it to add/remove files.',
                 'inputSchema' => [
                     'type' => 'object',
                     'properties' => [
@@ -124,6 +127,7 @@ final readonly class WriteToolRegistry
                         'mailReference' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 1024],
                         'body' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 10000],
                         'htmlBody' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 20000],
+                        'attachments' => $this->attachmentSchema(),
                     ],
                     'required' => ['mailReference', 'body'],
                     'additionalProperties' => false,
@@ -302,6 +306,24 @@ final readonly class WriteToolRegistry
         } catch (Throwable) {
             return $this->error('The write operation failed.');
         }
+    }
+
+    /** @param array<string, mixed> $arguments
+     * @return list<array<string, mixed>>
+     */
+    private function attachmentList(array $arguments): array
+    {
+        $attachments = array_key_exists('attachments', $arguments) ? $arguments['attachments'] : [];
+        if (!is_array($attachments) || !array_is_list($attachments) || MailDraftAttachment::MAX_COUNT < count($attachments)) {
+            throw new InvalidToolArguments('Invalid attachment list.');
+        }
+        foreach ($attachments as $attachment) {
+            if (!is_array($attachment)) {
+                throw new InvalidToolArguments('Invalid attachment.');
+            }
+        }
+
+        return $attachments;
     }
 
     /** @return array<string, mixed> */
@@ -728,7 +750,7 @@ final readonly class WriteToolRegistry
             return $this->error('Draft writes are disabled.');
         }
         try {
-            if ([] !== array_diff(array_keys($arguments), ['mailReference', 'body', 'htmlBody', 'replyAll'])) {
+            if ([] !== array_diff(array_keys($arguments), ['mailReference', 'body', 'htmlBody', 'replyAll', 'attachments'])) {
                 throw new InvalidToolArguments('Unexpected argument.');
             }
             $reference = $this->text($arguments, 'mailReference', 1024);
@@ -738,7 +760,8 @@ final readonly class WriteToolRegistry
             if (!is_bool($replyAll) || (array_key_exists('replyAll', $arguments) && null === $arguments['replyAll'])) {
                 throw new InvalidToolArguments('replyAll must be a boolean.');
             }
-            $result = $this->mailDraftWriter->save($reference, $body, $htmlBody, $replyAll);
+            $attachments = $this->attachmentList($arguments);
+            $result = $this->mailDraftWriter->save($reference, $body, $htmlBody, $replyAll, $attachments);
             $json = json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
             return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => in_array($result['status'], ['uncertain', 'missing'], true)];
@@ -762,7 +785,7 @@ final readonly class WriteToolRegistry
             return $this->error('Draft editing is disabled.');
         }
         try {
-            if ([] !== array_diff(array_keys($arguments), ['mailReference', 'draftMessageId', 'revision', 'body', 'htmlBody'])) {
+            if ([] !== array_diff(array_keys($arguments), ['mailReference', 'draftMessageId', 'revision', 'body', 'htmlBody', 'attachments', 'removeAttachmentIds'])) {
                 throw new InvalidToolArguments('Unexpected argument.');
             }
             $reference = $this->text($arguments, 'mailReference', 1024);
@@ -770,7 +793,17 @@ final readonly class WriteToolRegistry
             $revision = $this->text($arguments, 'revision', 64);
             $body = $this->draftBody($arguments, 'body', 10_000);
             $htmlBody = array_key_exists('htmlBody', $arguments) ? $this->draftBody($arguments, 'htmlBody', 20_000) : null;
-            $result = $this->mailDraftEditor->update($reference, $draftMessageId, $revision, $body, $htmlBody);
+            $attachments = $this->attachmentList($arguments);
+            $removeAttachmentIds = array_key_exists('removeAttachmentIds', $arguments) ? $arguments['removeAttachmentIds'] : [];
+            if (!is_array($removeAttachmentIds) || !array_is_list($removeAttachmentIds) || MailDraftAttachment::MAX_COUNT < count($removeAttachmentIds)) {
+                throw new InvalidToolArguments('Invalid attachment removal list.');
+            }
+            foreach ($removeAttachmentIds as $id) {
+                if (!is_string($id) || 1 !== preg_match('/^[a-f0-9]{64}$/D', $id)) {
+                    throw new InvalidToolArguments('Invalid attachment identifier.');
+                }
+            }
+            $result = $this->mailDraftEditor->update($reference, $draftMessageId, $revision, $body, $htmlBody, $attachments, $removeAttachmentIds);
             $json = json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
             return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => !in_array($result['status'] ?? null, ['saved'], true)];

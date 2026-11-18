@@ -44,6 +44,31 @@ final readonly class MailDraftAttachment
         return new self($filename, strtolower($mimeType), $content);
     }
 
+    /** @return list<self> */
+    public static function fromPayloads(mixed $payloads): array
+    {
+        if (!is_array($payloads) || !array_is_list($payloads) || self::MAX_COUNT < count($payloads)) {
+            throw new InvalidArgumentException('Invalid attachment list.');
+        }
+        $encodedBytes = 0;
+        foreach ($payloads as $payload) {
+            if (!is_array($payload) || !isset($payload['base64']) || !is_string($payload['base64'])) {
+                throw new InvalidArgumentException('Invalid attachment.');
+            }
+            $encodedBytes += strlen($payload['base64']);
+            if (4 * (int) ceil(self::MAX_TOTAL_BYTES / 3) + 4 * self::MAX_COUNT < $encodedBytes) {
+                throw new InvalidArgumentException('Encoded attachments exceed the size limit.');
+            }
+        }
+        $attachments = [];
+        foreach ($payloads as $payload) {
+            $attachments[] = self::fromPayload($payload);
+            self::assertLimits($attachments);
+        }
+
+        return $attachments;
+    }
+
     /** @return array{id: string, filename: string, mimeType: string, size: int, contentId: ?string, inline: bool} */
     public function metadata(): array
     {

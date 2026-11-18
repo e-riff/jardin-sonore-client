@@ -6,6 +6,8 @@ namespace App\Application\Mcp;
 
 interface MailDraftWriter
 {
-    /** @return array{status: string, folder: string, messageId: string, uid: ?int} */
-    public function save(string $mailReference, string $body, ?string $htmlBody = null, bool $replyAll = false): array;
+    /** @param list<array<string, mixed>> $attachments
+     * @return array{status: string, folder: string, messageId: string, uid: ?int}
+     */
+    public function save(string $mailReference, string $body, ?string $htmlBody = null, bool $replyAll = false, array $attachments = []): array;
 }

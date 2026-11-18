@@ -6,6 +6,7 @@ namespace App\Application\Controller;
 
 use App\Application\Mcp\McpProtocol;
 use JsonException;
+use stdClass;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -60,6 +61,12 @@ final readonly class McpController
         }
 
         try {
+            $rawMessage = json_decode($content, false, 64, JSON_THROW_ON_ERROR);
+            if ($this->hasInvalidAttachmentLists($rawMessage)) {
+                return new JsonResponse(['jsonrpc' => '2.0', 'id' => $rawMessage->id ?? null, 'error' => ['code' => -32602, 'message' => 'Attachment arguments must be JSON arrays.']]);
+            }
+            // Release the object tree before decoding into the protocol's associative arrays.
+            unset($rawMessage);
             $message = json_decode($content, true, 64, JSON_THROW_ON_ERROR);
         } catch (JsonException) {
             return new JsonResponse(['jsonrpc' => '2.0', 'id' => null, 'error' => ['code' => -32700, 'message' => 'Parse error']], Response::HTTP_BAD_REQUEST);
@@ -75,5 +82,27 @@ final readonly class McpController
         }
 
         return new JsonResponse($response);
+    }
+
+    private function hasInvalidAttachmentLists(mixed $message): bool
+    {
+        if (!$message instanceof stdClass || 'tools/call' !== ($message->method ?? null)) {
+            return false;
+        }
+        $params = $message->params ?? null;
+        if (!$params instanceof stdClass) {
+            return false;
+        }
+        $arguments = $params->arguments ?? null;
+        if (!$arguments instanceof stdClass) {
+            return false;
+        }
+        foreach (['attachments', 'removeAttachmentIds'] as $name) {
+            if (property_exists($arguments, $name) && !is_array($arguments->{$name})) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
