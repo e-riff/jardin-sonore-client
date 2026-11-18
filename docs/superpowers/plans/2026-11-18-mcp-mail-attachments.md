@@ -49,7 +49,7 @@
 
 - [x] Mettre à jour les descriptions MCP et la documentation des parcours, limites et rafraîchissement des outils.
 - [x] Lancer PHPUnit complet, style PHP, PHPStan et lint du conteneur Symfony ; aucun changement front.
-- [ ] Faire une revue finale du diff ; consigner résultats et limites. Committer, taguer, pousser branche et tag puis déployer le backend ; vérifier HTTP et les schémas MCP.
+- [x] Faire une revue finale du diff ; consigner résultats et limites. Committer, taguer, pousser branche et tag puis déployer le backend ; vérifier HTTP et les schémas MCP.
 
 ## Journal d'exécution
 
@@ -66,3 +66,5 @@
 - Revue indépendante : trois points importants corrigés par tests RED→GREEN : noms de fichiers altérés par le parseur IMAP, fichiers vides ignorés par la bibliothèque, objets JSON acceptés comme listes. Tests de relecture MIME réelle et entrée HTTP ajoutés (34 tests ciblés, 187 assertions).
 
 - Validation finale après corrections de revue : 668 tests, 3471 assertions, succès (2 dépréciations, 4 notices PHPUnit) ; PHPStan et style passent. Aucun point important laissé ouvert. Les dernières corrections ont un test observé en échec puis au vert ; pas de seconde revue exhaustive.
+
+- Livraison : commit afab252a intégré en avance rapide à main, branche et tag deploy-mcp-mail-attachments-20261118-01 poussés avant make deploy-backend CPANEL_BACKEND_RUN_MIGRATIONS=0. Succès ; HTTP 200 site/MCP, 53 outils avec attachments/replyAll/removeAttachmentIds. Aucun mail/brouillon de recette. Les notes utilisateur préexistantes de ROADMAP.md restent hors commit.

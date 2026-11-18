@@ -1,6 +1,25 @@
 # Roadmap Jardin Sonore
 
-Mise à jour le 17 novembre 2026. Ce document est la **seule source de l'état courant, des priorités et du point de reprise**. `AGENTS.md` et `.codex/jardin-sonore-guidelines.md` décrivent la méthode de travail ; les plans, conceptions et bilans datés gardent le détail technique et l'état constaté à leur date. Ne pas reprendre leurs anciennes listes de tâches sans vérifier cette page. L'ordre général est : **visibilité et nouvelles demandes**, puis **gain de temps dans le backoffice**. Les priorités indiquent un ordre de travail, pas un engagement de livraison simultanée.
+Mise à jour le 18 novembre 2026. Ce document est la **seule source de l'état courant, des priorités et du point de reprise**. `AGENTS.md` et `.codex/jardin-sonore-guidelines.md` décrivent la méthode de travail ; les plans, conceptions et bilans datés gardent le détail technique et l'état constaté à leur date. Ne pas reprendre leurs anciennes listes de tâches sans vérifier cette page. L'ordre général est : **visibilité et nouvelles demandes**, puis **gain de temps dans le backoffice**. Les priorités indiquent un ordre de travail, pas un engagement de livraison simultanée.
+
+## Pièces jointes mail MCP — livré le 18 novembre
+
+Déployé sous `deploy-mcp-mail-attachments-20261118-01` (`afab252a`). Les pièces
+jointes sont acceptées à la création d’une réponse (`save_mail_draft`, y compris
+`replyAll: true`) et dans `send_personal_notification`. `update_mail_draft`
+accepte ajout et retrait ; l’éditeur général conserve son accès à tous les
+brouillons manuels/MCP. Format filename/mimeType/base64 ; limites inchangées :
+10 fichiers, 5 Mio chacun, 10 Mio au total. Les envois incluent les fichiers dans
+leur dédoublonnage ; les anciennes demandes sans fichier restent compatibles.
+Les noms de fichiers et fichiers vides survivent à la relecture MIME.
+
+Validation : 668 tests, 3 471 assertions, PHPStan, style, conteneur Symfony,
+Composer, compilation des 81 assets et lint front. PHPUnit signale 2 dépréciations
+et 4 notices, sans échec. Pas de migration. Contrôle après déploiement limité,
+à la demande de l’utilisateur : site et MCP HTTP 200, 53 outils avec les nouveaux
+paramètres ; aucun mail ni brouillon réel de recette créé. Rafraîchir les fonctions
+du connecteur avant usage. [Guide](docs/mcp-mail-tools.md) et
+[message prêt à transmettre à l’IA](docs/mcp-mail-assistant-message.md).
 
 ## Correctifs annuaire, dossiers, MCP et séances — 17 novembre
 
