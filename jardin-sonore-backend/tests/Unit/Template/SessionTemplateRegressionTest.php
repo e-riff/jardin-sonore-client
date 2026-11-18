@@ -544,7 +544,8 @@ final class SessionTemplateRegressionTest extends TestCase
         self::assertIsString($template);
         self::assertIsString($controller);
         self::assertStringContainsString("stimulus_action('confirmation-dialog', 'open')", $template);
-        self::assertStringContainsString('this.dialogTarget.showModal()', $controller);
+        self::assertStringContainsString('extends InternalDialogController', $controller);
+        self::assertStringContainsString('super.open(event)', $controller);
         self::assertStringNotContainsString('@hotwired/turbo', $controller);
     }
 

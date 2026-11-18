@@ -38,6 +38,15 @@ final class CommercialProjectContactsControllerTest extends WebTestCase
         $client->loginUser($adminUserEntity);
 
         $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $crawler->filterXPath('//button[@aria-controls="commercial-contact-dialog-' . $projectEntity->getId() . '"]'));
+        $contactDialog = $crawler->filterXPath('//dialog[@id="commercial-contact-dialog-' . $projectEntity->getId() . '"]');
+        self::assertCount(1, $contactDialog);
+        self::assertCount(2, $contactDialog->filterXPath('.//input[@type="radio" and @name="contactMode"]'));
+        self::assertCount(2, $contactDialog->filterXPath('.//form'));
+        self::assertCount(0, $contactDialog->filterXPath('.//details'));
+        self::assertCount(2, $contactDialog->filterXPath('.//div[@class="internal-form-dialog__actions"]/button[@type="button"]'));
+        self::assertCount(1, $contactDialog->filterXPath('.//form[@hidden]'));
         $token = $crawler->filterXPath('//form[contains(@action, "/contacts/link")]/input[@name="_token"]')->attr('value');
         $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/contacts/link', [
             '_token' => $token,
@@ -79,5 +88,19 @@ final class CommercialProjectContactsControllerTest extends WebTestCase
         self::assertNull($savedProjectEntity->getPrimaryContact());
         self::assertFalse($savedProjectEntity->getPeople()->first()->isCurrent());
         self::assertTrue($savedPersonEntity->isActive());
+
+        $crawler = $client->request('GET', '/commercial/projects/' . $projectEntity->getId());
+        $token = $crawler->filterXPath('//form[contains(@action, "/contacts/create")]/input[@name="_token"]')->attr('value');
+        $client->request('POST', '/commercial/projects/' . $projectEntity->getId() . '/contacts/create', [
+            '_token' => $token, 'firstName' => 'Alice', 'lastName' => 'Durand', 'role' => 'Coordination', 'primary' => '1',
+        ]);
+        self::assertResponseRedirects();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $savedProjectEntity = $entityManager->find(CommercialProjectEntity::class, $projectEntity->getId());
+        $createdPersonEntity = $savedProjectEntity->getPrimaryContact();
+        self::assertInstanceOf(PersonEntity::class, $createdPersonEntity);
+        self::assertSame('Alice', $createdPersonEntity->getFirstName());
+        self::assertSame('Coordination', $createdPersonEntity->getRole());
+        self::assertSame($organizationEntity->getId(), $createdPersonEntity->getOrganization()?->getId());
     }
 }

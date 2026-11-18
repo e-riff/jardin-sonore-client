@@ -5,9 +5,34 @@ export default class extends Controller {
     static values = { openOnConnect: Boolean };
 
     connect() {
+        this.onBeforeCache = () => this.close();
+        document.addEventListener('turbo:before-cache', this.onBeforeCache);
         if (this.openOnConnectValue && !this.dialogTarget.open) {
             this.dialogTarget.showModal();
         }
+    }
+
+    disconnect() {
+        document.removeEventListener('turbo:before-cache', this.onBeforeCache);
+        if (this.hasDialogTarget) {
+            this.close();
+        }
+    }
+
+    dialogTargetConnected(dialog) {
+        this.onNativeClose = () => this.markClosed();
+        this.onNativeCancel = (event) => this.close(event);
+        dialog.addEventListener('close', this.onNativeClose);
+        dialog.addEventListener('cancel', this.onNativeCancel);
+    }
+
+    dialogTargetDisconnected(dialog) {
+        dialog.removeEventListener('close', this.onNativeClose);
+        dialog.removeEventListener('cancel', this.onNativeCancel);
+        if (dialog.open) {
+            dialog.close();
+        }
+        this.markClosed();
     }
 
     openOnConnectValueChanged(value) {

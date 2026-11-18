@@ -1,6 +1,6 @@
-import { Controller } from '@hotwired/stimulus';
+import InternalDialogController from './internal_dialog_controller.js';
 
-export default class extends Controller {
+export default class extends InternalDialogController {
     static targets = ["dialog", "form", "token", "item"];
 
     open(event) {
@@ -18,22 +18,11 @@ export default class extends Controller {
         this.formTarget.action = action;
         this.tokenTarget.value = token;
         this.itemTarget.textContent = item ?? "";
-        this.dialogTarget.showModal();
-    }
-
-    close(event) {
-        event?.preventDefault();
-        this.dialogTarget.close();
+        super.open(event);
     }
 
     closeAfterSubmit(event) {
         if (event.detail.success) {
-            this.close();
-        }
-    }
-
-    closeOnBackdrop(event) {
-        if (event.target === this.dialogTarget) {
             this.close();
         }
     }

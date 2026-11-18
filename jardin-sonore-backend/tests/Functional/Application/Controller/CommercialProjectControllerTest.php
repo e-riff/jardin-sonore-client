@@ -73,7 +73,7 @@ final class CommercialProjectControllerTest extends WebTestCase
         self::assertCount(1, $crawler->filterXPath('//details[contains(@class, "commercial-dossier__contacts")]//span[contains(@class, "commercial-contact-value") and contains(., "0612345678")]/following-sibling::a[@href="tel:+33612345678"]'));
         self::assertCount(1, $crawler->filterXPath('//details[contains(@class, "commercial-dossier__contacts")]//span[contains(@class, "commercial-contact-value") and contains(., "0678901234")]/following-sibling::a[@href="tel:+33678901234"]'));
         self::assertCount(1, $crawler->filterXPath('//a[@href="mailto:direction-' . $suffix . '@example.test"]'));
-        self::assertCount(1, $crawler->filterXPath('//details[contains(@class, "commercial-dossier__contact-tools") and not(@open)]'));
+        self::assertCount(1, $crawler->filterXPath('//div[contains(@class, "commercial-dossier__contact-tools")]/dialog[not(@open)]'));
         self::assertCount(1, $crawler->filterXPath('//details[contains(@class, "commercial-dossier__documents") and not(@open)]'));
         self::assertCount(1, $crawler->filterXPath('//details[contains(@class, "commercial-dossier__contacts") and @data-controller="responsive-details" and not(@open)]'));
         self::assertCount(1, $crawler->filterXPath('//*[contains(@class, "commercial-dossier__task")]//time[@datetime="2026-10-15"]'));

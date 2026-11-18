@@ -3560,6 +3560,22 @@ form.internal-form.commercial-calendar-group__form {
     accent-color: var(--color-secondary);
 }
 
+.internal-form__choices {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.internal-form__choices legend {
+    margin-bottom: 12px;
+    padding: 0;
+    color: var(--color-on-surface-variant);
+    font-size: .84rem;
+    font-weight: 700;
+}
+
 .internal-form .internal-form__choice {
     display: flex;
     align-items: center;
@@ -4193,6 +4209,7 @@ form.internal-form.commercial-calendar-group__form {
     gap: 14px;
 }
 
+.internal-form[hidden],
 .internal-form [hidden] {
     display: none !important;
 }

@@ -185,6 +185,7 @@ project:
   contact_manage: Gérer cet interlocuteur
   open_directory_record: Modifier la fiche annuaire
   contact_add: Ajouter ou rattacher un interlocuteur
+  contact_mode: Que souhaitez-vous faire ?
   contact_save: Enregistrer les corrections
   contact_primary: Choisir comme interlocuteur principal
   contact_mark_former: Ne suit plus ce dossier

@@ -61,29 +61,43 @@
             {% else %}
                 <p class="commercial-dossier__muted">{{ 'project.no_people'|trans({}, 'commercial') }}</p>
             {% endfor %}
-            <details class="commercial-dossier__contact-tools">
-                <summary>{{ 'project.contact_add'|trans({}, 'commercial') }}</summary>
-                <div class="commercial-dossier__subactions">
-                <details><summary>{{ 'project.contact_link'|trans({}, 'commercial') }}</summary>
-                    <form method="post" action="{{ path('commercial_project_contact_link', {id: project.id}) }}" class="internal-form">
-                        <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_contact_' ~ project.id ~ '_link') }}">
-                        <label>{{ 'project.contact_person'|trans({}, 'commercial') }}<select name="personId" required><option value="">{{ 'project.contact_select'|trans({}, 'commercial') }}</option>{% for person in project.organization.people %}{% if person.active %}<option value="{{ person.id }}">{{ person }}{% if person.role %} — {{ person.role }}{% endif %}</option>{% endif %}{% endfor %}</select></label>
-                        <label><input type="checkbox" name="primary" value="1"> {{ 'project.contact_make_primary'|trans({}, 'commercial') }}</label>
-                        <button class="internal-button internal-button--secondary" type="submit">{{ 'project.contact_link_save'|trans({}, 'commercial') }}</button>
-                    </form>
-                </details>
-                <details><summary>{{ 'project.contact_create'|trans({}, 'commercial') }}</summary>
-                    <form method="post" action="{{ path('commercial_project_contact_create', {id: project.id}) }}" class="internal-form">
-                        <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_contact_' ~ project.id ~ '_create') }}">
-                        <label>{{ 'project.last_name'|trans({}, 'commercial') }} <input name="lastName" required></label>
-                        <label>{{ 'project.first_name'|trans({}, 'commercial') }} <input name="firstName" required></label>
-                        <label>{{ 'project.role'|trans({}, 'commercial') }} <input name="role"></label>
-                        <label><input type="checkbox" name="primary" value="1"> {{ 'project.contact_make_primary'|trans({}, 'commercial') }}</label>
-                        <button class="internal-button internal-button--secondary" type="submit">{{ 'project.contact_create_save'|trans({}, 'commercial') }}</button>
-                    </form>
-                </details>
-                </div>
-            </details>
+            <div class="commercial-dossier__contact-tools" data-controller="internal-dialog">
+                <button type="button" class="internal-button internal-button--secondary internal-button--compact" data-action="internal-dialog#open" aria-haspopup="dialog" aria-controls="commercial-contact-dialog-{{ project.id }}">{% include 'commercial/project/_icon.html.twig' with {name: 'people'} only %} {{ 'project.contact_add'|trans({}, 'commercial') }}</button>
+                <dialog id="commercial-contact-dialog-{{ project.id }}" class="internal-form-dialog" aria-labelledby="commercial-contact-dialog-title-{{ project.id }}" data-internal-dialog-target="dialog" data-action="click->internal-dialog#closeOnBackdrop">
+                    <div class="internal-form-dialog__panel" data-controller="commercial-contact-mode">
+                        <button type="button" class="internal-form-dialog__close" data-action="internal-dialog#close" aria-label="{{ 'internal.confirmation.delete.close'|trans({}, 'internal') }}" title="{{ 'internal.confirmation.delete.close'|trans({}, 'internal') }}">×</button>
+                        <h2 id="commercial-contact-dialog-title-{{ project.id }}">{{ 'project.contact_add'|trans({}, 'commercial') }}</h2>
+                        <div class="internal-form">
+                            <fieldset class="internal-form__choices">
+                                <legend>{{ 'project.contact_mode'|trans({}, 'commercial') }}</legend>
+                                <label class="internal-form__choice"><input class="internal-form__choice-input" type="radio" name="contactMode" value="link" checked data-commercial-contact-mode-target="choice" data-action="change->commercial-contact-mode#change"><span class="internal-form__choice-label">{{ 'project.contact_link'|trans({}, 'commercial') }}</span></label>
+                                <label class="internal-form__choice"><input class="internal-form__choice-input" type="radio" name="contactMode" value="create" data-commercial-contact-mode-target="choice" data-action="change->commercial-contact-mode#change"><span class="internal-form__choice-label">{{ 'project.contact_create'|trans({}, 'commercial') }}</span></label>
+                            </fieldset>
+                        </div>
+                        <form method="post" action="{{ path('commercial_project_contact_link', {id: project.id}) }}" class="internal-form" data-commercial-contact-mode-target="linkForm">
+                            <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_contact_' ~ project.id ~ '_link') }}">
+                            <label for="commercial-contact-person-{{ project.id }}">{{ 'project.contact_person'|trans({}, 'commercial') }}</label>
+                            <select id="commercial-contact-person-{{ project.id }}" name="personId" required><option value="">{{ 'project.contact_select'|trans({}, 'commercial') }}</option>{% for person in project.organization.people %}{% if person.active %}<option value="{{ person.id }}">{{ person }}{% if person.role %} — {{ person.role }}{% endif %}</option>{% endif %}{% endfor %}</select>
+                            <div class="internal-form__checkbox"><input id="commercial-contact-link-primary-{{ project.id }}" type="checkbox" name="primary" value="1"><label for="commercial-contact-link-primary-{{ project.id }}">{{ 'project.contact_make_primary'|trans({}, 'commercial') }}</label></div>
+                            <div class="internal-form-dialog__actions">
+                                <button type="button" class="internal-button internal-button--secondary" data-action="internal-dialog#close">{{ 'project.contact_former_cancel'|trans({}, 'commercial') }}</button>
+                                <button class="internal-button" type="submit">{{ 'project.contact_link_save'|trans({}, 'commercial') }}</button>
+                            </div>
+                        </form>
+                        <form method="post" action="{{ path('commercial_project_contact_create', {id: project.id}) }}" class="internal-form" data-commercial-contact-mode-target="createForm" hidden>
+                            <input type="hidden" name="_token" value="{{ csrf_token('commercial_project_contact_' ~ project.id ~ '_create') }}">
+                            <label for="commercial-contact-last-name-{{ project.id }}">{{ 'project.last_name'|trans({}, 'commercial') }}</label><input id="commercial-contact-last-name-{{ project.id }}" name="lastName" autocomplete="family-name" required>
+                            <label for="commercial-contact-first-name-{{ project.id }}">{{ 'project.first_name'|trans({}, 'commercial') }}</label><input id="commercial-contact-first-name-{{ project.id }}" name="firstName" autocomplete="given-name" required>
+                            <label for="commercial-contact-role-{{ project.id }}">{{ 'project.role'|trans({}, 'commercial') }}</label><input id="commercial-contact-role-{{ project.id }}" name="role" autocomplete="organization-title">
+                            <div class="internal-form__checkbox"><input id="commercial-contact-create-primary-{{ project.id }}" type="checkbox" name="primary" value="1"><label for="commercial-contact-create-primary-{{ project.id }}">{{ 'project.contact_make_primary'|trans({}, 'commercial') }}</label></div>
+                            <div class="internal-form-dialog__actions">
+                                <button type="button" class="internal-button internal-button--secondary" data-action="internal-dialog#close">{{ 'project.contact_former_cancel'|trans({}, 'commercial') }}</button>
+                                <button class="internal-button" type="submit">{{ 'project.contact_create_save'|trans({}, 'commercial') }}</button>
+                            </div>
+                        </form>
+                    </div>
+                </dialog>
+            </div>
         </details>
     {% else %}
         <div class="commercial-dossier__organization commercial-dossier__organization--provisional">
