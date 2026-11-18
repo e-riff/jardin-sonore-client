@@ -49,3 +49,5 @@
 - Revue indépendante : aucun défaut important. Aucun commit ni déploiement ; pas de migration ni de dépendance. Session navigateur de recette fermée et fichier local d'authentification vidé.
 
 - Mise en ligne autorisée après les validations : commit, tag deploy-dossier-contact-dialogs-20261118-01 et push avant déploiement backend sans migration. Aucun nouveau test complet après livraison.
+
+- Livré : commit ac6eae54, tag deploy-dossier-contact-dialogs-20261118-01, push main et tag avant make deploy-backend CPANEL_BACKEND_RUN_MIGRATIONS=0. Déploiement réussi, 82 assets compilés ; contrôle après livraison regroupé site/backend HTTP 200/200. Aucun nouveau test ni écriture métier en production. Notes utilisateur préexistantes de ROADMAP.md conservées hors commit.

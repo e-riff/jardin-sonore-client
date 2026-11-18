@@ -2,9 +2,9 @@
 
 Mise à jour le 18 novembre 2026. Ce document est la **seule source de l'état courant, des priorités et du point de reprise**. `AGENTS.md` et `.codex/jardin-sonore-guidelines.md` décrivent la méthode de travail ; les plans, conceptions et bilans datés gardent le détail technique et l'état constaté à leur date. Ne pas reprendre leurs anciennes listes de tâches sans vérifier cette page. L'ordre général est : **visibilité et nouvelles demandes**, puis **gain de temps dans le backoffice**. Les priorités indiquent un ordre de travail, pas un engagement de livraison simultanée.
 
-## Dossiers — dialogue Interlocuteurs préparé le 18 novembre
+## Dossiers — dialogue Interlocuteurs livré le 18 novembre
 
-Lot préparé pour la livraison `deploy-dossier-contact-dialogs-20261118-01` : le bloc « Ajouter ou rattacher un
+Déployé sous `deploy-dossier-contact-dialogs-20261118-01` (`ac6eae54`) : le bloc « Ajouter ou rattacher un
 interlocuteur » ouvre un dialogue natif avec un choix Stimulus entre rattachement
 et création. Les deux formulaires, leurs jetons CSRF et l'interlocuteur principal
 sont conservés ; actions côte à côte, champs et cases harmonisés. Le formulaire
@@ -17,7 +17,9 @@ lint front et compilation des 82 assets. Recette locale sur ordinateur et mobile
 Échap/fond/croix/Annuler, réouverture et alternance tâches/notes/interlocuteurs,
 cache Turbo, reconnexion DOM et réouverture annuaire LiveComponent ; succès.
 Aucune donnée créée ni suppression déclenchée par le navigateur de recette.
-La revue ne relève aucun défaut important. Le reste de l'harmonisation des dossiers
+La revue ne relève aucun défaut important. Contrôle après déploiement limité au
+site et à la connexion backend : HTTP 200/200, sans relancer les tests.
+Le reste de l'harmonisation des dossiers
 reste à apprécier à l'usage ; les familles et variantes de séances restent à concevoir.
 
 ## Éléments libres des séances — appariement livré le 18 novembre
