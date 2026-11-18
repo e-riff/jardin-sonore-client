@@ -43,3 +43,5 @@
 - Vérification finale : 683 tests backend, 3558 assertions, succès (2 dépréciations et 4 notices PHPUnit inchangées par rapport au lot précédent) ; PHPStan, style, 17 templates Twig, conteneur et lint front réussis. Diff relu ; aucun changement JavaScript, aucune migration. Travail conservé non committé sur feat/session-free-line-pairs.
 
 - Livraison autorisée : commit, tag deploy-session-free-line-pairs-20261118-01, push main et tag avant déploiement backend sans migration. Vérifications déjà passées conservées ; contrôle après livraison réduit à HTTP site/backend.
+
+- Livré : e23dd2fa, tag deploy-session-free-line-pairs-20261118-01, commit et tag poussés avant déploiement backend réussi sans migration. Contrôle HTTP regroupé site/backend : 200/200. Les notes préexistantes de ROADMAP.md restent hors commit ; aucun nouveau test après déploiement.

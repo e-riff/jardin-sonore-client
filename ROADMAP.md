@@ -2,9 +2,9 @@
 
 Mise à jour le 18 novembre 2026. Ce document est la **seule source de l'état courant, des priorités et du point de reprise**. `AGENTS.md` et `.codex/jardin-sonore-guidelines.md` décrivent la méthode de travail ; les plans, conceptions et bilans datés gardent le détail technique et l'état constaté à leur date. Ne pas reprendre leurs anciennes listes de tâches sans vérifier cette page. L'ordre général est : **visibilité et nouvelles demandes**, puis **gain de temps dans le backoffice**. Les priorités indiquent un ordre de travail, pas un engagement de livraison simultanée.
 
-## Éléments libres des séances — appariement préparé le 18 novembre
+## Éléments libres des séances — appariement livré le 18 novembre
 
-Lot préparé pour la livraison `deploy-session-free-line-pairs-20261118-01` : les paroles et indications des éléments
+Déployé sous `deploy-session-free-line-pairs-20261118-01` (`e23dd2fa`) : les paroles et indications des éléments
 libres sont associées par numéro de ligne à la lecture et utilisent les blocs de
 rendu existants du répertoire (compositeur, aperçu, portail, PDF). Les lignes vides
 conservent leur place ; les lignes sans correspondance restent visibles. Les deux
@@ -12,7 +12,9 @@ champs de saisie restent en place ; les retours de ligne de début et de fin son
 préservés à la soumission et à la relecture. Aucun changement de schéma ni réécriture
 des séances existantes. L’édition en blocs séparés est notée en évolution différée.
 Validation : 683 tests backend, 3 558 assertions ; PHPStan, style, Twig, conteneur
-Symfony et lint front passent. Aucun défaut important en revue.
+Symfony et lint front passent. Aucun défaut important en revue. Contrôle après
+livraison limité à un appel regroupé : site et connexion backend HTTP 200, sans
+relancer les tests ni créer de données en production.
 
 ## Pièces jointes mail MCP — livré le 18 novembre
 
@@ -352,7 +354,7 @@ Ces idées restent visibles sans être décidées pour le prochain lot.
 | Performance et contrats du portail ; cohérence de l'édition du profil. | Réduire les appels inutiles, fiabiliser les données affichées et clarifier les succès partiels. | Mesurer les chargements, typer les séquences exposées par l'API et couvrir l'échec après enregistrement de l'avatar. |
 | Découpage du contrôleur de séance et frontières Doctrine. | Rendre les évolutions plus simples et plus sûres. | Extraire par responsabilités, selon les [frontières documentées](jardin-sonore-backend/docs/architecture-boundaries.md), sans refonte générale. |
 | Finitions du compositeur : aperçu, médias et esthétique du PDF A4. | Améliorer la lecture et l'impression des séances. | Préserver le flux fonctionnel de génération/téléchargement ; décider des finitions après recette visuelle. |
-| Édition structurée des paroles et indications des éléments libres de séance. | Associer explicitement chaque ligne de paroles à ses indications, comme dans le répertoire. | Évolution différée demandée le 18 novembre : conserver pour l’instant les deux champs multiligne. Leur appariement par numéro de ligne est implémenté localement, sans migration ; une future édition en blocs séparés reste à concevoir. |
+| Édition structurée des paroles et indications des éléments libres de séance. | Associer explicitement chaque ligne de paroles à ses indications, comme dans le répertoire. | Évolution différée demandée le 18 novembre : conserver pour l’instant les deux champs multiligne. Leur appariement par numéro de ligne est déployé, sans migration ; une future édition en blocs séparés reste à concevoir. |
 | Synchronisation éventuelle du PDF canonique vers Google Drive. | Retrouver le document courant dans l'espace de travail partagé. | Clarifier le besoin et les droits d'accès ; conserver le PDF local comme référence disponible. |
 | Dédoublonnage de l’annuaire et fluidité du CRUD répertoire. | Repérer les fiches en double avec leurs indices, puis éviter les rapprochements automatiques fragiles à l’import. | Une commande de revue en lecture seule et un seuil d’import plus prudent sont en production ; continuer la revue manuelle avant de décider si un écran interne ou un accès MCP est utile. |
 | Aperçus de fichiers dans les outils techniques et import initial de matière pédagogique depuis les séances. | Améliorer les corrections techniques et éviter les ressaisies. | Identifier les usages réels, puis définir le dédoublonnage des instruments, comptines et contenus liés. |
