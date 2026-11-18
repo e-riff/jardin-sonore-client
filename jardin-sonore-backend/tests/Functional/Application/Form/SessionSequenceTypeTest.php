@@ -16,6 +16,18 @@ final class SessionSequenceTypeTest extends KernelTestCase
         return Kernel::class;
     }
 
+    public function testFormKeepsBlankLinesUsedToAlignLyricsAndGestures(): void
+    {
+        self::bootKernel(['environment' => 'test']);
+        $form = self::getContainer()->get('form.factory')->create(SessionSequenceType::class, new SessionSequenceFormModel(), [
+            'activity_only' => true, 'csrf_protection' => false,
+        ]);
+        $form->submit(['title' => 'Comptine libre', 'body' => 'Préparer les foulards.', 'lyrics' => "Un\nDeux\n", 'gestures' => "\nLever les bras\n"]);
+        self::assertTrue($form->isSynchronized());
+        self::assertSame("Un\nDeux\n", $form->getData()->lyrics);
+        self::assertSame("\nLever les bras\n", $form->getData()->gestures);
+    }
+
     public function testComposerOffersTheWholeFreeSequenceInOneForm(): void
     {
         self::bootKernel(['environment' => 'test']);

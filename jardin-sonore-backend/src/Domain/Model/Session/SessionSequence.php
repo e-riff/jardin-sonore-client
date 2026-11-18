@@ -85,8 +85,8 @@ final readonly class SessionSequence
             title: (string) ($payload['title'] ?? ''),
             subtitle: self::nullableString($payload['subtitle'] ?? null),
             body: (string) ($payload['body'] ?? ''),
-            lyrics: self::nullableString($payload['lyrics'] ?? null),
-            gestures: self::nullableString($payload['gestures'] ?? null),
+            lyrics: self::nullableMultilineString($payload['lyrics'] ?? null),
+            gestures: self::nullableMultilineString($payload['gestures'] ?? null),
             primaryUrl: self::nullableString($payload['primaryUrl'] ?? null),
             secondaryUrl: self::nullableString($payload['secondaryUrl'] ?? null),
             imageUrl: self::nullableString($payload['imageUrl'] ?? null),
@@ -165,6 +165,12 @@ final readonly class SessionSequence
         }
 
         return array_values($media);
+    }
+
+    private static function nullableMultilineString(mixed $value): ?string
+    {
+        // Leading and trailing blank lines carry the lyrics/gestures alignment.
+        return is_string($value) && '' !== trim($value) ? $value : null;
     }
 
     private static function nullableString(mixed $value): ?string

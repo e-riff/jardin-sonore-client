@@ -96,11 +96,13 @@ final class SessionSequenceType extends AbstractType
             ->add('lyrics', TextareaType::class, [
                 'label' => 'sessions.sequence.form.lyrics',
                 'required' => false,
+                'trim' => false,
                 'attr' => ['rows' => 8],
             ])
             ->add('gestures', TextareaType::class, [
                 'label' => 'sessions.sequence.form.gestures',
                 'required' => false,
+                'trim' => false,
                 'attr' => ['rows' => 5],
             ])
             ->add('showLyricsByDefault', CheckboxType::class, [

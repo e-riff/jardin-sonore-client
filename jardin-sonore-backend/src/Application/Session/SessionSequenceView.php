@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Session;
 
+use App\Domain\Model\Session\RepertoireBlockKind;
 use App\Domain\Model\Session\RepertoireItem;
 use App\Domain\Model\Session\SessionSequence;
 use App\Domain\Model\Session\SessionSequenceMedia;
@@ -172,9 +173,35 @@ final readonly class SessionSequenceView
             generalInstructions: $isSynchronizedRepertoireItem ? $repertoireItem->getGeneralInstructions() : null,
             contentBlocks: $isSynchronizedRepertoireItem
                 ? array_map(RepertoireBlockView::fromDomain(...), $repertoireItem->getContentBlocks())
-                : [],
+                : self::pairLyricsAndGestures($sessionSequence->lyrics, $sessionSequence->gestures),
             hasRepertoireSource: $isSynchronizedRepertoireItem,
             storedMedia: $storedMedia,
         );
+    }
+
+    /** @return list<RepertoireBlockView> */
+    private static function pairLyricsAndGestures(?string $lyrics, ?string $gestures): array
+    {
+        if ('' === trim($lyrics ?? '') && '' === trim($gestures ?? '')) {
+            return [];
+        }
+
+        $lyricLines = explode("\n", str_replace(["\r\n", "\r"], "\n", $lyrics ?? ''));
+        $gestureLines = explode("\n", str_replace(["\r\n", "\r"], "\n", $gestures ?? ''));
+        $lineCount = max(count($lyricLines), count($gestureLines));
+        $contentBlocks = [];
+        for ($lineIndex = 0; $lineIndex < $lineCount; ++$lineIndex) {
+            $lyricLine = $lyricLines[$lineIndex] ?? '';
+            $gestureLine = $gestureLines[$lineIndex] ?? '';
+            $lyricLine = '' === trim($lyricLine) ? null : $lyricLine;
+            $gestureLine = '' === trim($gestureLine) ? null : $gestureLine;
+            $contentBlocks[] = new RepertoireBlockView(
+                kind: null === $lyricLine && null === $gestureLine ? RepertoireBlockKind::BREAK : RepertoireBlockKind::LINE,
+                text: $lyricLine,
+                gesture: $gestureLine,
+            );
+        }
+
+        return $contentBlocks;
     }
 }
