@@ -79,7 +79,7 @@ final class CommercialProjectTable
     private function matchesStatus(CommercialProjectRow $row): bool
     {
         return match ($this->status) {
-            'active' => 'closed' !== $row->bucket,
+            'active' => !in_array($row->bucket, ['closed', 'confirmed'], true),
             'closed' => 'closed' === $row->bucket,
             'all' => true,
             'discussion', 'confirmed', 'completed', 'without_result' => $row->status === $this->status,

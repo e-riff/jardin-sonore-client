@@ -10,8 +10,10 @@ use App\Application\Twig\Component\CommercialProjectTable;
 use App\Infrastructure\Doctrine\Entity\AddressContactEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialActionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialAppointmentEntity;
+use App\Infrastructure\Doctrine\Entity\CommercialInterventionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
+use App\Infrastructure\Doctrine\Repository\CommercialInterventionDoctrineRepository;
 use App\Kernel;
 use App\Tests\Support\GeographyFixture;
 use DateTimeImmutable;
@@ -47,6 +49,69 @@ final class CommercialProjectQueueTest extends KernelTestCase
         }
 
         parent::tearDown();
+    }
+
+    public function testActiveOverviewKeepsConfirmedRemindersButHidesConfirmedWithoutTasks(): void
+    {
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(5));
+        $organizationEntity = (new OrganizationEntity())->setName("Structure {$suffix}");
+        $projects = [];
+        foreach (['discussion', 'confirmed', 'priority', 'upcoming'] as $kind) {
+            $projectEntity = new CommercialProjectEntity("{$kind} {$suffix}", $organizationEntity, null, new DateTimeImmutable('2026-11-01'));
+            if ('discussion' !== $kind) {
+                $projectEntity->setStatus(CommercialProjectEntity::STATUS_CONFIRMED);
+            }
+            if (in_array($kind, ['priority', 'upcoming'], true)) {
+                $projectEntity->addAction(new CommercialActionEntity($projectEntity, 'Rappeler', new DateTimeImmutable('priority' === $kind ? '2026-11-17' : '2026-11-20')));
+            }
+            $entityManager->persist($projectEntity);
+            $projects[$kind] = $projectEntity;
+        }
+        $entityManager->persist($organizationEntity);
+        $entityManager->flush();
+        $table = new CommercialProjectTable(new CommercialProjectQueue($entityManager), new MockClock('2026-11-18 12:00:00 Europe/Paris'));
+        $table->query = $suffix;
+        $sections = $table->getSections();
+        self::assertSame([$projects['priority']->getId()], array_column($sections['priority'], 'id'));
+        self::assertSame([$projects['upcoming']->getId()], array_column($sections['upcoming'], 'id'));
+        self::assertSame([$projects['discussion']->getId()], array_column($sections['without_task'], 'id'));
+        self::assertSame([], $sections['confirmed']);
+        $table->status = 'confirmed';
+        $sections = $table->getSections();
+        $confirmedIds = array_merge(...array_map(static fn (string $bucket): array => array_column($sections[$bucket], 'id'), ['priority', 'upcoming', 'without_task', 'confirmed']));
+        self::assertEqualsCanonicalizing([$projects['confirmed']->getId(), $projects['priority']->getId(), $projects['upcoming']->getId()], $confirmedIds);
+    }
+
+    public function testWeekSessionsIncludePastAndSundayButExcludeCancelledUnlinkedAndOutsideParisWeek(): void
+    {
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $organizationEntity = (new OrganizationEntity())->setName('Structure semaine');
+        $projectEntity = new CommercialProjectEntity('Dossier semaine', $organizationEntity, null, new DateTimeImmutable('2026-10-01'));
+        $entityManager->persist($organizationEntity);
+        $entityManager->persist($projectEntity);
+        $sessions = [];
+        foreach ([
+            'before' => '2026-10-18 21:59:59 UTC',
+            'monday' => '2026-10-18 22:00:00 UTC',
+            'past' => '2026-10-20 08:00:00 UTC',
+            'cancelled' => '2026-10-21 08:00:00 UTC',
+            'unlinked' => '2026-10-22 08:00:00 UTC',
+            'sunday' => '2026-10-25 22:59:59 UTC',
+            'nextMonday' => '2026-10-25 23:00:00 UTC',
+        ] as $key => $date) {
+            $startsAt = new DateTimeImmutable($date);
+            $interventionEntity = new CommercialInterventionEntity('unlinked' === $key ? null : $projectEntity, 'test', bin2hex(random_bytes(8)), $key, $startsAt, $startsAt->modify('+1 hour'), 'Europe/Paris', 'Salle de musique', '', new DateTimeImmutable());
+            if ('cancelled' === $key) {
+                $interventionEntity->cancel(new DateTimeImmutable());
+            }
+            $entityManager->persist($interventionEntity);
+            $sessions[$key] = $interventionEntity;
+        }
+        $entityManager->flush();
+        $repository = self::getContainer()->get(CommercialInterventionDoctrineRepository::class);
+        $results = array_values(array_filter($repository->forWeek(new DateTimeImmutable('2026-10-25 12:00:00 Europe/Paris')), static fn ($session): bool => $session->getProject()?->getId() === $projectEntity->getId()));
+        self::assertSame([$sessions['monday']->getId(), $sessions['past']->getId(), $sessions['sunday']->getId()], array_map(static fn ($session): ?int => $session->getId(), $results));
     }
 
     public function testAProjectAppearsOnceWithItsEarliestOpenTaskAndNewBadge(): void
@@ -192,7 +257,7 @@ final class CommercialProjectQueueTest extends KernelTestCase
             array_map(static fn ($row): int => $row->id, $sections['upcoming_periods']['this_week']),
         );
         self::assertSame(
-            [$projects['Lundi prochain']->getId(), $projects['Dimanche prochain']->getId()],
+            [$projects['Lundi prochain']->getId(), $projects['Dossier confirmé']->getId(), $projects['Dimanche prochain']->getId()],
             array_map(static fn ($row): int => $row->id, $sections['upcoming_periods']['next_week']),
         );
         self::assertSame(
@@ -200,12 +265,12 @@ final class CommercialProjectQueueTest extends KernelTestCase
             array_map(static fn ($row): int => $row->id, $sections['upcoming_periods']['later']),
         );
         self::assertSame(
-            [$projects['Dossier confirmé']->getId()],
+            [],
             array_map(static fn ($row): int => $row->id, $sections['confirmed']),
         );
         self::assertSame(
             '2026-10-15',
-            array_values(array_filter($sections['confirmed'], static fn ($row): bool => $projects['Dossier confirmé']->getId() === $row->id))[0]->lastEventAt?->format('Y-m-d'),
+            array_values(array_filter($sections['upcoming'], static fn ($row): bool => $projects['Dossier confirmé']->getId() === $row->id))[0]->lastEventAt?->format('Y-m-d'),
         );
         self::assertSame('42000 — Saint-Étienne', array_values(array_filter(
             $sections['upcoming'],

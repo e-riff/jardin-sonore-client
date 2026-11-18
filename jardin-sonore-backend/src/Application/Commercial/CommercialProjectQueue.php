@@ -89,7 +89,7 @@ final readonly class CommercialProjectQueue
             $bucket = match (true) {
                 in_array($status, [CommercialProjectEntity::STATUS_COMPLETED, CommercialProjectEntity::STATUS_WITHOUT_RESULT], true) => 'closed',
                 $appointmentTodayHasPriority => 'priority',
-                CommercialProjectEntity::STATUS_CONFIRMED === $status => 'confirmed',
+                CommercialProjectEntity::STATUS_CONFIRMED === $status && null === $dueOn => 'confirmed',
                 null === $dueOn => 'without_task',
                 $dueOn->format('Y-m-d') <= $today => 'priority',
                 default => 'upcoming',

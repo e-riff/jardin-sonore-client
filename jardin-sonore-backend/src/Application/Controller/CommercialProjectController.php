@@ -12,6 +12,9 @@ use App\Application\Commercial\RefreshCommercialInterventions;
 use App\Application\Form\CommercialNoteType;
 use App\Application\Form\CommercialProjectCreateType;
 use App\Application\Form\CommercialProjectOrganizationType;
+use App\Application\Form\CommercialProjectPortalAccessType;
+use App\Application\Portal\GrantOrganizationPortalAccess;
+use App\Application\Portal\OrganizationAccessEmailSelection;
 use App\Infrastructure\Doctrine\Entity\CommercialActionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialAppointmentEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialEventEntity;
@@ -19,24 +22,32 @@ use App\Infrastructure\Doctrine\Entity\CommercialInterventionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\PersonEntity;
+use App\Infrastructure\Doctrine\Repository\CommercialInterventionDoctrineRepository;
 use DateTimeImmutable;
 use DateTimeZone;
 use Doctrine\ORM\EntityManagerInterface;
 use DomainException;
+use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Clock\ClockInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[Route('/commercial/projects', name: 'commercial_project_')]
 final class CommercialProjectController extends AbstractController
 {
     #[Route('', name: 'index', methods: ['GET'])]
-    public function index(): Response
+    public function index(Request $request, CommercialInterventionDoctrineRepository $interventionRepository, ClockInterface $clock): Response
     {
-        return $this->render('commercial/project/index.html.twig');
+        return $this->render('commercial/project/index.html.twig', [
+            'weekInterventions' => 'active' === $request->query->getString('status', 'active') ? $interventionRepository->forWeek($clock->now()) : [],
+        ]);
     }
 
     #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
@@ -115,9 +126,12 @@ final class CommercialProjectController extends AbstractController
         ], new Response(status: $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));
     }
 
-    #[Route('/{id}', name: 'show', requirements: ['id' => '\d+'], methods: ['GET'])]
+    #[Route('/{id}', name: 'show', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
     public function show(
         int $id,
+        Request $request,
+        GrantOrganizationPortalAccess $portalAccessGranter,
+        TranslatorInterface $translator,
         EntityManagerInterface $entityManager,
         RefreshCommercialInterventions $interventionRefresher,
         RefreshCommercialAppointments $appointmentRefresher,
@@ -128,6 +142,38 @@ final class CommercialProjectController extends AbstractController
         #[Autowire('%app.commercial.drive_invoices_url%')] string $driveInvoicesUrl,
     ): Response {
         $projectEntity = $this->findProject($id, $entityManager);
+        $portalAccessForm = $this->portalAccessForm($projectEntity);
+        if ($request->isMethod('POST')) {
+            if (null === $portalAccessForm) {
+                throw $this->createAccessDeniedException();
+            }
+            $portalAccessForm->handleRequest($request);
+            if (!$portalAccessForm->isSubmitted()) {
+                return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+            if ($portalAccessForm->isValid()) {
+                /** @var array{knownEmail?: ?OrganizationAccessEmailSelection, freeEmail?: ?string} $data */
+                $data = $portalAccessForm->getData();
+                $knownEmail = $data['knownEmail'] ?? null;
+                $freeEmail = trim($data['freeEmail'] ?? '');
+                if ((null === $knownEmail) === ('' === $freeEmail)) {
+                    $portalAccessForm->addError(new FormError($translator->trans('project.portal_access.choose_one', domain: 'commercial')));
+                } else {
+                    try {
+                        $result = $portalAccessGranter->grant($projectEntity->getOrganization(), null !== $knownEmail ? $knownEmail->emailAddress : $freeEmail, $knownEmail?->personEntity);
+                        $this->addFlash('success', ['message' => "project.portal_access.{$result}", 'domain' => 'commercial']);
+
+                        return $this->redirectToRoute('commercial_project_show', ['id' => $id], Response::HTTP_SEE_OTHER);
+                    } catch (InvalidArgumentException $exception) {
+                        $portalAccessForm->addError(new FormError($translator->trans($exception->getMessage(), domain: 'commercial')));
+                    } catch (TransportExceptionInterface) {
+                        $this->addFlash('danger', ['message' => 'project.portal_access.email_failed', 'domain' => 'commercial']);
+
+                        return $this->redirectToRoute('commercial_project_show', ['id' => $id], Response::HTTP_SEE_OTHER);
+                    }
+                }
+            }
+        }
         $interventionRefresher->run($id);
         $appointmentRefresher->run($id);
         $interventions = $entityManager->getRepository(CommercialInterventionEntity::class)->findBy(['project' => $projectEntity], ['startsAt' => 'ASC']);
@@ -143,6 +189,7 @@ final class CommercialProjectController extends AbstractController
             'interventions' => $interventions,
             'appointments' => $appointments,
             'appointmentRequestId' => bin2hex(random_bytes(16)),
+            'portalAccessForm' => $portalAccessForm,
             'noteForm' => $form,
             'organizationForm' => null === $projectEntity->getOrganization() ? $this->createForm(CommercialProjectOrganizationType::class) : null,
             'driveLinks' => [
@@ -151,7 +198,7 @@ final class CommercialProjectController extends AbstractController
                 'signedQuotes' => $driveSignedQuotesUrl,
                 'invoices' => $driveInvoicesUrl,
             ],
-        ]);
+        ], new Response(status: $request->isMethod('POST') ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));
     }
 
     #[Route('/{id}/title', name: 'title_edit', requirements: ['id' => '\\d+'], methods: ['POST'])]
@@ -228,6 +275,7 @@ final class CommercialProjectController extends AbstractController
                 'interventions' => $entityManager->getRepository(CommercialInterventionEntity::class)->findBy(['project' => $projectEntity], ['startsAt' => 'ASC']),
                 'appointments' => $entityManager->getRepository(CommercialAppointmentEntity::class)->findBy(['project' => $projectEntity], ['startsAt' => 'ASC']),
                 'appointmentRequestId' => bin2hex(random_bytes(16)),
+                'portalAccessForm' => $this->portalAccessForm($projectEntity),
                 'noteForm' => $form,
                 'organizationForm' => null === $projectEntity->getOrganization() ? $this->createForm(CommercialProjectOrganizationType::class) : null,
             ], new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY));
@@ -246,6 +294,7 @@ final class CommercialProjectController extends AbstractController
                 'interventions' => $entityManager->getRepository(CommercialInterventionEntity::class)->findBy(['project' => $projectEntity], ['startsAt' => 'ASC']),
                 'appointments' => $entityManager->getRepository(CommercialAppointmentEntity::class)->findBy(['project' => $projectEntity], ['startsAt' => 'ASC']),
                 'appointmentRequestId' => bin2hex(random_bytes(16)),
+                'portalAccessForm' => $this->portalAccessForm($projectEntity),
                 'noteForm' => $form,
                 'noteError' => 'note.due_required',
                 'organizationForm' => null === $projectEntity->getOrganization() ? $this->createForm(CommercialProjectOrganizationType::class) : null,
@@ -405,6 +454,21 @@ final class CommercialProjectController extends AbstractController
         $entityManager->flush();
 
         return $this->redirectToRoute('commercial_project_show', ['id' => $id]);
+    }
+
+    /** @return FormInterface<mixed>|null */
+    private function portalAccessForm(CommercialProjectEntity $projectEntity): ?FormInterface
+    {
+        $organizationEntity = $projectEntity->getOrganization();
+        if (null === $organizationEntity || !$organizationEntity->isActive()) {
+            return null;
+        }
+
+        return $this->createForm(CommercialProjectPortalAccessType::class, null, [
+            'organization' => $organizationEntity,
+            'action' => $this->generateUrl('commercial_project_show', ['id' => $projectEntity->getId()]),
+            'csrf_token_id' => 'commercial_project_portal_access_' . $projectEntity->getId(),
+        ]);
     }
 
     private function findProject(int $id, EntityManagerInterface $entityManager): CommercialProjectEntity

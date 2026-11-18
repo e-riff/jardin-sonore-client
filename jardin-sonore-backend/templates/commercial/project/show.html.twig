@@ -27,7 +27,10 @@
                     </form>
                 </details>
             </div>
+            <div class="internal-heading-actions">
+                {% include 'commercial/project/_portal_access.html.twig' %}
             <button type="button" class="internal-button internal-button--danger" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('commercial_project_delete', {id: project.id}) }}" data-confirmation-dialog-item-value="{{ 'project.delete_item'|trans({'%title%': project.title}, 'commercial') }}" data-confirmation-dialog-token-value="{{ csrf_token('commercial_project_' ~ project.id ~ '_delete') }}">{{ 'project.delete'|trans({}, 'commercial') }}</button>
+            </div>
         </div>
         <div class="commercial-dossier__title-edit" data-controller="commercial-title-edit">
             <h1 class="commercial-dossier__title-display" data-commercial-title-edit-target="display" data-action="click->commercial-title-edit#edit keydown.enter->commercial-title-edit#edit keydown.space->commercial-title-edit#edit" tabindex="0" role="button" aria-label="{{ 'project.edit_title'|trans({}, 'commercial') }}">{{ project.title }}<span class="commercial-dossier__title-edit-icon">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</span></h1>

@@ -1,0 +1,21 @@
+{% if portalAccessForm is defined and portalAccessForm %}
+    <div data-controller="internal-dialog" data-internal-dialog-open-on-connect-value="{{ portalAccessForm.vars.submitted ? 'true' : 'false' }}">
+        <button type="button" class="internal-button internal-button--secondary" data-action="internal-dialog#open" aria-haspopup="dialog">{{ 'project.portal_access.heading'|trans({}, 'commercial') }}</button>
+        <dialog class="internal-form-dialog" data-internal-dialog-target="dialog" data-action="click->internal-dialog#closeOnBackdrop" aria-labelledby="portal-access-heading">
+            <div class="internal-form-dialog__panel">
+                <button type="button" class="internal-form-dialog__close" data-action="internal-dialog#close" aria-label="{{ 'project.portal_access.close'|trans({}, 'commercial') }}">×</button>
+                <h2 id="portal-access-heading">{{ 'project.portal_access.heading'|trans({}, 'commercial') }}</h2>
+                <p>{{ 'project.portal_access.description'|trans({organization: project.organization.name}, 'commercial') }}</p>
+                {{ form_start(portalAccessForm, {attr: {class: 'internal-form'}}) }}
+                    {{ form_errors(portalAccessForm) }}
+                    {{ form_row(portalAccessForm.knownEmail) }}
+                    {{ form_row(portalAccessForm.freeEmail) }}
+                    <div class="internal-form-dialog__actions">
+                        <button type="button" class="internal-button internal-button--secondary" data-action="internal-dialog#close">{{ 'project.portal_access.cancel'|trans({}, 'commercial') }}</button>
+                        <button type="submit" class="internal-button">{{ 'project.portal_access.submit'|trans({}, 'commercial') }}</button>
+                    </div>
+                {{ form_end(portalAccessForm) }}
+            </div>
+        </dialog>
+    </div>
+{% endif %}

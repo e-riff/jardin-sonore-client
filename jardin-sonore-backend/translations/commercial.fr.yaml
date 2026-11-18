@@ -94,6 +94,25 @@ project:
   write_address: 'Écrire à {address}'
   documents_heading: Documents et suivi
   add_event_hint: Tu peux aussi prévoir la prochaine tâche ; laisse son intitulé vide si tu veux seulement noter l’échange.
+  portal_access:
+    heading: Donner accès au portail
+    description: "L’accès concerne toute la structure {organization}. Un nouveau compte recevra une invitation pour définir son mot de passe ; un compte existant sera simplement rattaché à la structure."
+    known_email: Personne ou adresse de la structure
+    choose_email: Choisir une adresse connue
+    free_email: Ou une autre adresse e-mail
+    free_email_help: Cette adresse sera ajoutée aux coordonnées de la structure si elle n’est pas déjà connue.
+    submit: Donner accès
+    cancel: Annuler
+    close: Fermer
+    choose_one: Choisissez une adresse connue ou saisissez une autre adresse, mais pas les deux.
+    invalid: Vérifiez l’adresse et que la structure est active.
+    account_disabled: Ce compte est désactivé. Consultez sa fiche dans la gestion des comptes portail.
+    access_disabled: Cet accès est désactivé. Consultez la fiche du compte dans la gestion des comptes portail.
+    person_disabled: Cette adresse est liée à une personne inactive. Vérifiez sa fiche dans l’annuaire.
+    created: Le compte a été créé et l’invitation envoyée.
+    linked: Le compte existant a maintenant accès à cette structure. Aucune nouvelle invitation n’a été envoyée.
+    already_granted: Ce compte dispose déjà d’un accès à cette structure.
+    email_failed: Le compte a été créé, mais l’invitation n’a pas pu être envoyée. Renvoyez-la depuis la gestion des comptes portail.
   list:
     heading: Dossiers
     intro: Un dossier rassemble les échanges, les tâches et les documents d’une structure.
@@ -116,7 +135,10 @@ project:
     next_week: Semaine prochaine
     later: Plus tard
     without_task: Sans tâche prévue
-    confirmed: Dossiers confirmés
+    confirmed: Dossiers validés sans rappel
+    confirmed_active: Dossiers validés en cours
+    confirmed_intro: Retrouvez tous les dossiers validés en cours, avec ou sans rappel.
+    week_sessions: Séances de cette semaine
     closed: Dossiers clos
     dossier: Dossier
     state: État

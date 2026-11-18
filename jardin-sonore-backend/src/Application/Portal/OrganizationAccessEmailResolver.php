@@ -10,16 +10,24 @@ use InvalidArgumentException;
 
 final class OrganizationAccessEmailResolver
 {
-    public function resolve(OrganizationEntity $organizationEntity, string $emailAddress): OrganizationAccessEmailSelection
+    public function resolve(OrganizationEntity $organizationEntity, string $emailAddress, ?PersonEntity $preferredPersonEntity = null): OrganizationAccessEmailSelection
     {
         $emailAddress = mb_strtolower(trim($emailAddress));
+
+        if (null !== $preferredPersonEntity) {
+            if ($preferredPersonEntity->isActive() && $preferredPersonEntity->getOrganization() === $organizationEntity && $this->hasEmailAddress($preferredPersonEntity, $emailAddress)) {
+                return new OrganizationAccessEmailSelection($emailAddress, $preferredPersonEntity);
+            }
+
+            throw new InvalidArgumentException('The selected email address is not linked to the organization.');
+        }
 
         if ($this->hasEmailAddress($organizationEntity, $emailAddress)) {
             return new OrganizationAccessEmailSelection($emailAddress, null);
         }
 
         foreach ($organizationEntity->getPeople() as $personEntity) {
-            if ($this->hasEmailAddress($personEntity, $emailAddress)) {
+            if ($personEntity->isActive() && $this->hasEmailAddress($personEntity, $emailAddress)) {
                 return new OrganizationAccessEmailSelection($emailAddress, $personEntity);
             }
         }
