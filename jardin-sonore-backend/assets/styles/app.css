@@ -7780,12 +7780,13 @@ a.session-composer-overlay__item {
 }
 
 .commercial-week__row:hover,
-.commercial-week__row:focus-visible {
+.commercial-week__row:focus-within {
     background: var(--color-surface-container-low);
     text-decoration: underline;
 }
 
-.commercial-week__row:focus-visible {
+.commercial-week__dossier-link:focus-visible,
+.commercial-week__map:focus-visible {
     outline: 2px solid currentColor;
     outline-offset: -2px;
 }
@@ -7821,3 +7822,9 @@ a.session-composer-overlay__item {
         display: none;
     }
 }
+
+.commercial-week__dossier-link { display: flex; flex: 1; min-width: 0; align-items: baseline; gap: .75rem; color: inherit; text-decoration: none; }
+.commercial-week__map { display: inline-flex; align-items: center; gap: .3rem; min-width: 0; max-width: 35%; color: var(--color-primary); }
+.commercial-week__map svg { width: 1rem; height: 1rem; flex: none; }
+.commercial-week__map span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 600px) { .commercial-week__map span { display: none; } }

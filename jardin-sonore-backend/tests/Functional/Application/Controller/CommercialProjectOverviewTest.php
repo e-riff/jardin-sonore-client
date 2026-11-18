@@ -51,10 +51,12 @@ final class CommercialProjectOverviewTest extends WebTestCase
         $crawler = $client->request('GET', '/commercial/projects?query=' . $suffix);
         self::assertResponseIsSuccessful();
         self::assertCount(1, $crawler->filterXPath('//section[contains(@class, "commercial-week")]/following-sibling::div[contains(@class, "commercial-project-browser")]'));
-        $weekLink = $crawler->filterXPath('//a[contains(@class, "commercial-week__row") and @href="/commercial/projects/' . $confirmedProject->getId() . '"]');
+        $weekLink = $crawler->filterXPath('//a[contains(@class, "commercial-week__dossier-link") and @href="/commercial/projects/' . $confirmedProject->getId() . '"]');
         self::assertCount(1, $weekLink);
         self::assertStringContainsString('16/11 · 10:00', $weekLink->text());
-        self::assertStringContainsString('Salle de musique', $weekLink->text());
+        $mapLink = $crawler->filterXPath('//li[a[@href="/commercial/projects/' . $confirmedProject->getId() . '"]]/a[contains(@class, "commercial-week__map")]');
+        self::assertCount(1, $mapLink);
+        self::assertStringContainsString('query=Salle%20de%20musique', $mapLink->attr('href'));
         self::assertCount(0, $crawler->filterXPath('//tr[@data-project-id="' . $confirmedProject->getId() . '"]'));
         self::assertCount(1, $crawler->filterXPath('//tr[@data-project-id="' . $reminderProject->getId() . '"]'));
         self::assertCount(1, $crawler->filterXPath('//tr[@data-project-id="' . $discussionProject->getId() . '"]'));

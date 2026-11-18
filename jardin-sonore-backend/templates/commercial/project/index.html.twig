@@ -24,12 +24,11 @@
             <h2 id="commercial-week-heading">{{ 'project.list.week_sessions'|trans({}, 'commercial') }} <span class="internal-badge internal-badge--muted">{{ weekInterventions|length }}</span></h2>
             <ul class="commercial-week__list">
                 {% for intervention in weekInterventions %}
-                    <li><a class="commercial-week__row" href="{{ path('commercial_project_show', {id: intervention.project.id}) }}">
+                    <li class="commercial-week__row"><a class="commercial-week__dossier-link" href="{{ path('commercial_project_show', {id: intervention.project.id}) }}">
                         <time datetime="{{ intervention.startsAt|date('c') }}">{{ intervention.startsAt|date('d/m · H:i', 'Europe/Paris') }}</time>
                         <span class="commercial-week__dossier" title="{{ intervention.project.title }}">{{ intervention.project.organization ? intervention.project.organization.name : intervention.project.title }}</span>
-                        {% if intervention.location %}<span class="commercial-week__location" title="{{ intervention.location }}">{{ intervention.location }}</span>{% endif %}
                         {% if intervention.status == 'option' %}<small>{{ 'calendar.status.option'|trans({}, 'commercial') }}</small>{% endif %}
-                    </a></li>
+                    </a>{% if intervention.location %}<a class="commercial-week__map" href="https://www.google.com/maps/search/?api=1&amp;query={{ intervention.location|url_encode }}" target="_blank" rel="noopener noreferrer" title="{{ 'technical.directory.open_in_google_maps'|trans({}, 'technical') }} — {{ intervention.location }}" aria-label="{{ 'technical.directory.open_in_google_maps'|trans({}, 'technical') }} — {{ intervention.location }}">{% include 'commercial/project/_icon.html.twig' with {name: 'map'} only %}<span>{{ intervention.location }}</span></a>{% endif %}</li>
                 {% endfor %}
             </ul>
         </section>
