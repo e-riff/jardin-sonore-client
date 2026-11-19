@@ -37,9 +37,24 @@ final readonly class RecordCommercialInvoice
         return $invoiceEntity;
     }
 
+    public function issueSimple(CommercialProjectEntity $projectEntity, string $reference, int $amountCents, DateTimeImmutable $issuedOn, DateTimeImmutable $serviceMonth, string $description): CommercialInvoiceEntity
+    {
+        $reference = trim($reference);
+        $description = trim($description);
+        if ('' === $reference || '' === $description || 0 > $amountCents || CommercialProjectEntity::STATUS_CONFIRMED !== $projectEntity->getStatus()) {
+            throw new DomainException('A sent invoice needs a confirmed project, reference, description and non-negative amount.');
+        }
+        $invoiceEntity = new CommercialInvoiceEntity($projectEntity, $reference, $amountCents, $issuedOn, $serviceMonth);
+        $invoiceEntity->markSimple($description);
+        $projectEntity->addInvoice($invoiceEntity);
+        $projectEntity->recordEvent('invoice_issued', $this->clock->now(), $reference);
+
+        return $invoiceEntity;
+    }
+
     public function createReminderIfOverdue(CommercialInvoiceEntity $invoiceEntity): bool
     {
-        if (null !== $invoiceEntity->getPaidOn() || null !== $invoiceEntity->getReminderAction()) {
+        if (!$invoiceEntity->hasPaymentTracking() || null !== $invoiceEntity->getPaidOn() || null !== $invoiceEntity->getReminderAction()) {
             return false;
         }
         $dueOn = $invoiceEntity->getIssuedOn()->modify('+30 days');

@@ -10,6 +10,7 @@ use App\Application\Mcp\MailReader;
 use App\Application\Mcp\MailReadException;
 use App\Application\Mcp\MailSource;
 use App\Application\Mcp\ProjectFollowupWriter;
+use App\Application\Mcp\ProjectInvoiceManager;
 use App\Application\Mcp\ProjectScheduleManager;
 use App\Application\Mcp\StandaloneMailDraftEditor;
 use App\Application\Mcp\StandaloneMailDraftWriter;
@@ -29,6 +30,18 @@ final class WriteToolRegistryTest extends TestCase
         }
         self::assertArrayHasKey('removeAttachmentIds', $definitions['update_mail_draft']['inputSchema']['properties']);
         self::assertArrayHasKey('replyAll', $definitions['save_mail_draft']['inputSchema']['properties']);
+    }
+
+    public function testInvoiceWritingRequiresItsOwnFeatureFlag(): void
+    {
+        $manager = $this->createMock(ProjectInvoiceManager::class);
+        $arguments = ['projectId' => 7, 'reference' => 'FAC-1', 'amount' => '120', 'description' => 'Séances', 'sentOn' => '2026-11-19', 'serviceMonth' => '2026-11'];
+        $manager->expects(self::once())->method('record')->with($arguments)->willReturn(['id' => 8, 'status' => 'sent']);
+        $disabled = new WriteToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectFollowupWriter::class), false, quoteWriteEnabled: true, projectInvoiceManager: $manager);
+        self::assertTrue($disabled->call('record_project_invoice_sent', $arguments)['isError']);
+        $enabled = new WriteToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectFollowupWriter::class), false, projectInvoiceManager: $manager, invoiceWriteEnabled: true);
+        self::assertTrue($enabled->call('record_project_invoice_sent', [...$arguments, 'extra' => true])['isError']);
+        self::assertFalse($enabled->call('record_project_invoice_sent', $arguments)['isError']);
     }
 
     public function testReplyCreationPassesFilesTogetherWithReplyAll(): void

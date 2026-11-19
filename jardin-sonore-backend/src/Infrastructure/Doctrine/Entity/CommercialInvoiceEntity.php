@@ -13,6 +13,10 @@ class CommercialInvoiceEntity
 
     private ?DateTimeImmutable $paidOn = null;
 
+    private bool $paymentTracking = true;
+
+    private ?string $description = null;
+
     private ?CommercialActionEntity $reminderAction = null;
 
     private DateTimeImmutable $serviceMonth;
@@ -25,6 +29,22 @@ class CommercialInvoiceEntity
         ?DateTimeImmutable $serviceMonth = null,
     ) {
         $this->serviceMonth = $serviceMonth ?? new DateTimeImmutable($issuedOn->format('Y-m-01'), $issuedOn->getTimezone());
+    }
+
+    public function markSimple(string $description): void
+    {
+        $this->paymentTracking = false;
+        $this->description = trim($description);
+    }
+
+    public function hasPaymentTracking(): bool
+    {
+        return $this->paymentTracking;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
     }
 
     public function getProject(): CommercialProjectEntity

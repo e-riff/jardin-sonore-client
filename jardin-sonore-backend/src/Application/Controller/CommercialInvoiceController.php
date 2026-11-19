@@ -7,10 +7,12 @@ namespace App\Application\Controller;
 use App\Application\Commercial\CommercialAmountParser;
 use App\Application\Commercial\RecordCommercialInvoice;
 use App\Application\Form\CommercialInvoiceType;
+use App\Application\Mcp\ProjectInvoiceManager;
 use App\Infrastructure\Doctrine\Entity\CommercialInvoiceEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use DomainException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,7 +29,7 @@ final class CommercialInvoiceController extends AbstractController
     }
 
     #[Route('/commercial/projects/{id}/invoices/new', name: 'commercial_invoice_new', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function new(int $id, Request $request, EntityManagerInterface $entityManager, RecordCommercialInvoice $recorder): Response
+    public function new(int $id, Request $request, EntityManagerInterface $entityManager, ProjectInvoiceManager $invoiceManager): Response
     {
         $projectEntity = $entityManager->find(CommercialProjectEntity::class, $id);
         if (!$projectEntity instanceof CommercialProjectEntity || CommercialProjectEntity::STATUS_CONFIRMED !== $projectEntity->getStatus()) {
@@ -50,10 +52,20 @@ final class CommercialInvoiceController extends AbstractController
             } elseif ($existingInvoiceEntity instanceof CommercialInvoiceEntity) {
                 $error = 'invoice.reference_exists';
             } else {
-                $recorder->issue($projectEntity, $reference, $amountCents, $data['issuedOn'], $data['serviceMonth']);
-                $entityManager->flush();
+                try {
+                    $invoiceManager->record([
+                        'projectId' => $id,
+                        'reference' => $reference,
+                        'amount' => (string) $data['amount'],
+                        'description' => (string) $data['description'],
+                        'sentOn' => $data['issuedOn']->format('Y-m-d'),
+                        'serviceMonth' => $data['serviceMonth']->format('Y-m'),
+                    ]);
 
-                return $this->redirectToRoute('commercial_project_show', ['id' => $id]);
+                    return $this->redirectToRoute('commercial_project_show', ['id' => $id]);
+                } catch (DomainException $exception) {
+                    $error = 'This invoice reference is already used.' === $exception->getMessage() ? 'invoice.reference_exists' : 'invoice.save_failed';
+                }
             }
         }
 
@@ -61,7 +73,7 @@ final class CommercialInvoiceController extends AbstractController
             'project' => $projectEntity,
             'form' => $form,
             'invoiceError' => $error,
-        ], new Response(status: null === $error ? Response::HTTP_OK : Response::HTTP_UNPROCESSABLE_ENTITY));
+        ], new Response(status: null === $error && (!$form->isSubmitted() || $form->isValid()) ? Response::HTTP_OK : Response::HTTP_UNPROCESSABLE_ENTITY));
     }
 
     #[Route('/commercial/invoices/{id}/pay', name: 'commercial_invoice_pay', requirements: ['id' => '\d+'], methods: ['POST'])]
@@ -73,6 +85,9 @@ final class CommercialInvoiceController extends AbstractController
         $invoiceEntity = $entityManager->find(CommercialInvoiceEntity::class, $id);
         if (!$invoiceEntity instanceof CommercialInvoiceEntity) {
             throw $this->createNotFoundException();
+        }
+        if (!$invoiceEntity->hasPaymentTracking()) {
+            return new Response(status: Response::HTTP_CONFLICT);
         }
         $paidOn = DateTimeImmutable::createFromFormat('!Y-m-d', $request->request->getString('paidOn'));
         if (!$paidOn instanceof DateTimeImmutable) {

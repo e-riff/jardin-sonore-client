@@ -15,7 +15,9 @@
                 <h2>{{ invoice.reference }}</h2>
                 <p><a href="{{ path('commercial_project_show', {id: invoice.project.id}) }}">{{ invoice.project.title }}{% if invoice.project.organization %} · {{ invoice.project.organization.name }}{% endif %}</a></p>
                 <strong>{{ (invoice.amountCents / 100)|number_format(2, ',', ' ') }} €</strong>
-                {% if invoice.paidOn %}
+                {% if not invoice.paymentTracking %}
+                    {% if invoice.description %}<p>{{ invoice.description }}</p>{% endif %}
+                {% elseif invoice.paidOn %}
                     <p>{{ 'invoice.paid_on'|trans({}, 'commercial') }} {{ invoice.paidOn|date('d/m/Y') }}</p>
                 {% else %}
                     <form method="post" action="{{ path('commercial_invoice_pay', {id: invoice.id}) }}">

@@ -38,7 +38,7 @@
                                 <tr><td style="padding:8px 0; border-bottom:1px solid #e5dcd3; font-size:14px; line-height:21px;">
                                     <a href="{{ url('commercial_project_show', {id: intervention.project.id}) }}" style="color:#47664b; font-weight:bold; text-decoration:underline;">{{ intervention.startsAt|date('d/m, H:i', 'Europe/Paris') }} · {{ intervention.project.organization ? intervention.project.organization.name : intervention.project.title }}</a>
                                     {% if intervention.status == 'option' %}<span style="color:#896a32; font-size:12px; font-weight:bold;"> · {{ 'option'|trans({}, 'commercial_digest') }}</span>{% endif %}
-                                    {% if intervention.location %}<br><span style="color:#70655a; font-size:12px;">{{ intervention.location }}</span>{% endif %}
+                                    {% if intervention.location %}<br><a href="https://www.google.com/maps/search/?api=1&amp;query={{ intervention.location|url_encode }}" target="_blank" rel="noopener noreferrer" style="color:#47664b; font-size:12px;">{{ intervention.location }}</a>{% endif %}
                                 </td></tr>
                                 {% endif %}
                             {% endfor %}
@@ -48,7 +48,7 @@
                                 <tr><td style="padding:8px 0; border-bottom:1px solid #e5dcd3; font-size:14px; line-height:21px;">
                                     <a href="{{ url('commercial_project_show', {id: intervention.project.id}) }}" style="color:#47664b; font-weight:bold; text-decoration:underline;">{{ intervention.startsAt|date('d/m, H:i', 'Europe/Paris') }} · {{ intervention.project.organization ? intervention.project.organization.name : intervention.project.title }}</a>
                                     {% if intervention.status == 'option' %}<span style="color:#896a32; font-size:12px; font-weight:bold;"> · {{ 'option'|trans({}, 'commercial_digest') }}</span>{% endif %}
-                                    {% if intervention.location %}<br><span style="color:#70655a; font-size:12px;">{{ intervention.location }}</span>{% endif %}
+                                    {% if intervention.location %}<br><a href="https://www.google.com/maps/search/?api=1&amp;query={{ intervention.location|url_encode }}" target="_blank" rel="noopener noreferrer" style="color:#47664b; font-size:12px;">{{ intervention.location }}</a>{% endif %}
                                 </td></tr>
                                 {% endif %}
                             {% endfor %}

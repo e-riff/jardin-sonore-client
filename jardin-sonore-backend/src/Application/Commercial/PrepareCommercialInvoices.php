@@ -8,8 +8,10 @@ use App\Infrastructure\Doctrine\Entity\CommercialActionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialInterventionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialInvoiceEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialInvoicePreparationEntity;
+use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use DateTimeImmutable;
 use DateTimeZone;
+use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Clock\ClockInterface;
 
@@ -66,37 +68,49 @@ final readonly class PrepareCommercialInvoices
                 continue;
             }
 
-            $preparationEntity = $this->entityManager->getRepository(CommercialInvoicePreparationEntity::class)->findOneBy([
-                'project' => $projectEntity,
-                'serviceMonth' => $serviceMonth,
-            ]);
-            $invoiceEntity = $this->entityManager->getRepository(CommercialInvoiceEntity::class)->findOneBy([
-                'project' => $projectEntity,
-                'serviceMonth' => $serviceMonth,
-            ]);
-            if ($invoiceEntity instanceof CommercialInvoiceEntity) {
-                if ($preparationEntity instanceof CommercialInvoicePreparationEntity && CommercialActionEntity::STATUS_OPEN === $preparationEntity->getAction()->getStatus()) {
-                    $preparationEntity->getAction()->resolve(CommercialActionEntity::STATUS_DONE, $now);
+            $created = $this->entityManager->wrapInTransaction(function () use ($projectEntity, $serviceMonth, $lastInterventionEntity, $timeZone, $now): bool {
+                $lockedProjectEntity = $this->entityManager->find(CommercialProjectEntity::class, $projectEntity->getId(), LockMode::PESSIMISTIC_WRITE);
+                if (!$lockedProjectEntity instanceof CommercialProjectEntity) {
+                    return false;
                 }
-                continue;
-            }
+                $preparationEntity = $this->entityManager->getRepository(CommercialInvoicePreparationEntity::class)->findOneBy([
+                    'project' => $projectEntity,
+                    'serviceMonth' => $serviceMonth,
+                ]);
+                $invoiceEntity = $this->entityManager->getRepository(CommercialInvoiceEntity::class)->findOneBy([
+                    'project' => $projectEntity,
+                    'serviceMonth' => $serviceMonth,
+                ]);
+                if ($invoiceEntity instanceof CommercialInvoiceEntity) {
+                    if ($preparationEntity instanceof CommercialInvoicePreparationEntity && CommercialActionEntity::STATUS_OPEN === $preparationEntity->getAction()->getStatus()) {
+                        $preparationEntity->getAction()->resolve(CommercialActionEntity::STATUS_DONE, $now);
+                    }
 
-            if ($preparationEntity instanceof CommercialInvoicePreparationEntity) {
-                if (CommercialActionEntity::STATUS_OPEN === $preparationEntity->getAction()->getStatus()) {
-                    $preparationEntity->getAction()->setDueOn($lastInterventionEntity->getStartsAt()->setTimezone($timeZone));
+                    return false;
                 }
-                continue;
-            }
 
-            $actionEntity = new CommercialActionEntity(
-                $projectEntity,
-                'Préparer la facture — ' . $serviceMonth->format('m/Y'),
-                $lastInterventionEntity->getStartsAt()->setTimezone($timeZone),
-                person: $projectEntity->getPrimaryContact(),
-            );
-            $projectEntity->addAction($actionEntity);
-            $this->entityManager->persist(new CommercialInvoicePreparationEntity($projectEntity, $serviceMonth, $actionEntity));
-            ++$createdCount;
+                if ($preparationEntity instanceof CommercialInvoicePreparationEntity) {
+                    if (CommercialActionEntity::STATUS_OPEN === $preparationEntity->getAction()->getStatus()) {
+                        $preparationEntity->getAction()->setDueOn($lastInterventionEntity->getStartsAt()->setTimezone($timeZone));
+                    }
+
+                    return false;
+                }
+
+                $actionEntity = new CommercialActionEntity(
+                    $projectEntity,
+                    'Préparer la facture — ' . $serviceMonth->format('m/Y'),
+                    $lastInterventionEntity->getStartsAt()->setTimezone($timeZone),
+                    person: $projectEntity->getPrimaryContact(),
+                );
+                $projectEntity->addAction($actionEntity);
+                $this->entityManager->persist(new CommercialInvoicePreparationEntity($projectEntity, $serviceMonth, $actionEntity));
+
+                return true;
+            });
+            if ($created) {
+                ++$createdCount;
+            }
         }
 
         $this->entityManager->flush();

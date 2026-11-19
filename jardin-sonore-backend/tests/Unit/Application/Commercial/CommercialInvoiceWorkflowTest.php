@@ -17,6 +17,21 @@ use Symfony\Component\Clock\MockClock;
 
 final class CommercialInvoiceWorkflowTest extends TestCase
 {
+    public function testSimpleSentInvoiceDoesNotCreatePaymentReminderOrPreventClosure(): void
+    {
+        $clock = new MockClock('2026-10-09 08:00:00');
+        $projectEntity = new CommercialProjectEntity('Ateliers', new OrganizationEntity(), null, new DateTimeImmutable());
+        $projectWorkflow = new CommercialProjectWorkflow($clock);
+        $projectWorkflow->confirm($projectEntity);
+        $recorder = new RecordCommercialInvoice(new CommercialActionWorkflow($clock), $clock);
+        $invoiceEntity = $recorder->issueSimple($projectEntity, 'FAC-SIMPLE', 31000, new DateTimeImmutable('2026-09-01'), new DateTimeImmutable('2026-09-01'), 'Séances de septembre');
+        self::assertSame('Séances de septembre', $invoiceEntity->getDescription());
+        self::assertFalse($recorder->createReminderIfOverdue($invoiceEntity));
+        self::assertCount(0, $projectEntity->getActions());
+        $projectWorkflow->complete($projectEntity);
+        self::assertSame(CommercialProjectEntity::STATUS_COMPLETED, $projectEntity->getStatus());
+    }
+
     public function testOverdueInvoiceCreatesOneActionAndPaymentAllowsClosing(): void
     {
         $clock = new MockClock('2026-10-09 08:00:00');

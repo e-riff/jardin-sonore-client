@@ -352,6 +352,8 @@ quote:
   status_refused: Refusé
   replacement: Remplace le devis
 invoice:
+  description: Ce qui a été facturé
+  status_sent: Envoyée
   heading: Factures
   new: Ajouter une facture émise
   hint: La facture est créée hors de ce backoffice. Enregistre ici sa référence, son montant et sa date d’émission.
@@ -362,6 +364,7 @@ invoice:
   save: Enregistrer la facture
   amount_invalid: Indiquer un montant valide, avec au plus deux décimales.
   reference_exists: Ce numéro de facture est déjà enregistré.
+  save_failed: La facture n’a pas pu être enregistrée. Vérifiez les informations et l’état du dossier.
   paid_on: Payée le
   mark_paid: Marquer comme payée
   status_paid: Payée

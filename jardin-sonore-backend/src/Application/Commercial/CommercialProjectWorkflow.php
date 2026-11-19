@@ -127,7 +127,7 @@ final readonly class CommercialProjectWorkflow
     private function assertNoUnpaidInvoices(CommercialProjectEntity $projectEntity): void
     {
         foreach ($projectEntity->getInvoices() as $invoiceEntity) {
-            if (null === $invoiceEntity->getPaidOn()) {
+            if ($invoiceEntity->hasPaymentTracking() && null === $invoiceEntity->getPaidOn()) {
                 throw new DomainException('The project still has an unpaid invoice.');
             }
         }

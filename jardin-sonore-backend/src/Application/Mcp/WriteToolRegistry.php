@@ -38,6 +38,8 @@ final readonly class WriteToolRegistry
         private ?GeneralMailDraftEditor $generalMailDraftEditor = null,
         private ?PersonalNotificationSender $personalNotificationSender = null,
         #[Autowire('%app.mcp.personal_notification_enabled%')] private bool $personalNotificationEnabled = false,
+        private ?ProjectInvoiceManager $projectInvoiceManager = null,
+        #[Autowire('%app.mcp.invoice_write_enabled%')] private bool $invoiceWriteEnabled = false,
     ) {
     }
 
@@ -218,6 +220,7 @@ final readonly class WriteToolRegistry
             ...$this->sessionCatalogDefinitions(),
             ...$this->scheduleDefinitions(),
             ...$this->quoteDefinitions(),
+            ['name' => 'record_project_invoice_sent', 'description' => 'After separate explicit user confirmation, record a sent invoice and close its monthly preparation reminder. Does not send an invoice or track payment.', 'inputSchema' => ['type' => 'object', 'properties' => ['projectId' => ['type' => 'integer', 'minimum' => 1], 'reference' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 64], 'amount' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 32], 'description' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255], 'sentOn' => ['type' => 'string', 'format' => 'date'], 'serviceMonth' => ['type' => 'string', 'pattern' => '^\\d{4}-\\d{2}$']], 'required' => ['projectId', 'reference', 'amount', 'description', 'sentOn', 'serviceMonth'], 'additionalProperties' => false], 'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false]],
         ];
     }
 
@@ -226,6 +229,24 @@ final readonly class WriteToolRegistry
      */
     public function call(string $name, array $arguments): array
     {
+        if ('record_project_invoice_sent' === $name) {
+            if (!$this->invoiceWriteEnabled || null === $this->projectInvoiceManager) {
+                return $this->error('Invoice writes are disabled.');
+            }
+            try {
+                $required = ['projectId', 'reference', 'amount', 'description', 'sentOn', 'serviceMonth'];
+                if ([] !== array_diff(array_keys($arguments), $required) || [] !== array_diff($required, array_keys($arguments))) {
+                    throw new InvalidToolArguments('Invalid invoice arguments.');
+                }
+                $result = $this->projectInvoiceManager->record($arguments);
+
+                return ['content' => [['type' => 'text', 'text' => json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)]], 'isError' => false];
+            } catch (DomainException|InvalidToolArguments $exception) {
+                return $this->error($exception->getMessage());
+            } catch (Throwable) {
+                return $this->error('The invoice operation failed.');
+            }
+        }
         if ('send_personal_notification' === $name) {
             if (!$this->personalNotificationEnabled || null === $this->personalNotificationSender) {
                 return $this->error('Personal notifications are disabled.');

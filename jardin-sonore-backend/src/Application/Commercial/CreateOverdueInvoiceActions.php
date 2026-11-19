@@ -25,6 +25,8 @@ final readonly class CreateOverdueInvoiceActions
         $queryBuilder = $this->entityManager->getRepository(CommercialInvoiceEntity::class)->createQueryBuilder('invoice');
         $queryBuilder
             ->select('invoice.id')
+            ->andWhere($queryBuilder->expr()->eq('invoice.paymentTracking', ':paymentTracking'))
+            ->setParameter('paymentTracking', true)
             ->andWhere($queryBuilder->expr()->isNull('invoice.paidOn'))
             ->andWhere($queryBuilder->expr()->isNull('invoice.reminderAction'))
             ->andWhere($queryBuilder->expr()->lte('invoice.issuedOn', ':threshold'))

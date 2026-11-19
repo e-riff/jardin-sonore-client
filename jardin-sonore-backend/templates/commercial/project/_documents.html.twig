@@ -56,7 +56,7 @@
                 {% for invoice in project.invoices %}
                     <article class="commercial-dossier__document">
                         {% include 'commercial/project/_icon.html.twig' with {name: 'invoice'} only %}
-                        <div><strong>{{ invoice.reference }}</strong><span>{{ (invoice.amountCents / 100)|number_format(2, ',', ' ') }} € · {{ invoice.issuedOn|date('d/m/Y') }}</span><span class="commercial-dossier__document-state">{{ (invoice.paidOn ? 'invoice.status_paid' : 'invoice.status_unpaid')|trans({}, 'commercial') }}</span>{% if invoice.paidOn is null %}<a href="{{ path('commercial_invoice_index') }}">{{ 'invoice.mark_paid'|trans({}, 'commercial') }}</a>{% endif %}</div>
+                        <div><strong>{{ invoice.reference }}</strong><span>{{ (invoice.amountCents / 100)|number_format(2, ',', ' ') }} € · {{ invoice.issuedOn|date('d/m/Y') }}</span>{% if invoice.description %}<span>{{ invoice.description }}</span>{% endif %}<span class="commercial-dossier__document-state">{{ (invoice.paymentTracking ? (invoice.paidOn ? 'invoice.status_paid' : 'invoice.status_unpaid') : 'invoice.status_sent')|trans({}, 'commercial') }}</span>{% if invoice.paymentTracking and invoice.paidOn is null %}<a href="{{ path('commercial_invoice_index') }}">{{ 'invoice.mark_paid'|trans({}, 'commercial') }}</a>{% endif %}</div>
                     </article>
                 {% else %}<p class="commercial-dossier__muted">{{ 'invoice.none'|trans({}, 'commercial') }}</p>{% endfor %}
             </section>

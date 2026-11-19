@@ -11,7 +11,7 @@ use Throwable;
 
 final readonly class ReadToolRegistry
 {
-    public function __construct(private MailReader $mailReader, private ProjectSearch $projectSearch, private ProjectContextReader $projectContextReader, private ?MailDraftEditor $mailDraftEditor = null, private ?MailingDraftManager $mailingDraftManager = null, private ?ProjectScheduleManager $projectScheduleManager = null, private ?StandaloneMailDraftEditor $standaloneMailDraftEditor = null, private ?McpMailingRecommendations $mcpMailingRecommendations = null, private ?McpSessionCatalog $mcpSessionCatalog = null, private ?ProjectQuoteManager $projectQuoteManager = null, private ?GeneralMailDraftEditor $generalMailDraftEditor = null)
+    public function __construct(private MailReader $mailReader, private ProjectSearch $projectSearch, private ProjectContextReader $projectContextReader, private ?MailDraftEditor $mailDraftEditor = null, private ?MailingDraftManager $mailingDraftManager = null, private ?ProjectScheduleManager $projectScheduleManager = null, private ?StandaloneMailDraftEditor $standaloneMailDraftEditor = null, private ?McpMailingRecommendations $mcpMailingRecommendations = null, private ?McpSessionCatalog $mcpSessionCatalog = null, private ?ProjectQuoteManager $projectQuoteManager = null, private ?GeneralMailDraftEditor $generalMailDraftEditor = null, private ?ProjectInvoiceManager $projectInvoiceManager = null)
     {
     }
 
@@ -122,6 +122,7 @@ final readonly class ReadToolRegistry
                 ], 'required' => ['projectId', 'appointmentId'], 'additionalProperties' => false],
                 'annotations' => ['readOnlyHint' => true, 'destructiveHint' => false, 'openWorldHint' => false],
             ],
+            ['name' => 'list_project_invoices', 'description' => 'List invoices to prepare and sent invoices for an exact dossier.', 'inputSchema' => ['type' => 'object', 'properties' => ['projectId' => ['type' => 'integer', 'minimum' => 1]], 'required' => ['projectId'], 'additionalProperties' => false], 'annotations' => ['readOnlyHint' => true, 'destructiveHint' => false, 'openWorldHint' => false]],
             [
                 'name' => 'list_project_quotes',
                 'description' => 'List quotes recorded in one exact commercial project, with their status, replacement relation and revision tokens. This only reads dossier metadata, not quote documents.',
@@ -213,6 +214,7 @@ final readonly class ReadToolRegistry
                 'search_projects' => ['email', 'organization', 'terms', 'limit'],
                 'get_project_context' => ['projectId'],
                 'get_project_appointment' => ['projectId', 'appointmentId'],
+                'list_project_invoices' => ['projectId'],
                 'list_project_quotes' => ['projectId'],
                 'get_project_quote' => ['projectId', 'quoteId'],
                 'search_mailing_campaigns' => ['query', 'limit'],
@@ -283,6 +285,13 @@ final readonly class ReadToolRegistry
                         throw new InvalidToolArguments('Invalid appointment identifier.');
                     }
                     $result = $this->projectScheduleManager->getAppointment($projectId, $appointmentId);
+                    break;
+                case 'list_project_invoices':
+                    $projectId = $arguments['projectId'] ?? null;
+                    if (!is_int($projectId) || 1 > $projectId || null === $this->projectInvoiceManager) {
+                        throw new InvalidToolArguments('Invalid project ID.');
+                    }
+                    $result = $this->projectInvoiceManager->list($projectId);
                     break;
                 case 'list_project_quotes':
                     $projectId = $arguments['projectId'] ?? null;

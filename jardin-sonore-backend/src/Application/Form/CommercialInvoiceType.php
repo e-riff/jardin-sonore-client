@@ -10,6 +10,7 @@ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /** @extends AbstractType<array<string, mixed>> */
 final class CommercialInvoiceType extends AbstractType
@@ -17,7 +18,8 @@ final class CommercialInvoiceType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('reference', TextType::class, ['label' => 'invoice.reference'])
+            ->add('reference', TextType::class, ['label' => 'invoice.reference', 'constraints' => [new Assert\NotBlank(), new Assert\Length(max: 64)], 'attr' => ['maxlength' => 64]])
+            ->add('description', TextType::class, ['label' => 'invoice.description', 'constraints' => [new Assert\NotBlank(), new Assert\Length(max: 255)], 'attr' => ['maxlength' => 255]])
             ->add('amount', TextType::class, ['label' => 'invoice.amount'])
             ->add('issuedOn', DateType::class, ['label' => 'invoice.issued_on', 'widget' => 'single_text', 'input' => 'datetime_immutable'])
             ->add('serviceMonth', DateType::class, ['label' => 'invoice.service_month', 'widget' => 'single_text', 'input' => 'datetime_immutable'])

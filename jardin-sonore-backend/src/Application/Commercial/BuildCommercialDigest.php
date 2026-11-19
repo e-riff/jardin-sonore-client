@@ -34,6 +34,8 @@ final readonly class BuildCommercialDigest
 
         $invoiceQueryBuilder = $this->entityManager->getRepository(CommercialInvoiceEntity::class)->createQueryBuilder('invoice');
         $overdueInvoices = $invoiceQueryBuilder
+            ->andWhere($invoiceQueryBuilder->expr()->eq('invoice.paymentTracking', ':paymentTracking'))
+            ->setParameter('paymentTracking', true)
             ->andWhere($invoiceQueryBuilder->expr()->isNull('invoice.paidOn'))
             ->andWhere($invoiceQueryBuilder->expr()->lte('invoice.issuedOn', ':threshold'))
             ->setParameter('threshold', $localDate->modify('-30 days'), Types::DATE_IMMUTABLE)

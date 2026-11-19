@@ -21,6 +21,7 @@ use App\Application\Mcp\MailReader;
 use App\Application\Mcp\PersonalNotificationStore;
 use App\Application\Mcp\ProjectContextReader;
 use App\Application\Mcp\ProjectFollowupWriter;
+use App\Application\Mcp\ProjectInvoiceManager;
 use App\Application\Mcp\ProjectNoteWriter;
 use App\Application\Mcp\ProjectQuoteManager;
 use App\Application\Mcp\ProjectScheduleManager;
@@ -35,6 +36,7 @@ use App\Application\Session\SessionNotificationMailSenderInterface;
 use App\Infrastructure\Doctrine\Commercial\DoctrineGoogleCalendarConnectionStore;
 use App\Infrastructure\Doctrine\Commercial\DoctrineProjectContextReader;
 use App\Infrastructure\Doctrine\Commercial\DoctrineProjectFollowupWriter;
+use App\Infrastructure\Doctrine\Commercial\DoctrineProjectInvoiceManager;
 use App\Infrastructure\Doctrine\Commercial\DoctrineProjectNoteWriter;
 use App\Infrastructure\Doctrine\Commercial\DoctrineProjectQuoteManager;
 use App\Infrastructure\Doctrine\Commercial\DoctrineProjectScheduleManager;
@@ -144,6 +146,7 @@ return App::config([
         ProjectNoteWriter::class => [
             'alias' => DoctrineProjectNoteWriter::class,
         ],
+        ProjectInvoiceManager::class => ['alias' => DoctrineProjectInvoiceManager::class],
         ProjectQuoteManager::class => [
             'alias' => DoctrineProjectQuoteManager::class,
         ],
