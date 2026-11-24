@@ -1,0 +1,25 @@
+{% form_theme form.lyrics 'session/_line_pair_form_theme.html.twig' %}
+{% form_theme form.gestures 'session/_line_pair_form_theme.html.twig' %}
+<div data-controller="session-line-pairs">
+    <div data-session-line-pairs-target="fallback">
+        {{ form_row(form.lyrics, {attr: {'data-session-line-pairs-target': 'lyrics'}}) }}
+        {{ form_row(form.gestures, {attr: {'data-session-line-pairs-target': 'gestures'}}) }}
+    </div>
+    <div data-session-line-pairs-target="editor" hidden>
+        <div data-session-line-pairs-target="list"></div>
+        <button type="button" class="internal-button internal-button--secondary internal-button--compact" data-action="session-line-pairs#add">{{ 'sessions.sequence.form.line_add'|trans({}, 'sessions') }}</button>
+        <template data-session-line-pairs-target="template">
+            <div class="session-line-pair" data-line-row>
+                <div class="session-line-pair__fields">
+                    <label>{{ 'sessions.sequence.form.lyrics'|trans({}, 'sessions') }}<input type="text" data-line-lyrics data-action="input->session-line-pairs#change"></label>
+                    <label>{{ 'sessions.sequence.form.gestures'|trans({}, 'sessions') }}<input type="text" data-line-gestures data-action="input->session-line-pairs#change"></label>
+                </div>
+                <div class="session-line-pair__actions">
+                    <button type="button" class="internal-icon-button" data-action="session-line-pairs#moveUp" title="{{ 'sessions.sequence.form.line_up'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.sequence.form.line_up'|trans({}, 'sessions') }}">↑</button>
+                    <button type="button" class="internal-icon-button" data-action="session-line-pairs#moveDown" title="{{ 'sessions.sequence.form.line_down'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.sequence.form.line_down'|trans({}, 'sessions') }}">↓</button>
+                    <button type="button" class="internal-icon-button internal-icon-button--danger" data-action="session-line-pairs#remove" title="{{ 'sessions.sequence.form.line_remove'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.sequence.form.line_remove'|trans({}, 'sessions') }}">×</button>
+                </div>
+            </div>
+        </template>
+    </div>
+</div>

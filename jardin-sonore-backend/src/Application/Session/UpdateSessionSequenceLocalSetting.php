@@ -34,6 +34,7 @@ final readonly class UpdateSessionSequenceLocalSetting
                 primaryUrl: $sessionSequence->primaryUrl, secondaryUrl: $sessionSequence->secondaryUrl, imageUrl: $sessionSequence->imageUrl,
                 showLyricsByDefault: $sessionSequence->showLyricsByDefault, sourceUuid: $sessionSequence->sourceUuid,
                 sourceKind: $sessionSequence->sourceKind, sourceTitle: $sessionSequence->sourceTitle,
+                originUuid: $sessionSequence->originUuid,
                 role: SessionSequenceLocalSetting::ROLE === $setting ? $value : $sessionSequence->role,
                 instrumentUuids: $sessionSequence->instrumentUuids, media: $sessionSequence->getMedia(),
             ));

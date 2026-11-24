@@ -8,10 +8,12 @@ use App\Domain\Model\AddressBook\Organization;
 use App\Domain\Model\Session\SessionSequence;
 use App\Domain\Model\Session\SessionSummary;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
+use App\Infrastructure\Doctrine\Entity\SessionFamilyEntity;
 use App\Infrastructure\Doctrine\Entity\SessionSummaryEntity;
 use App\Infrastructure\Doctrine\Entity\ThemeEntity;
 use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
+use Symfony\Component\Uid\Uuid;
 
 final readonly class SessionSummaryMapper
 {
@@ -24,6 +26,14 @@ final readonly class SessionSummaryMapper
 
     public function toDomain(SessionSummaryEntity $sessionSummaryEntity): SessionSummary
     {
+        $sequences = [];
+        foreach ($sessionSummaryEntity->getSequences() as $index => $sequence) {
+            if (!isset($sequence['uuid']) || '' === $sequence['uuid']) {
+                $sequence['uuid'] = Uuid::v5($sessionSummaryEntity->getUuid(), "legacy-sequence-{$index}")->toRfc4122();
+            }
+            $sequences[] = SessionSequence::fromArray($sequence);
+        }
+
         return new SessionSummary(
             title: $sessionSummaryEntity->getTitle(),
             sessionDate: $sessionSummaryEntity->getSessionDate(),
@@ -36,10 +46,7 @@ final readonly class SessionSummaryMapper
             furtherExploration: $sessionSummaryEntity->getFurtherExploration(),
             instrumentUuids: $sessionSummaryEntity->getInstrumentUuids(),
             recommendationUuids: $sessionSummaryEntity->getRecommendationUuids(),
-            sequences: array_map(
-                static fn (array $sequence): SessionSequence => SessionSequence::fromArray($sequence),
-                $sessionSummaryEntity->getSequences(),
-            ),
+            sequences: $sequences,
             createdAt: $sessionSummaryEntity->getCreatedAt(),
             updatedAt: $sessionSummaryEntity->getUpdatedAt(),
             uuid: $sessionSummaryEntity->getUuid(),
@@ -49,6 +56,7 @@ final readonly class SessionSummaryMapper
             themes: array_map(fn (ThemeEntity $themeEntity): \App\Domain\Model\ContentCatalog\Theme => $this->themeMapper->toDomain($themeEntity), $sessionSummaryEntity->getThemes()->toArray()),
             published: $sessionSummaryEntity->isPublished(),
             firstPublishedAt: $sessionSummaryEntity->getFirstPublishedAt(),
+            familyUuid: $sessionSummaryEntity->getFamily()?->getUuid(),
         );
     }
 
@@ -57,6 +65,11 @@ final readonly class SessionSummaryMapper
         ?SessionSummaryEntity $sessionSummaryEntity = null,
     ): SessionSummaryEntity {
         $sessionSummaryEntity ??= new SessionSummaryEntity();
+        $familyUuid = $sessionSummary->getFamilyUuid();
+        $family = null === $familyUuid ? null : $this->entityManager->getRepository(SessionFamilyEntity::class)->findOneBy(['uuid' => $familyUuid]);
+        if (null !== $familyUuid && !$family instanceof SessionFamilyEntity) {
+            throw new LogicException('Session family not found.');
+        }
         $organizationEntities = [];
         foreach ($sessionSummary->getOrganizations() as $organization) {
             $organizationId = $organization->getId();
@@ -70,6 +83,7 @@ final readonly class SessionSummaryMapper
             ->setUuid($sessionSummary->getUuid())
             ->setTitle($sessionSummary->getTitle())
             ->setSessionDate($sessionSummary->getSessionDate())
+            ->setFamily($family)
             ->replaceOrganizations($organizationEntities)
             ->setTheme($sessionSummary->getTheme())
             ->setGeneralNotes($sessionSummary->getGeneralNotes())

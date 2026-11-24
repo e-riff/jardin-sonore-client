@@ -22,6 +22,8 @@ class SessionSummaryEntity
 
     private DateTimeImmutable $sessionDate;
 
+    private ?SessionFamilyEntity $family = null;
+
     /** @var Collection<int, SessionSummaryOrganizationEntity> */
     private Collection $organizationShares;
 
@@ -76,6 +78,18 @@ class SessionSummaryEntity
     public function getTitle(): string
     {
         return $this->title;
+    }
+
+    public function getFamily(): ?SessionFamilyEntity
+    {
+        return $this->family;
+    }
+
+    public function setFamily(?SessionFamilyEntity $family): static
+    {
+        $this->family = $family;
+
+        return $this;
     }
 
     public function setTitle(string $title): static

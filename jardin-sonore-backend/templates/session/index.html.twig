@@ -10,6 +10,7 @@
             <p>{{ 'sessions.summary.index.description'|trans({}, 'sessions') }}</p>
         </div>
         <div class="internal-heading-actions">
+            <a class="internal-button internal-button--secondary" href="{{ path('session_family_index') }}">{{ 'sessions.family.heading'|trans({}, 'sessions') }}</a>
             <form method="post" action="{{ path('session_documents_regenerate') }}">
                 <input type="hidden" name="_token" value="{{ csrf_token('session_documents_regenerate') }}">
                 <button class="internal-button internal-button--secondary" type="submit">{{ 'sessions.summary.index.regenerate_documents'|trans({}, 'sessions') }}</button>
@@ -42,6 +43,14 @@
                         {% endfor %}
                     </select>
                 </div>
+                <div class="internal-search__field internal-search__field--compact">
+                    <label for="session-family-filter">{{ 'sessions.family.assignment'|trans({}, 'sessions') }}</label>
+                    <select id="session-family-filter" name="family">
+                        <option value="">{{ 'sessions.family.all'|trans({}, 'sessions') }}</option>
+                        <option value="none" {{ familyFilter == 'none' ? 'selected' : '' }}>{{ 'sessions.family.none'|trans({}, 'sessions') }}</option>
+                        {% for family in familyOptions %}<option value="{{ family.uuid }}" {{ familyFilter == family.uuid.toRfc4122 ? 'selected' : '' }}>{{ family.name }}</option>{% endfor %}
+                    </select>
+                </div>
             </div>
         </form>
 
@@ -51,14 +60,14 @@
             {% else %}
                 <div class="internal-table-wrapper">
                     <twig:TableMobileSort label="Trier les séances" :selected="tableSort.column" :options="[
-                        { value: 'sessionDate', label: 'Date', href: path('session_index', { query: query, publication: publicationFilter, theme: themeUuid, sort: 'sessionDate', direction: tableSort.nextDirectionFor('sessionDate') }) },
-                        { value: 'title', label: 'Titre', href: path('session_index', { query: query, publication: publicationFilter, theme: themeUuid, sort: 'title', direction: tableSort.nextDirectionFor('title') }) }
+                        { value: 'sessionDate', label: 'Date', href: path('session_index', { query: query, publication: publicationFilter, theme: themeUuid, family: familyFilter, sort: 'sessionDate', direction: tableSort.nextDirectionFor('sessionDate') }) },
+                        { value: 'title', label: 'Titre', href: path('session_index', { query: query, publication: publicationFilter, theme: themeUuid, family: familyFilter, sort: 'title', direction: tableSort.nextDirectionFor('title') }) }
                     ]" />
                     <table class="internal-table internal-table--compact-mobile session-index-table">
                         <thead>
                             <tr>
-                                <th><twig:TableSortHeader label="{{ 'sessions.summary.table.title'|trans({}, 'sessions') }}" :href="path('session_index', { query: query, publication: publicationFilter, theme: themeUuid, sort: 'title', direction: tableSort.nextDirectionFor('title') })" :active="tableSort.column == 'title'" :direction="tableSort.direction" /></th>
-                                <th><twig:TableSortHeader label="{{ 'sessions.summary.table.date'|trans({}, 'sessions') }}" :href="path('session_index', { query: query, publication: publicationFilter, theme: themeUuid, sort: 'sessionDate', direction: tableSort.nextDirectionFor('sessionDate') })" :active="tableSort.column == 'sessionDate'" :direction="tableSort.direction" /></th>
+                                <th><twig:TableSortHeader label="{{ 'sessions.summary.table.title'|trans({}, 'sessions') }}" :href="path('session_index', { query: query, publication: publicationFilter, theme: themeUuid, family: familyFilter, sort: 'title', direction: tableSort.nextDirectionFor('title') })" :active="tableSort.column == 'title'" :direction="tableSort.direction" /></th>
+                                <th><twig:TableSortHeader label="{{ 'sessions.summary.table.date'|trans({}, 'sessions') }}" :href="path('session_index', { query: query, publication: publicationFilter, theme: themeUuid, family: familyFilter, sort: 'sessionDate', direction: tableSort.nextDirectionFor('sessionDate') })" :active="tableSort.column == 'sessionDate'" :direction="tableSort.direction" /></th>
                                 <th>{{ 'sessions.summary.table.themes'|trans({}, 'sessions') }}</th>
                                 <th>{{ 'sessions.summary.table.publication'|trans({}, 'sessions') }}</th>
                                 <th>{{ 'sessions.summary.table.actions'|trans({}, 'sessions') }}</th>

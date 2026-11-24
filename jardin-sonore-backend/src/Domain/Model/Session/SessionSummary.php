@@ -90,6 +90,7 @@ final class SessionSummary implements UuidIdentifiableInterface
         array $themes = [],
         bool $published = false,
         ?DateTimeImmutable $firstPublishedAt = null,
+        private ?Uuid $familyUuid = null,
     ) {
         $this->initializeUuid($uuid);
         $this->createdAt = $createdAt ?? new DateTimeImmutable();
@@ -121,6 +122,16 @@ final class SessionSummary implements UuidIdentifiableInterface
     public function getTitle(): string
     {
         return $this->title;
+    }
+
+    public function getFamilyUuid(): ?Uuid
+    {
+        return $this->familyUuid;
+    }
+
+    public function setFamilyUuid(?Uuid $familyUuid): void
+    {
+        $this->familyUuid = $familyUuid;
     }
 
     public function getSessionDate(): DateTimeImmutable

@@ -23,6 +23,13 @@ final readonly class UpdateSessionSequence
             throw new InvalidArgumentException('Session summary not found.');
         }
 
+        $originUuid = null;
+        foreach ($sessionSummary->getSequences() as $existingSequence) {
+            if ($existingSequence->uuid->equals($sequenceUuid)) {
+                $originUuid = $existingSequence->originUuid;
+                break;
+            }
+        }
         $sessionSummary->replaceSequence(new SessionSequence(
             uuid: $sequenceUuid,
             type: $saveSessionSequenceInput->type,
@@ -41,6 +48,7 @@ final readonly class UpdateSessionSequence
             sourceTitle: $saveSessionSequenceInput->sourceTitle,
             instrumentUuids: $saveSessionSequenceInput->instrumentUuids,
             media: $saveSessionSequenceInput->media,
+            originUuid: $originUuid,
         ));
 
         $this->sessionSummaryRepository->save($sessionSummary);

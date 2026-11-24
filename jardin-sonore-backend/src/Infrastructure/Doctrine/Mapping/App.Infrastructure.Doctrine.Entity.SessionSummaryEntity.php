@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Domain\Model\Session\SessionDocumentStatus;
+use App\Infrastructure\Doctrine\Entity\SessionFamilyEntity;
 use App\Infrastructure\Doctrine\Entity\SessionSummaryOrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\ThemeEntity;
 use Doctrine\DBAL\Types\Types;
@@ -51,6 +52,8 @@ return static function (ClassMetadata $metadata): void {
         'columnName' => 'session_date',
         'type' => Types::DATE_IMMUTABLE,
     ]);
+
+    $metadata->mapManyToOne(['fieldName' => 'family', 'targetEntity' => SessionFamilyEntity::class, 'joinColumns' => [['name' => 'family_id', 'referencedColumnName' => 'id', 'nullable' => true, 'onDelete' => 'RESTRICT']]]);
 
     $metadata->mapOneToMany([
         'fieldName' => 'organizationShares',

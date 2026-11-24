@@ -49,6 +49,7 @@ final class SessionSummaryDoctrineRepository extends ServiceEntityRepository imp
     public function search(?string $query = null): array
     {
         $queryBuilder = $this->createQueryBuilder('summary')
+            ->leftJoin('summary.family', 'family')->addSelect('family')
             ->orderBy('summary.sessionDate', 'DESC')
             ->addOrderBy('summary.updatedAt', 'DESC')
             ->addOrderBy('summary.id', 'DESC');

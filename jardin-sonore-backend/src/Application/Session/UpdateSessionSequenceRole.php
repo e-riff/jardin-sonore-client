@@ -42,9 +42,11 @@ final readonly class UpdateSessionSequenceRole
                 showLyricsByDefault: $sessionSequence->showLyricsByDefault,
                 sourceUuid: $sessionSequence->sourceUuid,
                 sourceKind: $sessionSequence->sourceKind,
+                originUuid: $sessionSequence->originUuid,
                 sourceTitle: $sessionSequence->sourceTitle,
                 role: $role,
                 instrumentUuids: $sessionSequence->instrumentUuids,
+                media: $sessionSequence->getMedia(),
             ));
             $this->sessionSummaryRepository->save($sessionSummary);
 

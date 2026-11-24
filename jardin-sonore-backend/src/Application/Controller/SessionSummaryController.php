@@ -44,14 +44,17 @@ use App\Application\Session\UpdateSessionSequenceLocalSetting;
 use App\Application\Session\UpdateSessionSequenceRole;
 use App\Application\Session\UpdateSessionSummary;
 use App\Domain\Model\Session\MediaResourceType;
+use App\Domain\Model\Session\SessionFamily;
 use App\Domain\Model\Session\SessionSequenceSourceKind;
 use App\Domain\Repository\OrganizationRepositoryInterface;
+use App\Domain\Repository\SessionFamilyRepositoryInterface;
 use App\Domain\Repository\ThemeRepositoryInterface;
 use App\Infrastructure\Doctrine\Repository\OrganizationDoctrineRepository;
 use DateTimeImmutable;
 use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\HeaderUtils;
@@ -71,7 +74,7 @@ final class SessionSummaryController extends AbstractController
     }
 
     #[Route('', name: 'index', methods: ['GET'])]
-    public function index(Request $request, SearchSessionSummaries $searchSessionSummaries, ThemeRepositoryInterface $themeRepository): Response
+    public function index(Request $request, SearchSessionSummaries $searchSessionSummaries, ThemeRepositoryInterface $themeRepository, SessionFamilyRepositoryInterface $families): Response
     {
         $publicationFilter = $request->query->getString('publication');
         if (!in_array($publicationFilter, ['published', 'unpublished'], true)) {
@@ -96,6 +99,14 @@ final class SessionSummaryController extends AbstractController
         if ('' !== $themeUuid) {
             $sessions = array_values(array_filter($sessions, static fn (SessionSummaryView $session): bool => in_array($themeUuid, array_column($session->themes, 'uuid'), true)));
         }
+        $familyFilter = $request->query->getString('family');
+        $familyOptions = $families->listFamilies();
+        if ('none' !== $familyFilter && !in_array($familyFilter, array_map(static fn ($family): string => $family->uuid->toRfc4122(), $familyOptions), true)) {
+            $familyFilter = '';
+        }
+        if ('' !== $familyFilter) {
+            $sessions = array_values(array_filter($sessions, static fn (SessionSummaryView $session): bool => 'none' === $familyFilter ? null === $session->familyUuid : $session->familyUuid?->toRfc4122() === $familyFilter));
+        }
 
         usort($sessions, static function (SessionSummaryView $left, SessionSummaryView $right) use ($tableSort): int {
             $leftValue = match ($tableSort->column) {
@@ -115,6 +126,8 @@ final class SessionSummaryController extends AbstractController
             'publicationFilter' => $publicationFilter,
             'themeUuid' => $themeUuid,
             'themes' => $themes,
+            'familyFilter' => $familyFilter,
+            'familyOptions' => $familyOptions,
             'sessions' => $sessions,
             'tableSort' => $tableSort,
         ]);
@@ -205,6 +218,7 @@ final class SessionSummaryController extends AbstractController
         Request $request,
         GetSessionSummary $getSessionSummary,
         UpdateSessionSummary $updateSessionSummary,
+        SessionFamilyRepositoryInterface $families,
         #[Autowire('%kernel.project_dir%/var/session-documents')]
         string $sessionDocumentDirectory,
     ): Response {
@@ -219,10 +233,24 @@ final class SessionSummaryController extends AbstractController
             }
         }
         $form = $this->createForm(SessionSummaryFormType::class, $formModel, ['allow_publication' => true, 'allow_recommendations' => false]);
+        $familyChoices = $families->listFamilies();
+        $form->add('family', ChoiceType::class, [
+            'mapped' => false,
+            'required' => false,
+            'label' => 'sessions.family.assignment',
+            'translation_domain' => 'sessions',
+            'placeholder' => 'sessions.family.none',
+            'choices' => $familyChoices,
+            'choice_label' => static fn (SessionFamily $family): string => $family->name,
+            'choice_value' => static fn (?SessionFamily $family): string => null === $family ? '' : $family->uuid->toRfc4122(),
+            'data' => current(array_filter($familyChoices, static fn (SessionFamily $family): bool => $sessionSummaryView->familyUuid?->equals($family->uuid) ?? false)) ?: null,
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $updateSessionSummary($sessionSummaryView->uuid, $this->createSummaryInput($formModel, $sessionSummaryView));
+            $selectedFamily = $form->get('family')->getData();
+            $families->assignSession($sessionSummaryView->uuid, $selectedFamily?->uuid);
             $this->addFlash('success', [
                 'message' => 'sessions.summary.flash.updated',
                 'domain' => 'sessions',
@@ -239,6 +267,7 @@ final class SessionSummaryController extends AbstractController
             'session' => $sessionSummaryView,
             'documentAvailable' => $this->hasSessionDocument($sessionSummaryView, $sessionDocumentDirectory),
             'mediaTypes' => MediaResourceType::cases(),
+            'families' => $families->listFamilies(),
         ], $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null);
     }
 

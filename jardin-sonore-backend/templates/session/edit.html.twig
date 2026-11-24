@@ -30,10 +30,10 @@
         <div class="internal-heading-actions session-edit-actions">
             <form method="post" action="{{ path('session_duplicate', {uuid: session.uuid}) }}">
                 <input type="hidden" name="_token" value="{{ csrf_token('session_duplicate_' ~ session.uuid) }}">
-                <button type="submit" class="internal-button internal-button--secondary session-edit-actions__icon-mobile" title="{{ 'sessions.summary.duplicate.action'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.summary.duplicate.action'|trans({}, 'sessions') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'copy'} only %}<span>{{ 'sessions.summary.duplicate.action'|trans({}, 'sessions') }}</span></button>
+                <button type="submit" class="internal-icon-button" title="{{ 'sessions.summary.duplicate.action'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.summary.duplicate.action'|trans({}, 'sessions') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'copy'} only %}</button>
             </form>
             <div class="session-edit-actions__documents">
-                <a class="internal-button session-edit-heading__preview" href="{{ path('session_show', { uuid: session.uuid }) }}" target="_blank" rel="noopener">{{ 'sessions.summary.edit.preview'|trans({}, 'sessions') }}</a>
+                <a class="internal-button session-edit-heading__preview" href="{{ path('session_show', { uuid: session.uuid }) }}" target="_blank" rel="noopener" title="{{ 'sessions.summary.edit.preview'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.summary.edit.preview'|trans({}, 'sessions') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'eye'} only %}<span>{{ 'sessions.summary.edit.preview'|trans({}, 'sessions') }}</span></a>
                 <details class="session-pdf-menu" data-controller="internal-popover">
                     <summary class="internal-button internal-button--secondary">{{ 'sessions.summary.document.actions'|trans({}, 'sessions') }}</summary>
                     <div class="session-pdf-menu__panel">
@@ -46,7 +46,7 @@
                 </details>
             </div>
             <div class="session-edit-actions__delete">
-                <button type="button" class="internal-button internal-button--danger session-edit-actions__icon-mobile" title="{{ 'sessions.summary.edit.remove'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.summary.edit.remove'|trans({}, 'sessions') }}" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('session_remove', { uuid: session.uuid }) }}" data-confirmation-dialog-item-value="{{ session.title }}" data-confirmation-dialog-token-value="{{ csrf_token('session_remove_' ~ session.uuid) }}">{% include 'commercial/project/_icon.html.twig' with {name: 'trash'} only %}<span>{{ 'sessions.summary.edit.remove'|trans({}, 'sessions') }}</span></button>
+                <button type="button" class="internal-icon-button session-edit-actions__danger" title="{{ 'sessions.summary.edit.remove'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.summary.edit.remove'|trans({}, 'sessions') }}" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('session_remove', { uuid: session.uuid }) }}" data-confirmation-dialog-item-value="{{ session.title }}" data-confirmation-dialog-token-value="{{ csrf_token('session_remove_' ~ session.uuid) }}">{% include 'commercial/project/_icon.html.twig' with {name: 'trash'} only %}</button>
             </div>
         </div>
     </section>
@@ -58,6 +58,8 @@
 
         {% include 'session/_summary_form.html.twig' with {
             form: form,
+            session: session,
+            families: families,
         } only %}
     </section>
 

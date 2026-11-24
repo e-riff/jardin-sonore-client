@@ -47,6 +47,7 @@ final readonly class SessionSummaryView
         public ?string $documentError,
         public array $themes = [],
         public bool $published = false,
+        public ?Uuid $familyUuid = null,
     ) {
     }
 
@@ -107,6 +108,7 @@ final readonly class SessionSummaryView
             documentPath: $sessionSummary->getDocumentPath(),
             documentError: $sessionSummary->getDocumentError(),
             published: $sessionSummary->isPublished(),
+            familyUuid: $sessionSummary->getFamilyUuid(),
         );
     }
 }

@@ -1,0 +1,35 @@
+{% extends 'internal/base.html.twig' %}
+{% set title = 'sessions.family.heading'|trans({}, 'sessions') %}
+{% block internal_body %}
+    {% include 'components/_internal_back_button.html.twig' with {href: path('session_index'), label: 'sessions.family.back_sessions'|trans({}, 'sessions')} only %}
+    <section class="internal-page-heading">
+        <div><p class="internal-eyebrow">{{ 'sessions.family.eyebrow'|trans({}, 'sessions') }}</p><h1>{{ title }}</h1></div>
+        <div class="internal-heading-actions"><a class="internal-button" href="{{ path('session_family_new') }}">{{ 'sessions.family.create'|trans({}, 'sessions') }}</a></div>
+    </section>
+    <section class="internal-card" data-controller="auto-filter">
+        <form method="get" class="internal-search" data-auto-filter-target="form" data-action="input->auto-filter#schedule change->auto-filter#change submit->auto-filter#submit">
+            <div class="internal-search__field"><label for="family-query">{{ 'sessions.family.search'|trans({}, 'sessions') }}</label><input id="family-query" type="search" name="query" value="{{ query }}"></div>
+            <input type="hidden" name="direction" value="{{ direction }}">
+        </form>
+        <div data-auto-filter-target="results" aria-live="polite">
+            {% if families is empty %}<p class="internal-empty-state">{{ (query ? 'sessions.family.no_results' : 'sessions.family.empty')|trans({}, 'sessions') }}</p>{% else %}
+                <div class="internal-table-wrapper">
+                    <twig:TableMobileSort label="{{ 'sessions.family.sort'|trans({}, 'sessions') }}" :selected="direction" :options="[
+                        { value: 'asc', label: 'A → Z', href: path('session_family_index', {query: query, direction: 'asc'}) },
+                        { value: 'desc', label: 'Z → A', href: path('session_family_index', {query: query, direction: 'desc'}) }
+                    ]" />
+                    <table class="internal-table internal-table--compact-mobile">
+                        <thead><tr><th><twig:TableSortHeader label="{{ 'sessions.family.name'|trans({}, 'sessions') }}" :href="path('session_family_index', {query: query, direction: direction == 'asc' ? 'desc' : 'asc'})" :active="true" :direction="direction" /></th><th>{{ 'sessions.family.themes'|trans({}, 'sessions') }}</th><th>{{ 'sessions.summary.table.actions'|trans({}, 'sessions') }}</th></tr></thead>
+                        <tbody>{% for family in families %}
+                            <tr class="internal-table__row--clickable" tabindex="0" data-controller="catalog-row" data-catalog-row-url-value="{{ path('session_family_show', {uuid: family.uuid}) }}" data-action="click->catalog-row#navigate keydown->catalog-row#navigateFromKeyboard">
+                                <td data-table-mobile="primary"><strong><a href="{{ path('session_family_show', {uuid: family.uuid}) }}">{{ family.name }}</a></strong></td>
+                                <td data-table-mobile="themes"><div class="instrument-catalog__tags">{% for theme in family.themes %}<span class="internal-badge internal-badge--color" style="--badge-color: {{ theme.color }}">{{ theme.label }}</span>{% endfor %}</div></td>
+                                <td data-table-mobile="actions"><div class="instrument-catalog__actions"><a class="internal-icon-button" href="{{ path('session_family_edit', {uuid: family.uuid}) }}" title="{{ 'sessions.family.edit'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.family.edit'|trans({}, 'sessions') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</a></div></td>
+                            </tr>
+                        {% endfor %}</tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}

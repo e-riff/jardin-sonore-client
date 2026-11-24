@@ -424,15 +424,18 @@ final class SessionTemplateRegressionTest extends TestCase
     public function testActivityEditorOnlyRendersItsAllowedFields(): void
     {
         $template = file_get_contents(__DIR__ . '/../../../templates/session/composer_activity_form.html.twig');
+        $linePairs = file_get_contents(__DIR__ . '/../../../templates/session/_line_pairs.html.twig');
 
         self::assertIsString($template);
+        self::assertIsString($linePairs);
         self::assertStringContainsString('form.catalogMediaUuids', $template);
         self::assertStringContainsString('form.role', $template);
         self::assertStringContainsString('form.body', $template);
         self::assertStringNotContainsString('form.notes', $template);
         self::assertStringContainsString('form.instrumentUuids', $template);
-        self::assertStringContainsString('form.lyrics', $template);
-        self::assertStringContainsString('form.gestures', $template);
+        self::assertStringContainsString('session/_line_pairs.html.twig', $template);
+        self::assertStringContainsString('form.lyrics', $linePairs);
+        self::assertStringContainsString('form.gestures', $linePairs);
         self::assertStringContainsString('<details class="internal-disclosure">', $template);
         self::assertStringNotContainsString('instruction-list', $template);
     }

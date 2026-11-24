@@ -28,10 +28,7 @@
                 {% include 'media_resource/_association_picker.html.twig' with { field: form.catalogMediaUuids } only %}
                 <details class="internal-disclosure">
                     <summary>{{ 'sessions.sequence.form.lyrics_and_gestures'|trans({}, 'sessions') }}</summary>
-                    <div class="internal-form__grid">
-                        {{ form_row(form.lyrics) }}
-                        {{ form_row(form.gestures) }}
-                    </div>
+                    {% include 'session/_line_pairs.html.twig' with {form: form} only %}
                 </details>
                 {{ form_widget(form.showLyricsByDefault, { attr: { class: 'internal-visually-hidden', tabindex: '-1', 'aria-hidden': 'true' } }) }}
                 {{ form_widget(form.sourceUuid) }}

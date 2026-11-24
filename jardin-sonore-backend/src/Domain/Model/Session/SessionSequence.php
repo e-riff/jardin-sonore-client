@@ -39,6 +39,7 @@ final readonly class SessionSequence
         ?string $role = null,
         array $instrumentUuids = [],
         array $media = [],
+        public ?Uuid $originUuid = null,
     ) {
         $this->role = self::nullableString($role);
         $this->instrumentUuids = array_values(array_unique(array_filter(array_map(
@@ -71,6 +72,7 @@ final readonly class SessionSequence
             'sourceUuid' => $this->sourceUuid?->toRfc4122(),
             'sourceKind' => $this->sourceKind?->value,
             'sourceTitle' => $this->sourceTitle,
+            'originUuid' => $this->originUuid?->toRfc4122(),
         ];
     }
 
@@ -101,6 +103,9 @@ final readonly class SessionSequence
                 : null,
             sourceTitle: self::nullableString($payload['sourceTitle'] ?? null),
             media: self::mediaFromPayload($payload),
+            originUuid: isset($payload['originUuid']) && is_string($payload['originUuid']) && Uuid::isValid($payload['originUuid'])
+                ? Uuid::fromString($payload['originUuid'])
+                : null,
         );
     }
 
@@ -170,7 +175,7 @@ final readonly class SessionSequence
     private static function nullableMultilineString(mixed $value): ?string
     {
         // Leading and trailing blank lines carry the lyrics/gestures alignment.
-        return is_string($value) && '' !== trim($value) ? $value : null;
+        return is_string($value) && '' !== $value ? $value : null;
     }
 
     private static function nullableString(mixed $value): ?string

@@ -1,0 +1,45 @@
+{% extends 'internal/base.html.twig' %}
+{% set title = family.name %}
+{% block internal_body %}
+    {% include 'components/_internal_back_button.html.twig' with {href: path('session_family_index'), label: 'sessions.family.back'|trans({}, 'sessions')} only %}
+    <section class="internal-page-heading"><div><p class="internal-eyebrow">{{ 'sessions.family.eyebrow'|trans({}, 'sessions') }}</p><h1>{{ family.name }}</h1>{% for theme in family.themes %}<span class="internal-badge internal-badge--color" style="--badge-color: {{ theme.color }}">{{ theme.label }}</span> {% endfor %}</div><div class="internal-heading-actions session-family-heading__actions">{% if sessions is not empty %}<a class="internal-button" href="{{ path('session_family_compose', {uuid: family.uuid}) }}">{{ 'sessions.family.compose'|trans({}, 'sessions') }}</a>{% endif %}<a class="internal-icon-button" href="{{ path('session_family_edit', {uuid: family.uuid}) }}" title="{{ 'sessions.family.edit'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.family.edit'|trans({}, 'sessions') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</a></div></section>
+    <section class="internal-card"><h2>{{ 'sessions.family.variants'|trans({}, 'sessions') }}</h2>
+        {% if sessions is empty %}<p>{{ 'sessions.family.no_variants'|trans({}, 'sessions') }}</p>{% else %}
+            <ul class="session-family-list">{% for session in sessions %}<li><a href="{{ path('session_edit', {uuid: session.uuid}) }}">{{ session.title }}</a> · {{ session.sessionDate|date('d/m/Y') }} {% for theme in session.themes %}<span class="internal-badge internal-badge--color" style="--badge-color: {{ theme.color }}">{{ theme.label }}</span> {% endfor %}{% if session.sequences is not empty %}<p class="internal-table-note">{{ session.sequences|map(sequence => sequence.title)|join(' · ') }}</p>{% endif %}</li>{% endfor %}</ul>
+        {% endif %}
+    </section>
+    {% if availableSessions is not empty %}
+        <div data-controller="internal-dialog">
+            <button type="button" class="internal-button internal-button--secondary" data-action="internal-dialog#open" aria-haspopup="dialog">{{ 'sessions.family.attach_heading'|trans({}, 'sessions') }}</button>
+            <dialog class="internal-form-dialog" data-internal-dialog-target="dialog" data-action="click->internal-dialog#closeOnBackdrop" aria-labelledby="family-attach-title">
+                <div class="internal-form-dialog__panel" data-controller="catalog-filter">
+                    <button type="button" class="internal-form-dialog__close" data-action="internal-dialog#close" aria-label="{{ 'sessions.family.close'|trans({}, 'sessions') }}">×</button>
+                    <h2 id="family-attach-title">{{ 'sessions.family.attach_heading'|trans({}, 'sessions') }}</h2>
+                    <p>{{ 'sessions.family.attach_help'|trans({}, 'sessions') }}</p>
+                    <form method="post" action="{{ path('session_family_attach', {uuid: family.uuid}) }}" class="internal-form">
+                        <input type="hidden" name="_token" value="{{ csrf_token('session_family_attach_' ~ family.uuid) }}">
+                        <label for="family-attach-search">{{ 'sessions.summary.index.search'|trans({}, 'sessions') }}</label>
+                        <input id="family-attach-search" type="search" data-catalog-filter-target="query" data-action="input->catalog-filter#filter">
+                        <div class="session-family-attach__list">{% for availableSession in availableSessions %}<label class="internal-form__checkbox" data-catalog-filter-target="item" data-catalog-filter-search-value="{{ availableSession.title }}"><input type="checkbox" name="sessions[]" value="{{ availableSession.uuid }}"> {{ availableSession.title }} · {{ availableSession.sessionDate|date('d/m/Y') }}</label>{% endfor %}</div>
+                        <div class="internal-form-dialog__actions"><button type="button" class="internal-button internal-button--secondary" data-action="internal-dialog#close">{{ 'sessions.family.cancel'|trans({}, 'sessions') }}</button><button class="internal-button" type="submit">{{ 'sessions.family.attach'|trans({}, 'sessions') }}</button></div>
+                    </form>
+                </div>
+            </dialog>
+        </div>
+    {% endif %}
+    {% if groups is not empty %}
+        <section class="internal-card">
+            <h2>{{ 'sessions.family.elements'|trans({}, 'sessions') }}</h2>
+            {% for typeGroups in groups %}
+                <h3>{{ (typeGroups|first).translationKey|trans({}, 'sessions') }}</h3>
+                <ul class="session-family-list">
+                    {% for group in typeGroups %}
+                        <li><strong>{{ group.title }}</strong>
+                            {% for version in group.versions %}<p class="internal-table-note">{{ version.session.title }} · {{ version.session.sessionDate|date('d/m/Y') }}{% if version.view.title != group.title %} — {{ version.view.title }}{% endif %}{% if not version.available %} — {{ 'sessions.family.unavailable'|trans({}, 'sessions') }}{% endif %}</p>{% endfor %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endfor %}
+        </section>
+    {% endif %}
+{% endblock %}

@@ -3,7 +3,18 @@
         {{ form_row(form.title) }}
         {{ form_row(form.subtitle) }}
         {{ form_row(form.themeUuids) }}
-        {{ form_row(form.organizations) }}
+        {% if session is defined %}
+            {% set assignedFamily = families|filter(family => session.familyUuid and session.familyUuid.toRfc4122 == family.uuid.toRfc4122)|first %}
+            <div class="session-family-field">
+                {{ form_label(form.family) }}
+                <div class="session-family-field__control">
+                    {{ form_widget(form.family) }}
+                    <a class="internal-icon-button" href="{{ path('session_family_new', {session: session.uuid}) }}" title="{{ 'sessions.family.create'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.family.create'|trans({}, 'sessions') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'plus'} only %}</a>
+                    {% if assignedFamily %}<a class="internal-icon-button" href="{{ path('session_family_show', {uuid: assignedFamily.uuid}) }}" title="{{ 'sessions.family.open'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.family.open'|trans({}, 'sessions') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'external'} only %}</a>{% endif %}
+                </div>
+                {{ form_errors(form.family) }}
+            </div>
+        {% endif %}
     </div>
 
     {% if form.published is defined %}{{ form_widget(form.published, { attr: { hidden: true, 'data-session-publication-form-input': true } }) }}{% endif %}
@@ -11,6 +22,7 @@
     <div class="internal-form__grid">
         {{ form_row(form.sessionDate) }}
         {{ form_row(form.instrumentUuids) }}
+        {{ form_row(form.organizations, {row_attr: {class: 'session-summary-form__organization'}}) }}
     </div>
 
     <details class="session-summary-form__private-notes" {% if form.generalNotes.vars.data %}open{% endif %}>
