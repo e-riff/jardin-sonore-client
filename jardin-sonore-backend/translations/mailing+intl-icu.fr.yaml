@@ -235,6 +235,7 @@ mailing:
     delivery_sent: "Envoyée"
     delivery_failed: "Échec d’envoi"
   content:
+    other_actions: "Autres actions"
     title: "{campaign} | Jardin Sonore"
     eyebrow: "Contenu de la newsletter"
     description: "Préparez le contenu éditorial et les recommandations qui seront affichés dans l’e-mail."

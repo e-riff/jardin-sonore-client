@@ -11,7 +11,7 @@
             <p>{{ 'mailing.content.description'|trans({}, 'mailing') }}</p>
         </div>
 
-        <div class="internal-heading-actions">
+        <div class="internal-heading-actions mailing-content-heading__desktop-actions">
             <a class="internal-button internal-button--secondary" href="{{ path('mailing_report', {uuid: campaign.uuid}) }}">{{ 'mailing.report.title'|trans({}, 'mailing') }}</a>
             <a class="internal-button" href="{{ path('mailing_audience', {
                 uuid: campaign.uuid,
@@ -34,6 +34,18 @@
                 {{ 'mailing.content.send_test'|trans({}, 'mailing') }}
             </a>
 
+        </div>
+        <div class="internal-heading-actions mailing-content-heading__mobile-actions">
+            <a class="internal-button" href="{{ path('mailing_audience', {uuid: campaign.uuid, returnTo: path('mailing_content', {uuid: campaign.uuid})}) }}">{{ 'mailing.content.configure_audience'|trans({}, 'mailing') }}</a>
+            <details class="session-pdf-menu" data-controller="internal-popover">
+                <summary class="internal-button internal-button--secondary">{{ 'mailing.content.other_actions'|trans({}, 'mailing') }}</summary>
+                <div class="session-pdf-menu__panel">
+                    <a href="{{ path('mailing_report', {uuid: campaign.uuid}) }}">{{ 'mailing.report.title'|trans({}, 'mailing') }}</a>
+                    {% if campaign.canExtendAudience %}<a href="{{ path('mailing_audience_extend', {uuid: campaign.uuid, returnTo: path('mailing_content', {uuid: campaign.uuid})}) }}">{{ 'mailing.content.extend_audience'|trans({}, 'mailing') }}</a>{% endif %}
+                    <a href="{{ path('mailing_preview', {uuid: campaign.uuid}) }}">{{ 'mailing.content.preview'|trans({}, 'mailing') }}</a>
+                    <a href="{{ path('mailing_test', {uuid: campaign.uuid}) }}">{{ 'mailing.content.send_test'|trans({}, 'mailing') }}</a>
+                </div>
+            </details>
         </div>
     </section>
 

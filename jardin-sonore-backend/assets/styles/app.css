@@ -7939,3 +7939,56 @@ a.session-composer-overlay__item {
 .commercial-week__map svg { width: 1rem; height: 1rem; flex: none; }
 .commercial-week__map span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 600px) { .commercial-week__map span { display: none; } }
+
+.mailing-content-heading .mailing-content-heading__mobile-actions {
+    display: none;
+}
+
+.commercial-dossier__delete svg {
+    display: none;
+}
+
+@media (max-width: 760px) {
+    .internal-page-heading > .internal-heading-actions,
+    .commercial-dossier__hero-meta > .internal-heading-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 8px;
+    }
+
+    .internal-page-heading > .internal-heading-actions .internal-button,
+    .commercial-dossier__hero-meta > .internal-heading-actions .internal-button {
+        width: auto;
+        max-width: 100%;
+        min-height: 44px;
+        white-space: normal;
+    }
+
+    .internal-page-heading > .internal-heading-actions > form {
+        max-width: 100%;
+    }
+
+    .mailing-content-heading .mailing-content-heading__desktop-actions {
+        display: none;
+    }
+
+    .mailing-content-heading .mailing-content-heading__mobile-actions {
+        display: flex;
+    }
+
+    .commercial-dossier__delete span {
+        display: none;
+    }
+
+    .commercial-dossier__delete svg {
+        display: block;
+        width: 1rem;
+        height: 1rem;
+    }
+
+    .commercial-dossier__hero-meta > .internal-heading-actions .commercial-dossier__delete {
+        width: 44px;
+        padding: 0;
+    }
+}
