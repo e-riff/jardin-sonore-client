@@ -83,7 +83,7 @@ final class CommercialProjectQueueTest extends KernelTestCase
         self::assertEqualsCanonicalizing([$projects['confirmed']->getId(), $projects['priority']->getId(), $projects['upcoming']->getId()], $confirmedIds);
     }
 
-    public function testWeekSessionsIncludePastAndSundayButExcludeCancelledUnlinkedAndOutsideParisWeek(): void
+    public function testWeekSessionsStartTodayAndExcludeCancelledUnlinkedAndOutsideParisWeek(): void
     {
         $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         $organizationEntity = (new OrganizationEntity())->setName('Structure semaine');
@@ -97,6 +97,7 @@ final class CommercialProjectQueueTest extends KernelTestCase
             'past' => '2026-10-20 08:00:00 UTC',
             'cancelled' => '2026-10-21 08:00:00 UTC',
             'unlinked' => '2026-10-22 08:00:00 UTC',
+            'today' => '2026-10-24 22:00:00 UTC',
             'sunday' => '2026-10-25 22:59:59 UTC',
             'nextMonday' => '2026-10-25 23:00:00 UTC',
         ] as $key => $date) {
@@ -111,7 +112,7 @@ final class CommercialProjectQueueTest extends KernelTestCase
         $entityManager->flush();
         $repository = self::getContainer()->get(CommercialInterventionDoctrineRepository::class);
         $results = array_values(array_filter($repository->forWeek(new DateTimeImmutable('2026-10-25 12:00:00 Europe/Paris')), static fn ($session): bool => $session->getProject()?->getId() === $projectEntity->getId()));
-        self::assertSame([$sessions['monday']->getId(), $sessions['past']->getId(), $sessions['sunday']->getId()], array_map(static fn ($session): ?int => $session->getId(), $results));
+        self::assertSame([$sessions['today']->getId(), $sessions['sunday']->getId()], array_map(static fn ($session): ?int => $session->getId(), $results));
     }
 
     public function testAProjectAppearsOnceWithItsEarliestOpenTaskAndNewBadge(): void

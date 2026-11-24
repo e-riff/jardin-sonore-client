@@ -139,6 +139,9 @@ project:
     confirmed_active: Dossiers validés en cours
     confirmed_intro: Retrouvez tous les dossiers validés en cours, avec ou sans rappel.
     week_sessions: Séances de cette semaine
+    views: Vues
+    filters: Filtres
+    filters_active: Filtres modifiés
     closed: Dossiers clos
     dossier: Dossier
     state: État

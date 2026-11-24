@@ -799,6 +799,34 @@ button:disabled {
     font-size: clamp(2rem, 3vw, 2.5rem);
 }
 
+.commercial-project-hero__title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+}
+
+.commercial-project-hero__title-row h1 {
+    min-width: 0;
+    margin: 0;
+}
+
+.commercial-project-hero__actions {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-shrink: 0;
+}
+
+.commercial-project-hero__create {
+    padding: .7rem;
+}
+
+.commercial-project-hero__create svg {
+    width: 1.15rem;
+    height: 1.15rem;
+}
+
 .commercial-project-hero > p:not(.internal-eyebrow) {
     margin: 10px 0;
 }
@@ -837,6 +865,14 @@ button:disabled {
 .commercial-project-browser__controls input,
 .commercial-project-browser__controls select {
     width: 100%;
+}
+
+.commercial-project-browser__desktop-filters {
+    display: contents;
+}
+
+.commercial-project-browser__mobile-filters {
+    display: none;
 }
 
 .commercial-project-group {
@@ -7089,12 +7125,26 @@ a.session-composer-overlay__item {
     }
 
     .commercial-project-browser__controls {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: end;
         padding: 12px;
     }
 
     .commercial-project-browser__controls .internal-search__field:first-child {
-        grid-column: 1 / -1;
+        grid-column: auto;
+    }
+
+    .commercial-project-browser__desktop-filters {
+        display: none;
+    }
+
+    .commercial-project-browser__mobile-filters {
+        display: block;
+    }
+
+    .commercial-project-browser__filter-panel {
+        gap: 12px;
+        padding: 14px;
     }
 
     .commercial-project-group > summary {
@@ -7816,6 +7866,15 @@ a.session-composer-overlay__item {
 @media (max-width: 600px) {
     .commercial-week__row {
         gap: .5rem;
+    }
+
+    .commercial-week__dossier-link {
+        flex-wrap: wrap;
+        gap: .15rem .5rem;
+    }
+
+    .commercial-week__dossier {
+        white-space: normal;
     }
 
     .commercial-week__location {

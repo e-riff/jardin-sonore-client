@@ -7,16 +7,19 @@
 {% block internal_body %}
     <section class="internal-hero commercial-project-hero">
         <p class="internal-eyebrow">{{ 'dashboard.eyebrow'|trans({}, 'commercial') }}</p>
-        <h1>{{ title }}</h1>
-        <p>{{ (isClosedIndex ? 'project.list.closed_intro' : (isConfirmedIndex ? 'project.list.confirmed_intro' : 'project.list.intro'))|trans({}, 'commercial') }}</p>
-        <div class="internal-heading-actions">
-            <a class="internal-button" href="{{ path('commercial_project_new') }}">{{ 'project.create.heading'|trans({}, 'commercial') }}</a>
-            {% if isClosedIndex or isConfirmedIndex %}
-                <a class="internal-button internal-button--secondary" href="{{ path('commercial_project_index') }}">{{ 'project.list.back_to_open'|trans({}, 'commercial') }}</a>
-            {% else %}
-                <a class="internal-button internal-button--secondary" href="{{ path('commercial_project_index', {status: 'confirmed'}) }}">{{ 'project.list.confirmed_active'|trans({}, 'commercial') }}</a>
-                <a class="internal-button internal-button--secondary" href="{{ path('commercial_project_index', {status: 'closed'}) }}">{{ 'project.list.closed'|trans({}, 'commercial') }}</a>
-            {% endif %}
+        <div class="commercial-project-hero__title-row">
+            <h1>{{ title }}</h1>
+            <div class="commercial-project-hero__actions">
+                <details class="session-pdf-menu commercial-project-hero__views" data-controller="internal-popover">
+                    <summary class="internal-button internal-button--secondary">{{ 'project.list.views'|trans({}, 'commercial') }}</summary>
+                    <div class="session-pdf-menu__panel">
+                        <a href="{{ path('commercial_project_index') }}">{{ 'project.list.back_to_open'|trans({}, 'commercial') }}</a>
+                        <a href="{{ path('commercial_project_index', {status: 'confirmed'}) }}">{{ 'project.list.confirmed_active'|trans({}, 'commercial') }}</a>
+                        <a href="{{ path('commercial_project_index', {status: 'closed'}) }}">{{ 'project.list.closed'|trans({}, 'commercial') }}</a>
+                    </div>
+                </details>
+                <a class="internal-button commercial-project-hero__create" href="{{ path('commercial_project_new') }}" title="{{ 'project.create.heading'|trans({}, 'commercial') }}" aria-label="{{ 'project.create.heading'|trans({}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'plus'} only %}</a>
+            </div>
         </div>
     </section>
     {% if weekInterventions is not empty %}
@@ -24,11 +27,18 @@
             <h2 id="commercial-week-heading">{{ 'project.list.week_sessions'|trans({}, 'commercial') }} <span class="internal-badge internal-badge--muted">{{ weekInterventions|length }}</span></h2>
             <ul class="commercial-week__list">
                 {% for intervention in weekInterventions %}
+                    {% set mapLocation = intervention.location|default('')|trim %}
+                    {% if not mapLocation and intervention.project.organization and intervention.project.organization.contactDetails %}
+                        {% for address in intervention.project.organization.contactDetails.addressContacts %}
+                            {% if not mapLocation and address.active %}{% set mapLocation = address|striptags|trim %}{% endif %}
+                        {% endfor %}
+                    {% endif %}
                     <li class="commercial-week__row"><a class="commercial-week__dossier-link" target="_blank" rel="noopener noreferrer" href="{{ path('commercial_project_show', {id: intervention.project.id}) }}">
                         <time datetime="{{ intervention.startsAt|date('c') }}">{{ intervention.startsAt|date('d/m · H:i', 'Europe/Paris') }}</time>
                         <span class="commercial-week__dossier" title="{{ intervention.project.title }}">{{ intervention.project.organization ? intervention.project.organization.name : intervention.project.title }}</span>
+                        {% if intervention.project.primaryContact %}<span>{{ intervention.project.primaryContact }}</span>{% endif %}
                         {% if intervention.status == 'option' %}<small>{{ 'calendar.status.option'|trans({}, 'commercial') }}</small>{% endif %}
-                    </a>{% if intervention.location %}<a class="commercial-week__map" href="https://www.google.com/maps/search/?api=1&amp;query={{ intervention.location|url_encode }}" target="_blank" rel="noopener noreferrer" title="{{ 'technical.directory.open_in_google_maps'|trans({}, 'technical') }} — {{ intervention.location }}" aria-label="{{ 'technical.directory.open_in_google_maps'|trans({}, 'technical') }} — {{ intervention.location }}">{% include 'commercial/project/_icon.html.twig' with {name: 'map'} only %}<span>{{ intervention.location }}</span></a>{% endif %}</li>
+                    </a>{% if mapLocation %}<a class="commercial-week__map" href="https://www.google.com/maps/search/?api=1&amp;query={{ mapLocation|url_encode }}" target="_blank" rel="noopener noreferrer" title="{{ 'technical.directory.open_in_google_maps'|trans({}, 'technical') }} — {{ mapLocation }}" aria-label="{{ 'technical.directory.open_in_google_maps'|trans({}, 'technical') }} — {{ mapLocation }}">{% include 'commercial/project/_icon.html.twig' with {name: 'map'} only %}<span>{{ mapLocation }}</span></a>{% endif %}</li>
                 {% endfor %}
             </ul>
         </section>

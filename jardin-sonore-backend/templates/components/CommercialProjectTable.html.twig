@@ -4,6 +4,7 @@
             <span>{{ 'project.list.search'|trans({}, 'commercial') }}</span>
             <input type="search" value="{{ query }}" data-model="debounce(300)|query" placeholder="{{ 'project.list.search_placeholder'|trans({}, 'commercial') }}">
         </label>
+        <div class="commercial-project-browser__desktop-filters">
         <label class="internal-search__field internal-search__field--compact">
             <span>{{ 'project.list.status'|trans({}, 'commercial') }}</span>
             <select data-model="on(change)|status">
@@ -20,6 +21,28 @@
                 <option value="name" {% if sort == 'name' %}selected{% endif %}>{{ 'project.list.sort_name'|trans({}, 'commercial') }}</option>
             </select>
         </label>
+        </div>
+        <details class="session-pdf-menu commercial-project-browser__mobile-filters" data-controller="internal-popover">
+            <summary class="internal-button internal-button--secondary">{{ 'project.list.filters'|trans({}, 'commercial') }}{% if status != 'active' or sort != 'urgency' %} <span aria-label="{{ 'project.list.filters_active'|trans({}, 'commercial') }}">•</span>{% endif %}</summary>
+            <div class="session-pdf-menu__panel commercial-project-browser__filter-panel">
+                <label class="internal-search__field">
+                    <span>{{ 'project.list.status'|trans({}, 'commercial') }}</span>
+                    <select data-model="on(change)|status">
+                        {% for value, label in {active: 'project.list.active', closed: 'project.list.closed', discussion: 'project.status.discussion', confirmed: 'project.list.confirmed_active', completed: 'project.status.completed', without_result: 'project.status.without_result', all: 'project.list.all'} %}
+                            <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label|trans({}, 'commercial') }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label class="internal-search__field">
+                    <span>{{ 'project.list.sort'|trans({}, 'commercial') }}</span>
+                    <select data-model="on(change)|sort">
+                        <option value="urgency" {% if sort == 'urgency' %}selected{% endif %}>{{ 'project.list.sort_urgency'|trans({}, 'commercial') }}</option>
+                        <option value="recent" {% if sort == 'recent' %}selected{% endif %}>{{ 'project.list.sort_recent'|trans({}, 'commercial') }}</option>
+                        <option value="name" {% if sort == 'name' %}selected{% endif %}>{{ 'project.list.sort_name'|trans({}, 'commercial') }}</option>
+                    </select>
+                </label>
+            </div>
+        </details>
     </div>
 
     {% set sections = this.sections %}
