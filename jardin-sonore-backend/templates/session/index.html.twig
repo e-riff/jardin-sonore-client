@@ -3,7 +3,7 @@
 {% set title = 'sessions.summary.index.title'|trans({}, 'sessions') %}
 
 {% block internal_body %}
-    <section class="internal-page-heading">
+    <section class="internal-page-heading session-index-heading">
         <div>
             <p class="internal-eyebrow">{{ 'sessions.summary.index.eyebrow'|trans({}, 'sessions') }}</p>
             <h1>{{ 'sessions.summary.index.heading'|trans({}, 'sessions') }}</h1>
@@ -88,15 +88,15 @@
                                                 data-session-publication-unpublished-label-value="{{ 'sessions.summary.table.unpublished'|trans({}, 'sessions') }}"
                                                 data-session-publication-error-label-value="{{ 'sessions.summary.table.publication_error'|trans({}, 'sessions') }}">
                                                 <span class="session-publication-switch__track" aria-hidden="true"><span class="session-publication-switch__thumb"></span></span>
-                                                <span class="internal-visually-hidden" aria-live="polite" data-session-publication-target="status">{{ (session.published ? 'sessions.summary.table.published' : 'sessions.summary.table.unpublished')|trans({}, 'sessions') }}</span>
+                                                <span aria-live="polite" data-session-publication-target="status">{{ (session.published ? 'sessions.summary.table.published' : 'sessions.summary.table.unpublished')|trans({}, 'sessions') }}</span>
                                         </button>
                                     </td>
                                     <td data-table-mobile="actions" data-label="{{ 'sessions.summary.table.actions'|trans({}, 'sessions') }}">
                                         <div class="instrument-catalog__actions">
-                                            <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('session_show', { uuid: session.uuid }) }}">{{ 'sessions.summary.table.preview'|trans({}, 'sessions') }}</a>
+                                            <a class="internal-icon-button" href="{{ path('session_show', { uuid: session.uuid }) }}" title="{{ 'sessions.summary.table.preview'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.summary.table.preview'|trans({}, 'sessions') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'eye'} only %}</a>
                                             <form method="post" action="{{ path('session_duplicate', {uuid: session.uuid}) }}">
                                                 <input type="hidden" name="_token" value="{{ csrf_token('session_duplicate_' ~ session.uuid) }}">
-                                                <button class="internal-button internal-button--secondary internal-button--compact" type="submit">{{ 'sessions.summary.duplicate.action'|trans({}, 'sessions') }}</button>
+                                                <button class="internal-icon-button" type="submit" title="{{ 'sessions.summary.duplicate.action'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.summary.duplicate.action'|trans({}, 'sessions') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'copy'} only %}</button>
                                             </form>
                                             {% if session.documentStatus.value == 'ready' %}<a class="internal-icon-button" href="{{ path('session_document_download', { uuid: session.uuid }) }}" title="{{ 'sessions.summary.document.download'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.summary.document.download'|trans({}, 'sessions') }}">⇩</a>{% endif %}
                                             <form class="session-index__document-action" method="post" action="{{ path('session_document_regenerate', { uuid: session.uuid }) }}">

@@ -54,7 +54,8 @@ final class SessionPublicationControllerTest extends WebTestCase
         self::assertCount(1, $crawler->filterXPath('//tr[@data-controller="catalog-row" and @data-catalog-row-url-value="/sessions/' . $sessionSummaryEntity->getUuid()->toRfc4122() . '/edit"]'));
         self::assertCount(0, $crawler->filterXPath('//tr[@data-controller="catalog-row"]//a[@title="Modifier"]'));
         self::assertCount(1, $crawler->filterXPath('//td[@data-table-mobile="publication"]//button[@data-controller="session-publication"]'));
-        self::assertCount(1, $publicationButton->filterXPath('.//span[contains(@class, "internal-visually-hidden")]'));
+        self::assertStringContainsString('Non publié', $publicationButton->text());
+        self::assertCount(1, $crawler->filterXPath('//td[@data-table-mobile="actions"]//a[@aria-label="Prévisualiser" and .//*[local-name()="svg"]]'));
         $csrfToken = $publicationButton->attr('data-session-publication-token-value');
         self::assertNotNull($csrfToken);
 
@@ -94,7 +95,7 @@ final class SessionPublicationControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $form = $crawler->filterXPath('//td[@data-table-mobile="actions"]//form[@method="post" and @action="/sessions/' . $uuid . '/duplicate"]');
         self::assertCount(1, $form);
-        self::assertSame('Dupliquer', trim($form->filterXPath('.//button')->text()));
+        self::assertCount(1, $form->filterXPath('.//button[@aria-label="Dupliquer" and .//*[local-name()="svg"]]'));
         $token = $form->filterXPath('.//input[@name="_token"]')->attr('value');
         $client->request('POST', "/sessions/{$uuid}/duplicate", ['_token' => 'invalid']);
         self::assertResponseStatusCodeSame(403);

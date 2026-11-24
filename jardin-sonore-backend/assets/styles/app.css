@@ -622,6 +622,10 @@ button:disabled {
     padding-left: 18px;
 }
 
+.session-edit-actions__icon-mobile svg {
+    display: none;
+}
+
 .session-pdf-menu {
     position: relative;
 }
@@ -5534,6 +5538,9 @@ a.session-composer-overlay__item {
 .session-index__document-action { display: inline-flex; }
 
 .session-publication-switch--button {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
     padding: .2rem;
     border: 0;
     background: transparent;
@@ -5634,6 +5641,7 @@ a.session-composer-overlay__item {
 .internal-search__field--themes { min-width: min(100%, 27rem); }
 
 .internal-icon-button { align-items: center; background: #fff; border: 1px solid rgba(30, 41, 59, .18); border-radius: .75rem; color: #334155; display: inline-flex; font-size: 1rem; height: 2.25rem; justify-content: center; text-decoration: none; width: 2.25rem; }
+.internal-icon-button svg { width: 1rem; height: 1rem; }
 .internal-icon-button--danger { color: #b91c1c; }
 
 .directory-page-heading { margin-bottom: 24px; }
@@ -6704,14 +6712,16 @@ a.session-composer-overlay__item {
 
     .session-edit-actions {
         display: flex;
-        align-items: stretch;
-        flex-direction: column;
-        gap: 12px;
+        align-items: center;
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 8px;
     }
 
     .session-edit-actions__documents {
-        display: block;
-        width: 100%;
+        display: flex;
+        width: auto;
+        gap: 8px;
     }
 
     .session-edit-actions__documents > .internal-button,
@@ -6721,11 +6731,45 @@ a.session-composer-overlay__item {
     }
 
     .session-edit-actions__delete {
-        width: 100%;
+        width: auto;
         margin: 0;
-        border-top: 1px solid color-mix(in oklab, var(--color-outline-variant) 60%, white);
-        border-left: 0;
-        padding: 12px 0 0;
+        border: 0;
+        padding: 0;
+    }
+
+    .session-edit-actions .internal-button,
+    .session-index-heading .internal-heading-actions .internal-button,
+    .commercial-calendar-page-heading .internal-heading-actions .internal-button {
+        width: auto;
+    }
+
+    .session-edit-actions__icon-mobile span {
+        display: none;
+    }
+
+    .session-edit-actions__icon-mobile svg {
+        display: block;
+        width: 1rem;
+        height: 1rem;
+    }
+
+    .session-edit-actions__icon-mobile {
+        padding: .7rem;
+    }
+
+    .session-index-heading,
+    .session-edit-heading {
+        gap: 12px;
+        margin-bottom: 22px;
+        padding-bottom: 18px;
+    }
+
+    .session-index-heading .internal-heading-actions,
+    .commercial-calendar-page-heading .internal-heading-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 8px;
     }
 
     .mailing-audience__groups,

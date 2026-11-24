@@ -130,6 +130,7 @@ sessions:
       themes: "Thèmes"
       activate: "Activer le média"
       deactivate: "Désactiver le média"
+      active_label: "Média actif"
     new:
       title: "Nouveau média | Jardin Sonore"
       eyebrow: "Médias"

@@ -6,7 +6,7 @@
 
 {% block internal_body %}
     {% include 'components/_internal_back_button.html.twig' with { href: path('session_index'), label: 'sessions.summary.edit.back'|trans({}, 'sessions') } only %}
-    <section class="internal-page-heading">
+    <section class="internal-page-heading session-edit-heading">
         <div>
             <p class="internal-eyebrow">{{ 'sessions.summary.edit.eyebrow'|trans({}, 'sessions') }}</p>
             <div class="session-edit-heading__title-row">
@@ -30,7 +30,7 @@
         <div class="internal-heading-actions session-edit-actions">
             <form method="post" action="{{ path('session_duplicate', {uuid: session.uuid}) }}">
                 <input type="hidden" name="_token" value="{{ csrf_token('session_duplicate_' ~ session.uuid) }}">
-                <button type="submit" class="internal-button internal-button--secondary">{{ 'sessions.summary.duplicate.action'|trans({}, 'sessions') }}</button>
+                <button type="submit" class="internal-button internal-button--secondary session-edit-actions__icon-mobile" title="{{ 'sessions.summary.duplicate.action'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.summary.duplicate.action'|trans({}, 'sessions') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'copy'} only %}<span>{{ 'sessions.summary.duplicate.action'|trans({}, 'sessions') }}</span></button>
             </form>
             <div class="session-edit-actions__documents">
                 <a class="internal-button session-edit-heading__preview" href="{{ path('session_show', { uuid: session.uuid }) }}" target="_blank" rel="noopener">{{ 'sessions.summary.edit.preview'|trans({}, 'sessions') }}</a>
@@ -46,7 +46,7 @@
                 </details>
             </div>
             <div class="session-edit-actions__delete">
-                <button type="button" class="internal-button internal-button--danger" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('session_remove', { uuid: session.uuid }) }}" data-confirmation-dialog-item-value="{{ session.title }}" data-confirmation-dialog-token-value="{{ csrf_token('session_remove_' ~ session.uuid) }}">{{ 'sessions.summary.edit.remove'|trans({}, 'sessions') }}</button>
+                <button type="button" class="internal-button internal-button--danger session-edit-actions__icon-mobile" title="{{ 'sessions.summary.edit.remove'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.summary.edit.remove'|trans({}, 'sessions') }}" {{ stimulus_action('confirmation-dialog', 'open') }} data-confirmation-dialog-action-value="{{ path('session_remove', { uuid: session.uuid }) }}" data-confirmation-dialog-item-value="{{ session.title }}" data-confirmation-dialog-token-value="{{ csrf_token('session_remove_' ~ session.uuid) }}">{% include 'commercial/project/_icon.html.twig' with {name: 'trash'} only %}<span>{{ 'sessions.summary.edit.remove'|trans({}, 'sessions') }}</span></button>
             </div>
         </div>
     </section>

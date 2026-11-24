@@ -40,6 +40,9 @@
 
 ## Repères de design du backoffice
 
+- Sur mobile, garder l'en-tête court : placer les actions principales compactes près du titre quand elles tiennent sans gêner sa lecture ; regrouper les autres choix courts dans un menu contextuel. Éviter les empilements de boutons pleine largeur et les descriptions redondantes.
+- Dans les listes, utiliser des boutons icônes compacts pour les actions répétées lorsque leur sens est clair, avec `title` et nom accessible ; garder un libellé visible pour les actions ambiguës. Préserver des cibles tactiles utilisables et vérifier que les actions ne débordent pas sur mobile.
+- Toujours accompagner un interrupteur d'un libellé visible qui indique ce qu'il commande ou son état ; ne pas compter sur la couleur ou la position seule. Placer les changements sensibles dans le détail lorsque leur effet exige du contexte.
 - Garder un espace visible entre chaque label et son champ, y compris dans les lignes Symfony imbriquées dans un `fieldset` ; l’anneau de focus ne doit jamais toucher ni recouvrir le label. Utiliser les règles communes de `.internal-form` plutôt que des espacements ponctuels.
 - Utiliser un bouton principal pour l’action principale d’une zone et un bouton secondaire pour les actions courantes. Garder les actions répétées compactes.
 - Placer les actions destructives dans le détail de l’élément et demander une confirmation pour annuler ou supprimer.

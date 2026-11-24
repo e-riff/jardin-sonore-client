@@ -136,6 +136,7 @@
                                         {% endif %}
                                         <button type="button" class="session-publication-switch session-publication-switch--button media-catalog-switch" data-controller="media-switch" role="switch" aria-checked="{{ item.active ? 'true' : 'false' }}" aria-label="{{ (item.active ? 'sessions.media.table.deactivate' : 'sessions.media.table.activate')|trans({}, 'sessions') }}" title="{{ (item.active ? 'sessions.media.table.deactivate' : 'sessions.media.table.activate')|trans({}, 'sessions') }}" {{ stimulus_action('media-switch', 'toggle')|stimulus_action('live', 'action', null, { action: 'toggleActive', uuid: item.uuid.toRfc4122 }) }}>
                                             <span class="session-publication-switch__track"><span class="session-publication-switch__thumb"></span></span>
+                                            <span>{{ 'sessions.media.table.active_label'|trans({}, 'sessions') }}</span>
                                         </button>
                                         {% include 'components/_catalog_actions.html.twig' with { editUrl: path('media_resource_edit', { uuid: item.uuid.toRfc4122 }), deleteUrl: path('media_resource_delete', { uuid: item.uuid.toRfc4122 }), itemLabel: item.title, token: csrf_token('media_resource_delete_' ~ item.uuid.toRfc4122), editLabel: 'sessions.media.table.edit'|trans({}, 'sessions'), deleteLabel: 'sessions.media.table.delete'|trans({}, 'sessions') } only %}
                                     </div>
