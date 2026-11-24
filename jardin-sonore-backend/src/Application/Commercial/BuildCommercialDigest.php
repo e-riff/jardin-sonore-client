@@ -9,7 +9,6 @@ use App\Infrastructure\Doctrine\Entity\CommercialAppointmentEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialInterventionEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialInvoiceEntity;
 use App\Infrastructure\Doctrine\Entity\CommercialInvoicePreparationEntity;
-use App\Infrastructure\Doctrine\Entity\CommercialProjectEntity;
 use DateTimeImmutable;
 use DateTimeZone;
 use Doctrine\DBAL\Types\Types;
@@ -30,6 +29,8 @@ final readonly class BuildCommercialDigest
             ->setParameter('status', CommercialActionEntity::STATUS_OPEN)
             ->setParameter('today', $localDate, Types::DATE_IMMUTABLE)
             ->orderBy('action.dueOn', 'ASC')
+            ->addOrderBy('action.dueTime', 'ASC')
+            ->addOrderBy('action.id', 'ASC')
             ->getQuery()->getResult();
 
         $invoiceQueryBuilder = $this->entityManager->getRepository(CommercialInvoiceEntity::class)->createQueryBuilder('invoice');
@@ -65,25 +66,6 @@ final readonly class BuildCommercialDigest
                 $invoicePreparations[] = $actionEntity;
             } elseif (!in_array($actionEntity->getId(), $invoiceReminderIds, true)) {
                 $dueActions[] = $actionEntity;
-            }
-        }
-
-        $withoutAction = [];
-        if ('1' === $localDate->format('N')) {
-            $projects = $this->entityManager->getRepository(CommercialProjectEntity::class)->findBy([
-                'status' => [CommercialProjectEntity::STATUS_DISCUSSION, CommercialProjectEntity::STATUS_CONFIRMED],
-            ]);
-            foreach ($projects as $projectEntity) {
-                $hasOpenAction = false;
-                foreach ($projectEntity->getActions() as $actionEntity) {
-                    if (CommercialActionEntity::STATUS_OPEN === $actionEntity->getStatus()) {
-                        $hasOpenAction = true;
-                        break;
-                    }
-                }
-                if (!$hasOpenAction) {
-                    $withoutAction[] = $projectEntity;
-                }
             }
         }
 
@@ -125,6 +107,6 @@ final readonly class BuildCommercialDigest
             }
         }
 
-        return new CommercialDigest($localDate, $dueActions, $overdueInvoices, $withoutAction, $upcomingInterventions, $calendarSyncWarning, $todayAppointments, $appointmentSyncWarning, $invoicePreparations);
+        return new CommercialDigest($localDate, $dueActions, $overdueInvoices, [], $upcomingInterventions, $calendarSyncWarning, $todayAppointments, $appointmentSyncWarning, $invoicePreparations);
     }
 }

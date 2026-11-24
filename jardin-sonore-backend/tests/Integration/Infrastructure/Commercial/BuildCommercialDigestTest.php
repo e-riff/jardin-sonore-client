@@ -130,8 +130,7 @@ final class BuildCommercialDigestTest extends KernelTestCase
 
         $builder = new BuildCommercialDigest($entityManager);
         $mondayDigest = $builder->forDate(new DateTimeImmutable('2026-10-12'));
-        self::assertContains($projectWithoutActionEntity, $mondayDigest->withoutAction);
-        self::assertContains($provisionalProjectEntity, $mondayDigest->withoutAction);
+        self::assertSame([], $mondayDigest->withoutAction);
         self::assertContains($invoiceEntity, $mondayDigest->overdueInvoices);
         self::assertNotContains($reminderActionEntity, $mondayDigest->dueActions);
         self::assertContains($timedActionEntity, $mondayDigest->dueActions);
@@ -143,11 +142,11 @@ final class BuildCommercialDigestTest extends KernelTestCase
         $text = $twig->render('commercial/digest_email.txt.twig', ['digest' => $mondayDigest]);
         self::assertStringNotContainsString('/commercial/requests/' . $requestEntity->getId(), $html);
         self::assertStringNotContainsString('/commercial/requests/' . $requestEntity->getId(), $text);
-        self::assertSame(1, substr_count($html, '/commercial/projects/' . $provisionalProjectEntity->getId()));
-        self::assertSame(1, substr_count($text, '/commercial/projects/' . $provisionalProjectEntity->getId()));
+        self::assertStringNotContainsString('/commercial/projects/' . $provisionalProjectEntity->getId(), $html);
+        self::assertStringNotContainsString('/commercial/projects/' . $provisionalProjectEntity->getId(), $text);
         self::assertStringNotContainsString('Relancer facture', $html);
-        self::assertStringContainsString('Sans structure liée', $html);
-        self::assertStringContainsString('Sans structure liée', $text);
+        self::assertStringNotContainsString('Sans structure liée', $html);
+        self::assertStringNotContainsString('Sans structure liée', $text);
         self::assertStringContainsString('vers 14 h', $html);
         self::assertStringContainsString('vers 14 h', $text);
         self::assertStringContainsString('Rendez-vous du jour', $html);
@@ -156,5 +155,25 @@ final class BuildCommercialDigestTest extends KernelTestCase
 
         $tuesdayDigest = $builder->forDate(new DateTimeImmutable('2026-10-13'));
         self::assertSame([], $tuesdayDigest->withoutAction);
+    }
+
+    public function testActionsAreOrderedByDateThenUntimedBeforeTimedInEachSection(): void
+    {
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $project = new CommercialProjectEntity('Ordre du récapitulatif', null, null, new DateTimeImmutable('2026-11-01'));
+        $entityManager->persist($project);
+        $actions = [];
+        foreach (['late' => ['2026-11-13', '16:00'], 'earlier_day' => ['2026-11-12', '18:00'], 'early' => ['2026-11-13', '09:00'], 'untimed' => ['2026-11-13', null]] as $name => [$date, $time]) {
+            $action = new CommercialActionEntity($project, $name, new DateTimeImmutable($date));
+            if (null !== $time) {
+                $action->setDueTime($time);
+            }
+            $project->addAction($action);
+            $actions[$name] = $action;
+        }
+        $entityManager->flush();
+        $digest = (new BuildCommercialDigest($entityManager))->forDate(new DateTimeImmutable('2026-11-13'));
+        $actual = array_values(array_filter($digest->dueActions, static fn (CommercialActionEntity $action): bool => $action->getProject() === $project));
+        self::assertSame([$actions['earlier_day'], $actions['untimed'], $actions['early'], $actions['late']], $actual);
     }
 }

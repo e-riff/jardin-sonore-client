@@ -190,6 +190,10 @@ project:
     person_conflict: Choisir une personne existante ou en créer une, mais pas les deux.
     task_incomplete: Indiquer un libellé et une date pour la tâche.
   organization: Structure
+  correct_organization: Corriger la structure du dossier
+  correct_organization_help: Choisissez la structure correcte. Les interlocuteurs de l’ancienne structure ne suivront plus le dossier, mais resteront dans son historique et dans l’annuaire. La demande d’origine est conservée.
+  correct_organization_save: Corriger la structure
+  contact_other_organization: Rattaché à %organization% dans l’annuaire
   people: Interlocuteurs
   history: Fil du dossier
   actions: À faire
@@ -269,6 +273,7 @@ event:
   project_status_changed: État du dossier modifié
   initial_message: Premier message reçu
   organization_linked: Structure rattachée
+  organization_corrected: Structure corrigée
   request_qualified: Demande qualifiée
   note: Note
   action_created: Action créée

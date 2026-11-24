@@ -12,6 +12,25 @@
                 <div class="commercial-dossier__record-heading">
                     <strong>{{ project.organization.name }}</strong>
                     <a class="commercial-dossier__icon-action" href="{{ path('internal_directory_index', {section: 'organizations', selectedId: project.organization.id}) }}" title="{{ 'project.open_directory_record'|trans({}, 'commercial') }}" aria-label="{{ 'project.open_directory_record'|trans({}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</a>
+                    <div data-controller="internal-dialog">
+                        <button type="button" class="commercial-dossier__icon-action" data-action="internal-dialog#open" aria-haspopup="dialog" aria-controls="commercial-organization-correction-{{ project.id }}" title="{{ 'project.correct_organization'|trans({}, 'commercial') }}" aria-label="{{ 'project.correct_organization'|trans({}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'change'} only %}</button>
+                        <dialog id="commercial-organization-correction-{{ project.id }}" class="internal-form-dialog" aria-labelledby="commercial-organization-correction-title-{{ project.id }}" data-internal-dialog-target="dialog" data-action="click->internal-dialog#closeOnBackdrop">
+                            <div class="internal-form-dialog__panel">
+                                <button type="button" class="internal-form-dialog__close" data-action="internal-dialog#close" aria-label="{{ 'internal.confirmation.delete.close'|trans({}, 'internal') }}">×</button>
+                                <h2 id="commercial-organization-correction-title-{{ project.id }}">{{ 'project.correct_organization'|trans({}, 'commercial') }}</h2>
+                                <p>{{ 'project.correct_organization_help'|trans({}, 'commercial') }}</p>
+                                {{ form_start(organizationForm, {action: path('commercial_project_organization_correct', {id: project.id}), attr: {class: 'internal-form'}}) }}
+                                    <input type="hidden" name="previousOrganizationId" value="{{ project.organization.id }}">
+                                    {{ form_row(organizationForm.organization, {attr: {required: true}}) }}
+                                    {{ form_widget(organizationForm._token) }}
+                                    <div class="internal-form-dialog__actions">
+                                        <button type="button" class="internal-button internal-button--secondary" data-action="internal-dialog#close">{{ 'project.contact_former_cancel'|trans({}, 'commercial') }}</button>
+                                        <button class="internal-button" type="submit">{{ 'project.correct_organization_save'|trans({}, 'commercial') }}</button>
+                                    </div>
+                                {{ form_end(organizationForm, {render_rest: false}) }}
+                            </div>
+                        </dialog>
+                    </div>
                 </div>
                 {% if project.organization.municipalitySummary and project.organization.municipalitySummary != '—' %}<span class="commercial-dossier__muted">{{ project.organization.municipalitySummary }}</span>{% endif %}
             </div>
@@ -28,7 +47,8 @@
             <summary>{{ 'project.people'|trans({}, 'commercial') }} <span class="commercial-dossier__count">{{ project.people|length }}</span>{% if project.primaryContact %}<span class="commercial-dossier__summary-person">{{ project.primaryContact }}</span>{% endif %}</summary>
             {% for projectPerson in project.people %}
                 <div class="commercial-dossier__person">
-                    <div class="commercial-dossier__person-heading"><strong>{{ projectPerson.person }}</strong><a class="commercial-dossier__icon-action" href="{{ path('internal_directory_index', {section: 'people', selectedId: projectPerson.person.id}) }}" title="{{ 'project.open_directory_record'|trans({}, 'commercial') }}" aria-label="{{ 'project.open_directory_record'|trans({}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</a>{% if project.primaryContact == projectPerson.person %}<span class="commercial-dossier__primary" title="{{ 'project.primary_contact'|trans({}, 'commercial') }}">{{ 'project.primary_contact'|trans({}, 'commercial') }}</span>{% endif %}{% if not projectPerson.current %}<span class="internal-badge internal-badge--muted">{{ 'project.contact_former'|trans({}, 'commercial') }}</span>{% endif %}</div>
+                    <div class="commercial-dossier__person-heading"><strong>{{ projectPerson.person }}</strong><a class="commercial-dossier__icon-action" href="{{ path('internal_directory_index', {section: 'people', selectedId: projectPerson.person.id}) }}" title="{{ 'project.open_directory_record'|trans({}, 'commercial') }}" aria-label="{{ 'project.open_directory_record'|trans({}, 'commercial') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</a>{% if project.primaryContact and project.primaryContact.id == projectPerson.person.id %}<span class="commercial-dossier__primary" title="{{ 'project.primary_contact'|trans({}, 'commercial') }}">{{ 'project.primary_contact'|trans({}, 'commercial') }}</span>{% endif %}{% if not projectPerson.current %}<span class="internal-badge internal-badge--muted">{{ 'project.contact_former'|trans({}, 'commercial') }}</span>{% endif %}</div>
+                    {% if projectPerson.current and projectPerson.person.organization and projectPerson.person.organization.id != project.organization.id %}<span class="internal-badge internal-badge--warning">{{ 'project.contact_other_organization'|trans({'%organization%': projectPerson.person.organization.name}, 'commercial') }}</span>{% endif %}
                     {% if projectPerson.person.role %}<span class="commercial-dossier__muted">{{ projectPerson.person.role }}</span>{% endif %}
                     {% if projectPerson.current %}
                         <div data-controller="internal-dialog">

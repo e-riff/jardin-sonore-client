@@ -191,7 +191,7 @@ final class CommercialProjectController extends AbstractController
             'appointmentRequestId' => bin2hex(random_bytes(16)),
             'portalAccessForm' => $portalAccessForm,
             'noteForm' => $form,
-            'organizationForm' => null === $projectEntity->getOrganization() ? $this->createForm(CommercialProjectOrganizationType::class) : null,
+            'organizationForm' => $this->createForm(CommercialProjectOrganizationType::class),
             'driveLinks' => [
                 'root' => $driveRootUrl,
                 'quotes' => $driveQuotesUrl,
@@ -263,6 +263,42 @@ final class CommercialProjectController extends AbstractController
         return $this->redirectToRoute('commercial_project_show', ['id' => $id]);
     }
 
+    #[Route('/{id}/organization/correct', name: 'organization_correct', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function correctOrganization(int $id, Request $request, EntityManagerInterface $entityManager, ClockInterface $clock): Response
+    {
+        $projectEntity = $this->findProject($id, $entityManager);
+        $oldOrganization = $projectEntity->getOrganization();
+        if (null === $oldOrganization) {
+            return new Response(status: Response::HTTP_CONFLICT);
+        }
+        if ((string) $oldOrganization->getId() !== $request->request->getString('previousOrganizationId')) {
+            return new Response(status: Response::HTTP_CONFLICT);
+        }
+        $form = $this->createForm(CommercialProjectOrganizationType::class);
+        $form->handleRequest($request);
+        if (!$form->isSubmitted() || !$form->isValid()) {
+            return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        $data = $form->getData();
+        $organizationEntity = $data['organization'] ?? null;
+        if (!$organizationEntity instanceof OrganizationEntity || !$organizationEntity->isActive() || $organizationEntity === $oldOrganization || '' !== trim((string) ($data['newOrganizationName'] ?? ''))) {
+            return new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        foreach ($projectEntity->getPeople() as $projectPerson) {
+            if ($projectPerson->isCurrent() && $projectPerson->getPerson()->getOrganization()?->getId() === $oldOrganization->getId()) {
+                $projectPerson->markFormer();
+            }
+        }
+        if ($projectEntity->getPrimaryContact()?->getOrganization()?->getId() === $oldOrganization->getId()) {
+            $projectEntity->setPrimaryContact(null);
+        }
+        $projectEntity->setOrganization($organizationEntity);
+        $projectEntity->recordEvent('organization_corrected', $clock->now(), $oldOrganization->getName() . ' → ' . $organizationEntity->getName());
+        $entityManager->flush();
+
+        return $this->redirectToRoute('commercial_project_show', ['id' => $id]);
+    }
+
     #[Route('/{id}/notes', name: 'note', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function note(int $id, Request $request, EntityManagerInterface $entityManager, ClockInterface $clock): Response
     {
@@ -277,7 +313,7 @@ final class CommercialProjectController extends AbstractController
                 'appointmentRequestId' => bin2hex(random_bytes(16)),
                 'portalAccessForm' => $this->portalAccessForm($projectEntity),
                 'noteForm' => $form,
-                'organizationForm' => null === $projectEntity->getOrganization() ? $this->createForm(CommercialProjectOrganizationType::class) : null,
+                'organizationForm' => $this->createForm(CommercialProjectOrganizationType::class),
             ], new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY));
         }
 
@@ -297,7 +333,7 @@ final class CommercialProjectController extends AbstractController
                 'portalAccessForm' => $this->portalAccessForm($projectEntity),
                 'noteForm' => $form,
                 'noteError' => 'note.due_required',
-                'organizationForm' => null === $projectEntity->getOrganization() ? $this->createForm(CommercialProjectOrganizationType::class) : null,
+                'organizationForm' => $this->createForm(CommercialProjectOrganizationType::class),
             ], new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY));
         }
 

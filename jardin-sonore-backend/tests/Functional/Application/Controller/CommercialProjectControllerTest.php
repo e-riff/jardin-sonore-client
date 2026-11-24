@@ -33,6 +33,58 @@ final class CommercialProjectControllerTest extends WebTestCase
         return new Kernel($options['environment'] ?? 'test', $options['debug'] ?? true);
     }
 
+    public function testOrganizationCanBeCorrectedWithCsrfAndKeepsRequestHistory(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(5));
+        $admin = (new AdminUserEntity())->setEmail("correction-{$suffix}@example.test")->setPassword('unused');
+        $oldOrganization = (new OrganizationEntity())->setName("Ancienne {$suffix}");
+        $newOrganization = (new OrganizationEntity())->setName("Nouvelle {$suffix}");
+        $person = (new PersonEntity())->setFirstName('Camille')->setLastName('Martin');
+        $oldOrganization->addPerson($person);
+        $otherPerson = (new PersonEntity())->setFirstName('Lou')->setLastName('Durand');
+        $newOrganization->addPerson($otherPerson);
+        $inactiveOrganization = (new OrganizationEntity())->setName("Inactive {$suffix}")->setActive(false);
+        $request = new CommercialRequestEntity('manual', 'Contact', '', 'Demande initiale', new DateTimeImmutable('2026-10-01'));
+        $request->setOrganization($oldOrganization);
+        $project = new CommercialProjectEntity('Dossier à corriger', $oldOrganization, $request, new DateTimeImmutable('2026-10-01'));
+        $project->addPerson(new CommercialProjectPersonEntity($project, $person, new DateTimeImmutable('2026-10-01')));
+        $project->addPerson(new CommercialProjectPersonEntity($project, $otherPerson, new DateTimeImmutable('2026-10-01')));
+        $project->setPrimaryContact($person);
+        foreach ([$admin, $oldOrganization, $newOrganization, $inactiveOrganization, $person, $otherPerson, $request, $project] as $entity) {
+            $entityManager->persist($entity);
+        }
+        $entityManager->flush();
+        $client->loginUser($admin);
+        $path = '/commercial/projects/' . $project->getId() . '/organization/correct';
+        $crawler = $client->request('GET', '/commercial/projects/' . $project->getId());
+        self::assertResponseIsSuccessful();
+        $form = $crawler->filterXPath('//form[@action="' . $path . '"]');
+        self::assertCount(1, $form);
+        $token = $form->filterXPath('.//input[contains(@name, "[_token]")]')->attr('value');
+        $client->request('POST', $path, ['previousOrganizationId' => $oldOrganization->getId(), 'commercial_project_organization' => ['organization' => $newOrganization->getId(), '_token' => 'invalid']]);
+        self::assertResponseStatusCodeSame(422);
+        $client->request('POST', $path, ['previousOrganizationId' => $oldOrganization->getId(), 'commercial_project_organization' => ['organization' => $inactiveOrganization->getId(), '_token' => $token]]);
+        self::assertResponseStatusCodeSame(422);
+        $client->request('POST', $path, ['previousOrganizationId' => $oldOrganization->getId(), 'commercial_project_organization' => ['organization' => $newOrganization->getId(), '_token' => $token]]);
+        self::assertResponseRedirects('/commercial/projects/' . $project->getId());
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $saved = $entityManager->find(CommercialProjectEntity::class, $project->getId());
+        self::assertSame($newOrganization->getId(), $saved->getOrganization()?->getId());
+        self::assertSame($oldOrganization->getId(), $saved->getRequest()?->getOrganization()?->getId());
+        self::assertNull($saved->getPrimaryContact());
+        self::assertFalse($saved->getPeople()->first()->isCurrent());
+        self::assertSame($oldOrganization->getId(), $saved->getPeople()->first()->getPerson()->getOrganization()?->getId());
+        self::assertTrue($saved->getPeople()->last()->isCurrent());
+        self::assertCount(1, $saved->getEvents());
+        self::assertSame('organization_corrected', $saved->getEvents()->first()->getType());
+        $crawler = $client->followRedirect();
+        self::assertStringContainsString('Ancien interlocuteur', $crawler->text());
+        $client->request('POST', $path, ['previousOrganizationId' => $oldOrganization->getId(), 'commercial_project_organization' => ['organization' => $newOrganization->getId(), '_token' => $token]]);
+        self::assertResponseStatusCodeSame(409);
+    }
+
     public function testDossierShowsContactsTasksDocumentsAndNewestTimelineEntry(): void
     {
         $client = static::createClient();
