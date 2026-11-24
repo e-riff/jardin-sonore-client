@@ -90,6 +90,11 @@ final class SessionPublicationControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $form = $crawler->filterXPath('//form[@action="/sessions/' . $uuid . '/duplicate"]');
         self::assertCount(1, $form);
+        $crawler = $client->request('GET', '/sessions?query=' . urlencode('Séance à dupliquer'));
+        self::assertResponseIsSuccessful();
+        $form = $crawler->filterXPath('//td[@data-table-mobile="actions"]//form[@method="post" and @action="/sessions/' . $uuid . '/duplicate"]');
+        self::assertCount(1, $form);
+        self::assertSame('Dupliquer', trim($form->filterXPath('.//button')->text()));
         $token = $form->filterXPath('.//input[@name="_token"]')->attr('value');
         $client->request('POST', "/sessions/{$uuid}/duplicate", ['_token' => 'invalid']);
         self::assertResponseStatusCodeSame(403);

@@ -94,6 +94,10 @@
                                     <td data-table-mobile="actions" data-label="{{ 'sessions.summary.table.actions'|trans({}, 'sessions') }}">
                                         <div class="instrument-catalog__actions">
                                             <a class="internal-button internal-button--secondary internal-button--compact" href="{{ path('session_show', { uuid: session.uuid }) }}">{{ 'sessions.summary.table.preview'|trans({}, 'sessions') }}</a>
+                                            <form method="post" action="{{ path('session_duplicate', {uuid: session.uuid}) }}">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('session_duplicate_' ~ session.uuid) }}">
+                                                <button class="internal-button internal-button--secondary internal-button--compact" type="submit">{{ 'sessions.summary.duplicate.action'|trans({}, 'sessions') }}</button>
+                                            </form>
                                             {% if session.documentStatus.value == 'ready' %}<a class="internal-icon-button" href="{{ path('session_document_download', { uuid: session.uuid }) }}" title="{{ 'sessions.summary.document.download'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.summary.document.download'|trans({}, 'sessions') }}">⇩</a>{% endif %}
                                             <form class="session-index__document-action" method="post" action="{{ path('session_document_regenerate', { uuid: session.uuid }) }}">
                                                 <input type="hidden" name="_token" value="{{ csrf_token('session_document_regenerate_' ~ session.uuid) }}">
