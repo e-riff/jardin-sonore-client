@@ -1330,9 +1330,13 @@ button:disabled {
 
 .commercial-dossier__record-heading {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     flex-wrap: wrap;
     gap: 6px 10px;
+}
+
+.commercial-dossier__record-heading > [data-controller="internal-dialog"] {
+    display: inline-flex;
 }
 
 .commercial-dossier__label {
