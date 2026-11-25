@@ -1,16 +1,23 @@
 {% extends 'internal/base.html.twig' %}
 {% set title = family.name %}
 {% block internal_body %}
-    {% include 'components/_internal_back_button.html.twig' with {href: path('session_family_index'), label: 'sessions.family.back'|trans({}, 'sessions')} only %}
-    <section class="internal-page-heading"><div><p class="internal-eyebrow">{{ 'sessions.family.eyebrow'|trans({}, 'sessions') }}</p><h1>{{ family.name }}</h1>{% for theme in family.themes %}<span class="internal-badge internal-badge--color" style="--badge-color: {{ theme.color }}">{{ theme.label }}</span> {% endfor %}</div><div class="internal-heading-actions session-family-heading__actions">{% if sessions is not empty %}<a class="internal-button" href="{{ path('session_family_compose', {uuid: family.uuid}) }}">{{ 'sessions.family.compose'|trans({}, 'sessions') }}</a>{% endif %}<a class="internal-icon-button" href="{{ path('session_family_edit', {uuid: family.uuid}) }}" title="{{ 'sessions.family.edit'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.family.edit'|trans({}, 'sessions') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</a></div></section>
-    <section class="internal-card"><h2>{{ 'sessions.family.variants'|trans({}, 'sessions') }}</h2>
-        {% if sessions is empty %}<p>{{ 'sessions.family.no_variants'|trans({}, 'sessions') }}</p>{% else %}
-            <ul class="session-family-list">{% for session in sessions %}<li><a href="{{ path('session_edit', {uuid: session.uuid}) }}">{{ session.title }}</a> · {{ session.sessionDate|date('d/m/Y') }} {% for theme in session.themes %}<span class="internal-badge internal-badge--color" style="--badge-color: {{ theme.color }}">{{ theme.label }}</span> {% endfor %}{% if session.sequences is not empty %}<p class="internal-table-note">{{ session.sequences|map(sequence => sequence.title)|join(' · ') }}</p>{% endif %}</li>{% endfor %}</ul>
+    {% include 'components/_internal_back_button.html.twig' with {href: path('session_index'), label: 'sessions.family.back_sessions'|trans({}, 'sessions')} only %}
+    <section class="internal-page-heading"><div><p class="internal-eyebrow">{{ 'sessions.family.eyebrow'|trans({}, 'sessions') }}</p><h1>{{ family.name }}</h1>{% for theme in family.themes %}<span class="internal-badge internal-badge--color" style="--badge-color: {{ theme.color }}">{{ theme.label }}</span> {% endfor %}</div><div class="internal-heading-actions session-family-heading__actions"><a class="internal-icon-button" href="{{ path('session_family_edit', {uuid: family.uuid}) }}" title="{{ 'sessions.family.edit'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.family.edit'|trans({}, 'sessions') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'edit'} only %}</a></div></section>
+    <section class="internal-card session-family-variants" data-controller="internal-dialog">
+        <div class="session-family-section__heading">
+            <h2>{{ 'sessions.family.variants'|trans({}, 'sessions') }}</h2>
+            <div class="session-family-section__actions">
+                {% if availableSessions is not empty %}<button type="button" class="internal-button internal-button--secondary" data-action="internal-dialog#open" aria-haspopup="dialog">{% include 'commercial/project/_icon.html.twig' with {name: 'plus'} only %}<span>{{ 'sessions.family.attach_heading'|trans({}, 'sessions') }}</span></button>{% endif %}
+                {% if sessions is not empty %}<a class="internal-button" href="{{ path('session_family_compose', {uuid: family.uuid}) }}">{% include 'commercial/project/_icon.html.twig' with {name: 'music'} only %}<span>{{ 'sessions.family.compose'|trans({}, 'sessions') }}</span></a>{% endif %}
+            </div>
+        </div>
+        {% if sessions is empty %}<p class="internal-empty-state">{{ 'sessions.family.no_variants'|trans({}, 'sessions') }}</p>{% else %}
+            <div class="internal-table-wrapper"><table class="internal-table internal-table--compact-mobile session-family-detail-table">
+                <thead><tr><th>{{ 'sessions.summary.table.title'|trans({}, 'sessions') }}</th><th>{{ 'sessions.summary.table.date'|trans({}, 'sessions') }}</th><th>{{ 'sessions.summary.table.themes'|trans({}, 'sessions') }}</th></tr></thead>
+                <tbody>{% for session in sessions %}<tr><td data-table-mobile="primary"><a href="{{ path('session_edit', {uuid: session.uuid}) }}"><strong>{{ session.title }}</strong></a><span class="internal-table-note">{{ session.sessionDate|date('d/m/Y') }}</span>{% if session.sequences is not empty %}<span class="internal-table-note">{{ session.sequences|map(sequence => sequence.title)|join(' · ') }}</span>{% endif %}</td><td data-table-mobile="secondary">{{ session.sessionDate|date('d/m/Y') }}</td><td data-table-mobile="themes"><div class="instrument-catalog__tags">{% for theme in session.themes %}<span class="internal-badge internal-badge--color" style="--badge-color: {{ theme.color }}">{{ theme.label }}</span>{% endfor %}</div></td></tr>{% endfor %}</tbody>
+            </table></div>
         {% endif %}
-    </section>
-    {% if availableSessions is not empty %}
-        <div data-controller="internal-dialog">
-            <button type="button" class="internal-button internal-button--secondary" data-action="internal-dialog#open" aria-haspopup="dialog">{{ 'sessions.family.attach_heading'|trans({}, 'sessions') }}</button>
+        {% if availableSessions is not empty %}
             <dialog class="internal-form-dialog" data-internal-dialog-target="dialog" data-action="click->internal-dialog#closeOnBackdrop" aria-labelledby="family-attach-title">
                 <div class="internal-form-dialog__panel" data-controller="catalog-filter">
                     <button type="button" class="internal-form-dialog__close" data-action="internal-dialog#close" aria-label="{{ 'sessions.family.close'|trans({}, 'sessions') }}">×</button>
@@ -25,21 +32,17 @@
                     </form>
                 </div>
             </dialog>
-        </div>
-    {% endif %}
+        {% endif %}
+    </section>
     {% if groups is not empty %}
-        <section class="internal-card">
+        <section class="internal-card session-family-elements">
             <h2>{{ 'sessions.family.elements'|trans({}, 'sessions') }}</h2>
-            {% for typeGroups in groups %}
-                <h3>{{ (typeGroups|first).translationKey|trans({}, 'sessions') }}</h3>
-                <ul class="session-family-list">
-                    {% for group in typeGroups %}
-                        <li><strong>{{ group.title }}</strong>
-                            {% for version in group.versions %}<p class="internal-table-note">{{ version.session.title }} · {{ version.session.sessionDate|date('d/m/Y') }}{% if version.view.title != group.title %} — {{ version.view.title }}{% endif %}{% if not version.available %} — {{ 'sessions.family.unavailable'|trans({}, 'sessions') }}{% endif %}</p>{% endfor %}
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% endfor %}
+            <div class="internal-table-wrapper"><table class="internal-table internal-table--compact-mobile session-family-elements-table">
+                <thead><tr><th>{{ 'sessions.family.element_type'|trans({}, 'sessions') }}</th><th>{{ 'sessions.family.element_name'|trans({}, 'sessions') }}</th><th>{{ 'sessions.family.variants'|trans({}, 'sessions') }}</th></tr></thead>
+                <tbody>{% for typeGroups in groups %}{% for group in typeGroups %}
+                    <tr><td data-table-mobile="themes"><span class="session-family-element__type">{{ (typeGroups|first).translationKey|trans({}, 'sessions') }}</span></td><td data-table-mobile="primary"><strong>{{ group.title }}</strong></td><td data-table-mobile="actions"><div class="session-family-element__versions">{% for version in group.versions %}<span>{{ version.session.title }} · {{ version.session.sessionDate|date('d/m/Y') }}{% if version.view.title != group.title %} — {{ version.view.title }}{% endif %}{% if not version.available %} — {{ 'sessions.family.unavailable'|trans({}, 'sessions') }}{% endif %}</span>{% endfor %}</div></td></tr>
+                {% endfor %}{% endfor %}</tbody>
+            </table></div>
         </section>
     {% endif %}
 {% endblock %}

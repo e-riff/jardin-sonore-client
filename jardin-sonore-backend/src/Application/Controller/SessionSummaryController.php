@@ -92,7 +92,32 @@ final class SessionSummaryController extends AbstractController
             'sessionDate',
             'desc',
         );
-        $sessions = $searchSessionSummaries($request->query->getString('query'));
+        $query = trim($request->query->getString('query'));
+        $familyOptions = $families->listFamilies();
+        $matchingFamilyUuids = [];
+        if ('' !== $query) {
+            foreach ($familyOptions as $family) {
+                if (false !== mb_stripos($family->name, $query) || array_any($family->themes, static fn ($theme): bool => false !== mb_stripos($theme->getLabel(), $query))) {
+                    $matchingFamilyUuids[] = $family->uuid->toRfc4122();
+                }
+            }
+        }
+        $sessions = $searchSessionSummaries($query);
+        if ([] !== $matchingFamilyUuids) {
+            foreach ($familyOptions as $family) {
+                if (in_array($family->uuid->toRfc4122(), $matchingFamilyUuids, true)) {
+                    foreach ($families->sessions($family->uuid) as $familySession) {
+                        $session = SessionSummaryView::fromDomain($familySession);
+                        $sessions[$session->uuid->toRfc4122()] = $session;
+                    }
+                }
+            }
+            $uniqueSessions = [];
+            foreach ($sessions as $session) {
+                $uniqueSessions[$session->uuid->toRfc4122()] = $session;
+            }
+            $sessions = array_values($uniqueSessions);
+        }
         if ('' !== $publicationFilter) {
             $sessions = array_values(array_filter($sessions, static fn (SessionSummaryView $session): bool => $session->published === ('published' === $publicationFilter)));
         }
@@ -100,7 +125,6 @@ final class SessionSummaryController extends AbstractController
             $sessions = array_values(array_filter($sessions, static fn (SessionSummaryView $session): bool => in_array($themeUuid, array_column($session->themes, 'uuid'), true)));
         }
         $familyFilter = $request->query->getString('family');
-        $familyOptions = $families->listFamilies();
         if ('none' !== $familyFilter && !in_array($familyFilter, array_map(static fn ($family): string => $family->uuid->toRfc4122(), $familyOptions), true)) {
             $familyFilter = '';
         }
@@ -121,7 +145,28 @@ final class SessionSummaryController extends AbstractController
             return $tableSort->compare($leftValue, $rightValue);
         });
 
+        $sessionsByFamily = [];
+        $unassignedSessions = [];
+        foreach ($sessions as $session) {
+            if (null === $session->familyUuid) {
+                $unassignedSessions[] = $session;
+            } else {
+                $sessionsByFamily[$session->familyUuid->toRfc4122()][] = $session;
+            }
+        }
+        $visibleFamilies = array_values(array_filter($familyOptions, static function ($family) use ($sessionsByFamily, $familyFilter, $publicationFilter, $themeUuid, $query, $matchingFamilyUuids): bool {
+            $uuid = $family->uuid->toRfc4122();
+            if ('none' === $familyFilter || ('' !== $familyFilter && $familyFilter !== $uuid)) {
+                return false;
+            }
+
+            return isset($sessionsByFamily[$uuid]) || ('' === $publicationFilter && '' === $themeUuid && ('' === $query || in_array($uuid, $matchingFamilyUuids, true)));
+        }));
+
         return $this->render('session/index.html.twig', [
+            'visibleFamilies' => $visibleFamilies,
+            'sessionsByFamily' => $sessionsByFamily,
+            'unassignedSessions' => $unassignedSessions,
             'query' => $request->query->getString('query'),
             'publicationFilter' => $publicationFilter,
             'themeUuid' => $themeUuid,

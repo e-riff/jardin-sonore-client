@@ -3,15 +3,18 @@
 {% block internal_body %}
     {% include 'components/_internal_back_button.html.twig' with {href: path('session_family_show', {uuid: family.uuid}), label: 'sessions.family.back_family'|trans({}, 'sessions')} only %}
     <section class="internal-page-heading"><div><p class="internal-eyebrow">{{ family.name }}</p><h1>{{ title }}</h1><p>{{ 'sessions.family.compose_help'|trans({}, 'sessions') }}</p></div></section>
-    <form method="post" class="internal-form" data-controller="family-composer" data-family-composer-order-value="{{ selected|json_encode|e('html_attr') }}">
+    <form method="post" class="internal-form internal-form--wide family-composer" data-controller="family-composer" data-family-composer-order-value="{{ selected|json_encode|e('html_attr') }}">
         <noscript><p class="internal-alert">{{ 'sessions.family.compose_no_script'|trans({}, 'sessions') }}</p></noscript>
         <input type="hidden" name="_token" value="{{ csrf_token('session_family_compose_' ~ family.uuid) }}">
         <input type="hidden" name="compositionId" value="{{ compositionId }}">
         <div data-family-composer-target="ordered"></div>
         {% if error %}<div class="internal-alert internal-alert--error">{{ 'sessions.family.compose_error'|trans({}, 'sessions') }}</div>{% endif %}
-        <section class="internal-card internal-card--form">
-            <label for="family-session-title">{{ 'sessions.summary.form.title'|trans({}, 'sessions') }}</label><input id="family-session-title" name="title" required maxlength="255" value="{{ app.request.request.get('title', '') }}">
-            <label for="family-session-date">{{ 'sessions.summary.form.session_date'|trans({}, 'sessions') }}</label><input id="family-session-date" name="date" type="date" required value="{{ app.request.request.get('date', 'now'|date('Y-m-d')) }}">
+        <section class="internal-card family-composer__identity">
+            <h2>{{ 'sessions.family.session_information'|trans({}, 'sessions') }}</h2>
+            <div class="family-composer__identity-fields">
+                <div><label for="family-session-title">{{ 'sessions.summary.form.title'|trans({}, 'sessions') }}</label><input id="family-session-title" name="title" required maxlength="255" value="{{ app.request.request.get('title', '') }}"></div>
+                <div><label for="family-session-date">{{ 'sessions.summary.form.session_date'|trans({}, 'sessions') }}</label><input id="family-session-date" name="date" type="date" required value="{{ app.request.request.get('date', 'now'|date('Y-m-d')) }}"></div>
+            </div>
         </section>
         {% for typeGroups in groups %}
             <section class="internal-card family-composer__type">
@@ -21,7 +24,7 @@
                         {% for version in group.versions %}
                             {% set key = version.session.uuid ~ ':' ~ version.sequence.uuid %}
                             <div class="family-composer__version">
-                                <label><input type="checkbox" name="selection[]" value="{{ key }}" {{ version.available and key in selected ? 'checked' : '' }} {{ not version.available ? 'disabled' : '' }} data-family-composer-target="choice" data-family-composer-group-param="{{ groupKey }}" data-action="change->family-composer#change"> {{ version.session.title }} · {{ version.session.sessionDate|date('d/m/Y') }}{% if version.view.title != group.title %} — {{ version.view.title }}{% endif %}{% if not version.available %} — {{ 'sessions.family.unavailable'|trans({}, 'sessions') }}{% endif %}</label>
+                                <label class="family-composer__selection"><input type="checkbox" name="selection[]" value="{{ key }}" {{ version.available and key in selected ? 'checked' : '' }} {{ not version.available ? 'disabled' : '' }} data-family-composer-target="choice" data-family-composer-group-param="{{ groupKey }}" data-action="change->family-composer#change"> {{ version.session.title }} · {{ version.session.sessionDate|date('d/m/Y') }}{% if version.view.title != group.title %} — {{ version.view.title }}{% endif %}{% if not version.available %} — {{ 'sessions.family.unavailable'|trans({}, 'sessions') }}{% endif %}</label>
                                 {% if group.repertoire %}<label class="family-composer__instructions"><input type="checkbox" name="instructions[{{ key }}]" value="1" {{ selectedInstructions[key] is defined ? 'checked' : '' }}> {{ 'sessions.family.copy_instructions'|trans({}, 'sessions') }}</label>{% endif %}
                                 <details class="internal-disclosure"><summary>{{ 'sessions.family.view_element'|trans({}, 'sessions') }}</summary>
                                     {% if version.view.body %}<p>{{ version.view.body|nl2br }}</p>{% endif %}

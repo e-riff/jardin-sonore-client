@@ -135,7 +135,7 @@ final class SessionTemplateRegressionTest extends TestCase
     public function testSessionDocumentActionsKeepDownloadReadableAndExposeRegenerationFromTheIndex(): void
     {
         $editTemplate = file_get_contents(__DIR__ . '/../../../templates/session/edit.html.twig');
-        $indexTemplate = file_get_contents(__DIR__ . '/../../../templates/session/index.html.twig');
+        $indexTemplate = file_get_contents(__DIR__ . '/../../../templates/session/_index_row.html.twig');
 
         self::assertIsString($editTemplate);
         self::assertIsString($indexTemplate);

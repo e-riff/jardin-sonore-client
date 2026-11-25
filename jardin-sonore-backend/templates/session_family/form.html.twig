@@ -1,7 +1,7 @@
 {% extends 'internal/base.html.twig' %}
 {% set title = (family ? 'sessions.family.edit' : 'sessions.family.create')|trans({}, 'sessions') %}
 {% block internal_body %}
-    {% include 'components/_internal_back_button.html.twig' with {href: path('session_family_index'), label: 'sessions.family.back'|trans({}, 'sessions')} only %}
+    {% include 'components/_internal_back_button.html.twig' with {href: path('session_index'), label: 'sessions.family.back_sessions'|trans({}, 'sessions')} only %}
     <section class="internal-page-heading"><div><h1>{{ title }}</h1></div></section>
     <section class="internal-card internal-card--form">
         {{ form_start(form, {attr: {class: 'internal-form'}}) }}

@@ -60,6 +60,31 @@ final class SessionFamilyControllerTest extends WebTestCase
         return new Kernel($options['environment'] ?? 'test', $options['debug'] ?? true);
     }
 
+    public function testSessionIndexGroupsFamiliesAndFindsTheirVariants(): void
+    {
+        $client = static::createClient();
+        $manager = static::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(4));
+        $admin = (new AdminUserEntity())->setEmail("index-family-{$suffix}@example.test")->setPassword('unused');
+        $family = (new SessionFamilyEntity())->setName("Famille {$suffix}");
+        $session = (new SessionSummaryEntity())->setTitle("Variante {$suffix}")->setFamily($family);
+        $unassigned = (new SessionSummaryEntity())->setTitle("Libre {$suffix}");
+        foreach ([$admin, $family, $session, $unassigned] as $entity) {
+            $manager->persist($entity);
+        }
+        $manager->flush();
+        $client->loginUser($admin);
+        $crawler = $client->request('GET', '/sessions?query=' . urlencode("Variante {$suffix}"));
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $crawler->filterXPath('//details[@open]')->reduce(static fn ($node): bool => str_contains($node->text(), "Famille {$suffix}") && str_contains($node->text(), "Variante {$suffix}")));
+        $crawler = $client->request('GET', '/sessions?query=' . urlencode("Famille {$suffix}"));
+        self::assertStringContainsString("Variante {$suffix}", $crawler->text());
+        $crawler = $client->request('GET', '/sessions?publication=published&query=' . urlencode("Famille {$suffix}"));
+        self::assertCount(0, $crawler->filterXPath('//details[@open]')->reduce(static fn ($node): bool => str_contains($node->text(), "Famille {$suffix}")));
+        $crawler = $client->request('GET', '/sessions?query=' . urlencode("Libre {$suffix}"));
+        self::assertStringContainsString("Libre {$suffix}", $crawler->text());
+    }
+
     public function testFamiliesRequireAdminAuthentication(): void
     {
         $client = static::createClient();
