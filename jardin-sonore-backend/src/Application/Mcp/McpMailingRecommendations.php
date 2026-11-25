@@ -68,7 +68,7 @@ final readonly class McpMailingRecommendations
         $recommendation = ($this->createNewsletterRecommendation)(new CreateNewsletterRecommendationInput(
             title: $this->requiredText($input, 'title', 110),
             tag: $this->optionalText($input, 'tag', 40),
-            text: $this->requiredText($input, 'text', 320),
+            text: $this->requiredText($input, 'text', 400),
             url: $this->optionalUrl($input, 'url'),
             linkLabel: $this->optionalText($input, 'linkLabel', 60),
             imageFile: null,
@@ -89,7 +89,7 @@ final readonly class McpMailingRecommendations
         ($this->updateNewsletterRecommendation)($view->uuid, new CreateNewsletterRecommendationInput(
             title: array_key_exists('title', $input) ? $this->requiredText($input, 'title', 110) : $view->title,
             tag: array_key_exists('tag', $input) ? $this->optionalText($input, 'tag', 40) : $view->tag,
-            text: array_key_exists('text', $input) ? $this->requiredText($input, 'text', 320) : $view->text,
+            text: array_key_exists('text', $input) ? $this->requiredText($input, 'text', 400) : $view->text,
             url: array_key_exists('url', $input) ? $this->optionalUrl($input, 'url') : $view->url,
             linkLabel: array_key_exists('linkLabel', $input) ? $this->optionalText($input, 'linkLabel', 60) : $view->linkLabel,
             imageFile: null,

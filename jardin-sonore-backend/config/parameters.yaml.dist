@@ -7,6 +7,7 @@ parameters:
   app.mcp.draft_compose_enabled: '%env(bool:MCP_DRAFT_COMPOSE_ENABLED)%'
   app.mcp.mailing_write_enabled: '%env(bool:MCP_MAILING_WRITE_ENABLED)%'
   app.mcp.catalog_write_enabled: '%env(bool:MCP_CATALOG_WRITE_ENABLED)%'
+  app.mcp.session_write_enabled: '%env(bool:MCP_SESSION_WRITE_ENABLED)%'
   app.mcp.quote_write_enabled: '%env(bool:MCP_QUOTE_WRITE_ENABLED)%'
   app.mcp.invoice_write_enabled: '%env(bool:MCP_INVOICE_WRITE_ENABLED)%'
   app.mcp.personal_notification_enabled: '%env(bool:MCP_PERSONAL_NOTIFICATION_ENABLED)%'

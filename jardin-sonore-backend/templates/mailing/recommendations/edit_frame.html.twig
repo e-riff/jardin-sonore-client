@@ -14,11 +14,17 @@
                     campaignUuid: campaign.uuid,
                     recommendationUuid: recommendation.uuid
                 }),
-                attr: { class: 'internal-form' }
+                attr: { class: 'internal-form', 'data-controller': 'character-counter', 'data-character-counter-limit-value': 400 }
             }) }}
                 {{ form_row(form.title) }}
                 {{ form_row(form.tag) }}
-                {{ form_row(form.text) }}
+                <div class="character-counter__field">
+                    {{ form_label(form.text) }}
+                    {{ form_widget(form.text) }}
+                    <p class="character-counter" data-character-counter-target="output" aria-live="polite"></p>
+                    {{ form_errors(form.text) }}
+                    {{ form_help(form.text) }}
+                </div>
                 {{ form_row(form.url) }}
                 {{ form_row(form.linkLabel) }}
                 {{ form_row(form.active) }}

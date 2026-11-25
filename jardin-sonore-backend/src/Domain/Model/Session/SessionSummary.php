@@ -111,6 +111,10 @@ final class SessionSummary implements UuidIdentifiableInterface
             furtherExploration: $furtherExploration,
             instrumentUuids: $instrumentUuids,
         );
+        $this->updatedAt = $updatedAt ?? $this->updatedAt;
+        $this->documentStatus = $documentStatus;
+        $this->documentPath = self::normalizeNullableString($documentPath);
+        $this->documentError = self::normalizeNullableString($documentError);
         $this->recommendationUuids = self::normalizeUuids($recommendationUuids);
         $this->themes = array_values(array_unique($themes, SORT_REGULAR));
 

@@ -274,6 +274,9 @@ final readonly class MailingDraftManager
             }
             $title = $this->requiredText($item, 'title', 255);
             $text = $this->requiredText($item, 'text', 10000);
+            if (400 < mb_strlen($text) && (null === $id || $text !== $existingById[$id]->getText())) {
+                throw new InvalidArgumentException('Recommendation text exceeds 400 characters.');
+            }
             $tag = $this->optionalText($item, 'tag', 255);
             $url = $this->optionalUrl($item, 'url');
             $linkLabel = $this->optionalText($item, 'linkLabel', 255);

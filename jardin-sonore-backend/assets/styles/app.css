@@ -5407,9 +5407,26 @@ a.session-composer-overlay__item {
     font-size: 0.875rem;
 }
 
+.internal-form div.character-counter__field {
+    display: grid;
+    gap: 8px;
+}
+
+.character-counter__field .character-counter {
+    margin: 0;
+}
+
 .character-counter--exceeded {
     color: #a82323;
     font-weight: 700;
+}
+
+.mailing-catalog-table__excerpt {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: anywhere;
 }
 
 .mailing-index__actions {

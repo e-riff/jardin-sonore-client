@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Application\Mcp;
 
+use App\Application\Session\GetSessionSummary;
+use App\Application\Session\SessionSequenceView;
 use App\Domain\Model\Session\SessionFamily;
 use App\Domain\Model\Session\SessionSummary;
 use App\Domain\Repository\SessionFamilyRepositoryInterface;
@@ -18,6 +20,7 @@ final readonly class McpSessionReader
         private SessionFamilyRepositoryInterface $families,
         private SessionSummaryRepositoryInterface $sessions,
         private UrlGeneratorInterface $urlGenerator,
+        private ?GetSessionSummary $getSessionSummary = null,
     ) {
     }
 
@@ -45,7 +48,7 @@ final readonly class McpSessionReader
         $id = $this->uuid($uuid);
         $family = $this->families->findByUuid($id) ?? throw new InvalidArgumentException('Family not found.');
 
-        return $this->familyView($family) + ['sessions' => array_map($this->sessionView(...), $this->families->sessions($id))];
+        return $this->familyView($family) + ['revision' => McpSessionWriter::familyRevision($family), 'sessions' => array_map($this->sessionView(...), $this->families->sessions($id))];
     }
 
     /** @return list<array<string, mixed>> */
@@ -62,15 +65,32 @@ final readonly class McpSessionReader
     public function session(string $uuid): array
     {
         $session = $this->sessions->findByUuid($this->uuid($uuid)) ?? throw new InvalidArgumentException('Session not found.');
+        $view = null === $this->getSessionSummary ? null : ($this->getSessionSummary)($session->getUuid());
+        $sequences = array_map(static fn ($sequence): array => $sequence->toArray(), $session->getSequences());
+        if (null !== $view) {
+            foreach ($view->sequences as $index => $sequenceView) {
+                if (!isset($sequences[$index]) || !$sequenceView instanceof SessionSequenceView) {
+                    continue;
+                }
+                $sequences[$index] = array_replace($sequences[$index], [
+                    'title' => $sequenceView->title, 'subtitle' => $sequenceView->subtitle,
+                    'lyrics' => $sequenceView->lyrics, 'gestures' => $sequenceView->gestures,
+                    'generalInstructions' => $sequenceView->generalInstructions,
+                    'instrumentNames' => $sequenceView->instrumentNames,
+                    'media' => array_map(static fn ($media): array => $media->toArray(), $sequenceView->media),
+                ]);
+            }
+        }
 
         return $this->sessionView($session) + [
+            'revision' => McpSessionWriter::revision($session),
             'themes' => array_map(static fn ($theme): array => ['uuid' => $theme->getUuid()->toRfc4122(), 'label' => $theme->getLabel()], $session->getThemes()),
             'generalNotes' => $session->getGeneralNotes(),
             'materialSummary' => $session->getMaterialSummary(),
             'furtherExploration' => $session->getFurtherExploration(),
             'instrumentUuids' => $session->getInstrumentUuids(),
             'recommendationUuids' => $session->getRecommendationUuids(),
-            'sequences' => array_map(static fn ($sequence): array => $sequence->toArray(), $session->getSequences()),
+            'sequences' => $sequences,
         ];
     }
 

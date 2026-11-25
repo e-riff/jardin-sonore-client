@@ -37,6 +37,7 @@ final class NewsletterRecommendationCatalogControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertCount(1, $client->getCrawler()->filterXPath('//input[@name="newsletter_recommendation[imageFile]"]'));
+        self::assertCount(1, $client->getCrawler()->filterXPath('//textarea[@name="newsletter_recommendation[text]" and @maxlength="400"]/following-sibling::*[1][contains(@class, "character-counter")]'));
 
         $mailingCampaign = static::getContainer()->get(CreateMailingCampaign::class)(new CreateMailingCampaignInput(
             internalTitle: 'Campagne test',
@@ -52,6 +53,7 @@ final class NewsletterRecommendationCatalogControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertCount(1, $client->getCrawler()->filterXPath('//input[@name="newsletter_recommendation[imageFile]"]'));
+        self::assertCount(1, $client->getCrawler()->filterXPath('//textarea[@name="newsletter_recommendation[text]" and @maxlength="400"]/following-sibling::*[1][contains(@class, "character-counter")]'));
 
         $newsletterRecommendation = static::getContainer()->get(CreateNewsletterRecommendation::class)(new CreateNewsletterRecommendationInput(
             title: 'Recommandation test',
@@ -66,5 +68,9 @@ final class NewsletterRecommendationCatalogControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertCount(1, $client->getCrawler()->filterXPath('//input[@name="newsletter_recommendation[imageFile]"]'));
+        self::assertCount(1, $client->getCrawler()->filterXPath('//textarea[@name="newsletter_recommendation[text]" and @maxlength="400"]/following-sibling::*[1][contains(@class, "character-counter")]'));
+        $client->request('GET', '/mailing/recommendations');
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $client->getCrawler()->filterXPath('//tr[@data-controller="catalog-row" and contains(@data-catalog-row-url-value, "' . $newsletterRecommendation->getUuid()->toRfc4122() . '")]'));
     }
 }

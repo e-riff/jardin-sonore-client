@@ -27,6 +27,16 @@ final class SessionSummaryDocumentTest extends TestCase
     }
 
     #[Test]
+    public function rehydrationPreservesReadyDocumentAndUpdateDate(): void
+    {
+        $updatedAt = new DateTimeImmutable('2026-07-01 12:00:00');
+        $session = new SessionSummary(title: 'Séance', sessionDate: new DateTimeImmutable('2026-07-30'), updatedAt: $updatedAt, documentStatus: SessionDocumentStatus::READY, documentPath: '/tmp/session.pdf');
+        self::assertSame(SessionDocumentStatus::READY, $session->getDocumentStatus());
+        self::assertSame('/tmp/session.pdf', $session->getDocumentPath());
+        self::assertSame($updatedAt, $session->getUpdatedAt());
+    }
+
+    #[Test]
     public function itMarksItsDocumentAsPendingWhenDetailsChange(): void
     {
         $sessionSummary = new SessionSummary(

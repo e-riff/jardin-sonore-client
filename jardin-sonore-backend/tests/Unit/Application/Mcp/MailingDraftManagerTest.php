@@ -6,6 +6,7 @@ namespace App\Tests\Unit\Application\Mcp;
 
 use App\Application\Mcp\MailingDraftManager;
 use App\Domain\Model\Mailing\MailingCampaign;
+use App\Domain\Model\Mailing\MailingRecommendation;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Domain\Repository\MailingAudienceMaskRepositoryInterface;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
@@ -57,6 +58,33 @@ final class MailingDraftManagerTest extends TestCase
         self::assertSame('uploads/mailing/content/photo.jpg', $campaign->getIntroBlocks()[1]['imagePath']);
         self::assertSame('<strong>Après</strong>', $campaign->getIntroBlocks()[0]['text']);
         self::assertSame('Après', $result['mainText']);
+    }
+
+    public function testKeepsAnExistingLongRecommendationWhenUnchanged(): void
+    {
+        $campaign = $this->campaign();
+        $recommendation = new MailingRecommendation('Conseil', null, str_repeat('a', 450), 1);
+        $campaign->replaceRecommendations([$recommendation]);
+        $repository = $this->createMock(MailingCampaignRepositoryInterface::class);
+        $repository->method('findByUuid')->willReturn($campaign);
+        $repository->expects(self::once())->method('save');
+        $manager = new MailingDraftManager($repository, $this->createStub(MailingAudienceMaskRepositoryInterface::class), new NewsletterRichTextFormatter());
+        $view = $manager->get((string) $campaign->getUuid());
+        $manager->update((string) $campaign->getUuid(), ['revision' => $view['revision'], 'recommendations' => [['recommendationUuid' => (string) $recommendation->getUuid(), 'title' => 'Conseil', 'text' => str_repeat('a', 450)]]]);
+        self::assertSame(str_repeat('a', 450), $campaign->getRecommendations()[0]->getText());
+    }
+
+    public function testRejectsAChangedRecommendationLongerThan400Characters(): void
+    {
+        $campaign = $this->campaign();
+        $recommendation = new MailingRecommendation('Conseil', null, str_repeat('a', 450), 1);
+        $campaign->replaceRecommendations([$recommendation]);
+        $repository = $this->createMock(MailingCampaignRepositoryInterface::class);
+        $repository->method('findByUuid')->willReturn($campaign);
+        $repository->expects(self::never())->method('save');
+        $manager = new MailingDraftManager($repository, $this->createStub(MailingAudienceMaskRepositoryInterface::class), new NewsletterRichTextFormatter());
+        $this->expectException(InvalidArgumentException::class);
+        $manager->update((string) $campaign->getUuid(), ['revision' => $manager->get((string) $campaign->getUuid())['revision'], 'recommendations' => [['recommendationUuid' => (string) $recommendation->getUuid(), 'title' => 'Conseil', 'text' => str_repeat('b', 401)]]]);
     }
 
     public function testStaleRevisionCannotOverwriteChanges(): void

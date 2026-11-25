@@ -18,6 +18,7 @@ use App\Application\Mcp\MailDraftReceiptStore;
 use App\Application\Mcp\MailDraftStore;
 use App\Application\Mcp\MailDraftWriter;
 use App\Application\Mcp\MailReader;
+use App\Application\Mcp\McpSessionWriteCoordinator;
 use App\Application\Mcp\PersonalNotificationStore;
 use App\Application\Mcp\ProjectContextReader;
 use App\Application\Mcp\ProjectFollowupWriter;
@@ -53,6 +54,7 @@ use App\Infrastructure\Mailer\SymfonyNewsletterConfirmationMailSender;
 use App\Infrastructure\Mailer\SymfonyPortalAccountMailSender;
 use App\Infrastructure\Mailer\SymfonySessionNotificationMailSender;
 use App\Infrastructure\Mailing\DoctrineNewsletterRecipientEligibility;
+use App\Infrastructure\Mcp\DoctrineMcpSessionWriteCoordinator;
 use App\Infrastructure\Session\DompdfSessionDocumentGenerator;
 use Gedmo\Sluggable\SluggableListener;
 use Gedmo\Timestampable\TimestampableListener;
@@ -82,6 +84,9 @@ return App::config([
         ],
         SessionDocumentGeneratorInterface::class => [
             'alias' => DompdfSessionDocumentGenerator::class,
+        ],
+        McpSessionWriteCoordinator::class => [
+            'alias' => DoctrineMcpSessionWriteCoordinator::class,
         ],
         PortalAccountMailSenderInterface::class => [
             'alias' => SymfonyPortalAccountMailSender::class,

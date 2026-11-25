@@ -42,6 +42,9 @@ final class MailingRecommendationType extends AbstractType
                 'help' => 'mailing.form.recommendation.text_help',
                 'attr' => [
                     'rows' => 4,
+                    'maxlength' => 400,
+                    'data-character-counter-target' => 'input',
+                    'data-action' => 'input->character-counter#update',
                 ],
             ])
             ->add('url', UrlType::class, [

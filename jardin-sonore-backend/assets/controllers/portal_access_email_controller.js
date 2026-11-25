@@ -5,6 +5,7 @@ export default class extends Controller {
     static values = { url: String };
 
     connect() {
+        this.requestVersion = 0;
         this.organizationElement = this.element.form.querySelector('[data-portal-access-email-target="organization"]');
         this.emailElement = this.element.form.querySelector('[data-portal-access-email-target="email"]');
         this.contactTypeElement = this.element.form.querySelector('[data-portal-access-email-target="contact-type"]');
@@ -24,16 +25,22 @@ export default class extends Controller {
             create: false,
             shouldLoad: (query) => query.length >= 2 && '' !== this.organizationElement.value,
             load: (query, callback) => {
-                this.fetchEmailChoices(query)
-                    .then((items) => callback(items))
+                const requestVersion = this.requestVersion;
+                const organizationId = this.organizationElement.value;
+                this.fetchEmailChoices(query, organizationId)
+                    .then((items) => callback(requestVersion === this.requestVersion ? items : []))
                     .catch(() => callback());
             },
         });
 
         this.toggleContactCreationFields();
+        if ('' !== this.organizationElement.value) {
+            this.organizationChanged();
+        }
     }
 
     disconnect() {
+        this.requestVersion++;
         this.organizationElement.removeEventListener('change', this.organizationChanged);
         this.element.removeEventListener('change', this.prefillEmail);
         this.emailElement.removeEventListener('input', this.clearLinkedEmailWhenManuallyEdited);
@@ -41,12 +48,15 @@ export default class extends Controller {
         this.tomSelect?.destroy();
     }
 
-    organizationChanged = async () => {
+    organizationChanged = async (event = null) => {
+        const requestVersion = ++this.requestVersion;
+        const organizationId = this.organizationElement.value;
         const selectedEmailAddress = this.tomSelect.getValue();
         this.tomSelect.clear(true);
         this.tomSelect.clearOptions();
+        if (null !== event || '' !== selectedEmailAddress) this.emailElement.value = '';
 
-        if ('' === selectedEmailAddress || '' === this.organizationElement.value) {
+        if ('' === organizationId) {
             this.emailElement.value = '';
             this.toggleContactCreationFields();
 
@@ -54,25 +64,35 @@ export default class extends Controller {
         }
 
         try {
-            const emailChoices = await this.fetchEmailChoices(selectedEmailAddress);
-            const selectedEmailChoice = emailChoices.find((emailChoice) => emailChoice.email === selectedEmailAddress);
-            if (undefined !== selectedEmailChoice) {
-                this.tomSelect.addOption(selectedEmailChoice);
-                this.tomSelect.setValue(selectedEmailAddress, true);
-            } else {
-                this.emailElement.value = '';
+            const emailChoices = await this.fetchEmailChoices('', organizationId);
+            if (requestVersion !== this.requestVersion) return;
+            this.tomSelect.addOptions(emailChoices);
+            this.tomSelect.refreshOptions(false);
+            if ('' !== selectedEmailAddress) {
+                const matchingChoices = await this.fetchEmailChoices(selectedEmailAddress, organizationId);
+                if (requestVersion !== this.requestVersion) return;
+                const selectedEmailChoice = matchingChoices.find((emailChoice) => emailChoice.email === selectedEmailAddress);
+                if (undefined !== selectedEmailChoice) {
+                    this.tomSelect.addOption(selectedEmailChoice);
+                    this.tomSelect.setValue(selectedEmailAddress, true);
+                    this.emailElement.value = selectedEmailAddress;
+                } else {
+                    this.emailElement.value = '';
+                }
             }
         } catch {
-            this.emailElement.value = '';
+            if (requestVersion === this.requestVersion && '' !== selectedEmailAddress) {
+                this.emailElement.value = '';
+            }
         }
 
-        this.toggleContactCreationFields();
+        if (requestVersion === this.requestVersion) this.toggleContactCreationFields();
     };
 
-    fetchEmailChoices = async (query) => {
+    fetchEmailChoices = async (query, organizationId = this.organizationElement.value) => {
         const url = new URL(this.urlValue, window.location.origin);
         url.searchParams.set('q', query);
-        url.searchParams.set('organizationId', this.organizationElement.value);
+        url.searchParams.set('organizationId', organizationId);
 
         const response = await fetch(url, { headers: { Accept: 'application/json' } });
         if (!response.ok) {
@@ -85,6 +105,7 @@ export default class extends Controller {
     };
 
     prefillEmail = () => {
+        this.requestVersion++;
         const emailAddress = this.tomSelect.getValue();
         if ('' !== emailAddress) {
             this.emailElement.value = emailAddress;
@@ -95,6 +116,7 @@ export default class extends Controller {
 
     clearLinkedEmailWhenManuallyEdited = () => {
         if (this.tomSelect.getValue() !== this.emailElement.value) {
+            this.requestVersion++;
             this.tomSelect.clear(true);
         }
 

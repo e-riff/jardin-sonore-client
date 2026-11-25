@@ -86,7 +86,7 @@ final class PortalUserManagementController extends AbstractController
     {
         $organizationId = $request->query->getInt('organizationId');
         $query = trim($request->query->getString('q'));
-        if (1 > $organizationId || 2 > mb_strlen($query)) {
+        if (1 > $organizationId || ('' !== $query && 2 > mb_strlen($query))) {
             return new JsonResponse(['items' => []]);
         }
 
@@ -123,6 +123,7 @@ final class PortalUserManagementController extends AbstractController
             ->innerJoin('contactDetails.emailContactLinks', 'emailContactLink')
             ->innerJoin('emailContactLink.emailContact', 'emailContact')
             ->where('organization.id = :organizationId')
+            ->andWhere('person.active = true')
             ->andWhere('emailContact.active = true')
             ->andWhere('emailContactLink.active = true')
             ->andWhere('LOWER(emailContact.emailAddress) LIKE LOWER(:query)')
@@ -303,6 +304,10 @@ final class PortalUserManagementController extends AbstractController
     {
         $linkedEmailAddress = $userEntity->getLinkedEmailAddressForNewAccess();
         if (null !== $linkedEmailAddress) {
+            if (mb_strtolower(trim($userEntity->getEmail())) !== mb_strtolower(trim($linkedEmailAddress))) {
+                throw new InvalidArgumentException('The selected email address does not match the entered address.');
+            }
+
             return $this->organizationAccessEmailResolver->resolve($organizationEntity, $linkedEmailAddress);
         }
 
@@ -346,8 +351,10 @@ final class PortalUserManagementController extends AbstractController
 
     private function contactErrorMessage(InvalidArgumentException $exception): string
     {
-        return 'The selected email address is not linked to the organization.' === $exception->getMessage()
-            ? $this->translator->trans('technical.portal_user.error.email_not_linked', domain: 'technical')
-            : $exception->getMessage();
+        return match ($exception->getMessage()) {
+            'The selected email address is not linked to the organization.' => $this->translator->trans('technical.portal_user.error.email_not_linked', domain: 'technical'),
+            'The selected email address does not match the entered address.' => $this->translator->trans('technical.portal_user.error.email_mismatch', domain: 'technical'),
+            default => $exception->getMessage(),
+        };
     }
 }

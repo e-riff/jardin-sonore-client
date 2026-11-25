@@ -21,17 +21,22 @@
 
         {{ form_start(form, {
             action: path('mailing_recommendation_catalog_new'),
-            attr: { class: 'internal-form', 'data-controller': 'character-counter', 'data-character-counter-limit-value': 320 }
+            attr: { class: 'internal-form', 'data-controller': 'character-counter', 'data-character-counter-limit-value': 400 }
         }) }}
             {{ form_row(form.title) }}
             {{ form_row(form.tag) }}
-            {{ form_row(form.text) }}
+            <div class="character-counter__field">
+                    {{ form_label(form.text) }}
+                    {{ form_widget(form.text) }}
+                    <p class="character-counter" data-character-counter-target="output" aria-live="polite"></p>
+                    {{ form_errors(form.text) }}
+                    {{ form_help(form.text) }}
+                </div>
             {{ form_row(form.url) }}
             {{ form_row(form.linkLabel) }}
             {{ form_row(form.imageFile) }}
             {{ form_row(form.active) }}
             <datalist id="newsletter-recommendation-tag-suggestions">{% for tagSuggestion in tagSuggestions %}<option value="{{ tagSuggestion }}">{% endfor %}</datalist>
-            <p class="character-counter" data-character-counter-target="output"></p>
             <div class="internal-form__actions">{{ form_widget(form.submit) }}</div>
         {{ form_end(form) }}
     </section>

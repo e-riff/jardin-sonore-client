@@ -18,7 +18,7 @@ final class NewsletterRecommendationFormModel
     public ?string $tag = null;
 
     #[Assert\NotBlank]
-    #[Assert\Length(max: 320)]
+    #[Assert\Length(max: 400)]
     public string $text = '';
 
     #[Assert\Url]

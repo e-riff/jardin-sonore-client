@@ -9,17 +9,45 @@ use App\Application\Mcp\MailDraftWriter;
 use App\Application\Mcp\MailReader;
 use App\Application\Mcp\MailReadException;
 use App\Application\Mcp\MailSource;
+use App\Application\Mcp\McpSessionWriteCoordinator;
+use App\Application\Mcp\McpSessionWriter;
 use App\Application\Mcp\ProjectFollowupWriter;
 use App\Application\Mcp\ProjectInvoiceManager;
 use App\Application\Mcp\ProjectScheduleManager;
 use App\Application\Mcp\StandaloneMailDraftEditor;
 use App\Application\Mcp\StandaloneMailDraftWriter;
 use App\Application\Mcp\WriteToolRegistry;
+use App\Domain\Repository\SessionFamilyRepositoryInterface;
+use App\Domain\Repository\SessionSummaryRepositoryInterface;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 
 final class WriteToolRegistryTest extends TestCase
 {
+    public function testSessionDraftCreationDispatchesOnlyWhenEnabled(): void
+    {
+        $sessions = $this->createMock(SessionSummaryRepositoryInterface::class);
+        $sessions->method('findByUuid')->willReturn(null);
+        $sessions->expects(self::once())->method('save');
+        $writer = new McpSessionWriter($this->createStub(SessionFamilyRepositoryInterface::class), $sessions);
+        $coordinator = $this->createMock(McpSessionWriteCoordinator::class);
+        $coordinator->expects(self::once())->method('executeCreation')->with('create_session_draft', 'test-request', self::anything())->willReturnCallback(static fn (string $tool, string $requestId, callable $operation): array => $operation());
+        $registry = new WriteToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectFollowupWriter::class), false, mcpSessionWriter: $writer, sessionWriteEnabled: true, sessionWriteCoordinator: $coordinator);
+        $result = $registry->call('create_session_draft', ['requestId' => ' test-request ', 'title' => 'Essai', 'date' => '2026-12-01']);
+        self::assertFalse($result['isError']);
+        $created = json_decode($result['content'][0]['text'], true, 512, JSON_THROW_ON_ERROR);
+        self::assertFalse($created['published']);
+        self::assertArrayHasKey('uuid', $created);
+    }
+
+    public function testSessionWriteToolsRemainDisabledByDefault(): void
+    {
+        $registry = new WriteToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectFollowupWriter::class), true);
+        foreach (['create_session_draft', 'update_session_draft', 'update_session_content', 'create_session_family', 'update_session_family', 'assign_session_family', 'add_session_free_element', 'add_session_repertoire_element', 'update_session_element', 'copy_session_element', 'remove_session_element', 'reorder_session_elements', 'attach_session_element_media', 'attach_session_element_instrument', 'create_session_file_media'] as $tool) {
+            self::assertTrue($registry->call($tool, [])['isError'], $tool);
+        }
+    }
+
     public function testMailSchemasExposeFilesAndReplyAll(): void
     {
         $registry = new WriteToolRegistry($this->createStub(MailReader::class), $this->createStub(ProjectFollowupWriter::class), false);

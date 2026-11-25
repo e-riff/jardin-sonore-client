@@ -40,6 +40,9 @@ final readonly class WriteToolRegistry
         #[Autowire('%app.mcp.personal_notification_enabled%')] private bool $personalNotificationEnabled = false,
         private ?ProjectInvoiceManager $projectInvoiceManager = null,
         #[Autowire('%app.mcp.invoice_write_enabled%')] private bool $invoiceWriteEnabled = false,
+        private ?McpSessionWriter $mcpSessionWriter = null,
+        #[Autowire('%app.mcp.session_write_enabled%')] private bool $sessionWriteEnabled = false,
+        private ?McpSessionWriteCoordinator $sessionWriteCoordinator = null,
     ) {
     }
 
@@ -218,6 +221,96 @@ final readonly class WriteToolRegistry
             ],
             ...$this->mailingRecommendationDefinitions(),
             ...$this->sessionCatalogDefinitions(),
+            [
+                'name' => 'create_session_family',
+                'description' => 'After explicit confirmation, create a session family with existing theme UUIDs. Reuse requestId for retries.',
+                'inputSchema' => ['type' => 'object', 'properties' => ['requestId' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 128], 'name' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255], 'themeUuids' => ['type' => 'array', 'maxItems' => 50, 'items' => ['type' => 'string', 'format' => 'uuid']]], 'required' => ['requestId', 'name', 'themeUuids'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false, 'idempotentHint' => true],
+            ],
+            [
+                'name' => 'update_session_family',
+                'description' => 'After explicit confirmation, update a family name and its full set of themes using its current revision from get_session_family.',
+                'inputSchema' => ['type' => 'object', 'properties' => ['uuid' => ['type' => 'string', 'format' => 'uuid'], 'revision' => ['type' => 'string', 'minLength' => 64, 'maxLength' => 64], 'name' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255], 'themeUuids' => ['type' => 'array', 'maxItems' => 50, 'items' => ['type' => 'string', 'format' => 'uuid']]], 'required' => ['uuid', 'revision', 'name', 'themeUuids'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
+            [
+                'name' => 'assign_session_family',
+                'description' => 'After explicit confirmation, assign or detach a draft session from a family using its current revision. Does not change establishments or publication.',
+                'inputSchema' => ['type' => 'object', 'properties' => ['uuid' => ['type' => 'string', 'format' => 'uuid'], 'revision' => ['type' => 'string', 'minLength' => 64, 'maxLength' => 64], 'familyUuid' => ['type' => ['string', 'null'], 'format' => 'uuid']], 'required' => ['uuid', 'revision', 'familyUuid'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
+            [
+                'name' => 'update_session_element',
+                'description' => 'After explicit confirmation, update selected fields of one element in a draft, using the current session revision. Changes to shared repertoire content require the catalog tool.',
+                'inputSchema' => ['type' => 'object', 'properties' => ['uuid' => ['type' => 'string', 'format' => 'uuid'], 'revision' => ['type' => 'string', 'minLength' => 64, 'maxLength' => 64], 'sequenceUuid' => ['type' => 'string', 'format' => 'uuid'], 'changes' => ['type' => 'object', 'properties' => ['title' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255], 'subtitle' => ['type' => ['string', 'null'], 'maxLength' => 255], 'type' => ['enum' => ['warmup', 'nursery_rhyme', 'fingerplay', 'soundtrack', 'manipulation', 'movement', 'closing', 'free']], 'showLyricsByDefault' => ['type' => 'boolean'], 'body' => ['type' => 'string', 'maxLength' => 20000], 'lyrics' => ['type' => ['string', 'null'], 'maxLength' => 20000], 'gestures' => ['type' => ['string', 'null'], 'maxLength' => 20000], 'role' => ['type' => ['string', 'null'], 'maxLength' => 255]], 'additionalProperties' => false]], 'required' => ['uuid', 'revision', 'sequenceUuid', 'changes'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
+            [
+                'name' => 'create_session_file_media',
+                'description' => 'After explicit confirmation, upload a file supplied by the user into the reusable media catalog. Maximum 5 MiB; PDF, MP3, WAV, OGG, FLAC, JPEG, PNG, WebP or MP4. Reuse requestId only to check for an existing result. This does not attach it to a session.',
+                'inputSchema' => ['type' => 'object', 'properties' => ['requestId' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 128], 'title' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255], 'type' => ['enum' => ['soundtrack', 'ambient_sound', 'score', 'video', 'link', 'tutorial']], 'filename' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255], 'base64' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 6990508]], 'required' => ['requestId', 'title', 'type', 'filename', 'base64'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
+            [
+                'name' => 'attach_session_element_instrument',
+                'description' => 'After explicit confirmation, attach an existing active instrument to an element of a draft session using its current revision.',
+                'inputSchema' => ['type' => 'object', 'properties' => ['uuid' => ['type' => 'string', 'format' => 'uuid'], 'revision' => ['type' => 'string', 'minLength' => 64, 'maxLength' => 64], 'sequenceUuid' => ['type' => 'string', 'format' => 'uuid'], 'instrumentUuid' => ['type' => 'string', 'format' => 'uuid']], 'required' => ['uuid', 'revision', 'sequenceUuid', 'instrumentUuid'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
+            [
+                'name' => 'attach_session_element_media',
+                'description' => 'After explicit confirmation, attach an existing active catalog media to an element of a draft session using its current revision.',
+                'inputSchema' => ['type' => 'object', 'properties' => ['uuid' => ['type' => 'string', 'format' => 'uuid'], 'revision' => ['type' => 'string', 'minLength' => 64, 'maxLength' => 64], 'sequenceUuid' => ['type' => 'string', 'format' => 'uuid'], 'mediaUuid' => ['type' => 'string', 'format' => 'uuid']], 'required' => ['uuid', 'revision', 'sequenceUuid', 'mediaUuid'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
+            [
+                'name' => 'remove_session_element',
+                'description' => 'After separate explicit confirmation, remove one element from a draft session using its current revision. The source catalog and files remain unchanged.',
+                'inputSchema' => ['type' => 'object', 'properties' => ['uuid' => ['type' => 'string', 'format' => 'uuid'], 'revision' => ['type' => 'string', 'minLength' => 64, 'maxLength' => 64], 'sequenceUuid' => ['type' => 'string', 'format' => 'uuid']], 'required' => ['uuid', 'revision', 'sequenceUuid'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => false, 'destructiveHint' => true, 'openWorldHint' => false],
+            ],
+            [
+                'name' => 'reorder_session_elements',
+                'description' => 'After explicit confirmation, reorder all elements of a draft session using its current revision and every element UUID exactly once.',
+                'inputSchema' => ['type' => 'object', 'properties' => ['uuid' => ['type' => 'string', 'format' => 'uuid'], 'revision' => ['type' => 'string', 'minLength' => 64, 'maxLength' => 64], 'sequenceUuids' => ['type' => 'array', 'maxItems' => 100, 'items' => ['type' => 'string', 'format' => 'uuid']]], 'required' => ['uuid', 'revision', 'sequenceUuids'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
+            [
+                'name' => 'copy_session_element',
+                'description' => 'After explicit confirmation, copy an existing session element into a draft. Read both sessions first and use the target revision. The source remains unchanged.',
+                'inputSchema' => ['type' => 'object', 'properties' => ['uuid' => ['type' => 'string', 'format' => 'uuid'], 'revision' => ['type' => 'string', 'minLength' => 64, 'maxLength' => 64], 'sourceSessionUuid' => ['type' => 'string', 'format' => 'uuid'], 'sourceSequenceUuid' => ['type' => 'string', 'format' => 'uuid'], 'sourceRevision' => ['type' => 'string', 'minLength' => 64, 'maxLength' => 64]], 'required' => ['uuid', 'revision', 'sourceSessionUuid', 'sourceSequenceUuid', 'sourceRevision'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
+            [
+                'name' => 'add_session_repertoire_element',
+                'description' => 'After explicit confirmation, append an existing active repertoire item to a draft session using its current revision.',
+                'inputSchema' => ['type' => 'object', 'properties' => ['uuid' => ['type' => 'string', 'format' => 'uuid'], 'revision' => ['type' => 'string', 'minLength' => 64, 'maxLength' => 64], 'repertoireUuid' => ['type' => 'string', 'format' => 'uuid']], 'required' => ['uuid', 'revision', 'repertoireUuid'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
+            [
+                'name' => 'add_session_free_element',
+                'description' => 'After explicit confirmation, append a free element to a draft session using its current revision. This does not modify the reusable catalog.',
+                'inputSchema' => ['type' => 'object', 'properties' => ['uuid' => ['type' => 'string', 'format' => 'uuid'], 'revision' => ['type' => 'string', 'minLength' => 64, 'maxLength' => 64], 'title' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255], 'type' => ['enum' => ['warmup', 'nursery_rhyme', 'fingerplay', 'soundtrack', 'manipulation', 'movement', 'closing', 'free']], 'body' => ['type' => 'string', 'maxLength' => 20000], 'lyrics' => ['type' => ['string', 'null'], 'maxLength' => 20000], 'gestures' => ['type' => ['string', 'null'], 'maxLength' => 20000], 'role' => ['type' => ['string', 'null'], 'maxLength' => 255]], 'required' => ['uuid', 'revision', 'title', 'type', 'body'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
+            [
+                'name' => 'create_session_draft',
+                'description' => 'After explicit user confirmation, create an unpublished session without establishments, optionally in an existing family. Reuse requestId for retries.',
+                'inputSchema' => ['type' => 'object', 'properties' => ['requestId' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 128], 'title' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255], 'date' => ['type' => 'string', 'format' => 'date'], 'familyUuid' => ['type' => 'string', 'format' => 'uuid']], 'required' => ['requestId', 'title', 'date'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false, 'idempotentHint' => true],
+            ],
+            [
+                'name' => 'update_session_content',
+                'description' => 'After explicit confirmation, update selected notes or replace the themes, instruments or recommendations of a draft session using its revision. Omitted fields remain unchanged. Establishments and publication cannot be changed.',
+                'inputSchema' => ['type' => 'object', 'properties' => ['uuid' => ['type' => 'string', 'format' => 'uuid'], 'revision' => ['type' => 'string', 'minLength' => 64, 'maxLength' => 64], 'changes' => ['type' => 'object', 'properties' => ['generalNotes' => ['type' => ['string', 'null'], 'maxLength' => 20000], 'materialSummary' => ['type' => ['string', 'null'], 'maxLength' => 20000], 'furtherExploration' => ['type' => ['string', 'null'], 'maxLength' => 20000], 'themeUuids' => ['type' => 'array', 'maxItems' => 50, 'items' => ['type' => 'string', 'format' => 'uuid']], 'instrumentUuids' => ['type' => 'array', 'maxItems' => 50, 'items' => ['type' => 'string', 'format' => 'uuid']], 'recommendationUuids' => ['type' => 'array', 'maxItems' => 50, 'items' => ['type' => 'string', 'format' => 'uuid']]], 'additionalProperties' => false]], 'required' => ['uuid', 'revision', 'changes'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
+            [
+                'name' => 'update_session_draft',
+                'description' => 'After explicit user confirmation, update title and date of an unpublished session. Read the exact session first and supply its revision. Never changes establishments or publishes.',
+                'inputSchema' => ['type' => 'object', 'properties' => ['uuid' => ['type' => 'string', 'format' => 'uuid'], 'revision' => ['type' => 'string', 'minLength' => 64, 'maxLength' => 64], 'title' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255], 'date' => ['type' => 'string', 'format' => 'date']], 'required' => ['uuid', 'revision', 'title', 'date'], 'additionalProperties' => false],
+                'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false],
+            ],
             ...$this->scheduleDefinitions(),
             ...$this->quoteDefinitions(),
             ['name' => 'record_project_invoice_sent', 'description' => 'After separate explicit user confirmation, record a sent invoice and close its monthly preparation reminder. Does not send an invoice or track payment.', 'inputSchema' => ['type' => 'object', 'properties' => ['projectId' => ['type' => 'integer', 'minimum' => 1], 'reference' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 64], 'amount' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 32], 'description' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255], 'sentOn' => ['type' => 'string', 'format' => 'date'], 'serviceMonth' => ['type' => 'string', 'pattern' => '^\\d{4}-\\d{2}$']], 'required' => ['projectId', 'reference', 'amount', 'description', 'sentOn', 'serviceMonth'], 'additionalProperties' => false], 'annotations' => ['readOnlyHint' => false, 'destructiveHint' => false, 'openWorldHint' => false]],
@@ -228,6 +321,50 @@ final readonly class WriteToolRegistry
      * @return array<string, mixed>
      */
     public function call(string $name, array $arguments): array
+    {
+        if ($this->sessionWriteEnabled && in_array($name, ['create_session_draft', 'create_session_family', 'create_session_file_media'], true)) {
+            if (null === $this->sessionWriteCoordinator || !isset($arguments['requestId']) || !is_string($arguments['requestId']) || '' === trim($arguments['requestId']) || 128 < strlen($arguments['requestId'])) {
+                return $this->error('Invalid creation request or session write locking unavailable.');
+            }
+            $arguments['requestId'] = trim($arguments['requestId']);
+            try {
+                return $this->sessionWriteCoordinator->executeCreation($name, $arguments['requestId'], fn (): array => $this->callUnlocked($name, $arguments));
+            } catch (Throwable) {
+                return $this->error('Unable to lock the creation request.');
+            }
+        }
+        $sessionMutations = ['update_session_draft', 'update_session_content', 'assign_session_family', 'add_session_free_element', 'add_session_repertoire_element', 'update_session_element', 'copy_session_element', 'remove_session_element', 'reorder_session_elements', 'attach_session_element_media', 'attach_session_element_instrument'];
+        if ($this->sessionWriteEnabled && (in_array($name, $sessionMutations, true) || 'update_session_family' === $name)) {
+            if (null === $this->sessionWriteCoordinator) {
+                return $this->error('Session write locking is unavailable.');
+            }
+            if (!isset($arguments['uuid']) || !is_string($arguments['uuid'])) {
+                return $this->error('Invalid UUID.');
+            }
+            $familyUuid = 'update_session_family' === $name ? $arguments['uuid'] : null;
+            $sessionUuids = null === $familyUuid ? [$arguments['uuid']] : [];
+            if ('copy_session_element' === $name) {
+                if (!isset($arguments['sourceSessionUuid']) || !is_string($arguments['sourceSessionUuid'])) {
+                    return $this->error('Invalid source UUID.');
+                }
+                $sessionUuids[] = $arguments['sourceSessionUuid'];
+            }
+            try {
+                return $this->sessionWriteCoordinator->execute($sessionUuids, $familyUuid, fn (): array => $this->callUnlocked($name, $arguments));
+            } catch (InvalidArgumentException $exception) {
+                return $this->error($exception->getMessage());
+            } catch (Throwable) {
+                return $this->error('Unable to lock the record.');
+            }
+        }
+
+        return $this->callUnlocked($name, $arguments);
+    }
+
+    /** @param array<string, mixed> $arguments
+     * @return array<string, mixed>
+     */
+    private function callUnlocked(string $name, array $arguments): array
     {
         if ('record_project_invoice_sent' === $name) {
             if (!$this->invoiceWriteEnabled || null === $this->projectInvoiceManager) {
@@ -259,6 +396,274 @@ final readonly class WriteToolRegistry
                 return $this->error($exception->getMessage());
             } catch (Throwable) {
                 return $this->error('Personal notification unavailable; retry only with the same requestId.');
+            }
+        }
+        if (in_array($name, ['create_session_family', 'update_session_family'], true)) {
+            if (!$this->sessionWriteEnabled || null === $this->mcpSessionWriter) {
+                return $this->error('Session writes are disabled.');
+            }
+            try {
+                $allowed = 'create_session_family' === $name ? ['requestId', 'name', 'themeUuids'] : ['uuid', 'revision', 'name', 'themeUuids'];
+                if ([] !== array_diff(array_keys($arguments), $allowed) || !isset($arguments['themeUuids']) || !is_array($arguments['themeUuids']) || !array_is_list($arguments['themeUuids'])) {
+                    throw new InvalidToolArguments('Invalid family arguments.');
+                }
+                foreach ($arguments['themeUuids'] as $uuid) {
+                    if (!is_string($uuid)) {
+                        throw new InvalidToolArguments('Invalid theme UUID.');
+                    }
+                }
+                $familyName = $this->text($arguments, 'name', 255);
+                if ('create_session_family' === $name) {
+                    $family = $this->mcpSessionWriter->createFamily($this->text($arguments, 'requestId', 128), $familyName, $arguments['themeUuids']);
+                    $result = ['uuid' => $family->uuid->toRfc4122()];
+                } else {
+                    $this->mcpSessionWriter->updateFamily($this->text($arguments, 'uuid', 36), $familyName, $arguments['themeUuids'], $this->text($arguments, 'revision', 64));
+                    $result = ['updated' => true];
+                }
+                $json = json_encode($result, JSON_THROW_ON_ERROR);
+
+                return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => false];
+            } catch (InvalidArgumentException $exception) {
+                return $this->error($exception->getMessage());
+            } catch (Throwable) {
+                return $this->error('Family operation failed.');
+            }
+        }
+        if ('assign_session_family' === $name) {
+            if (!$this->sessionWriteEnabled || null === $this->mcpSessionWriter) {
+                return $this->error('Session writes are disabled.');
+            }
+            try {
+                if ([] !== array_diff(array_keys($arguments), ['uuid', 'revision', 'familyUuid']) || !array_key_exists('familyUuid', $arguments) || (null !== $arguments['familyUuid'] && !is_string($arguments['familyUuid']))) {
+                    throw new InvalidToolArguments('Invalid family assignment.');
+                }
+                $this->mcpSessionWriter->assignFamily($this->text($arguments, 'uuid', 36), $arguments['familyUuid'], $this->text($arguments, 'revision', 64));
+
+                return ['content' => [['type' => 'text', 'text' => '{"updated":true}']], 'isError' => false];
+            } catch (InvalidArgumentException $exception) {
+                return $this->error($exception->getMessage());
+            } catch (Throwable) {
+                return $this->error('Family assignment failed.');
+            }
+        }
+        if ('update_session_element' === $name) {
+            if (!$this->sessionWriteEnabled || null === $this->mcpSessionWriter) {
+                return $this->error('Session writes are disabled.');
+            }
+            try {
+                if ([] !== array_diff(array_keys($arguments), ['uuid', 'revision', 'sequenceUuid', 'changes']) || !isset($arguments['changes']) || !is_array($arguments['changes']) || array_is_list($arguments['changes'])) {
+                    throw new InvalidToolArguments('Invalid element changes.');
+                }
+                $this->mcpSessionWriter->updateElement($this->text($arguments, 'uuid', 36), $this->text($arguments, 'revision', 64), $this->text($arguments, 'sequenceUuid', 36), $arguments['changes']);
+
+                return ['content' => [['type' => 'text', 'text' => '{"updated":true}']], 'isError' => false];
+            } catch (InvalidArgumentException $exception) {
+                return $this->error($exception->getMessage());
+            } catch (Throwable) {
+                return $this->error('Element update failed.');
+            }
+        }
+        if ('create_session_file_media' === $name) {
+            if (!$this->sessionWriteEnabled || null === $this->mcpSessionWriter) {
+                return $this->error('Session writes are disabled.');
+            }
+            try {
+                if ([] !== array_diff(array_keys($arguments), ['requestId', 'title', 'type', 'filename', 'base64'])) {
+                    throw new InvalidToolArguments('Invalid file arguments.');
+                }
+                $media = $this->mcpSessionWriter->createFileMedia($this->text($arguments, 'requestId', 128), $this->text($arguments, 'title', 255), $this->text($arguments, 'type', 32), $this->text($arguments, 'filename', 255), $this->text($arguments, 'base64', 6990508));
+                $json = json_encode(['uuid' => $media->getUuid()->toRfc4122()], JSON_THROW_ON_ERROR);
+
+                return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => false];
+            } catch (InvalidArgumentException $exception) {
+                return $this->error($exception->getMessage());
+            } catch (Throwable) {
+                return $this->error('File creation failed; search for the existing result before retrying.');
+            }
+        }
+        if ('attach_session_element_instrument' === $name) {
+            if (!$this->sessionWriteEnabled || null === $this->mcpSessionWriter) {
+                return $this->error('Session writes are disabled.');
+            }
+            try {
+                if ([] !== array_diff(array_keys($arguments), ['uuid', 'revision', 'sequenceUuid', 'instrumentUuid'])) {
+                    throw new InvalidToolArguments('Invalid instrument arguments.');
+                }
+                $this->mcpSessionWriter->attachInstrument($this->text($arguments, 'uuid', 36), $this->text($arguments, 'revision', 64), $this->text($arguments, 'sequenceUuid', 36), $this->text($arguments, 'instrumentUuid', 36));
+
+                return ['content' => [['type' => 'text', 'text' => '{"updated":true}']], 'isError' => false];
+            } catch (InvalidArgumentException $exception) {
+                return $this->error($exception->getMessage());
+            } catch (Throwable) {
+                return $this->error('Instrument attachment failed.');
+            }
+        }
+        if ('attach_session_element_media' === $name) {
+            if (!$this->sessionWriteEnabled || null === $this->mcpSessionWriter) {
+                return $this->error('Session writes are disabled.');
+            }
+            try {
+                if ([] !== array_diff(array_keys($arguments), ['uuid', 'revision', 'sequenceUuid', 'mediaUuid'])) {
+                    throw new InvalidToolArguments('Invalid media arguments.');
+                }
+                $this->mcpSessionWriter->attachMedia($this->text($arguments, 'uuid', 36), $this->text($arguments, 'revision', 64), $this->text($arguments, 'sequenceUuid', 36), $this->text($arguments, 'mediaUuid', 36));
+
+                return ['content' => [['type' => 'text', 'text' => '{"updated":true}']], 'isError' => false];
+            } catch (InvalidArgumentException $exception) {
+                return $this->error($exception->getMessage());
+            } catch (Throwable) {
+                return $this->error('Media attachment failed.');
+            }
+        }
+        if ('remove_session_element' === $name) {
+            if (!$this->sessionWriteEnabled || null === $this->mcpSessionWriter) {
+                return $this->error('Session writes are disabled.');
+            }
+            try {
+                if ([] !== array_diff(array_keys($arguments), ['uuid', 'revision', 'sequenceUuid'])) {
+                    throw new InvalidToolArguments('Invalid element arguments.');
+                }
+                $this->mcpSessionWriter->removeElement($this->text($arguments, 'uuid', 36), $this->text($arguments, 'revision', 64), $this->text($arguments, 'sequenceUuid', 36));
+
+                return ['content' => [['type' => 'text', 'text' => '{"updated":true}']], 'isError' => false];
+            } catch (InvalidArgumentException $exception) {
+                return $this->error($exception->getMessage());
+            } catch (Throwable) {
+                return $this->error('Element removal failed.');
+            }
+        }
+        if ('reorder_session_elements' === $name) {
+            if (!$this->sessionWriteEnabled || null === $this->mcpSessionWriter) {
+                return $this->error('Session writes are disabled.');
+            }
+            try {
+                if ([] !== array_diff(array_keys($arguments), ['uuid', 'revision', 'sequenceUuids']) || !isset($arguments['sequenceUuids']) || !is_array($arguments['sequenceUuids']) || !array_is_list($arguments['sequenceUuids'])) {
+                    throw new InvalidToolArguments('Invalid element order.');
+                }
+                foreach ($arguments['sequenceUuids'] as $elementUuid) {
+                    if (!is_string($elementUuid)) {
+                        throw new InvalidToolArguments('Invalid element UUID.');
+                    }
+                }
+                $this->mcpSessionWriter->reorderElements($this->text($arguments, 'uuid', 36), $this->text($arguments, 'revision', 64), $arguments['sequenceUuids']);
+
+                return ['content' => [['type' => 'text', 'text' => '{"updated":true}']], 'isError' => false];
+            } catch (InvalidArgumentException $exception) {
+                return $this->error($exception->getMessage());
+            } catch (Throwable) {
+                return $this->error('Element reorder failed.');
+            }
+        }
+        if ('copy_session_element' === $name) {
+            if (!$this->sessionWriteEnabled || null === $this->mcpSessionWriter) {
+                return $this->error('Session writes are disabled.');
+            }
+            try {
+                if ([] !== array_diff(array_keys($arguments), ['uuid', 'revision', 'sourceSessionUuid', 'sourceSequenceUuid', 'sourceRevision'])) {
+                    throw new InvalidToolArguments('Invalid copy arguments.');
+                }
+                $sequence = $this->mcpSessionWriter->copyElement($this->text($arguments, 'uuid', 36), $this->text($arguments, 'revision', 64), $this->text($arguments, 'sourceSessionUuid', 36), $this->text($arguments, 'sourceSequenceUuid', 36), $this->text($arguments, 'sourceRevision', 64));
+                $json = json_encode(['uuid' => $sequence->uuid->toRfc4122()], JSON_THROW_ON_ERROR);
+
+                return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => false];
+            } catch (InvalidArgumentException $exception) {
+                return $this->error($exception->getMessage());
+            } catch (Throwable) {
+                return $this->error('Element copy failed; reread the session before retrying.');
+            }
+        }
+        if ('add_session_repertoire_element' === $name) {
+            if (!$this->sessionWriteEnabled || null === $this->mcpSessionWriter) {
+                return $this->error('Session writes are disabled.');
+            }
+            try {
+                if ([] !== array_diff(array_keys($arguments), ['uuid', 'revision', 'repertoireUuid'])) {
+                    throw new InvalidToolArguments('Invalid repertoire arguments.');
+                }
+                $sequence = $this->mcpSessionWriter->addRepertoireElement($this->text($arguments, 'uuid', 36), $this->text($arguments, 'revision', 64), $this->text($arguments, 'repertoireUuid', 36));
+                $json = json_encode(['uuid' => $sequence->uuid->toRfc4122()], JSON_THROW_ON_ERROR);
+
+                return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => false];
+            } catch (InvalidArgumentException $exception) {
+                return $this->error($exception->getMessage());
+            } catch (Throwable) {
+                return $this->error('Repertoire attachment failed; reread the session before retrying.');
+            }
+        }
+        if ('add_session_free_element' === $name) {
+            if (!$this->sessionWriteEnabled || null === $this->mcpSessionWriter) {
+                return $this->error('Session writes are disabled.');
+            }
+            try {
+                if ([] !== array_diff(array_keys($arguments), ['uuid', 'revision', 'title', 'type', 'body', 'lyrics', 'gestures', 'role']) || !array_key_exists('body', $arguments) || !is_string($arguments['body'])) {
+                    throw new InvalidToolArguments('Invalid element arguments.');
+                }
+                foreach (['lyrics', 'gestures', 'role'] as $key) {
+                    if (isset($arguments[$key]) && !is_string($arguments[$key])) {
+                        throw new InvalidToolArguments('Invalid element text.');
+                    }
+                }
+                $sequence = $this->mcpSessionWriter->addFreeElement($this->text($arguments, 'uuid', 36), $this->text($arguments, 'revision', 64), $this->text($arguments, 'title', 255), $this->text($arguments, 'type', 32), $arguments['body'], $arguments['lyrics'] ?? null, $arguments['gestures'] ?? null, $arguments['role'] ?? null);
+                $json = json_encode(['uuid' => $sequence->uuid->toRfc4122()], JSON_THROW_ON_ERROR);
+
+                return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => false];
+            } catch (InvalidArgumentException $exception) {
+                return $this->error($exception->getMessage());
+            } catch (Throwable) {
+                return $this->error('Element creation failed; reread the session before retrying.');
+            }
+        }
+        if ('create_session_draft' === $name) {
+            if (!$this->sessionWriteEnabled || null === $this->mcpSessionWriter) {
+                return $this->error('Session writes are disabled.');
+            }
+            try {
+                if ([] !== array_diff(array_keys($arguments), ['requestId', 'title', 'date', 'familyUuid'])) {
+                    throw new InvalidToolArguments('Unexpected session argument.');
+                }
+                $familyUuid = array_key_exists('familyUuid', $arguments) ? $this->text($arguments, 'familyUuid', 36) : null;
+                $session = $this->mcpSessionWriter->createSession($this->text($arguments, 'requestId', 128), $this->text($arguments, 'title', 255), $this->text($arguments, 'date', 10), $familyUuid);
+                $json = json_encode(['uuid' => $session->getUuid()->toRfc4122(), 'published' => $session->isPublished()], JSON_THROW_ON_ERROR);
+
+                return ['content' => [['type' => 'text', 'text' => $json]], 'isError' => false];
+            } catch (InvalidArgumentException $exception) {
+                return $this->error($exception->getMessage());
+            } catch (Throwable) {
+                return $this->error('Session creation failed; retry with the same requestId.');
+            }
+        }
+        if ('update_session_content' === $name) {
+            if (!$this->sessionWriteEnabled || null === $this->mcpSessionWriter) {
+                return $this->error('Session writes are disabled.');
+            }
+            try {
+                if ([] !== array_diff(array_keys($arguments), ['uuid', 'revision', 'changes']) || !isset($arguments['changes']) || !is_array($arguments['changes']) || array_is_list($arguments['changes'])) {
+                    throw new InvalidToolArguments('Invalid session changes.');
+                }
+                $this->mcpSessionWriter->updateSessionContent($this->text($arguments, 'uuid', 36), $this->text($arguments, 'revision', 64), $arguments['changes']);
+
+                return ['content' => [['type' => 'text', 'text' => '{"updated":true}']], 'isError' => false];
+            } catch (InvalidArgumentException $exception) {
+                return $this->error($exception->getMessage());
+            } catch (Throwable) {
+                return $this->error('Session update failed.');
+            }
+        }
+        if ('update_session_draft' === $name) {
+            if (!$this->sessionWriteEnabled || null === $this->mcpSessionWriter) {
+                return $this->error('Session writes are disabled.');
+            }
+            try {
+                if ([] !== array_diff(array_keys($arguments), ['uuid', 'revision', 'title', 'date'])) {
+                    throw new InvalidToolArguments('Unexpected session argument.');
+                }
+                $this->mcpSessionWriter->updateSession($this->text($arguments, 'uuid', 36), $this->text($arguments, 'title', 255), $this->text($arguments, 'date', 10), $this->text($arguments, 'revision', 64));
+
+                return ['content' => [['type' => 'text', 'text' => '{"updated":true}']], 'isError' => false];
+            } catch (InvalidArgumentException $exception) {
+                return $this->error($exception->getMessage());
+            } catch (Throwable) {
+                return $this->error('Session update failed.');
             }
         }
         if ('save_mail_draft' === $name) {
@@ -525,7 +930,7 @@ final readonly class WriteToolRegistry
         $fields = [
             'title' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 110],
             'tag' => ['type' => ['string', 'null'], 'maxLength' => 40],
-            'text' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 320],
+            'text' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 400],
             'url' => ['type' => ['string', 'null'], 'maxLength' => 2048],
             'linkLabel' => ['type' => ['string', 'null'], 'maxLength' => 60],
             'active' => ['type' => 'boolean'],

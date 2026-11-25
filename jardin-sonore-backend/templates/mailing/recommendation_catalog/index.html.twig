@@ -50,7 +50,7 @@
                         </thead>
                         <tbody>
                         {% for recommendation in recommendations %}
-                            <tr data-table-availability="{{ recommendation.active ? 'active' : 'inactive' }}">
+                            <tr class="internal-table__row--clickable" data-table-availability="{{ recommendation.active ? 'active' : 'inactive' }}" tabindex="0" data-controller="catalog-row" data-catalog-row-url-value="{{ path('mailing_recommendation_catalog_edit', {uuid: recommendation.uuid}) }}" data-action="click->catalog-row#navigate keydown->catalog-row#navigateFromKeyboard" aria-label="{{ 'mailing.catalog.index.edit'|trans({}, 'mailing') }} — {{ recommendation.title }}">
                                 <td data-table-mobile="hidden" data-label="{{ 'mailing.catalog.index.table.visual'|trans({}, 'mailing') }}">
                                     {% if recommendation.imagePath %}
                                         {% if recommendation.url %}
@@ -71,14 +71,14 @@
                                         <p class="mailing-catalog-card__tag">{{ recommendation.tag }}</p>
                                     {% endif %}
                                     <span class="internal-table__availability-dot{{ recommendation.active ? '' : ' internal-table__availability-dot--inactive' }}"></span><strong>{{ recommendation.title }}</strong>
-                                    <span class="internal-table-note">{{ recommendation.text }}</span>
+                                    <span class="internal-table-note mailing-catalog-table__excerpt">{{ recommendation.text }}</span>
                                 </td>
                                 <td data-table-mobile="secondary" data-label="Tag">{{ recommendation.tag ?? '—' }}</td>
                                 <td data-table-mobile="secondary" data-label="{{ 'mailing.catalog.index.table.usages'|trans({}, 'mailing') }}">
                                     {% if recommendation.usages is empty %}
                                         <span class="internal-table-note">{{ 'mailing.catalog.index.never_used'|trans({}, 'mailing') }}</span>
                                     {% else %}
-                                        <details>
+                                        <details data-catalog-row-ignore>
                                             <summary>{{ recommendation.usages|first.sentAt|date('d/m/Y H:i') }}</summary>
                                             <ul>
                                                 {% for usage in recommendation.usages %}

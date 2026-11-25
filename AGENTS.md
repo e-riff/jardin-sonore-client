@@ -53,6 +53,7 @@
 - Utiliser les icônes SVG existantes du backoffice ; donner un nom accessible aux commandes avec icône seule. Ne pas dépendre de la couleur seule pour distinguer un état.
 - Pour ouvrir une fiche liée depuis une action contextuelle (par exemple une fiche EasyAdmin depuis un dossier), garder un lien de navigation mais le présenter comme un petit bouton icône standardisé (`.internal-icon-button` ou `.commercial-dossier__icon-action`), avec `title` et nom accessible. Ne pas utiliser un lien texte vert souligné pour ce type d’action.
 - Une ligne ou carte cliquable doit ouvrir un détail clairement annoncé, avoir un état de survol et un état de focus clavier, et passer à une colonne sur mobile.
+- Pour les index du backoffice, réutiliser le tableau commun avec recherche et filtres dynamiques, tri, actions compactes et lignes ouvrant la fiche au clic ou au clavier ; préserver les liens, menus et actions propres à chaque ligne, ainsi que le rendu mobile.
 
 ## PHP et Symfony
 

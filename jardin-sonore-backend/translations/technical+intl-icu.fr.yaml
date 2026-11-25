@@ -296,6 +296,7 @@ technical:
       inactive: "Inactif"
     error:
       email_not_linked: "Cette adresse e-mail n’est pas associée à la structure sélectionnée."
+      email_mismatch: "L’adresse saisie ne correspond pas à l’adresse associée sélectionnée."
     enabled: "Oui"
     disabled: "Non"
     flash:
