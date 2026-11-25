@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Application\Controller;
 
+use App\Infrastructure\Doctrine\Entity\SessionFamilyEntity;
+use App\Infrastructure\Doctrine\Entity\SessionSummaryEntity;
 use App\Kernel;
+use Doctrine\ORM\EntityManagerInterface;
 use stdClass;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -91,6 +94,28 @@ final class McpControllerTest extends WebTestCase
         } else {
             putenv("MCP_BEARER_TOKEN={$this->previousBearerToken}");
         }
+    }
+
+    public function testFamilyAndSessionReadingTools(): void
+    {
+        $manager = static::getContainer()->get(EntityManagerInterface::class);
+        $suffix = bin2hex(random_bytes(4));
+        $family = (new SessionFamilyEntity())->setName("MCP famille {$suffix}");
+        $session = (new SessionSummaryEntity())->setTitle("MCP séance {$suffix}")->setFamily($family);
+        $manager->persist($family);
+        $manager->persist($session);
+        $manager->flush();
+        $headers = ['HTTP_AUTHORIZATION' => 'Bearer test-mcp-token', 'HTTP_ACCEPT' => 'application/json, text/event-stream'];
+        $this->client->jsonRequest('POST', '/api/mcp', ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/call', 'params' => ['name' => 'search_session_families', 'arguments' => ['query' => "MCP famille {$suffix}"]]], $headers);
+        $response = json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertFalse($response['result']['isError']);
+        $result = json_decode($response['result']['content'][0]['text'], true, 512, JSON_THROW_ON_ERROR);
+        self::assertSame($family->getUuid()->toRfc4122(), $result[0]['uuid']);
+        $this->client->jsonRequest('POST', '/api/mcp', ['jsonrpc' => '2.0', 'id' => 2, 'method' => 'tools/call', 'params' => ['name' => 'get_session_family', 'arguments' => ['uuid' => $family->getUuid()->toRfc4122()]]], $headers);
+        $response = json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertFalse($response['result']['isError']);
+        $result = json_decode($response['result']['content'][0]['text'], true, 512, JSON_THROW_ON_ERROR);
+        self::assertSame($session->getUuid()->toRfc4122(), $result['sessions'][0]['uuid']);
     }
 
     public function testInitializeNegotiatesMcpCapabilities(): void
