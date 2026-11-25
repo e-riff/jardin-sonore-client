@@ -4291,6 +4291,13 @@ form.internal-form.commercial-calendar-group__form {
     letter-spacing: 0.04em;
 }
 
+.internal-form label:has(> input[type="checkbox"]:not(.internal-visually-hidden)) {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
 .session-sequence-local-details__instruction-label {
     display: block;
     margin: 0 0 8px;
@@ -7952,7 +7959,7 @@ a.session-composer-overlay__item {
 .family-composer__group legend { font-weight: 700; }
 .family-composer__version + .family-composer__version { border-top: 1px solid var(--color-outline-variant); margin-top: .75rem; padding-top: .75rem; }
 .family-composer__version p { margin: .3rem 0; font-size: .85rem; }
-.family-composer__instructions { display: block; margin: .4rem 0 0 1.5rem; }
+.internal-form .family-composer__instructions { margin: .4rem 0 0 1.5rem; }
 .session-family-heading__actions { align-items: center; }
 .session-summary-form__organization { grid-column: 1 / -1; }
 .session-family-field__control { display: flex; align-items: stretch; gap: .5rem; min-width: 0; }
