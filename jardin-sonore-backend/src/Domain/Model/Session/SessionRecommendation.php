@@ -40,8 +40,8 @@ final class SessionRecommendation implements UuidIdentifiableInterface
         $this->initializeUuid($uuid);
         $this->initializeActive($active);
         $this->createdAt = $createdAt ?? new DateTimeImmutable();
-        $this->updatedAt = $updatedAt ?? new DateTimeImmutable();
         $this->updateContent($title, $text, $notes, $primaryUrl, $secondaryUrl, $imagePath);
+        $this->updatedAt = $updatedAt ?? $this->updatedAt;
     }
 
     public function getTitle(): string
