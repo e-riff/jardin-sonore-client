@@ -8,5 +8,6 @@ use App\Domain\Model\Session\SessionSummary;
 
 interface SessionDocumentGeneratorInterface
 {
+    /** Returns a private temporary PDF for the caller to publish or discard. */
     public function generate(SessionSummary $sessionSummary): string;
 }

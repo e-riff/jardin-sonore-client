@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Infrastructure\Doctrine\Repository;
 
 use App\Application\Session\Message\GenerateSessionDocumentMessage;
+use App\Application\Session\SessionDocumentGenerationStore;
+use App\Domain\Model\Session\SessionDocumentStatus;
 use App\Domain\Model\Session\SessionSummary;
 use App\Domain\Repository\SessionSummaryRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\SessionSummaryEntity;
@@ -18,13 +20,14 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
+use RuntimeException;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
  * @extends ServiceEntityRepository<SessionSummaryEntity>
  */
-final class SessionSummaryDoctrineRepository extends ServiceEntityRepository implements SessionSummaryRepositoryInterface
+final class SessionSummaryDoctrineRepository extends ServiceEntityRepository implements SessionSummaryRepositoryInterface, SessionDocumentGenerationStore
 {
     public function __construct(
         ManagerRegistry $managerRegistry,
@@ -44,6 +47,54 @@ final class SessionSummaryDoctrineRepository extends ServiceEntityRepository imp
         return $entity instanceof SessionSummaryEntity
             ? $this->sessionSummaryMapper->toDomain($entity)
             : null;
+    }
+
+    public function claimDocument(Uuid $uuid, string $token): ?SessionSummary
+    {
+        return $this->getEntityManager()->wrapInTransaction(function () use ($uuid, $token): ?SessionSummary {
+            $entity = $this->lockedSession($uuid);
+            if (null === $entity || (SessionDocumentStatus::READY === $entity->getDocumentStatus() && is_file($entity->getDocumentPath() ?? ''))) {
+                return null;
+            }
+
+            $entity->setDocumentStatus(SessionDocumentStatus::GENERATING)->setDocumentPath($token)->setDocumentError(null);
+
+            return $this->sessionSummaryMapper->toDomain($entity);
+        });
+    }
+
+    public function finishDocument(Uuid $uuid, string $token, ?string $stagedPath, ?string $error): bool
+    {
+        return $this->getEntityManager()->wrapInTransaction(function () use ($uuid, $token, $stagedPath, $error): bool {
+            $entity = $this->lockedSession($uuid);
+            if (null === $entity || SessionDocumentStatus::GENERATING !== $entity->getDocumentStatus() || $token !== $entity->getDocumentPath()) {
+                return false;
+            }
+
+            if (null === $stagedPath) {
+                $entity->setDocumentStatus(SessionDocumentStatus::FAILED)->setDocumentPath(null)->setDocumentError($error);
+
+                return true;
+            }
+
+            $documentPath = dirname($stagedPath) . '/' . $uuid->toRfc4122() . '.pdf';
+            if (!rename($stagedPath, $documentPath)) {
+                throw new RuntimeException("Unable to store {$documentPath}.");
+            }
+            $entity->setDocumentStatus(SessionDocumentStatus::READY)->setDocumentPath($documentPath)->setDocumentError(null);
+
+            return true;
+        });
+    }
+
+    private function lockedSession(Uuid $uuid): ?SessionSummaryEntity
+    {
+        $entity = $this->findOneBy(['uuid' => $uuid]);
+        if (null !== $entity) {
+            $this->getEntityManager()->refresh($entity, LockMode::PESSIMISTIC_WRITE);
+        }
+
+        return $entity;
     }
 
     public function search(?string $query = null): array

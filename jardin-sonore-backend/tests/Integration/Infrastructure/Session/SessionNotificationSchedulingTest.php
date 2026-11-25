@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Infrastructure\Session;
 
+use App\Application\Session\Message\GenerateSessionDocumentMessage;
+use App\Application\Session\MessageHandler\GenerateSessionDocumentHandler;
 use App\Application\Session\SaveSessionSummaryInput;
 use App\Application\Session\SetSessionPublication;
 use App\Application\Session\UpdateSessionSummary;
 use App\Domain\Model\Portal\UserStatus;
+use App\Domain\Model\Session\SessionDocumentStatus;
 use App\Infrastructure\Doctrine\Entity\OrganizationEntity;
 use App\Infrastructure\Doctrine\Entity\SessionNotificationDeliveryEntity;
 use App\Infrastructure\Doctrine\Entity\SessionSummaryEntity;
@@ -75,6 +78,43 @@ final class SessionNotificationSchedulingTest extends KernelTestCase
                 return '/tmp/jardin-sonore-session-notification-test-cache';
             }
         };
+    }
+
+    public function testObsoletePdfCannotOverwriteSessionOrNewerGeneration(): void
+    {
+        $session = $this->session([]);
+        $repository = self::getContainer()->get(SessionSummaryDoctrineRepository::class);
+        $uuid = $session->getUuid();
+        self::assertNotNull($repository->claimDocument($uuid, 'first-render'));
+        $session->setTitle('Modification pendant le rendu');
+        $session->setDocumentStatus(SessionDocumentStatus::PENDING)->setDocumentPath(null);
+        $this->entityManager->flush();
+        self::assertFalse($repository->finishDocument($uuid, 'first-render', '/obsolete-render', null));
+        self::assertNotNull($repository->claimDocument($uuid, 'second-render'));
+        self::assertFalse($repository->finishDocument($uuid, 'first-render', null, 'Ancienne erreur'));
+        self::assertSame('Modification pendant le rendu', $repository->findByUuid($uuid)?->getTitle());
+        self::assertSame('second-render', $session->getDocumentPath());
+    }
+
+    public function testWorkerPublishesTheGeneratedPdfAndSkipsDuplicateMessages(): void
+    {
+        $session = $this->session([]);
+        $handler = self::getContainer()->get(GenerateSessionDocumentHandler::class);
+        $message = new GenerateSessionDocumentMessage($session->getUuid()->toRfc4122());
+        $handler($message);
+        $path = $session->getDocumentPath();
+        self::assertNotNull($path);
+        try {
+            self::assertSame(SessionDocumentStatus::READY, $session->getDocumentStatus());
+            self::assertSame($session->getUuid()->toRfc4122() . '.pdf', basename($path));
+            self::assertSame('%PDF-', file_get_contents($path, false, null, 0, 5));
+            $handler($message);
+            self::assertSame($path, $session->getDocumentPath());
+        } finally {
+            if (is_file($path)) {
+                unlink($path);
+            }
+        }
     }
 
     public function testBothPublicationPathsScheduleSameEligibleRecipients(): void

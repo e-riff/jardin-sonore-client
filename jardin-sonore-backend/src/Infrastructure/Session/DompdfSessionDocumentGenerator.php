@@ -57,12 +57,16 @@ final readonly class DompdfSessionDocumentGenerator implements SessionDocumentGe
         $font = $dompdf->getFontMetrics()->getFont('DejaVu Sans', 'normal');
         $canvas->page_text(475, 814, 'Page {PAGE_NUM} / {PAGE_COUNT}', $font, 7, [0.4, 0.45, 0.43]);
 
-        $documentPath = $this->sessionDocumentDirectory . '/' . $sessionSummary->getUuid()->toRfc4122() . '.pdf';
-        $temporaryPath = $documentPath . '.tmp';
-        if (false === file_put_contents($temporaryPath, $dompdf->output()) || !rename($temporaryPath, $documentPath)) {
-            throw new RuntimeException("Unable to store {$documentPath}.");
+        $pdf = $dompdf->output();
+        $temporaryPath = tempnam($this->sessionDocumentDirectory, 'render-');
+        if (false === $temporaryPath) {
+            throw new RuntimeException("Unable to create a temporary PDF in {$this->sessionDocumentDirectory}.");
+        }
+        if (strlen($pdf) !== file_put_contents($temporaryPath, $pdf)) {
+            unlink($temporaryPath);
+            throw new RuntimeException("Unable to store {$temporaryPath}.");
         }
 
-        return $documentPath;
+        return $temporaryPath;
     }
 }

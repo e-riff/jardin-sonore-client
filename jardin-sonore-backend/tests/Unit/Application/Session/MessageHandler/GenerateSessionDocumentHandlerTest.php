@@ -6,9 +6,9 @@ namespace App\Tests\Unit\Application\Session\MessageHandler;
 
 use App\Application\Session\Message\GenerateSessionDocumentMessage;
 use App\Application\Session\MessageHandler\GenerateSessionDocumentHandler;
+use App\Application\Session\SessionDocumentGenerationStore;
 use App\Application\Session\SessionDocumentGeneratorInterface;
 use App\Domain\Model\Session\SessionSummary;
-use App\Domain\Repository\SessionSummaryRepositoryInterface;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -26,12 +26,12 @@ final class GenerateSessionDocumentHandlerTest extends TestCase
             organizations: [],
         );
         $sessionSummary->markDocumentReady($documentPath);
-        $sessionSummaryRepository = $this->createMock(SessionSummaryRepositoryInterface::class);
+        $sessionSummaryRepository = $this->createMock(SessionDocumentGenerationStore::class);
         $sessionSummaryRepository
             ->expects(self::once())
-            ->method('findByUuid')
-            ->willReturn($sessionSummary);
-        $sessionSummaryRepository->expects(self::never())->method('save');
+            ->method('claimDocument')
+            ->willReturn(null);
+        $sessionSummaryRepository->expects(self::never())->method('finishDocument');
         $sessionDocumentGenerator = $this->createMock(SessionDocumentGeneratorInterface::class);
         $sessionDocumentGenerator->expects(self::never())->method('generate');
         $logger = $this->createMock(LoggerInterface::class);
