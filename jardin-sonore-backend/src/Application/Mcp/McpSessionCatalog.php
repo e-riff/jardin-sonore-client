@@ -8,6 +8,7 @@ use App\Application\ContentCatalog\CreateInstrument;
 use App\Application\ContentCatalog\FindInstrumentCatalogItems;
 use App\Application\ContentCatalog\GetInstrumentForEdit;
 use App\Application\ContentCatalog\InstrumentCatalogCriteria;
+use App\Application\ContentCatalog\InstrumentCatalogItem;
 use App\Application\ContentCatalog\InstrumentEditView;
 use App\Application\ContentCatalog\SaveInstrumentInput;
 use App\Application\ContentCatalog\UpdateInstrument;
@@ -81,7 +82,7 @@ final readonly class McpSessionCatalog
         $items = match ($category) {
             'repertoire' => ($this->searchRepertoireItems)(query: $query, activeOnly: $activeOnly),
             'instrument' => array_values(array_filter(array_map(
-                fn ($instrumentCatalogItem): ?InstrumentEditView => ($this->getInstrumentForEdit)($instrumentCatalogItem->uuid),
+                fn (InstrumentCatalogItem $instrumentCatalogItem): ?InstrumentEditView => ($this->getInstrumentForEdit)($instrumentCatalogItem->uuid),
                 ($this->findInstrumentCatalogItems)(new InstrumentCatalogCriteria(query: $query ?? '', activeFilter: $activeOnly ? 'active' : '', perPage: $limit))->items,
             ))),
             'media' => ($this->searchMediaResources)(query: $query, activeOnly: $activeOnly),
@@ -89,7 +90,7 @@ final readonly class McpSessionCatalog
             default => throw new InvalidArgumentException('Unknown catalog category.'),
         };
 
-        return array_map(function (object $item) use ($category): array {
+        return array_map(function (InstrumentEditView|MediaResourceView|RepertoireItemView|SessionRecommendationView $item) use ($category): array {
             $data = $this->view($category, $item);
 
             return array_intersect_key($data, array_flip(['uuid', 'title', 'name', 'type', 'source', 'description', 'text', 'imagePath', 'active', 'revision', 'url']));

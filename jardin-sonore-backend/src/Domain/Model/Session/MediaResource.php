@@ -48,6 +48,7 @@ final class MediaResource implements UuidIdentifiableInterface
         $this->updatedAt = $updatedAt ?? new DateTimeImmutable();
         $this->updateContent($title, $primaryUrl, $source, $description, $imageUrl);
         $this->setThemes($themes);
+        $this->updatedAt = $updatedAt ?? $this->updatedAt;
     }
 
     public function getType(): MediaResourceType

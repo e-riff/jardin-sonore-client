@@ -39,6 +39,7 @@ final class Instrument implements UuidIdentifiableInterface
         $this->initializeActive($active);
         $this->updateDetails($name, $tuning, $quantity, $notes);
         $this->replaceTags($tags);
+        $this->updatedAt = $updatedAt;
     }
 
     public function getName(): string

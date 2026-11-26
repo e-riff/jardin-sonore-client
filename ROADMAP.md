@@ -388,3 +388,7 @@ Ces idées restent visibles sans être décidées pour le prochain lot.
 - [Plan d'action SEO](.codex/plan-action-seo.md) : hypothèses et pistes pour la vitrine et la visibilité locale.
 - [Identité visuelle de la vitrine](docs/identite-visuelle-vitrine.md) : palette, typographie, composants et transitions réutilisables.
 - [Historique technique backend](.codex/backend-roadmap.md) : décisions et anciens lots conservés pour mémoire.
+
+## Correction identifiée — révisions des médias et instruments MCP
+
+Le 25 novembre, l'audit après le correctif des prolongements identifie le même défaut d'hydratation dans `MediaResource` et `Instrument` : le constructeur appelle une méthode qui remplace la date persistée par l'heure courante. Corriger ces deux types et vérifier lectures stables puis modification avec révision. Les séances, prolongements et éléments du répertoire conservent désormais leur date à l'hydratation.
