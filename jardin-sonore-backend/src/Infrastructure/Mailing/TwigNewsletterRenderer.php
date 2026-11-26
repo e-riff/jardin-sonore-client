@@ -47,9 +47,15 @@ final readonly class TwigNewsletterRenderer implements NewsletterRendererInterfa
             'token' => self::UNSUBSCRIBE_TOKEN_PLACEHOLDER,
         ], UrlGeneratorInterface::ABSOLUTE_URL);
 
+        $recommendationTexts = [];
+        foreach ($activeRecommendations as $mailingRecommendation) {
+            $recommendationTexts[$mailingRecommendation->getUuid()->toRfc4122()] = $this->newsletterRichTextFormatter->format($mailingRecommendation->getText());
+        }
+
         $context = [
             'campaign' => $mailingCampaign,
             'activeRecommendations' => $activeRecommendations,
+            'recommendationTexts' => $recommendationTexts,
             'preheader' => $preheader,
             'unsubscribeUrl' => $unsubscribeUrl,
             'heroImagePath' => $heroImagePath,

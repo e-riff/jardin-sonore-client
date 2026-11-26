@@ -6,6 +6,7 @@ namespace App\Tests\Unit\Infrastructure\Mailing;
 
 use App\Application\Mailing\RenderedNewsletter;
 use App\Domain\Model\Mailing\MailingCampaign;
+use App\Domain\Model\Mailing\MailingRecommendation;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Infrastructure\Mailing\NewsletterMainTextFormatter;
 use App\Infrastructure\Mailing\NewsletterRichTextFormatter;
@@ -81,8 +82,33 @@ final class TwigNewsletterRendererTest extends TestCase
         self::assertSame('Premier paragraphe', $renderedNewsletter->preheader);
     }
 
-    /** @param list<array<string, mixed>>|null $introBlocks */
-    private function renderCampaign(string $emailSubject, ?string $subtitle, string $mainText, ?array $introBlocks = null, ?string $preheader = null): RenderedNewsletter
+    public function testRecommendationsRenderSafeLinksAndCenteredImages(): void
+    {
+        $recommendation = new MailingRecommendation('Lecture', null, 'Voir <a href="https://example.test/livre">ce livre</a><script>alert(1)</script>', 1, imagePath: 'book.webp');
+        $rendered = $this->renderCampaign('Objet', null, 'Texte', recommendations: [$recommendation]);
+        self::assertStringContainsString('href="https://example.test/livre"', $rendered->html);
+        self::assertStringContainsString('>ce livre</a>', $rendered->html);
+        self::assertStringNotContainsString('alert(1)', $rendered->html);
+        self::assertStringContainsString('ce livre (https://example.test/livre)', $rendered->text);
+        self::assertStringNotContainsString('<a ', $rendered->text);
+        self::assertStringContainsString('vertical-align:middle;', $rendered->html);
+    }
+
+    public function testSideImagesAreVerticallyCentered(): void
+    {
+        $rendered = $this->renderCampaign('Objet', null, 'Texte', introBlocks: [
+            ['id' => 'left-image', 'kind' => 'split', 'text' => 'Texte long', 'imagePath' => 'uploads/mailing/content/side.webp', 'imageAlt' => '', 'imageDecorative' => true, 'imageSide' => 'left'],
+            ['id' => 'right-image', 'kind' => 'split', 'text' => 'Texte long', 'imagePath' => 'uploads/mailing/content/side.webp', 'imageAlt' => '', 'imageDecorative' => true, 'imageSide' => 'right'],
+        ]);
+        self::assertDoesNotMatchRegularExpression('/class="mailing-intro-split-cell"[^>]*valign="top"/', $rendered->html);
+        self::assertMatchesRegularExpression('/class="mailing-intro-split-cell"[^>]*valign="middle"[^>]*vertical-align:middle/', $rendered->html);
+    }
+
+    /**
+     * @param list<array<string, mixed>>|null $introBlocks
+     * @param list<MailingRecommendation>     $recommendations
+     */
+    private function renderCampaign(string $emailSubject, ?string $subtitle, string $mainText, ?array $introBlocks = null, ?string $preheader = null, array $recommendations = []): RenderedNewsletter
     {
         $twig = new Environment(new FilesystemLoader(__DIR__ . '/../../../../templates'));
         $twig->addFunction(new TwigFunction('asset', static fn (string $path): string => "/{$path}"));
@@ -105,6 +131,8 @@ final class TwigNewsletterRendererTest extends TestCase
             introBlocks: $introBlocks,
             preheader: $preheader,
         );
+
+        $mailingCampaign->replaceRecommendations($recommendations);
 
         return (new TwigNewsletterRenderer($twig, $urlGenerator, new NewsletterMainTextFormatter(), new NewsletterRichTextFormatter()))->render($mailingCampaign);
     }

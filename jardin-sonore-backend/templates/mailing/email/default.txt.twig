@@ -16,7 +16,7 @@ Nos recommandations
 {% for recommendation in activeRecommendations %}
 
 - {{ recommendation.title }}
-{% if recommendation.tag %}{{ recommendation.tag }} - {% endif %}{{ recommendation.text }}
+{% if recommendation.tag %}{{ recommendation.tag }} - {% endif %}{{ recommendationTexts[recommendation.uuid ~ ''].text }}
 {% if recommendation.url %}
 {{ recommendation.linkLabel ?: ('mailing.preview.email.recommendation_default_link_label'|trans({}, 'mailing')) }} : {{ recommendation.url }}
 {% endif %}

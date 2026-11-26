@@ -8,7 +8,9 @@ use App\Domain\Model\Mailing\NewsletterRecommendationUsage;
 use App\Domain\Repository\NewsletterRecommendationUsageRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\NewsletterRecommendationUsageEntity;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Uid\Uuid;
 
 /** @extends ServiceEntityRepository<NewsletterRecommendationUsageEntity> */
 final class NewsletterRecommendationUsageDoctrineRepository extends ServiceEntityRepository implements NewsletterRecommendationUsageRepositoryInterface
@@ -47,7 +49,7 @@ final class NewsletterRecommendationUsageDoctrineRepository extends ServiceEntit
 
         $entities = $this->createQueryBuilder('usage')
             ->andWhere('usage.sourceRecommendationUuid IN (:sourceRecommendationUuids)')
-            ->setParameter('sourceRecommendationUuids', $sourceRecommendationUuids)
+            ->setParameter('sourceRecommendationUuids', array_map(static fn (Uuid $uuid): string => $uuid->toBinary(), $sourceRecommendationUuids), ArrayParameterType::BINARY)
             ->orderBy('usage.sentAt', 'DESC')
             ->getQuery()
             ->getResult();

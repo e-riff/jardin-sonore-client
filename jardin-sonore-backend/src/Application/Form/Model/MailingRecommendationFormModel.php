@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Form\Model;
 
+use App\Application\Mailing\RecommendationText;
 use App\Domain\Model\Mailing\MailingRecommendation;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -19,8 +20,9 @@ final class MailingRecommendationFormModel
     #[Assert\Length(max: 40)]
     public ?string $tag = null;
 
-    #[Assert\NotBlank]
-    #[Assert\Length(max: 400)]
+    #[Assert\NotBlank(normalizer: [RecommendationText::class, 'trimmedVisibleText'])]
+    #[Assert\Length(max: RecommendationText::MAX_SOURCE_LENGTH)]
+    #[Assert\Length(max: RecommendationText::MAX_VISIBLE_LENGTH, normalizer: [RecommendationText::class, 'visibleText'])]
     public string $text = '';
 
     #[Assert\Url]

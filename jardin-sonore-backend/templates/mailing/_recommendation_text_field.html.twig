@@ -1,0 +1,16 @@
+<div class="character-counter__field" data-controller="recommendation-text"
+     data-recommendation-text-limit-value="420"
+     data-recommendation-text-counter-value="{{ 'mailing.catalog.form.characters_remaining'|trans({}, 'mailing') }}"
+     data-recommendation-text-link-prompt-value="{{ 'mailing.form.intro_link_prompt'|trans({}, 'mailing') }}"
+     data-recommendation-text-link-invalid-value="{{ 'mailing.form.intro_link_invalid'|trans({}, 'mailing') }}"
+     data-recommendation-text-selection-required-value="{{ 'mailing.catalog.form.link_selection'|trans({}, 'mailing') }}">
+    {{ form_label(textForm, null, { label_attr: { id: textForm.vars.id ~ '_label' } }) }}
+    <div class="mailing-intro-block__toolbar" data-recommendation-text-target="toolbar" hidden>
+        <button type="button" data-action="mousedown->recommendation-text#keepSelection click->recommendation-text#addLink" title="{{ 'mailing.catalog.form.link_selection'|trans({}, 'mailing') }}">{{ 'mailing.form.intro_link'|trans({}, 'mailing') }}</button>
+    </div>
+    <div id="{{ textForm.vars.id }}_editor" class="mailing-intro-block__editable" contenteditable="true" role="textbox" aria-multiline="true" aria-required="true" aria-labelledby="{{ textForm.vars.id }}_label" aria-describedby="{{ textForm.vars.id }}_counter" data-recommendation-text-target="editor" data-action="input->recommendation-text#sync mouseup->recommendation-text#rememberSelection keyup->recommendation-text#rememberSelection blur->recommendation-text#rememberSelection paste->recommendation-text#paste keydown.enter->recommendation-text#lineBreak" hidden>{{ textForm.vars.value|mailing_recommendation_editor }}</div>
+    {{ form_widget(textForm) }}
+    <p id="{{ textForm.vars.id }}_counter" class="character-counter" data-recommendation-text-target="output" aria-live="polite"></p>
+    {{ form_errors(textForm) }}
+    {{ form_help(textForm) }}
+</div>

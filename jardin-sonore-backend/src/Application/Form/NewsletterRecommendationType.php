@@ -42,9 +42,8 @@ final class NewsletterRecommendationType extends AbstractType
                 'help' => 'mailing.catalog.form.text_help',
                 'attr' => [
                     'rows' => 5,
-                    'maxlength' => 400,
-                    'data-character-counter-target' => 'input',
-                    'data-action' => 'input->character-counter#update',
+                    'data-recommendation-text-target' => 'input',
+                    'data-action' => 'input->recommendation-text#sourceChanged',
                 ],
             ])
             ->add('url', UrlType::class, [

@@ -13,6 +13,7 @@ use App\Application\Mailing\CreateNewsletterRecommendationInput;
 use App\Application\Mailing\DeleteNewsletterRecommendation;
 use App\Application\Mailing\GetMailingCampaign;
 use App\Application\Mailing\GetNewsletterRecommendationForEdit;
+use App\Application\Mailing\NewsletterRecommendationView;
 use App\Application\Mailing\SearchNewsletterRecommendations;
 use App\Application\Mailing\UpdateNewsletterRecommendation;
 use App\Domain\Model\Mailing\MailingCampaign;
@@ -37,27 +38,29 @@ final class NewsletterRecommendationCatalogController extends AbstractController
         $tableSort = TableSort::fromQuery(
             $request->query->getString('sort'),
             $request->query->getString('direction'),
-            ['title', 'tag', 'lastUsedAt'],
-            'title',
-            'asc',
+            ['title', 'tag', 'lastUsedAt', 'createdAt'],
+            'createdAt',
+            'desc',
         );
         $recommendations = $searchNewsletterRecommendations($query, 'active' === $availability);
 
         if ('inactive' === $availability) {
             $recommendations = array_values(array_filter(
                 $recommendations,
-                static fn ($recommendation): bool => !$recommendation->active,
+                static fn (NewsletterRecommendationView $recommendation): bool => !$recommendation->active,
             ));
         }
 
-        usort($recommendations, static function ($left, $right) use ($tableSort): int {
+        usort($recommendations, static function (NewsletterRecommendationView $left, NewsletterRecommendationView $right) use ($tableSort): int {
             $leftValue = match ($tableSort->column) {
                 'tag' => $left->tag ?? '',
+                'createdAt' => $left->createdAt->getTimestamp(),
                 'lastUsedAt' => ($left->usages[0] ?? null)?->sentAt->getTimestamp() ?? 0,
                 default => $left->title,
             };
             $rightValue = match ($tableSort->column) {
                 'tag' => $right->tag ?? '',
+                'createdAt' => $right->createdAt->getTimestamp(),
                 'lastUsedAt' => ($right->usages[0] ?? null)?->sentAt->getTimestamp() ?? 0,
                 default => $right->title,
             };

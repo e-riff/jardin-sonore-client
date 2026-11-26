@@ -102,7 +102,7 @@
                                     <td bgcolor="#f8f3f0" style="padding:0 28px 20px 28px; background-color:#f8f3f0;">
                                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#fffdfa" style="background-color:#fffdfa; border:1px solid #eadfd7;">
                                             <tr>
-                                                <td width="152" valign="middle" align="center" style="padding:16px 8px 16px 16px;">
+                                                <td width="152" valign="middle" align="center" style="padding:16px 8px 16px 16px; vertical-align:middle;">
                                                     {% if recommendation.imagePath %}
                                                         {% if recommendation.url %}
                                                             <a href="{{ recommendation.url }}" target="_blank" style="display:block; text-decoration:none;">
@@ -133,7 +133,7 @@
                                                 </td>
                                                 <td valign="top" style="padding:16px 16px 16px 12px;">
                                                     <h4 style="margin:0 0 10px 0; color:#1c1b1a; font-size:18px; line-height:26px; font-weight:bold;">{{ recommendation.title }}</h4>
-                                                    <div style="color:#554240; font-size:14px; line-height:1.7; white-space:pre-line;">{% if recommendation.tag %}<span style="color:{{ loop.index is odd ? '#692019' : '#47664b' }}; font-family:Arial, sans-serif; font-weight:bold;">{{ recommendation.tag }}</span> - {% endif %}{{ recommendation.text }}</div>
+                                                    <div style="color:#554240; font-size:14px; line-height:1.7;">{% if recommendation.tag %}<span style="color:{{ loop.index is odd ? '#692019' : '#47664b' }}; font-family:Arial, sans-serif; font-weight:bold;">{{ recommendation.tag }}</span> - {% endif %}{{ recommendationTexts[recommendation.uuid ~ ''].html|raw }}</div>
                                                     {% if recommendation.url %}
                                                         <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-top:12px;">
                                                             <tr>

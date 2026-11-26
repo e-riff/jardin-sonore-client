@@ -930,7 +930,7 @@ final readonly class WriteToolRegistry
         $fields = [
             'title' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 110],
             'tag' => ['type' => ['string', 'null'], 'maxLength' => 40],
-            'text' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 400],
+            'text' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 20000, 'description' => 'At most 420 visible characters. Safe inline HTML links are supported; URLs and markup do not count towards the visible limit.'],
             'url' => ['type' => ['string', 'null'], 'maxLength' => 2048],
             'linkLabel' => ['type' => ['string', 'null'], 'maxLength' => 60],
             'active' => ['type' => 'boolean'],

@@ -11,6 +11,7 @@ use App\Application\Mailing\GetMailingCampaign;
 use App\Application\Mailing\GetNewsletterRecommendation;
 use App\Application\Mailing\GetNewsletterRecommendationForEdit;
 use App\Application\Mailing\NewsletterRecommendationView;
+use App\Application\Mailing\RecommendationText;
 use App\Application\Mailing\RemoveMailingRecommendation;
 use App\Application\Mailing\SearchNewsletterRecommendations;
 use App\Application\Mailing\UpdateNewsletterRecommendation;
@@ -68,7 +69,7 @@ final readonly class McpMailingRecommendations
         $recommendation = ($this->createNewsletterRecommendation)(new CreateNewsletterRecommendationInput(
             title: $this->requiredText($input, 'title', 110),
             tag: $this->optionalText($input, 'tag', 40),
-            text: $this->requiredText($input, 'text', 400),
+            text: $this->recommendationText($input),
             url: $this->optionalUrl($input, 'url'),
             linkLabel: $this->optionalText($input, 'linkLabel', 60),
             imageFile: null,
@@ -89,7 +90,7 @@ final readonly class McpMailingRecommendations
         ($this->updateNewsletterRecommendation)($view->uuid, new CreateNewsletterRecommendationInput(
             title: array_key_exists('title', $input) ? $this->requiredText($input, 'title', 110) : $view->title,
             tag: array_key_exists('tag', $input) ? $this->optionalText($input, 'tag', 40) : $view->tag,
-            text: array_key_exists('text', $input) ? $this->requiredText($input, 'text', 400) : $view->text,
+            text: array_key_exists('text', $input) ? $this->recommendationText($input) : $view->text,
             url: array_key_exists('url', $input) ? $this->optionalUrl($input, 'url') : $view->url,
             linkLabel: array_key_exists('linkLabel', $input) ? $this->optionalText($input, 'linkLabel', 60) : $view->linkLabel,
             imageFile: null,
@@ -218,6 +219,18 @@ final readonly class McpMailingRecommendations
         if ([] !== array_diff(array_keys($input), $allowed)) {
             throw new InvalidArgumentException('Unexpected argument.');
         }
+    }
+
+    /** @param array<string, mixed> $input */
+    private function recommendationText(array $input): string
+    {
+        $text = $this->requiredText($input, 'text', RecommendationText::MAX_SOURCE_LENGTH);
+        $visibleText = RecommendationText::visibleText($text);
+        if ('' === RecommendationText::trimmedVisibleText($text) || RecommendationText::MAX_VISIBLE_LENGTH < mb_strlen($visibleText)) {
+            throw new InvalidArgumentException('Recommendation text must contain at most 420 visible characters.');
+        }
+
+        return $text;
     }
 
     /** @param array<string, mixed> $input */

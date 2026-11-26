@@ -21,6 +21,7 @@ final readonly class NewsletterRecommendationView
         public ?string $imagePath,
         public bool $active,
         public DateTimeImmutable $updatedAt,
+        public DateTimeImmutable $createdAt,
         /** @var list<NewsletterRecommendationUsage> */
         public array $usages = [],
     ) {
@@ -39,6 +40,7 @@ final readonly class NewsletterRecommendationView
             imagePath: $newsletterRecommendation->getImagePath(),
             active: $newsletterRecommendation->isActive(),
             updatedAt: $newsletterRecommendation->getUpdatedAt(),
+            createdAt: $newsletterRecommendation->getCreatedAt(),
             usages: $usages,
         );
     }

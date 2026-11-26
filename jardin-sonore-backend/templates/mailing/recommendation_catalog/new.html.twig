@@ -21,17 +21,11 @@
 
         {{ form_start(form, {
             action: path('mailing_recommendation_catalog_new'),
-            attr: { class: 'internal-form', 'data-controller': 'character-counter', 'data-character-counter-limit-value': 400 }
+            attr: { class: 'internal-form' }
         }) }}
             {{ form_row(form.title) }}
             {{ form_row(form.tag) }}
-            <div class="character-counter__field">
-                    {{ form_label(form.text) }}
-                    {{ form_widget(form.text) }}
-                    <p class="character-counter" data-character-counter-target="output" aria-live="polite"></p>
-                    {{ form_errors(form.text) }}
-                    {{ form_help(form.text) }}
-                </div>
+            {% include 'mailing/_recommendation_text_field.html.twig' with { textForm: form.text } only %}
             {{ form_row(form.url) }}
             {{ form_row(form.linkLabel) }}
             {{ form_row(form.imageFile) }}

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Twig;
 
+use App\Application\Mailing\RecommendationText;
 use App\Infrastructure\Mailing\NewsletterRichTextFormatter;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
@@ -17,6 +18,8 @@ final class MailingIntroRichTextExtension extends AbstractExtension
     public function getFilters(): array
     {
         return [
+            new TwigFilter('mailing_recommendation_editor', fn (string $text): string => str_replace("\n", '', $this->newsletterRichTextFormatter->format($text)->html), ['is_safe' => ['html']]),
+            new TwigFilter('mailing_recommendation_visible_text', static fn (string $text): string => RecommendationText::visibleText($text)),
             new TwigFilter('mailing_intro_rich_text', fn (string $text): string => $this->newsletterRichTextFormatter->format($text)->html, ['is_safe' => ['html']]),
             new TwigFilter('commercial_timeline_rich_text', fn (string $text): string => $this->formatCommercialTimelineText($text), ['is_safe' => ['html']]),
         ];

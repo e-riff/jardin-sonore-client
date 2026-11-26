@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Mcp;
 
 use App\Application\Mailing\MailingIntroBlockProcessor;
+use App\Application\Mailing\RecommendationText;
 use App\Domain\Model\Mailing\MailingAudienceMask;
 use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Model\Mailing\MailingRecommendation;
@@ -273,9 +274,12 @@ final readonly class MailingDraftManager
                 throw new InvalidArgumentException('Invalid recommendation UUID.');
             }
             $title = $this->requiredText($item, 'title', 255);
-            $text = $this->requiredText($item, 'text', 10000);
-            if (400 < mb_strlen($text) && (null === $id || $text !== $existingById[$id]->getText())) {
-                throw new InvalidArgumentException('Recommendation text exceeds 400 characters.');
+            $text = $this->requiredText($item, 'text', RecommendationText::MAX_SOURCE_LENGTH);
+            if ('' === RecommendationText::trimmedVisibleText($text)) {
+                throw new InvalidArgumentException('Recommendation text must contain visible text.');
+            }
+            if (RecommendationText::MAX_VISIBLE_LENGTH < mb_strlen(RecommendationText::visibleText($text)) && (null === $id || $text !== $existingById[$id]->getText())) {
+                throw new InvalidArgumentException('Recommendation text exceeds 420 visible characters.');
             }
             $tag = $this->optionalText($item, 'tag', 255);
             $url = $this->optionalUrl($item, 'url');

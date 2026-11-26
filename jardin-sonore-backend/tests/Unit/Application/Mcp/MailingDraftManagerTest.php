@@ -74,7 +74,7 @@ final class MailingDraftManagerTest extends TestCase
         self::assertSame(str_repeat('a', 450), $campaign->getRecommendations()[0]->getText());
     }
 
-    public function testRejectsAChangedRecommendationLongerThan400Characters(): void
+    public function testRejectsAChangedRecommendationLongerThan420VisibleCharacters(): void
     {
         $campaign = $this->campaign();
         $recommendation = new MailingRecommendation('Conseil', null, str_repeat('a', 450), 1);
@@ -84,7 +84,32 @@ final class MailingDraftManagerTest extends TestCase
         $repository->expects(self::never())->method('save');
         $manager = new MailingDraftManager($repository, $this->createStub(MailingAudienceMaskRepositoryInterface::class), new NewsletterRichTextFormatter());
         $this->expectException(InvalidArgumentException::class);
-        $manager->update((string) $campaign->getUuid(), ['revision' => $manager->get((string) $campaign->getUuid())['revision'], 'recommendations' => [['recommendationUuid' => (string) $recommendation->getUuid(), 'title' => 'Conseil', 'text' => str_repeat('b', 401)]]]);
+        $manager->update((string) $campaign->getUuid(), ['revision' => $manager->get((string) $campaign->getUuid())['revision'], 'recommendations' => [['recommendationUuid' => (string) $recommendation->getUuid(), 'title' => 'Conseil', 'text' => str_repeat('b', 421)]]]);
+    }
+
+    public function testRecommendationLinkUrlDoesNotConsumeVisibleCharacterLimit(): void
+    {
+        $campaign = $this->campaign();
+        $recommendation = new MailingRecommendation('Conseil', null, 'Texte initial', 1);
+        $campaign->replaceRecommendations([$recommendation]);
+        $repository = $this->createStub(MailingCampaignRepositoryInterface::class);
+        $repository->method('findByUuid')->willReturn($campaign);
+        $manager = new MailingDraftManager($repository, $this->createStub(MailingAudienceMaskRepositoryInterface::class), new NewsletterRichTextFormatter());
+        $linkedText = '<a href="https://example.test/une-adresse-longue">' . str_repeat('é', 420) . '</a>';
+        $manager->update((string) $campaign->getUuid(), ['revision' => $manager->get((string) $campaign->getUuid())['revision'], 'recommendations' => [['recommendationUuid' => (string) $recommendation->getUuid(), 'title' => 'Conseil', 'text' => $linkedText]]]);
+        self::assertSame($linkedText, $campaign->getRecommendations()[0]->getText());
+    }
+
+    public function testRejectsRecommendationWithoutVisibleText(): void
+    {
+        $campaign = $this->campaign();
+        $recommendation = new MailingRecommendation('Conseil', null, 'Texte initial', 1);
+        $campaign->replaceRecommendations([$recommendation]);
+        $repository = $this->createStub(MailingCampaignRepositoryInterface::class);
+        $repository->method('findByUuid')->willReturn($campaign);
+        $manager = new MailingDraftManager($repository, $this->createStub(MailingAudienceMaskRepositoryInterface::class), new NewsletterRichTextFormatter());
+        $this->expectException(InvalidArgumentException::class);
+        $manager->update((string) $campaign->getUuid(), ['revision' => $manager->get((string) $campaign->getUuid())['revision'], 'recommendations' => [['recommendationUuid' => (string) $recommendation->getUuid(), 'title' => 'Conseil', 'text' => '<a href="https://example.test"> </a>']]]);
     }
 
     public function testStaleRevisionCannotOverwriteChanges(): void

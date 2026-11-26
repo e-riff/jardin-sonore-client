@@ -36,7 +36,7 @@ final class NewsletterRecommendationDoctrineRepository extends ServiceEntityRepo
     public function search(?string $query = null, bool $activeOnly = false): array
     {
         $queryBuilder = $this->createQueryBuilder('recommendation')
-            ->orderBy('recommendation.updatedAt', 'DESC')
+            ->orderBy('recommendation.createdAt', 'DESC')
             ->addOrderBy('recommendation.id', 'DESC')
             ->setMaxResults(50);
 

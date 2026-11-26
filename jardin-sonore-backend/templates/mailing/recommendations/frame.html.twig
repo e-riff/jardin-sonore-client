@@ -63,7 +63,7 @@
                                     <p class="mailing-recommendation__tag">{{ recommendation.tag }}</p>
                                 {% endif %}
                                 <h3>{{ recommendation.title }}</h3>
-                                <p>{{ recommendation.text }}</p>
+                                <p>{{ recommendation.text|mailing_intro_rich_text }}</p>
                             </div>
 
                             {% if campaign.editable %}
@@ -146,7 +146,7 @@
                                     <p class="mailing-catalog-card__tag">{{ recommendation.tag }}</p>
                                 {% endif %}
                                 <h3>{{ recommendation.title }}</h3>
-                                <p>{{ recommendation.text }}</p>
+                                <p>{{ recommendation.text|mailing_intro_rich_text }}</p>
                             </div>
                             {% if campaign.editable %}
                                 <form method="post" action="{{ path('mailing_campaign_recommendation_select', {

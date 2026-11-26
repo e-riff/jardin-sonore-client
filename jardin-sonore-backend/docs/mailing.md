@@ -588,3 +588,12 @@ Un renvoi remplace le jeton précédent. Une confirmation est consommée une seu
 Configuration requise : `PORTAL_API_BASE_URL` et `PORTAL_BFF_SHARED_SECRET` dans le serveur Next, même secret côté Symfony, URL publique du portail et transport Mailer corrects. La migration `Version20261001101645` a été validée en développement/test ; son état en production n'a pas été revérifié le 5 octobre. Les logs applicatifs masquent les jetons. Le lien de confirmation place le jeton dans un fragment ; le clic envoie le jeton dans le corps d'un POST à chemin constant. Contrôler les journaux d'accès de l'hébergeur lors d'une recette de production. ALTCHA conserve son stockage anti-rejeu existant en mémoire, à partager si plusieurs instances Next sont déployées.
 
 Recette locale du 1er octobre : 311 tests backend / 1 706 assertions, 14 tests Node, style/PHPStan/conteneur/Twig/YAML et lint/build réussis. Mailpit et navigateur ont validé footer, confirmation explicite, mobile/clavier, ajout/retrait administrateur et inclusion dans l’audience. Lot livré sous `deploy-newsletter-footer-20261001-01`, puis présentation de la confirmation corrigée sous les tags `deploy-newsletter-confirmation-layout-20261001-01` et `deploy-newsletter-confirmation-layout-20261001-02`. État courant et points ouverts : [ROADMAP.md](../../ROADMAP.md).
+
+
+## Recommandations : texte lié et historique
+
+Les descriptions du catalogue et de ses copies dans les campagnes acceptent 420 caractères visibles. Le bouton « Lien » s’applique au texte sélectionné et ne conserve que des adresses HTTP(S). Le compteur, la validation des formulaires et les écritures MCP ignorent les balises et les adresses des liens ; le libellé affiché et les retours à la ligne restent comptés. Le collage dans le petit éditeur insère du texte brut pour éviter des mises en forme étrangères. Le rendu des mails filtre le HTML ; la version texte conserve les adresses entre parenthèses.
+
+L’historique affiché provient des utilisations enregistrées, retrouvées par UUID binaire. Aucun rapprochement approximatif ou date déduite n’est ajouté. Le catalogue affiche la date de création et trie par défaut les créations les plus récentes en premier. Les copies de campagne restent indépendantes des modifications du catalogue.
+
+Les images des recommandations et des blocs avec image latérale utilisent un alignement vertical au milieu de leur cellule, par attribut HTML et style inline, pour les logiciels de messagerie. Les blocs latéraux conservent leur empilement sur mobile.
