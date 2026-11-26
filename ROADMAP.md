@@ -1,6 +1,51 @@
 # Roadmap Jardin Sonore
 
-Mise à jour le 18 novembre 2026. Ce document est la **seule source de l'état courant, des priorités et du point de reprise**. `AGENTS.md` et `.codex/jardin-sonore-guidelines.md` décrivent la méthode de travail ; les plans, conceptions et bilans datés gardent le détail technique et l'état constaté à leur date. Ne pas reprendre leurs anciennes listes de tâches sans vérifier cette page. L'ordre général est : **visibilité et nouvelles demandes**, puis **gain de temps dans le backoffice**. Les priorités indiquent un ordre de travail, pas un engagement de livraison simultanée.
+Mise à jour le 26 novembre 2026. Ce document est la **seule source de l'état courant, des priorités et du point de reprise**. `AGENTS.md` et `.codex/jardin-sonore-guidelines.md` décrivent la méthode de travail ; les plans, conceptions et bilans datés gardent le détail technique et l'état constaté à leur date. Ne pas reprendre leurs anciennes listes de tâches sans vérifier cette page. L'ordre général est : **visibilité et nouvelles demandes**, puis **gain de temps dans le backoffice**. Les priorités indiquent un ordre de travail, pas un engagement de livraison simultanée.
+
+## Recommandations mailing et prochaines suites — 26 novembre
+
+Lot déployé le 26 novembre sous `deploy-mailing-recommendations-20261126-01` (`c6123e99`) : correction de la lecture des utilisations par UUID binaire (les traces existantes réapparaissent), date de création visible et tri récent d’abord ; description limitée à 420 caractères visibles, liens intégrés par un petit bouton et adresses exclues du compteur. Formulaires, MCP, aperçu et versions HTML/texte des mails sont cohérents. Les images des recommandations et des blocs latéraux sont centrées verticalement. Validation : 766 tests backend, 4 062 assertions, sans échec (15 notices PHPUnit) ; PHPStan, style, Twig, conteneur et compilation de 86 assets valides. Recette navigateur du champ Twig réel sans sauvegarde ni envoi : liens, compteur Unicode et limites 420/421 valides.
+
+Les finitions séances/compositeur/PDF sont closes pour le moment à la demande de l’utilisateur. La prochaine piste à cadrer est une petite liste de rappels généraux, facile à administrer dans le backoffice et via MCP, également incluse dans le mail du matin. Les détails de récurrence restent à décider. Voir le [plan du lot recommandations](docs/superpowers/plans/2026-11-26-mailing-recommendations.md).
+
+## Familles, variantes et connecteur de séances — chantier terminé
+
+Le connecteur permet de créer et modifier les familles et de composer des séances en brouillon en production. Le correctif PDF est livré sous le tag `deploy-pdf-seances-20261125-01`.
+
+Premier lot déployé le 24 novembre sous `deploy-familles-variantes-20261124-01` (`b7a4451a`) : familles et tags propres, variantes indépendantes, composition depuis une famille et édition des éléments libres ligne par ligne. La suite backend passe (721 tests et 13 notices PHPUnit) ; une recette métier complète reste à faire, notamment pour le portail et les PDF. La migration `Version20261124164210` est appliquée aux bases locales, de test et de production ; son `down` puis son `up` ont été vérifiés sur la base de test, et le schéma de développement est synchronisé. La base de test conserve des écarts antérieurs hors sujet (quatre migrations historiques non exécutées) ; ne pas les appliquer sans vérifier leur contenu. L'ancienne migration `Version20261027160000` reste volontairement non exécutée en développement. Suivre la [conception](docs/superpowers/specs/2026-11-24-familles-variantes-seances-design.md) et le [plan](docs/superpowers/plans/2026-11-24-familles-variantes-seances.md). Le 25 novembre, le parcours actuel suffit à l’usage. La recherche dédiée de variantes par thème entre familles est écartée pour le moment.
+
+Parcours livré : création d'une famille depuis une séance, rattachement de plusieurs séances sans famille depuis son détail, sélecteur de famille enregistré avec les informations de séance, index harmonisé et actions de séance plus compactes sur mobile. La recette visuelle de ces derniers ajustements reste à faire.
+
+L’utilisateur indique le 24 novembre que les recettes précédemment listées au point 3 (dossiers, calendrier, Google Calendar et Mistral) sont déjà faites ; ne pas les présenter comme des tâches à refaire sans problème nouveau.
+
+## Correction de la structure d’un dossier et mail du matin
+
+Déployé le 24 novembre sous `deploy-dossier-structure-digest-20261124-01` (`06e8d25f`) : les interlocuteurs de l’ancienne structure cessent de suivre le dossier tout en restant dans son historique et l’annuaire ; le contact principal concerné est retiré, la demande d’origine est conservée et la correction figure dans le fil. Le mail du matin n’inclut plus les dossiers sans action et trie les tâches par jour, sans heure d’abord puis par heure croissante. Les 705 tests backend passent ; aucune donnée réelle n’a été modifiée pour la recette.
+
+## Factures simples et liens de séances — déployés le 19 novembre
+
+En local, le dossier et le connecteur distinguent les factures à préparer des factures envoyées, avec référence, montant et description. Les nouvelles factures n’activent pas le suivi de paiement ; les anciennes conservent leur fonctionnement. La préparation mensuelle est terminée lors de l’enregistrement. Le lien dossier des séances ouvre un nouvel onglet et le mail de synthèse contient les liens de carte. La migration `Version20261119090032` est appliquée sur les bases locales, de test et de production. Déploiement sous le tag `deploy-factures-simples-20261119-01` (commit `e8187a1d`) ; site et connexion HTTP 200, connecteur non authentifié HTTP 401. L’écriture MCP possède le verrou dédié `MCP_INVOICE_WRITE_ENABLED`, activé en production après autorisation explicite. Le conteneur et la disponibilité ont été vérifiés ; régler l’outil sur « Demander » dans Mistral et rafraîchir la liste des fonctions. Aucun enregistrement réel de facture n’a été effectué pendant ce contrôle.
+
+## Priorité utilisateur du 17 novembre — historique
+
+Reprendre **d’abord la présentation des formulaires dans les dossiers**, notamment
+« Ajouter ou rattacher un interlocuteur » : les dépliants imbriqués et les formulaires
+côte à côte rendent la hiérarchie confuse, avec des champs, cases à cocher et actions
+insuffisamment harmonisés. Présenter des actions explicites et ouvrir les formulaires
+d’ajout/rattachement dans des dialogues natifs, avec un peu de Stimulus pour les
+interactions, en suivant les styles communs du backoffice. Vérifier sur toute la page
+les fermetures par fond, Échap, croix, annulation et validation, puis la réouverture
+du même dialogue et d’un autre, sans blocage. Contrôler aussi le rendu mobile et le
+parcours clavier. La capture fournie le 17 novembre illustre le bloc Interlocuteurs.
+
+**Ensuite, concevoir le regroupement des séances en familles et variantes** : besoin
+confirmé et important pour retrouver les séances, rechercher et parcourir leur liste.
+Piste proposée : une famille regroupe des variantes indépendantes avec des chansons
+ou contenus différents. La structure exacte, les recherches et la présentation de la
+liste restent à définir avec l’utilisateur ; aucun héritage automatique ni modèle
+parent/enfant n’est décidé à ce stade.
+
+Les priorités actuelles sont indiquées en tête de cette roadmap.
 
 ## Dossiers — dialogue Interlocuteurs livré le 18 novembre
 
@@ -191,7 +236,7 @@ modifié. Détails : [plan et vérifications](docs/superpowers/plans/2026-11-12-
 
 - Backoffice métier pour l'annuaire, les médias, les prolongements, le mailing, les séances et les outils techniques ; EasyAdmin a été retiré.
 - Masques d'audience réutilisables, ciblage géographique et extension d'une campagne déjà envoyée.
-- Compositeur de séances, publication aux structures, lecture HTML et téléchargement du PDF canonique ; la génération et le téléchargement fonctionnent. L'esthétique du PDF reste à reprendre.
+- Compositeur de séances, publication aux structures, lecture HTML et téléchargement du PDF canonique ; la génération et le téléchargement fonctionnent. Les finitions du compositeur et du PDF sont closes pour le moment à la demande de l’utilisateur le 26 novembre.
 - Portail structures accessible avec comptes, séances, comptines, profil et impersonation ; le bandeau du portail et la stabilité du menu sont livrés.
 - Règle de mot de passe du portail centralisée. Le traitement d'une réussite partielle lors de l'édition du profil reste distinct et ouvert.
 - Notifications de première disponibilité par structure, préférences distinctes du profil, audiences annuaire/portail/abonnés libres, contrôle du consentement avant envoi, inscription publique confirmée depuis le footer et gestion centralisée des abonnements dans Mailing.
@@ -263,7 +308,7 @@ L'usage visé est une demande matinale dans le chat, avec confirmation avant cha
 ### Suites MCP décidées le 19 octobre 2026
 
 1. **Mailings : créer et modifier des campagnes complètes en brouillon.** Déployé le 19 octobre 2026 sous `deploy-mcp-mailing-drafts-20261019-01` ; les outils MCP créent et modifient les campagnes, lisent les masques d'audience et appliquent le rendu du mailing. Voir le bilan de livraison ci-dessous.
-2. **Rappels généraux d'entreprise : les ajouter au backoffice, puis les exposer au MCP.** Ils seront indépendants des dossiers commerciaux, qui gardent leurs propres actions. Prévoir des rappels ponctuels pour les tâches de l'entreprise et des rappels récurrents, par exemple « préparer le prochain mailing ». Mistral pourra les consulter et, après confirmation, les créer, modifier ou terminer. Un rappel de mailing sert à préparer une campagne ; il ne crée, programme ni envoie la campagne. La règle de récurrence (intervalle, date de prochaine occurrence et moment où elle est renouvelée) reste à préciser pendant la conception.
+2. **Rappels généraux d'entreprise : piste réactivée le 26 novembre, à cadrer en version légère.** Priorité à une petite liste facile à administrer dans le backoffice et via MCP, indépendante des dossiers, avec le minimum de champs et d’actions. Ils devront aussi apparaître dans le mail du matin (choix confirmé le 26 novembre). Aucun développement de rappels dans le lot recommandations mailing. Ils seront indépendants des dossiers commerciaux, qui gardent leurs propres actions. Prévoir des rappels ponctuels pour les tâches de l'entreprise et des rappels récurrents, par exemple « préparer le prochain mailing ». Mistral pourra les consulter et, après confirmation, les créer, modifier ou terminer. Un rappel de mailing sert à préparer une campagne ; il ne crée, programme ni envoie la campagne. La règle de récurrence (intervalle, date de prochaine occurrence et moment où elle est renouvelée) reste à préciser pendant la conception.
 3. **Répertoire pédagogique via MCP.** Première étape vers les séances : permettre au MCP de créer, lire et modifier les éléments du répertoire, selon les mêmes règles métier que le backoffice. Garder les médias et les relations du répertoire dans ce périmètre ; le MCP ne doit pas déduire ou modifier des séances lors de ces opérations.
 4. **Simplifier le formulaire et le compositeur des séances.** Première étape déployée le 21 octobre 2026 sous `deploy-session-composer-20261021-01` : suppression des notes internes des éléments avec migration exécutée en local et en production, correction de la mise en page des médias, retrait des options « à la une / afficher dans la séance », libellé lisible pour le type de média et regroupement des actions de rendu/PDF et de publication près du titre. Prochaine passe : retirer ce qui est encore inutile dans les formulaires, clarifier le rôle des blocs et corriger les comportements JavaScript qui gênent l’usage, avec un refactor minimal. Lorsqu'un élément du répertoire est ajouté à une séance, ne pas modifier sa fiche ; conserver les consignes « en plus » propres à la séance et limiter les créations à la volée aux médias de ses éléments propres.
 5. **Séances via MCP, après la simplification du parcours.** Permettre leur lecture et leur création, puis l’édition si elle s’intègre simplement au modèle, en réutilisant les éléments du répertoire. Le MCP pourra gérer les listes d’éléments et les consignes propres à la séance ; il ne modifiera pas les fiches du répertoire lorsqu'il ajoute ou retire un élément. La création MCP restera en brouillon. Aucun outil ne publiera une séance ni n’enverra de notification sans cadrage et confirmation distincts.
@@ -316,8 +361,8 @@ La [conception des disponibilités](docs/superpowers/specs/2026-09-30-session-av
 | Contact du site. | Déployé. | Un dossier provisoire et une tâche « Répondre » créés une seule fois, sans structure inventée ni doublon à la relance. |
 | Tâches, fil et statuts. | Déployé. | Commandes distinctes, correction des notes et tâches terminées, changement manuel du statut avec garde sur les factures impayées. |
 | Devis, factures et documents. | Suivi manuel déployé ; décisions signé/refusé livrées le 14 octobre ; automatisations et générateur restent à cadrer. | États et références courts, événements fiables dans le fil et accès aux documents sans masquer le dossier. |
-| Page Dossiers unique. | Déployée ; lignes compactées, état et dernière activité visibles, groupes distincts pour les dossiers confirmés et ceux sans tâche, périodes à venir organisées par semaine. Les actions rapides de tâches ont été retirées de l'index. La recette visuelle authentifiée reste ouverte. | Priorités, recherche, filtres et dossiers clos sur une seule page, sans « À faire » séparé. Confirmer la lisibilité des tableaux sur ordinateur et mobile et recueillir les retours d'usage. |
-| Détail du dossier et cohérence du backoffice. | Déployés ; recette sur téléphone et ordinateur à compléter. | Confirmer les volets, liens de contact, actions et cohérence des formulaires dans l'usage réel. |
+| Page Dossiers unique. | Déployée ; lignes compactées, état et dernière activité visibles, groupes distincts pour les dossiers confirmés et ceux sans tâche, périodes à venir organisées par semaine. Recette indiquée comme faite par l’utilisateur le 24 novembre. | Continuer à recueillir les retours d'usage. |
+| Détail du dossier et cohérence du backoffice. | Déployés ; recette indiquée comme faite par l’utilisateur le 24 novembre. | Faire évoluer les volets, liens de contact, actions et formulaires selon les retours d’usage. |
 
 L'archivage des dossiers fermés reste à définir après usage réel ; il devra préserver l'historique et alléger les listes principales. Le [guide des deux parcours](docs/suivi-clients-parcours-concrets-2026-10-12.md) conserve les situations qui ont lancé cette refonte ; les décisions courantes sont dans la conception du 13 octobre.
 
@@ -371,10 +416,10 @@ Ces idées restent visibles sans être décidées pour le prochain lot.
 | Actualités et sélection de newsletters publiables. | Proposer du contenu utile et durable sur la vitrine. | Sélection éditoriale explicite ; ne pas publier automatiquement les campagnes internes. |
 | Contenu de la vitrine administrable et messages publics temporaires. | Mettre à jour les informations sans intervention technique. | Cadrer droits d'édition, dates de publication/expiration et séparation des messages publics et réservés aux structures. Prévoir en priorité la mise à jour autonome des photos de la vitrine, puis des liens vers les publications récentes sur les réseaux sociaux. |
 | Recherches réactives du backoffice. | Accélérer la navigation dans les catalogues. | Optimiser et mesurer d'abord les requêtes concernées. |
-| Historique et tri des recommandations d'e-mail. | Afficher les dates d'utilisation et retrouver les recommandations les plus récentes en premier. | Diagnostiquer pourquoi la liste indique « Jamais envoyée » malgré les utilisations ; vérifier les données et le suivi des envois, puis afficher la date de création et trier par défaut sur celle-ci. |
+| Historique et tri des recommandations d’e-mail. | Déployé le 26 novembre sous `deploy-mailing-recommendations-20261126-01`. | UUID binaires convertis à la lecture ; dates d’utilisation existantes retrouvées, date de création et tri décroissant affichés. |
 | Performance et contrats du portail ; cohérence de l'édition du profil. | Réduire les appels inutiles, fiabiliser les données affichées et clarifier les succès partiels. | Mesurer les chargements, typer les séquences exposées par l'API et couvrir l'échec après enregistrement de l'avatar. |
 | Découpage du contrôleur de séance et frontières Doctrine. | Rendre les évolutions plus simples et plus sûres. | Extraire par responsabilités, selon les [frontières documentées](jardin-sonore-backend/docs/architecture-boundaries.md), sans refonte générale. |
-| Finitions du compositeur : aperçu, médias et esthétique du PDF A4. | Améliorer la lecture et l'impression des séances. | Préserver le flux fonctionnel de génération/téléchargement ; décider des finitions après recette visuelle. |
+| Finitions du compositeur et du PDF A4. | Clos pour le moment à la demande de l’utilisateur le 26 novembre. | Aucune suite prévue ; reprendre uniquement sur un besoin nouveau. |
 | Création et édition des séances et familles via le MCP. | Permettre à l'assistant de retrouver les familles et variantes, puis d'aider à préparer et modifier leurs séances. | Écritures derrière un verrou désactivé par défaut, séances en brouillon seulement, sans rattachement d'établissement. Le worker PDF enregistre uniquement le document de la génération en cours. Recette client : vérifier la demande de confirmation avant chaque écriture. |
 | Édition structurée des paroles et indications des éléments libres de séance. | Associer explicitement chaque ligne de paroles à ses indications, comme dans le répertoire. | Évolution différée demandée le 18 novembre : conserver pour l’instant les deux champs multiligne. Leur appariement par numéro de ligne est déployé, sans migration ; une future édition en blocs séparés reste à concevoir. |
 | Synchronisation éventuelle du PDF canonique vers Google Drive. | Retrouver le document courant dans l'espace de travail partagé. | Clarifier le besoin et les droits d'accès ; conserver le PDF local comme référence disponible. |
