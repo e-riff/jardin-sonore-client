@@ -8,6 +8,7 @@ use App\Application\Mailing\CreateMailingCampaign;
 use App\Application\Mailing\CreateMailingCampaignInput;
 use App\Application\Mailing\CreateNewsletterRecommendation;
 use App\Application\Mailing\CreateNewsletterRecommendationInput;
+use App\Domain\Model\Mailing\MailingCampaignType;
 use App\Domain\Model\Mailing\NewsletterRecommendation;
 use App\Domain\Model\Mailing\NewsletterRecommendationUsage;
 use App\Domain\Repository\NewsletterRecommendationRepositoryInterface;
@@ -72,7 +73,7 @@ final class NewsletterRecommendationCatalogControllerTest extends WebTestCase
         self::assertCount(1, $client->getCrawler()->filterXPath('//input[@name="newsletter_recommendation[imageFile]"]'));
         self::assertCount(1, $client->getCrawler()->filterXPath('//div[@data-controller="recommendation-text" and @data-recommendation-text-limit-value="420"]//textarea[@name="newsletter_recommendation[text]" and not(@maxlength)]'));
 
-        $mailingCampaign = static::getContainer()->get(CreateMailingCampaign::class)(new CreateMailingCampaignInput(
+        $mailingCampaign = static::getContainer()->get(CreateMailingCampaign::class)(new CreateMailingCampaignInput(campaignType: MailingCampaignType::NEWSLETTER,
             internalTitle: 'Campagne test',
             emailSubject: 'Objet test',
             publicTitle: 'Titre test',

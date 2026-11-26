@@ -19,7 +19,7 @@ final readonly class RecordNewsletterRecommendationUsages
     {
         $sourceRecommendationUuids = [];
 
-        foreach ($mailingCampaign->getRecommendations() as $mailingRecommendation) {
+        foreach ($mailingCampaign->getVisibleRecommendations() as $mailingRecommendation) {
             $sourceRecommendationUuid = $mailingRecommendation->getSourceRecommendationUuid();
 
             if (null !== $sourceRecommendationUuid) {

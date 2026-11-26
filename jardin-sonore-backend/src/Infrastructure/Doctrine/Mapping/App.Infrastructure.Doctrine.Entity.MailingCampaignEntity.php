@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Domain\Model\Mailing\MailingCampaignStatus;
+use App\Domain\Model\Mailing\MailingCampaignType;
 use App\Infrastructure\Doctrine\Entity\MailingRecommendationEntity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\ClassMetadata;
@@ -31,6 +32,22 @@ return static function (ClassMetadata $metadata): void {
         'fieldName' => 'uuid',
         'type' => UuidType::NAME,
         'unique' => true,
+    ]);
+
+    $metadata->mapField([
+        'fieldName' => 'structuredContent',
+        'columnName' => 'structured_content',
+        'type' => Types::JSON,
+        'nullable' => true,
+    ]);
+
+    $metadata->mapField([
+        'fieldName' => 'campaignType',
+        'columnName' => 'campaign_type',
+        'type' => Types::STRING,
+        'length' => 16,
+        'nullable' => true,
+        'enumType' => MailingCampaignType::class,
     ]);
 
     $metadata->mapField([

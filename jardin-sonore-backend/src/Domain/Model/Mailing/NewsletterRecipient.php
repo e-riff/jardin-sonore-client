@@ -9,12 +9,20 @@ use InvalidArgumentException;
 
 final readonly class NewsletterRecipient
 {
+    /** @param list<MailingRecipientOrganizationSnapshot> $organizationSnapshots */
     public function __construct(
         private EmailAddress $emailAddress,
         private string $unsubscribeToken,
         private ?string $displayName = null,
+        private array $organizationSnapshots = [],
     ) {
         $this->assertNotBlank($unsubscribeToken, 'Newsletter recipient unsubscribe token cannot be blank.');
+    }
+
+    /** @return list<MailingRecipientOrganizationSnapshot> */
+    public function getOrganizationSnapshots(): array
+    {
+        return $this->organizationSnapshots;
     }
 
     public function getEmailAddress(): EmailAddress

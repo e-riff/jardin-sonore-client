@@ -6,6 +6,7 @@ namespace App\Tests\Functional\Application\Controller;
 
 use App\Application\Mailing\CreateMailingCampaign;
 use App\Application\Mailing\CreateMailingCampaignInput;
+use App\Domain\Model\Mailing\MailingCampaignType;
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
 use App\Kernel;
 use Doctrine\ORM\EntityManagerInterface;
@@ -33,7 +34,7 @@ final class MailingIndexControllerTest extends WebTestCase
 
         $uniqueWord = bin2hex(random_bytes(7));
         $mailingCampaign = (static::getContainer()->get(CreateMailingCampaign::class))(
-            new CreateMailingCampaignInput(
+            new CreateMailingCampaignInput(campaignType: MailingCampaignType::NEWSLETTER,
                 internalTitle: "Campagne {$uniqueWord}",
                 emailSubject: 'Objet de recette',
                 publicTitle: 'Titre de recette',

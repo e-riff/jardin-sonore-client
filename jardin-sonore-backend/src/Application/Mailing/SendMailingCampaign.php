@@ -18,6 +18,7 @@ final readonly class SendMailingCampaign
         private NewsletterAudienceResolverInterface $newsletterAudienceResolver,
         private MailingDeliveryQueueInterface $mailingDeliveryQueue,
         private LoggerInterface $mailingDeliveryLogger,
+        private MailingCampaignDeliveryTransactionInterface $mailingCampaignDeliveryTransaction,
     ) {
     }
 
@@ -27,6 +28,7 @@ final readonly class SendMailingCampaign
             throw new InvalidArgumentException('Mailing campaign delivery is already queued.');
         }
 
+        $mailingCampaign->assertReadyForDelivery();
         $audienceResolution = $this->newsletterAudienceResolver->resolve($mailingCampaign->getAudienceFilter());
         $recipients = $audienceResolution->getRecipients();
         $total = $audienceResolution->getTotal();
@@ -35,13 +37,17 @@ final readonly class SendMailingCampaign
             throw new InvalidArgumentException('Mailing campaign audience is empty.');
         }
 
-        $this->mailingDeliveryQueue->seedCampaignRecipients(
-            $mailingCampaign->getUuid()->toRfc4122(),
-            $recipients,
-        );
+        $queuedCampaign = clone $mailingCampaign;
+        $this->mailingCampaignDeliveryTransaction->run(function () use ($queuedCampaign, $recipients): void {
+            $this->mailingDeliveryQueue->seedCampaignRecipients(
+                $queuedCampaign->getUuid()->toRfc4122(),
+                $recipients,
+            );
 
+            $queuedCampaign->markDeliveryQueued();
+            $this->mailingCampaignRepository->save($queuedCampaign);
+        });
         $mailingCampaign->markDeliveryQueued();
-        $this->mailingCampaignRepository->save($mailingCampaign);
 
         $this->mailingDeliveryLogger->info('Newsletter delivery queued.', [
             'campaign_uuid' => $mailingCampaign->getUuid()->toRfc4122(),

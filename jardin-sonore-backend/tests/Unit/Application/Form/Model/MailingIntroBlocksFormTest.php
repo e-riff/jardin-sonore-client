@@ -8,6 +8,7 @@ use App\Application\Form\Model\CreateMailingCampaignFormModel;
 use App\Application\Form\Model\EditMailingCampaignFormModel;
 use App\Application\Form\Model\MailingIntroBlockFormModel;
 use App\Domain\Model\Mailing\MailingCampaign;
+use App\Domain\Model\Mailing\MailingCampaignType;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Validator\Validation;
@@ -17,6 +18,7 @@ final class MailingIntroBlocksFormTest extends TestCase
     public function testNewImageBlockRequiresAnUploadAndAlternativeText(): void
     {
         $formModel = new CreateMailingCampaignFormModel();
+        $formModel->campaignType = MailingCampaignType::NEWSLETTER;
         $formModel->internalTitle = 'Campagne';
         $formModel->emailSubject = 'Objet';
         $formModel->publicTitle = 'Titre';
@@ -47,9 +49,10 @@ final class MailingIntroBlocksFormTest extends TestCase
         self::assertNull($campaign->getIntroBlocks());
     }
 
-    public function testRemovingEveryBlockIsRejected(): void
+    public function testTypedDraftCanStartWithoutTextForARecommendationsOnlyNewsletter(): void
     {
         $formModel = new CreateMailingCampaignFormModel();
+        $formModel->campaignType = MailingCampaignType::NEWSLETTER;
         $formModel->internalTitle = 'Campagne';
         $formModel->emailSubject = 'Objet';
         $formModel->publicTitle = 'Titre';
@@ -58,7 +61,6 @@ final class MailingIntroBlocksFormTest extends TestCase
 
         $violations = Validation::createValidatorBuilder()->enableAttributeMapping()->getValidator()->validate($formModel);
 
-        self::assertCount(1, $violations);
-        self::assertSame('introBlocks', $violations[0]->getPropertyPath());
+        self::assertCount(0, $violations);
     }
 }

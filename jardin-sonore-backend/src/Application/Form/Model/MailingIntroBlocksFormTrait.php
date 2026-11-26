@@ -25,6 +25,14 @@ trait MailingIntroBlocksFormTrait
     #[Assert\Callback]
     public function validateIntroBlocks(ExecutionContextInterface $context): void
     {
+        if (property_exists($this, 'usesStructuredContent') && $this->usesStructuredContent) {
+            return;
+        }
+
+        $requiresText = !($this instanceof CreateMailingCampaignFormModel && null !== $this->campaignType);
+        if ([] === $this->introBlocks && !$requiresText) {
+            return;
+        }
         if ([] === $this->introBlocks) {
             $context->buildViolation('mailing.form.intro_text_required')->atPath('introBlocks')->addViolation();
 
@@ -73,7 +81,7 @@ trait MailingIntroBlocksFormTrait
             }
         }
 
-        if (!$hasText) {
+        if (!$hasText && $requiresText) {
             $context->buildViolation('mailing.form.intro_text_required')->atPath('introBlocks')->addViolation();
         }
     }

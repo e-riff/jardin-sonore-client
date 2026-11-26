@@ -39,8 +39,13 @@ final class MailingCampaign implements UuidIdentifiableInterface
         /** @var list<array<string, mixed>>|null */
         private ?array $introBlocks = null,
         ?Uuid $uuid = null,
+        private ?MailingCampaignType $campaignType = null,
+        private ?MailingCampaignContent $structuredContent = null,
     ) {
         $this->initializeUuid($uuid);
+        if (null !== $structuredContent && null !== $campaignType) {
+            $structuredContent->assertMatchesType($campaignType);
+        }
         $this->assertContentIsValid($internalTitle, $emailSubject, $publicTitle, $mainText, $templateKey);
         self::assertIntroBlocksAreValid($introBlocks);
         $this->preheader = $this->normalizeNullableString($preheader);
@@ -54,6 +59,83 @@ final class MailingCampaign implements UuidIdentifiableInterface
         $this->appliedAudienceMaskName = $this->normalizeNullableString($appliedAudienceMaskName);
         $this->assertAppliedAudienceMaskIsConsistent();
         $this->assertStatusIsConsistent($status, $lastTestSentAt);
+        $this->assertAudienceAllowed($audienceFilter);
+    }
+
+    public function getCampaignType(): ?MailingCampaignType
+    {
+        return $this->campaignType;
+    }
+
+    public function setCampaignType(MailingCampaignType $campaignType): void
+    {
+        if ($this->campaignType === $campaignType) {
+            return;
+        }
+
+        $this->assertEditable();
+        if (null !== $this->structuredContent) {
+            throw new InvalidArgumentException('Changing structured campaign type requires an explicit content conversion.');
+        }
+        if (MailingCampaignType::OUTREACH === $campaignType && $this->audienceFilter->includesFreeSubscribers()) {
+            throw new InvalidArgumentException('Newsletter subscribers cannot be included as an outreach audience source.');
+        }
+        $this->campaignType = $campaignType;
+        $this->markAsUpdated();
+    }
+
+    public function getStructuredContent(): ?MailingCampaignContent
+    {
+        return $this->structuredContent;
+    }
+
+    public function setStructuredContent(MailingCampaignContent $structuredContent): void
+    {
+        $this->assertEditable();
+        if (null === $this->campaignType) {
+            throw new InvalidArgumentException('Structured content requires a campaign type.');
+        }
+        if ($this->templateKey !== $this->campaignType->value) {
+            throw new InvalidArgumentException('Legacy content must be converted explicitly before adding structured sections.');
+        }
+        $structuredContent->assertMatchesType($this->campaignType);
+        $this->structuredContent = $structuredContent;
+        $this->markAsUpdated();
+    }
+
+    /** @return list<MailingRecommendation> */
+    public function getVisibleRecommendations(): array
+    {
+        if (null !== $this->structuredContent && !$this->structuredContent->isSectionEnabled('recommendations')) {
+            return [];
+        }
+
+        return array_values(array_filter($this->recommendations, static fn (MailingRecommendation $mailingRecommendation): bool => $mailingRecommendation->isActive()));
+    }
+
+    public function assertReadyForDelivery(): void
+    {
+        if (null === $this->campaignType && !$this->hasDeliveryStarted()) {
+            throw new InvalidArgumentException('Mailing campaign type must be selected before delivery.');
+        }
+        if (null === $this->structuredContent) {
+            return;
+        }
+        if (MailingCampaignType::OUTREACH === $this->campaignType) {
+            if (!$this->structuredContent->hasVisibleText('proposal')) {
+                throw new InvalidArgumentException('Outreach requires a visible proposal.');
+            }
+
+            return;
+        }
+        foreach (MailingCampaignContent::NEWSLETTER_SECTIONS as $sectionKey) {
+            if ($this->structuredContent->hasVisibleText($sectionKey)) {
+                return;
+            }
+        }
+        if ([] === $this->getVisibleRecommendations()) {
+            throw new InvalidArgumentException('Mailing requires visible content.');
+        }
     }
 
     public function getInternalTitle(): string
@@ -73,7 +155,29 @@ final class MailingCampaign implements UuidIdentifiableInterface
 
     public function getMainText(): string
     {
-        return $this->mainText;
+        if (null === $this->structuredContent) {
+            return $this->mainText;
+        }
+        $paragraphs = [];
+        $keys = MailingCampaignType::OUTREACH === $this->campaignType
+            ? MailingCampaignContent::OUTREACH_SECTIONS : MailingCampaignContent::NEWSLETTER_SECTIONS;
+        foreach ($keys as $key) {
+            if (!$this->structuredContent->isSectionEnabled($key)) {
+                continue;
+            }
+            foreach ($this->structuredContent->getBlocks($key) as $block) {
+                $text = (string) ($block['text'] ?? '');
+                $text = preg_replace('~<(script|style)\b[^>]*>.*?</\1>~is', '', $text) ?? '';
+                $text = preg_replace('~<br\s*/?>|</p>~i', "\n", $text) ?? '';
+                $text = html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5);
+                $text = trim(str_replace("\u{00A0}", ' ', $text));
+                if ('' !== $text) {
+                    $paragraphs[] = $text;
+                }
+            }
+        }
+
+        return implode("\n\n", $paragraphs);
     }
 
     public function getPreheader(): ?string
@@ -264,9 +368,17 @@ final class MailingCampaign implements UuidIdentifiableInterface
         $this->markAsUpdated();
     }
 
+    public function assertAudienceAllowed(NewsletterAudienceFilter $audienceFilter): void
+    {
+        if (MailingCampaignType::OUTREACH === $this->campaignType && $audienceFilter->includesFreeSubscribers()) {
+            throw new InvalidArgumentException('Newsletter subscribers cannot be included as an outreach audience source.');
+        }
+    }
+
     public function updateAudienceFilter(NewsletterAudienceFilter $audienceFilter): void
     {
         $this->assertEditable();
+        $this->assertAudienceAllowed($audienceFilter);
         $this->audienceFilter = $audienceFilter;
         $this->appliedAudienceMaskUuid = null;
         $this->appliedAudienceMaskName = null;
@@ -276,6 +388,7 @@ final class MailingCampaign implements UuidIdentifiableInterface
     public function applyAudienceMask(MailingAudienceMask $mailingAudienceMask): void
     {
         $this->assertEditable();
+        $this->assertAudienceAllowed($mailingAudienceMask->getAudienceFilter());
         $this->audienceFilter = $mailingAudienceMask->getAudienceFilter();
         $this->appliedAudienceMaskUuid = $mailingAudienceMask->getUuid();
         $this->appliedAudienceMaskName = $mailingAudienceMask->getName();
@@ -375,8 +488,16 @@ final class MailingCampaign implements UuidIdentifiableInterface
         $this->assertNotBlank($internalTitle, 'Mailing campaign internal title cannot be blank.');
         $this->assertNotBlank($emailSubject, 'Mailing campaign email subject cannot be blank.');
         $this->assertNotBlank($publicTitle, 'Mailing campaign public title cannot be blank.');
-        $this->assertNotBlank($mainText, 'Mailing campaign main text cannot be blank.');
+        if (null === $this->structuredContent) {
+            $this->assertNotBlank($mainText, 'Mailing campaign main text cannot be blank.');
+        }
         $this->assertNotBlank($templateKey, 'Mailing campaign template key cannot be blank.');
+        if (null === $this->structuredContent && 'default' !== $templateKey) {
+            throw new InvalidArgumentException('Legacy content requires the default mailing template.');
+        }
+        if (null !== $this->structuredContent && $templateKey !== $this->campaignType?->value) {
+            throw new InvalidArgumentException('Structured content requires its campaign template.');
+        }
     }
 
     /**

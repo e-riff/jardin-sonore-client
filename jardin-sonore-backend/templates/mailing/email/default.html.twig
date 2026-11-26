@@ -56,12 +56,14 @@
                         </tr>
                         <tr>
                             <td style="padding:32px 28px 20px 28px;">
+                                {% block mailing_content %}
                                 {% if introBlocks is null %}
                                     <div style="color:#554240; font-size:16px; line-height:28px;">{{ mainTextHtml|raw }}</div>
                                 {% else %}
                                     {% include 'mailing/email/intro_blocks.html.twig' with { blocks: introBlocks } only %}
                                 {% endif %}
-                                {% if campaign.callToActionLabel and campaign.callToActionUrl %}
+                                {% endblock %}
+                                {% if showCallToAction and campaign.callToActionLabel and campaign.callToActionUrl %}
                                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top:24px;">
                                         <tr>
                                             <td align="center">

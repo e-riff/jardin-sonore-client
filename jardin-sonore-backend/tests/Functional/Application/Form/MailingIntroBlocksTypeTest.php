@@ -11,6 +11,8 @@ use App\Application\Form\Model\CreateMailingCampaignFormModel;
 use App\Application\Form\Model\EditMailingCampaignFormModel;
 use App\Application\Form\Model\MailingIntroBlockFormModel;
 use App\Domain\Model\Mailing\MailingCampaign;
+use App\Domain\Model\Mailing\MailingCampaignContent;
+use App\Domain\Model\Mailing\MailingCampaignType;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Kernel;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -27,12 +29,28 @@ final class MailingIntroBlocksTypeTest extends KernelTestCase
         return Kernel::class;
     }
 
+    public function testSectionImageWithoutFileIsAFormError(): void
+    {
+        self::bootKernel(['environment' => 'test']);
+        $campaign = new MailingCampaign('Internal', 'Subject', 'Title', '', 'newsletter', NewsletterAudienceFilter::empty(), campaignType: MailingCampaignType::NEWSLETTER,
+            structuredContent: MailingCampaignContent::fromArray(['version' => 1, 'sections' => []]));
+        $model = EditMailingCampaignFormModel::fromMailingCampaign($campaign);
+        $form = self::getContainer()->get(FormFactoryInterface::class)->create(EditMailingCampaignType::class, $model, ['csrf_protection' => false]);
+        $form->submit([
+            'internalTitle' => 'Internal', 'emailSubject' => 'Subject', 'publicTitle' => 'Title', 'campaignType' => 'newsletter', 'templateKey' => 'newsletter',
+            'sections' => ['editorial' => ['enabled' => '1', 'blocks' => [['id' => 'image', 'kind' => 'image', 'imageAlt' => 'Photo']]]],
+        ]);
+        self::assertFalse($form->isValid());
+        self::assertGreaterThan(0, count($form->get('sections')->get('editorial')->get('blocks')->get('0')->get('imageFile')->getErrors(true)));
+    }
+
     public function testNewFormAcceptsOrderedBlocksAndAnOptionalPreheader(): void
     {
         self::bootKernel(['environment' => 'test']);
         $formModel = new CreateMailingCampaignFormModel();
         $form = self::getContainer()->get(FormFactoryInterface::class)->create(CreateMailingCampaignType::class, $formModel);
         $form->submit([
+            'campaignType' => 'newsletter',
             'internalTitle' => 'Campagne',
             'emailSubject' => 'Sujet',
             'publicTitle' => 'Titre',
@@ -63,6 +81,7 @@ final class MailingIntroBlocksTypeTest extends KernelTestCase
         self::assertStringContainsString('data-prototype=', $html);
 
         $form->submit([
+            'campaignType' => 'newsletter',
             'internalTitle' => 'Campagne',
             'emailSubject' => 'Sujet',
             'publicTitle' => 'Titre',
@@ -236,6 +255,7 @@ final class MailingIntroBlocksTypeTest extends KernelTestCase
         $form = self::getContainer()->get(FormFactoryInterface::class)->create(EditMailingCampaignType::class, $formModel, ['csrf_protection' => false]);
 
         $form->submit([
+            'campaignType' => 'newsletter',
             'internalTitle' => 'Campagne',
             'emailSubject' => 'Sujet',
             'publicTitle' => 'Titre',
@@ -260,6 +280,7 @@ final class MailingIntroBlocksTypeTest extends KernelTestCase
         $form = self::getContainer()->get(FormFactoryInterface::class)->create(EditMailingCampaignType::class, $formModel, ['csrf_protection' => false]);
 
         $form->submit([
+            'campaignType' => 'newsletter',
             'internalTitle' => 'Campagne',
             'emailSubject' => 'Sujet',
             'publicTitle' => 'Titre',

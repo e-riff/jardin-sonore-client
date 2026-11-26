@@ -17,6 +17,7 @@ final readonly class UpdateMailingCampaign
         private MailingBannerImageStorageInterface $mailingBannerImageStorage,
         private MailingIntroBlockProcessor $mailingIntroBlockProcessor,
         private MailingIntroImageStorageInterface $mailingIntroImageStorage,
+        private MailingStructuredContentProcessor $structuredContentProcessor,
     ) {
     }
 
@@ -31,8 +32,16 @@ final readonly class UpdateMailingCampaign
                 : $this->mailingBannerImageStorage->store($input->bannerImageFile));
 
         $processedBlocks = null;
+        $processedSections = null;
         try {
-            $processedBlocks = null === $input->introBlocks
+            if (null !== $input->campaignType) {
+                $mailingCampaign->setCampaignType($input->campaignType);
+            }
+            if (null !== $input->sections) {
+                $processedSections = $this->structuredContentProcessor->process($input->sections, $mailingCampaign->getStructuredContent());
+                $mailingCampaign->setStructuredContent($processedSections['content']);
+            }
+            $processedBlocks = null !== $mailingCampaign->getStructuredContent() || null === $input->introBlocks
                 ? null
                 : $this->mailingIntroBlockProcessor->process($input->introBlocks, $previousIntroBlocks);
             $mainText = null === $processedBlocks ? $input->mainText : MailingIntroBlockProcessor::plainText($processedBlocks->blocks);
@@ -42,7 +51,7 @@ final readonly class UpdateMailingCampaign
                 publicTitle: $input->publicTitle,
                 mainText: $mainText,
                 preheader: $input->preheader,
-                introBlocks: $processedBlocks?->blocks,
+                introBlocks: null !== $mailingCampaign->getStructuredContent() ? null : $processedBlocks?->blocks,
                 subtitle: $input->subtitle,
                 callToActionLabel: $input->callToActionLabel,
                 callToActionUrl: $input->callToActionUrl,
@@ -52,6 +61,9 @@ final readonly class UpdateMailingCampaign
 
             $this->mailingCampaignRepository->save($mailingCampaign);
         } catch (Throwable $throwable) {
+            foreach ($processedSections['newImages'] ?? [] as $imagePath) {
+                $this->mailingIntroImageStorage->delete($imagePath);
+            }
             foreach ($processedBlocks->newImagePaths ?? [] as $imagePath) {
                 $this->mailingIntroImageStorage->delete($imagePath);
             }
@@ -61,6 +73,10 @@ final readonly class UpdateMailingCampaign
             }
 
             throw $throwable;
+        }
+
+        foreach ($processedSections['obsoleteImages'] ?? [] as $imagePath) {
+            $this->mailingIntroImageStorage->delete($imagePath);
         }
 
         $obsoleteImagePaths = $processedBlocks->obsoleteImagePaths ?? array_values(array_filter(array_map(

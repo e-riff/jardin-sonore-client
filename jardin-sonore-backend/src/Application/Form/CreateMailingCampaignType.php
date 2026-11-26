@@ -6,8 +6,10 @@ namespace App\Application\Form;
 
 use App\Application\Form\Model\CreateMailingCampaignFormModel;
 use App\Application\Form\Model\MailingIntroBlockFormModel;
+use App\Domain\Model\Mailing\MailingCampaignType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
+use Symfony\Component\Form\Extension\Core\Type\EnumType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -28,6 +30,12 @@ final class CreateMailingCampaignType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
+            ->add('campaignType', EnumType::class, [
+                'class' => MailingCampaignType::class, 'label' => 'mailing.form.campaign_type',
+                'choice_label' => static fn (MailingCampaignType $type): string => 'mailing.type.' . $type->value,
+                'placeholder' => 'mailing.form.choose_type',
+                'disabled' => false,
+            ])
             ->add('internalTitle', TextType::class, [
                 'label' => 'mailing.form.internal_title',
                 'help' => 'mailing.form.internal_title_help',

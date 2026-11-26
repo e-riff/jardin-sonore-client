@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Doctrine\Mapper;
 
 use App\Domain\Model\Mailing\MailingCampaign;
+use App\Domain\Model\Mailing\MailingCampaignContent;
 use App\Infrastructure\Doctrine\Entity\MailingCampaignEntity;
 
 final readonly class MailingCampaignMapper
@@ -24,6 +25,8 @@ final readonly class MailingCampaignMapper
         }
 
         return new MailingCampaign(
+            campaignType: $mailingCampaignEntity->getCampaignType(),
+            structuredContent: null === $mailingCampaignEntity->getStructuredContent() ? null : MailingCampaignContent::fromArray($mailingCampaignEntity->getStructuredContent()),
             internalTitle: $mailingCampaignEntity->getInternalTitle(),
             emailSubject: $mailingCampaignEntity->getEmailSubject(),
             publicTitle: $mailingCampaignEntity->getPublicTitle(),
@@ -58,6 +61,8 @@ final readonly class MailingCampaignMapper
 
         $mailingCampaignEntity
             ->setUuid($mailingCampaign->getUuid())
+            ->setCampaignType($mailingCampaign->getCampaignType())
+            ->setStructuredContent($mailingCampaign->getStructuredContent()?->toArray())
             ->setInternalTitle($mailingCampaign->getInternalTitle())
             ->setEmailSubject($mailingCampaign->getEmailSubject())
             ->setPublicTitle($mailingCampaign->getPublicTitle())

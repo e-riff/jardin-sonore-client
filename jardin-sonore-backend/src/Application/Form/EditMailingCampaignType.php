@@ -6,10 +6,12 @@ namespace App\Application\Form;
 
 use App\Application\Form\Model\EditMailingCampaignFormModel;
 use App\Application\Form\Model\MailingIntroBlockFormModel;
+use App\Domain\Model\Mailing\MailingCampaignType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
+use Symfony\Component\Form\Extension\Core\Type\EnumType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -32,6 +34,12 @@ final class EditMailingCampaignType extends AbstractType
         $locked = true === $options['locked'];
 
         $builder
+            ->add('campaignType', EnumType::class, [
+                'class' => MailingCampaignType::class, 'label' => 'mailing.form.campaign_type',
+                'choice_label' => static fn (MailingCampaignType $type): string => 'mailing.type.' . $type->value,
+                'placeholder' => 'mailing.form.choose_type',
+                'disabled' => $locked || ($builder->getData() instanceof EditMailingCampaignFormModel && $builder->getData()->usesStructuredContent),
+            ])
             ->add('internalTitle', TextType::class, [
                 'label' => 'mailing.form.internal_title',
                 'help' => 'mailing.form.internal_title_help',
@@ -114,10 +122,10 @@ final class EditMailingCampaignType extends AbstractType
             ->add('templateKey', ChoiceType::class, [
                 'label' => 'mailing.form.template',
                 'help' => 'mailing.form.template_help',
-                'disabled' => $locked,
-                'choices' => [
-                    'mailing.form.template_default' => 'default',
-                ],
+                'disabled' => $locked || ($builder->getData() instanceof EditMailingCampaignFormModel && $builder->getData()->usesStructuredContent),
+                'choices' => $builder->getData() instanceof EditMailingCampaignFormModel && $builder->getData()->usesStructuredContent
+                    ? ['mailing.type.' . $builder->getData()->campaignType->value => $builder->getData()->campaignType->value]
+                    : ['mailing.form.template_default' => 'default'],
             ])
             ->add('submit', SubmitType::class, [
                 'label' => 'mailing.form.save',
@@ -126,6 +134,13 @@ final class EditMailingCampaignType extends AbstractType
                     'class' => 'internal-button',
                 ],
             ]);
+        $model = $builder->getData();
+        if ($model instanceof EditMailingCampaignFormModel && $model->usesStructuredContent) {
+            $builder->add('sections', CollectionType::class, [
+                'entry_type' => MailingSectionType::class, 'entry_options' => ['disabled' => $locked],
+                'allow_add' => false, 'allow_delete' => false, 'by_reference' => false, 'label' => false,
+            ]);
+        }
     }
 
     public function configureOptions(OptionsResolver $resolver): void

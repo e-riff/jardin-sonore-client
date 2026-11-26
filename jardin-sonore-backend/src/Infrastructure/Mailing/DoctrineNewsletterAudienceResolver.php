@@ -6,6 +6,7 @@ namespace App\Infrastructure\Mailing;
 
 use App\Application\Mailing\NewsletterAudienceResolution;
 use App\Application\Mailing\NewsletterAudienceResolverInterface;
+use App\Domain\Model\Mailing\MailingRecipientOrganizationSnapshot;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Domain\Model\Mailing\NewsletterAudienceRadiusOrigin;
 use App\Domain\Model\Mailing\NewsletterRecipient;
@@ -55,18 +56,16 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
         $recipientsByEmailAddress = $this->mapRecipientsByEmailAddress($queryBuilder);
         $explicitOrganizationRecipients = $this->findExplicitOrganizationRecipients($newsletterAudienceFilter);
 
-        foreach ($explicitOrganizationRecipients as $emailAddress => $newsletterRecipient) {
-            $recipientsByEmailAddress[$emailAddress] = $newsletterRecipient;
-        }
+        $recipientsByEmailAddress = $this->mergeRecipients($recipientsByEmailAddress, $explicitOrganizationRecipients);
 
         $portalQueryBuilder = $this->createPortalQueryBuilder();
         $this->applyAudienceFilters($portalQueryBuilder, $newsletterAudienceFilter, includePersonOrganization: false);
-        $recipientsByEmailAddress += $this->mapRecipientsByEmailAddress($portalQueryBuilder);
+        $recipientsByEmailAddress = $this->mergeRecipients($recipientsByEmailAddress, $this->mapRecipientsByEmailAddress($portalQueryBuilder));
 
         if ([] !== $newsletterAudienceFilter->getOrganizationUuids()) {
             $explicitPortalQueryBuilder = $this->createPortalQueryBuilder();
             $this->applyExplicitOrganizationFilter($explicitPortalQueryBuilder, $newsletterAudienceFilter, includePersonOrganization: false);
-            $recipientsByEmailAddress += $this->mapRecipientsByEmailAddress($explicitPortalQueryBuilder);
+            $recipientsByEmailAddress = $this->mergeRecipients($recipientsByEmailAddress, $this->mapRecipientsByEmailAddress($explicitPortalQueryBuilder));
         }
 
         if ($newsletterAudienceFilter->includesFreeSubscribers()) {
@@ -75,7 +74,7 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
                 ->addSelect('NULL AS display_name')
                 ->andWhere($freeQueryBuilder->expr()->eq(self::EMAIL_ALIAS . '.free_newsletter_subscription', '1'))
                 ->andWhere($freeQueryBuilder->expr()->isNotNull(self::EMAIL_ALIAS . '.free_newsletter_subscription_confirmed_at'));
-            $recipientsByEmailAddress += $this->mapRecipientsByEmailAddress($freeQueryBuilder);
+            $recipientsByEmailAddress = $this->mergeRecipients($recipientsByEmailAddress, $this->mapRecipientsByEmailAddress($freeQueryBuilder));
         }
 
         $recipients = array_values($recipientsByEmailAddress);
@@ -112,6 +111,8 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
         $queryBuilder = $this->createEligibleEmailQueryBuilder();
         $expr = $queryBuilder->expr();
 
+        $this->addOrganizationSnapshotColumns($queryBuilder, 'COALESCE(' . self::ORGANIZATION_ALIAS . '.id, ' . self::PERSON_ORGANIZATION_ALIAS . '.id)');
+
         return $queryBuilder
             ->addSelect(
                 sprintf(
@@ -138,10 +139,26 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
             ));
     }
 
+    private function addOrganizationSnapshotColumns(QueryBuilder $queryBuilder, string $organizationIdExpression): void
+    {
+        $queryBuilder->addSelect(
+            "(SELECT LOWER(HEX(snapshot_entry.uuid)) FROM directory_entry snapshot_entry WHERE snapshot_entry.id = {$organizationIdExpression}) AS snapshot_uuid",
+            "(SELECT snapshot_org.name FROM organization snapshot_org WHERE snapshot_org.id = {$organizationIdExpression}) AS snapshot_name",
+            "(SELECT snapshot_org.type FROM organization snapshot_org WHERE snapshot_org.id = {$organizationIdExpression}) AS snapshot_type",
+            "(SELECT CASE WHEN COUNT(DISTINCT snapshot_municipality.insee_code) = 1 THEN MIN(snapshot_municipality.insee_code) ELSE NULL END
+                FROM contact_details snapshot_details
+                INNER JOIN address_contact snapshot_address ON snapshot_address.contact_details_id = snapshot_details.id AND snapshot_address.active = 1
+                INNER JOIN municipality snapshot_municipality ON snapshot_municipality.id = snapshot_address.municipality_id
+                WHERE snapshot_details.directory_entry_id = {$organizationIdExpression}) AS snapshot_municipality",
+        );
+    }
+
     private function createPortalQueryBuilder(): QueryBuilder
     {
         $queryBuilder = $this->createEligibleEmailQueryBuilder();
         $expr = $queryBuilder->expr();
+
+        $this->addOrganizationSnapshotColumns($queryBuilder, self::ORGANIZATION_ALIAS . '.id');
 
         return $queryBuilder
             ->addSelect("TRIM(CONCAT(COALESCE(portal_user.first_name, ''), ' ', COALESCE(portal_user.last_name, ''))) AS display_name")
@@ -390,7 +407,7 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
      */
     private function mapRecipientsByEmailAddress(QueryBuilder $queryBuilder): array
     {
-        /** @var list<array{email_address: string, unsubscribe_token: string, display_name: ?string}> $rows */
+        /** @var list<array{email_address: string, unsubscribe_token: string, display_name: ?string, snapshot_uuid?: ?string, snapshot_name?: ?string, snapshot_type?: ?string, snapshot_municipality?: ?string}> $rows */
         $rows = $queryBuilder->executeQuery()->fetchAllAssociative();
         $recipientsByEmailAddress = [];
 
@@ -402,15 +419,48 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
                     emailAddress: new EmailAddress($emailAddress),
                     unsubscribeToken: $row['unsubscribe_token'],
                     displayName: $this->normalizeDisplayName($row['display_name']),
+                    organizationSnapshots: null === ($row['snapshot_uuid'] ?? null) ? [] : [new MailingRecipientOrganizationSnapshot(
+                        organizationUuid: Uuid::fromBinary(hex2bin($row['snapshot_uuid'])),
+                        organizationName: $row['snapshot_name'] ?? '',
+                        organizationType: $row['snapshot_type'] ?? null,
+                        municipalityInseeCode: $row['snapshot_municipality'] ?? null,
+                    )],
                 );
             } catch (InvalidArgumentException) {
                 continue;
             }
 
-            $recipientsByEmailAddress[$emailAddress] = $newsletterRecipient;
+            $recipientsByEmailAddress = $this->mergeRecipients($recipientsByEmailAddress, [$emailAddress => $newsletterRecipient]);
         }
 
         return $recipientsByEmailAddress;
+    }
+
+    /**
+     * @param array<string, NewsletterRecipient> $existing
+     * @param array<string, NewsletterRecipient> $additional
+     *
+     * @return array<string, NewsletterRecipient>
+     */
+    private function mergeRecipients(array $existing, array $additional): array
+    {
+        foreach ($additional as $emailAddress => $newsletterRecipient) {
+            if (!isset($existing[$emailAddress])) {
+                $existing[$emailAddress] = $newsletterRecipient;
+                continue;
+            }
+            $previousRecipient = $existing[$emailAddress];
+            $snapshots = [];
+            foreach (array_merge($previousRecipient->getOrganizationSnapshots(), $newsletterRecipient->getOrganizationSnapshots()) as $snapshot) {
+                $snapshots[$snapshot->organizationUuid->toRfc4122()] = $snapshot;
+            }
+            $existing[$emailAddress] = new NewsletterRecipient(
+                $previousRecipient->getEmailAddress(), $previousRecipient->getUnsubscribeToken(),
+                $previousRecipient->getDisplayName(), array_values($snapshots),
+            );
+        }
+
+        return $existing;
     }
 
     /**

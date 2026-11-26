@@ -1,0 +1,10 @@
+{% extends 'mailing/email/default.html.twig' %}
+
+{% block mailing_content %}
+    {% for sectionKey, sectionBlocks in visibleSections %}
+        {% if sectionBlocks is not empty %}
+            <h3 style="margin:0 0 16px; color:#692019; font-size:22px;">{{ ('mailing.sections.' ~ sectionKey)|trans({}, 'mailing') }}</h3>
+            {% include 'mailing/email/intro_blocks.html.twig' with { blocks: sectionBlocks } only %}
+        {% endif %}
+    {% endfor %}
+{% endblock %}

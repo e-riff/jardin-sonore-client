@@ -7,7 +7,8 @@ namespace App\Infrastructure\Mailing;
 use App\Application\Mailing\NewsletterRendererInterface;
 use App\Application\Mailing\RenderedNewsletter;
 use App\Domain\Model\Mailing\MailingCampaign;
-use App\Domain\Model\Mailing\MailingRecommendation;
+use App\Domain\Model\Mailing\MailingCampaignContent;
+use App\Domain\Model\Mailing\MailingCampaignType;
 use InvalidArgumentException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Twig\Environment;
@@ -28,10 +29,7 @@ final readonly class TwigNewsletterRenderer implements NewsletterRendererInterfa
     public function render(MailingCampaign $mailingCampaign): RenderedNewsletter
     {
         $template = $this->resolveTemplate($mailingCampaign->getTemplateKey());
-        $activeRecommendations = array_values(array_filter(
-            $mailingCampaign->getRecommendations(),
-            static fn (MailingRecommendation $mailingRecommendation): bool => $mailingRecommendation->isActive(),
-        ));
+        $activeRecommendations = $mailingCampaign->getVisibleRecommendations();
         $heroImagePath = $mailingCampaign->getBannerImagePath() ?? self::DEFAULT_BANNER_IMAGE_PATH;
         $formattedMainText = $this->newsletterMainTextFormatter->format($mailingCampaign->getMainText());
         $introBlocks = $this->formatIntroBlocks($mailingCampaign->getIntroBlocks());
@@ -42,6 +40,25 @@ final readonly class TwigNewsletterRenderer implements NewsletterRendererInterfa
             ?? (null === $introBlocks
                 ? $this->resolvePreheader($mailingCampaign, $formattedMainText->text)
                 : $this->firstBlockPreheader($introBlocks));
+
+        $visibleSections = [];
+        $structuredContent = $mailingCampaign->getStructuredContent();
+        if (null !== $structuredContent) {
+            $sectionKeys = MailingCampaignType::OUTREACH === $mailingCampaign->getCampaignType()
+                ? MailingCampaignContent::OUTREACH_SECTIONS : MailingCampaignContent::NEWSLETTER_SECTIONS;
+            foreach ($sectionKeys as $sectionKey) {
+                if ('recommendations' !== $sectionKey && $structuredContent->isSectionEnabled($sectionKey)) {
+                    $visibleSections[$sectionKey] = $this->formatIntroBlocks($structuredContent->getBlocks($sectionKey)) ?? [];
+                }
+            }
+            $visibleBlocks = [];
+            foreach ($visibleSections as $sectionBlocks) {
+                array_push($visibleBlocks, ...$sectionBlocks);
+            }
+            $preheader = $mailingCampaign->getPreheader() ?? $this->firstBlockPreheader($visibleBlocks);
+        }
+        $showCallToAction = null === $structuredContent || MailingCampaignType::OUTREACH === $mailingCampaign->getCampaignType()
+            || $structuredContent->isSectionEnabled('jardin_sonore');
 
         $unsubscribeUrl = $this->urlGenerator->generate('newsletter_unsubscribe', [
             'token' => self::UNSUBSCRIBE_TOKEN_PLACEHOLDER,
@@ -54,6 +71,8 @@ final readonly class TwigNewsletterRenderer implements NewsletterRendererInterfa
 
         $context = [
             'campaign' => $mailingCampaign,
+            'visibleSections' => $visibleSections,
+            'showCallToAction' => $showCallToAction,
             'activeRecommendations' => $activeRecommendations,
             'recommendationTexts' => $recommendationTexts,
             'preheader' => $preheader,
@@ -68,7 +87,7 @@ final readonly class TwigNewsletterRenderer implements NewsletterRendererInterfa
         return new RenderedNewsletter(
             subject: $mailingCampaign->getEmailSubject(),
             html: $this->twig->render($template, $context),
-            text: $this->twig->render('mailing/email/default.txt.twig', $context),
+            text: $this->twig->render(null === $structuredContent ? 'mailing/email/default.txt.twig' : 'mailing/email/' . $mailingCampaign->getTemplateKey() . '.txt.twig', $context),
             bannerImagePath: $heroImagePath,
             preheader: $preheader,
         );
@@ -113,6 +132,8 @@ final readonly class TwigNewsletterRenderer implements NewsletterRendererInterfa
     {
         return match ($templateKey) {
             'default' => 'mailing/email/default.html.twig',
+            'newsletter' => 'mailing/email/newsletter.html.twig',
+            'outreach' => 'mailing/email/outreach.html.twig',
             default => throw new InvalidArgumentException("Unknown mailing template key \"{$templateKey}\"."),
         };
     }

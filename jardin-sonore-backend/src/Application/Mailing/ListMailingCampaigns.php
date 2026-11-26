@@ -36,6 +36,7 @@ final readonly class ListMailingCampaigns
 
             $summaries[] = new MailingCampaignSummary(
                 uuid: $mailingCampaign->getUuid(),
+                campaignType: $mailingCampaign->getCampaignType(),
                 internalTitle: $mailingCampaign->getInternalTitle(),
                 emailSubject: $mailingCampaign->getEmailSubject(),
                 status: $mailingCampaign->getStatus(),

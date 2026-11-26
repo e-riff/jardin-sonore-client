@@ -578,3 +578,19 @@ mailing:
 
 mailing.audience.result.free_included: "Abonnés libres inclus, sans critères de structure. Le total ne compte chaque adresse qu’une fois."
 mailing.audience.result.free_excluded: "Abonnés libres exclus de cette audience."
+
+mailing.sections.editorial: Édito
+mailing.sections.monthly_idea: L’idée du mois
+mailing.sections.jardin_sonore: Jardin Sonore
+mailing.sections.recommendations: Recommandations
+mailing.sections.proposal: Notre proposition
+mailing.sections.approach: Notre approche
+
+mailing.type.newsletter: Newsletter
+mailing.type.outreach: Démarchage
+mailing.type.legacy: Historique non classé
+mailing.form.campaign_type: Type de campagne
+mailing.form.choose_type: Choisir le type de campagne
+mailing.form.section_enabled: Inclure cette rubrique dans le mail
+
+mailing.form.outreach_subscribers_invalid: Retirez les abonnés libres du ciblage avant de choisir le démarchage.

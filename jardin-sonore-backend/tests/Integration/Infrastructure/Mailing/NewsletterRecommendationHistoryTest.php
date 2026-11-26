@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Infrastructure\Mailing;
 
+use App\Application\Mailing\RecordNewsletterRecommendationUsages;
+use App\Domain\Model\Mailing\MailingCampaign;
+use App\Domain\Model\Mailing\MailingCampaignContent;
+use App\Domain\Model\Mailing\MailingCampaignType;
+use App\Domain\Model\Mailing\MailingRecommendation;
+use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Domain\Model\Mailing\NewsletterRecommendationUsage;
 use App\Infrastructure\Doctrine\Repository\NewsletterRecommendationUsageDoctrineRepository;
 use App\Kernel;
@@ -38,6 +44,16 @@ final class NewsletterRecommendationHistoryTest extends KernelTestCase
             $this->connection->rollBack();
         }
         parent::tearDown();
+    }
+
+    public function testHiddenRecommendationsAreNotRecordedAsUsed(): void
+    {
+        $sourceUuid = Uuid::v7();
+        $campaign = new MailingCampaign('Internal', 'Subject', 'Title', '', 'newsletter', NewsletterAudienceFilter::empty(), campaignType: MailingCampaignType::NEWSLETTER,
+            structuredContent: MailingCampaignContent::fromArray(['version' => 1, 'sections' => ['recommendations' => ['enabled' => false, 'blocks' => []]]]));
+        $campaign->replaceRecommendations([new MailingRecommendation('Book', null, 'Read this', 1, sourceRecommendationUuid: $sourceUuid)]);
+        (self::getContainer()->get(RecordNewsletterRecommendationUsages::class))($campaign);
+        self::assertSame([], self::getContainer()->get(NewsletterRecommendationUsageDoctrineRepository::class)->findBySourceRecommendationUuids([$sourceUuid]));
     }
 
     public function testFindsStoredUsagesByBinaryUuidAndOrdersLatestFirst(): void

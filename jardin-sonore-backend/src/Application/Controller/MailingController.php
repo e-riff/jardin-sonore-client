@@ -13,6 +13,7 @@ use App\Application\Form\Model\CreateMailingCampaignFormModel;
 use App\Application\Form\Model\EditMailingCampaignFormModel;
 use App\Application\Form\Model\MailingAudienceMaskFormModel;
 use App\Application\Form\Model\MailingIntroBlockFormModel;
+use App\Application\Form\Model\MailingSectionFormModel;
 use App\Application\Form\Model\MailingTestFormModel;
 use App\Application\Mailing\CreateMailingCampaign;
 use App\Application\Mailing\CreateMailingCampaignInput;
@@ -22,6 +23,7 @@ use App\Application\Mailing\GetMailingCampaign;
 use App\Application\Mailing\ListMailingAudienceMasks;
 use App\Application\Mailing\ListMailingCampaigns;
 use App\Application\Mailing\MailingCampaignSummary;
+use App\Application\Mailing\MailingIntroBlockInput;
 use App\Application\Mailing\NewsletterAudienceMapQueryInterface;
 use App\Application\Mailing\NewsletterAudienceMunicipalityMaterializerInterface;
 use App\Application\Mailing\NewsletterAudienceOptionsQueryInterface;
@@ -293,6 +295,7 @@ final class MailingController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $mailingCampaign = $createMailingCampaign(new CreateMailingCampaignInput(
+                campaignType: $formModel->campaignType,
                 internalTitle: $formModel->internalTitle,
                 emailSubject: $formModel->emailSubject,
                 publicTitle: $formModel->publicTitle,
@@ -303,7 +306,7 @@ final class MailingController extends AbstractController
                 bannerImageFile: $formModel->bannerImageFile,
                 preheader: $formModel->preheader,
                 introBlocks: [] === $formModel->introBlocks ? null : array_map(
-                    static fn (MailingIntroBlockFormModel $block) => $block->toInput(),
+                    static fn (MailingIntroBlockFormModel $block): MailingIntroBlockInput => $block->toInput(),
                     $formModel->introBlocks,
                 ),
             ));
@@ -354,6 +357,8 @@ final class MailingController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $updateMailingCampaign($mailingCampaign, new UpdateMailingCampaignInput(
+                campaignType: $formModel->campaignType,
+                sections: $formModel->usesStructuredContent ? array_map(static fn (MailingSectionFormModel $section): array => $section->toInput(), $formModel->sections) : null,
                 internalTitle: $formModel->internalTitle,
                 emailSubject: $formModel->emailSubject,
                 publicTitle: $formModel->publicTitle,
@@ -366,7 +371,7 @@ final class MailingController extends AbstractController
                 templateKey: $formModel->templateKey,
                 preheader: $formModel->preheader,
                 introBlocks: [] === $formModel->introBlocks ? null : array_map(
-                    static fn (MailingIntroBlockFormModel $block) => $block->toInput(),
+                    static fn (MailingIntroBlockFormModel $block): MailingIntroBlockInput => $block->toInput(),
                     $formModel->introBlocks,
                 ),
             ));

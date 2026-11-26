@@ -3,6 +3,7 @@
 {% set title = 'mailing.preview.title'|trans({ campaign: campaign.internalTitle }, 'mailing') %}
 
 {% block internal_body %}
+    <p class="internal-eyebrow">{{ ('mailing.type.' ~ (campaign.campaignType ? campaign.campaignType.value : 'legacy'))|trans({}, 'mailing') }}</p>
     {% include 'components/_internal_back_button.html.twig' with { href: path('mailing_content', { uuid: campaign.uuid }), label: 'mailing.preview.back'|trans({}, 'mailing') } only %}
     <section class="internal-page-heading">
         <div>

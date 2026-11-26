@@ -219,6 +219,7 @@ sessions:
       search_submit: "Filtrer"
       empty: "Aucun prolongement ne correspond à cette recherche."
     table:
+      visual: "Visuel"
       title: "Titre"
       link: "Lien"
       actions: "Actions"

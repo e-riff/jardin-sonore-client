@@ -8,6 +8,8 @@ use App\Application\Mailing\MailingIntroBlockProcessor;
 use App\Application\Mailing\RecommendationText;
 use App\Domain\Model\Mailing\MailingAudienceMask;
 use App\Domain\Model\Mailing\MailingCampaign;
+use App\Domain\Model\Mailing\MailingCampaignContent;
+use App\Domain\Model\Mailing\MailingCampaignType;
 use App\Domain\Model\Mailing\MailingRecommendation;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Domain\Repository\MailingAudienceMaskRepositoryInterface;
@@ -39,6 +41,8 @@ final readonly class MailingDraftManager
 
             $results[] = [
                 'campaignUuid' => (string) $campaign->getUuid(),
+                'campaignType' => $campaign->getCampaignType()?->value,
+                'structuredContent' => $campaign->getStructuredContent()?->toArray(),
                 'internalTitle' => $campaign->getInternalTitle(),
                 'emailSubject' => $campaign->getEmailSubject(),
                 'status' => $campaign->getStatus()->value,
@@ -78,7 +82,7 @@ final readonly class MailingDraftManager
      */
     public function create(array $input): array
     {
-        $this->assertKeys($input, ['requestId', 'internalTitle', 'emailSubject', 'publicTitle', 'mainText', 'introBlocks', 'preheader', 'subtitle', 'callToActionLabel', 'callToActionUrl', 'audienceMaskUuid']);
+        $this->assertKeys($input, ['campaignType', 'structuredContent', 'requestId', 'internalTitle', 'emailSubject', 'publicTitle', 'mainText', 'introBlocks', 'preheader', 'subtitle', 'callToActionLabel', 'callToActionUrl', 'audienceMaskUuid']);
         $requestId = $this->requiredText($input, 'requestId', 100);
         $uuid = Uuid::v5(Uuid::fromString(self::REQUEST_NAMESPACE), $requestId);
         $existing = $this->campaignRepository->findByUuid($uuid);
@@ -86,20 +90,30 @@ final readonly class MailingDraftManager
             return $this->view($existing);
         }
 
+        $campaignType = MailingCampaignType::tryFrom($this->requiredText($input, 'campaignType', 16))
+            ?? throw new InvalidArgumentException('Choose newsletter or outreach as campaignType.');
+        $structuredContent = array_key_exists('structuredContent', $input) ? $this->structuredContent($input['structuredContent'], null) : null;
         $blocks = $this->blocks($input['introBlocks'] ?? null, []);
-        $mainText = null === $blocks ? $this->requiredText($input, 'mainText', 20000) : MailingIntroBlockProcessor::plainText($blocks);
+        $mainText = null !== $structuredContent ? '' : (null === $blocks ? $this->requiredText($input, 'mainText', 20000) : MailingIntroBlockProcessor::plainText($blocks));
+        if (null === $structuredContent) {
+            $structuredContent = MailingCampaignContent::fromInitialBlocks($campaignType,
+                $blocks ?? [['id' => 'initial', 'kind' => 'paragraph', 'text' => $mainText]],
+            );
+        }
         $campaign = new MailingCampaign(
             internalTitle: $this->requiredText($input, 'internalTitle', 255),
             emailSubject: $this->requiredText($input, 'emailSubject', 255),
             publicTitle: $this->requiredText($input, 'publicTitle', 255),
             mainText: $mainText,
-            templateKey: 'default',
+            templateKey: $campaignType->value,
+            campaignType: $campaignType,
+            structuredContent: $structuredContent,
             audienceFilter: NewsletterAudienceFilter::empty(),
             subtitle: $this->optionalText($input, 'subtitle', 255),
             callToActionLabel: $this->optionalText($input, 'callToActionLabel', 255),
             callToActionUrl: $this->optionalUrl($input, 'callToActionUrl'),
             preheader: $this->optionalText($input, 'preheader', 255),
-            introBlocks: $blocks,
+            introBlocks: null,
             uuid: $uuid,
         );
         if (isset($input['audienceMaskUuid'])) {
@@ -115,7 +129,7 @@ final readonly class MailingDraftManager
      */
     public function update(string $campaignUuid, array $input): array
     {
-        $this->assertKeys($input, ['revision', 'internalTitle', 'emailSubject', 'publicTitle', 'mainText', 'introBlocks', 'preheader', 'subtitle', 'callToActionLabel', 'callToActionUrl', 'audienceMaskUuid', 'recommendations']);
+        $this->assertKeys($input, ['campaignType', 'structuredContent', 'revision', 'internalTitle', 'emailSubject', 'publicTitle', 'mainText', 'introBlocks', 'preheader', 'subtitle', 'callToActionLabel', 'callToActionUrl', 'audienceMaskUuid', 'recommendations']);
         $campaign = $this->findCampaign($campaignUuid);
         if (!$campaign->isEditable()) {
             throw new InvalidArgumentException('This mailing has already entered delivery and cannot be edited.');
@@ -125,6 +139,16 @@ final readonly class MailingDraftManager
             throw new InvalidArgumentException('This mailing changed since it was read. Read it again before editing.');
         }
 
+        if (isset($input['campaignType'])) {
+            $campaign->setCampaignType(MailingCampaignType::tryFrom($this->requiredText($input, 'campaignType', 16))
+                ?? throw new InvalidArgumentException('Choose newsletter or outreach as campaignType.'));
+        }
+        if (array_key_exists('structuredContent', $input)) {
+            $campaign->setStructuredContent($this->structuredContent($input['structuredContent'], $campaign->getStructuredContent()));
+        }
+        if (null !== $campaign->getStructuredContent() && (array_key_exists('introBlocks', $input) || array_key_exists('mainText', $input))) {
+            throw new InvalidArgumentException('Edit structuredContent for this campaign; legacy text fields cannot overwrite sections.');
+        }
         if (array_key_exists('introBlocks', $input) && !is_array($input['introBlocks'])) {
             throw new InvalidArgumentException('Invalid introduction blocks.');
         }
@@ -157,6 +181,26 @@ final readonly class MailingDraftManager
         $this->campaignRepository->save($campaign);
 
         return $this->view($campaign);
+    }
+
+    private function structuredContent(mixed $value, ?MailingCampaignContent $previous): MailingCampaignContent
+    {
+        if (!is_array($value)) {
+            throw new InvalidArgumentException('structuredContent must be a versioned object.');
+        }
+        $content = MailingCampaignContent::fromArray($value);
+        $sections = $content->toArray()['sections'];
+        foreach ($sections as $key => &$section) {
+            $section['blocks'] = $this->blocks($section['blocks'], $previous?->getBlocks($key) ?? []) ?? [];
+        }
+        unset($section);
+        foreach ($previous?->toArray()['sections'] ?? [] as $key => $previousSection) {
+            if (!array_key_exists($key, $sections)) {
+                $sections[$key] = $previousSection;
+            }
+        }
+
+        return MailingCampaignContent::fromArray(['version' => 1, 'sections' => $sections]);
     }
 
     private function findCampaign(string $uuid): MailingCampaign
@@ -317,6 +361,8 @@ final readonly class MailingDraftManager
     {
         return [
             'campaignUuid' => (string) $campaign->getUuid(),
+            'campaignType' => $campaign->getCampaignType()?->value,
+            'structuredContent' => $campaign->getStructuredContent()?->toArray(),
             'status' => $campaign->getStatus()->value,
             'editable' => $campaign->isEditable(),
             'revision' => $this->revision($campaign),
@@ -353,6 +399,7 @@ final readonly class MailingDraftManager
     {
         try {
             return hash('sha256', json_encode([
+                $campaign->getCampaignType()?->value, $campaign->getStructuredContent()?->toArray(),
                 $campaign->getStatus()->value, $campaign->getInternalTitle(), $campaign->getEmailSubject(),
                 $campaign->getPublicTitle(), $campaign->getPreheader(), $campaign->getSubtitle(),
                 $campaign->getMainText(), $campaign->getIntroBlocks(), $campaign->getCallToActionLabel(),

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Application\Form\Model;
 
 use App\Domain\Model\Mailing\MailingCampaign;
+use App\Domain\Model\Mailing\MailingCampaignContent;
+use App\Domain\Model\Mailing\MailingCampaignType;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Constraints\Image;
@@ -13,6 +15,16 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
 final class EditMailingCampaignFormModel
 {
     use MailingIntroBlocksFormTrait;
+
+    public ?MailingCampaignType $campaignType = null;
+
+    public bool $usesStructuredContent = false;
+
+    public bool $includesFreeSubscribers = false;
+
+    /** @var array<string, MailingSectionFormModel> */
+    #[Assert\Valid]
+    public array $sections = [];
 
     #[Assert\NotBlank]
     public string $internalTitle = '';
@@ -53,6 +65,21 @@ final class EditMailingCampaignFormModel
     public static function fromMailingCampaign(MailingCampaign $mailingCampaign): self
     {
         $formModel = new self();
+        $formModel->campaignType = $mailingCampaign->getCampaignType();
+        $formModel->includesFreeSubscribers = $mailingCampaign->getAudienceFilter()->includesFreeSubscribers();
+        $structuredContent = $mailingCampaign->getStructuredContent();
+        $formModel->usesStructuredContent = null !== $structuredContent;
+        if (null !== $structuredContent) {
+            $keys = MailingCampaignType::OUTREACH === $mailingCampaign->getCampaignType()
+                ? MailingCampaignContent::OUTREACH_SECTIONS
+                : MailingCampaignContent::NEWSLETTER_SECTIONS;
+            foreach ($keys as $key) {
+                $section = new MailingSectionFormModel();
+                $section->enabled = $structuredContent->isSectionEnabled($key);
+                $section->blocks = array_map(MailingIntroBlockFormModel::fromBlock(...), $structuredContent->getBlocks($key));
+                $formModel->sections[$key] = $section;
+            }
+        }
         $formModel->internalTitle = $mailingCampaign->getInternalTitle();
         $formModel->emailSubject = $mailingCampaign->getEmailSubject();
         $formModel->publicTitle = $mailingCampaign->getPublicTitle();
@@ -95,6 +122,14 @@ final class EditMailingCampaignFormModel
         $formModel->templateKey = $mailingCampaign->getTemplateKey();
 
         return $formModel;
+    }
+
+    #[Assert\Callback]
+    public function validateCampaignType(ExecutionContextInterface $context): void
+    {
+        if (MailingCampaignType::OUTREACH === $this->campaignType && $this->includesFreeSubscribers) {
+            $context->buildViolation('mailing.form.outreach_subscribers_invalid')->atPath('campaignType')->addViolation();
+        }
     }
 
     #[Assert\Callback]

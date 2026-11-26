@@ -12,17 +12,26 @@ use App\Application\Mailing\DeleteMailingAudienceMask;
 use App\Application\Mailing\ExtendMailingCampaignAudience;
 use App\Application\Mailing\GetMailingAudienceMask;
 use App\Application\Mailing\GetMailingCampaign;
+use App\Application\Mailing\MailingCampaignDeliveryTransactionInterface;
+use App\Application\Mailing\NewsletterAudienceResolution;
 use App\Application\Mailing\NewsletterAudienceResolverInterface;
 use App\Application\Mailing\SendMailingCampaign;
 use App\Domain\Model\Mailing\MailingCampaign;
+use App\Domain\Model\Mailing\MailingCampaignType;
+use App\Domain\Model\Mailing\MailingRecipientOrganizationSnapshot;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
+use App\Domain\Model\Mailing\NewsletterRecipient;
+use App\Domain\Model\ValueObject\EmailAddress;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 use App\Infrastructure\Mailing\DoctrineMailingDeliveryQueue;
 use App\Kernel;
 use DateTimeImmutable;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\NullLogger;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\Uid\Uuid;
 
 final class NewsletterAudienceCampaignFlowTest extends KernelTestCase
 {
@@ -48,6 +57,27 @@ final class NewsletterAudienceCampaignFlowTest extends KernelTestCase
             $this->entityManager->getConnection()->rollBack();
         }
         parent::tearDown();
+    }
+
+    public function testQueueFailureRollsBackRecipientsAndLeavesCampaignEditable(): void
+    {
+        $campaign = $this->campaign();
+        $repository = self::getContainer()->get(MailingCampaignRepositoryInterface::class);
+        $repository->save($campaign);
+        $recipient = new NewsletterRecipient(new EmailAddress('duplicate@example.test'), 'token', organizationSnapshots: [
+            new MailingRecipientOrganizationSnapshot(Uuid::v7(), 'Nursery', 'creche', null),
+        ]);
+        $resolver = $this->createStub(NewsletterAudienceResolverInterface::class);
+        $resolver->method('resolve')->willReturn(new NewsletterAudienceResolution(2, [$recipient, $recipient]));
+        $send = new SendMailingCampaign($repository, $resolver, self::getContainer()->get(DoctrineMailingDeliveryQueue::class), new NullLogger(), self::getContainer()->get(MailingCampaignDeliveryTransactionInterface::class));
+        try {
+            $send($campaign);
+            self::fail('Duplicate recipients must reject the whole delivery.');
+        } catch (UniqueConstraintViolationException) {
+            self::assertTrue($campaign->isEditable());
+            self::assertSame(0, (int) $this->entityManager->getConnection()->fetchOne('SELECT COUNT(*) FROM mailing_delivery_recipient WHERE campaign_uuid = ?', [$campaign->getUuid()->toRfc4122()]));
+            self::assertTrue($repository->findByUuid($campaign->getUuid())->isEditable());
+        }
     }
 
     public function testSavedMaskAndCampaignPreserveFreeOptionAndPreviewEqualsQueue(): void
@@ -120,6 +150,6 @@ final class NewsletterAudienceCampaignFlowTest extends KernelTestCase
 
     private function campaign(?NewsletterAudienceFilter $filter = null): MailingCampaign
     {
-        return new MailingCampaign('Test campaign', 'Subject', 'Public title', 'Test text', 'default', $filter ?? NewsletterAudienceFilter::empty());
+        return new MailingCampaign('Test campaign', 'Subject', 'Public title', 'Test text', 'default', $filter ?? NewsletterAudienceFilter::empty(), campaignType: MailingCampaignType::NEWSLETTER);
     }
 }

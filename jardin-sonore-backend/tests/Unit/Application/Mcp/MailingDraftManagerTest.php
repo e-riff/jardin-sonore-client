@@ -17,6 +17,23 @@ use Symfony\Component\Uid\Uuid;
 
 final class MailingDraftManagerTest extends TestCase
 {
+    public function testTypedDraftKeepsStructuredContentOnPartialUpdate(): void
+    {
+        $campaign = null;
+        $repository = $this->createStub(MailingCampaignRepositoryInterface::class);
+        $repository->method('findByUuid')->willReturnCallback(static function () use (&$campaign): ?MailingCampaign { return $campaign; });
+        $repository->method('save')->willReturnCallback(static function (MailingCampaign $savedCampaign) use (&$campaign): void { $campaign = $savedCampaign; });
+        $manager = new MailingDraftManager($repository, $this->createStub(MailingAudienceMaskRepositoryInterface::class), new NewsletterRichTextFormatter());
+        $created = $manager->create([
+            'requestId' => 'typed-draft', 'campaignType' => 'newsletter', 'internalTitle' => 'Internal', 'emailSubject' => 'Subject', 'publicTitle' => 'Title',
+            'structuredContent' => ['version' => 1, 'sections' => ['editorial' => ['enabled' => true, 'blocks' => [['id' => 'e', 'kind' => 'paragraph', 'text' => 'Hello']]]]],
+        ]);
+        $updated = $manager->update($created['campaignUuid'], ['revision' => $created['revision'], 'emailSubject' => 'Updated']);
+        self::assertSame('newsletter', $updated['campaignType']);
+        self::assertSame($created['structuredContent'], $updated['structuredContent']);
+        self::assertNotSame($created['revision'], $updated['revision']);
+    }
+
     public function testSentCampaignCanBeReadButCannotBeEdited(): void
     {
         $campaign = $this->campaign();

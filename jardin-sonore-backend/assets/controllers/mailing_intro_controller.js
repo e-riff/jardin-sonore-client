@@ -226,7 +226,7 @@ export default class extends Controller {
                 for (const attribute of ['name', 'id', 'for']) {
                     const value = element.getAttribute(attribute);
                     if (value) {
-                        element.setAttribute(attribute, value.replace(/(introBlocks(?:\]\[|_))\d+/, `$1${index}`));
+                        element.setAttribute(attribute, value.replace(/((?:introBlocks|blocks)(?:\]\[|_))\d+/, `$1${index}`));
                     }
                 }
             });

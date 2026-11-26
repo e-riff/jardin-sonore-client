@@ -10,6 +10,7 @@ use App\Domain\Model\Mailing\NewsletterRecipient;
 use DateTimeImmutable;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 
 final readonly class DoctrineMailingDeliveryQueue implements MailingDeliveryQueueInterface
 {
@@ -45,6 +46,16 @@ final readonly class DoctrineMailingDeliveryQueue implements MailingDeliveryQueu
                 'queued_at' => 'string',
                 'updated_at' => 'string',
             ]);
+            $deliveryRecipientId = (int) $this->connection->lastInsertId();
+            foreach ($newsletterRecipient->getOrganizationSnapshots() as $snapshot) {
+                $this->connection->insert('mailing_delivery_recipient_organization', [
+                    'delivery_recipient_id' => $deliveryRecipientId,
+                    'organization_uuid' => $snapshot->organizationUuid->toBinary(),
+                    'organization_name' => $snapshot->organizationName,
+                    'organization_type' => $snapshot->organizationType,
+                    'municipality_insee_code' => $snapshot->municipalityInseeCode,
+                ], ['organization_uuid' => ParameterType::BINARY]);
+            }
         }
     }
 

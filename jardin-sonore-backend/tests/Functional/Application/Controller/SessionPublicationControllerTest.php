@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Functional\Application\Controller;
 
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
+use App\Infrastructure\Doctrine\Entity\SessionRecommendationEntity;
 use App\Infrastructure\Doctrine\Entity\SessionSummaryEntity;
 use App\Infrastructure\Doctrine\Entity\ThemeEntity;
 use App\Kernel;
@@ -23,6 +24,36 @@ final class SessionPublicationControllerTest extends WebTestCase
                 return '/tmp/jardin-sonore-session-publication-test-cache';
             }
         };
+    }
+
+    public function testEditorCanAttachRecommendationAndCatalogShowsThumbnail(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $adminUserEntity = (new AdminUserEntity())->setEmail('recommendation-' . bin2hex(random_bytes(8)) . '@portal.test')->setPassword('unused');
+        $sessionSummaryEntity = (new SessionSummaryEntity())->setTitle('Séance avec prolongement');
+        $recommendationTitle = 'Livre de recette ' . bin2hex(random_bytes(8));
+        $sessionRecommendationEntity = (new SessionRecommendationEntity())->setTitle($recommendationTitle)->setText('À découvrir')->setImagePath('uploads/recommendations/recipe.jpg');
+        foreach ([$adminUserEntity, $sessionSummaryEntity, $sessionRecommendationEntity] as $entity) {
+            $entityManager->persist($entity);
+        }
+        $entityManager->flush();
+        $client->loginUser($adminUserEntity);
+        $path = '/sessions/' . $sessionSummaryEntity->getUuid()->toRfc4122() . '/edit';
+        $recommendationUuid = $sessionRecommendationEntity->getUuid()->toRfc4122();
+        $crawler = $client->request('GET', $path);
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $crawler->filterXPath('//*[@id="session_recommendation_add"]'));
+        $form = $crawler->filterXPath('//form[@name="session_summary"]')->form();
+        $form['session_summary[recommendationUuids]']->select([$recommendationUuid]);
+        $form['session_summary[recommendationOrder]'] = $recommendationUuid;
+        $client->submit($form);
+        self::assertResponseRedirects($path, 303);
+        $crawler = $client->followRedirect();
+        self::assertCount(1, $crawler->filterXPath('//select[@name="session_summary[recommendationUuids][]"]/option[@selected and @value="' . $recommendationUuid . '"]'));
+        $crawler = $client->request('GET', '/sessions/recommendations?query=' . urlencode($recommendationTitle));
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $crawler->filterXPath('//img[@src="/uploads/recommendations/recipe.jpg"]'));
     }
 
     public function testAdminCanPublishFromSessionListWithCsrf(): void

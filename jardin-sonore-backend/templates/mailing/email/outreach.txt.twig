@@ -1,0 +1,14 @@
+{% extends 'mailing/email/default.txt.twig' %}
+
+{% block mailing_content %}
+{% for sectionKey, sectionBlocks in visibleSections %}
+{% if sectionBlocks is not empty %}
+{{ ('mailing.sections.' ~ sectionKey)|trans({}, 'mailing') }}
+{% for block in sectionBlocks %}
+{% if block.textPlain %}{{ block.textPlain }}
+
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endblock %}

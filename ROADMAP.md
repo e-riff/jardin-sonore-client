@@ -2,6 +2,20 @@
 
 Mise à jour le 26 novembre 2026. Ce document est la **seule source de l'état courant, des priorités et du point de reprise**. `AGENTS.md` et `.codex/jardin-sonore-guidelines.md` décrivent la méthode de travail ; les plans, conceptions et bilans datés gardent le détail technique et l'état constaté à leur date. Ne pas reprendre leurs anciennes listes de tâches sans vérifier cette page. L'ordre général est : **visibilité et nouvelles demandes**, puis **gain de temps dans le backoffice**. Les priorités indiquent un ordre de travail, pas un engagement de livraison simultanée.
 
+## Newsletter et démarchage — premier lot implémenté en local
+
+Conception et plan validés le 26 novembre ; implémentation non commitée sur `feat/newsletter-outreach-lot-1`. Le premier lot distingue les types et modèles, ajoute les rubriques facultatives et prépare l'historique des établissements effectivement ciblés. Les préférences restent globales ; exclusion glissante, journal complet, masque newsletter réservé et articles publics appartiennent aux suites.
+
+La migration additive `Version20261126112154`, générée avec `make:migration`, est appliquée après accord utilisateur aux bases locales de développement et de test. Une nouvelle génération ne détecte aucun changement et la validation du schéma est correcte. Les anciennes migrations en attente restent intactes. Le retour arrière est relu et simulé, pas exécuté réellement.
+
+Validation du lot mailing : 793 tests PHP / 4 138 assertions sans échec (2 dépréciations, 15 notices), 8 tests JavaScript ; revue indépendante et corrections couvertes par régressions ; PHPStan, style, Twig et conteneur valides, 86 assets compilés. Recette navigateur du formulaire Twig réel : ajout, suppression, ordre, masquage avec conservation du contenu ; aucune erreur JavaScript ni débordement à 390 px. Aucun envoi réel, commit ou déploiement.
+
+Deux finitions mineures restent différées : nettoyage des images des rubriques à la suppression d'une campagne et compteur d'aperçu des recommandations masquées. Le rendu envoyé et l'historique d'utilisation respectent le masquage.
+
+Ajout demandé ensuite : rétablissement du sélecteur de prolongements dans l'édition de séance et miniature à gauche dans leur index, suivant le catalogue des recommandations. Régression HTTP d'ajout/enregistrement et affichage couverte ; validation finale consignée dans le plan.
+
+Références : [cadrage](docs/mailing-newsletter-demarchage-cadrage-2026-11-26.md), [plan du premier lot](docs/superpowers/plans/2026-11-26-newsletter-outreach-lot-1.md). Prochaine étape : relecture utilisateur avant toute demande de commit ou livraison.
+
 ## Recommandations mailing et prochaines suites — 26 novembre
 
 Lot déployé le 26 novembre sous `deploy-mailing-recommendations-20261126-01` (`c6123e99`) : correction de la lecture des utilisations par UUID binaire (les traces existantes réapparaissent), date de création visible et tri récent d’abord ; description limitée à 420 caractères visibles, liens intégrés par un petit bouton et adresses exclues du compteur. Formulaires, MCP, aperçu et versions HTML/texte des mails sont cohérents. Les images des recommandations et des blocs latéraux sont centrées verticalement. Validation : 766 tests backend, 4 062 assertions, sans échec (15 notices PHPUnit) ; PHPStan, style, Twig, conteneur et compilation de 86 assets valides. Recette navigateur du champ Twig réel sans sauvegarde ni envoi : liens, compteur Unicode et limites 420/421 valides.

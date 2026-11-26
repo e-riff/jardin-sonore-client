@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Mailing;
 
 use App\Domain\Model\Mailing\MailingCampaignStatus;
+use App\Domain\Model\Mailing\MailingCampaignType;
 use DateTimeImmutable;
 use Symfony\Component\Uid\Uuid;
 
@@ -22,6 +23,7 @@ final readonly class MailingCampaignSummary
         public bool $canStopDelivery,
         public bool $canBeDeleted,
         public bool $canExtendAudience,
+        public ?MailingCampaignType $campaignType = null,
     ) {
     }
 }

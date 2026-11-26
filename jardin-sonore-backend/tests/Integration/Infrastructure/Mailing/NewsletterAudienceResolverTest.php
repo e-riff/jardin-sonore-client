@@ -314,6 +314,39 @@ final class NewsletterAudienceResolverTest extends KernelTestCase
         self::assertSame([], $this->addresses($newsletterAudienceFilter));
     }
 
+    public function testSharedAddressOnlyCapturesTargetedOrganizations(): void
+    {
+        $firstOrganization = $this->organization();
+        $targetOrganization = $this->organization();
+        $email = $this->email('shared-snapshot');
+        $this->link($firstOrganization, $email);
+        $this->link($targetOrganization, $email);
+        $filter = new NewsletterAudienceFilter(directoryEntryUuids: [$targetOrganization->getUuid()->toRfc4122()]);
+        $recipients = $this->resolver()->resolve($filter)->getRecipients();
+        self::assertCount(1, $recipients);
+        $snapshots = $recipients[0]->getOrganizationSnapshots();
+        self::assertCount(1, $snapshots);
+        self::assertSame($targetOrganization->getUuid()->toRfc4122(), $snapshots[0]->organizationUuid->toRfc4122());
+    }
+
+    public function testDirectoryAndPortalUnionRetainsBothTargetedOrganizations(): void
+    {
+        $firstOrganization = $this->organization();
+        $secondOrganization = $this->organization();
+        $this->link($firstOrganization, $this->email('union-snapshot'));
+        $this->user('union-snapshot', [$secondOrganization]);
+        $recipients = $this->resolver()->resolve(NewsletterAudienceFilter::empty())->getRecipients();
+        self::assertCount(1, $recipients);
+        self::assertCount(2, $recipients[0]->getOrganizationSnapshots());
+    }
+
+    public function testFreeSubscriberDoesNotInventOrganizationSnapshot(): void
+    {
+        $this->email('free-snapshot', free: true);
+        $recipients = $this->resolver()->resolve(new NewsletterAudienceFilter(includeFreeSubscribers: true))->getRecipients();
+        self::assertSame([], $recipients[0]->getOrganizationSnapshots());
+    }
+
     private function resolver(): DoctrineNewsletterAudienceResolver
     {
         return new DoctrineNewsletterAudienceResolver($this->connection, '48.85', '2.35');

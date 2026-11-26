@@ -6,6 +6,8 @@ namespace App\Tests\Unit\Infrastructure\Mailing;
 
 use App\Application\Mailing\RenderedNewsletter;
 use App\Domain\Model\Mailing\MailingCampaign;
+use App\Domain\Model\Mailing\MailingCampaignContent;
+use App\Domain\Model\Mailing\MailingCampaignType;
 use App\Domain\Model\Mailing\MailingRecommendation;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Infrastructure\Mailing\NewsletterMainTextFormatter;
@@ -104,11 +106,32 @@ final class TwigNewsletterRendererTest extends TestCase
         self::assertMatchesRegularExpression('/class="mailing-intro-split-cell"[^>]*valign="middle"[^>]*vertical-align:middle/', $rendered->html);
     }
 
+    public function testNewsletterHidesDisabledSectionsInHtmlTextAndPreheader(): void
+    {
+        $rendered = $this->renderCampaign('Objet', null, '', recommendations: [new MailingRecommendation('Hidden book', null, 'Hidden recommendation', 1)], structuredContent: MailingCampaignContent::fromArray([
+            'version' => 1,
+            'sections' => [
+                'editorial' => ['enabled' => false, 'blocks' => [['id' => 'e', 'kind' => 'paragraph', 'text' => 'Secret editorial']]],
+                'monthly_idea' => ['enabled' => true, 'blocks' => [['id' => 'm', 'kind' => 'paragraph', 'text' => 'Visible idea']]],
+                'jardin_sonore' => ['enabled' => false, 'blocks' => []],
+                'recommendations' => ['enabled' => false, 'blocks' => []],
+            ],
+        ]));
+        self::assertStringContainsString('Visible idea', $rendered->html);
+        self::assertStringContainsString('Visible idea', $rendered->text);
+        self::assertSame('Visible idea', $rendered->preheader);
+        foreach ([$rendered->html, $rendered->text] as $body) {
+            self::assertStringNotContainsString('Secret editorial', $body);
+            self::assertStringNotContainsString('Hidden book', $body);
+            self::assertStringNotContainsString('Contact us', $body);
+        }
+    }
+
     /**
      * @param list<array<string, mixed>>|null $introBlocks
      * @param list<MailingRecommendation>     $recommendations
      */
-    private function renderCampaign(string $emailSubject, ?string $subtitle, string $mainText, ?array $introBlocks = null, ?string $preheader = null, array $recommendations = []): RenderedNewsletter
+    private function renderCampaign(string $emailSubject, ?string $subtitle, string $mainText, ?array $introBlocks = null, ?string $preheader = null, array $recommendations = [], ?MailingCampaignContent $structuredContent = null): RenderedNewsletter
     {
         $twig = new Environment(new FilesystemLoader(__DIR__ . '/../../../../templates'));
         $twig->addFunction(new TwigFunction('asset', static fn (string $path): string => "/{$path}"));
@@ -125,7 +148,11 @@ final class TwigNewsletterRendererTest extends TestCase
             emailSubject: $emailSubject,
             publicTitle: 'Titre public',
             mainText: $mainText,
-            templateKey: 'default',
+            templateKey: null === $structuredContent ? 'default' : 'newsletter',
+            campaignType: null === $structuredContent ? null : MailingCampaignType::NEWSLETTER,
+            structuredContent: $structuredContent,
+            callToActionLabel: 'Contact us',
+            callToActionUrl: 'https://example.test/contact',
             audienceFilter: NewsletterAudienceFilter::empty(),
             subtitle: $subtitle,
             introBlocks: $introBlocks,

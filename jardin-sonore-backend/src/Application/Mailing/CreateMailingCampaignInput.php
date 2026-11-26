@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Mailing;
 
+use App\Domain\Model\Mailing\MailingCampaignType;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 final readonly class CreateMailingCampaignInput
@@ -20,6 +21,7 @@ final readonly class CreateMailingCampaignInput
         public ?string $preheader = null,
         /** @var list<MailingIntroBlockInput>|null */
         public ?array $introBlocks = null,
+        public ?MailingCampaignType $campaignType = null,
     ) {
     }
 }

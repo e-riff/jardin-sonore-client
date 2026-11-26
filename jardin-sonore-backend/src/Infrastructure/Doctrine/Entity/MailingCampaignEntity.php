@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Doctrine\Entity;
 
 use App\Domain\Model\Mailing\MailingCampaignStatus;
+use App\Domain\Model\Mailing\MailingCampaignType;
 use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\UuidIdentifiableTrait;
 use DateTimeImmutable;
@@ -16,6 +17,11 @@ class MailingCampaignEntity
 {
     use IdentifiableTrait;
     use UuidIdentifiableTrait;
+
+    private ?MailingCampaignType $campaignType = null;
+
+    /** @var array<string, mixed>|null */
+    private ?array $structuredContent = null;
 
     private string $internalTitle = '';
 
@@ -75,6 +81,32 @@ class MailingCampaignEntity
     public function __toString(): string
     {
         return $this->internalTitle;
+    }
+
+    /** @return array<string, mixed>|null */
+    public function getStructuredContent(): ?array
+    {
+        return $this->structuredContent;
+    }
+
+    /** @param array<string, mixed>|null $structuredContent */
+    public function setStructuredContent(?array $structuredContent): static
+    {
+        $this->structuredContent = $structuredContent;
+
+        return $this;
+    }
+
+    public function getCampaignType(): ?MailingCampaignType
+    {
+        return $this->campaignType;
+    }
+
+    public function setCampaignType(?MailingCampaignType $campaignType): static
+    {
+        $this->campaignType = $campaignType;
+
+        return $this;
     }
 
     public function getInternalTitle(): string

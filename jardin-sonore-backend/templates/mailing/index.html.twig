@@ -78,7 +78,7 @@
                             <tr class="internal-table__row--clickable" tabindex="0" data-controller="catalog-row" data-catalog-row-url-value="{{ path('mailing_content', { uuid: campaign.uuid }) }}" data-action="click->catalog-row#navigate keydown->catalog-row#navigateFromKeyboard" aria-label="{{ 'mailing.index.open'|trans({ campaign: campaign.internalTitle }, 'mailing') }}">
                                 <td data-table-mobile="primary" data-label="{{ 'mailing.index.table.internal_title'|trans({}, 'mailing') }}">
                                     <span class="mailing-index__mobile-label">{{ 'mailing.index.table.internal_title'|trans({}, 'mailing') }}</span>
-                                    <strong class="mailing-index__campaign-title">{{ campaign.internalTitle }}</strong>
+                                    <strong class="mailing-index__campaign-title">{{ campaign.internalTitle }} <small>{{ ('mailing.type.' ~ (campaign.campaignType ? campaign.campaignType.value : 'legacy'))|trans({}, 'mailing') }}</small></strong>
                                 </td>
                                 <td data-table-mobile="secondary" data-label="{{ 'mailing.index.table.email_subject'|trans({}, 'mailing') }}">{{ campaign.emailSubject }}</td>
                                 <td data-table-mobile="primary" data-label="{{ 'mailing.index.table.status'|trans({}, 'mailing') }}">

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Form\Model;
 
+use App\Domain\Model\Mailing\MailingCampaignType;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Constraints\Image;
@@ -12,6 +13,9 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
 final class CreateMailingCampaignFormModel
 {
     use MailingIntroBlocksFormTrait;
+
+    #[Assert\NotNull]
+    public ?MailingCampaignType $campaignType = null;
 
     #[Assert\NotBlank]
     public string $internalTitle = '';

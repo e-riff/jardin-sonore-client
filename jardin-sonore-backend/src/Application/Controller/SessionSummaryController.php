@@ -277,7 +277,7 @@ final class SessionSummaryController extends AbstractController
                 }
             }
         }
-        $form = $this->createForm(SessionSummaryFormType::class, $formModel, ['allow_publication' => true, 'allow_recommendations' => false]);
+        $form = $this->createForm(SessionSummaryFormType::class, $formModel, ['allow_publication' => true]);
         $familyChoices = $families->listFamilies();
         $form->add('family', ChoiceType::class, [
             'mapped' => false,

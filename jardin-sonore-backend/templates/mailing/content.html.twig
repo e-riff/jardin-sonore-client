@@ -104,12 +104,19 @@
                 </p>
             </div>
 
+            {{ form_row(form.campaignType) }}
             {{ form_row(form.internalTitle) }}
             {{ form_row(form.emailSubject) }}
             {{ form_row(form.preheader) }}
             {{ form_row(form.publicTitle) }}
             {{ form_row(form.subtitle) }}
             {{ form_widget(form.mainText, { attr: { hidden: 'hidden' } }) }}
+            {% if form.sections is defined %}
+                {% do form.introBlocks.setRendered %}
+                {% for sectionKey, sectionForm in form.sections %}
+                    {% include 'mailing/_section_editor.html.twig' with { sectionKey: sectionKey, sectionForm: sectionForm, campaignLocked: campaignLocked } only %}
+                {% endfor %}
+            {% else %}
             {% if not campaignLocked %}
                 {% set introPrototype %}{% include 'mailing/_intro_block_row.html.twig' with { blockForm: form.introBlocks.vars.prototype, locked: false } only %}{% endset %}
             {% endif %}
@@ -133,6 +140,7 @@
                     </details>
                 {% endif %}
             </section>
+            {% endif %}
             <div class="internal-form__grid">
                 {{ form_row(form.callToActionLabel) }}
                 {{ form_row(form.callToActionUrl) }}

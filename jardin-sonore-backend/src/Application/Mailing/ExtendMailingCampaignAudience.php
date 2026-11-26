@@ -20,6 +20,7 @@ final readonly class ExtendMailingCampaignAudience
         private NewsletterAudienceResolverInterface $newsletterAudienceResolver,
         private MailingDeliveryQueueInterface $mailingDeliveryQueue,
         private LoggerInterface $mailingDeliveryLogger,
+        private MailingCampaignDeliveryTransactionInterface $mailingCampaignDeliveryTransaction,
     ) {
     }
 
@@ -29,6 +30,7 @@ final readonly class ExtendMailingCampaignAudience
             throw new InvalidArgumentException('Mailing campaign audience cannot be extended.');
         }
 
+        $mailingCampaign->assertAudienceAllowed($audienceFilter);
         $audienceResolution = $this->newsletterAudienceResolver->resolve($audienceFilter);
         $matchedRecipients = $audienceResolution->getRecipients();
 
@@ -59,12 +61,16 @@ final readonly class ExtendMailingCampaignAudience
             throw new InvalidArgumentException('Mailing campaign extension audience only contains already linked recipients.');
         }
 
-        $this->mailingDeliveryQueue->seedCampaignRecipients(
-            $mailingCampaign->getUuid()->toRfc4122(),
-            $newRecipients,
-        );
+        $queuedCampaign = clone $mailingCampaign;
+        $this->mailingCampaignDeliveryTransaction->run(function () use ($queuedCampaign, $newRecipients): void {
+            $this->mailingDeliveryQueue->seedCampaignRecipients(
+                $queuedCampaign->getUuid()->toRfc4122(),
+                $newRecipients,
+            );
+            $queuedCampaign->markDeliveryQueued();
+            $this->mailingCampaignRepository->save($queuedCampaign);
+        });
         $mailingCampaign->markDeliveryQueued();
-        $this->mailingCampaignRepository->save($mailingCampaign);
 
         $result = new ExtendMailingCampaignAudienceResult(
             matchedRecipientCount: count($matchedRecipients),

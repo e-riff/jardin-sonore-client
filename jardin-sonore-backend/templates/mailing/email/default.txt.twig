@@ -4,9 +4,9 @@
 {{ campaign.subtitle }}
 
 {% endif %}
-{{ introBlocks is null ? mainTextText : introText }}
+{% block mailing_content %}{{ introBlocks is null ? mainTextText : introText }}{% endblock %}
 
-{% if campaign.callToActionLabel and campaign.callToActionUrl %}
+{% if showCallToAction and campaign.callToActionLabel and campaign.callToActionUrl %}
 
 {{ campaign.callToActionLabel }} : {{ campaign.callToActionUrl }}
 {% endif %}

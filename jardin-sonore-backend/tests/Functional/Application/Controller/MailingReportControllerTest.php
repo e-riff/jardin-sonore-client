@@ -8,6 +8,7 @@ use App\Application\Mailing\CreateMailingCampaign;
 use App\Application\Mailing\CreateMailingCampaignInput;
 use App\Domain\Model\AddressBook\OrganizationSector;
 use App\Domain\Model\AddressBook\OrganizationType;
+use App\Domain\Model\Mailing\MailingCampaignType;
 use App\Domain\Model\Portal\UserStatus;
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
@@ -37,7 +38,7 @@ final class MailingReportControllerTest extends WebTestCase
         $entityManager->persist($admin);
         $entityManager->flush();
         $client->loginUser($admin);
-        $campaign = (static::getContainer()->get(CreateMailingCampaign::class))(new CreateMailingCampaignInput(
+        $campaign = (static::getContainer()->get(CreateMailingCampaign::class))(new CreateMailingCampaignInput(campaignType: MailingCampaignType::NEWSLETTER,
             internalTitle: 'Campagne bilan', emailSubject: 'Sujet', publicTitle: 'Titre', mainText: 'Contenu',
             subtitle: null, callToActionLabel: null, callToActionUrl: null, bannerImageFile: null,
         ));
