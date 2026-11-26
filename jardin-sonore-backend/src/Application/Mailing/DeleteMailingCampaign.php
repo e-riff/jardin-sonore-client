@@ -33,10 +33,18 @@ final readonly class DeleteMailingCampaign
         $this->mailingDeliveryQueue->deleteCampaignRecipients($mailingCampaign->getUuid()->toRfc4122());
         $this->mailingCampaignRepository->delete($mailingCampaign);
         $this->mailingBannerImageStorage->delete($mailingCampaign->getBannerImagePath());
-        foreach ($mailingCampaign->getIntroBlocks() ?? [] as $introBlock) {
+        $imagePaths = [];
+        $blocks = $mailingCampaign->getIntroBlocks() ?? [];
+        foreach ($mailingCampaign->getStructuredContent()?->toArray()['sections'] ?? [] as $section) {
+            array_push($blocks, ...$section['blocks']);
+        }
+        foreach ($blocks as $introBlock) {
             if (isset($introBlock['imagePath']) && is_string($introBlock['imagePath'])) {
-                $this->mailingIntroImageStorage->delete($introBlock['imagePath']);
+                $imagePaths[$introBlock['imagePath']] = true;
             }
+        }
+        foreach (array_keys($imagePaths) as $imagePath) {
+            $this->mailingIntroImageStorage->delete($imagePath);
         }
     }
 }

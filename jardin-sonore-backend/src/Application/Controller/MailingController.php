@@ -35,7 +35,6 @@ use App\Application\Mailing\StopMailingCampaignDelivery;
 use App\Application\Mailing\UpdateMailingCampaign;
 use App\Application\Mailing\UpdateMailingCampaignInput;
 use App\Domain\Model\Mailing\MailingCampaignStatus;
-use App\Domain\Model\Mailing\MailingRecommendation;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Domain\Model\Mailing\NewsletterAudienceRadiusOrigin;
 use InvalidArgumentException;
@@ -515,10 +514,7 @@ final class MailingController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        $activeRecommendationCount = count(array_filter(
-            $mailingCampaign->getRecommendations(),
-            static fn (MailingRecommendation $mailingRecommendation): bool => $mailingRecommendation->isActive(),
-        ));
+        $activeRecommendationCount = count($mailingCampaign->getVisibleRecommendations());
 
         $audienceRecipientCount = null;
 

@@ -2,19 +2,19 @@
 
 Mise à jour le 26 novembre 2026. Ce document est la **seule source de l'état courant, des priorités et du point de reprise**. `AGENTS.md` et `.codex/jardin-sonore-guidelines.md` décrivent la méthode de travail ; les plans, conceptions et bilans datés gardent le détail technique et l'état constaté à leur date. Ne pas reprendre leurs anciennes listes de tâches sans vérifier cette page. L'ordre général est : **visibilité et nouvelles demandes**, puis **gain de temps dans le backoffice**. Les priorités indiquent un ordre de travail, pas un engagement de livraison simultanée.
 
-## Newsletter et démarchage — premier lot implémenté en local
+## Newsletter et démarchage — premier lot déployé
 
-Conception et plan validés le 26 novembre ; implémentation non commitée sur `feat/newsletter-outreach-lot-1`. Le premier lot distingue les types et modèles, ajoute les rubriques facultatives et prépare l'historique des établissements effectivement ciblés. Les préférences restent globales ; exclusion glissante, journal complet, masque newsletter réservé et articles publics appartiennent aux suites.
+Conception et plan validés le 26 novembre ; livré sous `deploy-newsletter-outreach-20261126-01` (commit `397701d8`) depuis `feat/newsletter-outreach-lot-1`. Le premier lot distingue les types et modèles, ajoute les rubriques facultatives et prépare l'historique des établissements effectivement ciblés. Les préférences restent globales ; exclusion glissante, journal complet, masque newsletter réservé et articles publics appartiennent aux suites.
 
 La migration additive `Version20261126112154`, générée avec `make:migration`, est appliquée après accord utilisateur aux bases locales de développement et de test. Une nouvelle génération ne détecte aucun changement et la validation du schéma est correcte. Les anciennes migrations en attente restent intactes. Le retour arrière est relu et simulé, pas exécuté réellement.
 
-Validation du lot mailing : 793 tests PHP / 4 138 assertions sans échec (2 dépréciations, 15 notices), 8 tests JavaScript ; revue indépendante et corrections couvertes par régressions ; PHPStan, style, Twig et conteneur valides, 86 assets compilés. Recette navigateur du formulaire Twig réel : ajout, suppression, ordre, masquage avec conservation du contenu ; aucune erreur JavaScript ni débordement à 390 px. Aucun envoi réel, commit ou déploiement.
+Validation du lot mailing : 793 tests PHP / 4 138 assertions sans échec (2 dépréciations, 15 notices), 8 tests JavaScript ; revue indépendante et corrections couvertes par régressions ; PHPStan, style, Twig et conteneur valides, 86 assets compilés. Recette navigateur du formulaire Twig réel : ajout, suppression, ordre, masquage avec conservation du contenu ; aucune erreur JavaScript ni débordement à 390 px. Aucun envoi réel de recette. Déploiement effectué le 26 novembre : migration appliquée en production, schéma synchronisé, site et connexion backoffice HTTP 200.
 
-Deux finitions mineures restent différées : nettoyage des images des rubriques à la suppression d'une campagne et compteur d'aperçu des recommandations masquées. Le rendu envoyé et l'historique d'utilisation respectent le masquage.
+Deux finitions préparées ensuite en local : nettoyage des images des rubriques à la suppression d'une campagne et compteur d'aperçu des recommandations masquées. Elles restent distinctes du tag livré. Le rendu envoyé et l'historique d'utilisation respectent déjà le masquage.
 
 Ajout demandé ensuite : rétablissement du sélecteur de prolongements dans l'édition de séance et miniature à gauche dans leur index, suivant le catalogue des recommandations. Régression HTTP d'ajout/enregistrement et affichage couverte ; validation finale consignée dans le plan.
 
-Références : [cadrage](docs/mailing-newsletter-demarchage-cadrage-2026-11-26.md), [plan du premier lot](docs/superpowers/plans/2026-11-26-newsletter-outreach-lot-1.md). Prochaine étape : relecture utilisateur avant toute demande de commit ou livraison.
+Références : [cadrage](docs/mailing-newsletter-demarchage-cadrage-2026-11-26.md), [plan du premier lot](docs/superpowers/plans/2026-11-26-newsletter-outreach-lot-1.md). Prochaine étape : finaliser les deux finitions locales, puis cadrer le lot suivant (exclusion glissante et journal, avant préférences et audience newsletter).
 
 ## Recommandations mailing et prochaines suites — 26 novembre
 
