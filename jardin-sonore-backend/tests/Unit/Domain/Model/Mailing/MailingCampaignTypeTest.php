@@ -15,6 +15,14 @@ use PHPUnit\Framework\TestCase;
 
 final class MailingCampaignTypeTest extends TestCase
 {
+    public function testDeliveredOutreachCannotBeDeletedBecauseItsHistoryProtectsRecipients(): void
+    {
+        $campaign = $this->campaign();
+        $campaign->setCampaignType(MailingCampaignType::OUTREACH);
+        $campaign->markDeliverySent();
+        self::assertFalse($campaign->canBeDeleted());
+    }
+
     public function testLegacyDraftMustBeClassifiedBeforeDeliveryWithoutConvertingContent(): void
     {
         $campaign = $this->campaign();

@@ -26,6 +26,17 @@ final class MailingCampaignDoctrineRepository extends ServiceEntityRepository im
         parent::__construct($managerRegistry, MailingCampaignEntity::class);
     }
 
+    public function findFreshByUuid(Uuid $uuid): ?MailingCampaign
+    {
+        $entity = $this->findOneBy(['uuid' => $uuid]);
+        if (!$entity instanceof MailingCampaignEntity) {
+            return null;
+        }
+        $this->getEntityManager()->refresh($entity);
+
+        return $this->mailingCampaignMapper->toDomain($entity);
+    }
+
     public function findByUuid(Uuid $uuid): ?MailingCampaign
     {
         $mailingCampaignEntity = $this->findOneBy(['uuid' => $uuid]);

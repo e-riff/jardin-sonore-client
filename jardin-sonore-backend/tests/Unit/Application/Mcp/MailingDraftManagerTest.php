@@ -17,6 +17,22 @@ use Symfony\Component\Uid\Uuid;
 
 final class MailingDraftManagerTest extends TestCase
 {
+    public function testOutreachDelayIsReadableEditableAndPreservedOnPartialUpdate(): void
+    {
+        $campaign = null;
+        $repository = $this->createStub(MailingCampaignRepositoryInterface::class);
+        $repository->method('findByUuid')->willReturnCallback(static function () use (&$campaign): ?MailingCampaign { return $campaign; });
+        $repository->method('save')->willReturnCallback(static function (MailingCampaign $savedCampaign) use (&$campaign): void { $campaign = $savedCampaign; });
+        $manager = new MailingDraftManager($repository, $this->createStub(MailingAudienceMaskRepositoryInterface::class), new NewsletterRichTextFormatter(), 8);
+        $created = $manager->create(['requestId' => 'outreach-window', 'campaignType' => 'outreach', 'internalTitle' => 'Internal', 'emailSubject' => 'Subject', 'publicTitle' => 'Title', 'mainText' => 'Proposal']);
+        self::assertSame(8, $created['outreachExclusionWeeks']);
+        $updated = $manager->update($created['campaignUuid'], ['revision' => $created['revision'], 'outreachExclusionWeeks' => 3]);
+        self::assertSame(3, $updated['outreachExclusionWeeks']);
+        self::assertNotSame($created['revision'], $updated['revision']);
+        $partial = $manager->update($created['campaignUuid'], ['revision' => $updated['revision'], 'emailSubject' => 'Updated']);
+        self::assertSame(3, $partial['outreachExclusionWeeks']);
+    }
+
     public function testTypedDraftKeepsStructuredContentOnPartialUpdate(): void
     {
         $campaign = null;

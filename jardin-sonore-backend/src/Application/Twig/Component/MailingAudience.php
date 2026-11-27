@@ -16,11 +16,13 @@ use App\Application\Mailing\NewsletterAudienceMapQueryInterface;
 use App\Application\Mailing\NewsletterAudienceMunicipalityMaterializerInterface;
 use App\Application\Mailing\NewsletterAudienceResolution;
 use App\Application\Mailing\NewsletterAudienceResolverInterface;
+use App\Application\Mailing\OutreachAudiencePolicy;
 use App\Application\Mailing\UpdateMailingAudienceMask;
 use App\Application\Mailing\UpdateMailingCampaignAudience;
 use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Domain\Model\Mailing\NewsletterRecipient;
+use DateTimeImmutable;
 use InvalidArgumentException;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Form\FormError;
@@ -92,6 +94,7 @@ final class MailingAudience
      *     matchedRecipientCount:int,
      *     alreadyLinkedRecipientCount:int,
      *     newRecipientCount:int,
+     *     excludedRecipientCount:int,
      *     previewRecipients:list<NewsletterRecipient>
      * }|null
      */
@@ -115,6 +118,7 @@ final class MailingAudience
         private readonly string $homeLongitude,
         private readonly RequestStack $requestStack,
         private readonly UrlGeneratorInterface $urlGenerator,
+        private readonly OutreachAudiencePolicy $outreachAudiencePolicy,
     ) {
     }
 
@@ -187,6 +191,7 @@ final class MailingAudience
                     'matchedRecipientCount' => $result->matchedRecipientCount,
                     'alreadyLinkedRecipientCount' => $result->alreadyLinkedRecipientCount,
                     'newRecipientCount' => $result->newRecipientCount,
+                    'excludedRecipientCount' => $result->excludedRecipientCount,
                 ]);
             } else {
                 if (!$mailingCampaign->isEditable()) {
@@ -199,6 +204,7 @@ final class MailingAudience
         } catch (InvalidArgumentException $invalidArgumentException) {
             $translationKey = match ($invalidArgumentException->getMessage()) {
                 'Mailing campaign audience cannot be extended.' => 'mailing.flash.audience_extension_not_allowed',
+                'Mailing campaign extension audience is entirely excluded by recent outreach.' => 'mailing.outreach.extension_all_excluded',
                 'Mailing campaign extension audience is empty.' => 'mailing.flash.audience_extension_empty',
                 'Mailing campaign extension audience only contains already linked recipients.' => 'mailing.flash.audience_extension_no_delta',
                 default => 'mailing.flash.audience_extension_failed',
@@ -258,6 +264,7 @@ final class MailingAudience
      *     matchedRecipientCount:int,
      *     alreadyLinkedRecipientCount:int,
      *     newRecipientCount:int,
+     *     excludedRecipientCount:int,
      *     previewRecipients:list<NewsletterRecipient>
      * }|null
      */
@@ -586,6 +593,7 @@ final class MailingAudience
      *     matchedRecipientCount:int,
      *     alreadyLinkedRecipientCount:int,
      *     newRecipientCount:int,
+     *     excludedRecipientCount:int,
      *     previewRecipients:list<NewsletterRecipient>
      * }
      */
@@ -613,9 +621,15 @@ final class MailingAudience
             $previewRecipients[] = $newsletterRecipient;
         }
 
+        $alreadyLinkedRecipientCount = $audienceResolution->getTotal() - $newRecipientCount;
+        $selection = $this->outreachAudiencePolicy->select($this->resolveMailingCampaign(), $previewRecipients, new DateTimeImmutable());
+        $newRecipientCount = count($selection->recipients);
+        $previewRecipients = $selection->recipients;
+
         return [
             'matchedRecipientCount' => $audienceResolution->getTotal(),
-            'alreadyLinkedRecipientCount' => $audienceResolution->getTotal() - $newRecipientCount,
+            'alreadyLinkedRecipientCount' => $alreadyLinkedRecipientCount,
+            'excludedRecipientCount' => $selection->excludedRecipientCount,
             'newRecipientCount' => $newRecipientCount,
             'previewRecipients' => $previewRecipients,
         ];

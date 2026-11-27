@@ -20,12 +20,24 @@
         </div>
     </section>
 
+    {% if outreachSettingsForm %}
+        <section class="internal-card internal-card--form">
+            {{ form_start(outreachSettingsForm, {attr: {class: 'internal-form'}}) }}
+                {{ form_row(outreachSettingsForm.weeks) }}
+                {{ form_row(outreachSettingsForm.save) }}
+            {{ form_end(outreachSettingsForm) }}
+        </section>
+    {% endif %}
+
     <section class="internal-card mailing-preview-meta">
         <div>
             <p class="internal-eyebrow">{{ 'mailing.send.summary.eyebrow'|trans({}, 'mailing') }}</p>
             <h2>{{ 'mailing.send.summary.title'|trans({}, 'mailing') }}</h2>
         </div>
 
+        {% if campaign.campaignType and campaign.campaignType.value == 'outreach' %}
+            <p>{{ 'mailing.outreach.excluded'|trans({}, 'mailing') }} : {{ excludedRecipientCount }}</p>
+        {% endif %}
         {% if audienceError %}
             <div class="internal-alert internal-alert--error">
                 {{ audienceError|trans({}, 'mailing') }}

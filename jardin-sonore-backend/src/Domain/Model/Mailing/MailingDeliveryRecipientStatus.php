@@ -8,6 +8,8 @@ enum MailingDeliveryRecipientStatus: string
 {
     case PENDING = 'pending';
     case PROCESSING = 'processing';
+    case SENDING = 'sending';
+    case UNCERTAIN = 'uncertain';
     case SENT = 'sent';
     case FAILED = 'failed';
     case CANCELLED = 'cancelled';

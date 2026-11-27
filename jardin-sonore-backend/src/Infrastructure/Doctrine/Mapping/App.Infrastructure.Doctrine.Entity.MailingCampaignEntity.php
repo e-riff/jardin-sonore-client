@@ -35,6 +35,13 @@ return static function (ClassMetadata $metadata): void {
     ]);
 
     $metadata->mapField([
+        'fieldName' => 'outreachExclusionWeeks',
+        'columnName' => 'outreach_exclusion_weeks',
+        'type' => Types::INTEGER,
+        'options' => ['default' => 0],
+    ]);
+
+    $metadata->mapField([
         'fieldName' => 'structuredContent',
         'columnName' => 'structured_content',
         'type' => Types::JSON,

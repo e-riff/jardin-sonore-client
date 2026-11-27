@@ -9,6 +9,8 @@ use Symfony\Component\Uid\Uuid;
 
 interface MailingCampaignRepositoryInterface
 {
+    public function findFreshByUuid(Uuid $uuid): ?MailingCampaign;
+
     public function findByUuid(Uuid $uuid): ?MailingCampaign;
 
     /**

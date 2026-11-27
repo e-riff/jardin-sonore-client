@@ -10,6 +10,7 @@ final readonly class ExtendMailingCampaignAudienceResult
         public int $matchedRecipientCount,
         public int $alreadyLinkedRecipientCount,
         public int $newRecipientCount,
+        public int $excludedRecipientCount = 0,
     ) {
     }
 }

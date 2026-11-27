@@ -86,8 +86,11 @@ final class SessionSummaryType extends AbstractType
 
         if ($options['allow_recommendations']) {
             $recommendationChoices = [];
+            $recommendationImages = [];
             foreach ($this->sessionRecommendationRepository->search(activeOnly: true) as $sessionRecommendation) {
-                $recommendationChoices[$sessionRecommendation->getTitle()] = $sessionRecommendation->getUuid()->toRfc4122();
+                $recommendationUuid = $sessionRecommendation->getUuid()->toRfc4122();
+                $recommendationChoices[$sessionRecommendation->getTitle()] = $recommendationUuid;
+                $recommendationImages[$recommendationUuid] = $sessionRecommendation->getImagePath();
             }
 
             $builder
@@ -96,6 +99,7 @@ final class SessionSummaryType extends AbstractType
                     'required' => false,
                     'multiple' => true,
                     'choices' => $recommendationChoices,
+                    'choice_attr' => static fn (string $uuid): array => ['data-image-path' => $recommendationImages[$uuid] ?? ''],
                 ])
                 ->add('recommendationOrder', HiddenType::class, ['empty_data' => '']);
         }

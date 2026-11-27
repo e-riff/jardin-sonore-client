@@ -37,6 +37,13 @@ class MailingDeliveryRecipientEntity
 
     private ?string $lastError = null;
 
+    private ?string $cancellationReason = null;
+
+    public function getCancellationReason(): ?string
+    {
+        return $this->cancellationReason;
+    }
+
     public function __toString(): string
     {
         return $this->emailAddress;

@@ -43,7 +43,11 @@ final class SessionPublicationControllerTest extends WebTestCase
         $recommendationUuid = $sessionRecommendationEntity->getUuid()->toRfc4122();
         $crawler = $client->request('GET', $path);
         self::assertResponseIsSuccessful();
-        self::assertCount(1, $crawler->filterXPath('//*[@id="session_recommendation_add"]'));
+        self::assertCount(0, $crawler->filterXPath('//*[@id="session_recommendation_add"]'));
+        self::assertCount(1, $crawler->filterXPath('//dialog[@id="session-recommendation-picker"]'));
+        self::assertCount(1, $crawler->filterXPath('//dialog//button[@data-choice-value="' . $recommendationUuid . '"]//img[@src="/uploads/recommendations/recipe.jpg"]'));
+        self::assertCount(0, $crawler->filterXPath('//label[@for="session_summary_generalNotes"]'));
+        self::assertStringContainsString('Notes privées', $crawler->filterXPath('//summary[h2[@id="session-private-notes-heading"]]')->text());
         $form = $crawler->filterXPath('//form[@name="session_summary"]')->form();
         $form['session_summary[recommendationUuids]']->select([$recommendationUuid]);
         $form['session_summary[recommendationOrder]'] = $recommendationUuid;

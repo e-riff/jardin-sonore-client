@@ -177,9 +177,9 @@ final class SessionTemplateRegressionTest extends TestCase
         $template = file_get_contents(__DIR__ . '/../../../templates/session/_summary_form.html.twig');
 
         self::assertIsString($template);
-        self::assertStringContainsString('data-controller="ordered-choice"', $template);
+        self::assertStringContainsString('data-controller="ordered-choice internal-dialog"', $template);
         self::assertStringContainsString('data-ordered-choice-target="list"', $template);
-        self::assertStringContainsString('data-ordered-choice-target="add"', $template);
+        self::assertStringContainsString('data-ordered-choice-target="choice"', $template);
     }
 
     public function testOrderedChoicesRestoreThePersistedOrderOnPageLoad(): void

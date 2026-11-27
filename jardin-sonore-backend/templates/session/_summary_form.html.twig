@@ -1,4 +1,6 @@
 {{ form_start(form, { attr: { class: 'internal-form' } }) }}
+    <section class="session-summary-section session-summary-section--general" aria-labelledby="session-general-heading">
+        <div class="session-summary-section__heading"><h2 id="session-general-heading">{{ 'sessions.summary.form.general_heading'|trans({}, 'sessions') }}</h2></div>
     <div class="internal-form__grid">
         {{ form_row(form.title) }}
         {{ form_row(form.subtitle) }}
@@ -25,34 +27,55 @@
         {{ form_row(form.organizations, {row_attr: {class: 'session-summary-form__organization'}}) }}
     </div>
 
-    <details class="session-summary-form__private-notes" {% if form.generalNotes.vars.data %}open{% endif %}>
-        <summary>{{ 'sessions.summary.form.private_notes_heading'|trans({}, 'sessions') }}</summary>
-        <p>{{ 'sessions.summary.form.private_notes_help'|trans({}, 'sessions') }}</p>
-        {{ form_row(form.generalNotes) }}
+    </section>
+
+    <details class="session-summary-section session-summary-section--notes" {% if form.generalNotes.vars.data %}open{% endif %}>
+        <summary><h2 id="session-private-notes-heading">{{ 'sessions.summary.form.private_notes_heading'|trans({}, 'sessions') }}</h2></summary>
+        <div class="session-summary-section__body">
+            {{ form_widget(form.generalNotes, {attr: {'aria-labelledby': 'session-private-notes-heading'}}) }}
+            {{ form_errors(form.generalNotes) }}
+        </div>
     </details>
 
-    {% if form.recommendationUuids is defined %}<div
-        data-controller="ordered-choice"
+    {% if form.recommendationUuids is defined %}<section class="session-summary-section"
+        aria-labelledby="session-recommendations-heading"
+        data-controller="ordered-choice internal-dialog"
+        data-action="ordered-choice:selected->internal-dialog#close"
         data-ordered-choice-move-up-label-value="{{ 'sessions.summary.form.recommendations_move_up'|trans({}, 'sessions') }}"
         data-ordered-choice-move-down-label-value="{{ 'sessions.summary.form.recommendations_move_down'|trans({}, 'sessions') }}"
         data-ordered-choice-remove-label-value="{{ 'sessions.summary.form.recommendations_remove'|trans({}, 'sessions') }}"
     >
-        {{ form_label(form.recommendationUuids) }}
-        {{ form_widget(form.recommendationOrder, { attr: { 'data-ordered-choice-target': 'order' } }) }}
-        {{ form_widget(form.recommendationUuids, { attr: { class: 'ordered-choice__source', 'data-ordered-choice-target': 'source' } }) }}
-        <div class="ordered-choice__add">
-            <label for="session_recommendation_add">{{ 'sessions.summary.form.recommendations_add'|trans({}, 'sessions') }}</label>
-            <select id="session_recommendation_add" data-ordered-choice-target="add" data-action="change->ordered-choice#add">
-                <option value="">{{ 'sessions.summary.form.recommendations_add_placeholder'|trans({}, 'sessions') }}</option>
-                {% for choice in form.recommendationUuids.vars.choices %}
-                    <option value="{{ choice.value }}">{{ choice.label }}</option>
-                {% endfor %}
-            </select>
+        <div class="session-summary-section__heading">
+            <h2 id="session-recommendations-heading">{{ 'sessions.summary.form.recommendations'|trans({}, 'sessions') }}</h2>
+            <button type="button" class="internal-icon-button" data-action="internal-dialog#open" aria-haspopup="dialog" aria-controls="session-recommendation-picker" title="{{ 'sessions.summary.form.recommendations_add'|trans({}, 'sessions') }}" aria-label="{{ 'sessions.summary.form.recommendations_add'|trans({}, 'sessions') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'plus'} only %}</button>
         </div>
+        {{ form_widget(form.recommendationOrder, { attr: { 'data-ordered-choice-target': 'order' } }) }}
+        {{ form_widget(form.recommendationUuids, { attr: { class: 'ordered-choice__source', 'data-ordered-choice-target': 'source', tabindex: '-1', 'aria-hidden': 'true', 'aria-labelledby': 'session-recommendations-heading' } }) }}
         <ul class="ordered-choice__list" data-ordered-choice-target="list"></ul>
-        <p class="internal-form-help">{{ 'sessions.summary.form.recommendations_order_help'|trans({}, 'sessions') }}</p>
         {{ form_errors(form.recommendationUuids) }}
-    </div>{% endif %}
+        <dialog id="session-recommendation-picker" class="internal-form-dialog session-recommendation-picker" aria-labelledby="session-recommendation-picker-heading" data-internal-dialog-target="dialog" data-action="click->internal-dialog#closeOnBackdrop">
+            <div class="internal-form-dialog__panel">
+                <div class="session-summary-section__heading">
+                    <h2 id="session-recommendation-picker-heading">{{ 'sessions.summary.form.recommendations_add'|trans({}, 'sessions') }}</h2>
+                    <button type="button" class="internal-icon-button" data-action="internal-dialog#close" aria-label="{{ 'sessions.summary.form.picker_close'|trans({}, 'sessions') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'close'} only %}</button>
+                </div>
+                <label for="session-recommendation-search">{{ 'sessions.summary.form.picker_search'|trans({}, 'sessions') }}</label>
+                <input id="session-recommendation-search" type="search" autocomplete="off" data-ordered-choice-target="search" data-action="input->ordered-choice#filter">
+                <div class="session-recommendation-picker__choices">
+                    {% for choice in form.recommendationUuids.vars.choices %}
+                        {% set imagePath = choice.attr['data-image-path']|default('') %}
+                        <button type="button" class="session-recommendation-picker__choice" data-ordered-choice-target="choice" data-choice-value="{{ choice.value }}" data-image-url="{{ imagePath ? asset(imagePath) : '' }}" data-action="ordered-choice#choose">
+                            <span>{{ choice.label }}</span>
+                            {% if imagePath %}<img src="{{ asset(imagePath) }}" alt="" loading="lazy">{% endif %}
+                        </button>
+                    {% else %}<p>{{ 'sessions.summary.form.picker_empty'|trans({}, 'sessions') }}</p>{% endfor %}
+                </div>
+                <div class="internal-form__actions">
+                    <button type="button" class="internal-button internal-button--secondary" data-action="internal-dialog#close">{{ 'sessions.summary.form.picker_close'|trans({}, 'sessions') }}</button>
+                </div>
+            </div>
+        </dialog>
+    </section>{% endif %}
 
     <div class="internal-form__actions">
         {{ form_widget(form.submit) }}

@@ -20,6 +20,7 @@
     </section>
 
     {% if audienceExtensionResult %}
+        <p>{{ 'mailing.outreach.excluded'|trans({}, 'mailing') }} : {{ audienceExtensionResult.excludedRecipientCount|default(0) }}</p>
         <section class="internal-card internal-card--compact">
             <div>
                 <p class="internal-eyebrow">{{ 'mailing.audience.extend.last_run_eyebrow'|trans({}, 'mailing') }}</p>

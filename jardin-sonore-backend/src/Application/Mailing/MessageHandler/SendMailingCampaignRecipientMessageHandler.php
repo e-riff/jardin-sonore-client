@@ -5,17 +5,19 @@ declare(strict_types=1);
 namespace App\Application\Mailing\MessageHandler;
 
 use App\Application\Mailing\MailingDeliveryQueueInterface;
+use App\Application\Mailing\MailingExecutionLockInterface;
 use App\Application\Mailing\Message\SendMailingCampaignRecipientMessage;
 use App\Application\Mailing\NewsletterMailSenderInterface;
 use App\Application\Mailing\NewsletterRecipientEligibilityInterface;
 use App\Application\Mailing\NewsletterRendererInterface;
+use App\Application\Mailing\OutreachAudiencePolicy;
 use App\Application\Mailing\RecordNewsletterRecommendationUsages;
 use App\Application\Mailing\SendMailingCampaignCompletionSummary;
 use App\Domain\Model\Mailing\MailingCampaignStatus;
-use App\Domain\Model\Mailing\NewsletterRecipient;
-use App\Domain\Model\ValueObject\EmailAddress;
+use App\Domain\Model\Mailing\MailingCampaignType;
+use App\Domain\Model\Mailing\MailingDeliveryRecipientStatus;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
-use InvalidArgumentException;
+use DateTimeImmutable;
 use Monolog\Attribute\WithMonologChannel;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -35,34 +37,57 @@ final readonly class SendMailingCampaignRecipientMessageHandler
         private LoggerInterface $mailingDeliveryLogger,
         private NewsletterRecipientEligibilityInterface $newsletterRecipientEligibility,
         private SendMailingCampaignCompletionSummary $sendMailingCampaignCompletionSummary,
+        private MailingExecutionLockInterface $mailingExecutionLock,
+        private OutreachAudiencePolicy $outreachAudiencePolicy,
     ) {
     }
 
     public function __invoke(SendMailingCampaignRecipientMessage $message): void
     {
+        $this->mailingExecutionLock->run('recipient-' . $message->deliveryRecipientId, function () use ($message): void {
+            $campaign = Uuid::isValid($message->campaignUuid) ? $this->mailingCampaignRepository->findFreshByUuid(Uuid::fromString($message->campaignUuid)) : null;
+            if (null === $campaign) {
+                return;
+            }
+            if (MailingCampaignType::OUTREACH === $campaign->getCampaignType()) {
+                $this->mailingExecutionLock->run('outreach', function () use ($message): void { $this->deliver($message); });
+            } else {
+                $this->deliver($message);
+            }
+        });
+    }
+
+    private function deliver(SendMailingCampaignRecipientMessage $message): void
+    {
         if (!Uuid::isValid($message->campaignUuid)) {
             return;
         }
 
-        $mailingCampaign = $this->mailingCampaignRepository->findByUuid(Uuid::fromString($message->campaignUuid));
+        $mailingCampaign = $this->mailingCampaignRepository->findFreshByUuid(Uuid::fromString($message->campaignUuid));
 
         if (null === $mailingCampaign) {
             return;
         }
 
-        try {
-            $newsletterRecipient = new NewsletterRecipient(
-                emailAddress: new EmailAddress($message->recipientEmail),
-                unsubscribeToken: $message->unsubscribeToken,
-                displayName: $message->displayName,
-            );
-        } catch (InvalidArgumentException) {
+        $queuedRecipient = $this->mailingDeliveryQueue->findDeliveryRecipient($message->deliveryRecipientId);
+        if (null === $queuedRecipient || $queuedRecipient->campaignUuid !== $message->campaignUuid || !in_array($queuedRecipient->status, [MailingDeliveryRecipientStatus::PROCESSING->value, MailingDeliveryRecipientStatus::FAILED->value], true)) {
             return;
         }
+        $newsletterRecipient = $queuedRecipient->recipient;
 
+        $smtpAccepted = false;
+        $successRecorded = false;
         try {
-            if (!$this->newsletterRecipientEligibility->isEligible($newsletterRecipient->getEmailAddress()->value())) {
-                $this->mailingDeliveryQueue->markCancelled($message->deliveryRecipientId);
+            $cancellationReason = null;
+            if (MailingCampaignStatus::DELIVERY_STOPPED === $mailingCampaign->getStatus()) {
+                $cancellationReason = 'campaign_stopped';
+            } elseif (!$this->newsletterRecipientEligibility->isEligible($newsletterRecipient->getEmailAddress()->value())) {
+                $cancellationReason = 'unsubscribed';
+            } elseif (0 < $this->outreachAudiencePolicy->select($mailingCampaign, [$newsletterRecipient], new DateTimeImmutable())->excludedRecipientCount) {
+                $cancellationReason = 'recent_outreach';
+            }
+            if (null !== $cancellationReason) {
+                $this->mailingDeliveryQueue->markCancelled($message->deliveryRecipientId, $cancellationReason);
                 $this->mailingDeliveryLogger->info('Newsletter recipient cancelled after eligibility check.', [
                     'campaign_uuid' => $mailingCampaign->getUuid()->toRfc4122(),
                     'campaign_title' => $mailingCampaign->getInternalTitle(),
@@ -71,8 +96,11 @@ final readonly class SendMailingCampaignRecipientMessageHandler
                 ]);
             } else {
                 $renderedNewsletter = $this->newsletterRenderer->render($mailingCampaign);
+                $this->mailingDeliveryQueue->markSending($message->deliveryRecipientId);
                 $this->newsletterMailSender->sendToRecipient($renderedNewsletter, $newsletterRecipient);
+                $smtpAccepted = true;
                 $this->mailingDeliveryQueue->markSent($message->deliveryRecipientId);
+                $successRecorded = true;
                 $this->mailingDeliveryLogger->info('Newsletter recipient sent.', [
                     'campaign_uuid' => $mailingCampaign->getUuid()->toRfc4122(),
                     'campaign_title' => $mailingCampaign->getInternalTitle(),
@@ -82,21 +110,27 @@ final readonly class SendMailingCampaignRecipientMessageHandler
                 ]);
             }
         } catch (Throwable $throwable) {
-            $this->mailingDeliveryQueue->markFailed($message->deliveryRecipientId, $throwable->getMessage());
-            $this->mailingDeliveryLogger->error('Newsletter recipient failed.', [
-                'campaign_uuid' => $mailingCampaign->getUuid()->toRfc4122(),
-                'campaign_title' => $mailingCampaign->getInternalTitle(),
-                'delivery_recipient_id' => $message->deliveryRecipientId,
-                'recipient_email' => $message->recipientEmail,
-                'error' => $throwable->getMessage(),
-            ]);
+            if ($smtpAccepted) {
+                if (!$successRecorded) {
+                    $this->mailingDeliveryQueue->markUncertain($message->deliveryRecipientId, $throwable->getMessage());
+                }
+            } else {
+                $this->mailingDeliveryQueue->markFailed($message->deliveryRecipientId, $throwable->getMessage());
+                $this->mailingDeliveryLogger->error('Newsletter recipient failed.', [
+                    'campaign_uuid' => $mailingCampaign->getUuid()->toRfc4122(),
+                    'campaign_title' => $mailingCampaign->getInternalTitle(),
+                    'delivery_recipient_id' => $message->deliveryRecipientId,
+                    'recipient_email' => $message->recipientEmail,
+                    'error' => $throwable->getMessage(),
+                ]);
 
-            if (MailingCampaignStatus::DELIVERY_STOPPED !== $mailingCampaign->getStatus()) {
-                $mailingCampaign->markDeliveryFailed();
-                $this->mailingCampaignRepository->save($mailingCampaign);
+                if (MailingCampaignStatus::DELIVERY_STOPPED !== $mailingCampaign->getStatus()) {
+                    $mailingCampaign->markDeliveryFailed();
+                    $this->mailingCampaignRepository->save($mailingCampaign);
+                }
+
+                throw $throwable;
             }
-
-            throw $throwable;
         }
 
         if ($this->mailingDeliveryQueue->hasOutstandingRecipients($message->campaignUuid)) {

@@ -241,6 +241,7 @@
             </div>
         {% elseif resolution %}
             {% if is_extension_mode and audience_delta %}
+                <p>{{ 'mailing.outreach.excluded'|trans({}, 'mailing') }} : {{ audience_delta.excludedRecipientCount }}</p>
                 <div class="internal-stats-grid">
                     <article class="internal-stat-card">
                         <strong>{{ audience_delta.matchedRecipientCount }}</strong>

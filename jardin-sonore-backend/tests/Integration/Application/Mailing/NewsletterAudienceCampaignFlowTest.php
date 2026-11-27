@@ -69,7 +69,7 @@ final class NewsletterAudienceCampaignFlowTest extends KernelTestCase
         ]);
         $resolver = $this->createStub(NewsletterAudienceResolverInterface::class);
         $resolver->method('resolve')->willReturn(new NewsletterAudienceResolution(2, [$recipient, $recipient]));
-        $send = new SendMailingCampaign($repository, $resolver, self::getContainer()->get(DoctrineMailingDeliveryQueue::class), new NullLogger(), self::getContainer()->get(MailingCampaignDeliveryTransactionInterface::class));
+        $send = new SendMailingCampaign($repository, $resolver, self::getContainer()->get(DoctrineMailingDeliveryQueue::class), new NullLogger(), self::getContainer()->get(MailingCampaignDeliveryTransactionInterface::class), self::getContainer()->get(\App\Application\Mailing\OutreachAudiencePolicy::class));
         try {
             $send($campaign);
             self::fail('Duplicate recipients must reject the whole delivery.');

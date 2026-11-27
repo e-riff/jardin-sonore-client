@@ -41,8 +41,10 @@ final class MailingCampaign implements UuidIdentifiableInterface
         ?Uuid $uuid = null,
         private ?MailingCampaignType $campaignType = null,
         private ?MailingCampaignContent $structuredContent = null,
+        private int $outreachExclusionWeeks = 0,
     ) {
         $this->initializeUuid($uuid);
+        self::assertOutreachExclusionWeeks($outreachExclusionWeeks);
         if (null !== $structuredContent && null !== $campaignType) {
             $structuredContent->assertMatchesType($campaignType);
         }
@@ -60,6 +62,26 @@ final class MailingCampaign implements UuidIdentifiableInterface
         $this->assertAppliedAudienceMaskIsConsistent();
         $this->assertStatusIsConsistent($status, $lastTestSentAt);
         $this->assertAudienceAllowed($audienceFilter);
+    }
+
+    public function getOutreachExclusionWeeks(): int
+    {
+        return $this->outreachExclusionWeeks;
+    }
+
+    public function setOutreachExclusionWeeks(int $weeks): void
+    {
+        $this->assertEditable();
+        self::assertOutreachExclusionWeeks($weeks);
+        $this->outreachExclusionWeeks = $weeks;
+        $this->markAsUpdated();
+    }
+
+    private static function assertOutreachExclusionWeeks(int $weeks): void
+    {
+        if (0 > $weeks || 520 < $weeks) {
+            throw new InvalidArgumentException('Outreach exclusion must be between 0 and 520 weeks.');
+        }
     }
 
     public function getCampaignType(): ?MailingCampaignType
@@ -463,6 +485,10 @@ final class MailingCampaign implements UuidIdentifiableInterface
 
     public function canBeDeleted(): bool
     {
+        if (MailingCampaignType::OUTREACH === $this->campaignType && $this->hasDeliveryStarted()) {
+            return false;
+        }
+
         return !in_array($this->status, [
             MailingCampaignStatus::DELIVERY_QUEUED,
             MailingCampaignStatus::DELIVERY_SENDING,

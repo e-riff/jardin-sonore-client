@@ -18,6 +18,14 @@ return static function (ClassMetadata $metadata): void {
     ]);
 
     $metadata->mapField([
+        'fieldName' => 'cancellationReason',
+        'columnName' => 'cancellation_reason',
+        'type' => Types::STRING,
+        'length' => 32,
+        'nullable' => true,
+    ]);
+
+    $metadata->mapField([
         'fieldName' => 'id',
         'type' => Types::BIGINT,
         'id' => true,

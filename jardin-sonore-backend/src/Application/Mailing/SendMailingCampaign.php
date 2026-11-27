@@ -6,6 +6,7 @@ namespace App\Application\Mailing;
 
 use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
+use DateTimeImmutable;
 use InvalidArgumentException;
 use Monolog\Attribute\WithMonologChannel;
 use Psr\Log\LoggerInterface;
@@ -19,6 +20,7 @@ final readonly class SendMailingCampaign
         private MailingDeliveryQueueInterface $mailingDeliveryQueue,
         private LoggerInterface $mailingDeliveryLogger,
         private MailingCampaignDeliveryTransactionInterface $mailingCampaignDeliveryTransaction,
+        private OutreachAudiencePolicy $outreachAudiencePolicy,
     ) {
     }
 
@@ -30,8 +32,9 @@ final readonly class SendMailingCampaign
 
         $mailingCampaign->assertReadyForDelivery();
         $audienceResolution = $this->newsletterAudienceResolver->resolve($mailingCampaign->getAudienceFilter());
-        $recipients = $audienceResolution->getRecipients();
-        $total = $audienceResolution->getTotal();
+        $selection = $this->outreachAudiencePolicy->select($mailingCampaign, $audienceResolution->getRecipients(), new DateTimeImmutable());
+        $recipients = $selection->recipients;
+        $total = count($recipients);
 
         if (0 === $total) {
             throw new InvalidArgumentException('Mailing campaign audience is empty.');

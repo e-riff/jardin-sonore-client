@@ -41,6 +41,8 @@ mailing_summary:
   count:
     sent: 'Envoyés'
     failed: 'En échec'
-    cancelled: 'Annulés (consentement ou retrait)'
+    cancelled: 'Annulés (désabonnement, arrêt ou exclusion)'
     pending: 'En attente'
     processing: 'En cours'
+    sending: 'En cours de confirmation'
+    uncertain: 'À vérifier sans reprise automatique'

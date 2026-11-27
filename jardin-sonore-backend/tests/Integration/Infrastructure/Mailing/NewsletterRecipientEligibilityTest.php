@@ -144,6 +144,7 @@ final class NewsletterRecipientEligibilityTest extends KernelTestCase
         $mailingDeliveryQueue = new DoctrineMailingDeliveryQueue($this->connection);
         $mailingCampaignRepository = $this->createStub(MailingCampaignRepositoryInterface::class);
         $mailingCampaignRepository->method('findByUuid')->willReturn($mailingCampaign);
+        $mailingCampaignRepository->method('findFreshByUuid')->willReturn($mailingCampaign);
         $newsletterRenderer = $this->createMock(NewsletterRendererInterface::class);
         $newsletterRenderer->expects($this->never())->method('render');
         $newsletterMailSender = $this->createMock(NewsletterMailSenderInterface::class);
@@ -158,6 +159,8 @@ final class NewsletterRecipientEligibilityTest extends KernelTestCase
                 $this->createStub(MailingCampaignSummarySenderInterface::class),
                 new NullLogger(),
             ),
+            self::getContainer()->get(\App\Application\Mailing\MailingExecutionLockInterface::class),
+            self::getContainer()->get(\App\Application\Mailing\OutreachAudiencePolicy::class),
         );
         $handler($message);
 

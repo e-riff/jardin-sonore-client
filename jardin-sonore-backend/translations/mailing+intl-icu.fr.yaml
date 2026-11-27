@@ -594,3 +594,38 @@ mailing.form.choose_type: Choisir le type de campagne
 mailing.form.section_enabled: Inclure cette rubrique dans le mail
 
 mailing.form.outreach_subscribers_invalid: Retirez les abonnés libres du ciblage avant de choisir le démarchage.
+
+mailing.outreach.window_label: "Espacement entre démarchages (semaines)"
+mailing.outreach.window_help: "0 désactive l’exclusion. Une adresse partagée est exclue si l’un des établissements ciblés a été démarché récemment. Le contrôle est refait avant l’envoi."
+mailing.outreach.save_settings: "Enregistrer le délai"
+mailing.outreach.settings_saved: "Le délai est enregistré."
+mailing.outreach.excluded: "Adresses exclues pour démarchage récent"
+mailing.outreach.retained: "Adresses retenues après exclusion"
+mailing.outreach.journal_title: "Journal des démarchages"
+mailing.outreach.journal_help: "Historique des établissements effectivement ciblés. Un envoi ne garantit ni réception ni lecture. Les dates et informations des établissements sont conservées telles qu’elles étaient lors du ciblage."
+mailing.outreach.organization_type: "Type d’établissement"
+mailing.outreach.campaign: "Campagne"
+mailing.outreach.since: "Du"
+mailing.outreach.until: "Au"
+mailing.outreach.filter: "Filtrer"
+mailing.outreach.summary: "Envois par type d’établissement"
+mailing.outreach.summary_help: "Les 50 derniers groupes campagne/type envoyés dans le périmètre sélectionné. Les nombres concernent seulement les établissements et adresses effectivement ciblés."
+mailing.outreach.period: "Période d’envoi"
+mailing.outreach.organizations: "Établissements distincts"
+mailing.outreach.details: "Détail des destinataires ciblés"
+mailing.outreach.municipality: "Commune (code INSEE)"
+mailing.outreach.invalid_dates: "La date de fin doit suivre la date de début."
+mailing.outreach.reason.unsubscribed: "Désabonnement"
+mailing.outreach.reason.recent_outreach: "Démarchage récent"
+mailing.outreach.reason.campaign_stopped: "Campagne arrêtée"
+
+mailing.outreach.invalid_filters: "Vérifiez les filtres : identifiants, dates et numéro de page."
+
+mailing.outreach.all_organizations: "Tous les établissements"
+mailing.outreach.all_campaigns: "Toutes les campagnes"
+mailing.outreach.all_types: "Tous les types"
+
+mailing.report.status.sending: "Envoi en cours de confirmation"
+mailing.report.status.uncertain: "Envoi à vérifier (confirmation non enregistrée)"
+
+mailing.outreach.extension_all_excluded: "Toutes les nouvelles adresses sont exclues pour démarchage récent."

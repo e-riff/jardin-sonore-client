@@ -34,7 +34,7 @@ final readonly class MailingReportQuery
                 WHERE delivery.campaign_uuid = :campaign AND delivery.status = 'sent' AND organization.name LIKE :search";
             $order = 'name, id';
         } else {
-            $source = 'SELECT delivery.email_address, delivery.display_name, delivery.status, delivery.sent_at, delivery.last_error FROM mailing_delivery_recipient delivery WHERE delivery.campaign_uuid = :campaign AND delivery.email_address LIKE :search';
+            $source = 'SELECT delivery.email_address, delivery.display_name, delivery.status, delivery.sent_at, delivery.last_error, delivery.cancellation_reason FROM mailing_delivery_recipient delivery WHERE delivery.campaign_uuid = :campaign AND delivery.email_address LIKE :search';
             $order = 'email_address';
         }
         $total = (int) $this->connection->fetchOne("SELECT COUNT(*) FROM ({$source}) report_rows", $params);

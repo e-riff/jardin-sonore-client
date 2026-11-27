@@ -70,6 +70,20 @@ class MailingCampaignEntity
      */
     private Collection $recommendations;
 
+    private int $outreachExclusionWeeks = 0;
+
+    public function getOutreachExclusionWeeks(): int
+    {
+        return $this->outreachExclusionWeeks;
+    }
+
+    public function setOutreachExclusionWeeks(int $weeks): static
+    {
+        $this->outreachExclusionWeeks = $weeks;
+
+        return $this;
+    }
+
     public function __construct()
     {
         $this->initializeUuid();

@@ -192,6 +192,7 @@ final readonly class WriteToolRegistry
                     'publicTitle' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255],
                     'preheader' => ['type' => ['string', 'null'], 'maxLength' => 255],
                     'subtitle' => ['type' => ['string', 'null'], 'maxLength' => 255],
+                    'outreachExclusionWeeks' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 520],
                     'campaignType' => ['type' => 'string', 'enum' => ['newsletter', 'outreach']],
                     'structuredContent' => ['type' => 'object', 'properties' => ['version' => ['const' => 1], 'sections' => ['type' => 'object']], 'required' => ['version', 'sections'], 'additionalProperties' => false],
                     'introBlocks' => ['type' => 'array', 'maxItems' => 20, 'items' => ['type' => 'object', 'properties' => ['id' => ['type' => 'string', 'maxLength' => 64], 'kind' => ['const' => 'paragraph'], 'text' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 10000]], 'required' => ['id', 'kind', 'text'], 'additionalProperties' => false]],
@@ -213,6 +214,7 @@ final readonly class WriteToolRegistry
                     'preheader' => ['type' => ['string', 'null'], 'maxLength' => 255],
                     'subtitle' => ['type' => ['string', 'null'], 'maxLength' => 255],
                     'mainText' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 20000],
+                    'outreachExclusionWeeks' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 520],
                     'campaignType' => ['type' => 'string', 'enum' => ['newsletter', 'outreach']],
                     'structuredContent' => ['type' => 'object', 'properties' => ['version' => ['const' => 1], 'sections' => ['type' => 'object']], 'required' => ['version', 'sections'], 'additionalProperties' => false],
                     'introBlocks' => ['type' => 'array', 'maxItems' => 20, 'items' => ['type' => 'object', 'properties' => ['id' => ['type' => 'string', 'maxLength' => 64], 'kind' => ['enum' => ['paragraph', 'image', 'split']], 'text' => ['type' => 'string', 'maxLength' => 10000], 'imagePath' => ['type' => 'string'], 'imageAlt' => ['type' => 'string'], 'imageDecorative' => ['type' => 'boolean'], 'imageSide' => ['enum' => ['left', 'right']]], 'required' => ['id', 'kind'], 'additionalProperties' => false]],
@@ -1141,8 +1143,8 @@ final readonly class WriteToolRegistry
         }
         try {
             $allowed = 'create_mailing_draft' === $name
-                ? ['campaignType', 'structuredContent', 'requestId', 'internalTitle', 'emailSubject', 'publicTitle', 'mainText', 'introBlocks', 'preheader', 'subtitle', 'callToActionLabel', 'callToActionUrl', 'audienceMaskUuid', 'recommendations']
-                : ['campaignType', 'structuredContent', 'campaignUuid', 'revision', 'internalTitle', 'emailSubject', 'publicTitle', 'mainText', 'introBlocks', 'preheader', 'subtitle', 'callToActionLabel', 'callToActionUrl', 'audienceMaskUuid', 'recommendations'];
+                ? ['outreachExclusionWeeks', 'campaignType', 'structuredContent', 'requestId', 'internalTitle', 'emailSubject', 'publicTitle', 'mainText', 'introBlocks', 'preheader', 'subtitle', 'callToActionLabel', 'callToActionUrl', 'audienceMaskUuid', 'recommendations']
+                : ['outreachExclusionWeeks', 'campaignType', 'structuredContent', 'campaignUuid', 'revision', 'internalTitle', 'emailSubject', 'publicTitle', 'mainText', 'introBlocks', 'preheader', 'subtitle', 'callToActionLabel', 'callToActionUrl', 'audienceMaskUuid', 'recommendations'];
             if ([] !== array_diff(array_keys($arguments), $allowed)) {
                 throw new InvalidToolArguments('Unexpected argument.');
             }

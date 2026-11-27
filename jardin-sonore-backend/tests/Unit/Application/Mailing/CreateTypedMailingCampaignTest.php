@@ -15,6 +15,16 @@ use PHPUnit\Framework\TestCase;
 
 final class CreateTypedMailingCampaignTest extends TestCase
 {
+    public function testNewOutreachUsesConfiguredDefaultWindow(): void
+    {
+        $imageStorage = $this->createStub(MailingIntroImageStorageInterface::class);
+        $create = new CreateMailingCampaign($this->createStub(MailingCampaignRepositoryInterface::class), $this->createStub(MailingBannerImageStorageInterface::class), new MailingIntroBlockProcessor($imageStorage), $imageStorage, 9);
+        $campaign = $create(new CreateMailingCampaignInput('Internal', 'Subject', 'Title', 'Proposal', null, null, null, null, campaignType: MailingCampaignType::OUTREACH));
+        self::assertSame(9, $campaign->getOutreachExclusionWeeks());
+        $newsletter = $create(new CreateMailingCampaignInput('Internal', 'Subject', 'Title', 'Editorial', null, null, null, null, campaignType: MailingCampaignType::NEWSLETTER));
+        self::assertSame(0, $newsletter->getOutreachExclusionWeeks());
+    }
+
     public function testNewsletterInitializesAllFourSectionsAndKeepsItsCallToActionVisible(): void
     {
         $imageStorage = $this->createStub(MailingIntroImageStorageInterface::class);

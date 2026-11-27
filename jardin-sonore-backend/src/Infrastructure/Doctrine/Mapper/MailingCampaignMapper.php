@@ -26,6 +26,7 @@ final readonly class MailingCampaignMapper
 
         return new MailingCampaign(
             campaignType: $mailingCampaignEntity->getCampaignType(),
+            outreachExclusionWeeks: $mailingCampaignEntity->getOutreachExclusionWeeks(),
             structuredContent: null === $mailingCampaignEntity->getStructuredContent() ? null : MailingCampaignContent::fromArray($mailingCampaignEntity->getStructuredContent()),
             internalTitle: $mailingCampaignEntity->getInternalTitle(),
             emailSubject: $mailingCampaignEntity->getEmailSubject(),
@@ -62,6 +63,7 @@ final readonly class MailingCampaignMapper
         $mailingCampaignEntity
             ->setUuid($mailingCampaign->getUuid())
             ->setCampaignType($mailingCampaign->getCampaignType())
+            ->setOutreachExclusionWeeks($mailingCampaign->getOutreachExclusionWeeks())
             ->setStructuredContent($mailingCampaign->getStructuredContent()?->toArray())
             ->setInternalTitle($mailingCampaign->getInternalTitle())
             ->setEmailSubject($mailingCampaign->getEmailSubject())

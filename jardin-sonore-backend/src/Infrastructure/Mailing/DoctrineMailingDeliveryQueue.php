@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace App\Infrastructure\Mailing;
 
 use App\Application\Mailing\MailingDeliveryQueueInterface;
+use App\Application\Mailing\MailingQueuedRecipient;
 use App\Domain\Model\Mailing\MailingDeliveryRecipientStatus;
+use App\Domain\Model\Mailing\MailingRecipientOrganizationSnapshot;
 use App\Domain\Model\Mailing\NewsletterRecipient;
+use App\Domain\Model\ValueObject\EmailAddress;
 use DateTimeImmutable;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
+use Symfony\Component\Uid\Uuid;
 
 final readonly class DoctrineMailingDeliveryQueue implements MailingDeliveryQueueInterface
 {
@@ -112,6 +116,12 @@ final readonly class DoctrineMailingDeliveryQueue implements MailingDeliveryQueu
      */
     public function claimPendingRecipients(string $campaignUuid, int $limit): array
     {
+        return $this->connection->transactional(fn (): array => $this->claimLockedPendingRecipients($campaignUuid, $limit));
+    }
+
+    /** @return list<array{id:int, campaign_uuid:string, email_address:string, unsubscribe_token:string, display_name:?string}> */
+    private function claimLockedPendingRecipients(string $campaignUuid, int $limit): array
+    {
         if (1 > $limit) {
             return [];
         }
@@ -127,6 +137,7 @@ final readonly class DoctrineMailingDeliveryQueue implements MailingDeliveryQueu
             ->setMaxResults($limit)
             ->setParameter('campaignUuid', $campaignUuid)
             ->setParameter('status', MailingDeliveryRecipientStatus::PENDING->value)
+            ->forUpdate()
             ->executeQuery()
             ->fetchAllAssociative();
 
@@ -140,12 +151,13 @@ final readonly class DoctrineMailingDeliveryQueue implements MailingDeliveryQueu
         $this->connection->executeStatement(
             'UPDATE ' . self::TABLE . '
             SET status = :status, dispatched_at = :dispatchedAt, updated_at = :updatedAt
-            WHERE id IN (:ids)',
+            WHERE id IN (:ids) AND status = :pendingStatus',
             [
                 'status' => MailingDeliveryRecipientStatus::PROCESSING->value,
                 'dispatchedAt' => $now,
                 'updatedAt' => $now,
                 'ids' => $ids,
+                'pendingStatus' => MailingDeliveryRecipientStatus::PENDING->value,
             ],
             [
                 'ids' => ArrayParameterType::INTEGER,
@@ -153,6 +165,38 @@ final readonly class DoctrineMailingDeliveryQueue implements MailingDeliveryQueu
         );
 
         return $rows;
+    }
+
+    public function findDeliveryRecipient(int $id): ?MailingQueuedRecipient
+    {
+        $row = $this->connection->fetchAssociative('SELECT campaign_uuid, status, email_address, unsubscribe_token, display_name FROM mailing_delivery_recipient WHERE id = ?', [$id]);
+        if (false === $row) {
+            return null;
+        }
+        $snapshots = [];
+        foreach ($this->connection->fetchAllAssociative('SELECT HEX(organization_uuid) AS uuid, organization_name, organization_type, municipality_insee_code FROM mailing_delivery_recipient_organization WHERE delivery_recipient_id = ?', [$id]) as $snapshot) {
+            $snapshots[] = new MailingRecipientOrganizationSnapshot(
+                Uuid::fromBinary((string) hex2bin((string) $snapshot['uuid'])),
+                (string) $snapshot['organization_name'],
+                null === $snapshot['organization_type'] ? null : (string) $snapshot['organization_type'],
+                null === $snapshot['municipality_insee_code'] ? null : (string) $snapshot['municipality_insee_code'],
+            );
+        }
+
+        return new MailingQueuedRecipient((string) $row['campaign_uuid'], (string) $row['status'], new NewsletterRecipient(
+            new EmailAddress((string) $row['email_address']), (string) $row['unsubscribe_token'],
+            null === $row['display_name'] ? null : (string) $row['display_name'], $snapshots,
+        ));
+    }
+
+    public function markSending(int $deliveryRecipientId): void
+    {
+        $this->connection->update(self::TABLE, ['status' => MailingDeliveryRecipientStatus::SENDING->value, 'updated_at' => $this->currentTimestamp()], ['id' => $deliveryRecipientId]);
+    }
+
+    public function markUncertain(int $deliveryRecipientId, string $error): void
+    {
+        $this->connection->update(self::TABLE, ['status' => MailingDeliveryRecipientStatus::UNCERTAIN->value, 'last_error' => mb_substr($error, 0, 65535), 'updated_at' => $this->currentTimestamp()], ['id' => $deliveryRecipientId]);
     }
 
     public function markSent(int $deliveryRecipientId): void
@@ -183,10 +227,11 @@ final readonly class DoctrineMailingDeliveryQueue implements MailingDeliveryQueu
         ]);
     }
 
-    public function markCancelled(int $deliveryRecipientId): void
+    public function markCancelled(int $deliveryRecipientId, ?string $reason = null): void
     {
         $this->connection->update(self::TABLE, [
             'status' => MailingDeliveryRecipientStatus::CANCELLED->value,
+            'cancellation_reason' => $reason,
             'updated_at' => $this->currentTimestamp(),
             'last_error' => null,
         ], ['id' => $deliveryRecipientId]);
@@ -198,7 +243,7 @@ final readonly class DoctrineMailingDeliveryQueue implements MailingDeliveryQueu
 
         return $this->connection->executeStatement(
             'UPDATE ' . self::TABLE . '
-            SET status = :status, updated_at = :updatedAt
+            SET status = :status, updated_at = :updatedAt, cancellation_reason = :reason
             WHERE campaign_uuid = :campaignUuid
             AND status = :currentStatus',
             [
@@ -206,6 +251,7 @@ final readonly class DoctrineMailingDeliveryQueue implements MailingDeliveryQueu
                 'updatedAt' => $now,
                 'campaignUuid' => $campaignUuid,
                 'currentStatus' => MailingDeliveryRecipientStatus::PENDING->value,
+                'reason' => 'campaign_stopped',
             ],
         );
     }
@@ -221,6 +267,7 @@ final readonly class DoctrineMailingDeliveryQueue implements MailingDeliveryQueu
             ->setParameter('statuses', [
                 MailingDeliveryRecipientStatus::PENDING->value,
                 MailingDeliveryRecipientStatus::PROCESSING->value,
+                MailingDeliveryRecipientStatus::SENDING->value,
             ], ArrayParameterType::STRING)
             ->executeQuery()
             ->fetchOne();
@@ -232,9 +279,9 @@ final readonly class DoctrineMailingDeliveryQueue implements MailingDeliveryQueu
             ->select('COUNT(*)')
             ->from(self::TABLE)
             ->where('campaign_uuid = :campaignUuid')
-            ->andWhere('status = :status')
+            ->andWhere('status IN (:statuses)')
             ->setParameter('campaignUuid', $campaignUuid)
-            ->setParameter('status', MailingDeliveryRecipientStatus::FAILED->value)
+            ->setParameter('statuses', [MailingDeliveryRecipientStatus::FAILED->value, MailingDeliveryRecipientStatus::UNCERTAIN->value], ArrayParameterType::STRING)
             ->executeQuery()
             ->fetchOne();
     }

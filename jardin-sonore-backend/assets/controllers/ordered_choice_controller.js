@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static targets = ['source', 'add', 'list', 'order'];
+    static targets = ['source', 'choice', 'search', 'list', 'order'];
     static values = {
         moveUpLabel: String,
         moveDownLabel: String,
@@ -12,16 +12,24 @@ export default class extends Controller {
         this.sync();
     }
 
-    add() {
-        const option = this.sourceOption(this.addTarget.value);
-        if (!option) {
+    choose(event) {
+        event.preventDefault();
+        const option = this.sourceOption(event.currentTarget.dataset.choiceValue);
+        if (!option || option.selected) {
             return;
         }
 
         option.selected = true;
         this.sourceTarget.append(option);
-        this.addTarget.value = '';
         this.sync();
+        this.dispatch('selected');
+    }
+
+    filter() {
+        const query = this.searchTarget.value.trim().toLocaleLowerCase('fr');
+        this.choiceTargets.forEach((choice) => {
+            choice.hidden = !choice.textContent.toLocaleLowerCase('fr').includes(query);
+        });
     }
 
     remove(event) {
@@ -35,7 +43,7 @@ export default class extends Controller {
 
         option.selected = false;
         item.remove();
-        this.syncAddOptions();
+        this.syncChoices();
         this.syncOrder();
     }
 
@@ -68,7 +76,7 @@ export default class extends Controller {
     sync() {
         this.listTarget.replaceChildren();
         this.orderedSourceOptions().forEach((option) => this.listTarget.append(this.item(option)));
-        this.syncAddOptions();
+        this.syncChoices();
         this.syncOrder();
     }
 
@@ -104,9 +112,9 @@ export default class extends Controller {
             .join(',');
     }
 
-    syncAddOptions() {
-        Array.from(this.addTarget.options).forEach((option) => {
-            option.disabled = '' !== option.value && this.sourceOption(option.value)?.selected;
+    syncChoices() {
+        this.choiceTargets.forEach((choice) => {
+            choice.disabled = Boolean(this.sourceOption(choice.dataset.choiceValue)?.selected);
         });
     }
 
@@ -120,6 +128,7 @@ export default class extends Controller {
         item.className = 'ordered-choice__item';
 
         const title = document.createElement('span');
+        title.className = 'ordered-choice__title';
         title.textContent = option.text;
         item.append(title);
 
@@ -130,6 +139,14 @@ export default class extends Controller {
             this.button('↓', this.moveDownLabelValue, this.moveDown.bind(this)),
             this.button(this.removeLabelValue, this.removeLabelValue, this.remove.bind(this)),
         );
+        const imageUrl = this.choiceTargets.find((choice) => choice.dataset.choiceValue === option.value)?.dataset.imageUrl;
+        if (imageUrl) {
+            const image = document.createElement('img');
+            image.src = imageUrl;
+            image.alt = '';
+            image.className = 'ordered-choice__thumbnail';
+            actions.append(image);
+        }
         item.append(actions);
 
         return item;

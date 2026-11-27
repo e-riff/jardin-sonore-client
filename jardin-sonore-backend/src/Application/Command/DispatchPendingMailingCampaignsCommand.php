@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Command;
 
 use App\Application\Mailing\MailingDeliveryQueueInterface;
+use App\Application\Mailing\MailingExecutionLockInterface;
 use App\Application\Mailing\Message\SendMailingCampaignRecipientMessage;
 use App\Domain\Model\Mailing\MailingCampaignStatus;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
@@ -37,10 +38,16 @@ final readonly class DispatchPendingMailingCampaignsCommand
         #[Autowire('%app.mailing.dispatch_batch_size%')]
         private int $mailingDispatchBatchSize,
         private LoggerInterface $mailingDeliveryLogger,
+        private MailingExecutionLockInterface $mailingExecutionLock,
     ) {
     }
 
     public function __invoke(SymfonyStyle $io): int
+    {
+        return $this->mailingExecutionLock->run('dispatch', fn (): int => $this->dispatch($io));
+    }
+
+    private function dispatch(SymfonyStyle $io): int
     {
         $windowLimit = max(1, $this->mailingWindowLimit);
         $windowMinutes = max(1, $this->mailingWindowMinutes);

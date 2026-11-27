@@ -21,6 +21,47 @@ final class MailingCampaignContentControllerTest extends WebTestCase
         return new Kernel($options['environment'] ?? 'test', $options['debug'] ?? true);
     }
 
+    public function testJournalRequiresLoginAndValidatesDateRange(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/mailing/outreach-journal');
+        self::assertResponseRedirects('/login');
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $admin = (new AdminUserEntity())->setEmail('journal-' . bin2hex(random_bytes(6)) . '@example.test')->setPassword('unused');
+        $entityManager->persist($admin);
+        $entityManager->flush();
+        $client->loginUser($admin);
+        $client->request('GET', '/mailing/outreach-journal');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Journal des démarchages', (string) $client->getResponse()->getContent());
+        $client->request('GET', '/mailing/outreach-journal?since=2026-11-26&until=2026-10-01');
+        self::assertResponseStatusCodeSame(422);
+    }
+
+    public function testOutreachDelayCanBeSavedWithoutSendingCampaign(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $admin = (new AdminUserEntity())->setEmail('outreach-' . bin2hex(random_bytes(6)) . '@example.test')->setPassword('unused');
+        $entityManager->persist($admin);
+        $entityManager->flush();
+        $client->loginUser($admin);
+        $campaign = (static::getContainer()->get(CreateMailingCampaign::class))(new CreateMailingCampaignInput(
+            internalTitle: 'Outreach test', emailSubject: 'Subject', publicTitle: 'Title', mainText: 'Proposal',
+            subtitle: null, callToActionLabel: null, callToActionUrl: null, bannerImageFile: null, campaignType: MailingCampaignType::OUTREACH,
+        ));
+        $path = '/mailing/' . $campaign->getUuid()->toRfc4122() . '/send';
+        $crawler = $client->request('GET', $path);
+        self::assertResponseIsSuccessful();
+        $form = $crawler->selectButton('Enregistrer le délai')->form();
+        $form['outreach_settings[weeks]'] = '9';
+        $client->submit($form);
+        self::assertResponseRedirects($path);
+        $restored = static::getContainer()->get(MailingCampaignRepositoryInterface::class)->findByUuid($campaign->getUuid());
+        self::assertSame(9, $restored->getOutreachExclusionWeeks());
+        self::assertFalse($restored->hasDeliveryStarted());
+    }
+
     public function testNewsletterEditorSavesSectionsWithoutLosingHiddenContent(): void
     {
         $client = static::createClient();

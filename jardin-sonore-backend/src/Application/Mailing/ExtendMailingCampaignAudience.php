@@ -8,6 +8,7 @@ use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Domain\Model\Mailing\NewsletterRecipient;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
+use DateTimeImmutable;
 use InvalidArgumentException;
 use Monolog\Attribute\WithMonologChannel;
 use Psr\Log\LoggerInterface;
@@ -21,6 +22,7 @@ final readonly class ExtendMailingCampaignAudience
         private MailingDeliveryQueueInterface $mailingDeliveryQueue,
         private LoggerInterface $mailingDeliveryLogger,
         private MailingCampaignDeliveryTransactionInterface $mailingCampaignDeliveryTransaction,
+        private OutreachAudiencePolicy $outreachAudiencePolicy,
     ) {
     }
 
@@ -57,8 +59,11 @@ final readonly class ExtendMailingCampaignAudience
 
         $alreadyLinkedRecipientCount = count($matchedRecipients) - count($newRecipients);
 
+        $selection = $this->outreachAudiencePolicy->select($mailingCampaign, $newRecipients, new DateTimeImmutable());
+        $newRecipients = $selection->recipients;
+
         if ([] === $newRecipients) {
-            throw new InvalidArgumentException('Mailing campaign extension audience only contains already linked recipients.');
+            throw new InvalidArgumentException(0 < $selection->excludedRecipientCount ? 'Mailing campaign extension audience is entirely excluded by recent outreach.' : 'Mailing campaign extension audience only contains already linked recipients.');
         }
 
         $queuedCampaign = clone $mailingCampaign;
@@ -76,6 +81,7 @@ final readonly class ExtendMailingCampaignAudience
             matchedRecipientCount: count($matchedRecipients),
             alreadyLinkedRecipientCount: $alreadyLinkedRecipientCount,
             newRecipientCount: count($newRecipients),
+            excludedRecipientCount: $selection->excludedRecipientCount,
         );
 
         $this->mailingDeliveryLogger->info('Newsletter audience extended.', [

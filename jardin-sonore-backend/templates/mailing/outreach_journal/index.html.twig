@@ -1,0 +1,50 @@
+{% extends 'internal/base.html.twig' %}
+{% set title = 'mailing.outreach.journal_title'|trans({}, 'mailing') %}
+{% block internal_body %}
+    <section class="internal-page-heading">
+        <div><p class="internal-eyebrow">{{ 'mailing.type.outreach'|trans({}, 'mailing') }}</p><h1>{{ title }}</h1><p>{{ 'mailing.outreach.journal_help'|trans({}, 'mailing') }}</p></div>
+    </section>
+    <section class="internal-card" data-controller="auto-filter">
+        <form class="internal-search" method="get" data-auto-filter-target="form" data-action="change->auto-filter#change submit->auto-filter#submit">
+            <div class="internal-form__grid">
+                <div><label for="journal-organization">{{ 'mailing.report.organization'|trans({}, 'mailing') }}</label><select id="journal-organization" name="organizationUuid"><option value="">{{ 'mailing.outreach.all_organizations'|trans({}, 'mailing') }}</option>{% for choice in choices.organizations %}<option value="{{ choice.uuid }}" {{ choice.uuid == filter.organizationUuid ? 'selected' : '' }}>{{ choice.name }}</option>{% endfor %}</select></div>
+                <div><label for="journal-type">{{ 'mailing.outreach.organization_type'|trans({}, 'mailing') }}</label><select id="journal-type" name="organizationType"><option value="">{{ 'mailing.outreach.all_types'|trans({}, 'mailing') }}</option>{% for type in choices.types %}<option value="{{ type }}" {{ type == filter.organizationType ? 'selected' : '' }}>{{ ('address_book.organization_type.' ~ type)|trans({}, 'backoffice') }}</option>{% endfor %}</select></div>
+                <div><label for="journal-campaign">{{ 'mailing.outreach.campaign'|trans({}, 'mailing') }}</label><select id="journal-campaign" name="campaignUuid"><option value="">{{ 'mailing.outreach.all_campaigns'|trans({}, 'mailing') }}</option>{% for choice in choices.campaigns %}<option value="{{ choice.uuid }}" {{ choice.uuid == filter.campaignUuid ? 'selected' : '' }}>{{ choice.name }}</option>{% endfor %}</select></div>
+                <div><label for="journal-since">{{ 'mailing.outreach.since'|trans({}, 'mailing') }}</label><input id="journal-since" type="date" name="since" value="{{ filter.since }}"></div>
+                <div><label for="journal-until">{{ 'mailing.outreach.until'|trans({}, 'mailing') }}</label><input id="journal-until" type="date" name="until" value="{{ filter.until }}"></div>
+            </div>
+            <button class="internal-button internal-button--secondary" type="submit">{{ 'mailing.outreach.filter'|trans({}, 'mailing') }}</button>
+        </form>
+        <div data-auto-filter-target="results" aria-live="polite">
+            <h2>{{ 'mailing.outreach.summary'|trans({}, 'mailing') }}</h2>
+            <p>{{ 'mailing.outreach.summary_help'|trans({}, 'mailing') }}</p>
+            <div class="internal-table-wrapper"><table class="internal-table internal-table--compact-mobile">
+                <thead><tr><th>{{ 'mailing.outreach.campaign'|trans({}, 'mailing') }}</th><th>{{ 'mailing.outreach.organization_type'|trans({}, 'mailing') }}</th><th>{{ 'mailing.outreach.period'|trans({}, 'mailing') }}</th><th>{{ 'mailing.outreach.organizations'|trans({}, 'mailing') }}</th><th>{{ 'mailing.report.emails'|trans({}, 'mailing') }}</th></tr></thead>
+                <tbody>{% for group in journal.groups %}<tr>
+                    <td data-table-mobile="primary"><a href="{{ path('mailing_outreach_journal', {campaignUuid: group.campaign_uuid, organizationType: group.organization_type}) }}">{{ group.internal_title }}</a></td>
+                    <td data-table-mobile="secondary">{{ group.organization_type ? ('address_book.organization_type.' ~ group.organization_type)|trans({}, 'backoffice') : '—' }}</td>
+                    <td data-table-mobile="secondary">{{ group.first_sent_at|date('d/m/Y') }} – {{ group.last_sent_at|date('d/m/Y') }}</td>
+                    <td data-table-mobile="secondary">{{ group.organization_count }}</td><td data-table-mobile="secondary">{{ group.address_count }}</td>
+                </tr>{% else %}<tr><td colspan="5">{{ 'mailing.report.empty'|trans({}, 'mailing') }}</td></tr>{% endfor %}</tbody>
+            </table></div>
+            <h2>{{ 'mailing.outreach.details'|trans({}, 'mailing') }}</h2>
+            <p>{{ 'mailing.report.results'|trans({count: journal.total}, 'mailing') }}</p>
+            <div class="internal-table-wrapper"><table class="internal-table internal-table--compact-mobile">
+                <thead><tr><th>{{ 'mailing.report.organization'|trans({}, 'mailing') }}</th><th>{{ 'mailing.outreach.organization_type'|trans({}, 'mailing') }}</th><th>{{ 'mailing.outreach.municipality'|trans({}, 'mailing') }}</th><th>{{ 'mailing.outreach.campaign'|trans({}, 'mailing') }}</th><th>{{ 'mailing.report.email'|trans({}, 'mailing') }}</th><th>{{ 'mailing.report.date'|trans({}, 'mailing') }}</th><th>{{ 'mailing.report.state'|trans({}, 'mailing') }}</th></tr></thead>
+                <tbody>{% for row in journal.rows %}<tr>
+                    <td data-table-mobile="primary"><a href="{{ path('mailing_outreach_journal', {organizationUuid: row.organization_uuid}) }}">{{ row.organization_name }}</a></td>
+                    <td data-table-mobile="secondary">{{ row.organization_type ? ('address_book.organization_type.' ~ row.organization_type)|trans({}, 'backoffice') : '—' }}</td><td data-table-mobile="secondary">{{ row.municipality_insee_code ?: '—' }}</td>
+                    <td data-table-mobile="secondary"><a href="{{ path('mailing_report', {uuid: row.campaign_uuid}) }}">{{ row.internal_title }}</a></td>
+                    <td data-table-mobile="secondary">{{ row.email_address }}</td><td data-table-mobile="secondary">{{ row.sent_at ? row.sent_at|date('d/m/Y H:i') : '—' }}</td>
+                    <td data-table-mobile="secondary">{{ ('mailing.report.status.' ~ row.status)|trans({}, 'mailing') }}{% if row.cancellation_reason %} · {{ ('mailing.outreach.reason.' ~ row.cancellation_reason)|trans({}, 'mailing') }}{% endif %}</td>
+                </tr>{% else %}<tr><td colspan="7">{{ 'mailing.report.empty'|trans({}, 'mailing') }}</td></tr>{% endfor %}</tbody>
+            </table></div>
+            {% set filters = {organizationUuid: filter.organizationUuid, campaignUuid: filter.campaignUuid, organizationType: filter.organizationType, since: filter.since, until: filter.until} %}
+            <div class="internal-heading-actions">
+                {% if filter.page > 1 %}<a class="internal-button internal-button--secondary" href="{{ path('mailing_outreach_journal', filters|merge({page: filter.page - 1})) }}">{{ 'mailing.report.previous'|trans({}, 'mailing') }}</a>{% endif %}
+                <span>{{ 'mailing.report.page'|trans({page: filter.page}, 'mailing') }}</span>
+                {% if filter.page * 50 < journal.total %}<a class="internal-button internal-button--secondary" href="{{ path('mailing_outreach_journal', filters|merge({page: filter.page + 1})) }}">{{ 'mailing.report.next'|trans({}, 'mailing') }}</a>{% endif %}
+            </div>
+        </div>
+    </section>
+{% endblock %}

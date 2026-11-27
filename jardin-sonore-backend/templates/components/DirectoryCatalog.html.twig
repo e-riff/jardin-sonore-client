@@ -134,6 +134,7 @@
                         {% endif %}
                     </div>
                     <div class="directory-detail__actions">
+                        {% if not isPerson %}<a class="internal-icon-button" href="{{ path('mailing_outreach_journal', {organizationUuid: selectedEntry.uuid}) }}" title="{{ 'mailing.outreach.journal_title'|trans({}, 'mailing') }}" aria-label="{{ 'mailing.outreach.journal_title'|trans({}, 'mailing') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'note'} only %}</a>{% endif %}
                         <span class="directory-catalog__status{{ selectedEntry.active ? ' is-active' : '' }}">{{ selectedEntry.active ? 'technical.directory.status_active'|trans({}, 'technical') : 'technical.directory.status_inactive'|trans({}, 'technical') }}</span>
                         {% if not isPerson %}<button type="button" class="internal-icon-button" {{ live_action('addPersonToSelectedOrganization') }} title="{{ 'technical.directory.add_person'|trans({}, 'technical') }}" aria-label="{{ 'technical.directory.add_person'|trans({}, 'technical') }}">{% include 'commercial/project/_icon.html.twig' with {name: 'person-add'} only %}</button>{% endif %}
                     </div>

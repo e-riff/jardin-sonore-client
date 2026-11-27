@@ -15,6 +15,8 @@ use App\Application\Form\Model\MailingAudienceMaskFormModel;
 use App\Application\Form\Model\MailingIntroBlockFormModel;
 use App\Application\Form\Model\MailingSectionFormModel;
 use App\Application\Form\Model\MailingTestFormModel;
+use App\Application\Form\Model\OutreachSettingsFormModel;
+use App\Application\Form\OutreachSettingsType;
 use App\Application\Mailing\CreateMailingCampaign;
 use App\Application\Mailing\CreateMailingCampaignInput;
 use App\Application\Mailing\DeleteMailingCampaign;
@@ -27,16 +29,21 @@ use App\Application\Mailing\MailingIntroBlockInput;
 use App\Application\Mailing\NewsletterAudienceMapQueryInterface;
 use App\Application\Mailing\NewsletterAudienceMunicipalityMaterializerInterface;
 use App\Application\Mailing\NewsletterAudienceOptionsQueryInterface;
+use App\Application\Mailing\NewsletterAudienceResolution;
 use App\Application\Mailing\NewsletterAudienceResolverInterface;
 use App\Application\Mailing\NewsletterRendererInterface;
+use App\Application\Mailing\OutreachAudiencePolicy;
 use App\Application\Mailing\SendMailingCampaign;
 use App\Application\Mailing\SendMailingCampaignTest;
 use App\Application\Mailing\StopMailingCampaignDelivery;
 use App\Application\Mailing\UpdateMailingCampaign;
 use App\Application\Mailing\UpdateMailingCampaignInput;
 use App\Domain\Model\Mailing\MailingCampaignStatus;
+use App\Domain\Model\Mailing\MailingCampaignType;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Domain\Model\Mailing\NewsletterAudienceRadiusOrigin;
+use App\Domain\Repository\MailingCampaignRepositoryInterface;
+use DateTimeImmutable;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -541,6 +548,8 @@ final class MailingController extends AbstractController
         Request $request,
         GetMailingCampaign $getMailingCampaign,
         NewsletterAudienceResolverInterface $newsletterAudienceResolver,
+        MailingCampaignRepositoryInterface $campaignRepository,
+        OutreachAudiencePolicy $outreachAudiencePolicy,
         SendMailingCampaign $sendMailingCampaign,
     ): Response {
         $mailingCampaign = $getMailingCampaign($uuid);
@@ -549,15 +558,34 @@ final class MailingController extends AbstractController
             throw $this->createNotFoundException();
         }
 
+        $settingsForm = null;
+        if (MailingCampaignType::OUTREACH === $mailingCampaign->getCampaignType() && $mailingCampaign->isEditable()) {
+            $settings = new OutreachSettingsFormModel($mailingCampaign->getOutreachExclusionWeeks());
+            $settingsForm = $this->createForm(OutreachSettingsType::class, $settings);
+            $settingsForm->handleRequest($request);
+            if ($settingsForm->isSubmitted()) {
+                if ($settingsForm->isValid()) {
+                    $mailingCampaign->setOutreachExclusionWeeks($settings->weeks);
+                    $campaignRepository->save($mailingCampaign);
+                    $this->addFlash('success', 'mailing.outreach.settings_saved');
+
+                    return $this->redirectToRoute('mailing_send', ['uuid' => $uuid]);
+                }
+            }
+        }
+        $excludedRecipientCount = 0;
         try {
-            $audienceResolution = $newsletterAudienceResolver->resolve($mailingCampaign->getAudienceFilter(), 10);
+            $audienceResolution = $newsletterAudienceResolver->resolve($mailingCampaign->getAudienceFilter());
+            $selection = $outreachAudiencePolicy->select($mailingCampaign, $audienceResolution->getRecipients(), new DateTimeImmutable());
+            $excludedRecipientCount = $selection->excludedRecipientCount;
+            $audienceResolution = new NewsletterAudienceResolution(count($selection->recipients), array_slice($selection->recipients, 0, 10));
             $audienceError = null;
         } catch (InvalidArgumentException) {
             $audienceResolution = null;
             $audienceError = 'mailing.send.invalid_audience';
         }
 
-        if ($request->isMethod('POST')) {
+        if ($request->isMethod('POST') && !($settingsForm?->isSubmitted() ?? false)) {
             if (!$this->isCsrfTokenValid('mailing_send_' . $mailingCampaign->getUuid()->toRfc4122(), (string) $request->request->get('_token'))) {
                 throw $this->createAccessDeniedException();
             }
@@ -584,6 +612,8 @@ final class MailingController extends AbstractController
 
         return $this->render('mailing/send.html.twig', [
             'campaign' => $mailingCampaign,
+            'outreachSettingsForm' => $settingsForm?->createView(),
+            'excludedRecipientCount' => $excludedRecipientCount,
             'audienceResolution' => $audienceResolution,
             'audienceError' => $audienceError,
             'queueWillUseCron' => true,

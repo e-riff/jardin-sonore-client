@@ -10,11 +10,31 @@ La migration additive `Version20261126112154`, générée avec `make:migration`,
 
 Validation du lot mailing : 793 tests PHP / 4 138 assertions sans échec (2 dépréciations, 15 notices), 8 tests JavaScript ; revue indépendante et corrections couvertes par régressions ; PHPStan, style, Twig et conteneur valides, 86 assets compilés. Recette navigateur du formulaire Twig réel : ajout, suppression, ordre, masquage avec conservation du contenu ; aucune erreur JavaScript ni débordement à 390 px. Aucun envoi réel de recette. Déploiement effectué le 26 novembre : migration appliquée en production, schéma synchronisé, site et connexion backoffice HTTP 200.
 
-Deux finitions préparées ensuite en local : nettoyage des images des rubriques à la suppression d'une campagne et compteur d'aperçu des recommandations masquées. Elles restent distinctes du tag livré. Le rendu envoyé et l'historique d'utilisation respectent déjà le masquage.
+Deux finitions déployées sous `deploy-mailing-sections-fixes-20261126-01` (`a800be42`) : nettoyage des images des rubriques à la suppression d'une campagne et compteur d'aperçu des recommandations masquées. Vérifiées par 34 tests / 122 assertions, PHPStan et style ; site et backoffice HTTP 200. Le rendu envoyé et l'historique d'utilisation respectent déjà le masquage.
 
 Ajout demandé ensuite : rétablissement du sélecteur de prolongements dans l'édition de séance et miniature à gauche dans leur index, suivant le catalogue des recommandations. Régression HTTP d'ajout/enregistrement et affichage couverte ; validation finale consignée dans le plan.
 
-Références : [cadrage](docs/mailing-newsletter-demarchage-cadrage-2026-11-26.md), [plan du premier lot](docs/superpowers/plans/2026-11-26-newsletter-outreach-lot-1.md). Prochaine étape : finaliser les deux finitions locales, puis cadrer le lot suivant (exclusion glissante et journal, avant préférences et audience newsletter).
+Références : [cadrage](docs/mailing-newsletter-demarchage-cadrage-2026-11-26.md), [plan du premier lot](docs/superpowers/plans/2026-11-26-newsletter-outreach-lot-1.md). Suite implémentée en local : [exclusion glissante et journal](docs/superpowers/specs/2026-11-26-outreach-exclusion-journal-design.md), avant préférences et audience newsletter. Adresse partagée bloquée dès qu’un établissement ciblé est exclu (validé). Voir le suivi du lot ci-dessous.
+
+## Démarchages : exclusion et journal — implémentés en local
+
+Suite validée par l’utilisateur : adresse partagée bloquée dès qu’un établissement ciblé est exclu. Délai proposé pour les nouvelles campagnes via `MAILING_OUTREACH_EXCLUSION_WEEKS=6`, modifiable par campagne sur la préparation d’envoi et via MCP ; zéro désactive, bornes 0–520 semaines. Les campagnes existantes gardent zéro jusqu’au choix explicite. Les newsletters restent hors fenêtre.
+
+Le filtre compte seulement les autres campagnes typées démarchage réellement envoyées ; il est appliqué à la mise en file, aux extensions puis juste avant SMTP. Revendication SQL atomique, verrou de distribution et verrous partagés destinataire/démarchage protègent les traitements concurrents. Les états « en cours de confirmation » et « à vérifier » évitent de renvoyer automatiquement après un succès SMTP non enregistré. Une interruption pendant SMTP reste une incertitude à examiner manuellement ; aucune promesse de livraison exactement une fois.
+
+Journal dans le menu Mailing et depuis les fiches d’établissement : filtres par noms, type historique, campagne et dates, synthèse des campagnes/types avec compteurs d’adresses et établissements distincts, détails paginés. Les campagnes de démarchage commencées ne sont plus supprimables, afin de conserver cet historique. Les raisons d’annulation distinguent arrêt, désabonnement et sollicitation récente.
+
+Migration `Version20261126195323` générée, relue et appliquée après accord aux bases locales de développement et de test uniquement ; schéma synchronisé et nouvelle génération sans changement. Deux colonnes additives, aucun retraitement historique. Retour arrière relu et simulé, sans exécution destructive.
+
+Validation : revue indépendante traitée, 812 tests / 4 196 assertions sans échec (2 dépréciations, 15 notices), régressions double message, deux campagnes/même établissement, incident après SMTP, statut Doctrine périmé et extension entièrement exclue. Formulaire réel et journal vérifiés ; recette navigateur Twig sur données fictives à 390 px sans débordement ni erreur JavaScript, navigateur fermé. Aucun envoi réel ni déploiement de ce lot. Contrôles statiques finaux consignés dans le plan.
+
+Références : [conception](docs/superpowers/specs/2026-11-26-outreach-exclusion-journal-design.md), [plan et suivi](docs/superpowers/plans/2026-11-26-outreach-exclusion-journal.md). Suite à cadrer séparément : préférences distinctes et audience newsletter réservée.
+
+## Édition de séance — ajustement demandé le 27 novembre, en local
+
+Bloc rééquilibré en « Général », « Notes privées » repliables et « Prolongements ». Suppression du label et de l’aide redondants des notes ; choix des prolongements par bouton + et dialogue natif avec recherche et miniatures. Les éléments choisis affichent une miniature de 32 px à droite et gardent ordre/retrait. La sélection reste enregistrée avec le formulaire de séance, sans sauvegarde implicite ni changement du rendu portail/PDF.
+
+Validation : test fonctionnel d’ajout/persistance adapté, PHPStan/style/Twig valides ; recette du formulaire Twig réel et des contrôleurs applicatifs : ajout, retrait, réajout, ordre, recherche, Échap/fond/boutons, conservation des notes, mobile 390 px sans débordement ni erreur JavaScript. Assets recompilés. Aucun déploiement de cet ajustement.
 
 ## Recommandations mailing et prochaines suites — 26 novembre
 

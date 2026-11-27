@@ -17,6 +17,7 @@ use App\Domain\Repository\MailingCampaignRepositoryInterface;
 use App\Infrastructure\Mailing\NewsletterRichTextFormatter;
 use InvalidArgumentException;
 use JsonException;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Uid\Uuid;
 
 final readonly class MailingDraftManager
@@ -27,6 +28,8 @@ final readonly class MailingDraftManager
         private MailingCampaignRepositoryInterface $campaignRepository,
         private MailingAudienceMaskRepositoryInterface $maskRepository,
         private NewsletterRichTextFormatter $richTextFormatter,
+        #[Autowire('%env(int:MAILING_OUTREACH_EXCLUSION_WEEKS)%')]
+        private int $defaultOutreachExclusionWeeks = 6,
     ) {
     }
 
@@ -42,6 +45,7 @@ final readonly class MailingDraftManager
             $results[] = [
                 'campaignUuid' => (string) $campaign->getUuid(),
                 'campaignType' => $campaign->getCampaignType()?->value,
+                'outreachExclusionWeeks' => $campaign->getOutreachExclusionWeeks(),
                 'structuredContent' => $campaign->getStructuredContent()?->toArray(),
                 'internalTitle' => $campaign->getInternalTitle(),
                 'emailSubject' => $campaign->getEmailSubject(),
@@ -82,7 +86,7 @@ final readonly class MailingDraftManager
      */
     public function create(array $input): array
     {
-        $this->assertKeys($input, ['campaignType', 'structuredContent', 'requestId', 'internalTitle', 'emailSubject', 'publicTitle', 'mainText', 'introBlocks', 'preheader', 'subtitle', 'callToActionLabel', 'callToActionUrl', 'audienceMaskUuid']);
+        $this->assertKeys($input, ['outreachExclusionWeeks', 'campaignType', 'structuredContent', 'requestId', 'internalTitle', 'emailSubject', 'publicTitle', 'mainText', 'introBlocks', 'preheader', 'subtitle', 'callToActionLabel', 'callToActionUrl', 'audienceMaskUuid']);
         $requestId = $this->requiredText($input, 'requestId', 100);
         $uuid = Uuid::v5(Uuid::fromString(self::REQUEST_NAMESPACE), $requestId);
         $existing = $this->campaignRepository->findByUuid($uuid);
@@ -107,6 +111,7 @@ final readonly class MailingDraftManager
             mainText: $mainText,
             templateKey: $campaignType->value,
             campaignType: $campaignType,
+            outreachExclusionWeeks: MailingCampaignType::OUTREACH === $campaignType ? $this->outreachWeeks($input, $this->defaultOutreachExclusionWeeks) : 0,
             structuredContent: $structuredContent,
             audienceFilter: NewsletterAudienceFilter::empty(),
             subtitle: $this->optionalText($input, 'subtitle', 255),
@@ -129,7 +134,7 @@ final readonly class MailingDraftManager
      */
     public function update(string $campaignUuid, array $input): array
     {
-        $this->assertKeys($input, ['campaignType', 'structuredContent', 'revision', 'internalTitle', 'emailSubject', 'publicTitle', 'mainText', 'introBlocks', 'preheader', 'subtitle', 'callToActionLabel', 'callToActionUrl', 'audienceMaskUuid', 'recommendations']);
+        $this->assertKeys($input, ['outreachExclusionWeeks', 'campaignType', 'structuredContent', 'revision', 'internalTitle', 'emailSubject', 'publicTitle', 'mainText', 'introBlocks', 'preheader', 'subtitle', 'callToActionLabel', 'callToActionUrl', 'audienceMaskUuid', 'recommendations']);
         $campaign = $this->findCampaign($campaignUuid);
         if (!$campaign->isEditable()) {
             throw new InvalidArgumentException('This mailing has already entered delivery and cannot be edited.');
@@ -142,6 +147,9 @@ final readonly class MailingDraftManager
         if (isset($input['campaignType'])) {
             $campaign->setCampaignType(MailingCampaignType::tryFrom($this->requiredText($input, 'campaignType', 16))
                 ?? throw new InvalidArgumentException('Choose newsletter or outreach as campaignType.'));
+        }
+        if (array_key_exists('outreachExclusionWeeks', $input)) {
+            $campaign->setOutreachExclusionWeeks($this->outreachWeeks($input, 0));
         }
         if (array_key_exists('structuredContent', $input)) {
             $campaign->setStructuredContent($this->structuredContent($input['structuredContent'], $campaign->getStructuredContent()));
@@ -362,6 +370,7 @@ final readonly class MailingDraftManager
         return [
             'campaignUuid' => (string) $campaign->getUuid(),
             'campaignType' => $campaign->getCampaignType()?->value,
+            'outreachExclusionWeeks' => $campaign->getOutreachExclusionWeeks(),
             'structuredContent' => $campaign->getStructuredContent()?->toArray(),
             'status' => $campaign->getStatus()->value,
             'editable' => $campaign->isEditable(),
@@ -395,11 +404,22 @@ final readonly class MailingDraftManager
         ];
     }
 
+    /** @param array<string, mixed> $input */
+    private function outreachWeeks(array $input, int $default): int
+    {
+        $value = $input['outreachExclusionWeeks'] ?? $default;
+        if (!is_int($value) || 0 > $value || 520 < $value) {
+            throw new InvalidArgumentException('Outreach exclusion must be an integer between 0 and 520 weeks.');
+        }
+
+        return $value;
+    }
+
     private function revision(MailingCampaign $campaign): string
     {
         try {
             return hash('sha256', json_encode([
-                $campaign->getCampaignType()?->value, $campaign->getStructuredContent()?->toArray(),
+                $campaign->getCampaignType()?->value, $campaign->getStructuredContent()?->toArray(), $campaign->getOutreachExclusionWeeks(),
                 $campaign->getStatus()->value, $campaign->getInternalTitle(), $campaign->getEmailSubject(),
                 $campaign->getPublicTitle(), $campaign->getPreheader(), $campaign->getSubtitle(),
                 $campaign->getMainText(), $campaign->getIntroBlocks(), $campaign->getCallToActionLabel(),

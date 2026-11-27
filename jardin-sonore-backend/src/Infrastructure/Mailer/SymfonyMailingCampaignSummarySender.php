@@ -46,6 +46,8 @@ final readonly class SymfonyMailingCampaignSummarySender implements MailingCampa
             'cancelled' => 'mailing_summary.count.cancelled',
             'pending' => 'mailing_summary.count.pending',
             'processing' => 'mailing_summary.count.processing',
+            'sending' => 'mailing_summary.count.sending',
+            'uncertain' => 'mailing_summary.count.uncertain',
         ];
         $countLines = [];
 

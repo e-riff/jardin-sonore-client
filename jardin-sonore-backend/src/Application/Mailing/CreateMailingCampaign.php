@@ -8,9 +8,11 @@ use App\Application\Storage\MailingBannerImageStorageInterface;
 use App\Application\Storage\MailingIntroImageStorageInterface;
 use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Model\Mailing\MailingCampaignContent;
+use App\Domain\Model\Mailing\MailingCampaignType;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
 use InvalidArgumentException;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Throwable;
 
 final readonly class CreateMailingCampaign
@@ -20,6 +22,8 @@ final readonly class CreateMailingCampaign
         private MailingBannerImageStorageInterface $mailingBannerImageStorage,
         private MailingIntroBlockProcessor $mailingIntroBlockProcessor,
         private MailingIntroImageStorageInterface $mailingIntroImageStorage,
+        #[Autowire('%env(int:MAILING_OUTREACH_EXCLUSION_WEEKS)%')]
+        private int $defaultOutreachExclusionWeeks = 6,
     ) {
     }
 
@@ -46,6 +50,7 @@ final readonly class CreateMailingCampaign
                 preheader: $input->preheader,
                 introBlocks: null,
                 campaignType: $input->campaignType,
+                outreachExclusionWeeks: MailingCampaignType::OUTREACH === $input->campaignType ? $this->defaultOutreachExclusionWeeks : 0,
                 structuredContent: $structuredContent,
                 subtitle: $input->subtitle,
                 callToActionLabel: $input->callToActionLabel,

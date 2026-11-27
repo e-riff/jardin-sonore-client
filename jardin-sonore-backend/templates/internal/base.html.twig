@@ -73,11 +73,13 @@
                             icon: 'send',
                             label: 'internal.base.nav.mailing'|trans({}, 'internal'),
                             active: currentRoute starts with 'mailing_'
+                                and not (currentRoute == 'mailing_outreach_journal')
                                 and not (currentRoute starts with 'mailing_invalid_recipients_')
                                 and not (currentRoute starts with 'mailing_audience_mask_')
                                 and not (currentRoute starts with 'mailing_recommendation_catalog_')
                                 and not (currentRoute starts with 'mailing_campaign_recommendation_'),
                         },
+                        {route: 'mailing_outreach_journal', icon: 'note', label: 'mailing.outreach.journal_title'|trans({}, 'mailing'), active: currentRoute == 'mailing_outreach_journal'},
                         {
                             route: 'newsletter_subscriber_index',
                             icon: 'people',

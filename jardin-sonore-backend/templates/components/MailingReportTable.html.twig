@@ -15,7 +15,7 @@
             {% endif %}
         </tr></thead><tbody>{% for row in results.rows %}<tr>
             {% if organizations %}<td><a href="{{ path('internal_directory_index', {section: 'organizations', selectedId: row.id}) }}">{{ row.name }}</a></td>{% else %}
-                <td>{{ row.email_address }}</td><td>{{ ('mailing.report.status.' ~ row.status)|trans({}, 'mailing') }}</td><td>{{ row.sent_at ? row.sent_at|date('d/m/Y H:i') : '—' }}</td><td>{{ row.last_error ?: '—' }}</td>
+                <td>{{ row.email_address }}</td><td>{{ ('mailing.report.status.' ~ row.status)|trans({}, 'mailing') }}</td><td>{{ row.sent_at ? row.sent_at|date('d/m/Y H:i') : '—' }}</td><td>{% if row.cancellation_reason %}{{ ('mailing.outreach.reason.' ~ row.cancellation_reason)|trans({}, 'mailing') }}{% else %}{{ row.last_error ?: '—' }}{% endif %}</td>
             {% endif %}
         </tr>{% endfor %}</tbody></table></div>
     {% endif %}
