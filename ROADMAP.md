@@ -1,6 +1,6 @@
 # Roadmap Jardin Sonore
 
-Mise à jour le 26 novembre 2026. Ce document est la **seule source de l'état courant, des priorités et du point de reprise**. `AGENTS.md` et `.codex/jardin-sonore-guidelines.md` décrivent la méthode de travail ; les plans, conceptions et bilans datés gardent le détail technique et l'état constaté à leur date. Ne pas reprendre leurs anciennes listes de tâches sans vérifier cette page. L'ordre général est : **visibilité et nouvelles demandes**, puis **gain de temps dans le backoffice**. Les priorités indiquent un ordre de travail, pas un engagement de livraison simultanée.
+Mise à jour le 27 novembre 2026. Ce document est la **seule source de l'état courant, des priorités et du point de reprise**. `AGENTS.md` et `.codex/jardin-sonore-guidelines.md` décrivent la méthode de travail ; les plans, conceptions et bilans datés gardent le détail technique et l'état constaté à leur date. Ne pas reprendre leurs anciennes listes de tâches sans vérifier cette page. L'ordre général est : **visibilité et nouvelles demandes**, puis **gain de temps dans le backoffice**. Les priorités indiquent un ordre de travail, pas un engagement de livraison simultanée.
 
 ## Newsletter et démarchage — premier lot déployé
 
@@ -16,7 +16,7 @@ Ajout demandé ensuite : rétablissement du sélecteur de prolongements dans l'�
 
 Références : [cadrage](docs/mailing-newsletter-demarchage-cadrage-2026-11-26.md), [plan du premier lot](docs/superpowers/plans/2026-11-26-newsletter-outreach-lot-1.md). Suite implémentée en local : [exclusion glissante et journal](docs/superpowers/specs/2026-11-26-outreach-exclusion-journal-design.md), avant préférences et audience newsletter. Adresse partagée bloquée dès qu’un établissement ciblé est exclu (validé). Voir le suivi du lot ci-dessous.
 
-## Démarchages : exclusion et journal — implémentés en local
+## Démarchages : exclusion et journal — déployés
 
 Suite validée par l’utilisateur : adresse partagée bloquée dès qu’un établissement ciblé est exclu. Délai proposé pour les nouvelles campagnes via `MAILING_OUTREACH_EXCLUSION_WEEKS=6`, modifiable par campagne sur la préparation d’envoi et via MCP ; zéro désactive, bornes 0–520 semaines. Les campagnes existantes gardent zéro jusqu’au choix explicite. Les newsletters restent hors fenêtre.
 
@@ -26,15 +26,15 @@ Journal dans le menu Mailing et depuis les fiches d’établissement : filtres p
 
 Migration `Version20261126195323` générée, relue et appliquée après accord aux bases locales de développement et de test uniquement ; schéma synchronisé et nouvelle génération sans changement. Deux colonnes additives, aucun retraitement historique. Retour arrière relu et simulé, sans exécution destructive.
 
-Validation : revue indépendante traitée, 812 tests / 4 196 assertions sans échec (2 dépréciations, 15 notices), régressions double message, deux campagnes/même établissement, incident après SMTP, statut Doctrine périmé et extension entièrement exclue. Formulaire réel et journal vérifiés ; recette navigateur Twig sur données fictives à 390 px sans débordement ni erreur JavaScript, navigateur fermé. Aucun envoi réel ni déploiement de ce lot. Contrôles statiques finaux consignés dans le plan.
+Validation : revue indépendante traitée ; 812 tests / 4 201 assertions sans échec (15 notices), PHPStan et style propres. Régressions double message, deux campagnes/même établissement, incident après SMTP, statut Doctrine périmé et extension entièrement exclue. Formulaire réel et journal vérifiés ; recette navigateur Twig sur données fictives à 390 px sans débordement ni erreur JavaScript, navigateur fermé. Déployé le 27 novembre sous `deploy-outreach-journal-20261127-01` (commit `4b361cf8`). La migration ciblée a été appliquée en production sans jouer les migrations historiques en attente ; le schéma est synchronisé avec le code déployé, le site et le backoffice répondent HTTP 200. Aucun envoi réel de recette.
 
 Références : [conception](docs/superpowers/specs/2026-11-26-outreach-exclusion-journal-design.md), [plan et suivi](docs/superpowers/plans/2026-11-26-outreach-exclusion-journal.md). Suite à cadrer séparément : préférences distinctes et audience newsletter réservée.
 
-## Édition de séance — ajustement demandé le 27 novembre, en local
+## Édition de séance — ajustement déployé le 27 novembre
 
 Bloc rééquilibré en « Général », « Notes privées » repliables et « Prolongements ». Suppression du label et de l’aide redondants des notes ; choix des prolongements par bouton + et dialogue natif avec recherche et miniatures. Les éléments choisis affichent une miniature de 32 px à droite et gardent ordre/retrait. La sélection reste enregistrée avec le formulaire de séance, sans sauvegarde implicite ni changement du rendu portail/PDF.
 
-Validation : test fonctionnel d’ajout/persistance adapté, PHPStan/style/Twig valides ; recette du formulaire Twig réel et des contrôleurs applicatifs : ajout, retrait, réajout, ordre, recherche, Échap/fond/boutons, conservation des notes, mobile 390 px sans débordement ni erreur JavaScript. Assets recompilés. Aucun déploiement de cet ajustement.
+Validation : test fonctionnel d’ajout/persistance adapté, PHPStan/style/Twig valides ; recette du formulaire Twig réel et des contrôleurs applicatifs : ajout, retrait, réajout, ordre, recherche, Échap/fond/boutons, conservation des notes, mobile 390 px sans débordement ni erreur JavaScript. Assets recompilés. Inclus dans `deploy-outreach-journal-20261127-01` ; site et backoffice répondent HTTP 200.
 
 ## Recommandations mailing et prochaines suites — 26 novembre
 
