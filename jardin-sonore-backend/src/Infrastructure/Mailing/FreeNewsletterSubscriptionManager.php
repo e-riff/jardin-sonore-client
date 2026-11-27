@@ -6,8 +6,8 @@ namespace App\Infrastructure\Mailing;
 
 use App\Application\Mailing\NewsletterConfirmationMailSenderInterface;
 use App\Application\Mailing\NewsletterConfirmationState;
+use App\Domain\Model\Mailing\MailingCampaignType;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
-use App\Infrastructure\Doctrine\Entity\EmailContactLinkEntity;
 use App\Infrastructure\Doctrine\Entity\NewsletterSubscriptionRequestEntity;
 use App\Infrastructure\Doctrine\Repository\EmailContactDoctrineRepository;
 use App\Infrastructure\Doctrine\Repository\NewsletterSubscriptionRequestDoctrineRepository;
@@ -28,6 +28,7 @@ final readonly class FreeNewsletterSubscriptionManager
         private NewsletterSubscriptionRequestDoctrineRepository $subscriptionRequestRepository,
         private ClockInterface $clock,
         private NewsletterConfirmationMailSenderInterface $confirmationMailSender,
+        private MailingPreferenceManager $mailingPreferenceManager,
     ) {
     }
 
@@ -122,11 +123,7 @@ final readonly class FreeNewsletterSubscriptionManager
                 throw new DomainException('This newsletter address is blocked.');
             }
             if (!$this->isSubscribed($emailContactEntity)) {
-                if ($this->hasActiveDirectoryLink($emailContactEntity) && !$emailContactEntity->hasFreeNewsletterSubscription()) {
-                    $emailContactEntity->setOptInNewsletter(true)->setUnsubscribedAt(null);
-                } else {
-                    $this->activate($emailContactEntity, $this->clock->now(), 'backoffice');
-                }
+                $this->activate($emailContactEntity, $this->clock->now(), 'backoffice');
                 $this->subscriptionRequestRepository->findLockedByContact($emailContactEntity)?->consumeAt($this->clock->now());
                 $this->entityManager->flush();
             }
@@ -147,7 +144,7 @@ final readonly class FreeNewsletterSubscriptionManager
             if (!$emailContactEntity instanceof EmailContactEntity) {
                 throw new DomainException('Unknown newsletter contact.');
             }
-            $emailContactEntity->setOptInNewsletter(false)->setUnsubscribedAt($emailContactEntity->getUnsubscribedAt() ?? $this->clock->now());
+            $this->mailingPreferenceManager->refuse($emailContactUuid, MailingCampaignType::NEWSLETTER);
             $this->subscriptionRequestRepository->findLockedByContact($emailContactEntity)?->consumeAt($this->clock->now());
             $this->entityManager->flush();
         });
@@ -155,21 +152,13 @@ final readonly class FreeNewsletterSubscriptionManager
 
     private function activate(EmailContactEntity $emailContactEntity, DateTimeImmutable $now, string $origin): void
     {
-        $emailContactEntity->confirmFreeNewsletterSubscription($now, $origin);
-        $emailContactEntity->setOptInNewsletter(true)->setUnsubscribedAt(null);
+        $this->mailingPreferenceManager->confirmNewsletter($emailContactEntity->getUuid()->toRfc4122(), $origin);
     }
 
     private function isSubscribed(EmailContactEntity $emailContactEntity): bool
     {
         return $emailContactEntity->hasFreeNewsletterSubscription() && null !== $emailContactEntity->getFreeNewsletterSubscriptionConfirmedAt()
-            && $emailContactEntity->hasOptInNewsletter() && !$emailContactEntity->isUnsubscribed();
-    }
-
-    private function hasActiveDirectoryLink(EmailContactEntity $emailContactEntity): bool
-    {
-        return $emailContactEntity->getEmailContactLinks()->exists(
-            static fn (int|string $key, EmailContactLinkEntity $emailContactLinkEntity): bool => $emailContactLinkEntity->isActive(),
-        );
+            && !$emailContactEntity->isNewsletterRefused();
     }
 
     private function state(NewsletterSubscriptionRequestEntity $subscriptionRequestEntity): NewsletterConfirmationState

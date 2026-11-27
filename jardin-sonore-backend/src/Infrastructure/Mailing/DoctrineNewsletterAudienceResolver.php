@@ -6,6 +6,7 @@ namespace App\Infrastructure\Mailing;
 
 use App\Application\Mailing\NewsletterAudienceResolution;
 use App\Application\Mailing\NewsletterAudienceResolverInterface;
+use App\Domain\Model\Mailing\MailingCampaignType;
 use App\Domain\Model\Mailing\MailingRecipientOrganizationSnapshot;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Domain\Model\Mailing\NewsletterAudienceRadiusOrigin;
@@ -45,36 +46,46 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
     public function resolve(
         NewsletterAudienceFilter $newsletterAudienceFilter,
         ?int $limit = null,
+        ?MailingCampaignType $campaignType = null,
     ): NewsletterAudienceResolution {
         if (null !== $limit && 1 > $limit) {
             throw new InvalidArgumentException('Newsletter audience resolution limit must be greater than zero.');
         }
 
-        $queryBuilder = $this->createQueryBuilder();
+        $queryBuilder = $this->createQueryBuilder($campaignType);
         $this->applyAudienceFilters($queryBuilder, $newsletterAudienceFilter);
 
-        $recipientsByEmailAddress = $this->mapRecipientsByEmailAddress($queryBuilder);
-        $explicitOrganizationRecipients = $this->findExplicitOrganizationRecipients($newsletterAudienceFilter);
+        $includeDirectory = null === $campaignType || $newsletterAudienceFilter->hasDirectoryCriteria();
+        $recipientsByEmailAddress = $includeDirectory ? $this->mapRecipientsByEmailAddress($queryBuilder) : [];
+        $explicitOrganizationRecipients = $this->findExplicitOrganizationRecipients($newsletterAudienceFilter, $campaignType);
 
         $recipientsByEmailAddress = $this->mergeRecipients($recipientsByEmailAddress, $explicitOrganizationRecipients);
 
-        $portalQueryBuilder = $this->createPortalQueryBuilder();
+        $portalQueryBuilder = $this->createPortalQueryBuilder($campaignType);
         $this->applyAudienceFilters($portalQueryBuilder, $newsletterAudienceFilter, includePersonOrganization: false);
-        $recipientsByEmailAddress = $this->mergeRecipients($recipientsByEmailAddress, $this->mapRecipientsByEmailAddress($portalQueryBuilder));
+        if ($includeDirectory) {
+            $recipientsByEmailAddress = $this->mergeRecipients($recipientsByEmailAddress, $this->mapRecipientsByEmailAddress($portalQueryBuilder));
+        }
 
         if ([] !== $newsletterAudienceFilter->getOrganizationUuids()) {
-            $explicitPortalQueryBuilder = $this->createPortalQueryBuilder();
+            $explicitPortalQueryBuilder = $this->createPortalQueryBuilder($campaignType);
             $this->applyExplicitOrganizationFilter($explicitPortalQueryBuilder, $newsletterAudienceFilter, includePersonOrganization: false);
             $recipientsByEmailAddress = $this->mergeRecipients($recipientsByEmailAddress, $this->mapRecipientsByEmailAddress($explicitPortalQueryBuilder));
         }
 
-        if ($newsletterAudienceFilter->includesFreeSubscribers()) {
-            $freeQueryBuilder = $this->createEligibleEmailQueryBuilder();
+        $directoryCount = count($recipientsByEmailAddress);
+        $subscriberCount = 0;
+        $overlapCount = 0;
+        if (MailingCampaignType::NEWSLETTER === $campaignType || (null === $campaignType && $newsletterAudienceFilter->includesFreeSubscribers())) {
+            $freeQueryBuilder = $this->createEligibleEmailQueryBuilder($campaignType);
             $freeQueryBuilder
                 ->addSelect('NULL AS display_name')
                 ->andWhere($freeQueryBuilder->expr()->eq(self::EMAIL_ALIAS . '.free_newsletter_subscription', '1'))
                 ->andWhere($freeQueryBuilder->expr()->isNotNull(self::EMAIL_ALIAS . '.free_newsletter_subscription_confirmed_at'));
-            $recipientsByEmailAddress = $this->mergeRecipients($recipientsByEmailAddress, $this->mapRecipientsByEmailAddress($freeQueryBuilder));
+            $subscriberRecipients = $this->mapRecipientsByEmailAddress($freeQueryBuilder);
+            $subscriberCount = count($subscriberRecipients);
+            $overlapCount = count(array_intersect_key($recipientsByEmailAddress, $subscriberRecipients));
+            $recipientsByEmailAddress = $this->mergeRecipients($recipientsByEmailAddress, $subscriberRecipients);
         }
 
         $recipients = array_values($recipientsByEmailAddress);
@@ -84,10 +95,10 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
             $recipients = array_slice($recipients, 0, $limit);
         }
 
-        return new NewsletterAudienceResolution($total, $recipients);
+        return new NewsletterAudienceResolution($total, $recipients, $directoryCount, $subscriberCount, $overlapCount);
     }
 
-    private function createEligibleEmailQueryBuilder(): QueryBuilder
+    private function createEligibleEmailQueryBuilder(?MailingCampaignType $campaignType): QueryBuilder
     {
         $queryBuilder = $this->connection->createQueryBuilder();
         $expr = $queryBuilder->expr();
@@ -99,16 +110,22 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
             )
             ->from('email_contact', self::EMAIL_ALIAS)
             ->where($expr->eq(self::EMAIL_ALIAS . '.active', '1'))
-            ->andWhere($expr->eq(self::EMAIL_ALIAS . '.opt_in_newsletter', '1'))
-            ->andWhere($expr->isNull(self::EMAIL_ALIAS . '.unsubscribed_at'))
+            ->andWhere(match ($campaignType) {
+                MailingCampaignType::NEWSLETTER => 'email.newsletter_refused = 0',
+                MailingCampaignType::OUTREACH => 'email.outreach_refused = 0',
+                null => 'email.opt_in_newsletter = 1 AND email.unsubscribed_at IS NULL AND email.newsletter_refused = 0 AND email.outreach_refused = 0 AND (email.directory_mailing_allowed = 1 OR (email.free_newsletter_subscription = 1 AND email.free_newsletter_subscription_confirmed_at IS NOT NULL))',
+            })
             ->andWhere('TRIM(' . self::EMAIL_ALIAS . ".email_address) <> ''")
             ->andWhere('TRIM(' . self::EMAIL_ALIAS . ".unsubscribe_token) <> ''")
             ->orderBy(self::EMAIL_ALIAS . '.email_address', 'ASC');
     }
 
-    private function createQueryBuilder(): QueryBuilder
+    private function createQueryBuilder(?MailingCampaignType $campaignType): QueryBuilder
     {
-        $queryBuilder = $this->createEligibleEmailQueryBuilder();
+        $queryBuilder = $this->createEligibleEmailQueryBuilder($campaignType);
+        if (null !== $campaignType) {
+            $queryBuilder->andWhere('email.directory_mailing_allowed = 1');
+        }
         $expr = $queryBuilder->expr();
 
         $this->addOrganizationSnapshotColumns($queryBuilder, 'COALESCE(' . self::ORGANIZATION_ALIAS . '.id, ' . self::PERSON_ORGANIZATION_ALIAS . '.id)');
@@ -153,9 +170,12 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
         );
     }
 
-    private function createPortalQueryBuilder(): QueryBuilder
+    private function createPortalQueryBuilder(?MailingCampaignType $campaignType): QueryBuilder
     {
-        $queryBuilder = $this->createEligibleEmailQueryBuilder();
+        $queryBuilder = $this->createEligibleEmailQueryBuilder($campaignType);
+        if (null !== $campaignType) {
+            $queryBuilder->andWhere('email.directory_mailing_allowed = 1');
+        }
         $expr = $queryBuilder->expr();
 
         $this->addOrganizationSnapshotColumns($queryBuilder, self::ORGANIZATION_ALIAS . '.id');
@@ -466,7 +486,7 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
     /**
      * @return array<string, NewsletterRecipient>
      */
-    private function findExplicitOrganizationRecipients(NewsletterAudienceFilter $newsletterAudienceFilter): array
+    private function findExplicitOrganizationRecipients(NewsletterAudienceFilter $newsletterAudienceFilter, ?MailingCampaignType $campaignType): array
     {
         $organizationUuids = $newsletterAudienceFilter->getOrganizationUuids();
 
@@ -474,7 +494,7 @@ final readonly class DoctrineNewsletterAudienceResolver implements NewsletterAud
             return [];
         }
 
-        $queryBuilder = $this->createQueryBuilder();
+        $queryBuilder = $this->createQueryBuilder($campaignType);
         $this->applyExplicitOrganizationFilter($queryBuilder, $newsletterAudienceFilter);
 
         return $this->mapRecipientsByEmailAddress($queryBuilder);

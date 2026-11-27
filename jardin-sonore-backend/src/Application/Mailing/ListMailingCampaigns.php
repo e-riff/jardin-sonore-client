@@ -28,7 +28,7 @@ final readonly class ListMailingCampaigns
 
             if ($audienceFilter->hasActiveCriteria()) {
                 try {
-                    $audienceRecipientCount = $this->newsletterAudienceResolver->resolve($audienceFilter, 1)->getTotal();
+                    $audienceRecipientCount = $this->newsletterAudienceResolver->resolve($audienceFilter, 1, $mailingCampaign->getCampaignType())->getTotal();
                 } catch (InvalidArgumentException) {
                     $audienceRecipientCount = null;
                 }

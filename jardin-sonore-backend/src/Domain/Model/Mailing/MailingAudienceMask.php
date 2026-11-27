@@ -24,10 +24,31 @@ final class MailingAudienceMask implements UuidIdentifiableInterface
         private DateTimeImmutable $createdAt = new DateTimeImmutable(),
         private DateTimeImmutable $updatedAt = new DateTimeImmutable(),
         ?Uuid $uuid = null,
+        private ?string $reservedRole = null,
     ) {
         $this->initializeUuid($uuid);
         $this->name = $this->normalizeName($name);
         $this->materializedMunicipalityInseeCodes = $this->normalizeMaterializedMunicipalityInseeCodes($materializedMunicipalityInseeCodes);
+    }
+
+    public function isNewsletterMask(): bool
+    {
+        return 'newsletter' === $this->reservedRole;
+    }
+
+    public function getReservedRole(): ?string
+    {
+        return $this->reservedRole;
+    }
+
+    public function reserveForNewsletter(): void
+    {
+        $this->reservedRole = 'newsletter';
+    }
+
+    public function canBeDeleted(): bool
+    {
+        return !$this->isNewsletterMask();
     }
 
     public function getName(): string

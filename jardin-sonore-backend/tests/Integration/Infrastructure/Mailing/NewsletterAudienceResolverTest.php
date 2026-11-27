@@ -6,6 +6,7 @@ namespace App\Tests\Integration\Infrastructure\Mailing;
 
 use App\Domain\Model\AddressBook\OrganizationSector;
 use App\Domain\Model\AddressBook\OrganizationType;
+use App\Domain\Model\Mailing\MailingCampaignType;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Domain\Model\Mailing\NewsletterAudienceRadiusOrigin;
 use App\Domain\Model\Mailing\NewsletterRecipient;
@@ -67,6 +68,25 @@ final class NewsletterAudienceResolverTest extends KernelTestCase
         $this->link($personEntity, $this->email('person'));
 
         self::assertSame(['organization@example.test', 'person@example.test'], $this->addresses());
+    }
+
+    public function testTypedNewsletterUnitesSourcesAndOutreachDoesNotUseSubscriptionAlone(): void
+    {
+        $this->connection->executeStatement('UPDATE email_contact SET newsletter_refused = 1, outreach_refused = 1');
+        $organization = $this->organization();
+        $shared = $this->email('typed-shared', free: true)->setDirectoryMailingAllowed(true)->setOutreachRefused(true);
+        $this->link($organization, $shared);
+        $this->email('typed-free', free: true);
+        $this->entityManager->flush();
+        $this->link($this->organization(), $this->email('typed-unrelated')->setDirectoryMailingAllowed(true));
+        $filter = new NewsletterAudienceFilter(organizationUuids: [$organization->getUuid()->toRfc4122()]);
+        $newsletter = $this->resolver()->resolve($filter, campaignType: MailingCampaignType::NEWSLETTER);
+        self::assertSame(2, $newsletter->getTotal());
+        self::assertSame(1, $newsletter->getDirectoryCount());
+        self::assertSame(2, $newsletter->getSubscriberCount());
+        self::assertSame(1, $newsletter->getOverlapCount());
+        self::assertSame(2, $this->resolver()->resolve(new NewsletterAudienceFilter(includeFreeSubscribers: true), campaignType: MailingCampaignType::NEWSLETTER)->getTotal());
+        self::assertSame(0, $this->resolver()->resolve($filter, campaignType: MailingCampaignType::OUTREACH)->getTotal());
     }
 
     public function testPortalSourceDoesNotRequireAnOrganizationEmail(): void
@@ -376,7 +396,7 @@ final class NewsletterAudienceResolverTest extends KernelTestCase
 
     private function email(string $localPart, bool $free = false): EmailContactEntity
     {
-        $emailContactEntity = (new EmailContactEntity())->setEmailAddress("{$localPart}@example.test");
+        $emailContactEntity = (new EmailContactEntity())->setDirectoryMailingAllowed(true)->setEmailAddress("{$localPart}@example.test");
         if ($free) {
             $emailContactEntity->confirmFreeNewsletterSubscription(new DateTimeImmutable(), 'test');
         }

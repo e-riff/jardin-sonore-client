@@ -23,4 +23,5 @@ Nos recommandations
 {% endfor %}
 {% endif %}
 
-Se désinscrire : {{ unsubscribeUrl }}
+{{ unsubscribeLabelKey|trans({}, 'newsletter') }} : {{ unsubscribeUrl }}
+{{ 'preferences.title'|trans({}, 'newsletter') }} : {{ preferencesUrl }}

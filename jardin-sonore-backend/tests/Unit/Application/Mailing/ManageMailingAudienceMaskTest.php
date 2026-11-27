@@ -44,6 +44,11 @@ final class InMemoryMailingAudienceMaskRepository implements MailingAudienceMask
     /** @var array<string, MailingAudienceMask> */
     private array $masks = [];
 
+    public function findNewsletterMask(): ?MailingAudienceMask
+    {
+        return null;
+    }
+
     public function findByUuid(Uuid $uuid): ?MailingAudienceMask
     {
         return $this->masks[$uuid->toRfc4122()] ?? null;

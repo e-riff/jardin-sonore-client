@@ -5,15 +5,18 @@ declare(strict_types=1);
 namespace App\Tests\Integration\Infrastructure\Mailing;
 
 use App\Application\Mailing\MailingCampaignSummarySenderInterface;
+use App\Application\Mailing\MailingExecutionLockInterface;
 use App\Application\Mailing\Message\SendMailingCampaignRecipientMessage;
 use App\Application\Mailing\MessageHandler\SendMailingCampaignRecipientMessageHandler;
 use App\Application\Mailing\NewsletterMailSenderInterface;
 use App\Application\Mailing\NewsletterRecipientEligibilityInterface;
 use App\Application\Mailing\NewsletterRendererInterface;
+use App\Application\Mailing\OutreachAudiencePolicy;
 use App\Application\Mailing\RecordNewsletterRecommendationUsages;
 use App\Application\Mailing\SendMailingCampaignCompletionSummary;
 use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Model\Mailing\MailingCampaignStatus;
+use App\Domain\Model\Mailing\MailingCampaignType;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Domain\Model\Mailing\NewsletterRecipient;
 use App\Domain\Model\ValueObject\EmailAddress;
@@ -52,7 +55,7 @@ final class NewsletterRecipientEligibilityTest extends KernelTestCase
         $this->connection = $this->entityManager->getConnection();
         self::assertStringEndsWith('_test', (string) $this->connection->getDatabase());
         $this->connection->beginTransaction();
-        $this->emailContactEntity = (new EmailContactEntity())->setEmailAddress('eligibility-' . bin2hex(random_bytes(8)) . '@example.test');
+        $this->emailContactEntity = (new EmailContactEntity())->setDirectoryMailingAllowed(true)->setEmailAddress('eligibility-' . bin2hex(random_bytes(8)) . '@example.test');
         $this->entityManager->persist($this->emailContactEntity);
         $this->entityManager->flush();
         $this->campaignUuid = Uuid::v4()->toRfc4122();
@@ -76,6 +79,24 @@ final class NewsletterRecipientEligibilityTest extends KernelTestCase
 
         self::assertTrue($newsletterRecipientEligibility->isEligible(' ' . strtoupper($this->emailContactEntity->getEmailAddress()) . ' '));
         self::assertFalse($newsletterRecipientEligibility->isEligible('missing-' . bin2hex(random_bytes(8)) . '@example.test'));
+    }
+
+    public function testLegacyCampaignRejectsAnAddressWithoutAdmissionOrSubscription(): void
+    {
+        $this->emailContactEntity->setDirectoryMailingAllowed(false);
+        $this->entityManager->flush();
+        self::assertFalse((new DoctrineNewsletterRecipientEligibility($this->connection))->isEligible($this->emailContactEntity->getEmailAddress()));
+    }
+
+    public function testTypedCampaignsRespectOnlyTheirOwnRefusal(): void
+    {
+        $this->emailContactEntity->setDirectoryMailingAllowed(true)->setOutreachRefused(true)->refreshHistoricalMailingPreferences();
+        $this->entityManager->flush();
+        $eligibility = new DoctrineNewsletterRecipientEligibility($this->connection);
+        $email = $this->emailContactEntity->getEmailAddress();
+        self::assertTrue($eligibility->isEligible($email, MailingCampaignType::NEWSLETTER));
+        self::assertFalse($eligibility->isEligible($email, MailingCampaignType::OUTREACH));
+        self::assertFalse($eligibility->isEligible($email));
     }
 
     #[DataProvider('ineligibleStates')]
@@ -159,8 +180,8 @@ final class NewsletterRecipientEligibilityTest extends KernelTestCase
                 $this->createStub(MailingCampaignSummarySenderInterface::class),
                 new NullLogger(),
             ),
-            self::getContainer()->get(\App\Application\Mailing\MailingExecutionLockInterface::class),
-            self::getContainer()->get(\App\Application\Mailing\OutreachAudiencePolicy::class),
+            self::getContainer()->get(MailingExecutionLockInterface::class),
+            self::getContainer()->get(OutreachAudiencePolicy::class),
         );
         $handler($message);
 

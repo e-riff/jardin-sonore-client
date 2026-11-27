@@ -3,6 +3,7 @@
 {% set title = 'mailing.new.title'|trans({}, 'mailing') %}
 
 {% block internal_body %}
+    {% if hasNewsletterMask is defined and not hasNewsletterMask %}<div class="internal-alert">{{ 'mailing.audience.mask.configure_required'|trans({}, 'mailing') }} <a href="{{ path('mailing_audience_mask_index') }}">{{ 'mailing.audience.mask.catalog_title'|trans({}, 'mailing') }}</a></div>{% endif %}
     {% include 'components/_internal_back_button.html.twig' with { href: path('mailing_index'), label: 'mailing.new.back'|trans({}, 'mailing') } only %}
     <section class="internal-page-heading">
         <div>

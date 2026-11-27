@@ -15,6 +15,7 @@ use App\Application\Mailing\GetMailingCampaign;
 use App\Application\Mailing\MailingCampaignDeliveryTransactionInterface;
 use App\Application\Mailing\NewsletterAudienceResolution;
 use App\Application\Mailing\NewsletterAudienceResolverInterface;
+use App\Application\Mailing\OutreachAudiencePolicy;
 use App\Application\Mailing\SendMailingCampaign;
 use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Model\Mailing\MailingCampaignType;
@@ -48,7 +49,7 @@ final class NewsletterAudienceCampaignFlowTest extends KernelTestCase
         $this->entityManager = self::getContainer()->get(EntityManagerInterface::class);
         self::assertStringEndsWith('_test', (string) $this->entityManager->getConnection()->getDatabase());
         $this->entityManager->getConnection()->beginTransaction();
-        $this->entityManager->getConnection()->executeStatement('UPDATE email_contact SET opt_in_newsletter = 0');
+        $this->entityManager->getConnection()->executeStatement('UPDATE email_contact SET opt_in_newsletter = 0, newsletter_refused = 1');
     }
 
     protected function tearDown(): void
@@ -69,7 +70,7 @@ final class NewsletterAudienceCampaignFlowTest extends KernelTestCase
         ]);
         $resolver = $this->createStub(NewsletterAudienceResolverInterface::class);
         $resolver->method('resolve')->willReturn(new NewsletterAudienceResolution(2, [$recipient, $recipient]));
-        $send = new SendMailingCampaign($repository, $resolver, self::getContainer()->get(DoctrineMailingDeliveryQueue::class), new NullLogger(), self::getContainer()->get(MailingCampaignDeliveryTransactionInterface::class), self::getContainer()->get(\App\Application\Mailing\OutreachAudiencePolicy::class));
+        $send = new SendMailingCampaign($repository, $resolver, self::getContainer()->get(DoctrineMailingDeliveryQueue::class), new NullLogger(), self::getContainer()->get(MailingCampaignDeliveryTransactionInterface::class), self::getContainer()->get(OutreachAudiencePolicy::class));
         try {
             $send($campaign);
             self::fail('Duplicate recipients must reject the whole delivery.');
@@ -97,7 +98,7 @@ final class NewsletterAudienceCampaignFlowTest extends KernelTestCase
         $loadedCampaign = (self::getContainer()->get(GetMailingCampaign::class))($campaign->getUuid());
         self::assertNotNull($loadedCampaign);
         self::assertTrue($loadedCampaign->getAudienceFilter()->includesFreeSubscribers());
-        self::assertSame(2, self::getContainer()->get(NewsletterAudienceResolverInterface::class)->resolve($loadedCampaign->getAudienceFilter())->getTotal());
+        self::assertSame(2, self::getContainer()->get(NewsletterAudienceResolverInterface::class)->resolve($loadedCampaign->getAudienceFilter(), campaignType: MailingCampaignType::NEWSLETTER)->getTotal());
         self::assertSame(2, (self::getContainer()->get(SendMailingCampaign::class))($loadedCampaign));
         self::assertCount(2, self::getContainer()->get(DoctrineMailingDeliveryQueue::class)->findCampaignRecipientEmailAddresses($campaign->getUuid()->toRfc4122()));
     }

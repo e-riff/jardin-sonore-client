@@ -51,6 +51,7 @@
                 <article class="mailing-preview-meta__item">
                     <strong>{{ 'mailing.send.summary.recipients'|trans({}, 'mailing') }}</strong>
                     <p>{{ 'mailing.index.audience.recipients'|trans({ count: audienceResolution.total }, 'mailing') }}</p>
+                    <p>{{ 'mailing.audience.source_counts'|trans({directory: audienceResolution.directoryCount, subscribers: audienceResolution.subscriberCount, overlap: audienceResolution.overlapCount, total: audienceResolution.total + excludedRecipientCount}, 'mailing') }}</p>
                 </article>
                 <article class="mailing-preview-meta__item">
                     <strong>{{ 'mailing.send.summary.status'|trans({}, 'mailing') }}</strong>

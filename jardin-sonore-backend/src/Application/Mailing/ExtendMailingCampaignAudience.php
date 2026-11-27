@@ -33,7 +33,7 @@ final readonly class ExtendMailingCampaignAudience
         }
 
         $mailingCampaign->assertAudienceAllowed($audienceFilter);
-        $audienceResolution = $this->newsletterAudienceResolver->resolve($audienceFilter);
+        $audienceResolution = $this->newsletterAudienceResolver->resolve($audienceFilter, campaignType: $mailingCampaign->getCampaignType());
         $matchedRecipients = $audienceResolution->getRecipients();
 
         if ([] === $matchedRecipients) {

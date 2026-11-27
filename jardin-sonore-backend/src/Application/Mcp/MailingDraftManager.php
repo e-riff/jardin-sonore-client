@@ -67,12 +67,12 @@ final readonly class MailingDraftManager
         return $this->view($this->findCampaign($campaignUuid));
     }
 
-    /** @return list<array{maskUuid: string, name: string}> */
+    /** @return list<array{maskUuid: string, name: string, newsletterReserved: bool}> */
     public function masks(): array
     {
         $masks = [];
         foreach ($this->maskRepository->findAllOrderedByUpdatedAtDesc() as $mask) {
-            $masks[] = ['maskUuid' => (string) $mask->getUuid(), 'name' => $mask->getName()];
+            $masks[] = ['maskUuid' => (string) $mask->getUuid(), 'name' => $mask->getName(), 'newsletterReserved' => $mask->isNewsletterMask()];
             if (20 <= count($masks)) {
                 break;
             }
@@ -104,6 +104,10 @@ final readonly class MailingDraftManager
                 $blocks ?? [['id' => 'initial', 'kind' => 'paragraph', 'text' => $mainText]],
             );
         }
+        $newsletterMask = MailingCampaignType::NEWSLETTER === $campaignType ? $this->maskRepository->findNewsletterMask() : null;
+        if (MailingCampaignType::NEWSLETTER === $campaignType && null === $newsletterMask) {
+            throw new InvalidArgumentException('Configure the reserved newsletter audience mask first.');
+        }
         $campaign = new MailingCampaign(
             internalTitle: $this->requiredText($input, 'internalTitle', 255),
             emailSubject: $this->requiredText($input, 'emailSubject', 255),
@@ -121,8 +125,15 @@ final readonly class MailingDraftManager
             introBlocks: null,
             uuid: $uuid,
         );
+        if (null !== $newsletterMask) {
+            $campaign->applyAudienceMask($newsletterMask);
+        }
         if (isset($input['audienceMaskUuid'])) {
-            $campaign->applyAudienceMask($this->findMask($input['audienceMaskUuid']));
+            $requestedMask = $this->findMask($input['audienceMaskUuid']);
+            if (null !== $newsletterMask && !$requestedMask->getUuid()->equals($newsletterMask->getUuid())) {
+                throw new InvalidArgumentException('New newsletters must start from the reserved audience mask.');
+            }
+            $campaign->applyAudienceMask($requestedMask);
         }
         $this->campaignRepository->save($campaign);
 

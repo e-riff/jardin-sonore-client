@@ -1,5 +1,7 @@
 "use server";
 
+import {changedMailingPreferences} from "@/lib/portal/mailing-preferences";
+
 import {redirect} from "next/navigation";
 import {revalidatePath} from "next/cache";
 import {PortalApiClient} from "@/lib/portal/api-client";
@@ -58,7 +60,7 @@ export async function updatePortalProfileAction(_previousState: PortalProfileFor
         const result = await portalApiClient.updateProfile({
             firstName: typeof formData.get("firstName") === "string" ? String(formData.get("firstName")).trim() : "",
             lastName: typeof formData.get("lastName") === "string" ? String(formData.get("lastName")).trim() : "",
-            newsletterSubscribed: formData.get("newsletterSubscribed") === "on",
+            ...changedMailingPreferences(formData),
             newSessionNotificationsEnabled: formData.get("newSessionNotificationsEnabled") === "on",
         });
         if (!result.response.ok || !result.data) {

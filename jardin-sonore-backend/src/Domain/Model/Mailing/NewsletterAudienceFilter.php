@@ -47,6 +47,26 @@ final readonly class NewsletterAudienceFilter
         $this->assertRadiusIsConsistent();
     }
 
+    public function withFreeSubscribers(bool $includeFreeSubscribers): self
+    {
+        return new self(
+            organizationTypes: $this->organizationTypes,
+            organizationSectors: $this->organizationSectors,
+            organizationUuids: $this->organizationUuids,
+            tagUuids: $this->tagUuids,
+            directoryEntryUuids: $this->directoryEntryUuids,
+            regionCodes: $this->regionCodes,
+            departmentCodes: $this->departmentCodes,
+            municipalityInseeCodes: $this->municipalityInseeCodes,
+            radiusKilometers: $this->radiusKilometers,
+            radiusOrigin: $this->radiusOrigin,
+            radiusOriginMunicipalityInseeCode: $this->radiusOriginMunicipalityInseeCode,
+            radiusOriginCustomLatitude: $this->radiusOriginCustomLatitude,
+            radiusOriginCustomLongitude: $this->radiusOriginCustomLongitude,
+            includeFreeSubscribers: $includeFreeSubscribers,
+        );
+    }
+
     public static function empty(): self
     {
         return new self();
@@ -142,6 +162,14 @@ final readonly class NewsletterAudienceFilter
     public function includesFreeSubscribers(): bool
     {
         return $this->includeFreeSubscribers;
+    }
+
+    public function hasDirectoryCriteria(): bool
+    {
+        return [] !== $this->organizationTypes || [] !== $this->organizationSectors
+            || [] !== $this->tagUuids || [] !== $this->directoryEntryUuids
+            || [] !== $this->regionCodes || [] !== $this->departmentCodes
+            || [] !== $this->municipalityInseeCodes || null !== $this->radiusKilometers;
     }
 
     public function hasActiveCriteria(): bool

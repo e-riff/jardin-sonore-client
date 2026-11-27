@@ -35,6 +35,11 @@ final class EmailContact implements IdentifiableInterface, UuidIdentifiableInter
         private bool $freeNewsletterSubscription = false,
         private ?DateTimeImmutable $freeNewsletterSubscriptionConfirmedAt = null,
         private ?string $freeNewsletterSubscriptionOrigin = null,
+        private bool $directoryMailingAllowed = false,
+        private bool $newsletterRefused = false,
+        private ?DateTimeImmutable $newsletterRefusedAt = null,
+        private bool $outreachRefused = false,
+        private ?DateTimeImmutable $outreachRefusedAt = null,
     ) {
         $this->initializeId($id);
         $this->initializeUuid($uuid);
@@ -44,6 +49,31 @@ final class EmailContact implements IdentifiableInterface, UuidIdentifiableInter
     }
 
     private string $unsubscribeToken;
+
+    public function isDirectoryMailingAllowed(): bool
+    {
+        return $this->directoryMailingAllowed;
+    }
+
+    public function isNewsletterRefused(): bool
+    {
+        return $this->newsletterRefused;
+    }
+
+    public function getNewsletterRefusedAt(): ?DateTimeImmutable
+    {
+        return $this->newsletterRefusedAt;
+    }
+
+    public function isOutreachRefused(): bool
+    {
+        return $this->outreachRefused;
+    }
+
+    public function getOutreachRefusedAt(): ?DateTimeImmutable
+    {
+        return $this->outreachRefusedAt;
+    }
 
     public function getEmailAddress(): EmailAddress
     {
@@ -99,6 +129,10 @@ final class EmailContact implements IdentifiableInterface, UuidIdentifiableInter
     {
         $this->unsubscribedAt = $unsubscribedAt ?? new DateTimeImmutable();
         $this->optInNewsletter = false;
+        $this->newsletterRefused = true;
+        $this->outreachRefused = true;
+        $this->newsletterRefusedAt = $this->unsubscribedAt;
+        $this->outreachRefusedAt = $this->unsubscribedAt;
     }
 
     public function resubscribe(): void

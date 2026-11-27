@@ -13,6 +13,38 @@ use PHPUnit\Framework\TestCase;
 
 final class EmailContactMapperTest extends TestCase
 {
+    public function testHistoricalProjectionRemainsConservativeWithUndatedRefusal(): void
+    {
+        $emailContactEntity = (new EmailContactEntity())->setDirectoryMailingAllowed(true)->setNewsletterRefused(true);
+        $emailContactEntity->refreshHistoricalMailingPreferences();
+        self::assertFalse($emailContactEntity->hasOptInNewsletter());
+        self::assertNull($emailContactEntity->getUnsubscribedAt());
+        $date = new DateTimeImmutable('2026-11-27');
+        $emailContactEntity->setOutreachRefused(true)->setOutreachRefusedAt($date)->refreshHistoricalMailingPreferences();
+        self::assertSame($date, $emailContactEntity->getUnsubscribedAt());
+        $emailContactEntity->setNewsletterRefused(false)->refreshHistoricalMailingPreferences();
+        self::assertFalse($emailContactEntity->hasOptInNewsletter());
+        $emailContactEntity->setOutreachRefused(false)->refreshHistoricalMailingPreferences();
+        self::assertTrue($emailContactEntity->hasOptInNewsletter());
+        self::assertNull($emailContactEntity->getUnsubscribedAt());
+    }
+
+    public function testIndependentPreferencesSurviveMappingWithoutInventingDates(): void
+    {
+        $emailContactEntity = (new EmailContactEntity())->setEmailAddress('shared@example.test')
+            ->setDirectoryMailingAllowed(false)->setNewsletterRefused(true)
+            ->setOutreachRefused(true)->setOutreachRefusedAt(new DateTimeImmutable('2026-11-27 09:00:00'));
+        $emailContactMapper = new EmailContactMapper();
+        $emailContact = $emailContactMapper->toDomain($emailContactEntity);
+        $restoredEmailContactEntity = $emailContactMapper->toEntity($emailContact);
+
+        self::assertFalse($restoredEmailContactEntity->isDirectoryMailingAllowed());
+        self::assertTrue($restoredEmailContactEntity->isNewsletterRefused());
+        self::assertNull($restoredEmailContactEntity->getNewsletterRefusedAt());
+        self::assertTrue($restoredEmailContactEntity->isOutreachRefused());
+        self::assertSame($emailContactEntity->getOutreachRefusedAt(), $restoredEmailContactEntity->getOutreachRefusedAt());
+    }
+
     public function testHistoricalConsentDoesNotBecomeAFreeSubscription(): void
     {
         $emailContactEntity = (new EmailContactEntity())->setEmailAddress('historical@example.test');

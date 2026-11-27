@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Application\Controller;
 
-use App\Application\Mailing\CreateMailingCampaign;
 use App\Application\Mailing\CreateMailingCampaignInput;
 use App\Domain\Model\Mailing\MailingCampaignType;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
 use App\Kernel;
+use App\Tests\Fixtures\CreatesMailingWithNewsletterMask;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpKernel\KernelInterface;
 
 final class MailingCampaignContentControllerTest extends WebTestCase
 {
+    use CreatesMailingWithNewsletterMask;
+
     protected static function createKernel(array $options = []): KernelInterface
     {
         return new Kernel($options['environment'] ?? 'test', $options['debug'] ?? true);
@@ -46,7 +48,7 @@ final class MailingCampaignContentControllerTest extends WebTestCase
         $entityManager->persist($admin);
         $entityManager->flush();
         $client->loginUser($admin);
-        $campaign = (static::getContainer()->get(CreateMailingCampaign::class))(new CreateMailingCampaignInput(
+        $campaign = ($this->configuredCampaignCreator())(new CreateMailingCampaignInput(
             internalTitle: 'Outreach test', emailSubject: 'Subject', publicTitle: 'Title', mainText: 'Proposal',
             subtitle: null, callToActionLabel: null, callToActionUrl: null, bannerImageFile: null, campaignType: MailingCampaignType::OUTREACH,
         ));
@@ -71,7 +73,7 @@ final class MailingCampaignContentControllerTest extends WebTestCase
         $entityManager->persist($admin);
         $entityManager->flush();
         $client->loginUser($admin);
-        $campaign = (static::getContainer()->get(CreateMailingCampaign::class))(new CreateMailingCampaignInput(
+        $campaign = ($this->configuredCampaignCreator())(new CreateMailingCampaignInput(
             internalTitle: 'Newsletter test', emailSubject: 'Subject', publicTitle: 'Title', mainText: 'Editorial to preserve',
             subtitle: null, callToActionLabel: null, callToActionUrl: null, bannerImageFile: null, campaignType: MailingCampaignType::NEWSLETTER,
         ));

@@ -74,12 +74,12 @@ subscriber:
     status_help:
       title: "Comprendre les abonnements et les fiches"
       subscribed: "Le système considère cette adresse éligible aux envois si elle correspond à l’audience choisie. Cela peut venir d’un accord attesté au backoffice, d’une case cochée sur le portail ou d’une inscription publique confirmée. Attention : une nouvelle adresse créée par import de l’annuaire reçoit actuellement cet état par défaut, sans preuve d’un accord individuel enregistrée."
-      not_subscribed: "Aucune autorisation d’envoi n’est enregistrée pour cette adresse. Exemple : l’adresse figure dans une fiche de l’annuaire, mais la case newsletter n’a pas été cochée. La fiche et l’adresse restent conservées."
-      unsubscribed: "La personne a retiré son autorisation. Exemple : elle s’est désinscrite depuis son profil portail ou a demandé le retrait au backoffice. L’adresse reste conservée et est exclue des envois, même si plusieurs fiches l’utilisent."
+      not_subscribed: "Cette adresse ne dispose ni d’admission au ciblage professionnel ni d’inscription volontaire confirmée. Ses fiches restent conservées."
+      unsubscribed: "La réception de la newsletter est refusée pour cette adresse, y compris sur toutes ses fiches. Pour les états repris de l’ancien système, l’origine et la date du refus peuvent être inconnues."
       inactive: "L’adresse a été désactivée manuellement dans le backoffice. Elle reste conservée, mais ne peut pas recevoir de campagne. Ce statut est différent d’une désinscription demandée par la personne."
-      pending: "La personne a rempli le formulaire public, mais n’a pas encore cliqué sur le lien reçu par e-mail. L’adresse ne recevra pas de newsletter tant que l’inscription n’est pas confirmée."
+      pending: "Une demande d’inscription publique attend sa confirmation. Elle n’ajoute pas encore cette adresse aux abonnés volontaires ; un éventuel ciblage professionnel déjà autorisé reste indépendant."
   status:
-    subscribed: "Inscription active"
+    subscribed: "Réception autorisée"
     not_subscribed: "Non inscrit"
     unsubscribed: "Désinscrit"
     inactive: "Adresse désactivée"
@@ -90,3 +90,31 @@ subscriber:
     unsubscribed: "Désinscrit"
     inactive: "Inactif"
     pending: "En attente"
+
+preferences:
+  title: Mes préférences de réception
+  shared: Ces choix concernent cette adresse, y compris lorsqu’elle est utilisée pour plusieurs établissements. Les messages de service restent indépendants.
+  saved: Vos préférences ont été enregistrées.
+  newsletter_stopped: La newsletter est désactivée.
+  newsletter_available: La réception de la newsletter n’est pas refusée. Elle dépend de votre inscription ou du public sélectionné.
+  outreach_stopped: Les propositions sont désactivées.
+  outreach_available: Les propositions ne sont pas refusées. Leur réception dépend du public sélectionné.
+  stop_newsletter: Ne plus recevoir la newsletter
+  stop_outreach: Ne plus recevoir de propositions
+  stop_all: Tout arrêter
+  resubscribe: Pour recevoir à nouveau la newsletter, utilisez le formulaire d’inscription sur le site Jardin Sonore et confirmez votre adresse.
+
+preferences.directory_allowed: Adresse admise au ciblage professionnel.
+preferences.directory_blocked: Adresse non admise au ciblage professionnel.
+preferences.explicit_subscription: Inscription volontaire à la newsletter enregistrée.
+preferences.no_explicit_subscription: Aucune inscription volontaire enregistrée.
+preferences.unknown_date: Date du refus inconnue
+preferences.allow_directory: Autoriser le ciblage professionnel
+preferences.allow_outreach: Autoriser à nouveau les propositions
+preferences.directory_help: Autoriser le ciblage ne lève aucun refus et ne crée pas d’abonnement. Vérifiez le contexte professionnel de cette adresse avant de l’autoriser.
+
+preferences.cancel: Annuler
+
+subscriber.index.origin.portal: Portail
+
+preferences.invalid_request: Cette demande a expiré. Rechargez la page et réessayez.

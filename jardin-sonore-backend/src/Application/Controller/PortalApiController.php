@@ -176,6 +176,8 @@ final class PortalApiController extends AbstractController
             'lastName' => $userEntity->getLastName(),
             'avatarPath' => $userEntity->getAvatarPath(),
             'newsletterSubscribed' => $this->portalNewsletterSubscriptionManager->isEnabled($userEntity),
+            'newsletterSubscriptionConfirmed' => $this->portalNewsletterSubscriptionManager->hasConfirmedSubscription($userEntity),
+            'outreachAllowed' => $this->portalNewsletterSubscriptionManager->isOutreachAllowed($userEntity),
             'newSessionNotificationsEnabled' => $userEntity->isNewSessionNotificationsEnabled(),
             'organizations' => array_map(static fn ($organizationEntity): array => [
                 'uuid' => $organizationEntity->getUuid()->toRfc4122(),
@@ -197,7 +199,7 @@ final class PortalApiController extends AbstractController
             return new JsonResponse(['message' => 'Profile fields are too long.'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        if (array_key_exists('newsletterSubscribed', $payload) && !is_bool($payload['newsletterSubscribed'])) {
+        if ((array_key_exists('outreachAllowed', $payload) && !is_bool($payload['outreachAllowed'])) || (array_key_exists('newsletterSubscribed', $payload) && !is_bool($payload['newsletterSubscribed']))) {
             return new JsonResponse(['message' => 'Newsletter preference must be a boolean.'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
@@ -206,6 +208,9 @@ final class PortalApiController extends AbstractController
             $this->entityManager->getConnection()->transactional(function () use ($payload, $userEntity, $firstName, $lastName, $newSessionNotificationsEnabled): void {
                 if (array_key_exists('newsletterSubscribed', $payload)) {
                     $this->portalNewsletterSubscriptionManager->setEnabled($userEntity, $payload['newsletterSubscribed']);
+                }
+                if (array_key_exists('outreachAllowed', $payload)) {
+                    $this->portalNewsletterSubscriptionManager->setOutreachAllowed($userEntity, $payload['outreachAllowed']);
                 }
                 $userEntity->setFirstName($firstName)->setLastName($lastName);
                 if (null !== $newSessionNotificationsEnabled) {

@@ -13,8 +13,10 @@ use App\Infrastructure\Doctrine\Entity\UserEntity;
 use App\Infrastructure\Doctrine\Repository\EmailContactDoctrineRepository;
 use App\Infrastructure\Doctrine\Repository\NewsletterSubscriptionRequestDoctrineRepository;
 use App\Infrastructure\Mailing\FreeNewsletterSubscriptionManager;
+use App\Infrastructure\Mailing\MailingPreferenceManager;
 use App\Infrastructure\Portal\PortalNewsletterSubscriptionManager;
 use App\Kernel;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use DomainException;
 use RuntimeException;
@@ -49,6 +51,7 @@ final class FreeNewsletterSubscriptionManagerTest extends KernelTestCase
             self::getContainer()->get(NewsletterSubscriptionRequestDoctrineRepository::class),
             $this->clock,
             $this->sender,
+            new MailingPreferenceManager($this->entityManager, self::getContainer()->get(EmailContactDoctrineRepository::class), $this->clock),
         );
     }
 
@@ -75,6 +78,30 @@ final class FreeNewsletterSubscriptionManagerTest extends KernelTestCase
         self::assertSame(NewsletterConfirmationState::CONFIRMED, $this->manager->confirm($rawToken));
         self::assertTrue($this->contact()->hasOptInNewsletter());
         self::assertSame('footer', $this->contact()->getFreeNewsletterSubscriptionOrigin());
+    }
+
+    public function testBackofficeSubscriptionKeepsTheSeparateOutreachRefusal(): void
+    {
+        $emailContactEntity = (new EmailContactEntity())->setEmailAddress($this->emailAddress)->setOutreachRefused(true);
+        $this->entityManager->persist($emailContactEntity);
+        $this->entityManager->flush();
+        $this->manager->subscribeFromBackoffice($this->emailAddress, true);
+        self::assertTrue($this->contact()->isOutreachRefused());
+        self::assertTrue($this->contact()->hasFreeNewsletterSubscription());
+        self::assertFalse($this->contact()->hasOptInNewsletter());
+    }
+
+    public function testLegacyGlobalLinkDatesOnlyTheNewlyRefusedScopeToday(): void
+    {
+        $oldRefusal = new DateTimeImmutable('2026-01-01');
+        $contact = (new EmailContactEntity())->setEmailAddress($this->emailAddress)->setDirectoryMailingAllowed(true)
+            ->setNewsletterRefused(true)->setNewsletterRefusedAt($oldRefusal)->refreshHistoricalMailingPreferences();
+        $this->entityManager->persist($contact);
+        $this->entityManager->flush();
+        (self::getContainer()->get(UnsubscribeNewsletterRecipient::class))($contact->getUnsubscribeToken());
+        $this->entityManager->refresh($contact);
+        self::assertEquals($oldRefusal, $contact->getNewsletterRefusedAt());
+        self::assertGreaterThan($oldRefusal, $contact->getOutreachRefusedAt());
     }
 
     public function testConsumedTokenCannotReactivateUnsubscribedContact(): void

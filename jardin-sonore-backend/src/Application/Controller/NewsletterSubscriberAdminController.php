@@ -7,9 +7,11 @@ namespace App\Application\Controller;
 use App\Application\Backoffice\TableSort;
 use App\Application\Form\Model\NewsletterSubscriberFormModel;
 use App\Application\Form\NewsletterSubscriberType;
+use App\Domain\Model\Mailing\MailingCampaignType;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 use App\Infrastructure\Doctrine\Repository\EmailContactDoctrineRepository;
 use App\Infrastructure\Mailing\FreeNewsletterSubscriptionManager;
+use App\Infrastructure\Mailing\MailingPreferenceManager;
 use App\Infrastructure\Mailing\NewsletterSubscriberCatalog;
 use DomainException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -23,6 +25,27 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 #[Route('/newsletter/subscribers', name: 'newsletter_subscriber_')]
 final class NewsletterSubscriberAdminController extends AbstractController
 {
+    #[Route('/{uuid}/preferences', name: 'preferences', methods: ['POST'])]
+    public function preferences(Request $request, string $uuid, MailingPreferenceManager $manager): Response
+    {
+        $contact = $this->loadContact($uuid);
+        if (!$this->isCsrfTokenValid('admin_preferences_' . $uuid, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+        if ('allow_directory' === $request->request->getString('action') && !$request->request->getBoolean('confirmed')) {
+            throw $this->createAccessDeniedException();
+        }
+        match ($request->request->getString('action')) {
+            'allow_directory' => $manager->allowDirectoryMailing($uuid),
+            'allow_outreach' => $manager->allowOutreach($uuid),
+            'stop_outreach' => $manager->refuse($uuid, MailingCampaignType::OUTREACH),
+            'stop_all' => $manager->refuse($uuid, null),
+            default => throw $this->createNotFoundException(),
+        };
+
+        return $this->redirectToRoute('newsletter_subscriber_edit', ['uuid' => $contact->getUuid()]);
+    }
+
     public function __construct(
         private readonly FreeNewsletterSubscriptionManager $subscriptionManager,
         private readonly EmailContactDoctrineRepository $emailContactRepository,

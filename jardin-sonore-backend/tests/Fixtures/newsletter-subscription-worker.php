@@ -6,6 +6,7 @@ use App\Application\Mailing\NewsletterConfirmationMailSenderInterface;
 use App\Infrastructure\Doctrine\Repository\EmailContactDoctrineRepository;
 use App\Infrastructure\Doctrine\Repository\NewsletterSubscriptionRequestDoctrineRepository;
 use App\Infrastructure\Mailing\FreeNewsletterSubscriptionManager;
+use App\Infrastructure\Mailing\MailingPreferenceManager;
 use App\Kernel;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Clock\MockClock;
@@ -40,7 +41,7 @@ $sender = new class($argv[2]) implements NewsletterConfirmationMailSenderInterfa
         fclose($stream);
     }
 };
-$manager = new FreeNewsletterSubscriptionManager($entityManager, $container->get(EmailContactDoctrineRepository::class), $container->get(NewsletterSubscriptionRequestDoctrineRepository::class), new MockClock('2026-10-01 12:00:00 UTC'), $sender);
+$manager = new FreeNewsletterSubscriptionManager($entityManager, $container->get(EmailContactDoctrineRepository::class), $container->get(NewsletterSubscriptionRequestDoctrineRepository::class), new MockClock('2026-10-01 12:00:00 UTC'), $sender, $container->get(MailingPreferenceManager::class));
 $deadline = microtime(true) + 10;
 while (!is_file($argv[3])) {
     if (microtime(true) > $deadline) {

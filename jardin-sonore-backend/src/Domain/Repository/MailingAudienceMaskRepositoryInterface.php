@@ -9,6 +9,8 @@ use Symfony\Component\Uid\Uuid;
 
 interface MailingAudienceMaskRepositoryInterface
 {
+    public function findNewsletterMask(): ?MailingAudienceMask;
+
     public function findByUuid(Uuid $uuid): ?MailingAudienceMask;
 
     /**

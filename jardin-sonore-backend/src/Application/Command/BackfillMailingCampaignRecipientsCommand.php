@@ -56,7 +56,7 @@ final readonly class BackfillMailingCampaignRecipientsCommand
             return Command::FAILURE;
         }
 
-        $audienceResolution = $this->newsletterAudienceResolver->resolve($mailingCampaign->getAudienceFilter());
+        $audienceResolution = $this->newsletterAudienceResolver->resolve($mailingCampaign->getAudienceFilter(), campaignType: $mailingCampaign->getCampaignType());
         $resolvedRecipients = $audienceResolution->getRecipients();
         $existingRecipientEmailAddresses = $this->mailingDeliveryQueue->findCampaignRecipientEmailAddresses($campaignUuid);
         $existingRecipientEmailAddressesLookup = array_fill_keys($existingRecipientEmailAddresses, true);

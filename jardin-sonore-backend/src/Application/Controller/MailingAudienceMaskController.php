@@ -17,12 +17,14 @@ use App\Application\Mailing\GetMailingCampaign;
 use App\Application\Mailing\ListMailingAudienceMasks;
 use App\Application\Mailing\NewsletterAudienceMunicipalityMaterializerInterface;
 use App\Application\Mailing\NewsletterAudienceOptionsQueryInterface;
+use App\Application\Mailing\NewsletterAudienceResolverInterface;
 use App\Application\Mailing\UpdateMailingCampaignAudience;
 use App\Domain\Model\AddressBook\OrganizationSector;
 use App\Domain\Model\AddressBook\OrganizationType;
 use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Domain\Model\Mailing\NewsletterAudienceRadiusOrigin;
+use App\Domain\Repository\MailingAudienceMaskRepositoryInterface;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -35,6 +37,25 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 #[Route('/mailing/audience-masks', name: 'mailing_audience_mask_')]
 final class MailingAudienceMaskController extends AbstractController
 {
+    #[Route('/{maskUuid}/reserve-newsletter', name: 'reserve_newsletter', methods: ['POST'])]
+    public function reserveNewsletter(string $maskUuid, Request $request, MailingAudienceMaskRepositoryInterface $repository): Response
+    {
+        if (!$this->isCsrfTokenValid('reserve_newsletter_' . $maskUuid, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+        $mask = Uuid::isValid($maskUuid) ? $repository->findByUuid(Uuid::fromString($maskUuid)) : null;
+        if (null === $mask) {
+            throw $this->createNotFoundException();
+        }
+        if (null !== $repository->findNewsletterMask()) {
+            throw $this->createAccessDeniedException();
+        }
+        $mask->reserveForNewsletter();
+        $repository->save($mask);
+
+        return $this->redirectToRoute('mailing_audience_mask_index');
+    }
+
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(
         Request $request,
@@ -152,6 +173,9 @@ final class MailingAudienceMaskController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
+        if (!$audienceMask->canBeDeleted()) {
+            throw $this->createAccessDeniedException();
+        }
         $deleteMailingAudienceMask($audienceMask->getUuid());
         $this->addFlash('success', 'mailing.flash.audience_mask_deleted');
 
@@ -229,6 +253,7 @@ final class MailingAudienceMaskController extends AbstractController
         GetMailingAudienceMask $getMailingAudienceMask,
         GetMailingCampaign $getMailingCampaign,
         ApplyMailingAudienceMaskToCampaign $applyMailingAudienceMaskToCampaign,
+        NewsletterAudienceResolverInterface $resolver,
     ): Response {
         $mailingAudienceMask = Uuid::isValid($maskUuid) ? $getMailingAudienceMask(Uuid::fromString($maskUuid)) : null;
         $mailingCampaign = $this->resolveMailingCampaign($campaignUuid, $getMailingCampaign);
@@ -244,6 +269,16 @@ final class MailingAudienceMaskController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
+        $revision = hash('sha256', serialize([$mailingAudienceMask->getName(), $mailingAudienceMask->getAudienceFilter(), $mailingCampaign->getAudienceFilter(), $mailingCampaign->getUpdatedAt()]));
+        if (!$request->request->getBoolean('confirmed') || !hash_equals($revision, $request->request->getString('revision'))) {
+            return $this->render('mailing/audience_mask/apply.html.twig', [
+                'campaign' => $mailingCampaign,
+                'mask' => $mailingAudienceMask,
+                'before' => $resolver->resolve($mailingCampaign->getAudienceFilter(), 1, $mailingCampaign->getCampaignType()),
+                'after' => $resolver->resolve($mailingAudienceMask->getAudienceFilter(), 1, $mailingCampaign->getCampaignType()),
+                'revision' => $revision,
+            ]);
+        }
         try {
             $applyMailingAudienceMaskToCampaign($mailingCampaign, $mailingAudienceMask);
             $this->addFlash('success', 'mailing.flash.audience_mask_applied');

@@ -9,7 +9,6 @@ use App\Application\Mailing\InvalidRecipientBatchProcessorInterface;
 use App\Application\Mailing\InvalidRecipientProcessResult;
 use App\Infrastructure\Doctrine\Entity\EmailContactEntity;
 use App\Infrastructure\Doctrine\Repository\EmailContactDoctrineRepository;
-use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class DoctrineInvalidRecipientBatchProcessor implements InvalidRecipientBatchProcessorInterface
@@ -20,6 +19,7 @@ final class DoctrineInvalidRecipientBatchProcessor implements InvalidRecipientBa
         private readonly EntityManagerInterface $entityManager,
         private readonly DirectorySharedContactLookupInterface $directorySharedContactLookup,
         private readonly EmailContactDoctrineRepository $emailContactDoctrineRepository,
+        private readonly MailingPreferenceManager $mailingPreferenceManager,
     ) {
     }
 
@@ -58,7 +58,7 @@ final class DoctrineInvalidRecipientBatchProcessor implements InvalidRecipientBa
         $notes = [];
 
         if ('unsubscribe' === $action) {
-            $emailContact->setUnsubscribedAt(new DateTimeImmutable());
+            $this->mailingPreferenceManager->refuse($emailContact->getUuid()->toRfc4122(), null);
             $notes[] = 'mailing.invalid_recipient.result.unsubscribed_note';
         } else {
             $emailContact->setActive(false);

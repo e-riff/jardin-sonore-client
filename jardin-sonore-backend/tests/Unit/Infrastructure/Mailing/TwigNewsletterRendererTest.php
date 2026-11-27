@@ -139,7 +139,7 @@ final class TwigNewsletterRendererTest extends TestCase
         $twig->addFilter(new TwigFilter('trans', static fn (string $value): string => $value));
 
         $urlGenerator = $this->createMock(UrlGeneratorInterface::class);
-        $urlGenerator->expects($this->once())
+        $urlGenerator->expects($this->exactly(2))
             ->method('generate')
             ->willReturn('https://example.test/newsletter/unsubscribe/__unsubscribe_token__');
 

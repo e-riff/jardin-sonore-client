@@ -21,7 +21,30 @@ class EmailContactEntity
     use TimestampableTrait;
     use UuidIdentifiableTrait;
 
+    private bool $directoryMailingAllowed = false;
+
+    private bool $newsletterRefused = false;
+
+    private ?DateTimeImmutable $newsletterRefusedAt = null;
+
+    private bool $outreachRefused = false;
+
+    private ?DateTimeImmutable $outreachRefusedAt = null;
+
     private string $emailAddress = '';
+
+    public function refreshHistoricalMailingPreferences(): static
+    {
+        $this->optInNewsletter = $this->isActive()
+            && ($this->directoryMailingAllowed || ($this->freeNewsletterSubscription && null !== $this->freeNewsletterSubscriptionConfirmedAt))
+            && !$this->newsletterRefused && !$this->outreachRefused;
+        $newsletterRefusedAt = $this->newsletterRefused ? $this->newsletterRefusedAt : null;
+        $outreachRefusedAt = $this->outreachRefused ? $this->outreachRefusedAt : null;
+        $this->unsubscribedAt = null === $newsletterRefusedAt ? $outreachRefusedAt
+            : (null === $outreachRefusedAt || $newsletterRefusedAt < $outreachRefusedAt ? $newsletterRefusedAt : $outreachRefusedAt);
+
+        return $this;
+    }
 
     private bool $optInNewsletter = true;
 
@@ -54,6 +77,66 @@ class EmailContactEntity
     public function __toString(): string
     {
         return $this->emailAddress;
+    }
+
+    public function isDirectoryMailingAllowed(): bool
+    {
+        return $this->directoryMailingAllowed;
+    }
+
+    public function setDirectoryMailingAllowed(bool $directoryMailingAllowed): static
+    {
+        $this->directoryMailingAllowed = $directoryMailingAllowed;
+
+        return $this;
+    }
+
+    public function isNewsletterRefused(): bool
+    {
+        return $this->newsletterRefused;
+    }
+
+    public function setNewsletterRefused(bool $newsletterRefused): static
+    {
+        $this->newsletterRefused = $newsletterRefused;
+
+        return $this;
+    }
+
+    public function getNewsletterRefusedAt(): ?DateTimeImmutable
+    {
+        return $this->newsletterRefusedAt;
+    }
+
+    public function setNewsletterRefusedAt(?DateTimeImmutable $newsletterRefusedAt): static
+    {
+        $this->newsletterRefusedAt = $newsletterRefusedAt;
+
+        return $this;
+    }
+
+    public function isOutreachRefused(): bool
+    {
+        return $this->outreachRefused;
+    }
+
+    public function setOutreachRefused(bool $outreachRefused): static
+    {
+        $this->outreachRefused = $outreachRefused;
+
+        return $this;
+    }
+
+    public function getOutreachRefusedAt(): ?DateTimeImmutable
+    {
+        return $this->outreachRefusedAt;
+    }
+
+    public function setOutreachRefusedAt(?DateTimeImmutable $outreachRefusedAt): static
+    {
+        $this->outreachRefusedAt = $outreachRefusedAt;
+
+        return $this;
     }
 
     public function getEmailAddress(): string

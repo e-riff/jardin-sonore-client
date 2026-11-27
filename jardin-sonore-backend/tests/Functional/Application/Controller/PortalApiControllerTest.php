@@ -29,13 +29,14 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Uid\Uuid;
 
 final class PortalApiControllerTest extends WebTestCase
 {
     /** @param array<string, mixed> $options */
-    protected static function createKernel(array $options = []): \Symfony\Component\HttpKernel\KernelInterface
+    protected static function createKernel(array $options = []): KernelInterface
     {
         return new class($options['environment'] ?? 'test', $options['debug'] ?? true) extends Kernel {
             public function getCacheDir(): string
@@ -66,7 +67,7 @@ final class PortalApiControllerTest extends WebTestCase
             'firstName' => null,
             'lastName' => null,
             'avatarPath' => null,
-            'newsletterSubscribed' => false,
+            'newsletterSubscribed' => false, 'newsletterSubscriptionConfirmed' => false, 'outreachAllowed' => true,
             'newSessionNotificationsEnabled' => false,
             'organizations' => [[
                 'uuid' => $organizationEntity->getUuid()->toRfc4122(),

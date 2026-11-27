@@ -401,7 +401,7 @@ final class MailingCampaign implements UuidIdentifiableInterface
     {
         $this->assertEditable();
         $this->assertAudienceAllowed($audienceFilter);
-        $this->audienceFilter = $audienceFilter;
+        $this->audienceFilter = MailingCampaignType::NEWSLETTER === $this->campaignType ? $audienceFilter->withFreeSubscribers(true) : $audienceFilter;
         $this->appliedAudienceMaskUuid = null;
         $this->appliedAudienceMaskName = null;
         $this->markAsUpdated();
@@ -411,7 +411,7 @@ final class MailingCampaign implements UuidIdentifiableInterface
     {
         $this->assertEditable();
         $this->assertAudienceAllowed($mailingAudienceMask->getAudienceFilter());
-        $this->audienceFilter = $mailingAudienceMask->getAudienceFilter();
+        $this->audienceFilter = MailingCampaignType::NEWSLETTER === $this->campaignType ? $mailingAudienceMask->getAudienceFilter()->withFreeSubscribers(true) : $mailingAudienceMask->getAudienceFilter();
         $this->appliedAudienceMaskUuid = $mailingAudienceMask->getUuid();
         $this->appliedAudienceMaskName = $mailingAudienceMask->getName();
         $this->markAsUpdated();

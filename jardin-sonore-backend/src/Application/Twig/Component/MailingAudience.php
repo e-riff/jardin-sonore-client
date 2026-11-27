@@ -20,6 +20,7 @@ use App\Application\Mailing\OutreachAudiencePolicy;
 use App\Application\Mailing\UpdateMailingAudienceMask;
 use App\Application\Mailing\UpdateMailingCampaignAudience;
 use App\Domain\Model\Mailing\MailingCampaign;
+use App\Domain\Model\Mailing\MailingCampaignType;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Domain\Model\Mailing\NewsletterRecipient;
 use DateTimeImmutable;
@@ -242,6 +243,7 @@ final class MailingAudience
             $this->audienceResolution = $this->newsletterAudienceResolver->resolve(
                 $this->buildAudienceFilter($formModel),
                 $this->extensionMode ? null : 10,
+                $this->maskMode ? null : $this->resolveMailingCampaign()->getCampaignType(),
             );
             $this->audienceDelta = $this->extensionMode ? $this->buildAudienceDelta($this->audienceResolution) : null;
         } catch (InvalidArgumentException) {
@@ -410,6 +412,7 @@ final class MailingAudience
             [
                 'locked' => $this->locked || (!$this->extensionMode && !$this->maskMode && !$this->resolveMailingCampaign()->isEditable()),
                 'mask_mode' => $this->maskMode,
+                'campaign_type' => $this->maskMode ? null : $this->resolveMailingCampaign()->getCampaignType(),
             ],
         );
     }
@@ -457,7 +460,7 @@ final class MailingAudience
         $rawAudienceFilter = $formModel->toAudienceFilter();
 
         return new NewsletterAudienceFilter(
-            includeFreeSubscribers: $rawAudienceFilter->includesFreeSubscribers(),
+            includeFreeSubscribers: !$this->maskMode && MailingCampaignType::NEWSLETTER === $this->resolveMailingCampaign()->getCampaignType() ? true : $rawAudienceFilter->includesFreeSubscribers(),
             organizationTypes: $rawAudienceFilter->getOrganizationTypes(),
             organizationSectors: $rawAudienceFilter->getOrganizationSectors(),
             organizationUuids: $rawAudienceFilter->getOrganizationUuids(),

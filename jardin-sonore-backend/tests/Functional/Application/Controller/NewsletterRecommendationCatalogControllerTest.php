@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Application\Controller;
 
-use App\Application\Mailing\CreateMailingCampaign;
 use App\Application\Mailing\CreateMailingCampaignInput;
 use App\Application\Mailing\CreateNewsletterRecommendation;
 use App\Application\Mailing\CreateNewsletterRecommendationInput;
@@ -15,6 +14,7 @@ use App\Domain\Repository\NewsletterRecommendationRepositoryInterface;
 use App\Domain\Repository\NewsletterRecommendationUsageRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
 use App\Kernel;
+use App\Tests\Fixtures\CreatesMailingWithNewsletterMask;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -23,6 +23,8 @@ use Symfony\Component\Uid\Uuid;
 
 final class NewsletterRecommendationCatalogControllerTest extends WebTestCase
 {
+    use CreatesMailingWithNewsletterMask;
+
     /** @param array<string, mixed> $options */
     protected static function createKernel(array $options = []): KernelInterface
     {
@@ -73,7 +75,7 @@ final class NewsletterRecommendationCatalogControllerTest extends WebTestCase
         self::assertCount(1, $client->getCrawler()->filterXPath('//input[@name="newsletter_recommendation[imageFile]"]'));
         self::assertCount(1, $client->getCrawler()->filterXPath('//div[@data-controller="recommendation-text" and @data-recommendation-text-limit-value="420"]//textarea[@name="newsletter_recommendation[text]" and not(@maxlength)]'));
 
-        $mailingCampaign = static::getContainer()->get(CreateMailingCampaign::class)(new CreateMailingCampaignInput(campaignType: MailingCampaignType::NEWSLETTER,
+        $mailingCampaign = $this->configuredCampaignCreator()(new CreateMailingCampaignInput(campaignType: MailingCampaignType::NEWSLETTER,
             internalTitle: 'Campagne test',
             emailSubject: 'Objet test',
             publicTitle: 'Titre test',

@@ -12,6 +12,16 @@ use PHPUnit\Framework\TestCase;
 
 final class NewsletterTokenRedactionProcessorTest extends TestCase
 {
+    public function testPreferenceAndLegacyUnsubscribeTokensAreRedacted(): void
+    {
+        $token = str_repeat('b', 32);
+        $record = new LogRecord(new DateTimeImmutable(), 'request', Level::Info, 'GET /mailing/preferences/' . $token, ['token' => $token, 'url' => '/newsletter/unsubscribe/' . $token]);
+        $redacted = (new NewsletterTokenRedactionProcessor())($record);
+        self::assertStringNotContainsString($token, $redacted->message);
+        self::assertSame('[redacted]', $redacted->context['token']);
+        self::assertSame('/newsletter/unsubscribe/[redacted]', $redacted->context['url']);
+    }
+
     public function testRouteAndExceptionContextCannotLogConfirmationTokens(): void
     {
         $token = str_repeat('a', 64);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Application\Mcp;
 
 use App\Application\Mcp\MailingDraftManager;
+use App\Domain\Model\Mailing\MailingAudienceMask;
 use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Model\Mailing\MailingRecommendation;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
@@ -39,7 +40,9 @@ final class MailingDraftManagerTest extends TestCase
         $repository = $this->createStub(MailingCampaignRepositoryInterface::class);
         $repository->method('findByUuid')->willReturnCallback(static function () use (&$campaign): ?MailingCampaign { return $campaign; });
         $repository->method('save')->willReturnCallback(static function (MailingCampaign $savedCampaign) use (&$campaign): void { $campaign = $savedCampaign; });
-        $manager = new MailingDraftManager($repository, $this->createStub(MailingAudienceMaskRepositoryInterface::class), new NewsletterRichTextFormatter());
+        $maskRepository = $this->createStub(MailingAudienceMaskRepositoryInterface::class);
+        $maskRepository->method('findNewsletterMask')->willReturn(new MailingAudienceMask('Newsletter', new NewsletterAudienceFilter(departmentCodes: ['42'])));
+        $manager = new MailingDraftManager($repository, $maskRepository, new NewsletterRichTextFormatter());
         $created = $manager->create([
             'requestId' => 'typed-draft', 'campaignType' => 'newsletter', 'internalTitle' => 'Internal', 'emailSubject' => 'Subject', 'publicTitle' => 'Title',
             'structuredContent' => ['version' => 1, 'sections' => ['editorial' => ['enabled' => true, 'blocks' => [['id' => 'e', 'kind' => 'paragraph', 'text' => 'Hello']]]]],

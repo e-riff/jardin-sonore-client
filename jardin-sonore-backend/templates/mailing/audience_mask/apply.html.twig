@@ -1,0 +1,19 @@
+{% extends 'internal/base.html.twig' %}
+{% set title = 'mailing.audience.mask.confirm_apply'|trans({}, 'mailing') %}
+{% block internal_body %}
+<section class="internal-card internal-card--form">
+    <h1>{{ title }}</h1>
+    <p>{{ mask.name }} → {{ campaign.internalTitle }}</p>
+    <p>{{ 'mailing.audience.mask.before_after'|trans({before: before.total, after: after.total}, 'mailing') }}</p>
+    <p>{{ 'mailing.audience.source_counts'|trans({directory: after.directoryCount, subscribers: after.subscriberCount, overlap: after.overlapCount, total: after.total}, 'mailing') }}</p>
+    <form method="post" class="internal-form">
+        <input type="hidden" name="_token" value="{{ csrf_token('mailing_apply_audience_mask_' ~ mask.uuid.toRfc4122 ~ '_' ~ campaign.uuid.toRfc4122) }}">
+        <input type="hidden" name="confirmed" value="1">
+        <input type="hidden" name="revision" value="{{ revision }}">
+        <div class="internal-form__actions">
+            <a class="internal-button internal-button--secondary" href="{{ path('mailing_audience', {uuid: campaign.uuid}) }}">{{ 'preferences.cancel'|trans({}, 'newsletter') }}</a>
+            <button type="submit" class="internal-button">{{ 'mailing.audience.mask.apply'|trans({}, 'mailing') }}</button>
+        </div>
+    </form>
+</section>
+{% endblock %}

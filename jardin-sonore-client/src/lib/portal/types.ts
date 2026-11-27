@@ -9,6 +9,8 @@ export interface PortalAccount {
     lastName: string | null;
     avatarPath: string | null;
     newsletterSubscribed: boolean;
+    newsletterSubscriptionConfirmed: boolean;
+    outreachAllowed: boolean;
     newSessionNotificationsEnabled: boolean;
     organizations: PortalOrganization[];
 }
@@ -22,7 +24,8 @@ export const portalAccountDisplayName = (account: PortalAccount): string => {
 
 export const portalAvatarUrl = (avatarPath: string): string => `/portail/avatar?v=${encodeURIComponent(avatarPath)}`;
 
-export interface PortalProfileData { firstName: string; lastName: string; newsletterSubscribed: boolean; newSessionNotificationsEnabled: boolean; }
+export interface PortalProfileData { firstName: string; lastName: string; newsletterSubscribed?: boolean;
+    outreachAllowed?: boolean; newSessionNotificationsEnabled: boolean; }
 
 export interface PortalLoginData {
     email: string;

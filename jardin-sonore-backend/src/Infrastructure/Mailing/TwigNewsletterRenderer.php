@@ -60,7 +60,7 @@ final readonly class TwigNewsletterRenderer implements NewsletterRendererInterfa
         $showCallToAction = null === $structuredContent || MailingCampaignType::OUTREACH === $mailingCampaign->getCampaignType()
             || $structuredContent->isSectionEnabled('jardin_sonore');
 
-        $unsubscribeUrl = $this->urlGenerator->generate('newsletter_unsubscribe', [
+        $unsubscribeUrl = $this->urlGenerator->generate(null === $mailingCampaign->getCampaignType() ? 'newsletter_unsubscribe' : 'mailing_preferences', [
             'token' => self::UNSUBSCRIBE_TOKEN_PLACEHOLDER,
         ], UrlGeneratorInterface::ABSOLUTE_URL);
 
@@ -76,7 +76,13 @@ final readonly class TwigNewsletterRenderer implements NewsletterRendererInterfa
             'activeRecommendations' => $activeRecommendations,
             'recommendationTexts' => $recommendationTexts,
             'preheader' => $preheader,
-            'unsubscribeUrl' => $unsubscribeUrl,
+            'unsubscribeUrl' => null === $mailingCampaign->getCampaignType() ? $unsubscribeUrl : $unsubscribeUrl . '#' . $mailingCampaign->getCampaignType()->value,
+            'preferencesUrl' => $this->urlGenerator->generate('mailing_preferences', ['token' => self::UNSUBSCRIBE_TOKEN_PLACEHOLDER], UrlGeneratorInterface::ABSOLUTE_URL),
+            'unsubscribeLabelKey' => match ($mailingCampaign->getCampaignType()) {
+                MailingCampaignType::NEWSLETTER => 'preferences.stop_newsletter',
+                MailingCampaignType::OUTREACH => 'preferences.stop_outreach',
+                null => 'preferences.stop_all',
+            },
             'heroImagePath' => $heroImagePath,
             'mainTextHtml' => $formattedMainText->html,
             'mainTextText' => $formattedMainText->text,

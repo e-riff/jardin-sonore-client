@@ -84,7 +84,7 @@ final readonly class DirectoryEstablishmentUpserter
             $emailContact = (new EmailContactEntity())
                 ->setEmailAddress($emailAddress)
                 ->setSource(ContactDataSource::DIRECTORY_IMPORT)
-                ->setOptInNewsletter(true);
+                ->setDirectoryMailingAllowed(true)->refreshHistoricalMailingPreferences();
             $created = true;
         }
 

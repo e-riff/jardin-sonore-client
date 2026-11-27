@@ -70,8 +70,14 @@ export default function PortalProfileForm({content}: {content: AccountContent}):
             <span><span className="block font-semibold">{content.notificationsTitle}</span><span className="mt-1 block text-on-surface-variant">{content.notificationsDescription}</span></span>
         </label>
         <label className="flex items-start gap-3 rounded-lg border border-outline-variant bg-surface-container-low p-4 text-sm">
+            <input type="hidden" name="initialNewsletterSubscribed" value={String(account.newsletterSubscribed)} />
             <input className="mt-0.5 h-4 w-4 accent-primary" defaultChecked={account.newsletterSubscribed} name="newsletterSubscribed" type="checkbox" />
-            <span><span className="block font-semibold">{content.newsletterTitle}</span><span className="mt-1 block text-on-surface-variant">{content.newsletterDescription}</span></span>
+            <span><span className="block font-semibold">{content.newsletterTitle}</span><span className="mt-1 block text-on-surface-variant">{content.newsletterDescription}{account.newsletterSubscribed && !account.newsletterSubscriptionConfirmed ? ` ${content.newsletterDirectoryNotice}` : ""}</span></span>
+        </label>
+        <label className="flex items-start gap-3">
+            <input type="hidden" name="initialOutreachAllowed" value={String(account.outreachAllowed)} />
+            <input className="mt-0.5 h-4 w-4 accent-primary" defaultChecked={account.outreachAllowed} name="outreachAllowed" type="checkbox" />
+            <span><span className="block font-semibold">{content.outreachTitle}</span><span className="mt-1 block text-on-surface-variant">{content.outreachDescription}</span></span>
         </label>
         {showLegalPage ? <p className="text-sm"><Link className="font-semibold text-primary underline underline-offset-4 hover:text-primary-container" href="/mentions-legales#confidentialite">{content.privacyLink}</Link></p> : null}
         <ProfileSubmitButton content={content} />

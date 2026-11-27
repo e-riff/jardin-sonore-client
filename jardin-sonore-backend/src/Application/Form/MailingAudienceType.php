@@ -11,6 +11,7 @@ use App\Application\Form\Model\MailingAudienceGeographicMode;
 use App\Application\Mailing\NewsletterAudienceOptionsQueryInterface;
 use App\Domain\Model\AddressBook\OrganizationSector;
 use App\Domain\Model\AddressBook\OrganizationType;
+use App\Domain\Model\Mailing\MailingCampaignType;
 use BackedEnum;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\ChoiceList\ArrayChoiceList;
@@ -99,7 +100,8 @@ final class MailingAudienceType extends AbstractType
                 'label' => 'mailing.audience.form.include_free_subscribers',
                 'help' => 'mailing.audience.form.include_free_subscribers_help',
                 'required' => false,
-                'disabled' => $locked,
+                'disabled' => $locked || null !== $options['campaign_type'],
+                'data' => null === $options['campaign_type'] ? null : MailingCampaignType::NEWSLETTER === $options['campaign_type'],
             ])
             ->add('geographicMode', ChoiceType::class, [
                 'label' => 'mailing.audience.form.geographic_mode',
@@ -193,6 +195,7 @@ final class MailingAudienceType extends AbstractType
             'data_class' => MailingAudienceFormModel::class,
             'locked' => false,
             'mask_mode' => false,
+            'campaign_type' => null,
             'csrf_protection' => false,
             'translation_domain' => 'mailing',
         ]);

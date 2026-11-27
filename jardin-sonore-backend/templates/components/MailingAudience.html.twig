@@ -232,6 +232,7 @@
 
         {% set resolution = this.audienceResolution %}
         {% set audience_delta = this.audienceDelta %}
+        {% if resolution %}<p>{{ 'mailing.audience.source_counts'|trans({directory: resolution.directoryCount, subscribers: resolution.subscriberCount, overlap: resolution.overlapCount, total: resolution.total}, 'mailing') }}</p>{% endif %}
         {% set displayed_recipients = is_extension_mode and audience_delta ? audience_delta.previewRecipients : resolution ? resolution.recipients : [] %}
         {% set displayed_recipients_truncated = is_extension_mode ? false : resolution and resolution.truncated %}
 

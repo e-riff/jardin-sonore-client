@@ -84,7 +84,7 @@
                         {% for subscriber in subscribers %}
                             {% set pendingConfirmation = subscriber.confirmation_pending %}
                             {% set subscribed = subscriber.active and subscriber.opt_in and not subscriber.unsubscribed_at and not pendingConfirmation %}
-                            {% set state = not subscriber.active ? 'inactive' : (subscriber.unsubscribed_at ? 'unsubscribed' : (pendingConfirmation ? 'pending' : (not subscriber.opt_in ? 'not_subscribed' : 'subscribed'))) %}
+                            {% set state = not subscriber.active ? 'inactive' : (subscriber.newsletter_refused ? 'unsubscribed' : (pendingConfirmation ? 'pending' : (not subscriber.opt_in ? 'not_subscribed' : 'subscribed'))) %}
                             <tr>
                                 <td data-label="{{ 'subscriber.index.table.email'|trans({}, 'newsletter') }}">
                                     <strong>{{ subscriber.email }}</strong>

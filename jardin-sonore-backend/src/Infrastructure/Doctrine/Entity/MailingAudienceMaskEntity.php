@@ -7,11 +7,29 @@ namespace App\Infrastructure\Doctrine\Entity;
 use App\Infrastructure\Doctrine\Entity\Behavior\IdentifiableTrait;
 use App\Infrastructure\Doctrine\Entity\Behavior\UuidIdentifiableTrait;
 use DateTimeImmutable;
+use DomainException;
 
 class MailingAudienceMaskEntity
 {
     use IdentifiableTrait;
     use UuidIdentifiableTrait;
+
+    private ?string $reservedRole = null;
+
+    public function getReservedRole(): ?string
+    {
+        return $this->reservedRole;
+    }
+
+    public function setReservedRole(?string $reservedRole): static
+    {
+        if (null !== $this->reservedRole && $this->reservedRole !== $reservedRole) {
+            throw new DomainException('A reserved audience mask cannot change its role.');
+        }
+        $this->reservedRole = $reservedRole;
+
+        return $this;
+    }
 
     private string $name = '';
 

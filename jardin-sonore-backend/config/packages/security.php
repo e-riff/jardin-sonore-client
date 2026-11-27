@@ -73,6 +73,7 @@ return App::config([
             ],
         ],
         'access_control' => [
+            ['path' => '^/mailing/preferences/[^/]+$', 'roles' => 'PUBLIC_ACCESS'],
             ['path' => '^/api/newsletter/', 'roles' => 'PUBLIC_ACCESS'],
             ['path' => '^/api/mcp$', 'roles' => 'PUBLIC_ACCESS'],
             ['path' => '^/api/commercial/contact-requests$', 'roles' => 'PUBLIC_ACCESS'],

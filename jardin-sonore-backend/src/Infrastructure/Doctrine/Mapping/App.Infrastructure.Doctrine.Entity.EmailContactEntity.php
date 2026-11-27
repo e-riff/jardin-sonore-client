@@ -127,4 +127,38 @@ return static function (ClassMetadata $metadata): void {
         'targetEntity' => EmailContactLinkEntity::class,
         'mappedBy' => 'emailContact',
     ]);
+    $metadata->mapField([
+        'fieldName' => 'directoryMailingAllowed',
+        'columnName' => 'directory_mailing_allowed',
+        'type' => Types::BOOLEAN,
+        'options' => ['default' => false],
+    ]);
+
+    $metadata->mapField([
+        'fieldName' => 'newsletterRefused',
+        'columnName' => 'newsletter_refused',
+        'type' => Types::BOOLEAN,
+        'options' => ['default' => false],
+    ]);
+
+    $metadata->mapField([
+        'fieldName' => 'newsletterRefusedAt',
+        'columnName' => 'newsletter_refused_at',
+        'type' => Types::DATETIME_IMMUTABLE,
+        'nullable' => true,
+    ]);
+
+    $metadata->mapField([
+        'fieldName' => 'outreachRefused',
+        'columnName' => 'outreach_refused',
+        'type' => Types::BOOLEAN,
+        'options' => ['default' => false],
+    ]);
+
+    $metadata->mapField([
+        'fieldName' => 'outreachRefusedAt',
+        'columnName' => 'outreach_refused_at',
+        'type' => Types::DATETIME_IMMUTABLE,
+        'nullable' => true,
+    ]);
 };

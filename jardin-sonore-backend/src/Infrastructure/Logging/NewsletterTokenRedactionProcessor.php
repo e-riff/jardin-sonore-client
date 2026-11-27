@@ -12,7 +12,7 @@ use Throwable;
 #[AsMonologProcessor]
 final class NewsletterTokenRedactionProcessor implements ProcessorInterface
 {
-    private const string TOKEN_PATH_PATTERN = '~(/(?:api/newsletter/confirmations|newsletter/confirmer)/)(?:[a-f0-9]{64}|confirmation#[a-f0-9]{64})~';
+    private const string TOKEN_PATH_PATTERN = '~(/(?:api/newsletter/confirmations|newsletter/confirmer|mailing/preferences|newsletter/unsubscribe)/)(?:[a-f0-9]{32,64}|confirmation#[a-f0-9]{64})~';
 
     public function __invoke(LogRecord $record): LogRecord
     {
@@ -31,7 +31,7 @@ final class NewsletterTokenRedactionProcessor implements ProcessorInterface
                 $value[$childKey] = $this->redact($childValue, $childKey);
             }
         } elseif (is_string($value)) {
-            return 'token' === $key && 1 === preg_match('/^[a-f0-9]{64}$/D', $value) ? '[redacted]' : $this->redactString($value);
+            return 'token' === $key && 1 === preg_match('/^[a-f0-9]{32,64}$/D', $value) ? '[redacted]' : $this->redactString($value);
         } elseif ($value instanceof Throwable && 1 === preg_match(self::TOKEN_PATH_PATTERN, $value->getMessage())) {
             return ['class' => $value::class, 'message' => $this->redactString($value->getMessage()), 'code' => $value->getCode(), 'trace' => $this->redactString($value->getTraceAsString())];
         }

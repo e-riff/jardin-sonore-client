@@ -78,7 +78,10 @@ final class EmailContactDoctrineRepository extends ServiceEntityRepository imple
                 ->setLockMode(LockMode::PESSIMISTIC_WRITE)->setHint(Query::HINT_REFRESH, true)->getOneOrNullResult();
             if ($emailContactEntity instanceof EmailContactEntity && $emailContact->isUnsubscribed()) {
                 // Preserve history refreshed under the same lock used by confirmation.
-                $emailContactEntity->setOptInNewsletter(false)->setUnsubscribedAt($emailContactEntity->getUnsubscribedAt() ?? $emailContact->getUnsubscribedAt());
+                $emailContactEntity->setNewsletterRefused(true)->setOutreachRefused(true)
+                    ->setNewsletterRefusedAt($emailContactEntity->getNewsletterRefusedAt() ?? $emailContact->getUnsubscribedAt())
+                    ->setOutreachRefusedAt($emailContactEntity->getOutreachRefusedAt() ?? $emailContact->getUnsubscribedAt())
+                    ->refreshHistoricalMailingPreferences();
                 $connection->executeStatement('UPDATE newsletter_subscription_request SET consumed_at = ? WHERE email_contact_id = ? AND consumed_at IS NULL',
                     [$emailContactEntity->getUnsubscribedAt()?->format('Y-m-d H:i:s'), $emailContactEntity->getId()]);
             } else {

@@ -10,6 +10,7 @@ use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Model\Mailing\MailingCampaignContent;
 use App\Domain\Model\Mailing\MailingCampaignType;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
+use App\Domain\Repository\MailingAudienceMaskRepositoryInterface;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
 use InvalidArgumentException;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -24,6 +25,7 @@ final readonly class CreateMailingCampaign
         private MailingIntroImageStorageInterface $mailingIntroImageStorage,
         #[Autowire('%env(int:MAILING_OUTREACH_EXCLUSION_WEEKS)%')]
         private int $defaultOutreachExclusionWeeks = 6,
+        private ?MailingAudienceMaskRepositoryInterface $maskRepository = null,
     ) {
     }
 
@@ -31,6 +33,10 @@ final readonly class CreateMailingCampaign
     {
         if (null === $input->campaignType) {
             throw new InvalidArgumentException('A campaign type is required.');
+        }
+        $newsletterMask = MailingCampaignType::NEWSLETTER === $input->campaignType ? $this->maskRepository?->findNewsletterMask() : null;
+        if (MailingCampaignType::NEWSLETTER === $input->campaignType && null === $newsletterMask) {
+            throw new InvalidArgumentException('Configure the reserved newsletter audience mask first.');
         }
         $bannerImagePath = null === $input->bannerImageFile
             ? null
@@ -60,6 +66,9 @@ final readonly class CreateMailingCampaign
                 audienceFilter: NewsletterAudienceFilter::empty(),
             );
 
+            if (null !== $newsletterMask) {
+                $mailingCampaign->applyAudienceMask($newsletterMask);
+            }
             $this->mailingCampaignRepository->save($mailingCampaign);
         } catch (Throwable $throwable) {
             foreach ($processedBlocks->newImagePaths ?? [] as $imagePath) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Domain\Model\Mailing;
 
+use App\Domain\Model\AddressBook\OrganizationType;
 use App\Domain\Model\Mailing\MailingAudienceMask;
 use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
@@ -11,6 +12,15 @@ use PHPUnit\Framework\TestCase;
 
 final class MailingAudienceMaskTest extends TestCase
 {
+    public function testNewsletterRoleSurvivesEditingAndPreventsDeletion(): void
+    {
+        $mask = new MailingAudienceMask('Newsletter', new NewsletterAudienceFilter(organizationTypes: [OrganizationType::CRECHE]));
+        $mask->reserveForNewsletter();
+        $mask->update('Newsletter modifiée', new NewsletterAudienceFilter(departmentCodes: ['42']), []);
+        self::assertTrue($mask->isNewsletterMask());
+        self::assertFalse($mask->canBeDeleted());
+    }
+
     public function testUpdateChangesReusableMaskWithoutChangingAppliedCampaignSnapshot(): void
     {
         $originalFilter = new NewsletterAudienceFilter(includeFreeSubscribers: true);

@@ -17,6 +17,7 @@ final readonly class MailingAudienceMaskMapper
     {
         return new MailingAudienceMask(
             name: $mailingAudienceMaskEntity->getName(),
+            reservedRole: $mailingAudienceMaskEntity->getReservedRole(),
             audienceFilter: $this->newsletterAudienceFilterArrayMapper->toDomain($mailingAudienceMaskEntity->getAudienceFilter()),
             materializedMunicipalityInseeCodes: $mailingAudienceMaskEntity->getMaterializedMunicipalityInseeCodes(),
             createdAt: $mailingAudienceMaskEntity->getCreatedAt(),
@@ -30,6 +31,10 @@ final readonly class MailingAudienceMaskMapper
         ?MailingAudienceMaskEntity $mailingAudienceMaskEntity = null,
     ): MailingAudienceMaskEntity {
         $mailingAudienceMaskEntity ??= new MailingAudienceMaskEntity();
+
+        if (null === $mailingAudienceMaskEntity->getReservedRole() && null !== $mailingAudienceMask->getReservedRole()) {
+            $mailingAudienceMaskEntity->setReservedRole($mailingAudienceMask->getReservedRole());
+        }
 
         return $mailingAudienceMaskEntity
             ->setUuid($mailingAudienceMask->getUuid())

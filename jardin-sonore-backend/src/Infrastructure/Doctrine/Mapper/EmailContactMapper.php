@@ -24,6 +24,11 @@ final readonly class EmailContactMapper
             unsubscribeToken: $emailContactEntity->getUnsubscribeToken(),
             uuid: $emailContactEntity->getUuid(),
             id: $emailContactEntity->getId(),
+            directoryMailingAllowed: $emailContactEntity->isDirectoryMailingAllowed(),
+            newsletterRefused: $emailContactEntity->isNewsletterRefused(),
+            newsletterRefusedAt: $emailContactEntity->getNewsletterRefusedAt(),
+            outreachRefused: $emailContactEntity->isOutreachRefused(),
+            outreachRefusedAt: $emailContactEntity->getOutreachRefusedAt(),
             freeNewsletterSubscription: $emailContactEntity->hasFreeNewsletterSubscription(),
             freeNewsletterSubscriptionConfirmedAt: $emailContactEntity->getFreeNewsletterSubscriptionConfirmedAt(),
             freeNewsletterSubscriptionOrigin: $emailContactEntity->getFreeNewsletterSubscriptionOrigin(),
@@ -44,7 +49,12 @@ final readonly class EmailContactMapper
             ->setUnsubscribeToken($emailContact->getUnsubscribeToken())
             ->setFreeNewsletterSubscription($emailContact->hasFreeNewsletterSubscription())
             ->setFreeNewsletterSubscriptionConfirmedAt($emailContact->getFreeNewsletterSubscriptionConfirmedAt())
-            ->setFreeNewsletterSubscriptionOrigin($emailContact->getFreeNewsletterSubscriptionOrigin());
+            ->setFreeNewsletterSubscriptionOrigin($emailContact->getFreeNewsletterSubscriptionOrigin())
+            ->setDirectoryMailingAllowed($emailContact->isDirectoryMailingAllowed())
+            ->setNewsletterRefused($emailContact->isNewsletterRefused())
+            ->setNewsletterRefusedAt($emailContact->getNewsletterRefusedAt())
+            ->setOutreachRefused($emailContact->isOutreachRefused())
+            ->setOutreachRefusedAt($emailContact->getOutreachRefusedAt());
 
         return $emailContactEntity;
     }

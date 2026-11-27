@@ -8,7 +8,9 @@ use App\Application\Mailing\CreateMailingAudienceMask;
 use App\Application\Mailing\CreateMailingAudienceMaskInput;
 use App\Application\Mailing\GetMailingAudienceMask;
 use App\Domain\Model\AddressBook\OrganizationType;
+use App\Domain\Model\Mailing\MailingCampaign;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
+use App\Domain\Repository\MailingCampaignRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
 use App\Kernel;
 use Doctrine\ORM\EntityManagerInterface;
@@ -17,6 +19,32 @@ use Symfony\Component\HttpKernel\KernelInterface;
 
 final class MailingAudienceMaskControllerTest extends WebTestCase
 {
+    public function testApplyingAMaskRequiresReviewBeforeChangingTheCampaign(): void
+    {
+        $client = self::createClient(['environment' => 'test']);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $admin = (new AdminUserEntity())->setEmail('mask-preview-' . bin2hex(random_bytes(5)) . '@example.test')->setPassword('unused');
+        $entityManager->persist($admin);
+        $entityManager->flush();
+        $client->loginUser($admin);
+        $mask = (self::getContainer()->get(CreateMailingAudienceMask::class))(new CreateMailingAudienceMaskInput('Preview mask', new NewsletterAudienceFilter(departmentCodes: ['69'])));
+        $campaign = new MailingCampaign('Preview', 'Subject', 'Title', 'Text', 'default', new NewsletterAudienceFilter(departmentCodes: ['42']));
+        $repository = self::getContainer()->get(MailingCampaignRepositoryInterface::class);
+        $repository->save($campaign);
+        $crawler = $client->request('GET', '/mailing/audience-masks?campaign=' . $campaign->getUuid()->toRfc4122());
+        $action = '/mailing/audience-masks/' . $mask->getUuid()->toRfc4122() . '/apply-to-campaign/' . $campaign->getUuid()->toRfc4122();
+        $form = $crawler->filterXPath('//form[@action="' . $action . '"]')->form();
+        $crawler = $client->submit($form);
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Vérifier le changement d’audience', (string) $client->getResponse()->getContent());
+        $repository = self::getContainer()->get(MailingCampaignRepositoryInterface::class);
+        self::assertSame(['42'], $repository->findByUuid($campaign->getUuid())->getAudienceFilter()->getDepartmentCodes());
+        $client->submit($crawler->filterXPath('//form[input[@name="revision"]]')->form());
+        self::assertResponseRedirects();
+        $repository = self::getContainer()->get(MailingCampaignRepositoryInterface::class);
+        self::assertSame(['69'], $repository->findByUuid($campaign->getUuid())->getAudienceFilter()->getDepartmentCodes());
+    }
+
     /** @param array<string, mixed> $options */
     protected static function createKernel(array $options = []): KernelInterface
     {

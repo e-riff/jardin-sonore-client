@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Application\Controller;
 
-use App\Application\Mailing\CreateMailingCampaign;
 use App\Application\Mailing\CreateMailingCampaignInput;
 use App\Domain\Model\Mailing\MailingCampaignType;
 use App\Infrastructure\Doctrine\Entity\AdminUserEntity;
 use App\Kernel;
+use App\Tests\Fixtures\CreatesMailingWithNewsletterMask;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpKernel\KernelInterface;
 
 final class MailingIndexControllerTest extends WebTestCase
 {
+    use CreatesMailingWithNewsletterMask;
+
     /** @param array<string, mixed> $options */
     protected static function createKernel(array $options = []): KernelInterface
     {
@@ -33,7 +35,7 @@ final class MailingIndexControllerTest extends WebTestCase
         $client->loginUser($adminUserEntity);
 
         $uniqueWord = bin2hex(random_bytes(7));
-        $mailingCampaign = (static::getContainer()->get(CreateMailingCampaign::class))(
+        $mailingCampaign = ($this->configuredCampaignCreator())(
             new CreateMailingCampaignInput(campaignType: MailingCampaignType::NEWSLETTER,
                 internalTitle: "Campagne {$uniqueWord}",
                 emailSubject: 'Objet de recette',

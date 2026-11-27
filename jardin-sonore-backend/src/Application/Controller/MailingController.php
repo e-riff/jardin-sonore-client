@@ -42,17 +42,20 @@ use App\Domain\Model\Mailing\MailingCampaignStatus;
 use App\Domain\Model\Mailing\MailingCampaignType;
 use App\Domain\Model\Mailing\NewsletterAudienceFilter;
 use App\Domain\Model\Mailing\NewsletterAudienceRadiusOrigin;
+use App\Domain\Repository\MailingAudienceMaskRepositoryInterface;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
 use DateTimeImmutable;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Throwable;
 
 #[Route('/mailing', name: 'mailing_')]
@@ -293,11 +296,15 @@ final class MailingController extends AbstractController
     }
 
     #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
-    public function new(Request $request, CreateMailingCampaign $createMailingCampaign): Response
+    public function new(Request $request, CreateMailingCampaign $createMailingCampaign, MailingAudienceMaskRepositoryInterface $maskRepository, TranslatorInterface $translator): Response
     {
         $formModel = new CreateMailingCampaignFormModel();
         $form = $this->createForm(CreateMailingCampaignType::class, $formModel);
         $form->handleRequest($request);
+        $hasNewsletterMask = null !== $maskRepository->findNewsletterMask();
+        if ($form->isSubmitted() && !$hasNewsletterMask && MailingCampaignType::NEWSLETTER === $formModel->campaignType) {
+            $form->addError(new FormError($translator->trans('mailing.audience.mask.configure_required', [], 'mailing')));
+        }
 
         if ($form->isSubmitted() && $form->isValid()) {
             $mailingCampaign = $createMailingCampaign(new CreateMailingCampaignInput(
@@ -326,7 +333,7 @@ final class MailingController extends AbstractController
 
         return $this->render(
             'mailing/new.html.twig',
-            ['form' => $form->createView()],
+            ['form' => $form->createView(), 'hasNewsletterMask' => $hasNewsletterMask],
             $form->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null,
         );
     }
@@ -414,7 +421,7 @@ final class MailingController extends AbstractController
 
         if ($mailingCampaign->getAudienceFilter()->hasActiveCriteria()) {
             try {
-                $audienceRecipientCount = $newsletterAudienceResolver->resolve($mailingCampaign->getAudienceFilter(), 1)->getTotal();
+                $audienceRecipientCount = $newsletterAudienceResolver->resolve($mailingCampaign->getAudienceFilter(), 1, $mailingCampaign->getCampaignType())->getTotal();
             } catch (InvalidArgumentException) {
                 $audienceRecipientCount = null;
             }
@@ -527,7 +534,7 @@ final class MailingController extends AbstractController
 
         if ($mailingCampaign->getAudienceFilter()->hasActiveCriteria()) {
             try {
-                $audienceRecipientCount = $newsletterAudienceResolver->resolve($mailingCampaign->getAudienceFilter(), 1)->getTotal();
+                $audienceRecipientCount = $newsletterAudienceResolver->resolve($mailingCampaign->getAudienceFilter(), 1, $mailingCampaign->getCampaignType())->getTotal();
             } catch (InvalidArgumentException) {
                 $audienceRecipientCount = null;
             }
@@ -575,10 +582,10 @@ final class MailingController extends AbstractController
         }
         $excludedRecipientCount = 0;
         try {
-            $audienceResolution = $newsletterAudienceResolver->resolve($mailingCampaign->getAudienceFilter());
+            $audienceResolution = $newsletterAudienceResolver->resolve($mailingCampaign->getAudienceFilter(), campaignType: $mailingCampaign->getCampaignType());
             $selection = $outreachAudiencePolicy->select($mailingCampaign, $audienceResolution->getRecipients(), new DateTimeImmutable());
             $excludedRecipientCount = $selection->excludedRecipientCount;
-            $audienceResolution = new NewsletterAudienceResolution(count($selection->recipients), array_slice($selection->recipients, 0, 10));
+            $audienceResolution = new NewsletterAudienceResolution(count($selection->recipients), array_slice($selection->recipients, 0, 10), $audienceResolution->getDirectoryCount(), $audienceResolution->getSubscriberCount(), $audienceResolution->getOverlapCount());
             $audienceError = null;
         } catch (InvalidArgumentException) {
             $audienceResolution = null;

@@ -15,6 +15,7 @@ return static function (ClassMetadata $metadata): void {
         ],
         'uniqueConstraints' => [
             'uniq_mailing_audience_mask_uuid' => ['columns' => ['uuid']],
+            'uniq_mailing_audience_mask_role' => ['columns' => ['reserved_role']],
         ],
     ]);
 
@@ -30,6 +31,8 @@ return static function (ClassMetadata $metadata): void {
         'type' => UuidType::NAME,
         'unique' => true,
     ]);
+
+    $metadata->mapField(['fieldName' => 'reservedRole', 'columnName' => 'reserved_role', 'type' => Types::STRING, 'length' => 32, 'nullable' => true]);
 
     $metadata->mapField([
         'fieldName' => 'name',

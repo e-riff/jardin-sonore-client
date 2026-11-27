@@ -1,0 +1,22 @@
+{% extends 'base.html.twig' %}
+{% trans_default_domain 'newsletter' %}
+{% block title %}{{ 'preferences.title'|trans }}{% endblock %}
+{% block body %}
+<main class="internal-main">
+    <section class="internal-card internal-card--form">
+        <h1>{{ 'preferences.title'|trans }}</h1>
+        <p>{{ 'preferences.shared'|trans }}</p>
+        {% if requestError|default(false) %}<p role="alert">{{ 'preferences.invalid_request'|trans }}</p>{% endif %}
+        {% if saved %}<p role="status">{{ 'preferences.saved'|trans }}</p>{% endif %}
+        <form method="post" class="internal-form">
+            <input type="hidden" name="_token" value="{{ csrf_token('mailing_preferences_' ~ token) }}">
+            <p>{{ (contact.newsletterRefused ? 'preferences.newsletter_stopped' : 'preferences.newsletter_available')|trans }}</p>
+            <button class="internal-button internal-button--secondary" id="newsletter" name="action" value="newsletter">{{ 'preferences.stop_newsletter'|trans }}</button>
+            <p>{{ (contact.outreachRefused ? 'preferences.outreach_stopped' : 'preferences.outreach_available')|trans }}</p>
+            <button class="internal-button internal-button--secondary" id="outreach" name="action" value="outreach">{{ 'preferences.stop_outreach'|trans }}</button>
+            <div class="internal-form__actions"><button class="internal-button" name="action" value="all">{{ 'preferences.stop_all'|trans }}</button></div>
+        </form>
+        <p><a href="https://jardin-sonore.fr/#newsletter">{{ 'preferences.resubscribe'|trans }}</a></p>
+    </section>
+</main>
+{% endblock %}

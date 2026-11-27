@@ -50,7 +50,7 @@ final class PortalNewsletterSubscriptionManagerTest extends KernelTestCase
         self::assertSame(0, $this->contactCount());
     }
 
-    public function testExplicitSubscriptionCreatesOneContactWithoutFreeMembership(): void
+    public function testExplicitSubscriptionCreatesOneContactWithFreeMembership(): void
     {
         $manager = $this->manager();
         $manager->setEnabled($this->userEntity, true);
@@ -61,8 +61,8 @@ final class PortalNewsletterSubscriptionManagerTest extends KernelTestCase
         $emailContactEntity = $this->contact();
         self::assertSame(1, $this->contactCount());
         self::assertTrue($manager->isEnabled($this->userEntity));
-        self::assertFalse($emailContactEntity->hasFreeNewsletterSubscription());
-        self::assertNull($emailContactEntity->getFreeNewsletterSubscriptionConfirmedAt());
+        self::assertTrue($emailContactEntity->hasFreeNewsletterSubscription());
+        self::assertNotNull($emailContactEntity->getFreeNewsletterSubscriptionConfirmedAt());
         self::assertFalse($this->userEntity->isNewSessionNotificationsEnabled());
     }
 
@@ -111,7 +111,7 @@ final class PortalNewsletterSubscriptionManagerTest extends KernelTestCase
     {
         $emailContactEntity = $this->createContact();
         self::assertTrue($this->manager()->isEnabled($this->userEntity));
-        $emailContactEntity->setOptInNewsletter(false)->setUnsubscribedAt(new DateTimeImmutable());
+        $emailContactEntity->setNewsletterRefused(true)->setNewsletterRefusedAt(new DateTimeImmutable())->refreshHistoricalMailingPreferences();
         $this->entityManager->flush();
 
         self::assertFalse($this->manager()->isEnabled($this->userEntity));
@@ -134,7 +134,7 @@ final class PortalNewsletterSubscriptionManagerTest extends KernelTestCase
 
     private function createContact(): EmailContactEntity
     {
-        $emailContactEntity = (new EmailContactEntity())->setEmailAddress($this->userEntity->getEmail());
+        $emailContactEntity = (new EmailContactEntity())->setEmailAddress($this->userEntity->getEmail())->setDirectoryMailingAllowed(true);
         $this->entityManager->persist($emailContactEntity);
         $this->entityManager->flush();
 

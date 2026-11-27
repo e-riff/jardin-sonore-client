@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Application\Controller;
 
-use App\Application\Mailing\CreateMailingCampaign;
 use App\Application\Mailing\CreateMailingCampaignInput;
 use App\Domain\Model\AddressBook\OrganizationSector;
 use App\Domain\Model\AddressBook\OrganizationType;
@@ -18,6 +17,7 @@ use App\Infrastructure\Doctrine\Entity\UserEntity;
 use App\Infrastructure\Doctrine\Entity\UserOrganizationAccessEntity;
 use App\Infrastructure\Mailing\MailingReportQuery;
 use App\Kernel;
+use App\Tests\Fixtures\CreatesMailingWithNewsletterMask;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -25,6 +25,8 @@ use Symfony\Component\HttpKernel\KernelInterface;
 
 final class MailingReportControllerTest extends WebTestCase
 {
+    use CreatesMailingWithNewsletterMask;
+
     protected static function createKernel(array $options = []): KernelInterface
     {
         return new Kernel($options['environment'] ?? 'test', $options['debug'] ?? true);
@@ -38,7 +40,7 @@ final class MailingReportControllerTest extends WebTestCase
         $entityManager->persist($admin);
         $entityManager->flush();
         $client->loginUser($admin);
-        $campaign = (static::getContainer()->get(CreateMailingCampaign::class))(new CreateMailingCampaignInput(campaignType: MailingCampaignType::NEWSLETTER,
+        $campaign = ($this->configuredCampaignCreator())(new CreateMailingCampaignInput(campaignType: MailingCampaignType::NEWSLETTER,
             internalTitle: 'Campagne bilan', emailSubject: 'Sujet', publicTitle: 'Titre', mainText: 'Contenu',
             subtitle: null, callToActionLabel: null, callToActionUrl: null, bannerImageFile: null,
         ));

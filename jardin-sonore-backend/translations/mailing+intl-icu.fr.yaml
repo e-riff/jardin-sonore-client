@@ -629,3 +629,13 @@ mailing.report.status.sending: "Envoi en cours de confirmation"
 mailing.report.status.uncertain: "Envoi à vérifier (confirmation non enregistrée)"
 
 mailing.outreach.extension_all_excluded: "Toutes les nouvelles adresses sont exclues pour démarchage récent."
+
+mailing.audience.mask.newsletter_reserved: Audience newsletter réservée
+mailing.audience.mask.reserve_newsletter: Utiliser pour les newsletters
+
+mailing.audience.source_counts: 'Annuaire éligible : {directory} · Abonnés confirmés : {subscribers} · Dans les deux sources : {overlap} · Total sans doublon : {total}'
+
+mailing.audience.mask.configure_required: Configurez le masque réservé à la newsletter avant de créer une nouvelle newsletter.
+
+mailing.audience.mask.confirm_apply: Vérifier le changement d’audience
+mailing.audience.mask.before_after: 'Avant : {before} adresses · Après : {after} adresses. Aucun envoi ne sera déclenché.'

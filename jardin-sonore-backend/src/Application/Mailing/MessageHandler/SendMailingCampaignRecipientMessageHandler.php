@@ -81,7 +81,7 @@ final readonly class SendMailingCampaignRecipientMessageHandler
             $cancellationReason = null;
             if (MailingCampaignStatus::DELIVERY_STOPPED === $mailingCampaign->getStatus()) {
                 $cancellationReason = 'campaign_stopped';
-            } elseif (!$this->newsletterRecipientEligibility->isEligible($newsletterRecipient->getEmailAddress()->value())) {
+            } elseif (!$this->newsletterRecipientEligibility->isEligible($newsletterRecipient->getEmailAddress()->value(), $mailingCampaign->getCampaignType())) {
                 $cancellationReason = 'unsubscribed';
             } elseif (0 < $this->outreachAudiencePolicy->select($mailingCampaign, [$newsletterRecipient], new DateTimeImmutable())->excludedRecipientCount) {
                 $cancellationReason = 'recent_outreach';

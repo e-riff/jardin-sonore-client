@@ -31,7 +31,7 @@ final readonly class SendMailingCampaign
         }
 
         $mailingCampaign->assertReadyForDelivery();
-        $audienceResolution = $this->newsletterAudienceResolver->resolve($mailingCampaign->getAudienceFilter());
+        $audienceResolution = $this->newsletterAudienceResolver->resolve($mailingCampaign->getAudienceFilter(), campaignType: $mailingCampaign->getCampaignType());
         $selection = $this->outreachAudiencePolicy->select($mailingCampaign, $audienceResolution->getRecipients(), new DateTimeImmutable());
         $recipients = $selection->recipients;
         $total = count($recipients);

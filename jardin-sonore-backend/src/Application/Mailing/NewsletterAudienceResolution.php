@@ -15,10 +15,28 @@ final readonly class NewsletterAudienceResolution
     public function __construct(
         private int $total,
         private array $recipients,
+        private int $directoryCount = 0,
+        private int $subscriberCount = 0,
+        private int $overlapCount = 0,
     ) {
         if (0 > $total || count($recipients) > $total) {
             throw new InvalidArgumentException('Newsletter audience resolution total is inconsistent.');
         }
+    }
+
+    public function getDirectoryCount(): int
+    {
+        return $this->directoryCount;
+    }
+
+    public function getSubscriberCount(): int
+    {
+        return $this->subscriberCount;
+    }
+
+    public function getOverlapCount(): int
+    {
+        return $this->overlapCount;
     }
 
     public function getTotal(): int
