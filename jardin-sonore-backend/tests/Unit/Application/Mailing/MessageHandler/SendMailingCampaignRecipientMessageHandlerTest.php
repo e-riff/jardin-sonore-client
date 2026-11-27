@@ -35,6 +35,27 @@ final class SendMailingCampaignRecipientMessageHandlerTest extends TestCase
 {
     private string $deliveryStatus = 'processing';
 
+    public function testStopDuringSmtpIsNotOverwrittenByCompletion(): void
+    {
+        $campaign = $this->campaign();
+        $repository = $this->createMock(MailingCampaignRepositoryInterface::class);
+        $repository->method('findByUuid')->willReturn($campaign);
+        $repository->method('findFreshByUuid')->willReturn($campaign);
+        $repository->expects(self::once())->method('transitionDeliveryStatus')->willReturn(false);
+        $repository->expects(self::never())->method('save');
+        $renderer = $this->createStub(NewsletterRendererInterface::class);
+        $renderer->method('render')->willReturn(new RenderedNewsletter('Subject', 'Content'));
+        $sender = $this->createMock(NewsletterMailSenderInterface::class);
+        $sender->expects(self::once())->method('sendToRecipient');
+        $queue = $this->createMock(MailingDeliveryQueueInterface::class);
+        $queue->method('hasOutstandingRecipients')->willReturn(false);
+        $queue->method('hasFailedRecipients')->willReturn(false);
+        $eligibility = $this->createStub(NewsletterRecipientEligibilityInterface::class);
+        $eligibility->method('isEligible')->willReturn(true);
+        ($this->handler($repository, $renderer, $sender, $queue, $eligibility))($this->message($campaign));
+        self::assertSame(MailingCampaignStatus::DELIVERY_SENDING, $campaign->getStatus());
+    }
+
     public function testSmtpSuccessThenPersistenceFailureNeverMarksRetryableFailure(): void
     {
         $campaign = $this->campaign();
@@ -83,7 +104,7 @@ final class SendMailingCampaignRecipientMessageHandlerTest extends TestCase
         $mailingCampaignRepository = $this->createMock(MailingCampaignRepositoryInterface::class);
         $mailingCampaignRepository->method('findByUuid')->willReturn($mailingCampaign);
         $mailingCampaignRepository->method('findFreshByUuid')->willReturn($mailingCampaign);
-        $mailingCampaignRepository->expects($this->exactly($saveCount))->method('save')->with($mailingCampaign);
+        $mailingCampaignRepository->expects($this->exactly($saveCount))->method('transitionDeliveryStatus')->willReturn(true);
 
         ($this->handler($mailingCampaignRepository, $newsletterRenderer, $newsletterMailSender, $mailingDeliveryQueue, $newsletterRecipientEligibility))($this->message($mailingCampaign));
 
@@ -105,7 +126,7 @@ final class SendMailingCampaignRecipientMessageHandlerTest extends TestCase
         $mailingCampaignRepository = $this->createMock(MailingCampaignRepositoryInterface::class);
         $mailingCampaignRepository->method('findByUuid')->willReturn($mailingCampaign);
         $mailingCampaignRepository->method('findFreshByUuid')->willReturn($mailingCampaign);
-        $mailingCampaignRepository->expects($this->once())->method('save')->with($mailingCampaign);
+        $mailingCampaignRepository->expects($this->once())->method('transitionDeliveryStatus')->willReturn(true);
         $renderedNewsletter = new RenderedNewsletter('Subject', '<p>Content</p>');
         $newsletterRenderer = $this->createMock(NewsletterRendererInterface::class);
         $newsletterRenderer->expects($this->once())->method('render')->with($mailingCampaign)->willReturn($renderedNewsletter);
@@ -135,7 +156,7 @@ final class SendMailingCampaignRecipientMessageHandlerTest extends TestCase
         $mailingCampaignRepository = $this->createMock(MailingCampaignRepositoryInterface::class);
         $mailingCampaignRepository->method('findByUuid')->willReturn($mailingCampaign);
         $mailingCampaignRepository->method('findFreshByUuid')->willReturn($mailingCampaign);
-        $mailingCampaignRepository->expects($this->exactly(MailingCampaignStatus::DELIVERY_STOPPED === $initialStatus ? 0 : 1))->method('save');
+        $mailingCampaignRepository->expects($this->never())->method('save');
         $error = new RuntimeException('Temporary delivery failure');
         $newsletterRecipientEligibility = $this->createMock(NewsletterRecipientEligibilityInterface::class);
         $newsletterRenderer = $this->createMock(NewsletterRendererInterface::class);
@@ -160,7 +181,7 @@ final class SendMailingCampaignRecipientMessageHandlerTest extends TestCase
         } catch (RuntimeException $runtimeException) {
             self::assertSame($error, $runtimeException);
         }
-        self::assertSame(MailingCampaignStatus::DELIVERY_STOPPED === $initialStatus ? MailingCampaignStatus::DELIVERY_STOPPED : MailingCampaignStatus::DELIVERY_FAILED, $mailingCampaign->getStatus());
+        self::assertSame($initialStatus, $mailingCampaign->getStatus(), 'A temporary failure must not stop dispatching remaining recipients.');
     }
 
     /** @return iterable<string, array{string, MailingCampaignStatus}> */

@@ -84,7 +84,13 @@ final readonly class DispatchPendingMailingCampaignsCommand
             if (!in_array($mailingCampaign->getStatus(), [
                 MailingCampaignStatus::DELIVERY_QUEUED,
                 MailingCampaignStatus::DELIVERY_SENDING,
+                MailingCampaignStatus::DELIVERY_FAILED,
             ], true)) {
+                continue;
+            }
+
+            if (MailingCampaignStatus::DELIVERY_SENDING !== $mailingCampaign->getStatus()
+                && !$this->mailingCampaignRepository->transitionDeliveryStatus($mailingCampaign->getUuid(), [MailingCampaignStatus::DELIVERY_QUEUED, MailingCampaignStatus::DELIVERY_FAILED], MailingCampaignStatus::DELIVERY_SENDING)) {
                 continue;
             }
 
@@ -92,14 +98,8 @@ final readonly class DispatchPendingMailingCampaignsCommand
                 $campaignUuid,
                 min($dispatchBatchSize, $remainingCapacity),
             );
-
             if ([] === $claimedRecipients) {
                 continue;
-            }
-
-            if (MailingCampaignStatus::DELIVERY_QUEUED === $mailingCampaign->getStatus()) {
-                $mailingCampaign->markDeliverySending();
-                $this->mailingCampaignRepository->save($mailingCampaign);
             }
 
             $this->mailingDeliveryLogger->info('Newsletter delivery wave dispatched to Messenger.', [

@@ -124,9 +124,8 @@ final readonly class SendMailingCampaignRecipientMessageHandler
                     'error' => $throwable->getMessage(),
                 ]);
 
-                if (MailingCampaignStatus::DELIVERY_STOPPED !== $mailingCampaign->getStatus()) {
-                    $mailingCampaign->markDeliveryFailed();
-                    $this->mailingCampaignRepository->save($mailingCampaign);
+                if (!$this->mailingDeliveryQueue->hasOutstandingRecipients($message->campaignUuid)) {
+                    $this->mailingCampaignRepository->transitionDeliveryStatus($mailingCampaign->getUuid(), [MailingCampaignStatus::DELIVERY_QUEUED, MailingCampaignStatus::DELIVERY_SENDING], MailingCampaignStatus::DELIVERY_FAILED);
                 }
 
                 throw $throwable;
@@ -149,8 +148,10 @@ final readonly class SendMailingCampaignRecipientMessageHandler
         }
 
         if ($this->mailingDeliveryQueue->hasFailedRecipients($message->campaignUuid)) {
+            if (!$this->mailingCampaignRepository->transitionDeliveryStatus($mailingCampaign->getUuid(), [MailingCampaignStatus::DELIVERY_QUEUED, MailingCampaignStatus::DELIVERY_SENDING, MailingCampaignStatus::DELIVERY_FAILED], MailingCampaignStatus::DELIVERY_FAILED)) {
+                return;
+            }
             $mailingCampaign->markDeliveryFailed();
-            $this->mailingCampaignRepository->save($mailingCampaign);
             ($this->sendMailingCampaignCompletionSummary)($mailingCampaign);
             $this->mailingDeliveryLogger->warning('Newsletter delivery completed with failures.', [
                 'campaign_uuid' => $mailingCampaign->getUuid()->toRfc4122(),
@@ -161,8 +162,10 @@ final readonly class SendMailingCampaignRecipientMessageHandler
             return;
         }
 
+        if (!$this->mailingCampaignRepository->transitionDeliveryStatus($mailingCampaign->getUuid(), [MailingCampaignStatus::DELIVERY_QUEUED, MailingCampaignStatus::DELIVERY_SENDING, MailingCampaignStatus::DELIVERY_FAILED], MailingCampaignStatus::DELIVERY_SENT)) {
+            return;
+        }
         $mailingCampaign->markDeliverySent();
-        $this->mailingCampaignRepository->save($mailingCampaign);
         ($this->recordNewsletterRecommendationUsages)($mailingCampaign);
         ($this->sendMailingCampaignCompletionSummary)($mailingCampaign);
         $this->mailingDeliveryLogger->info('Newsletter delivery fully sent.', [

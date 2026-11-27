@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Infrastructure\Doctrine\Repository;
 
 use App\Domain\Model\Mailing\MailingCampaign;
+use App\Domain\Model\Mailing\MailingCampaignStatus;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
 use App\Infrastructure\Doctrine\Entity\MailingCampaignEntity;
 use App\Infrastructure\Doctrine\Mapper\MailingCampaignMapper;
 use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\Uid\Uuid;
@@ -19,6 +21,19 @@ use Symfony\Component\Uid\Uuid;
  */
 final class MailingCampaignDoctrineRepository extends ServiceEntityRepository implements MailingCampaignRepositoryInterface
 {
+    public function transitionDeliveryStatus(Uuid $uuid, array $expectedStatuses, MailingCampaignStatus $newStatus): bool
+    {
+        if ([] === $expectedStatuses) {
+            return false;
+        }
+
+        return 0 < $this->getEntityManager()->getConnection()->executeStatement(
+            'UPDATE mailing_campaign SET status = ?, updated_at = ? WHERE uuid = ? AND status IN (?)',
+            [$newStatus->value, (new DateTimeImmutable())->format('Y-m-d H:i:s'), $uuid->toBinary(), array_map(static fn (MailingCampaignStatus $status): string => $status->value, $expectedStatuses)],
+            [\Doctrine\DBAL\ParameterType::STRING, \Doctrine\DBAL\ParameterType::STRING, \Doctrine\DBAL\ParameterType::BINARY, ArrayParameterType::STRING],
+        );
+    }
+
     public function __construct(
         ManagerRegistry $managerRegistry,
         private readonly MailingCampaignMapper $mailingCampaignMapper,

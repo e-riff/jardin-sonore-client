@@ -35,6 +35,24 @@ use Symfony\Component\Uid\Uuid;
 
 final class MailingWorkerGuardTest extends KernelTestCase
 {
+    public function testStoppedCampaignCannotBeOverwrittenByAStaleCompletion(): void
+    {
+        self::bootKernel(['environment' => 'test']);
+        $connection = self::getContainer()->get(Connection::class);
+        $connection->beginTransaction();
+        try {
+            $repository = self::getContainer()->get(MailingCampaignRepositoryInterface::class);
+            $campaign = new MailingCampaign('Stop race', 'Subject', 'Title', 'Body', 'default', NewsletterAudienceFilter::empty(), status: MailingCampaignStatus::DELIVERY_SENDING);
+            $repository->save($campaign);
+            self::assertTrue($repository->transitionDeliveryStatus($campaign->getUuid(), [MailingCampaignStatus::DELIVERY_SENDING], MailingCampaignStatus::DELIVERY_STOPPED));
+            self::assertFalse($repository->transitionDeliveryStatus($campaign->getUuid(), [MailingCampaignStatus::DELIVERY_SENDING, MailingCampaignStatus::DELIVERY_FAILED], MailingCampaignStatus::DELIVERY_SENT));
+            self::assertFalse($repository->transitionDeliveryStatus($campaign->getUuid(), [MailingCampaignStatus::DELIVERY_SENDING], MailingCampaignStatus::DELIVERY_FAILED));
+            self::assertSame(MailingCampaignStatus::DELIVERY_STOPPED, $repository->findFreshByUuid($campaign->getUuid())->getStatus());
+        } finally {
+            $connection->rollBack();
+        }
+    }
+
     protected static function getKernelClass(): string
     {
         return Kernel::class;

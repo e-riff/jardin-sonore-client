@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Mailing;
 
 use App\Domain\Model\Mailing\MailingCampaign;
+use App\Domain\Model\Mailing\MailingCampaignStatus;
 use App\Domain\Repository\MailingCampaignRepositoryInterface;
 use InvalidArgumentException;
 use Monolog\Attribute\WithMonologChannel;
@@ -26,11 +27,13 @@ final readonly class StopMailingCampaignDelivery
             throw new InvalidArgumentException('Mailing campaign delivery cannot be stopped.');
         }
 
+        if (!$this->mailingCampaignRepository->transitionDeliveryStatus($mailingCampaign->getUuid(), [MailingCampaignStatus::DELIVERY_QUEUED, MailingCampaignStatus::DELIVERY_SENDING, MailingCampaignStatus::DELIVERY_FAILED], MailingCampaignStatus::DELIVERY_STOPPED)) {
+            throw new InvalidArgumentException('Mailing campaign delivery cannot be stopped.');
+        }
+        $mailingCampaign->markDeliveryStopped();
         $cancelledPendingRecipients = $this->mailingDeliveryQueue->cancelPendingRecipients(
             $mailingCampaign->getUuid()->toRfc4122(),
         );
-        $mailingCampaign->markDeliveryStopped();
-        $this->mailingCampaignRepository->save($mailingCampaign);
 
         $deliveryCounts = $this->mailingDeliveryQueue->getCampaignDeliveryCounts(
             $mailingCampaign->getUuid()->toRfc4122(),

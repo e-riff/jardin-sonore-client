@@ -480,6 +480,7 @@ final class MailingCampaign implements UuidIdentifiableInterface
         return in_array($this->status, [
             MailingCampaignStatus::DELIVERY_QUEUED,
             MailingCampaignStatus::DELIVERY_SENDING,
+            MailingCampaignStatus::DELIVERY_FAILED,
         ], true);
     }
 

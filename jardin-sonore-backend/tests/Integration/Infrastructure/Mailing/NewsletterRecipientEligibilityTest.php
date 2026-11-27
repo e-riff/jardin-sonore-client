@@ -166,6 +166,7 @@ final class NewsletterRecipientEligibilityTest extends KernelTestCase
         $mailingCampaignRepository = $this->createStub(MailingCampaignRepositoryInterface::class);
         $mailingCampaignRepository->method('findByUuid')->willReturn($mailingCampaign);
         $mailingCampaignRepository->method('findFreshByUuid')->willReturn($mailingCampaign);
+        $mailingCampaignRepository->method('transitionDeliveryStatus')->willReturn(true);
         $newsletterRenderer = $this->createMock(NewsletterRendererInterface::class);
         $newsletterRenderer->expects($this->never())->method('render');
         $newsletterMailSender = $this->createMock(NewsletterMailSenderInterface::class);
